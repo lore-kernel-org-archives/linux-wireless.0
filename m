@@ -1,789 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34441 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755880AbdAIXBJ (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:35124 "EHLO
+        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751301AbdAaKKY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 18:01:09 -0500
-Received: by mail-oi0-f67.google.com with SMTP id 3so67048723oih.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 15:01:09 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 1/3] rtlwifi: Download firmware as bytes rather than as dwords
-Date: Mon,  9 Jan 2017 17:00:56 -0600
-Message-Id: <20170109230058.22758-2-Larry.Finger@lwfinger.net> (sfid-20170110_000114_375684_CD039D2B)
-In-Reply-To: <20170109230058.22758-1-Larry.Finger@lwfinger.net>
-References: <20170109230058.22758-1-Larry.Finger@lwfinger.net>
+        Tue, 31 Jan 2017 05:10:24 -0500
+Received: by mail-oi0-f44.google.com with SMTP id j15so211413590oih.2
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2017 02:09:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rx_gU-k790j=SnSvOtq5C2vxXWEQ75k=Y2CiUsHnrHEsA@mail.gmail.com>
+References: <CACna6rx_gU-k790j=SnSvOtq5C2vxXWEQ75k=Y2CiUsHnrHEsA@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 31 Jan 2017 11:09:09 +0100
+Message-ID: <CACna6ry2_7Lqty6-Ov=B=TiHXDN6qTSLE_pYMMvZ3wiUFF9jgQ@mail.gmail.com> (sfid-20170131_111316_857867_A81DBB4A)
+Subject: Re: Unsupported NVRAM on D-Link DIR-885L (affects brcmfmac)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        brcm80211 development <brcm80211-dev-list@broadcom.com>,
+        Arend Van Spriel <arend@broadcom.com>,
+        Hante Meuleman <meuleman@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware is read from disk as a little-endian byte string. The code
-that loads the firmware into the device transfers it as 4-byte quantities.
-The routines that write multi-byte quantities on BE hardware assume that
-the data are in CPU order, and automatically do the conversion to the LE
-order required by the device. As a result, the firmware is transmitted
-incorrectly. Rather than do multiple byte swaps on the data, the download
-routine is revised to transmit bytes rather than dwords. Although the
-number of I/O operations is increased, the firmware is not often loaded.
+On 31 January 2017 at 07:24, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wro=
+te:
+> I just noticed my DIR-885L has some weird NVRAM format. Linux doesn't
+> support it, it reads only part of it, which may affect brcmfmac.
+>
+> There goes the most interesting part:
+> 00000000  46 4c 53 48 50 3e 00 00  3f 01 00 00 4b 01 00 00  |FLSHP>..?...=
+K...|
+> 00000010  00 00 00 00 31 3a 70 61  35 67 38 30 61 33 3d 30  |....1:pa5g80=
+a3=3D0|
+> 00000020  78 31 64 36 36 2c 30 78  65 34 35 66 2c 30 78 32  |x1d66,0xe45f=
+,0x2|
+> 00000030  32 37 61 2c 30 78 32 33  36 65 2c 30 78 31 64 30  |27a,0x236e,0=
+x1d0|
+> 00000040  30 2c 30 78 65 62 38 38  2c 30 78 33 32 39 36 2c  |0,0xeb88,0x3=
+296,|
+> (...)
+> 00003e00  3d 36 35 35 33 35 00 31  3a 72 78 67 61 69 6e 65  |=3D65535.1:r=
+xgaine|
+> 00003e10  72 72 32 67 61 30 3d 36  33 00 30 3a 75 6c 62 70  |rr2ga0=3D63.=
+0:ulbp|
+> 00003e20  64 6f 66 66 73 35 67 62  34 61 31 3d 36 35 35 33  |doffs5gb4a1=
+=3D6553|
+> 00003e30  35 00 30 3a 6d 63 73 62  77 32 30 35 67 68 70 6f  |5.0:mcsbw205=
+ghpo|
+> 00003e40  3d 32 38 35 38 38 33 35  39 36 38 00 00 00 00 00  |=3D285883596=
+8.....|
+> 00003e50  6f 66 66 73 65 74 32 30  69 6e 34 30 6d 32 67 3d  |offset20in40=
+m2g=3D|
+> 00003e60  36 35 35 33 35 00 65 74  30 6d 61 63 61 64 64 72  |65535.et0mac=
+addr|
+> 00003e70  3d 30 30 3a 30 30 3a 30  30 3a 30 30 3a 30 30 3a  |=3D00:00:00:=
+00:00:|
+> 00003e80  30 30 00 31 3a 72 78 67  61 69 6e 73 32 67 74 72  |00.1:rxgains=
+2gtr|
+>
+> Header has length field 50 3e 00 00 which means 0x3e50 bytes. I was
+> surprised to see more entries after then "end" of the NVRAM.
+>
+> What's interesting CFE (bootloader) also can't read these entries.
+>
+> Any idea what format is that?
 
-All drivers have the same bug, and use essentially the same code to
-download firmware. These routines have been moved into rtlwifi.
+I used original D-Link firmware and did:
+nvram set foo=3D"loremipsum"
+nvram commit
 
-Some CamelCase variables have been renamed.
+After that NVRAM looks normal. Length is 04 66 00 00 which is 0x6604
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/efuse.c       | 45 ++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/efuse.h       |  4 ++
- .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    | 67 ++-------------------
- .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 70 +++-------------------
- .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    | 70 +++-------------------
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    | 68 ++-------------------
- .../realtek/rtlwifi/rtl8723com/fw_common.c         | 69 ++-------------------
- .../realtek/rtlwifi/rtl8723com/fw_common.h         |  6 --
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    | 67 ++-------------------
- 9 files changed, 85 insertions(+), 381 deletions(-)
+00000000  46 4c 53 48 04 66 00 00  2e 01 00 00 4b 01 00 00  |FLSH.f......K.=
+..|
+00000010  00 00 00 00 77 6c 31 5f  33 67 70 70 6c 69 73 74  |....wl1_3gppli=
+st|
+00000020  3d 00 77 6c 30 5f 72 65  61 6c 6d 6c 69 73 74 3d  |=3D.wl0_realml=
+ist=3D|
+00000030  6d 61 69 6c 2e 65 78 61  6d 70 6c 65 2e 63 6f 6d  |mail.example.c=
+om|
+00000040  2b 30 2b 32 31 3d 32 2c  34 23 35 2c 37 3f 63 69  |+0+21=3D2,4#5,=
+7?ci|
+(...)
+00003e00  33 3d 31 30 38 00 77 6c  31 5f 61 63 73 5f 63 69  |3=3D108.wl1_ac=
+s_ci|
+00003e10  5f 73 63 61 6e 5f 74 69  6d 65 6f 75 74 3d 33 30  |_scan_timeout=
+=3D30|
+00003e20  30 00 77 6c 31 5f 6d 6f  64 65 3d 61 70 00 77 6c  |0.wl1_mode=3Da=
+p.wl|
+00003e30  30 5f 64 66 73 5f 70 72  65 66 3d 00 30 3a 72 78  |0_dfs_pref=3D.=
+0:rx|
+00003e40  67 61 69 6e 65 72 72 32  67 61 31 3d 33 31 00 30  |gainerr2ga1=3D=
+31.0|
+00003e50  3a 70 64 6f 66 66 73 65  74 34 30 69 6e 38 30 6d  |:pdoffset40in8=
+0m|
+00003e60  35 67 62 31 3d 36 35 35  33 35 00 77 6c 31 5f 72  |5gb1=3D65535.w=
+l1_r|
+00003e70  78 63 68 61 69 6e 5f 70  77 72 73 61 76 65 5f 65  |xchain_pwrsave=
+_e|
+00003e80  6e 61 62 6c 65 3d 31 00  77 6c 30 5f 61 6d 70 64  |nable=3D1.wl0_=
+ampd|
+(...)
+000065d0  78 65 31 61 65 2c 30 78  32 39 36 31 2c 30 78 32  |xe1ae,0x2961,0=
+x2|
+000065e0  34 36 31 2c 30 78 31 65  61 39 2c 30 78 64 61 37  |461,0x1ea9,0xd=
+a7|
+000065f0  63 2c 30 78 32 30 62 31  2c 30 78 32 33 37 38 00  |c,0x20b1,0x237=
+8.|
+00006600  00 00 00 00 ff ff ff ff  ff ff ff ff ff ff ff ff  |..............=
+..|
+00006610  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |..............=
+..|
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.c b/drivers/net/wireless/realtek/rtlwifi/efuse.c
-index a11cacd..ef9acd4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/efuse.c
-@@ -31,6 +31,9 @@ static const u8 MAX_PGPKT_SIZE = 9;
- static const u8 PGPKT_DATA_SIZE = 8;
- static const int EFUSE_MAX_SIZE = 512;
- 
-+#define START_ADDRESS		0x1000
-+#define REG_MCUFWDL		0x0080
-+
- static const struct efuse_map RTL8712_SDIO_EFUSE_TABLE[] = {
- 	{0, 0, 0, 2},
- 	{0, 1, 0, 2},
-@@ -1319,3 +1322,45 @@ int rtl_get_hwinfo(struct ieee80211_hw *hw, struct rtl_priv *rtlpriv,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(rtl_get_hwinfo);
-+
-+void rtl_fw_block_write(struct ieee80211_hw *hw, const u8 *buffer, u32 size)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 *pu4byteptr = (u8 *)buffer;
-+	u32 i;
-+
-+	for (i = 0; i < size; i++)
-+		rtl_write_byte(rtlpriv, (START_ADDRESS + i), *(pu4byteptr + i));
-+}
-+EXPORT_SYMBOL_GPL(rtl_fw_block_write);
-+
-+void rtl_fw_page_write(struct ieee80211_hw *hw, u32 page, const u8 *buffer,
-+		       u32 size)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 value8;
-+	u8 u8page = (u8)(page & 0x07);
-+
-+	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
-+
-+	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
-+	rtl_fw_block_write(hw, buffer, size);
-+}
-+EXPORT_SYMBOL_GPL(rtl_fw_page_write);
-+
-+void rtl_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
-+{
-+	u32 fwlen = *pfwlen;
-+	u8 remain = (u8)(fwlen % 4);
-+
-+	remain = (remain == 0) ? 0 : (4 - remain);
-+
-+	while (remain > 0) {
-+		pfwbuf[fwlen] = 0;
-+		fwlen++;
-+		remain--;
-+	}
-+
-+	*pfwlen = fwlen;
-+}
-+EXPORT_SYMBOL_GPL(rtl_fill_dummy);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.h b/drivers/net/wireless/realtek/rtlwifi/efuse.h
-index 49a5fb2..952fdc2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/efuse.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/efuse.h
-@@ -112,5 +112,9 @@ void efuse_re_pg_section(struct ieee80211_hw *hw, u8 section_idx);
- void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate);
- int rtl_get_hwinfo(struct ieee80211_hw *hw, struct rtl_priv *rtlpriv,
- 		   int max_size, u8 *hwinfo, int *params);
-+void rtl_fill_dummy(u8 *pfwbuf, u32 *pfwlen);
-+void rtl_fw_page_write(struct ieee80211_hw *hw, u32 page, const u8 *buffer,
-+		       u32 size);
-+void rtl_fw_block_write(struct ieee80211_hw *hw, const u8 *buffer, u32 size);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-index afa784a..21ed9ad 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-@@ -27,6 +27,7 @@
- #include "../pci.h"
- #include "../base.h"
- #include "../core.h"
-+#include "../efuse.h"
- #include "reg.h"
- #include "def.h"
- #include "fw.h"
-@@ -53,63 +54,6 @@ static void _rtl88e_enable_fw_download(struct ieee80211_hw *hw, bool enable)
- 	}
- }
- 
--static void _rtl88e_fw_block_write(struct ieee80211_hw *hw,
--				   const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 blocksize = sizeof(u32);
--	u8 *bufferptr = (u8 *)buffer;
--	u32 *pu4BytePtr = (u32 *)buffer;
--	u32 i, offset, blockcount, remainsize;
--
--	blockcount = size / blocksize;
--	remainsize = size % blocksize;
--
--	for (i = 0; i < blockcount; i++) {
--		offset = i * blocksize;
--		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
--				*(pu4BytePtr + i));
--	}
--
--	if (remainsize) {
--		offset = blockcount * blocksize;
--		bufferptr += offset;
--		for (i = 0; i < remainsize; i++) {
--			rtl_write_byte(rtlpriv, (FW_8192C_START_ADDRESS +
--						 offset + i), *(bufferptr + i));
--		}
--	}
--}
--
--static void _rtl88e_fw_page_write(struct ieee80211_hw *hw,
--				  u32 page, const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 value8;
--	u8 u8page = (u8) (page & 0x07);
--
--	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
--
--	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
--	_rtl88e_fw_block_write(hw, buffer, size);
--}
--
--static void _rtl88e_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
--{
--	u32 fwlen = *pfwlen;
--	u8 remain = (u8) (fwlen % 4);
--
--	remain = (remain == 0) ? 0 : (4 - remain);
--
--	while (remain > 0) {
--		pfwbuf[fwlen] = 0;
--		fwlen++;
--		remain--;
--	}
--
--	*pfwlen = fwlen;
--}
--
- static void _rtl88e_write_fw(struct ieee80211_hw *hw,
- 			     enum version_8188e version, u8 *buffer, u32 size)
- {
-@@ -120,7 +64,7 @@ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
- 
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "FW size is %d bytes,\n", size);
- 
--	_rtl88e_fill_dummy(bufferptr, &size);
-+	rtl_fill_dummy(bufferptr, &size);
- 
- 	pagenums = size / FW_8192C_PAGE_SIZE;
- 	remainsize = size % FW_8192C_PAGE_SIZE;
-@@ -130,15 +74,14 @@ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
- 
- 	for (page = 0; page < pagenums; page++) {
- 		offset = page * FW_8192C_PAGE_SIZE;
--		_rtl88e_fw_page_write(hw, page, (bufferptr + offset),
--				      FW_8192C_PAGE_SIZE);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset),
-+				  FW_8192C_PAGE_SIZE);
- 	}
- 
- 	if (remainsize) {
- 		offset = pagenums * FW_8192C_PAGE_SIZE;
- 		page = pagenums;
--		_rtl88e_fw_page_write(hw, page, (bufferptr + offset),
--				      remainsize);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-index 433ab7f..c7a7746 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-@@ -27,6 +27,7 @@
- #include "../pci.h"
- #include "../base.h"
- #include "../core.h"
-+#include "../efuse.h"
- #include "../rtl8192ce/reg.h"
- #include "../rtl8192ce/def.h"
- #include "fw_common.h"
-@@ -68,63 +69,6 @@ static void _rtl92c_enable_fw_download(struct ieee80211_hw *hw, bool enable)
- 	}
- }
- 
--static void _rtl92c_fw_block_write(struct ieee80211_hw *hw,
--				   const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 blocksize = sizeof(u32);
--	u8 *bufferptr = (u8 *)buffer;
--	u32 *pu4byteptr = (u32 *)buffer;
--	u32 i, offset, blockcount, remainsize;
--
--	blockcount = size / blocksize;
--	remainsize = size % blocksize;
--
--	for (i = 0; i < blockcount; i++) {
--		offset = i * blocksize;
--		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
--				*(pu4byteptr + i));
--	}
--
--	if (remainsize) {
--		offset = blockcount * blocksize;
--		bufferptr += offset;
--		for (i = 0; i < remainsize; i++) {
--			rtl_write_byte(rtlpriv, (FW_8192C_START_ADDRESS +
--						 offset + i), *(bufferptr + i));
--		}
--	}
--}
--
--static void _rtl92c_fw_page_write(struct ieee80211_hw *hw,
--				  u32 page, const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 value8;
--	u8 u8page = (u8) (page & 0x07);
--
--	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
--
--	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
--	_rtl92c_fw_block_write(hw, buffer, size);
--}
--
--static void _rtl92c_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
--{
--	u32 fwlen = *pfwlen;
--	u8 remain = (u8) (fwlen % 4);
--
--	remain = (remain == 0) ? 0 : (4 - remain);
--
--	while (remain > 0) {
--		pfwbuf[fwlen] = 0;
--		fwlen++;
--		remain--;
--	}
--
--	*pfwlen = fwlen;
--}
--
- static void _rtl92c_write_fw(struct ieee80211_hw *hw,
- 			     enum version_8192c version, u8 *buffer, u32 size)
- {
-@@ -140,7 +84,7 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
- 		u32 page, offset;
- 
- 		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
--			_rtl92c_fill_dummy(bufferptr, &size);
-+			rtl_fill_dummy(bufferptr, &size);
- 
- 		pageNums = size / FW_8192C_PAGE_SIZE;
- 		remainsize = size % FW_8192C_PAGE_SIZE;
-@@ -150,18 +94,18 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
- 
- 		for (page = 0; page < pageNums; page++) {
- 			offset = page * FW_8192C_PAGE_SIZE;
--			_rtl92c_fw_page_write(hw, page, (bufferptr + offset),
--					      FW_8192C_PAGE_SIZE);
-+			rtl_fw_page_write(hw, page, (bufferptr + offset),
-+					  FW_8192C_PAGE_SIZE);
- 		}
- 
- 		if (remainsize) {
- 			offset = pageNums * FW_8192C_PAGE_SIZE;
- 			page = pageNums;
--			_rtl92c_fw_page_write(hw, page, (bufferptr + offset),
--					      remainsize);
-+			rtl_fw_page_write(hw, page, (bufferptr + offset),
-+					  remainsize);
- 		}
- 	} else {
--		_rtl92c_fw_block_write(hw, buffer, size);
-+		rtl_fw_block_write(hw, buffer, size);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index aa1e51c..8931bcd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -26,6 +26,7 @@
- #include "../wifi.h"
- #include "../pci.h"
- #include "../base.h"
-+#include "../efuse.h"
- #include "reg.h"
- #include "def.h"
- #include "fw.h"
-@@ -59,84 +60,31 @@ static void _rtl92d_enable_fw_download(struct ieee80211_hw *hw, bool enable)
- 	}
- }
- 
--static void _rtl92d_fw_block_write(struct ieee80211_hw *hw,
--				   const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 blocksize = sizeof(u32);
--	u8 *bufferptr = (u8 *) buffer;
--	u32 *pu4BytePtr = (u32 *) buffer;
--	u32 i, offset, blockCount, remainSize;
--
--	blockCount = size / blocksize;
--	remainSize = size % blocksize;
--	for (i = 0; i < blockCount; i++) {
--		offset = i * blocksize;
--		rtl_write_dword(rtlpriv, (FW_8192D_START_ADDRESS + offset),
--				*(pu4BytePtr + i));
--	}
--	if (remainSize) {
--		offset = blockCount * blocksize;
--		bufferptr += offset;
--		for (i = 0; i < remainSize; i++) {
--			rtl_write_byte(rtlpriv, (FW_8192D_START_ADDRESS +
--						 offset + i), *(bufferptr + i));
--		}
--	}
--}
--
--static void _rtl92d_fw_page_write(struct ieee80211_hw *hw,
--				  u32 page, const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 value8;
--	u8 u8page = (u8) (page & 0x07);
--
--	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
--	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
--	_rtl92d_fw_block_write(hw, buffer, size);
--}
--
--static void _rtl92d_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
--{
--	u32 fwlen = *pfwlen;
--	u8 remain = (u8) (fwlen % 4);
--
--	remain = (remain == 0) ? 0 : (4 - remain);
--	while (remain > 0) {
--		pfwbuf[fwlen] = 0;
--		fwlen++;
--		remain--;
--	}
--	*pfwlen = fwlen;
--}
--
- static void _rtl92d_write_fw(struct ieee80211_hw *hw,
- 			     enum version_8192d version, u8 *buffer, u32 size)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u8 *bufferPtr = buffer;
--	u32 pagenums, remainSize;
-+	u8 *bufferptr = buffer;
-+	u32 pagenums, remainsize;
- 	u32 page, offset;
- 
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "FW size is %d bytes,\n", size);
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
--		_rtl92d_fill_dummy(bufferPtr, &size);
-+		rtl_fill_dummy(bufferptr, &size);
- 	pagenums = size / FW_8192D_PAGE_SIZE;
--	remainSize = size % FW_8192D_PAGE_SIZE;
-+	remainsize = size % FW_8192D_PAGE_SIZE;
- 	if (pagenums > 8)
- 		pr_err("Page numbers should not greater then 8\n");
- 	for (page = 0; page < pagenums; page++) {
- 		offset = page * FW_8192D_PAGE_SIZE;
--		_rtl92d_fw_page_write(hw, page, (bufferPtr + offset),
--				      FW_8192D_PAGE_SIZE);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset),
-+				  FW_8192D_PAGE_SIZE);
- 	}
--	if (remainSize) {
-+	if (remainsize) {
- 		offset = pagenums * FW_8192D_PAGE_SIZE;
- 		page = pagenums;
--		_rtl92d_fw_page_write(hw, page, (bufferPtr + offset),
--				      remainSize);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index 097c399..9fec345 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -27,6 +27,7 @@
- #include "../pci.h"
- #include "../base.h"
- #include "../core.h"
-+#include "../efuse.h"
- #include "reg.h"
- #include "def.h"
- #include "fw.h"
-@@ -48,64 +49,6 @@ static void _rtl92ee_enable_fw_download(struct ieee80211_hw *hw, bool enable)
- 	}
- }
- 
--static void _rtl92ee_fw_block_write(struct ieee80211_hw *hw,
--				    const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 blocksize = sizeof(u32);
--	u8 *bufferptr = (u8 *)buffer;
--	u32 *pu4byteptr = (u32 *)buffer;
--	u32 i, offset, blockcount, remainsize;
--
--	blockcount = size / blocksize;
--	remainsize = size % blocksize;
--
--	for (i = 0; i < blockcount; i++) {
--		offset = i * blocksize;
--		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
--				*(pu4byteptr + i));
--	}
--
--	if (remainsize) {
--		offset = blockcount * blocksize;
--		bufferptr += offset;
--		for (i = 0; i < remainsize; i++) {
--			rtl_write_byte(rtlpriv,
--				       (FW_8192C_START_ADDRESS + offset + i),
--				       *(bufferptr + i));
--		}
--	}
--}
--
--static void _rtl92ee_fw_page_write(struct ieee80211_hw *hw, u32 page,
--				   const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 value8;
--	u8 u8page = (u8)(page & 0x07);
--
--	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
--	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
--
--	_rtl92ee_fw_block_write(hw, buffer, size);
--}
--
--static void _rtl92ee_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
--{
--	u32 fwlen = *pfwlen;
--	u8 remain = (u8)(fwlen % 4);
--
--	remain = (remain == 0) ? 0 : (4 - remain);
--
--	while (remain > 0) {
--		pfwbuf[fwlen] = 0;
--		fwlen++;
--		remain--;
--	}
--
--	*pfwlen = fwlen;
--}
--
- static void _rtl92ee_write_fw(struct ieee80211_hw *hw,
- 			      enum version_8192e version,
- 			      u8 *buffer, u32 size)
-@@ -117,7 +60,7 @@ static void _rtl92ee_write_fw(struct ieee80211_hw *hw,
- 
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD , "FW size is %d bytes,\n", size);
- 
--	_rtl92ee_fill_dummy(bufferptr, &size);
-+	rtl_fill_dummy(bufferptr, &size);
- 
- 	pagenums = size / FW_8192C_PAGE_SIZE;
- 	remainsize = size % FW_8192C_PAGE_SIZE;
-@@ -127,16 +70,15 @@ static void _rtl92ee_write_fw(struct ieee80211_hw *hw,
- 
- 	for (page = 0; page < pagenums; page++) {
- 		offset = page * FW_8192C_PAGE_SIZE;
--		_rtl92ee_fw_page_write(hw, page, (bufferptr + offset),
--				       FW_8192C_PAGE_SIZE);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset),
-+				  FW_8192C_PAGE_SIZE);
- 		udelay(2);
- 	}
- 
- 	if (remainsize) {
- 		offset = pagenums * FW_8192C_PAGE_SIZE;
- 		page = pagenums;
--		_rtl92ee_fw_page_write(hw, page, (bufferptr + offset),
--				       remainsize);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-index 8e0d038..ac573d6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-@@ -26,6 +26,7 @@
- #include "../wifi.h"
- #include "../pci.h"
- #include "../base.h"
-+#include "../efuse.h"
- #include "fw_common.h"
- #include <linux/module.h>
- 
-@@ -53,65 +54,6 @@ void rtl8723_enable_fw_download(struct ieee80211_hw *hw, bool enable)
- }
- EXPORT_SYMBOL_GPL(rtl8723_enable_fw_download);
- 
--void rtl8723_fw_block_write(struct ieee80211_hw *hw,
--			    const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 blocksize = sizeof(u32);
--	u8 *bufferptr = (u8 *)buffer;
--	u32 *pu4byteptr = (u32 *)buffer;
--	u32 i, offset, blockcount, remainsize;
--
--	blockcount = size / blocksize;
--	remainsize = size % blocksize;
--
--	for (i = 0; i < blockcount; i++) {
--		offset = i * blocksize;
--		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
--				*(pu4byteptr + i));
--	}
--	if (remainsize) {
--		offset = blockcount * blocksize;
--		bufferptr += offset;
--		for (i = 0; i < remainsize; i++) {
--			rtl_write_byte(rtlpriv,
--				       (FW_8192C_START_ADDRESS + offset + i),
--				       *(bufferptr + i));
--		}
--	}
--}
--EXPORT_SYMBOL_GPL(rtl8723_fw_block_write);
--
--void rtl8723_fw_page_write(struct ieee80211_hw *hw,
--			   u32 page, const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 value8;
--	u8 u8page = (u8) (page & 0x07);
--
--	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
--
--	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
--	rtl8723_fw_block_write(hw, buffer, size);
--}
--EXPORT_SYMBOL_GPL(rtl8723_fw_page_write);
--
--void rtl8723_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
--{
--	u32 fwlen = *pfwlen;
--	u8 remain = (u8) (fwlen % 4);
--
--	remain = (remain == 0) ? 0 : (4 - remain);
--
--	while (remain > 0) {
--		pfwbuf[fwlen] = 0;
--		fwlen++;
--		remain--;
--	}
--	*pfwlen = fwlen;
--}
--EXPORT_SYMBOL(rtl8723_fill_dummy);
--
- void rtl8723_write_fw(struct ieee80211_hw *hw,
- 		      enum version_8723e version,
- 		      u8 *buffer, u32 size, u8 max_page)
-@@ -123,7 +65,7 @@ void rtl8723_write_fw(struct ieee80211_hw *hw,
- 
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "FW size is %d bytes,\n", size);
- 
--	rtl8723_fill_dummy(bufferptr, &size);
-+	rtl_fill_dummy(bufferptr, &size);
- 
- 	page_nums = size / FW_8192C_PAGE_SIZE;
- 	remain_size = size % FW_8192C_PAGE_SIZE;
-@@ -134,15 +76,14 @@ void rtl8723_write_fw(struct ieee80211_hw *hw,
- 	}
- 	for (page = 0; page < page_nums; page++) {
- 		offset = page * FW_8192C_PAGE_SIZE;
--		rtl8723_fw_page_write(hw, page, (bufferptr + offset),
--				      FW_8192C_PAGE_SIZE);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset),
-+				  FW_8192C_PAGE_SIZE);
- 	}
- 
- 	if (remain_size) {
- 		offset = page_nums * FW_8192C_PAGE_SIZE;
- 		page = page_nums;
--		rtl8723_fw_page_write(hw, page, (bufferptr + offset),
--				      remain_size);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset), remain_size);
- 	}
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "FW write done.\n");
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h
-index 8ea372d..77c25a9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h
-@@ -28,7 +28,6 @@
- 
- #define REG_SYS_FUNC_EN				0x0002
- #define REG_MCUFWDL				0x0080
--#define FW_8192C_START_ADDRESS			0x1000
- #define FW_8192C_PAGE_SIZE			4096
- #define FW_8723A_POLLING_TIMEOUT_COUNT		1000
- #define FW_8723B_POLLING_TIMEOUT_COUNT		6000
-@@ -84,10 +83,6 @@ enum rtl8723be_cmd {
- void rtl8723ae_firmware_selfreset(struct ieee80211_hw *hw);
- void rtl8723be_firmware_selfreset(struct ieee80211_hw *hw);
- void rtl8723_enable_fw_download(struct ieee80211_hw *hw, bool enable);
--void rtl8723_fw_block_write(struct ieee80211_hw *hw,
--			    const u8 *buffer, u32 size);
--void rtl8723_fw_page_write(struct ieee80211_hw *hw,
--			   u32 page, const u8 *buffer, u32 size);
- void rtl8723_write_fw(struct ieee80211_hw *hw,
- 		      enum version_8723e version,
- 		      u8 *buffer, u32 size, u8 max_page);
-@@ -95,6 +90,5 @@ int rtl8723_fw_free_to_go(struct ieee80211_hw *hw, bool is_8723be, int count);
- int rtl8723_download_fw(struct ieee80211_hw *hw, bool is_8723be, int count);
- bool rtl8723_cmd_send_packet(struct ieee80211_hw *hw,
- 			     struct sk_buff *skb);
--void rtl8723_fill_dummy(u8 *pfwbuf, u32 *pfwlen);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index a8cc486..a504dfa 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -27,6 +27,7 @@
- #include "../pci.h"
- #include "../base.h"
- #include "../core.h"
-+#include "../efuse.h"
- #include "reg.h"
- #include "def.h"
- #include "fw.h"
-@@ -51,63 +52,6 @@ static void _rtl8821ae_enable_fw_download(struct ieee80211_hw *hw, bool enable)
- 	}
- }
- 
--static void _rtl8821ae_fw_block_write(struct ieee80211_hw *hw,
--				      const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 blocksize = sizeof(u32);
--	u8 *bufferptr = (u8 *)buffer;
--	u32 *pu4byteptr = (u32 *)buffer;
--	u32 i, offset, blockcount, remainsize;
--
--	blockcount = size / blocksize;
--	remainsize = size % blocksize;
--
--	for (i = 0; i < blockcount; i++) {
--		offset = i * blocksize;
--		rtl_write_dword(rtlpriv, (FW_8821AE_START_ADDRESS + offset),
--				*(pu4byteptr + i));
--	}
--
--	if (remainsize) {
--		offset = blockcount * blocksize;
--		bufferptr += offset;
--		for (i = 0; i < remainsize; i++) {
--			rtl_write_byte(rtlpriv, (FW_8821AE_START_ADDRESS +
--					offset + i), *(bufferptr + i));
--		}
--	}
--}
--
--static void _rtl8821ae_fw_page_write(struct ieee80211_hw *hw,
--				     u32 page, const u8 *buffer, u32 size)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 value8;
--	u8 u8page = (u8)(page & 0x07);
--
--	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
--
--	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
--	_rtl8821ae_fw_block_write(hw, buffer, size);
--}
--
--static void _rtl8821ae_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
--{
--	u32 fwlen = *pfwlen;
--	u8 remain = (u8)(fwlen % 4);
--
--	remain = (remain == 0) ? 0 : (4 - remain);
--
--	while (remain > 0) {
--		pfwbuf[fwlen] = 0;
--		fwlen++;
--		remain--;
--	}
--
--	*pfwlen = fwlen;
--}
--
- static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
- 				enum version_8821ae version,
- 				u8 *buffer, u32 size)
-@@ -119,7 +63,7 @@ static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
- 
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "FW size is %d bytes,\n", size);
- 
--	_rtl8821ae_fill_dummy(bufferptr, &size);
-+	rtl_fill_dummy(bufferptr, &size);
- 
- 	pagenums = size / FW_8821AE_PAGE_SIZE;
- 	remainsize = size % FW_8821AE_PAGE_SIZE;
-@@ -129,15 +73,14 @@ static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
- 
- 	for (page = 0; page < pagenums; page++) {
- 		offset = page * FW_8821AE_PAGE_SIZE;
--		_rtl8821ae_fw_page_write(hw, page, (bufferptr + offset),
--					 FW_8821AE_PAGE_SIZE);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset),
-+				  FW_8821AE_PAGE_SIZE);
- 	}
- 
- 	if (remainsize) {
- 		offset = pagenums * FW_8821AE_PAGE_SIZE;
- 		page = pagenums;
--		_rtl8821ae_fw_page_write(hw, page, (bufferptr + offset),
--					 remainsize);
-+		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
- 	}
- }
- 
--- 
-2.10.2
+Should we care about this previous weird NVRAM format?
+
+--=20
+Rafa=C5=82
