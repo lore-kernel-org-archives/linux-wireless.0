@@ -1,83 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:34870 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750773AbdAKJiW (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:49394 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751932AbdAaTAR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 04:38:22 -0500
-Received: by mail-pg0-f44.google.com with SMTP id 194so19485032pgd.2
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2017 01:38:22 -0800 (PST)
-Subject: Re: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, Cedric.Izoard@ceva-dsp.com
-References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
- <1484121737.23671.0.camel@sipsolutions.net>
- <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com>
- <1484125220.23671.1.camel@sipsolutions.net>
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com> (sfid-20170111_103826_350940_60860753)
-Date: Wed, 11 Jan 2017 18:38:16 +0900
+        Tue, 31 Jan 2017 14:00:17 -0500
+Subject: Re: [PATCH v2 2/2] mac80211: store tx power value from user to
+ station
+To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
+ <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
+Cc: johannes@sipsolutions.net, arnagara@codeaurora.org,
+        ath10k@lists.infradead.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com> (sfid-20170131_200048_781942_7EB9B9CE)
+Date: Tue, 31 Jan 2017 11:00:06 -0800
 MIME-Version: 1.0
-In-Reply-To: <1484125220.23671.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017年01月11日 18:00, Johannes Berg wrote:
-> Ok, that's strange, but maybe there's a reason.
+On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
+> This patch introduce a new driver callback drv_sta_set_txpwr. This API will
+> copy the transmit power value passed from user space and call the driver
+> callback to set the tx power for the station.
 >
-> Can you extract *any* information whatsoever? Like maybe if you switch
-> to a VT console before running into the crash? I don't have any
-> hardware to run this on, and hwsim doesn't have any issues.
+> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+> ---
+>  include/net/mac80211.h    |  6 ++++++
+>  net/mac80211/cfg.c        |  7 +++++++
+>  net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
+>  net/mac80211/driver-ops.h |  5 +++++
+>  net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
+>  5 files changed, 66 insertions(+)
+>
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 5345d35..e059d5a 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
+>   *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
+>   * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
+>   * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
+> + * @txpwr: indicates the tx power, in dBm, to be used when sending data frames
+> + *	to the STA. Value of 0 means, automatic (default) tx power.
 
-I will call the mesh peers "STA A" and "STA B".
+Atheros NICs use 1/2 dBm increments internally, so maybe pass down mBm to the driver so you don't
+loose the granularity?  (Other NICs may potentially have even finer control.)
 
-Both STA has one physical wireless I/F and wired I/F.
-I have connected to both with SSH via wired I/F and started
-wpa_supplicant with this command for both.
-	sudo ./hostap/wpa_supplicant/wpa_supplicant -i <ifname> -D nl80211 -c 
-mesh_sae.conf
+Thanks,
+Ben
 
-STA A's mesh_sae.conf is this.
-
-----------------------
-ctrl_interface=/var/run/wpa_supplicant
-ap_scan=1
-user_mpm=1
-update_config=0
-
-network={
-	ssid="mesh0"
-	key_mgmt=SAE
-	mode=5
-	frequency=2412
-	psk="01234567"
-}
-----------------------
-
-STA B's mesh_sae.conf is this. The difference is "no_auto_peer=1".
-
-----------------------
-ctrl_interface=/var/run/wpa_supplicant
-ap_scan=1
-user_mpm=1
-update_config=0
-
-network={
-	ssid="mesh0"
-	key_mgmt=SAE
-	mode=5
-	frequency=2412
-	psk="01234567"
-	no_auto_peer=1
-}
-----------------------
-
-Booting the wpa_supplicant finishes successfully.
-
-After the successfull peering process, I could see
-	MESH-PEER-CONNECTED
-message on both side.
-
-Then STA A or STA B crashes, not both.
-
-Masashi Honma.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
