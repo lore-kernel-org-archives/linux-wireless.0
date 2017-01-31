@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:40931 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751771AbdAMPqx (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:33064 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751907AbdAaTWb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 10:46:53 -0500
-Date: Fri, 13 Jan 2017 16:46:30 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, lede-dev@lists.infradead.org,
-        openwrt-devel@lists.openwrt.org, john@phrozen.org, nbd@nbd.name,
-        roman@advem.lv, evaxige@qq.com, c.mignanti@gmail.com,
-        michel.stempin@wanadoo.fr, vasilugin@yandex.ru,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [RFC] [PULL REQUEST] rt2x00 patches from OpenWrt.org
-Message-ID: <20170113154629.GG2332@makrotopia.org> (sfid-20170113_164656_743337_630DDD13)
-References: <20170113035020.GA9063@makrotopia.org>
- <87tw93i6e7.fsf@purkki.adurom.net>
+        Tue, 31 Jan 2017 14:22:31 -0500
+In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+From: Russell King <rmk+kernel@armlinux.org.uk>
+To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Ralf Baechle <ralf@linux-mips.org>
+Subject: [PATCH 4.10-rc3 10/13] MIPS: Octeon: Remove unnecessary MODULE_*()
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87tw93i6e7.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1cYdxS-0000Wy-EM@rmk-PC.armlinux.org.uk> (sfid-20170131_202359_675070_53AEDA73)
+Date: Tue, 31 Jan 2017 19:19:14 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+octeon-platform.c can not be built as a module for two reasons:
 
-On Fri, Jan 13, 2017 at 12:46:56PM +0200, Kalle Valo wrote:
-> Daniel Golle <daniel@makrotopia.org> writes:
-> > ...
-> > Please review and comment, so we can get those patches merged!
-> 
-> No pull requests, please. Instead send these as patches, easier to
-> review and actually also easier for me to merge.
+(a) the Makefile doesn't allow it:
+    obj-y := cpu.o setup.o octeon-platform.o octeon-irq.o csrc-octeon.o
 
-The advantage of pull requests is that author information can be
-preserved more easily. Running git format-patch results in most patches
-having wrong SMTP sender information due to the assumption that the
-patch author is the same person also submitting the patch.
-So in practise, this would either require changing the From: (and thus
-Author) to myself or having most mails eaten by anti-spam measures due
-to non-matching SPF which prohibits my SMTP to send mail on behalf of
-the original authors of the patches.
+(b) the multiple *_initcall() statements, each of which are translated
+    to a module_init() call when attempting a module build, become
+    aliases to init_module().  Having more than one alias will cause a
+    build error.
 
-How do you suggest to handle this situation?
+Hence, rather than adding a linux/module.h include, remove the redundant
+MODULE_*() from this file.
 
+Acked-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+---
+ arch/mips/cavium-octeon/octeon-platform.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Cheers
-
-
-Daniel
+diff --git a/arch/mips/cavium-octeon/octeon-platform.c b/arch/mips/cavium-octeon/octeon-platform.c
+index 37a932d9148c..8297ce714c5e 100644
+--- a/arch/mips/cavium-octeon/octeon-platform.c
++++ b/arch/mips/cavium-octeon/octeon-platform.c
+@@ -1060,7 +1060,3 @@ static int __init octeon_publish_devices(void)
+ 	return of_platform_bus_probe(NULL, octeon_ids, NULL);
+ }
+ arch_initcall(octeon_publish_devices);
+-
+-MODULE_AUTHOR("David Daney <ddaney@caviumnetworks.com>");
+-MODULE_LICENSE("GPL");
+-MODULE_DESCRIPTION("Platform driver for Octeon SOC");
+-- 
+2.7.4
