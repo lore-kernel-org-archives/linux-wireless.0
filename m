@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49059 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750755AbdALLLk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 06:11:40 -0500
-Subject: Re: [PATCH 6/9] rt2800: fallback from mcs8 to mcs7
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
- <1483707918-31480-7-git-send-email-sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <e3c3f693-3d34-ecfc-de13-855c1d75b849@nbd.name> (sfid-20170112_121220_558522_76BB891C)
-Date: Thu, 12 Jan 2017 12:10:48 +0100
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14380 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751939AbdAaULM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jan 2017 15:11:12 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 3/3] mac80211: clear failure average upon mesh path deactivation
+Date: Tue, 31 Jan 2017 12:07:52 -0800
+Message-ID: <1485893272-6893-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20170131_211117_038924_79507BB0)
+In-Reply-To: <1485893272-6893-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1485893272-6893-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1483707918-31480-7-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-06 14:05, Stanislaw Gruszka wrote:
-> If we do not fallback to lower rate, we are unable to calculate
-> correctly number of retries in TX status code.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-I think falling back from the lowest dual-stream to the highest
-single-stream rate is a really bad idea.
-Instead you should get rid of the assumption that fallback rates are
-ordered by their MCS index.
+Mesh moving average should be cleared, whenever mesh paths
+to the given station are deactivated due to bad link. It makes
+path deactivation logic more robust by considering more tx
+status before terminating mesh link.
 
-- Felix
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+v2:
+ * removed paths_deactivated check
+ * updated commit log
+
+ net/mac80211/mesh_pathtbl.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index f0e6175a9821..bab443e5284d 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -537,6 +537,7 @@ void mesh_plink_broken(struct sta_info *sta)
+ 				WLAN_REASON_MESH_PATH_DEST_UNREACHABLE, bcast);
+ 		}
+ 	}
++	sta->mesh->fail_avg = 0;
+ out:
+ 	rhashtable_walk_stop(&iter);
+ 	rhashtable_walk_exit(&iter);
+-- 
+1.9.1
