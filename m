@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:53507 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934597AbdAEVnA (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:32930 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752004AbdAaTWf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 16:43:00 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: "Andrew F. Davis" <afd@ti.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Richard Purdie <rpurdie@rpsys.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-media@vger.kernel.org
-Subject: Re: [PATCH v2 6/6] [media] Only descend into directory when CONFIG_MEDIA_SUPPORT is set
-Date: Thu, 05 Jan 2017 22:42:16 +0100
-Message-ID: <4225650.R96pl5clWf@wuerfel> (sfid-20170105_224307_692008_E3BA0539)
-In-Reply-To: <20170105210158.14204-7-afd@ti.com>
-References: <20170105210158.14204-1-afd@ti.com> <20170105210158.14204-7-afd@ti.com>
+        Tue, 31 Jan 2017 14:22:35 -0500
+In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+From: Russell King <rmk+kernel@armlinux.org.uk>
+To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>
+Subject: [PATCH 4.10-rc3 06/13] net: fman: fix build errors when linux/phy*.h
+ is removed from net/dsa.h
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1cYdx7-0000WW-So@rmk-PC.armlinux.org.uk> (sfid-20170131_202359_120610_FAD71F60)
+Date: Tue, 31 Jan 2017 19:18:53 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, January 5, 2017 3:01:58 PM CET Andrew F. Davis wrote:
-> @@ -109,7 +109,8 @@ obj-$(CONFIG_SERIO)         += input/serio/
->  obj-$(CONFIG_GAMEPORT)         += input/gameport/
->  obj-$(CONFIG_INPUT)            += input/
->  obj-$(CONFIG_RTC_LIB)          += rtc/
-> -obj-y                          += i2c/ media/
-> +obj-y                          += i2c/
-> +obj-$(CONFIG_MEDIA_SUPPORT)    += media/
->  obj-$(CONFIG_PPS)              += pps/
->  obj-y                          += ptp/
->  obj-$(CONFIG_W1)               += w1/
-> 
+drivers/net/ethernet/freescale/fman/fman_memac.c:519:21: error: dereferencing pointer to incomplete type 'struct fixed_phy_status'
 
-This one seems wrong: if CONFIG_MEDIA_SUPPORT=m, but some I2C drivers
-inside of drivers/media/ are built-in, we will fail to enter the directory,
-see drivers/media/Makefile.
+Add linux/phy_fixed.h to fman_memac.c
 
-I checked the other five patches in the series as well, they all look
-ok to me.
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+---
+ drivers/net/ethernet/freescale/fman/fman_memac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-	Arnd
+diff --git a/drivers/net/ethernet/freescale/fman/fman_memac.c b/drivers/net/ethernet/freescale/fman/fman_memac.c
+index 71a5ded9d1de..cd6a53eaf161 100644
+--- a/drivers/net/ethernet/freescale/fman/fman_memac.c
++++ b/drivers/net/ethernet/freescale/fman/fman_memac.c
+@@ -38,6 +38,7 @@
+ #include <linux/slab.h>
+ #include <linux/io.h>
+ #include <linux/phy.h>
++#include <linux/phy_fixed.h>
+ #include <linux/of_mdio.h>
+ 
+ /* PCS registers */
+-- 
+2.7.4
