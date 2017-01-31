@@ -1,216 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47966 "EHLO sipsolutions.net"
+Received: from mail.neratec.com ([46.140.151.2]:41981 "EHLO mail.neratec.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751774AbdAZJeH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 04:34:07 -0500
-Message-ID: <1485423244.11038.4.camel@sipsolutions.net> (sfid-20170126_103412_359228_62B31662)
-Subject: Re: [RFC 1/3] cfg80211: Make pre-CAC results valid only for ETSI
- domain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Jan 2017 10:34:04 +0100
-In-Reply-To: <1485343870-23601-2-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
-         <1485343870-23601-2-git-send-email-vthiagar@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751604AbdAaKSL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jan 2017 05:18:11 -0500
+Subject: Re: Packet throughput (and those iperf data rate) with mac80211/ath9k
+ is 20% worse than net80211/madwifi
+To: Klaus Kinski <jpo234@outlook.de>
+References: <HE1PR0701MB1803E46BC8EC38D682361523FC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <87lgtsjz6o.fsf@toke.dk>
+ <CAA93jw5w6MaegbE+n9=-+F59vXTjEFGOH94Q=XYxiAqFKHeVfw@mail.gmail.com>
+ <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <87o9yo2v0s.fsf@toke.dk> <d23a5b33-9ec5-a3c3-81ed-91d8e9abe67a@neratec.com>
+ <HE1PR0701MB18031C6DF4DF46865EBF9E87FC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <f5adadba-2764-a7cc-c661-7061545341a7@neratec.com>
+ <CAEvAWuGa6YSFA80mC0+saoGO5VWGNqfbyw94Nv0vfhSoQfD-Jw@mail.gmail.com>
+ <HE1PR0701MB1803B7D5D0182EF7DD662B18FC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        Dave Taht <dave.taht@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Message-ID: <afccf3d4-b095-1a64-fd08-d559b44bcb72@neratec.com> (sfid-20170131_111924_227785_3DC6B7B8)
+Date: Tue, 31 Jan 2017 10:52:30 +0100
+MIME-Version: 1.0
+In-Reply-To: <HE1PR0701MB1803B7D5D0182EF7DD662B18FC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> +		/* Should we apply the grace period during beaconing
-> interface
-> +		 * shutdown also?
-> +		 */
-> +		cfg80211_sched_dfs_chan_update(rdev);
 
-It might make some sense, say if hostapd crashes and you restart it
-automatically or something?
-
->  	return err;
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> index 5497d022..090309a 100644
-> --- a/net/wireless/chan.c
-> +++ b/net/wireless/chan.c
-> @@ -456,6 +456,102 @@ bool cfg80211_chandef_dfs_usable(struct wiphy
-> *wiphy,
->  	return (r1 + r2 > 0);
->  }
->  
-> +static bool cfg80211_5ghz_sub_chan(struct cfg80211_chan_def
-> *chandef,
-> +				   struct ieee80211_channel *chan)
-
-This could use some explanation, and I don't see anything that's really
-5 GHz specific in here, so why that in the function name?
-
-> +	u32 start_freq_seg0 = 0, end_freq_seg0 = 0;
-> +	u32 start_freq_seg1 = 0, end_freq_seg1 = 0;
-> +
-> +	if (chandef->chan->center_freq == chan->center_freq)
-> +		return true;
-> +
-> +	switch (chandef->width) {
-> +	case NL80211_CHAN_WIDTH_40:
-> +		start_freq_seg0 = chandef->center_freq1 - 20;
-> +		end_freq_seg0 = chandef->center_freq1 + 20;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_80P80:
-> +		start_freq_seg1 = chandef->center_freq2 - 40;
-> +		end_freq_seg1 = chandef->center_freq2 + 40;
-> +		/* fall through */
-> +	case NL80211_CHAN_WIDTH_80:
-> +		start_freq_seg0 = chandef->center_freq1 - 40;
-> +		end_freq_seg0 = chandef->center_freq1 + 40;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_160:
-> +		start_freq_seg0 = chandef->center_freq1 - 80;
-> +		end_freq_seg0 = chandef->center_freq1 + 80;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_20_NOHT:
-> +	case NL80211_CHAN_WIDTH_20:
-> +	case NL80211_CHAN_WIDTH_5:
-> +	case NL80211_CHAN_WIDTH_10:
-> +		break;
-> +	}
-> +
-> +	if (chan->center_freq > start_freq_seg0 &&
-> +	    chan->center_freq < end_freq_seg0)
-> +		return true;
-> +
-> +	return chan->center_freq > start_freq_seg1 &&
-> +		chan->center_freq < end_freq_seg1;
-> +}
-
-It's also written pretty oddly... The 5/10/20 cases could return
-immediately, the start/end could be replaced by width, and the
-initializations wouldn't be needed at all ... I think we can do better
-here.
-
-> +bool cfg80211_5ghz_any_wiphy_oper_chan(struct wiphy *wiphy,
-> +				       struct ieee80211_channel
-> *chan)
-
-Again, nothing 5 GHz specific.
-
-> +	struct wireless_dev *wdev;
-> +
-> +	ASSERT_RTNL();
-> +
-> +	if (!(chan->flags & IEEE80211_CHAN_RADAR))
-> +		return false;
-> +
-> +	list_for_each_entry(wdev, &wiphy->wdev_list, list) {
-> +		if (!cfg80211_beaconing_iface_active(wdev))
-> +			continue;
-> +
-> +		if (cfg80211_5ghz_sub_chan(&wdev->chandef, chan))
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
->  
->  static bool cfg80211_get_chans_dfs_available(struct wiphy *wiphy,
->  					     u32 center_freq,
-> diff --git a/net/wireless/core.h b/net/wireless/core.h
-> index 58ca206..327fe95 100644
-> --- a/net/wireless/core.h
-> +++ b/net/wireless/core.h
-> @@ -459,6 +459,13 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
->  cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
->  			      const struct cfg80211_chan_def
-> *chandef);
->  
-> +void cfg80211_sched_dfs_chan_update(struct
-> cfg80211_registered_device *rdev);
-> +
-> +bool cfg80211_5ghz_any_wiphy_oper_chan(struct wiphy *wiphy,
-> +				       struct ieee80211_channel
-> *chan);
-> +
-> +bool cfg80211_beaconing_iface_active(struct wireless_dev *wdev);
-> +
->  static inline unsigned int elapsed_jiffies_msecs(unsigned long
-> start)
->  {
->  	unsigned long end = jiffies;
-> diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-> index 364f900..10bf040 100644
-> --- a/net/wireless/ibss.c
-> +++ b/net/wireless/ibss.c
-> @@ -190,6 +190,7 @@ static void __cfg80211_clear_ibss(struct
-> net_device *dev, bool nowext)
->  	if (!nowext)
->  		wdev->wext.ibss.ssid_len = 0;
->  #endif
-> +	cfg80211_sched_dfs_chan_update(rdev);
->  }
->  
->  void cfg80211_clear_ibss(struct net_device *dev, bool nowext)
-> diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-> index 2d8518a..ec0b1c2 100644
-> --- a/net/wireless/mesh.c
-> +++ b/net/wireless/mesh.c
-> @@ -262,6 +262,7 @@ int __cfg80211_leave_mesh(struct
-> cfg80211_registered_device *rdev,
->  		wdev->beacon_interval = 0;
->  		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
->  		rdev_set_qos_map(rdev, dev, NULL);
-> +		cfg80211_sched_dfs_chan_update(rdev);
->  	}
->  
->  	return err;
-> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-> index 22b3d99..3c7e155 100644
-> --- a/net/wireless/mlme.c
-> +++ b/net/wireless/mlme.c
-> @@ -745,6 +745,12 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev,
-> int freq, int sig_mbm,
->  }
->  EXPORT_SYMBOL(cfg80211_rx_mgmt);
->  
-> +void cfg80211_sched_dfs_chan_update(struct
-> cfg80211_registered_device *rdev)
-> +{
-> +	cancel_delayed_work(&rdev->dfs_update_channels_wk);
-> +	queue_delayed_work(cfg80211_wq, &rdev-
-> >dfs_update_channels_wk, 0);
-> +}
-
-This uses 0.
-
-> @@ -820,9 +844,7 @@ void cfg80211_radar_event(struct wiphy *wiphy,
->  	 */
->  	cfg80211_set_dfs_state(wiphy, chandef,
-> NL80211_DFS_UNAVAILABLE);
->  
-> -	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_NOP_TIME_MS);
-> -	queue_delayed_work(cfg80211_wq, &rdev-
-> >dfs_update_channels_wk,
-> -			   timeout);
-> +	cfg80211_sched_dfs_chan_update(rdev);
-
-But this didn't - why does that change?
-
-> +unsigned long regulatory_get_pre_cac_timeout(struct wiphy *wiphy)
-> +{
-> +	if (!regulatory_pre_cac_allowed(wiphy))
-> +		return REG_PRE_CAC_EXPIRY_GRACE_MS;
-> +
-> +	/*
-> +	 * Return the maximum pre-CAC timeout when pre-CAC is
-> allowed
-> +	 * in the current dfs domain (ETSI).
-> +	 */
-> +	return -1;
-> +}
-
-Don't ever return -1, that's -EPERM and not really what you want
-anyway.
-
-In fact, this doesn't even make sense, since the only caller already
-checks regulatory_pre_cac_allowed() before calling this.
-
-johannes
+On 31/01/17 10:46, Klaus Kinski wrote:
+> BTW, if I read the sources correctly, than IBSS mode uses the TXQ 
+> parameters from ieee80211_set_wmm_default with enable_qos = false 
+> which means that qparam.txop = 0, e.g. bursting is disabled. Am I right?
+I guess so. But you need to look also at contention window sizes because 
+it make a big impact on throughout with retries and collisions.
+>
+> Jörg Pommnitz <jpo234@outlook.de <mailto:jpo234@outlook.de>> schrieb 
+> am Di., 31. Jan. 2017 um 10:37 Uhr:
+>
+>     I'm mostly interested in Ad-Hoc mode, e.g. IBSS.
+>
+>     Wojciech Dubowik <wojciech.dubowik@neratec.com
+>     <mailto:wojciech.dubowik@neratec.com>> schrieb am Di., 31. Jan.
+>     2017 um 10:35 Uhr:
+>
+>         That's tricky but look at
+>         http://w1.fi/cgit/hostap/tree/hostapd/hostapd.conf
+>         <http://w1.fi/cgit/hostap/tree/hostapd/hostapd.conf>
+>
+>         tx_queue... are for AP and wmm_... for STA (over beacons).
+>
+>         These should be default parameters. You can also enable CONFIG
+>         debug flag
+>
+>         for ath9k and it prints wme parameters when it starts.
+>
+>         Wojtek
+>
+>
+>         On 31/01/17 10:18, Klaus Kinski wrote:
+>>         It seems that bursting can be controlled over nl80211 (see ,
+>>         specifically with NL80211_ATTR_WIPHY_TXQ_PARAMS.
+>>         Unfortunately this seems not to be exposed in iw. It's an
+>>         attribute of NL80211_CMD_SET_WIPHY.
+>>         Is there another tool that exposes txq params? If not, has
+>>         anybody thought about exposing it in iw? I might take a stab
+>>         at it...
+>>
+>>         Regards
+>>           Joerg
+>>
+>>         Wojciech Dubowik <wojciech.dubowik@neratec.com
+>>         <mailto:wojciech.dubowik@neratec.com>> schrieb am Di., 31.
+>>         Jan. 2017 um 08:55 Uhr:
+>>
+>>             Madwifi has default best effort queue "tuned" for throughout
+>>
+>>             and its parameters are different from mac80211 defaults when
+>>
+>>             qos  (WME) is disabled.
+>>
+>>             You would have to dump qos settings for both systems before
+>>
+>>             comparing them. I guess the easiest way is to make sure QoS
+>>
+>>             is enabled and send video type of packets with iperf ...
+>>             -S 0xa0
+>>
+>>             Wojtek
+>>
+>>
+>>             On 30/01/17 20:43, Toke Høiland-Jørgensen wrote:
+>>             > Klaus Kinski <jpo234@outlook.de
+>>             <mailto:jpo234@outlook.de>> writes:
+>>             >
+>>             >> The captures I used to create the statistics are here:
+>>             >>
+>>             https://drive.google.com/open?id=0ByFGz3ZH6JcYMGp0a05lYzBPNzA
+>>             >>
+>>             >> An obvious difference is, that Madwifi sends 5 packets
+>>             in a row
+>>             >> without waiting for an ACK whereas ath9k/mac80211
+>>             always seems to wait
+>>             >> for an ACK. This seems to point to the "net80211
+>>             aggressive mode
+>>             >> theory" https://wiki.freebsd.org/WifiAggressiveMode
+>>             <https://wiki.freebsd.org/WifiAggressiveMode>, IMHO.
+>>             > I'm not too familiar with that part of the stack, but
+>>             that seems
+>>             > reasonable, yeah. AFAIK the "aggresive mode" is a
+>>             pre-802.11n feature,
+>>             > though, which is why you won't see that in ath9k. In
+>>             802.11n this kind
+>>             > of bursting was replaced by aggregation, which you're
+>>             not getting any of
+>>             > since you're running in 802.11a mode, obviously.
+>>             >
+>>             > The lack of bursting will translate to slightly lower
+>>             throughput, which
+>>             > will be why you see fewer packets transmitted by ath9k.
+>>             Of course, if
+>>             > your receiver supported aggregation, the numbers would
+>>             look dramatically
+>>             > better in ath9k's favour... ;)
+>>             >
+>>             > -Toke
+>>
