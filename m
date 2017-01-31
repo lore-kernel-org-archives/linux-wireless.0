@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54181 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933241AbdA0RvI (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:32916 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751889AbdAaMm6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 12:51:08 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 31 Jan 2017 07:42:58 -0500
+Received: by mail-ot0-f193.google.com with SMTP id f9so41725317otd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2017 04:42:08 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [v2,02/13] wil6210: add disable_ap_sme module parameter
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1484226365-10433-3-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1484226365-10433-3-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Dedy Lansky <qca_dlansky@qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-ID: <ac37937bc2304d6197e6112c325d1bc5@eusanexr01a.eu.qualcomm.com> (sfid-20170127_185411_536879_3664584D)
-Date: Fri, 27 Jan 2017 09:50:52 -0800
+In-Reply-To: <afccf3d4-b095-1a64-fd08-d559b44bcb72@neratec.com>
+References: <HE1PR0701MB1803E46BC8EC38D682361523FC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <87lgtsjz6o.fsf@toke.dk> <CAA93jw5w6MaegbE+n9=-+F59vXTjEFGOH94Q=XYxiAqFKHeVfw@mail.gmail.com>
+ <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <87o9yo2v0s.fsf@toke.dk> <d23a5b33-9ec5-a3c3-81ed-91d8e9abe67a@neratec.com>
+ <HE1PR0701MB18031C6DF4DF46865EBF9E87FC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <f5adadba-2764-a7cc-c661-7061545341a7@neratec.com> <CAEvAWuGa6YSFA80mC0+saoGO5VWGNqfbyw94Nv0vfhSoQfD-Jw@mail.gmail.com>
+ <HE1PR0701MB1803B7D5D0182EF7DD662B18FC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <afccf3d4-b095-1a64-fd08-d559b44bcb72@neratec.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 31 Jan 2017 13:42:07 +0100
+Message-ID: <CACna6rzaUWa9KbiN2A-WuhrBp3WEWbTWJ2NoaPAD5q+k3zk6Eg@mail.gmail.com> (sfid-20170131_134717_295499_1EBC00E9)
+Subject: Re: Packet throughput (and those iperf data rate) with mac80211/ath9k
+ is 20% worse than net80211/madwifi
+To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Cc: Klaus Kinski <jpo234@outlook.de>,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+        Dave Taht <dave.taht@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-> From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-> 
-> By default, AP SME is handled by driver/FW.
-> In case disable_ap_sme is true, driver doesn't turn-on
-> WIPHY_FLAG_HAVE_AP_SME and the responsibility for
-> AP SME is passed to user space.
-> 
-> With AP SME disabled, driver reports assoc request frame
-> to user space which is then responsible for sending assoc
-> response frame and for sending NL80211_CMD_NEW_STATION.
-> Driver also reports disassoc frame to user space
-> which should then send NL80211_CMD_DEL_STATION.
-> 
-> NL80211_CMD_SET_STATION with NL80211_STA_FLAG_AUTHORIZED
-> is used by user space to allow/disallow data transmit.
-> 
-> Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+On 31 January 2017 at 10:52, Wojciech Dubowik
+<wojciech.dubowik@neratec.com> wrote:
+> On 31/01/17 10:46, Klaus Kinski wrote:
+>>
+>> BTW, if I read the sources correctly, than IBSS mode uses the TXQ
+>> parameters from ieee80211_set_wmm_default with enable_qos = false which
+>> means that qparam.txop = 0, e.g. bursting is disabled. Am I right?
+>
+> I guess so. But you need to look also at contention window sizes because it
+> make a big impact on throughout with retries and collisions.
 
-11 patches applied to ath-next branch of ath.git, thanks.
-
-849a564b7e28 wil6210: add disable_ap_sme module parameter
-a351f2f537b7 wil6210: support loading dedicated image for sparrow-plus devices
-af3db60a3033 wil6210: remove __func__ from debug printouts
-0d2370e939ac wil6210: support new WMI-only FW capability
-4d4c4dc324b4 wil6210: missing reinit_completion in wmi_call
-3ee908dc3b48 wil6210: protect against false interrupt during reset sequence
-a895cb8b990c wil6210: fix for broadcast workaround in PBSS
-a52fb913aee9 wil6210: align to latest auto generated wmi.h
-9d865ee232ec wil6210: report association ID (AID) per station in debugfs
-c3bfea05a6fd wil6210: option to override A-BFT length in start AP/PCP
-78484c44e4b3 wil6210: convert symbolic permissions to octal permissions
-
--- 
-https://patchwork.kernel.org/patch/9513175/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Klaus: I feel you keep dropping linux-wireless when sending your
+replies. Please don't do that.
