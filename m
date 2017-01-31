@@ -1,63 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44123 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752487AbdASNTQ (ORCPT
+Received: from mail-wj0-f174.google.com ([209.85.210.174]:32781 "EHLO
+        mail-wj0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751042AbdAaL5t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 08:19:16 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 31 Jan 2017 06:57:49 -0500
+Received: by mail-wj0-f174.google.com with SMTP id la6so3485193wjc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2017 03:56:55 -0800 (PST)
+Subject: Re: [PATCH 1/2] brcmfmac: check brcmf_bus_get_memdump result for
+ error
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170130150952.7133-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ebe3e543-51c3-140a-5140-c2c32afec74e@broadcom.com> (sfid-20170131_125755_778122_81F2599F)
+Date: Tue, 31 Jan 2017 12:56:53 +0100
 MIME-Version: 1.0
-Subject: Re: ath10k: Fix per station tx bit rate reporting
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1484303403-8908-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1484303403-8908-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <4ded1e01b9ae4c168a0d2ca73b7b72c2@euamsexm01a.eu.qualcomm.com> (sfid-20170119_141920_741571_496719FC)
-Date: Thu, 19 Jan 2017 14:19:02 +0100
+In-Reply-To: <20170130150952.7133-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> Not clearing the previous tx bit rate status
-> results in a ambigous tx bit rate reporting to
-> mac80211/cfg80211, for example the previous bit
-> rate status would have been marked as legacy rate
-> , while the current rate would have been an HT/VHT
-> rate with the tx bit rate flags set and this results
-> in exporting tx bitrate as legacy rate but with HT/VHT
-> rate flags set, fix this by clearing the tx bitrate
-> status for each event. This also fixes the below
-> warning when we do:
-> 
-> iw dev wlan#N station dump
-> 
-> WARNING: net/wireless/util.c:1222 cfg80211
-> 
-> [<c022f104>] (warn_slowpath_null) from [<bf3b9adc>]
-> (cfg80211_calculate_bitrate+0x110/0x1f4 [cfg80211])
-> [<bf3b9adc>] (cfg80211_calculate_bitrate [cfg80211]) from
-> [<bf3dcd54>] (nl80211_put_sta_rate+0x44/0x1dc [cfg80211])
-> [<bf3dcd54>] (nl80211_put_sta_rate [cfg80211]) from
-> [<bf3cbc34>] (nl80211_set_interface+0x724/0xd70 [cfg80211])
-> [<bf3cbc34>] (nl80211_set_interface [cfg80211]) from
-> [<bf3d0a18>] (nl80211_dump_station+0xdc/0x100 [cfg80211])
-> [<bf3d0a18>] (nl80211_dump_station [cfg80211])
-> 
-> Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
 
-0f8a2b7772f7 ath10k: fix per station tx bit rate reporting
+On 30-1-2017 16:09, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This method may be unsupported (see: USB bus) or may just fail (see:
+> SDIO bus).
+> While at it rework logic in brcmf_sdio_bus_get_memdump function to avoid
+> too many conditional code nesting levels.
 
--- 
-https://patchwork.kernel.org/patch/9514989/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  .../wireless/broadcom/brcm80211/brcmfmac/debug.c   | 23 +++++++++++++++-------
+>  1 file changed, 16 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> index e64557c35553..6f8a4b074c31 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> @@ -32,16 +32,25 @@ static int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+>  {
+>  	void *dump;
+>  	size_t ramsize;
+> +	int err;
+>  
+>  	ramsize = brcmf_bus_get_ramsize(bus);
+> -	if (ramsize) {
+> -		dump = vzalloc(len + ramsize);
+> -		if (!dump)
+> -			return -ENOMEM;
+> -		memcpy(dump, data, len);
+> -		brcmf_bus_get_memdump(bus, dump + len, ramsize);
+> -		dev_coredumpv(bus->dev, dump, len + ramsize, GFP_KERNEL);
+> +	if (!ramsize)
+> +		return -ENOTSUPP;
+> +
+> +	dump = vzalloc(len + ramsize);
+> +	if (!dump)
+> +		return -ENOMEM;
+> +
+> +	memcpy(dump, data, len);
+> +	err = brcmf_bus_get_memdump(bus, dump + len, ramsize);
+> +	if (err) {
+> +		vfree(dump);
+> +		return err;
+>  	}
+> +
+> +	dev_coredumpv(bus->dev, dump, len + ramsize, GFP_KERNEL);
+> +
+>  	return 0;
+>  }
+>  
+> 
