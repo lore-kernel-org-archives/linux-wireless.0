@@ -1,70 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37832 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753250AbdBCOi0 (ORCPT
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:33714 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751783AbdBAX0f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:38:26 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:37:48 +0200
-Message-Id: <20170203143812.7525-2-luca@coelho.fi> (sfid-20170203_153840_992229_C296F26C)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 01/25] iwlwifi: mvm: fix PS-Poll enablement
+        Wed, 1 Feb 2017 18:26:35 -0500
+Received: by mail-pg0-f49.google.com with SMTP id 204so113051281pge.0
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2017 15:26:35 -0800 (PST)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Mart Raudsepp <leio@gentoo.org>
+Subject: [PATCH] wcn36xx: Implement cancel_hw_scan
+Date: Wed,  1 Feb 2017 07:27:47 -0800
+Message-Id: <20170201152747.838-1-bjorn.andersson@linaro.org> (sfid-20170202_002657_458059_332A4BB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In the even that the wcn36xx interface is brought down while a hw_scan
+is active we must abort and wait for the ongoing scan to signal
+completion to mac80211.
 
-We added the uAPSD enabled ACs and that made the
-firmware choose to pull frames with uAPSD trigger
-frames instead of PS-Poll.
-Fix that.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reported-by: Mart Raudsepp <leio@gentoo.org>
+Fixes: 886039036c20 ("wcn36xx: Implement firmware assisted scan")
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/power.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/main.c    | 25 ++++++++++++++++++++++++-
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  1 +
+ 2 files changed, 25 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index af6d10c23e5a..3a8e9379da2f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -174,6 +174,14 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
- 	enum ieee80211_ac_numbers ac;
- 	bool tid_found = false;
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index a24edf33be93..bb7110f7fc86 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -574,6 +574,7 @@ static void wcn36xx_hw_scan_worker(struct work_struct *work)
+ 	struct cfg80211_scan_request *req = wcn->scan_req;
+ 	u8 channels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS_EX];
+ 	struct cfg80211_scan_info scan_info = {};
++	bool aborted = false;
+ 	int i;
  
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+	/* set advanced pm flag with no uapsd ACs to enable ps-poll */
-+	if (mvmvif->dbgfs_pm.use_ps_poll) {
-+		cmd->flags |= cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
-+		return;
-+	}
-+#endif
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 scan %d channels worker\n", req->n_channels);
+@@ -585,6 +586,13 @@ static void wcn36xx_hw_scan_worker(struct work_struct *work)
+ 
+ 	wcn36xx_smd_init_scan(wcn, HAL_SYS_MODE_SCAN);
+ 	for (i = 0; i < req->n_channels; i++) {
++		mutex_lock(&wcn->scan_lock);
++		aborted = wcn->scan_aborted;
++		mutex_unlock(&wcn->scan_lock);
 +
- 	for (ac = IEEE80211_AC_VO; ac <= IEEE80211_AC_BK; ac++) {
- 		if (!mvmvif->queue_params[ac].uapsd)
- 			continue;
-@@ -204,16 +212,6 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
- 		}
++		if (aborted)
++			break;
++
+ 		wcn->scan_freq = req->channels[i]->center_freq;
+ 		wcn->scan_band = req->channels[i]->band;
+ 
+@@ -596,7 +604,7 @@ static void wcn36xx_hw_scan_worker(struct work_struct *work)
  	}
+ 	wcn36xx_smd_finish_scan(wcn, HAL_SYS_MODE_SCAN);
  
--	if (!(cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK))) {
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--		/* set advanced pm flag with no uapsd ACs to enable ps-poll */
--		if (mvmvif->dbgfs_pm.use_ps_poll)
--			cmd->flags |=
--				cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
--#endif
--		return;
--	}
--
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK);
+-	scan_info.aborted = false;
++	scan_info.aborted = aborted;
+ 	ieee80211_scan_completed(wcn->hw, &scan_info);
  
- 	if (cmd->uapsd_ac_flags == (BIT(IEEE80211_AC_VO) |
+ 	mutex_lock(&wcn->scan_lock);
+@@ -615,6 +623,8 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
+ 		mutex_unlock(&wcn->scan_lock);
+ 		return -EBUSY;
+ 	}
++
++	wcn->scan_aborted = false;
+ 	wcn->scan_req = &hw_req->req;
+ 	mutex_unlock(&wcn->scan_lock);
+ 
+@@ -623,6 +633,18 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static void wcn36xx_cancel_hw_scan(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif)
++{
++	struct wcn36xx *wcn = hw->priv;
++
++	mutex_lock(&wcn->scan_lock);
++	wcn->scan_aborted = true;
++	mutex_unlock(&wcn->scan_lock);
++
++	cancel_work_sync(&wcn->scan_work);
++}
++
+ static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
+ 					 enum nl80211_band band)
+ {
+@@ -1034,6 +1056,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
+ 	.tx			= wcn36xx_tx,
+ 	.set_key		= wcn36xx_set_key,
+ 	.hw_scan		= wcn36xx_hw_scan,
++	.cancel_hw_scan		= wcn36xx_cancel_hw_scan,
+ 	.bss_info_changed	= wcn36xx_bss_info_changed,
+ 	.set_rts_threshold	= wcn36xx_set_rts_threshold,
+ 	.sta_add		= wcn36xx_sta_add,
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 571e9f76da7e..b52b4da9a967 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -220,6 +220,7 @@ struct wcn36xx {
+ 	int			scan_freq;
+ 	int			scan_band;
+ 	struct mutex		scan_lock;
++	bool			scan_aborted;
+ 
+ 	/* DXE channels */
+ 	struct wcn36xx_dxe_ch	dxe_tx_l_ch;	/* TX low */
 -- 
 2.11.0
