@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42440 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750949AbdBXGmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 01:42:35 -0500
-Message-ID: <1487918553.2540.9.camel@sipsolutions.net> (sfid-20170224_074240_470028_BA473F7E)
-Subject: Re: [PATCH 161/306] mac80211-hwsim: Improve logging.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Fri, 24 Feb 2017 07:42:33 +0100
-In-Reply-To: <1487896109-23851-6-git-send-email-greearb@candelatech.com> (sfid-20170224_012924_068303_22EAD8CA)
-References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
-         <1487896109-23851-6-git-send-email-greearb@candelatech.com>
-         (sfid-20170224_012924_068303_22EAD8CA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33793 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbdBAWaE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Feb 2017 17:30:04 -0500
+Received: by mail-oi0-f67.google.com with SMTP id w144so31975842oiw.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2017 14:30:03 -0800 (PST)
+Subject: Re: [PATCH 05/11 V2] rtlwifi: btcoexist: Change logging in
+ halbtc8192e2ant.c (fwd)
+To: Julia Lawall <julia.lawall@lip6.fr>
+References: <alpine.DEB.2.20.1702012318350.2021@hadrien>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        Ping-Ke Shih <pkshih@realtek.com>, kbuild-all@01.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <58b1b883-9a57-b667-2a7b-b74de24af87a@lwfinger.net> (sfid-20170201_233007_415635_BD0C8DC5)
+Date: Wed, 1 Feb 2017 16:30:01 -0600
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.20.1702012318350.2021@hadrien>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 02/01/2017 04:19 PM, Julia Lawall wrote:
+> Indeed, there are the four cases where the then and else branches are the
+> same.  Is it generated code?
+>
 
-> +		static unsigned int cnt = 0;
-> +		/* This is fairly common, and usually not a
-> bug.  So, print errors
-> +		   rarely. */
-> +		if (((cnt++ & 0x3FF) == 0x3FF) && net_ratelimit())
-> +			printk(KERN_DEBUG " hwsim rx-nl: radio %pM
-> idle: %d or not started: %d cnt: %d\n",
-> +			       dst, data2->idle, !data2->started,
-> cnt);
->  		goto out;
->  	}
+I am at least two coding groups removed from the original authors. I have no 
+idea how the code was generated. I will fix the problems.
 
-You just added that in the previous patch...
-
-Please take a bit more care, or I'll eventually stop looking at your
-patches since things like that seem to happen over and over again. I
-don't get a feeling that you actually care about getting things
-upstream much anyway.
-
-johannes
+Larry
