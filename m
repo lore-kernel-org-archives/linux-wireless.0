@@ -1,94 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:33296 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750992AbdBUJ5L (ORCPT
+Received: from smtpout.microchip.com ([198.175.253.82]:36568 "EHLO
+        email.microchip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751404AbdBAJkc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 04:57:11 -0500
-Received: by mail-qt0-f170.google.com with SMTP id b16so57362438qte.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 01:57:11 -0800 (PST)
-Subject: Re: [PATCH V3 2/2] brcmfmac: don't warn user about NVRAM if fallback
- to platform one succeeds
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20170216072636.7128-1-zajec5@gmail.com>
- <20170221094754.15406-1-zajec5@gmail.com>
- <20170221094754.15406-2-zajec5@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <9ac0557a-2746-bc61-7397-a7fa58a02787@broadcom.com> (sfid-20170221_105739_247965_2D0941D4)
-Date: Tue, 21 Feb 2017 10:57:07 +0100
+        Wed, 1 Feb 2017 04:40:32 -0500
+Subject: Re: [PATCH 4.10-rc3 03/13] net: macb: fix build errors when
+ linux/phy*.h is removed from net/dsa.h
+To: Russell King <rmk+kernel@armlinux.org.uk>,
+        <linux-mips@linux-mips.org>, <linux-nfs@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <target-devel@vger.kernel.org>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+ <E1cYdws-0000W9-GV@rmk-PC.armlinux.org.uk>
+CC: "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>
+From: Nicolas Ferre <nicolas.ferre@atmel.com>
+Message-ID: <0a75edf8-df17-fb7f-294f-8c1e04479a3b@atmel.com> (sfid-20170201_104044_612658_6CDD6C06)
+Date: Wed, 1 Feb 2017 10:40:53 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170221094754.15406-2-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <E1cYdws-0000W9-GV@rmk-PC.armlinux.org.uk>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21-2-2017 10:47, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+Le 31/01/2017 à 20:18, Russell King a écrit :
+> drivers/net/ethernet/cadence/macb.h:862:33: sparse: expected ; at end of declaration
+> drivers/net/ethernet/cadence/macb.h:862:33: sparse: Expected } at end of struct-union-enum-specifier
+> drivers/net/ethernet/cadence/macb.h:862:33: sparse: got phy_interface
+> drivers/net/ethernet/cadence/macb.h:877:1: sparse: Expected ; at the end of type declaration
+> drivers/net/ethernet/cadence/macb.h:877:1: sparse: got }
+> In file included from drivers/net/ethernet/cadence/macb_pci.c:29:0:
+> drivers/net/ethernet/cadence/macb.h:862:2: error: unknown type name 'phy_interface_t'
+>      phy_interface_t  phy_interface;
+>      ^~~~~~~~~~~~~~~
 > 
-> Failing to load NVRAM file isn't critical if we manage to get platform
-> one in the fallback path. It means warnings like:
-> [   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error -2
-> are unnecessary & disturbing for people with platform NVRAM. This is
-> very common case for Broadcom home routers.
+> Add linux/phy.h to macb.h
 > 
-> So instead of printing warning immediately with the firmware subsystem
-> let's first try our fallback code. If that fails as well, then it's a
-> right moment to print an error.
-> 
-> This should reduce amount of false reports from users seeing this
-> warning while having wireless working perfectly fine.
+> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-I think FW_OPT_NO_WARN does not cover all warnings in firmware_class
-although I did not check. Anyway...
+Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 > ---
-> V2: Update commit message as it wasn't clear enough (thanks Andy) & add extra
->     messages to the firmware.c.
-> V3: Set FW_OPT_UEVENT to don't change behavior
+>  drivers/net/ethernet/cadence/macb.h | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> Kalle, Arend: this patch is strictly related to the bigger 1/2. Could you ack
-> this change as I expect this patchset to be picked by Ming, Luis or Greg?
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> index c7c1e9906500..6dbcceff2529 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> @@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->  		raw_nvram = false;
->  	} else {
->  		data = bcm47xx_nvram_get_contents(&data_len);
-> -		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
-> -			goto fail;
-> +		if (!data) {
-> +			brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
-> +			if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
-> +				brcmf_err("Loading NVRAM from %s and using platform one both failed\n",
-> +					  fwctx->nvram_name);
-> +				goto fail;
-> +			}
-> +		}
->  		raw_nvram = true;
->  	}
+> diff --git a/drivers/net/ethernet/cadence/macb.h b/drivers/net/ethernet/cadence/macb.h
+> index d67adad67be1..383da8cf5f6d 100644
+> --- a/drivers/net/ethernet/cadence/macb.h
+> +++ b/drivers/net/ethernet/cadence/macb.h
+> @@ -10,6 +10,8 @@
+>  #ifndef _MACB_H
+>  #define _MACB_H
 >  
-> @@ -504,9 +510,10 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
->  		return;
->  	}
->  	fwctx->code = fw;
-> -	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
-> -				      fwctx->dev, GFP_KERNEL, fwctx,
-> -				      brcmf_fw_request_nvram_done);
-> +	ret = request_firmware_async(THIS_MODULE,
-> +				     FW_OPT_UEVENT | FW_OPT_NO_WARN,
-> +				     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
-> +				     fwctx, brcmf_fw_request_nvram_done);
+> +#include <linux/phy.h>
+> +
+>  #define MACB_GREGS_NBR 16
+>  #define MACB_GREGS_VERSION 2
+>  #define MACB_MAX_QUEUES 8
+> 
+
+
+-- 
+Nicolas Ferre
