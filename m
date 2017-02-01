@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f169.google.com ([74.125.82.169]:34782 "EHLO
-        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752351AbdBUSwe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47744 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753695AbdBARox (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 13:52:34 -0500
+        Wed, 1 Feb 2017 12:44:53 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170221.131858.949421414784612398.davem@davemloft.net>
-References: <alpine.LSU.2.20.1702201508280.24579@cbobk.fhfr.pm>
- <CA+55aFxLmgA7drrGfUJmCRPT-A74ROYf6GQHFGO5pzVjZ0dL7Q@mail.gmail.com>
- <87d1eb99dq.fsf_-_@purkki.adurom.net> <20170221.131858.949421414784612398.davem@davemloft.net>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 21 Feb 2017 10:52:33 -0800
-Message-ID: <CA+55aFyqH3WAKsD_AaCe905zJbPzTXGygu2eiD1L0d6c2sAkGA@mail.gmail.com> (sfid-20170221_195302_373615_E1A7F486)
-Subject: Re: ath10k regression on XPS13
-To: David Miller <davem@davemloft.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Jiri Kosina <jikos@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER"
-        <ath10k@lists.infradead.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 01 Feb 2017 23:14:50 +0530
+From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: add support for controlling tx power to a
+ station
+In-Reply-To: <cbb69298-391d-b3d5-5a84-5792fe170f95@candelatech.com>
+References: <1485888165-23504-1-git-send-email-arnagara@qti.qualcomm.com>
+ <cbb69298-391d-b3d5-5a84-5792fe170f95@candelatech.com>
+Message-ID: <0c8b88d40b3adc0f09ade2780ed1d994@codeaurora.org> (sfid-20170201_184533_171753_0EB94292)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 21, 2017 at 10:18 AM, David Miller <davem@davemloft.net> wrote:
->
-> Kalle I really wanted to send my net-next pull request to Linus later
-> today.  But I guess I have to wait for this ath10k first.
+On 2017-02-01 00:27, Ben Greear wrote:
+> On 01/31/2017 10:42 AM, Ashok Raj Nagarajan wrote:
+>> This patch will add the support to control the transmit power for 
+>> traffic
+>> to a station associated with the AP. Userspace provide the transmit 
+>> power
+>> value in mBm units and the allowed range is from 0 to 70. Underlying 
+>> FW
+> 
+> How did you come up with 70 mBm as the limit.  This is only 7dBm?
+> 
+> I would expect it to match the range of normal tx-power which is likely 
+> up to
+> 30 dBm or so on some NICs (not counting regulatory limit).
+> 
 
-Feel free to send it to me - it sounds like the regression is
- (a) easy to work around
-and
- (b) has a fix coming up.
+I think I will have to re-word the commit log a bit. ath10k driver would 
+get the value in dBm only and the range is from 0 to 70 dBm. Looking at 
+the db.txt, I see a max value of 44 dm for a 60GHz channel. SO to be 
+little future proof having a greater acceptable range from user. The 
+final tx power will be calculated based on this extra parameter the user 
+passes on, including the regulatory limit for the channel.
 
-And it won't even be something that I personally notice, since I have
-the prev-gen XPS13 that has intel wireless.
+Thanks,
+Ashok
 
-              Linus
+> Thanks,
+> Ben
