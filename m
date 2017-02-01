@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42312 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753702AbdBNL2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 06:28:33 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, greearb@candelatech.com,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/4] ieee80211: define HT operation CCFS2 field
-Date: Tue, 14 Feb 2017 12:28:25 +0100
-Message-Id: <20170214112827.28216-2-johannes@sipsolutions.net> (sfid-20170214_123015_885314_8E5B1009)
-In-Reply-To: <20170214112827.28216-1-johannes@sipsolutions.net>
-References: <20170214112827.28216-1-johannes@sipsolutions.net>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:36568 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbdBAVJT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Feb 2017 16:09:19 -0500
+Received: by mail-ot0-f193.google.com with SMTP id 36so46776571otx.3
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2017 13:09:18 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/7] Make changes in debugging in btcoexist
+Date: Wed,  1 Feb 2017 15:08:50 -0600
+Message-Id: <20170201210857.26516-1-Larry.Finger@lwfinger.net> (sfid-20170201_220926_034323_1ED0E824)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+These changes convert the various files in btcoexist to use the same
+debugging macros as the rest of the parts of the drivers. In addition,
+one typo is fixed in rtl8821ae.
 
-The Channel Center Frequency Segment 2 field is used in
-802.11-2016 for encoding the actual channel position of
-the 80+80/160 MHz channel, if the max NSS is restricted.
-This is used for backwards compatibility.
+This is all material for 4.11.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h | 2 ++
- 1 file changed, 2 insertions(+)
+Larry
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4a15e77d9d66..4a7200c6c9ea 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1411,6 +1411,8 @@ struct ieee80211_ht_operation {
- #define		IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED	3
- #define IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT		0x0004
- #define IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT		0x0010
-+#define IEEE80211_HT_OP_MODE_CCFS2_SHIFT		5
-+#define IEEE80211_HT_OP_MODE_CCFS2_MASK			0x1fe0
- 
- /* for stbc_param */
- #define IEEE80211_HT_STBC_PARAM_DUAL_BEACON		0x0040
+
+Larry Finger (7):
+  rtlwifi: rtl8821ae: Fix typo in symbol for bandwidth numbers
+  rtlwifi: btcoexist: Convert halbtc8192e2ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8723b1ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8723b2ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8821a1ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8821a2ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtcoutsrc.c to use standard debugging
+
+ .../wireless/realtek/rtlwifi/btcoexist/Makefile    |    7 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  237 +++--
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  827 ++++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  973 +++++++++---------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  898 +++++++++--------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 1055 +++++++++++---------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |    4 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   12 -
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   |   10 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |    8 +-
+ 10 files changed, 2163 insertions(+), 1868 deletions(-)
+
 -- 
-2.9.3
+2.10.2
