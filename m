@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752933AbdBUOc1 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53358 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750947AbdBASFL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:27 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 07/10] wil6210: protect list of pending wmi events during flush
-Date: Tue, 21 Feb 2017 16:32:05 +0200
-Message-Id: <1487687528-12832-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153234_465446_0DD542DB)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 1 Feb 2017 13:05:11 -0500
+Subject: Re: [PATCH v2] ath10k: add support for controlling tx power to a
+ station
+To: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+References: <1485888165-23504-1-git-send-email-arnagara@qti.qualcomm.com>
+ <cbb69298-391d-b3d5-5a84-5792fe170f95@candelatech.com>
+ <0c8b88d40b3adc0f09ade2780ed1d994@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        ath10k@lists.infradead.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <28c201cb-5546-0537-f85c-4f1b84a8d3f0@candelatech.com> (sfid-20170201_190756_189077_6C748F90)
+Date: Wed, 1 Feb 2017 10:05:09 -0800
+MIME-Version: 1.0
+In-Reply-To: <0c8b88d40b3adc0f09ade2780ed1d994@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+On 02/01/2017 09:44 AM, Ashok Raj Nagarajan wrote:
+> On 2017-02-01 00:27, Ben Greear wrote:
+>> On 01/31/2017 10:42 AM, Ashok Raj Nagarajan wrote:
+>>> This patch will add the support to control the transmit power for traffic
+>>> to a station associated with the AP. Userspace provide the transmit power
+>>> value in mBm units and the allowed range is from 0 to 70. Underlying FW
+>>
+>> How did you come up with 70 mBm as the limit.  This is only 7dBm?
+>>
+>> I would expect it to match the range of normal tx-power which is likely up to
+>> 30 dBm or so on some NICs (not counting regulatory limit).
+>>
+>
+> I think I will have to re-word the commit log a bit. ath10k driver would get the value in dBm only and the range is from 0 to 70 dBm. Looking at the db.txt, I
+> see a max value of 44 dm for a 60GHz channel. SO to be little future proof having a greater acceptable range from user. The final tx power will be calculated
+> based on this extra parameter the user passes on, including the regulatory limit for the channel.
 
-When flush is done, pending events list is manipulated
-without taking the proper spinlock, which could lead to
-memory corruption if list is manipulated by wmi worker
-or by interrupt routine.
+Why not just accept any value that fits within the storage (u16, probably).  The regulatory logic
+and other constraints can already make sure that the tx-power is not out-of-bounds, so the user cannot
+really break something by attempting to set a large value.
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index a2a895b..02ccdae 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1738,14 +1738,19 @@ int wmi_new_sta(struct wil6210_priv *wil, const u8 *mac, u8 aid)
- 
- void wmi_event_flush(struct wil6210_priv *wil)
- {
-+	ulong flags;
- 	struct pending_wmi_event *evt, *t;
- 
- 	wil_dbg_wmi(wil, "event_flush\n");
- 
-+	spin_lock_irqsave(&wil->wmi_ev_lock, flags);
-+
- 	list_for_each_entry_safe(evt, t, &wil->pending_wmi_ev, list) {
- 		list_del(&evt->list);
- 		kfree(evt);
- 	}
-+
-+	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
- }
- 
- static bool wmi_evt_call_handler(struct wil6210_priv *wil, int id,
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
