@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp06.msg.oleane.net ([62.161.4.6]:36985 "EHLO
-        smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932120AbdBVN4j (ORCPT
+Received: from mail.free-electrons.com ([62.4.15.54]:47158 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751086AbdBAK11 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Feb 2017 08:56:39 -0500
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Valo, Kalle'" <kvalo@qca.qualcomm.com>
-Cc: "'OpenWrt Development List'" <openwrt-devel@lists.openwrt.org>,
-        "'linux-wireless'" <linux-wireless@vger.kernel.org>,
-        <ath10k@lists.infradead.org>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>        <566849DB.9040901@candelatech.com>        <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>        <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>        <87twbnueqv.fsf@kamboji.qca.qualcomm.com>        <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>        <871syn5fnb.fsf@qca.qualcomm.com>        <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>        <87polwq2nq.fsf@kamboji.qca.qualcomm.com>        <027001d28c42$5042c910$f0c85b30$@acksys.fr> <87efyrd6lv.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87efyrd6lv.fsf@kamboji.qca.qualcomm.com>
-Subject: RE: [OpenWrt-Devel] ATH10K VLAN firmware issue
-Date: Wed, 22 Feb 2017 14:55:09 +0100
-Message-ID: <02ef01d28d13$48181ac0$d8485040$@acksys.fr> (sfid-20170222_145644_023820_A1379D87)
+        Wed, 1 Feb 2017 05:27:27 -0500
+Date: Wed, 1 Feb 2017 11:27:14 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Russell King <rmk+kernel@armlinux.org.uk>
+Cc: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [PATCH 4.10-rc3 07/13] net: mvneta: fix build errors when
+ linux/phy*.h is removed from net/dsa.h
+Message-ID: <20170201112714.03fc236e@free-electrons.com> (sfid-20170201_112741_978325_4D77367D)
+In-Reply-To: <E1cYdxD-0000Wd-1D@rmk-PC.armlinux.org.uk>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+        <E1cYdxD-0000Wd-1D@rmk-PC.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Thanks for your answer, 
+Hello,
 
-	How I can know when this issue will be fixed in ath10k firmware
-mainline?
-	Do you know if Qualcomm publish a release note for this firmware?
+On Tue, 31 Jan 2017 19:18:59 +0000, Russell King wrote:
+> drivers/net/ethernet/marvell/mvneta.c:2694:26: error: storage size of 'status' isn't known
+> drivers/net/ethernet/marvell/mvneta.c:2695:26: error: storage size of 'changed' isn't known
+> drivers/net/ethernet/marvell/mvneta.c:2695:9: error: variable 'changed' has initializer but incomplete type
+> drivers/net/ethernet/marvell/mvneta.c:2709:2: error: implicit declaration of function 'fixed_phy_update_state' [-Werror=implicit-function-declaration]
+> 
+> Add linux/phy_fixed.h to mvneta.c
+> 
+> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-> -----Message d'origine-----
-> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] De la part de Valo, Kalle
-> Envoyé : mardi 21 février 2017 14:19
-> À : voncken
-> Cc : 'OpenWrt Development List'; 'linux-wireless';
-> ath10k@lists.infradead.org
-> Objet : Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-> 
-> voncken <cedric.voncken@acksys.fr> writes:
-> 
-> > Do you know if the firmware team planned to fix the VLAN issue on
-> > ath10k firmware?
-> 
-> I reported it forward only this week.
-> 
-> --
-> Kalle Valo
+Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
