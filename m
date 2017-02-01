@@ -1,59 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29801 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751109AbdBSOHg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45380 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbdBAFe0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 09:07:36 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "Hsu, Ryan" <ryanhsu@qca.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v3 0/8] ath10k sdio support
-Date: Sun, 19 Feb 2017 14:05:42 +0000
-Message-ID: <87y3x2ff7y.fsf@kamboji.qca.qualcomm.com> (sfid-20170219_150740_659136_9528CA90)
-References: <7b204d34-b791-ea78-cf4e-90e8fe1b79fb@gmail.com>
-        <5a3ad65a-8cc0-ab1a-dc95-a5fd31035bd7@gmail.com>
-In-Reply-To: <5a3ad65a-8cc0-ab1a-dc95-a5fd31035bd7@gmail.com> (Erik
-        Stromdahl's message of "Sun, 19 Feb 2017 14:52:14 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+        Wed, 1 Feb 2017 00:34:26 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Russell King <rmk+kernel@armlinux.org.uk>
+Cc: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [PATCH 4.10-rc3 12/13] net: ath5k: fix build errors when linux/phy*.h is removed from net/dsa.h
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+        <E1cYdxc-0000XC-N6@rmk-PC.armlinux.org.uk>
+Date: Wed, 01 Feb 2017 07:34:19 +0200
+In-Reply-To: <E1cYdxc-0000XC-N6@rmk-PC.armlinux.org.uk> (Russell King's
+        message of "Tue, 31 Jan 2017 19:19:24 +0000")
+Message-ID: <87r33ibhk4.fsf@codeaurora.org> (sfid-20170201_063438_875724_3817AB96)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+Russell King <rmk+kernel@armlinux.org.uk> writes:
 
-> I just noticed that Ryan Hsu submitted two patches containing similar
-> functionality to what I have in my tree on github. They have not been
-> integrated in the ath master yet, but they have been added to master-pend=
-ing.
+> Fix these errors reported by the 0-day builder by replacing the
+> linux/export.h include with linux/module.h.
 >
-> Below are the commits I am talking about
+> In file included from include/linux/platform_device.h:14:0,
+>                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
+> include/linux/device.h:1463:1: warning: data definition has no type or storage class
+>  module_init(__driver##_init); \
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> include/linux/device.h:1463:1: error: type defaults to 'int' in declaration of 'module_init' [-Werror=implicit-int]
+>  module_init(__driver##_init); \
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
+> In file included from include/linux/platform_device.h:14:0,
+>                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
+> include/linux/device.h:1468:1: warning: data definition has no type or storage class
+>  module_exit(__driver##_exit);
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> include/linux/device.h:1468:1: error: type defaults to 'int' in declaration of 'module_exit' [-Werror=implicit-int]
+>  module_exit(__driver##_exit);
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
+> In file included from include/linux/platform_device.h:14:0,
+>                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
+> drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_exit' defined but not used [-Wunused-function]
+>  module_platform_driver(ath_ahb_driver);
+>                         ^
+> include/linux/device.h:1464:20: note: in definition of macro 'module_driver'
+>  static void __exit __driver##_exit(void) \
+>                     ^~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_init' defined but not used [-Wunused-function]
+>  module_platform_driver(ath_ahb_driver);
+>                         ^
+> include/linux/device.h:1459:19: note: in definition of macro 'module_driver'
+>  static int __init __driver##_init(void) \
+>                    ^~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
 >
-> bc1054a15be3c962c83aa22476a3e9c1266da792 ath10k: improve the firmware
-> download time for QCA9377
-> db5af2a25bd8c1410ec4456d1d4f4e6ded2649ca ath10k: improve the firmware
-> download time for QCA6174
->
-> Since some of my patches overlap with these I think it would be best if
-> I add these to my tree and rewrite my patches.
->
-> If they haven't made it into master before I submit my updated patch seri=
-es
-> I will include them in my set.
->
-> Is this OK?
->
-> If they will be added to master soon there is no issue since I will of co=
-urse
-> rebase to the latest ath-YYYYMMDDHHmm before I submit anything.
+> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-That's ok, just mention this in the cover letter.
+Looks good to me:
 
-Even better is that if you can use master-pending from ath.git as the
-baseline (compared to the master branch normally recommended), Ryan's
-patches are there now. That way you don't need to apply anything extra
-to your tree. But I'm hoping to apply Ryan's patches soon anyway.
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
---=20
-Kalle Valo=
+I assume Dave will take this so I'll drop the patch from my queue.
+
+-- 
+Kalle Valo
