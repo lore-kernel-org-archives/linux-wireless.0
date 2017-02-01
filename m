@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40754 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752530AbdBGILM (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52196 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753728AbdBARgG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 03:11:12 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Dmitry Osipenko <digetx@gmail.com>
-Subject: Re: [PATCH] rtlwifi: rtl8192c-common: Fix "BUG: KASAN:
-References: <20170205162422.26963-1-Larry.Finger@lwfinger.net>
-Date: Tue, 07 Feb 2017 10:11:07 +0200
-In-Reply-To: <20170205162422.26963-1-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Sun, 5 Feb 2017 10:24:22 -0600")
-Message-ID: <877f525skk.fsf@codeaurora.org> (sfid-20170207_091122_742477_826EE8BF)
+        Wed, 1 Feb 2017 12:36:06 -0500
+Subject: Re: [PATCH v2 1/2] cfg80211: Add support to set tx power for a
+ station associated
+To: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
+ <12efc3d8-2274-a6e8-6d74-c06bf89762fb@candelatech.com>
+ <14f6b3acb8b26d0eb806148c0ee47fb0@codeaurora.org>
+Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        ath10k@lists.infradead.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <2b68dc12-44bf-f510-339a-3d987a88e8b5@candelatech.com> (sfid-20170201_183737_000911_FB9833B3)
+Date: Wed, 1 Feb 2017 09:36:00 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <14f6b3acb8b26d0eb806148c0ee47fb0@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On 02/01/2017 09:27 AM, Ashok Raj Nagarajan wrote:
 
-> Kernels built with CONFIG_KASAN=y report the following BUG for rtl8192cu
-> and rtl8192c-common:
+>>> +static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
+>>> +                         struct station_parameters *params)
+>>> +{
+>>> +    struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>>> +    enum nl80211_tx_power_setting type;
+>>> +    int idx;
+>>> +
+>>> +    if (!rdev->ops->set_tx_power ||
+>>> +        !wiphy_ext_feature_isset(&rdev->wiphy,
+>>> +                     NL80211_EXT_FEATURE_STA_TX_PWR))
+>>> +        return -EOPNOTSUPP;
+>>
+>> Maybe always let a user set to default value even if the driver does not
+>> support setting specific values?
+>>
 >
-> ==================================================================
-> BUG: KASAN: slab-out-of-bounds in rtl92c_dm_bt_coexist+0x858/0x1e40
->      [rtl8192c_common] at addr ffff8801c90edb08
-> Read of size 1 by task kworker/0:1/38
-> page:ffffea0007243800 count:1 mapcount:0 mapping:          (null)
->      index:0x0 compound_mapcount: 0
-> flags: 0x8000000000004000(head)
-> page dumped because: kasan: bad access detected
-> CPU: 0 PID: 38 Comm: kworker/0:1 Not tainted 4.9.7-gentoo #3
-> Hardware name: Gigabyte Technology Co., Ltd. To be filled by
->      O.E.M./Z77-DS3H, BIOS F11a 11/13/2013
-> Workqueue: rtl92c_usb rtl_watchdog_wq_callback [rtlwifi]
->   0000000000000000 ffffffff829eea33 ffff8801d7f0fa30 ffff8801c90edb08
->   ffffffff824c0f09 ffff8801d4abee80 0000000000000004 0000000000000297
->   ffffffffc070b57c ffff8801c7aa7c48 ffff880100000004 ffffffff000003e8
-> Call Trace:
->   [<ffffffff829eea33>] ? dump_stack+0x5c/0x79
->   [<ffffffff824c0f09>] ? kasan_report_error+0x4b9/0x4e0
->   [<ffffffffc070b57c>] ? _usb_read_sync+0x15c/0x280 [rtl_usb]
->   [<ffffffff824c0f75>] ? __asan_report_load1_noabort+0x45/0x50
->   [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40 [rtl8192c_common]
->   [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40 [rtl8192c_common]
->   [<ffffffffc06d0cbe>] ? rtl92c_dm_rf_saving+0x96e/0x1330 [rtl8192c_common]
-> ...
->
-> The problem is due to rtl8192ce and rtl8192cu sharing routines, and having
-> different layouts of struct rtl_pci_priv, which is used by rtl8192ce, and
-> struct rtl_usb_priv, which is used by rtl8192cu. The problem was resolved
-> by placing the struct bt_coexist_info at the head of each of those private
-> areas.
->
-> Reported-and-tested-by: Dmitry Osipenko <digetx@gmail.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> # 4.0+
-> Cc: Dmitry Osipenko <digetx@gmail.com>
+> IMHO, having some default value in place of non-valid values may not be the right way.
 
-Patchwork incorrectly parsed this mail, my guess is because of the long
-'========' line:
+If a user or user-space script wants to always be able to initialize things to default
+values, it would be nice if it did not have to pay specific attention to whether the
+NIC supports STA_TX_PWR feature or not.  Since a NIC that does not support this feature will always
+have sta TX power set to default by definition, that is why I think you should let
+the call succeed in that case.
 
-https://patchwork.kernel.org/patch/9556171/
-
-So I applied this manually to wireless-drivers-next:
-
-6773386f977c rtlwifi: rtl8192c-common: Fix "BUG: KASAN:
-
-Thanks.
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
