@@ -1,89 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47938 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752232AbdBMT4d (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50538 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752860AbdBAR3M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 14:56:33 -0500
-Subject: Re: VHT 160Mhz and nss related config.
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
- <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
- <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
- <589F50B8.4020609@candelatech.com>
- <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com> (sfid-20170213_205636_736508_C31625B0)
-Date: Mon, 13 Feb 2017 11:56:32 -0800
+        Wed, 1 Feb 2017 12:29:12 -0500
 MIME-Version: 1.0
-In-Reply-To: <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 01 Feb 2017 22:59:09 +0530
+From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 2/2] mac80211: store tx power value from user to
+ station
+In-Reply-To: <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
+References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
+ <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
+ <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
+Message-ID: <7584a5235b49b7799a2c15f91fb03794@codeaurora.org> (sfid-20170201_182918_962556_009F1374)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
-> Am 11.02.2017 um 18:58 schrieb Ben Greear:
->> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
->>> On 10 February 2017 at 20:22, Sebastian Gottschall
->>> <s.gottschall@dd-wrt.com> wrote:
->>>> i really can't believe this. if this is true the  160 mhz mode would not
->>>> make any sense.
->>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is identical. so
->>>> vht160 would not increase performance in any way
->>>
->>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
->>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
->>> transmit 2x2 rates to different MU-MIMO peers.
->>>
->>> That's the outstanding question I have - is it like, 2x2 MU only, or
->>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
->>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
->>> group each) all going at the same time?
->>>
->>> I'm .. not even sure how you're supposed to cleanly negotiate that you
->>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
->>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
->>
->> I think using the max-rx-rate logic might could imply this, but I am not sure
->> many drivers fill this out properly.
->>
->> Looks like a mess waiting to happen to me.
->>
->> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not certain you
->> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
->>
->> So, from what I know currently, 80+80 is not that useful on the 9984 NIC...
-> never tried 80+80 since i need to enhance the channel logic alot in my firmware code to handle it. would be great enough if vht160 would work as expected and
-> i'm not sure right now if it really works, even if the interface initialized correctly it assocs only with vht80
+On 2017-02-01 00:30, Ben Greear wrote:
+> On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
+>> This patch introduce a new driver callback drv_sta_set_txpwr. This API 
+>> will
+>> copy the transmit power value passed from user space and call the 
+>> driver
+>> callback to set the tx power for the station.
+>> 
+>> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+>> ---
+>>  include/net/mac80211.h    |  6 ++++++
+>>  net/mac80211/cfg.c        |  7 +++++++
+>>  net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
+>>  net/mac80211/driver-ops.h |  5 +++++
+>>  net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
+>>  5 files changed, 66 insertions(+)
+>> 
+>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>> index 5345d35..e059d5a 100644
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
+>>   *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 
+>> 2).
+>>   * @support_p2p_ps: indicates whether the STA supports P2P PS 
+>> mechanism or not.
+>>   * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by 
+>> rate control.
+>> + * @txpwr: indicates the tx power, in dBm, to be used when sending 
+>> data frames
+>> + *	to the STA. Value of 0 means, automatic (default) tx power.
+> 
+> Atheros NICs use 1/2 dBm increments internally, so maybe pass down mBm
+> to the driver so you don't
+> loose the granularity?  (Other NICs may potentially have even finer 
+> control.)
+> 
 
-Looks like it is working with the hack I posted:
-
-Station 04:f0:21:2e:49:65 (on wlan2)
-	inactive time:	0 ms
-	rx bytes:	64902998
-	rx packets:	37918
-	tx bytes:	64760298
-	tx packets:	42239
-	tx retries:	0
-	tx failed:	0
-	signal:  	-43 dBm
-	signal avg:	-42 dBm
-	tx bitrate:	1053.0 MBit/s VHT-MCS 6 160MHz VHT-NSS 2
-	rx bitrate:	1560.0 MBit/s VHT-MCS 8 160MHz short GI VHT-NSS 2
-	authorized:	yes
-	authenticated:	yes
-	preamble:	long
-	WMM/WME:	yes
-	MFP:		no
-	TDLS peer:	no
-	connected time:	156 seconds
+ath10k firmware expects values to be in dBm and the calculations 
+regarding 1/2 dBm is taken care in firmware.
 
 Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Ashok
+> Thanks,
+> Ben
