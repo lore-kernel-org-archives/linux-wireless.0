@@ -1,108 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57099 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751448AbdBBLwL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 06:52:11 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH v4 0/3] mt76: add new wireless driver for MediaTek MT76x2 PCIe chips
-Date: Thu,  2 Feb 2017 12:52:05 +0100
-Message-Id: <20170202115208.8614-1-nbd@nbd.name> (sfid-20170202_125216_096293_5C9793E1)
+Received: from mail2.candelatech.com ([208.74.158.173]:52294 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753050AbdBARiE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Feb 2017 12:38:04 -0500
+Subject: Re: [PATCH v2 2/2] mac80211: store tx power value from user to
+ station
+To: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
+ <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
+ <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
+ <7584a5235b49b7799a2c15f91fb03794@codeaurora.org>
+Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        ath10k@lists.infradead.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <35c617ff-c07a-b221-5742-b1487618bce7@candelatech.com> (sfid-20170201_183808_228767_2E05B1CD)
+Date: Wed, 1 Feb 2017 09:32:39 -0800
+MIME-Version: 1.0
+In-Reply-To: <7584a5235b49b7799a2c15f91fb03794@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes since v3:
-- DFS fixes
-- stability fixes
-- use wiphy_read_of_freq_limits
+On 02/01/2017 09:29 AM, Ashok Raj Nagarajan wrote:
+> On 2017-02-01 00:30, Ben Greear wrote:
+>> On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
+>>> This patch introduce a new driver callback drv_sta_set_txpwr. This API will
+>>> copy the transmit power value passed from user space and call the driver
+>>> callback to set the tx power for the station.
+>>>
+>>> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+>>> ---
+>>>  include/net/mac80211.h    |  6 ++++++
+>>>  net/mac80211/cfg.c        |  7 +++++++
+>>>  net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
+>>>  net/mac80211/driver-ops.h |  5 +++++
+>>>  net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
+>>>  5 files changed, 66 insertions(+)
+>>>
+>>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>>> index 5345d35..e059d5a 100644
+>>> --- a/include/net/mac80211.h
+>>> +++ b/include/net/mac80211.h
+>>> @@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
+>>>   *    This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
+>>>   * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
+>>>   * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
+>>> + * @txpwr: indicates the tx power, in dBm, to be used when sending data frames
+>>> + *    to the STA. Value of 0 means, automatic (default) tx power.
+>>
+>> Atheros NICs use 1/2 dBm increments internally, so maybe pass down mBm
+>> to the driver so you don't
+>> loose the granularity?  (Other NICs may potentially have even finer control.)
+>>
+>
+> ath10k firmware expects values to be in dBm and the calculations regarding 1/2 dBm is taken care in firmware.
 
-Changes since v2:
-- lots of checkpatch cleanups
-- various tx path (and other) fixes
-- use the new bitfield API
-- documented device tree bindings
+Other drivers may want more precision, so I still think you should store this in mBm instead
+of throwing away precision in the API.
 
-Felix Fietkau (3):
-  Documentation: dt: net: add mt76 wireless device binding
-  mt76: add common code shared between multiple chipsets
-  mt76: add driver code for MT76x2e
+A new and improved ath10k firmware may support 1/2 dBm units directly, for instance.
 
- .../bindings/net/wireless/mediatek,mt76.txt        |  25 +
- drivers/net/wireless/mediatek/Kconfig              |   1 +
- drivers/net/wireless/mediatek/Makefile             |   1 +
- drivers/net/wireless/mediatek/mt76/Kconfig         |  10 +
- drivers/net/wireless/mediatek/mt76/Makefile        |  15 +
- drivers/net/wireless/mediatek/mt76/debugfs.c       |  76 ++
- drivers/net/wireless/mediatek/mt76/dma.c           | 451 ++++++++++++
- drivers/net/wireless/mediatek/mt76/dma.h           |  38 +
- drivers/net/wireless/mediatek/mt76/eeprom.c        | 111 +++
- drivers/net/wireless/mediatek/mt76/mac80211.c      | 346 +++++++++
- drivers/net/wireless/mediatek/mt76/mmio.c          |  61 ++
- drivers/net/wireless/mediatek/mt76/mt76.h          | 355 ++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h        | 223 ++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_core.c   |  88 +++
- .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    | 133 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c    | 493 +++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h    |  80 +++
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    | 184 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.h    |  68 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 643 +++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h | 181 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   | 784 +++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    | 738 +++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    | 189 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 534 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    | 452 ++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h    | 136 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_pci.c    | 109 +++
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 691 ++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 566 +++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_trace.c  |  23 +
- drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  | 144 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     | 262 +++++++
- drivers/net/wireless/mediatek/mt76/trace.c         |  23 +
- drivers/net/wireless/mediatek/mt76/trace.h         |  71 ++
- drivers/net/wireless/mediatek/mt76/tx.c            | 511 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/util.c          |  78 ++
- drivers/net/wireless/mediatek/mt76/util.h          |  44 ++
- 38 files changed, 8938 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
- create mode 100644 drivers/net/wireless/mediatek/mt76/Kconfig
- create mode 100644 drivers/net/wireless/mediatek/mt76/Makefile
- create mode 100644 drivers/net/wireless/mediatek/mt76/debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/dma.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/dma.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mac80211.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mmio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_core.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_main.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/trace.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/trace.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/tx.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/util.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/util.h
+Thanks,
+Ben
+
+>
+> Thanks,
+> Ashok
+>> Thanks,
+>> Ben
+>
+
 
 -- 
-2.11.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
