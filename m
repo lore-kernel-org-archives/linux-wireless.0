@@ -1,90 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753032AbdBUOcb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51072 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754091AbdBARrc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:31 -0500
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 09/10] wil6210: correctly report locally generated disconnect in STA mode
-Date: Tue, 21 Feb 2017 16:32:07 +0200
-Message-Id: <1487687528-12832-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153243_884592_6C952913)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 1 Feb 2017 12:47:32 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 01 Feb 2017 23:17:30 +0530
+From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 2/2] mac80211: store tx power value from user to
+ station
+In-Reply-To: <35c617ff-c07a-b221-5742-b1487618bce7@candelatech.com>
+References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
+ <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
+ <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
+ <7584a5235b49b7799a2c15f91fb03794@codeaurora.org>
+ <35c617ff-c07a-b221-5742-b1487618bce7@candelatech.com>
+Message-ID: <cef8a7325bc010dc26de0bbd006ceff3@codeaurora.org> (sfid-20170201_184823_290932_C187F6BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+On 2017-02-01 23:02, Ben Greear wrote:
+> On 02/01/2017 09:29 AM, Ashok Raj Nagarajan wrote:
+>> On 2017-02-01 00:30, Ben Greear wrote:
+>>> On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
+>>>> This patch introduce a new driver callback drv_sta_set_txpwr. This 
+>>>> API will
+>>>> copy the transmit power value passed from user space and call the 
+>>>> driver
+>>>> callback to set the tx power for the station.
+>>>> 
+>>>> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+>>>> ---
+>>>>  include/net/mac80211.h    |  6 ++++++
+>>>>  net/mac80211/cfg.c        |  7 +++++++
+>>>>  net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
+>>>>  net/mac80211/driver-ops.h |  5 +++++
+>>>>  net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
+>>>>  5 files changed, 66 insertions(+)
+>>>> 
+>>>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>>>> index 5345d35..e059d5a 100644
+>>>> --- a/include/net/mac80211.h
+>>>> +++ b/include/net/mac80211.h
+>>>> @@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
+>>>>   *    This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 
+>>>> NOTE 2).
+>>>>   * @support_p2p_ps: indicates whether the STA supports P2P PS 
+>>>> mechanism or not.
+>>>>   * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by 
+>>>> rate control.
+>>>> + * @txpwr: indicates the tx power, in dBm, to be used when sending 
+>>>> data frames
+>>>> + *    to the STA. Value of 0 means, automatic (default) tx power.
+>>> 
+>>> Atheros NICs use 1/2 dBm increments internally, so maybe pass down 
+>>> mBm
+>>> to the driver so you don't
+>>> loose the granularity?  (Other NICs may potentially have even finer 
+>>> control.)
+>>> 
+>> 
+>> ath10k firmware expects values to be in dBm and the calculations 
+>> regarding 1/2 dBm is taken care in firmware.
+> 
+> Other drivers may want more precision, so I still think you should
+> store this in mBm instead
+> of throwing away precision in the API.
+> 
 
-Driver always invoke cfg80211_disconnected() with locally_generated as
-false.
-Fix this by reporting true whenever the disconnect is triggered from
-upper layers (cfg80211) or from within the driver itself (reset,
-deinit).
+Okay point taken! Instead of having the conversion happening now in API, 
+I will push it down to the ath10k driver.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 1 +
- drivers/net/wireless/ath/wil6210/main.c     | 5 ++++-
- drivers/net/wireless/ath/wil6210/wil6210.h  | 1 +
- drivers/net/wireless/ath/wil6210/wmi.c      | 1 +
- 4 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 39ee565..1981ec2 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -710,6 +710,7 @@ static int wil_cfg80211_disconnect(struct wiphy *wiphy,
- 		return 0;
- 	}
- 
-+	wil->locally_generated_disc = true;
- 	rc = wmi_call(wil, WMI_DISCONNECT_CMDID, NULL, 0,
- 		      WMI_DISCONNECT_EVENTID, NULL, 0,
- 		      WIL6210_DISCONNECT_TO_MS);
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 79aeb2b8..3206aea 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -279,7 +279,10 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 		if (test_bit(wil_status_fwconnected, wil->status)) {
- 			clear_bit(wil_status_fwconnected, wil->status);
- 			cfg80211_disconnected(ndev, reason_code,
--					      NULL, 0, false, GFP_KERNEL);
-+					      NULL, 0,
-+					      wil->locally_generated_disc,
-+					      GFP_KERNEL);
-+			wil->locally_generated_disc = false;
- 		} else if (test_bit(wil_status_fwconnecting, wil->status)) {
- 			cfg80211_connect_result(ndev, bssid, NULL, 0, NULL, 0,
- 						WLAN_STATUS_UNSPECIFIED_FAILURE,
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 09e2fce..cb825cc 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -614,6 +614,7 @@ struct wil6210_priv {
- 	int sinfo_gen;
- 	u32 ap_isolate; /* no intra-BSS communication */
- 	struct cfg80211_bss *bss; /* connected bss, relevant in STA mode */
-+	int locally_generated_disc; /* relevant in STA mode */
- 	/* interrupt moderation */
- 	u32 tx_max_burst_duration;
- 	u32 tx_interframe_timeout;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 02ccdae..9255c47 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1497,6 +1497,7 @@ int wmi_disconnect_sta(struct wil6210_priv *wil, const u8 *mac,
- 
- 	wil_dbg_wmi(wil, "disconnect_sta: (%pM, reason %d)\n", mac, reason);
- 
-+	wil->locally_generated_disc = true;
- 	if (del_sta) {
- 		ether_addr_copy(del_sta_cmd.dst_mac, mac);
- 		rc = wmi_call(wil, WMI_DEL_STA_CMDID, &del_sta_cmd,
--- 
-1.9.1
+> A new and improved ath10k firmware may support 1/2 dBm units directly,
+> for instance.
+> 
+> Thanks,
+> Ben
+> 
+>> 
+>> Thanks,
+>> Ashok
+>>> Thanks,
+>>> Ben
+>> 
