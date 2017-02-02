@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39168 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753789AbdBHL22 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50210 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750881AbdBBJKi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 06:28:28 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 13:23:07 +0200
-Message-Id: <20170208112322.29413-3-luca@coelho.fi> (sfid-20170208_122839_539081_62FC8872)
-In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
-Subject: [PATCH 02/17] iwlwifi: pcie: separate between SW and HW MSIX configuration
+        Thu, 2 Feb 2017 04:10:38 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] ath9k: fix race condition in enabling/disabling IRQs
+References: <20170125163654.66431-1-nbd@nbd.name>
+        <20170125163654.66431-4-nbd@nbd.name>
+        <ca32601f-81f1-aec0-9ab4-02631b226900@nbd.name>
+Date: Thu, 02 Feb 2017 11:10:34 +0200
+In-Reply-To: <ca32601f-81f1-aec0-9ab4-02631b226900@nbd.name> (Felix Fietkau's
+        message of "Fri, 27 Jan 2017 13:47:06 +0100")
+Message-ID: <871svhez5h.fsf@purkki.adurom.net> (sfid-20170202_101210_387013_F09D5B34)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Felix Fietkau <nbd@nbd.name> writes:
 
-The MSIX configuration flow includes two different stages:
-configuring the HW by writing to the IVAR table and configuring the SW
-to reflect the HW configuration.
-The HW configuration is needed on each HW reset,
-whereas the SW configuration is only needed during the init flow.
+> On 2017-01-25 17:36, Felix Fietkau wrote:
+>> The code currently relies on refcounting to disable IRQs from within the
+>> IRQ handler and re-enabling them again after the tasklet has run.
+>> 
+>> However, due to race conditions sometimes the IRQ handler might be
+>> called twice, or the tasklet may not run at all (if interrupted in the
+>> middle of a reset).
+>> 
+>> This can cause nasty imbalances in the irq-disable refcount which will
+>> get the driver permanently stuck until the entire radio has been stopped
+>> and started again (ath_reset will not recover from this).
+>> 
+>> Instead of using this fragile logic, change the code to ensure that
+>> running the irq handler during tasklet processing is safe, and leave the
+>> refcount untouched.
+>> 
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>
+> Please don't apply this yet, it looks like it might cause some
+> regressions on other devices. I will investigate.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+Ok, as patch 3 also had some changes I'll drop these now. So please
+resend the whole patch series once you know more.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index f795ebea4c4a..e7a26f594386 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1147,7 +1147,7 @@ static void iwl_pcie_map_rx_causes(struct iwl_trans *trans)
- 		iwl_write8(trans, CSR_MSIX_RX_IVAR(1), val);
- }
- 
--static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
-+static void iwl_pcie_conf_msix_hw(struct iwl_trans_pcie *trans_pcie)
- {
- 	struct iwl_trans *trans = trans_pcie->trans;
- 
-@@ -1170,12 +1170,20 @@ static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
- 	iwl_pcie_map_rx_causes(trans);
- 
- 	iwl_pcie_map_non_rx_causes(trans);
-+}
-+
-+static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
-+{
-+	struct iwl_trans *trans = trans_pcie->trans;
-+
-+	iwl_pcie_conf_msix_hw(trans_pcie);
- 
--	trans_pcie->fh_init_mask =
--		~iwl_read32(trans, CSR_MSIX_FH_INT_MASK_AD);
-+	if (!trans_pcie->msix_enabled)
-+		return;
-+
-+	trans_pcie->fh_init_mask = ~iwl_read32(trans, CSR_MSIX_FH_INT_MASK_AD);
- 	trans_pcie->fh_mask = trans_pcie->fh_init_mask;
--	trans_pcie->hw_init_mask =
--		~iwl_read32(trans, CSR_MSIX_HW_INT_MASK_AD);
-+	trans_pcie->hw_init_mask = ~iwl_read32(trans, CSR_MSIX_HW_INT_MASK_AD);
- 	trans_pcie->hw_mask = trans_pcie->hw_init_mask;
- }
- 
-@@ -1675,6 +1683,7 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
- 	iwl_pcie_apm_init(trans);
- 
- 	iwl_pcie_init_msix(trans_pcie);
-+
- 	/* From now on, the op_mode will be kept updated about RF kill state */
- 	iwl_enable_rfkill_int(trans);
- 
 -- 
-2.11.0
+Kalle Valo
