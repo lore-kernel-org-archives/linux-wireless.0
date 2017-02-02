@@ -1,61 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58710 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751131AbdBHFBO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 00:01:14 -0500
-Message-ID: <1486529606.13263.29.camel@haakon3.risingtidesystems.com> (sfid-20170208_060125_227419_ADDA38E0)
-Subject: Re: [PATCH net-next v2 08/12] iscsi: fix build errors when
- linux/phy*.h is removed from net/dsa.h
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: netdev@vger.kernel.org, linux-mips@linux-mips.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Madalin Bucur <madalin.bucur@nxp.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Timur Tabi <timur@codeaurora.org>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
-        Woojung Huh <woojung.huh@microchip.com>
-Date: Tue, 07 Feb 2017 20:53:26 -0800
-In-Reply-To: <20170207230305.18222-9-f.fainelli@gmail.com>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
-         <20170207230305.18222-9-f.fainelli@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:51650 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751020AbdBBKC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 05:02:27 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Vishal Thanki <vishalthanki@gmail.com>
+Subject: [PATCH v4] rt2x00: avoid introducing a USB dependency in the rt2x00lib module
+Date: Thu,  2 Feb 2017 10:57:40 +0100
+Message-Id: <1486029460-23431-1-git-send-email-sgruszka@redhat.com> (sfid-20170202_110230_697930_A5E72D0B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Florian,
+As reported by Felix:
 
-On Tue, 2017-02-07 at 15:03 -0800, Florian Fainelli wrote:
-> From: Russell King <rmk+kernel@armlinux.org.uk>
-> 
-> drivers/target/iscsi/iscsi_target_login.c:1135:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
-> 
-> Add linux/module.h to iscsi_target_login.c.
-> 
-> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
-> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> ---
+Though protected by an ifdef, introducing an usb symbol dependency in
+the rt2x00lib module is a major inconvenience for distributions that
+package kernel modules split into individual packages.
 
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Get rid of this unnecessary dependency by calling the usb related
+function from a more suitable place.
+
+Cc: Vishal Thanki <vishalthanki@gmail.com>
+Reported-by: Felix Fietkau <nbd@nbd.name>
+Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+v1 -> v2 do not break shutdown sequence
+v2 -> v3 update patch to current kernel version
+v3 -> v4 fix topic
+
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 23 ++++++++---------------
+ drivers/net/wireless/ralink/rt2x00/rt2x00usb.c |  5 +++++
+ 2 files changed, 13 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 8fcbc8d..4b08007 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -1436,21 +1436,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	cancel_work_sync(&rt2x00dev->intf_work);
+ 	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
+ 	cancel_work_sync(&rt2x00dev->sleep_work);
+-#if IS_ENABLED(CONFIG_RT2X00_LIB_USB)
+-	if (rt2x00_is_usb(rt2x00dev)) {
+-		usb_kill_anchored_urbs(rt2x00dev->anchor);
+-		hrtimer_cancel(&rt2x00dev->txstatus_timer);
+-		cancel_work_sync(&rt2x00dev->rxdone_work);
+-		cancel_work_sync(&rt2x00dev->txdone_work);
+-	}
+-#endif
+-	if (rt2x00dev->workqueue)
+-		destroy_workqueue(rt2x00dev->workqueue);
+-
+-	/*
+-	 * Free the tx status fifo.
+-	 */
+-	kfifo_free(&rt2x00dev->txstatus_fifo);
+ 
+ 	/*
+ 	 * Kill the tx status tasklet.
+@@ -1466,6 +1451,14 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	rt2x00lib_uninitialize(rt2x00dev);
+ 
++	if (rt2x00dev->workqueue)
++		destroy_workqueue(rt2x00dev->workqueue);
++
++	/*
++	 * Free the tx status fifo.
++	 */
++	kfifo_free(&rt2x00dev->txstatus_fifo);
++
+ 	/*
+ 	 * Free extra components
+ 	 */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+index 838ca58..5a2bf9f 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+@@ -744,6 +744,11 @@ void rt2x00usb_uninitialize(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct data_queue *queue;
+ 
++	usb_kill_anchored_urbs(rt2x00dev->anchor);
++	hrtimer_cancel(&rt2x00dev->txstatus_timer);
++	cancel_work_sync(&rt2x00dev->rxdone_work);
++	cancel_work_sync(&rt2x00dev->txdone_work);
++
+ 	queue_for_each(rt2x00dev, queue)
+ 		rt2x00usb_free_entries(queue);
+ }
+-- 
+1.8.3.1
