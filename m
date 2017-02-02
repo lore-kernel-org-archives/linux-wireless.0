@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46338 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751670AbdBOJPK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 04:15:10 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/3] rtlwifi: btcoexist: Fix if == else warnings in
- halbtc8821a2ant.c
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170212004605.1308-2-Larry.Finger@lwfinger.net>
-References: <20170212004605.1308-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Julia Lawall <julia.lawall@lip6.fr>
-Message-Id: <20170215091510.2BE30608EA@smtp.codeaurora.org> (sfid-20170215_101534_217357_F6272652)
-Date: Wed, 15 Feb 2017 09:15:10 +0000 (UTC)
+Received: from nbd.name ([46.4.11.11]:57101 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751377AbdBBLwL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 06:52:11 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, devicetree@vger.kernel.org
+Subject: [PATCH v4 1/3] Documentation: dt: net: add mt76 wireless device binding
+Date: Thu,  2 Feb 2017 12:52:06 +0100
+Message-Id: <20170202115208.8614-2-nbd@nbd.name> (sfid-20170202_125215_676631_DCC7FF9B)
+In-Reply-To: <20170202115208.8614-1-nbd@nbd.name>
+References: <20170202115208.8614-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> The 0-DAY kernel test infrastructure reports the following:
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3023:1-3: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3035:2-4: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3037:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3047:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3075:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3085:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3129:1-3: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3141:2-4: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3143:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3153:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3179:2-4: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3181:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3192:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2677:1-3: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2833:1-3: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2847:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2857:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2885:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2895:3-5: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2940:1-3: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2788:2-4: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2391:2-4: WARNING: possible condition with no effect (if == else)
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2417:2-4: WARNING: possible condition with no effect (if == else)
-> 
-> Reported-by: kbuild-all@01.org
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Julia Lawall <julia.lawall@lip6.fr>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ .../bindings/net/wireless/mediatek,mt76.txt        | 25 ++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
 
-3 patches applied to wireless-drivers-next.git, thanks.
-
-ac0ca72c6f53 rtlwifi: btcoexist: Fix if == else warnings in halbtc8821a2ant.c
-42e74946f016 rtlwifi: btcoexist: Fix if == else warnings in halbtc8821a1ant.c
-b686784d03e6 rtlwifi: btcoexist: Fix if == else warnings in halbtc8723b1ant.c
-
+diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+new file mode 100644
+index 000000000000..2be480c0eab8
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+@@ -0,0 +1,25 @@
++* MediaTek mt76xx devices
++
++This node provides properties for configuring the MediaTek mt76xx wireless
++device. The node is expected to be specified as a child node of the PCI
++controller to which the wireless chip is connected.
++
++Optional properties:
++
++- mac-address: See ethernet.txt in the parent directory
++- local-mac-address: See ethernet.txt in the parent directory
++- ieee80211-freq-limit: See ieee80211.txt
++- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
++
++&pcie {
++	status = "okay";
++
++	pcie0 {
++		mt76@0,0 {
++			reg = <0x0000 0 0 0 0>;
++			device_type = "pci";
++			ieee80211-freq-limit = <5000000 6000000>;
++			mediatek,mtd-eeprom = <&factory 0x8000>;
++		};
++	};
++};
 -- 
-https://patchwork.kernel.org/patch/9568225/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
