@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33734 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751429AbdBOTBj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 14:01:39 -0500
-Received: by mail-wm0-f68.google.com with SMTP id v77so9644901wmv.0
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 11:01:38 -0800 (PST)
-From: Doru <gucea.doru@gmail.com>
-To: linux-wireless@vger.kernel.org, andra.paraschiv7@gmail.com,
-        costin.raiciu@cs.pub.ro, dragos.niculescu@cs.pub.ro
-Cc: Doru Gucea <gucea.doru@gmail.com>
-Subject: [PATCH 1/2] mac80211: Update the driver with beacon info constantly
-Date: Wed, 15 Feb 2017 21:01:18 +0200
-Message-Id: <1487185278-8643-1-git-send-email-gucea.doru@gmail.com> (sfid-20170215_200143_015997_298E3AD3)
+Received: from nbd.name ([46.4.11.11]:53179 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750921AbdBBJOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 04:14:54 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH v2 2/3] ath9k_hw: check if the chip failed to wake up
+Date: Thu,  2 Feb 2017 10:14:51 +0100
+Message-Id: <20170202091452.11939-2-nbd@nbd.name> (sfid-20170202_101500_129305_90E8D281)
+In-Reply-To: <20170202091452.11939-1-nbd@nbd.name>
+References: <20170202091452.11939-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Doru Gucea <gucea.doru@gmail.com>
+In an RFC patch, Sven Eckelmann and Simon Wunderlich reported:
 
-Once the mac80211 layer receives a beacon, it should send a notification
-to the driver. This will allow finer timining control in case of drivers
-that need a correct estimation for the arrival time of a beacon.
+"QCA 802.11n chips (especially AR9330/AR9340) sometimes end up in a
+state in which a read of AR_CFG always returns 0xdeadbeef.
+This should not happen when when the power_mode of the device is
+ATH9K_PM_AWAKE."
 
-Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
+Include the check for the default register state in the existing MAC
+hang check.
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/mlme.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/ath/ath9k/hw.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cd7e55e..0b8eed5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3536,6 +3536,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 			sdata->vif.bss_conf.sync_dtim_count = 0;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ac36873d6da4..8c5c2dd8fa7f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1603,6 +1603,10 @@ bool ath9k_hw_check_alive(struct ath_hw *ah)
+ 	int count = 50;
+ 	u32 reg, last_val;
  
-+	/* trigger hardware timers adjustment
-+	 * this needs to be done before beacon filtering
-+	*/
-+	changed |= BSS_CHANGED_BEACON_INFO;
-+	ieee80211_bss_info_change_notify(sata, changed);
++	/* Check if chip failed to wake up */
++	if (REG_READ(ah, AR_CFG) == 0xdeadbeef)
++		return false;
 +
- 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
- 		return;
- 	ifmgd->beacon_crc = ncrc;
+ 	if (AR_SREV_9300(ah))
+ 		return !ath9k_hw_detect_mac_hang(ah);
+ 
 -- 
-1.9.1
+2.11.0
