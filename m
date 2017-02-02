@@ -1,68 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59840 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751306AbdBOODB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 09:03:01 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 4/5] mac80211: copy VHT EXT NSS BW Support/Capable data to station
-Date: Wed, 15 Feb 2017 15:02:55 +0100
-Message-Id: <20170215140256.19455-4-johannes@sipsolutions.net> (sfid-20170215_150306_365042_0D5F079D)
-In-Reply-To: <20170215140256.19455-1-johannes@sipsolutions.net>
-References: <20170215140256.19455-1-johannes@sipsolutions.net>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34418 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751867AbdBBVdm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 16:33:42 -0500
+Received: by mail-lf0-f66.google.com with SMTP id q89so46738lfi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 13:33:41 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
+Date: Thu,  2 Feb 2017 22:33:16 +0100
+Message-Id: <20170202213321.11591-4-zajec5@gmail.com> (sfid-20170202_223358_813029_67940D0B)
+In-Reply-To: <20170202213321.11591-1-zajec5@gmail.com>
+References: <20170202213321.11591-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-When taking VHT capabilities for a station, copy the new
-fields if we support them as a transmitter. Also adjust
-the maximum bandwidth the station supports appropriately.
+This will allow getting struct device reference from the passed
+brcmf_pub for the needs of dev_err. More detailed messages are really
+important for home routers which frequently have 2 (or even 3) wireless
+cards supported by brcmfmac.
 
-Also, since it was missing, copy tx_highest and rx_highest.
+Note that all calls are yet to be updated as for now brcmf_err macro
+always passes NULL. This will be handled in following patch to make this
+change easier to review.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- net/mac80211/vht.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+V2: Add missing include
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h        | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h      | 9 +++++----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 4 +++-
+ 4 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 19ec2189d3ac..2d1e72747ab8 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -231,6 +231,13 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	memcpy(&vht_cap->vht_mcs, &vht_cap_ie->supp_mcs,
- 	       sizeof(struct ieee80211_vht_mcs_info));
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index 76693df34742..35d4801a62e6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -17,6 +17,8 @@
+ #ifndef BRCMFMAC_BUS_H
+ #define BRCMFMAC_BUS_H
  
-+	/* copy EXT_NSS_BW Support value or remove the capability */
-+	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_VHT_EXT_NSS_BW))
-+		vht_cap->cap |= (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
-+	else
-+		vht_cap->vht_mcs.tx_highest &=
-+			~cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
++#include <linux/device.h>
 +
- 	/* but also restrict MCSes */
- 	for (i = 0; i < 8; i++) {
- 		u16 own_rx, own_tx, peer_rx, peer_tx;
-@@ -294,6 +301,18 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 		break;
- 	default:
- 		sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_80;
-+
-+		if (!(vht_cap->vht_mcs.tx_highest &
-+				cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE))
-+			break;
-+
-+		/*
-+		 * If this is non-zero, then it does support 160 MHz after all,
-+		 * in one form or the other. We don't distinguish here (or even
-+		 * above) between 160 and 80+80 yet.
-+		 */
-+		if (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
-+			sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_160;
- 	}
+ #include "debug.h"
  
- 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
+ /* IDs of the 6 default common rings of msgbuf protocol */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 33b133f7e63a..f8ce597c4781 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -219,7 +219,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ }
+ 
+ #ifndef CONFIG_BRCM_TRACING
+-void __brcmf_err(const char *func, const char *fmt, ...)
++void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ {
+ 	struct va_format vaf;
+ 	va_list args;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 066126123e96..99acc095c834 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -19,6 +19,8 @@
+ 
+ #include <linux/net.h>	/* net_ratelimit() */
+ 
++struct brcmf_pub;
++
+ /* message levels */
+ #define BRCMF_TRACE_VAL		0x00000002
+ #define BRCMF_INFO_VAL		0x00000004
+@@ -45,8 +47,8 @@
+ #undef pr_fmt
+ #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+ 
+-__printf(2, 3)
+-void __brcmf_err(const char *func, const char *fmt, ...);
++__printf(3, 4)
++void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...);
+ /* Macro for error messages. When debugging / tracing the driver all error
+  * messages are important to us.
+  */
+@@ -55,7 +57,7 @@ void __brcmf_err(const char *func, const char *fmt, ...);
+ 		if (IS_ENABLED(CONFIG_BRCMDBG) ||			\
+ 		    IS_ENABLED(CONFIG_BRCM_TRACING) ||			\
+ 		    net_ratelimit())					\
+-			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
++			__brcmf_err(NULL, __func__, fmt, ##__VA_ARGS__);\
+ 	} while (0)
+ 
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+@@ -99,7 +101,6 @@ do {									\
+ 
+ extern int brcmf_msg_level;
+ 
+-struct brcmf_pub;
+ #ifdef DEBUG
+ void brcmf_debugfs_init(void);
+ void brcmf_debugfs_exit(void);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+index fe6755944b7b..329cb65eb78b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+@@ -18,10 +18,12 @@
+ 
+ #ifndef __CHECKER__
+ #define CREATE_TRACE_POINTS
++#include "bus.h"
++#include "core.h"
+ #include "tracepoint.h"
+ #include "debug.h"
+ 
+-void __brcmf_err(const char *func, const char *fmt, ...)
++void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
 -- 
-2.9.3
+2.11.0
