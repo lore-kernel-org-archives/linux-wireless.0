@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43404 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752370AbdBNNGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 08:06:21 -0500
-Message-ID: <1487077574.4705.13.camel@sipsolutions.net> (sfid-20170214_140755_352422_5DEE350B)
-Subject: Re: [RFC 3/4] ieee80211: add new VHT capability fields/parsing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, greearb@candelatech.com
-Date: Tue, 14 Feb 2017 14:06:14 +0100
-In-Reply-To: <20170214112827.28216-3-johannes@sipsolutions.net> (sfid-20170214_123003_071861_B32E46B9)
-References: <20170214112827.28216-1-johannes@sipsolutions.net>
-         <20170214112827.28216-3-johannes@sipsolutions.net>
-         (sfid-20170214_123003_071861_B32E46B9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35584 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbdBBVdn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 16:33:43 -0500
+Received: by mail-lf0-f66.google.com with SMTP id v186so42608lfa.2
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 13:33:43 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 5/9] brcmfmac: pcie: store private pointer to struct brcmf_pub
+Date: Thu,  2 Feb 2017 22:33:17 +0100
+Message-Id: <20170202213321.11591-5-zajec5@gmail.com> (sfid-20170202_223359_398446_F4F36D60)
+In-Reply-To: <20170202213321.11591-1-zajec5@gmail.com>
+References: <20170202213321.11591-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> +static inline int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap
-> *cap,
-> +					    enum
-> ieee80211_vht_chanwidth bw)
-> +{
-> +	unsigned long w;
-> +	int max_vht_nss;
-> +	int ext_nss_bw;
-> +	int supp_width;
-> +
-> +	if (cap->supp_mcs.rx_mcs_map == 0xffff)
-> +		return 0;
+Getting this pointer in PCIe code is not trivial and requires using
+dev_get_drvdata helper which adds extra line of code. Having access to
+this struct is useful for using generic stuff and e.g. improving logging
+messages.
 
-Apart from the various endian issues, this function is completely wrong
-because the max_vht_nss is per MCS (at least 0-7, 8 and 9 separately),
-which this can't take into account.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Also, the only code that would use this right now, in mac80211,
-probably won't use the same types as the parameters were to this
-function.
-
-I want to preserve the strange table somewhere in a single place, but
-not sure yet how to do that best.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 6fae4cf3f6ab..8a3c6e2e4b38 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -265,6 +265,7 @@ struct brcmf_pciedev_info {
+ 	void (*write_ptr)(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
+ 			  u16 value);
+ 	struct brcmf_mp_device *settings;
++	struct brcmf_pub *pub;
+ };
+ 
+ struct brcmf_pcie_ringbuf {
+@@ -1564,14 +1565,18 @@ static void brcmf_pcie_release_resource(struct brcmf_pciedev_info *devinfo)
+ 
+ static int brcmf_pcie_attach_bus(struct brcmf_pciedev_info *devinfo)
+ {
++	struct device *dev = &devinfo->pdev->dev;
++	struct brcmf_bus *bus = dev_get_drvdata(dev);
+ 	int ret;
+ 
+ 	/* Attach to the common driver interface */
+-	ret = brcmf_attach(&devinfo->pdev->dev, devinfo->settings);
++	ret = brcmf_attach(dev, devinfo->settings);
+ 	if (ret) {
+ 		brcmf_err("brcmf_attach failed\n");
+ 	} else {
+-		ret = brcmf_bus_started(&devinfo->pdev->dev);
++		devinfo->pub = bus->drvr;
++
++		ret = brcmf_bus_started(dev);
+ 		if (ret)
+ 			brcmf_err("dongle is not responding\n");
+ 	}
+-- 
+2.11.0
