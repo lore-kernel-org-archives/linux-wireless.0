@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36674 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751706AbdBINuZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57630 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750858AbdBBGXu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Feb 2017 08:50:25 -0500
-Received: by mail-wm0-f67.google.com with SMTP id r18so2969159wmd.3
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2017 05:49:04 -0800 (PST)
-From: Franck Demathieu <fdemathieu@gmail.com>
-To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH] staging: wilc1000: remove unnecessary local array
-Date: Thu,  9 Feb 2017 14:48:39 +0100
-Message-Id: <20170209134839.12138-1-fdemathieu@gmail.com> (sfid-20170209_145030_733526_7B02EEBD)
+        Thu, 2 Feb 2017 01:23:50 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Iain Hunter <drhunter95@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Iain Hunter <i-hunter1@ti.com>
+Subject: Re: [PATCH v3] wlcore: disable multicast filter in AP mode
+References: <20170131104840.10366-1-i-hunter1@ti.com>
+        <20170131124431.11675-1-i-hunter1@ti.com>
+Date: Thu, 02 Feb 2017 08:23:46 +0200
+In-Reply-To: <20170131124431.11675-1-i-hunter1@ti.com> (Iain Hunter's message
+        of "Tue, 31 Jan 2017 12:44:31 +0000")
+Message-ID: <87mve5f6vh.fsf@purkki.adurom.net> (sfid-20170202_072518_839052_B7E661DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It fixes the following warning reported by sparse:
+Iain Hunter <drhunter95@gmail.com> writes:
 
-  drivers/staging/wilc1000/linux_wlan.c:67:33: warning: too long initializer-string for array of char(no space for nul char)
+> Enable AP support for allmulticast for MDNS. It can be enabled by bringing
+> up the interface with ip command with argument allmulticast on
+>
+> Signed-off-by:Iain Hunter <i-hunter1@ti.com>
 
-Signed-off-by: Franck Demathieu <fdemathieu@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+There should be a space after ':' and before your name.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 2eebc62..fc61f4e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -64,7 +64,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 	u8 *ip_addr_buf;
- 	struct wilc_vif *vif;
- 	u8 null_ip[4] = {0};
--	char wlan_dev_name[5] = "wlan0";
- 
- 	if (!dev_iface || !dev_iface->ifa_dev || !dev_iface->ifa_dev->dev)
- 		return NOTIFY_DONE;
-@@ -113,7 +112,7 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 			wilc_optaining_ip = false;
- 		}
- 
--		if (memcmp(dev_iface->ifa_label, wlan_dev_name, 5) == 0)
-+		if (memcmp(dev_iface->ifa_label, "wlan0", 5) == 0)
- 			wilc_set_power_mgmt(vif, 0, 0);
- 
- 		wilc_resolve_disconnect_aberration(vif);
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -3281,6 +3281,21 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+>  			if (ret < 0)
+>  				goto out_sleep;
+>  		}
+> +
+> +        /*
+> +         * If interface in AP mode and created with allmulticast then disable
+> +         * the firmware filters so that all multicast packets are passed
+> +         * This is mandatory for MDNS based discovery protocols 
+> +         */
+> + 		if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
+
+The comment looks wrongly indented.
+
+> + 			if (*total & FIF_ALLMULTI) {
+> +				ret = wl1271_acx_group_address_tbl(wl, wlvif,
+> +							false,
+> +							NULL, 0);
+> +				if (ret < 0)
+> +					goto out_sleep;
+> +				}
+
+Also the closing bracket here is not indented correctly.
+
 -- 
-2.10.1
+Kalle Valo
