@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bsmtp2.bon.at ([213.33.87.16]:47515 "EHLO bsmtp5.bon.at"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751670AbdB1JdQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 04:33:16 -0500
-Received: from bsmtp7.bon.at (unknown [192.168.181.108])
-        by bsmtp5.bon.at (Postfix) with ESMTPS id 3vXXzw3lHKz5vgK
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 10:18:04 +0100 (CET)
-To: linux-wireless@vger.kernel.org
-Cc: "Bernhard Miller (bernhard.miller@streamunlimited.com)"
-        <bernhard.miller@streamunlimited.com>
-From: "ondrej.topolsky@streamunlimited.com"
-        <ondrej.topolsky@streamunlimited.com>
-Subject: mwifiex on 8977 8897 beacon frames forwarding
-Message-ID: <fdacd0ce-a4bc-c0a0-7d1d-24796052a8b0@streamunlimited.com> (sfid-20170228_103511_680053_C54AA23E)
-Date: Tue, 28 Feb 2017 10:17:22 +0100
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:36660 "EHLO
+        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751350AbdBBKTy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 05:19:54 -0500
+Received: by mail-lf0-f49.google.com with SMTP id z134so5921479lff.3
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 02:19:54 -0800 (PST)
+From: =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?=
+        <amadeusz.slawinski@tieto.com>
+To: ath10k@lists.infradead.org, Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?=
+        <amadeusz.slawinski@tieto.com>
+Subject: [PATCH 3/3] ath10k: fix comment
+Date: Thu,  2 Feb 2017 11:19:33 +0100
+Message-Id: <1486030773-30600-3-git-send-email-amadeusz.slawinski@tieto.com> (sfid-20170202_112050_068120_41407625)
+In-Reply-To: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
+References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I wanted to take a look and it's apparently in other header
 
-Is there any way how to properly get beacon frames from firmware? Not 
-sure if anybody tried that or played with that.
-CMD_802_11_RX_MGMT_INDICATION is not working as expected (details below 
-the line)
-and we do not want to use monitor mode for this.
-Is there probably something undocumented?
-Or is there any firmware for 8977 and 8897 which would forward the 
-management frames?
-
-I guess this is some "if statement" buried in the firmware which is 
-black box for us
-
+Signed-off-by: Amadeusz Sławiński <amadeusz.slawinski@tieto.com>
 ---
+ drivers/net/wireless/ath/ath10k/wmi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On  8977 the command CMD_802_11_RX_MGMT_INDICATION gets through 
-successfully(tried various masks like 256 and others),
-but the beacons are not coming from data path
-(checking all packets, the best what we can get is probe request frames 
-40 00).
-However we can get them in monitor mode (but this is unusable solution 
-for us).
-
-On 8897 the situation is the same - the command gets through, but the 
-beacons are not coming..
-the monitor mode cannot be turned on because the command returns 2 - 
-unsupported.
-
-Any hints or ideas would be highly appreciated
-Thanks and all the best,
-
-Ondrej from Stream Unlimited.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 5d3dff9..bf8dcbe 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -75,7 +75,7 @@ struct wmi_cmd_hdr {
+ 
+ /*
+  * There is no signed version of __le32, so for a temporary solution come
+- * up with our own version. The idea is from fs/ntfs/types.h.
++ * up with our own version. The idea is from fs/ntfs/endian.h.
+  *
+  * Use a_ prefix so that it doesn't conflict if we get proper support to
+  * linux/types.h.
+-- 
+1.9.1
