@@ -1,37 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:35368 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751471AbdBFTWh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 14:22:37 -0500
-Received: by mail-io0-f176.google.com with SMTP id j18so73206340ioe.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 11:22:37 -0800 (PST)
-Date: Mon, 6 Feb 2017 13:22:35 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless-regdb: Remove DFS requirement for India (IN)
-Message-ID: <20170206192235.GB4004@ubuntu-hedt> (sfid-20170206_202242_138258_31150A25)
-References: <1485778112-11236-1-git-send-email-jouni@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:33406 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750774AbdBBMxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 07:53:50 -0500
+Subject: Re: [PATCH v4 3/3] mt76: add driver code for MT76x2e
+To: linux-wireless@vger.kernel.org
+References: <20170202115208.8614-1-nbd@nbd.name>
+ <20170202115208.8614-4-nbd@nbd.name>
+Cc: kvalo@codeaurora.org,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <0eecf8bd-1bfc-ce97-d58c-60d072e9521f@nbd.name> (sfid-20170202_135353_292041_DEE36741)
+Date: Thu, 2 Feb 2017 13:53:47 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1485778112-11236-1-git-send-email-jouni@qca.qualcomm.com>
+In-Reply-To: <20170202115208.8614-4-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 30, 2017 at 02:08:32PM +0200, Jouni Malinen wrote:
-> The "Indoor Use of low power wireless equipment in the frequency band 5
-> GHz (Exemption from Licensing Requirement) Rules, 2005" notification by
-> Ministry of Communications and Information Technology (Wireless Planning
-> and Coordination Wing) (New Delhi, the 28th January 2005) does not
-> mandate use of DFS, so remove the DFS flag from the 5250-5330 MHz band
-> in India.
+On 2017-02-02 12:52, Felix Fietkau wrote:
+> This is a 2x2 PCIe 802.11ac chipset by MediaTek
 > 
-> In addition, increase the TX power limit to 23 dBm to match the 200 mW
-> maximum mentioned in the same notification. Also use the exact ranges
-> from that notification and enable use of 160 MHz channels in the
-> 5150-5350 MHz band.
-> 
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Kalle, Please also add:
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 
-Applied, thanks.
+Or should I resend?
+
+- Felix
