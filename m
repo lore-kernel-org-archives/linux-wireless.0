@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36509 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754698AbdBGXM5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48715 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751041AbdBBKsq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 18:12:57 -0500
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Madalin Bucur <madalin.bucur@nxp.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Timur Tabi <timur@codeaurora.org>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
-        Woojung Huh <woojung.huh@microchip.com>
-Subject: [PATCH net-next v2 02/12] net: cgroups: fix build errors when linux/phy*.h is removed from net/dsa.h
-Date: Tue,  7 Feb 2017 15:02:55 -0800
-Message-Id: <20170207230305.18222-3-f.fainelli@gmail.com> (sfid-20170208_001348_577932_52CEA554)
-In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
+        Thu, 2 Feb 2017 05:48:46 -0500
+Subject: [PATCH 3/3] ath10k: few whitespace fixes
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Thu, 2 Feb 2017 12:48:08 +0200
+Message-ID: <148603248800.7275.3176753002583396340.stgit@potku.adurom.net> (sfid-20170202_114852_975548_17A53237)
+In-Reply-To: <148603246555.7275.3348416808167032391.stgit@potku.adurom.net>
+References: <148603246555.7275.3348416808167032391.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+Fixes checkpatch warnings:
 
-net/core/netprio_cgroup.c:303:16: error: expected declaration specifiers or '...' before string constant
-    MODULE_LICENSE("GPL v2");
-                   ^~~~~~~~
+drivers/net/wireless/ath/ath10k/pci.c:1593: Statements should start on a tabstop
+drivers/net/wireless/ath/ath10k/ce.c:962: Alignment should match open parenthesis
 
-Add linux/module.h to fix this.
-
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/core/netprio_cgroup.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath10k/ce.c  |    6 +++---
+ drivers/net/wireless/ath/ath10k/pci.c |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index 2ec86fc552df..756637dc7a57 100644
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -13,6 +13,7 @@
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index da466ab2d823..4045657e0a6e 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -959,9 +959,9 @@ ath10k_ce_alloc_dest_ring(struct ath10k *ar, unsigned int ce_id,
+ 	 */
+ 	dest_ring->base_addr_owner_space_unaligned =
+ 		dma_zalloc_coherent(ar->dev,
+-				   (nentries * sizeof(struct ce_desc) +
+-				    CE_DESC_RING_ALIGN),
+-				   &base_addr, GFP_KERNEL);
++				    (nentries * sizeof(struct ce_desc) +
++				     CE_DESC_RING_ALIGN),
++				    &base_addr, GFP_KERNEL);
+ 	if (!dest_ring->base_addr_owner_space_unaligned) {
+ 		kfree(dest_ring);
+ 		return ERR_PTR(-ENOMEM);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index d2aa9e5ec05d..5e84199d68e1 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1590,7 +1590,7 @@ void ath10k_pci_irq_msi_fw_mask(struct ath10k *ar)
+ 		/* TODO: Find appropriate register configuration for QCA99X0
+ 		 *  to mask irq/MSI.
+ 		 */
+-		 break;
++		break;
+ 	}
+ }
  
- #include <linux/slab.h>
- #include <linux/types.h>
-+#include <linux/module.h>
- #include <linux/string.h>
- #include <linux/errno.h>
- #include <linux/skbuff.h>
--- 
-2.9.3
