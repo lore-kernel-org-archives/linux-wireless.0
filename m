@@ -1,11 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33269 "EHLO
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34455 "EHLO
         mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751519AbdBBMRS (ORCPT
+        with ESMTP id S1751500AbdBBVdw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 07:17:18 -0500
-Received: by mail-lf0-f65.google.com with SMTP id x1so1239079lff.0
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 04:17:17 -0800 (PST)
+        Thu, 2 Feb 2017 16:33:52 -0500
+Received: by mail-lf0-f65.google.com with SMTP id q89so47020lfi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 13:33:51 -0800 (PST)
 From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
 Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
@@ -16,11 +16,11 @@ Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2 2/7] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
-Date: Thu,  2 Feb 2017 13:16:54 +0100
-Message-Id: <20170202121659.21130-2-zajec5@gmail.com> (sfid-20170202_131726_201488_3C180D08)
-In-Reply-To: <20170202121659.21130-1-zajec5@gmail.com>
-References: <20170202121659.21130-1-zajec5@gmail.com>
+Subject: [PATCH V3 9/9] brcmfmac: use dev_err to print errors
+Date: Thu,  2 Feb 2017 22:33:21 +0100
+Message-Id: <20170202213321.11591-9-zajec5@gmail.com> (sfid-20170202_223400_032278_BB14B875)
+In-Reply-To: <20170202213321.11591-1-zajec5@gmail.com>
+References: <20170202213321.11591-1-zajec5@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
@@ -28,103 +28,57 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Rafał Miłecki <rafal@milecki.pl>
 
-This will allow getting struct device reference from the passed
-brcmf_pub for the needs of dev_err. More detailed messages are really
-important for home routers which frequently have 2 (or even 3) wireless
-cards supported by brcmfmac.
-
-Note that all calls are yet to be updated as for now brcmf_err macro
-always passes NULL. This will be handled in following patch to make this
-change easier to review.
+This adds a nice prefix to all error messages making it possible to
+identify device they are related to. It's really useful for e.g. home
+routers commonly having 2 or even 3 wireless devices.
 
 Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
-V2: Add missing include
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h        | 2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h      | 9 +++++----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 4 +++-
- 4 files changed, 11 insertions(+), 6 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     | 3 ++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index 76693df34742..35d4801a62e6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -17,6 +17,8 @@
- #ifndef BRCMFMAC_BUS_H
- #define BRCMFMAC_BUS_H
- 
-+#include <linux/device.h>
-+
- #include "debug.h"
- 
- /* IDs of the 6 default common rings of msgbuf protocol */
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 05fb778ddd0f..0978fb4c9066 100644
+index c0ac7979c9ea..5845a3e5150a 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -219,7 +219,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- }
- 
+@@ -223,6 +223,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
  #ifndef CONFIG_BRCM_TRACING
--void __brcmf_err(const char *func, const char *fmt, ...)
-+void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
  {
++	struct device *dev = pub && pub->bus_if ? pub->bus_if->dev : NULL;
  	struct va_format vaf;
  	va_list args;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-index 5fef79473c87..012401e6be74 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-@@ -19,6 +19,8 @@
  
- #include <linux/net.h>	/* net_ratelimit() */
+@@ -230,7 +231,7 @@ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
  
-+struct brcmf_pub;
-+
- /* message levels */
- #define BRCMF_TRACE_VAL		0x00000002
- #define BRCMF_INFO_VAL		0x00000004
-@@ -45,10 +47,10 @@
- #undef pr_fmt
- #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+-	pr_err("%s: %pV", func, &vaf);
++	dev_err(dev, "%s: %pV", func, &vaf);
  
--__printf(2, 3)
--void __brcmf_err(const char *func, const char *fmt, ...);
-+__printf(3, 4)
-+void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...);
- #define brcmf_err(fmt, ...) \
--	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
-+	__brcmf_err(NULL, __func__, fmt, ##__VA_ARGS__)
- 
- #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
- __printf(3, 4)
-@@ -91,7 +93,6 @@ do {									\
- 
- extern int brcmf_msg_level;
- 
--struct brcmf_pub;
- #ifdef DEBUG
- void brcmf_debugfs_init(void);
- void brcmf_debugfs_exit(void);
+ 	va_end(args);
+ }
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-index fe6755944b7b..329cb65eb78b 100644
+index 329cb65eb78b..393c1b31ed28 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-@@ -18,10 +18,12 @@
+@@ -25,6 +25,7 @@
  
- #ifndef __CHECKER__
- #define CREATE_TRACE_POINTS
-+#include "bus.h"
-+#include "core.h"
- #include "tracepoint.h"
- #include "debug.h"
- 
--void __brcmf_err(const char *func, const char *fmt, ...)
-+void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
  {
++	struct device *dev = pub && pub->bus_if ? pub->bus_if->dev : NULL;
  	struct va_format vaf = {
  		.fmt = fmt,
+ 	};
+@@ -32,7 +33,7 @@ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	pr_err("%s: %pV", func, &vaf);
++	dev_err(dev, "%s: %pV", func, &vaf);
+ 	trace_brcmf_err(func, &vaf);
+ 	va_end(args);
+ }
 -- 
 2.11.0
