@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37904 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751700AbdB0QIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 11:08:43 -0500
-Message-ID: <1488211719.28431.22.camel@sipsolutions.net> (sfid-20170227_170944_679179_5DB55A43)
-Subject: Re: [PATCH 1/2] mac80211_hwsim: Make sure NEW_RADIO contains final
- name
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 27 Feb 2017 17:08:39 +0100
-In-Reply-To: <CAOq732L0wT+HMouihfSYu4hwxy=fh6pieMY3r2DOO1tVXxqw1A@mail.gmail.com> (sfid-20170227_161634_708693_90859E55)
-References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
-         <CAOq732LiwZ13wVuB+wvk6nOCpY+oq=KWhcY1Au2zpcGSWsZ3uA@mail.gmail.com>
-         <1488201862.28431.5.camel@sipsolutions.net>
-         <CAOq732L0wT+HMouihfSYu4hwxy=fh6pieMY3r2DOO1tVXxqw1A@mail.gmail.com>
-         (sfid-20170227_161634_708693_90859E55)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:56210 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750858AbdBBGQe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 01:16:34 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] brcmfmac: check brcmf_bus_get_memdump result for error
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170130150952.7133-1-zajec5@gmail.com>
+References: <20170130150952.7133-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20170202061633.47CBA60915@smtp.codeaurora.org> (sfid-20170202_071638_174765_F08DC550)
+Date: Thu,  2 Feb 2017 06:16:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> >         [HWSIM_ATTR_RADIO_NAME] = { .type = NLA_STRING },
-> > 
-> > enforces that a NUL byte *must* be present when userspace gives us
-> > the
-> > information, so we're save - just asymmetric.
+Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> It seems that would be NLA_NUL_STRING, whlie for NLA_STRING it's
-> optional, 
+> This method may be unsupported (see: USB bus) or may just fail (see:
+> SDIO bus).
+> While at it rework logic in brcmf_sdio_bus_get_memdump function to avoid
+> too many conditional code nesting levels.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Oops. I indeed misread the code there.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-> I know because I didn't add the NUL in my userspace and
-> things still worked.
+f4737a62033d brcmfmac: check brcmf_bus_get_memdump result for error
+36401cb7ffae brcmfmac: be more verbose when PSM's watchdog fires
 
-:)
-Then you probably had some 0 padding or so.
+-- 
+https://patchwork.kernel.org/patch/9545583/
 
-> We can copy the received nla_data into a buffer
-> and add the 0-byte there to support this as an option.
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-I'll do that.
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
