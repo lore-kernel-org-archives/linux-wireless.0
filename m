@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:38911 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752850AbdBNJfz (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34410 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbdBBVdk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 04:35:55 -0500
-Received: by mail-it0-f45.google.com with SMTP id c7so27925143itd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 01:35:54 -0800 (PST)
-Subject: Re: [PATCH] iw: Fix bitrate output when no rate info found
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1487049663-2942-1-git-send-email-masashi.honma@gmail.com>
- <1487061321.4705.1.camel@sipsolutions.net>
- <a2ffeab5-dd9c-1c9d-3fd1-c098a6d1e748@gmail.com>
- <1487063659.4705.5.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <e5c7bb68-73d9-48f1-3063-2617125ac14f@gmail.com> (sfid-20170214_103702_325107_5B5DEC65)
-Date: Tue, 14 Feb 2017 18:35:51 +0900
+        Thu, 2 Feb 2017 16:33:40 -0500
+Received: by mail-lf0-f65.google.com with SMTP id q89so46661lfi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 13:33:39 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 3/9] brcmfmac: merge two remaining brcmf_err macros
+Date: Thu,  2 Feb 2017 22:33:15 +0100
+Message-Id: <20170202213321.11591-3-zajec5@gmail.com> (sfid-20170202_223358_399752_F7D50B2E)
+In-Reply-To: <20170202213321.11591-1-zajec5@gmail.com>
+References: <20170202213321.11591-1-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1487063659.4705.5.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-14 18:14, Johannes Berg wrote:
-> Yes, this is bad! But if you saw that, why did you ever get to the
-> below code that checked for the BITRATE(32) attributes?
->
->> So I used explaining message. We could see the message like this.
->>
->> tx bitrate: No rate info found!
->> rx bitrate: 48.0 MBit/s
->
-> Yeah I was just thinking we could also see
->
-> tx bitrate: (unknown)
->
-> and then if there was MCS anyway you'd see
->
-> tx bitrate: (unknown) MCS 7
->
-> or something like that?
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Yes, showing information as far as possible looks good.
+Now we always have __brcmf_err function we can do perfectly fine with
+just one macro.
 
-I will modify this patch.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+V3: Add this (new) patch
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-Masashi Honma.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 441a6661eac0..066126123e96 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -47,20 +47,16 @@
+ 
+ __printf(2, 3)
+ void __brcmf_err(const char *func, const char *fmt, ...);
+-#ifndef CONFIG_BRCM_TRACING
+-/* Macro for error messages. net_ratelimit() is used when driver
+- * debugging is not selected. When debugging the driver error
+- * messages are as important as other tracing or even more so.
++/* Macro for error messages. When debugging / tracing the driver all error
++ * messages are important to us.
+  */
+ #define brcmf_err(fmt, ...)						\
+ 	do {								\
+-		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
++		if (IS_ENABLED(CONFIG_BRCMDBG) ||			\
++		    IS_ENABLED(CONFIG_BRCM_TRACING) ||			\
++		    net_ratelimit())					\
+ 			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
+ 	} while (0)
+-#else
+-#define brcmf_err(fmt, ...) \
+-	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
+-#endif
+ 
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+ __printf(3, 4)
+-- 
+2.11.0
