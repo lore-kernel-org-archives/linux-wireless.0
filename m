@@ -1,170 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31368 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751291AbdBFMVi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 07:21:38 -0500
-From: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>
-To: Michael Ney <neym@vorklift.com>,
-        Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v3] ath10k: Fix crash during rmmod when probe firmware
- fails
-Date: Mon, 6 Feb 2017 12:21:21 +0000
-Message-ID: <1486383699520.26295@qti.qualcomm.com> (sfid-20170206_132144_629851_8DC29E4B)
-References: <1482221351-24029-1-git-send-email-mohammed@qca.qualcomm.com>
- <8760l38dz0.fsf@kamboji.qca.qualcomm.com>
- <871svr8d83.fsf@kamboji.qca.qualcomm.com>
- <20170206100448.GA13894@atheros-ThinkPad-T61>,<2DBE5232-FF3F-4B0E-8739-B6E82361316C@vorklift.com>
-In-Reply-To: <2DBE5232-FF3F-4B0E-8739-B6E82361316C@vorklift.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:53181 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750903AbdBBJOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 04:14:54 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH v2 3/3] ath9k: fix race condition in enabling/disabling IRQs
+Date: Thu,  2 Feb 2017 10:14:52 +0100
+Message-Id: <20170202091452.11939-3-nbd@nbd.name> (sfid-20170202_101504_891740_6ED3CCF2)
+In-Reply-To: <20170202091452.11939-1-nbd@nbd.name>
+References: <20170202091452.11939-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,=0A=
-=0A=
-even with the below patch applied ?=0A=
-https://patchwork.kernel.org/patch/9452265/=0A=
-=0A=
-regards=0A=
-shafi=0A=
-________________________________________=0A=
-From: Michael Ney <neym@vorklift.com>=0A=
-Sent: 06 February 2017 17:46=0A=
-To: Mohammed Shafi Shajakhan=0A=
-Cc: Valo, Kalle; linux-wireless@vger.kernel.org; ath10k@lists.infradead.org=
-; Shajakhan, Mohammed Shafi (Mohammed Shafi)=0A=
-Subject: Re: [PATCH v3] ath10k: Fix crash during rmmod when probe firmware =
-fails=0A=
-=0A=
-Symmetry is still broken on firmware crash (at least with 6174). ath10k_pci=
-_hif_stop gets called twice, once from the driver restart (warm restart) an=
-d once from ieee80211 start (cold restart), resulting in napi_synchrionize/=
-napi_disable getting called twice and sticking the driver in an infinite wa=
-it loop (napi_synchronize waits until NAPI_STATE_SCHED is off, while napi_d=
-isable leaves NAPI_STATE_SCHED to on when leaving).=0A=
-=0A=
-=0A=
-> On Feb 6, 2017, at 5:04 AM, Mohammed Shafi Shajakhan <mohammed@codeaurora=
-.org> wrote:=0A=
->=0A=
-> Hi Kalle,=0A=
->=0A=
-> the change suggested by you helps, and the device probe, scan=0A=
-> is successful as well. Still good to have this change part of your=0A=
-> basic sanity and regression testing !=0A=
->=0A=
-> regards,=0A=
-> shafi=0A=
->=0A=
-> On Wed, Jan 25, 2017 at 01:46:28PM +0000, Valo, Kalle wrote:=0A=
->> Kalle Valo <kvalo@qca.qualcomm.com> writes:=0A=
->>=0A=
->>> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:=0A=
->>>=0A=
->>>> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>=0A=
->>>>=0A=
->>>> This fixes the below crash when ath10k probe firmware fails,=0A=
->>>> NAPI polling tries to access a rx ring resource which was never=0A=
->>>> allocated, fix this by disabling NAPI right away once the probe=0A=
->>>> firmware fails by calling 'ath10k_hif_stop'. Its good to note=0A=
->>>> that the error is never propogated to 'ath10k_pci_probe' when=0A=
->>>> ath10k_core_register fails, so calling 'ath10k_hif_stop' to cleanup=0A=
->>>> PCI related things seems to be ok=0A=
->>>>=0A=
->>>> BUG: unable to handle kernel NULL pointer dereference at (null)=0A=
->>>> IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]=0A=
->>>> __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]=0A=
->>>>=0A=
->>>> Call Trace:=0A=
->>>>=0A=
->>>> [<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90=0A=
->>>> [ath10k_core]=0A=
->>>> [<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0=0A=
->>>> [ath10k_core]=0A=
->>>> [<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80=0A=
->>>> [<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150=0A=
->>>> [<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]=0A=
->>>> [<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]=0A=
->>>> [<ffffffff817863af>] net_rx_action+0x20f/0x370=0A=
->>>>=0A=
->>>> Reported-by: Ben Greear <greearb@candelatech.com>=0A=
->>>> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")=0A=
->>>> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>=0A=
->>>=0A=
->>> Is there an easy way to reproduce this bug? I don't see it on my x86=0A=
->>> laptop with qca988x and I call rmmod all the time. I would like to test=
-=0A=
->>> this myself.=0A=
->>>=0A=
->>>> --- a/drivers/net/wireless/ath/ath10k/core.c=0A=
->>>> +++ b/drivers/net/wireless/ath/ath10k/core.c=0A=
->>>> @@ -2164,6 +2164,7 @@ static int ath10k_core_probe_fw(struct ath10k *a=
-r)=0A=
->>>>    ath10k_core_free_firmware_files(ar);=0A=
->>>>=0A=
->>>> err_power_down:=0A=
->>>> +  ath10k_hif_stop(ar);=0A=
->>>>    ath10k_hif_power_down(ar);=0A=
->>>>=0A=
->>>>    return ret;=0A=
->>>=0A=
->>> This breaks the symmetry, we should not be calling ath10k_hif_stop() if=
-=0A=
->>> we haven't called ath10k_hif_start() from the same function. This can=
-=0A=
->>> just create a bigger mess later, for example with other bus support lik=
-e=0A=
->>> sdio or usb. In theory it should enough that we call=0A=
->>> ath10k_hif_power_down() and pci.c does the rest correctly "behind the=
-=0A=
->>> scenes".=0A=
->>>=0A=
->>> I investigated this a bit and I think the real cause is that we call=0A=
->>> napi_enable() from ath10k_pci_hif_power_up() and napi_disable() from=0A=
->>> ath10k_pci_hif_stop(). Does anyone remember why?=0A=
->>>=0A=
->>> I was expecting that we would call napi_enable()/napi_disable() either=
-=0A=
->>> in ath10k_hif_power_up/down() or ath10k_hif_start()/stop(), but not=0A=
->>> mixed like it's currently.=0A=
->>=0A=
->> So below is something I was thinking of, now napi_enable() is called=0A=
->> from ath10k_hif_start() and napi_disable() from ath10k_hif_stop(). Would=
-=0A=
->> that work?=0A=
->>=0A=
->> --- a/drivers/net/wireless/ath/ath10k/pci.c=0A=
->> +++ b/drivers/net/wireless/ath/ath10k/pci.c=0A=
->> @@ -1648,6 +1648,8 @@ static int ath10k_pci_hif_start(struct ath10k *ar)=
-=0A=
->>=0A=
->>      ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");=0A=
->>=0A=
->> +    napi_enable(&ar->napi);=0A=
->> +=0A=
->>      ath10k_pci_irq_enable(ar);=0A=
->>      ath10k_pci_rx_post(ar);=0A=
->>=0A=
->> @@ -2532,7 +2534,6 @@ static int ath10k_pci_hif_power_up(struct ath10k *=
-ar)=0A=
->>              ath10k_err(ar, "could not wake up target CPU: %d\n", ret);=
-=0A=
->>              goto err_ce;=0A=
->>      }=0A=
->> -    napi_enable(&ar->napi);=0A=
->>=0A=
->>      return 0;=0A=
->>=0A=
->> --=0A=
->> Kalle Valo=0A=
->=0A=
-> _______________________________________________=0A=
-> ath10k mailing list=0A=
-> ath10k@lists.infradead.org=0A=
-> http://lists.infradead.org/mailman/listinfo/ath10k=0A=
-=0A=
+The code currently relies on refcounting to disable IRQs from within the
+IRQ handler and re-enabling them again after the tasklet has run.
+
+However, due to race conditions sometimes the IRQ handler might be
+called twice, or the tasklet may not run at all (if interrupted in the
+middle of a reset).
+
+This can cause nasty imbalances in the irq-disable refcount which will
+get the driver permanently stuck until the entire radio has been stopped
+and started again (ath_reset will not recover from this).
+
+Instead of using this fragile logic, change the code to ensure that
+running the irq handler during tasklet processing is safe, and leave the
+refcount untouched.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+ drivers/net/wireless/ath/ath9k/init.c  |  1 +
+ drivers/net/wireless/ath/ath9k/mac.c   | 44 ++++++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/mac.h   |  1 +
+ drivers/net/wireless/ath/ath9k/main.c  | 27 +++++++++------------
+ 5 files changed, 48 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b2fa44adc60e..cf076719c27e 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -998,6 +998,7 @@ struct ath_softc {
+ 	struct survey_info *cur_survey;
+ 	struct survey_info survey[ATH9K_NUM_CHANNELS];
+ 
++	spinlock_t intr_lock;
+ 	struct tasklet_struct intr_tq;
+ 	struct tasklet_struct bcon_tasklet;
+ 	struct ath_hw *sc_ah;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index a2f7f48bbb92..fa4b3cc1ba22 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -669,6 +669,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 		common->bt_ant_diversity = 1;
+ 
+ 	spin_lock_init(&common->cc_lock);
++	spin_lock_init(&sc->intr_lock);
+ 	spin_lock_init(&sc->sc_serial_rw);
+ 	spin_lock_init(&sc->sc_pm_lock);
+ 	spin_lock_init(&sc->chan_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index bba85d1a6cd1..d937c39b3a0b 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -805,21 +805,12 @@ void ath9k_hw_disable_interrupts(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_disable_interrupts);
+ 
+-void ath9k_hw_enable_interrupts(struct ath_hw *ah)
++static void __ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 sync_default = AR_INTR_SYNC_DEFAULT;
+ 	u32 async_mask;
+ 
+-	if (!(ah->imask & ATH9K_INT_GLOBAL))
+-		return;
+-
+-	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
+-		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
+-			atomic_read(&ah->intr_ref_cnt));
+-		return;
+-	}
+-
+ 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+ 	    AR_SREV_9561(ah))
+ 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+@@ -841,6 +832,39 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ 	ath_dbg(common, INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
+ 		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
+ }
++
++void ath9k_hw_resume_interrupts(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (!(ah->imask & ATH9K_INT_GLOBAL))
++		return;
++
++	if (atomic_read(&ah->intr_ref_cnt) != 0) {
++		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
++			atomic_read(&ah->intr_ref_cnt));
++		return;
++	}
++
++	__ath9k_hw_enable_interrupts(ah);
++}
++EXPORT_SYMBOL(ath9k_hw_resume_interrupts);
++
++void ath9k_hw_enable_interrupts(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (!(ah->imask & ATH9K_INT_GLOBAL))
++		return;
++
++	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
++		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
++			atomic_read(&ah->intr_ref_cnt));
++		return;
++	}
++
++	__ath9k_hw_enable_interrupts(ah);
++}
+ EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
+ 
+ void ath9k_hw_set_interrupts(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 3bab01435a86..770fc11b41d1 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -744,6 +744,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah);
+ void ath9k_hw_enable_interrupts(struct ath_hw *ah);
+ void ath9k_hw_disable_interrupts(struct ath_hw *ah);
+ void ath9k_hw_kill_interrupts(struct ath_hw *ah);
++void ath9k_hw_resume_interrupts(struct ath_hw *ah);
+ 
+ void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0345d6ec564f..9e65d14e7b1e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -374,21 +374,20 @@ void ath9k_tasklet(unsigned long data)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	enum ath_reset_type type;
+ 	unsigned long flags;
+-	u32 status = sc->intrstatus;
++	u32 status;
+ 	u32 rxmask;
+ 
++	spin_lock_irqsave(&sc->intr_lock, flags);
++	status = sc->intrstatus;
++	sc->intrstatus = 0;
++	spin_unlock_irqrestore(&sc->intr_lock, flags);
++
+ 	ath9k_ps_wakeup(sc);
+ 	spin_lock(&sc->sc_pcu_lock);
+ 
+ 	if (status & ATH9K_INT_FATAL) {
+ 		type = RESET_TYPE_FATAL_INT;
+ 		ath9k_queue_reset(sc, type);
+-
+-		/*
+-		 * Increment the ref. counter here so that
+-		 * interrupts are enabled in the reset routine.
+-		 */
+-		atomic_inc(&ah->intr_ref_cnt);
+ 		ath_dbg(common, RESET, "FATAL: Skipping interrupts\n");
+ 		goto out;
+ 	}
+@@ -404,11 +403,6 @@ void ath9k_tasklet(unsigned long data)
+ 			type = RESET_TYPE_BB_WATCHDOG;
+ 			ath9k_queue_reset(sc, type);
+ 
+-			/*
+-			 * Increment the ref. counter here so that
+-			 * interrupts are enabled in the reset routine.
+-			 */
+-			atomic_inc(&ah->intr_ref_cnt);
+ 			ath_dbg(common, RESET,
+ 				"BB_WATCHDOG: Skipping interrupts\n");
+ 			goto out;
+@@ -421,7 +415,6 @@ void ath9k_tasklet(unsigned long data)
+ 		if ((sc->gtt_cnt >= MAX_GTT_CNT) && !ath9k_hw_check_alive(ah)) {
+ 			type = RESET_TYPE_TX_GTT;
+ 			ath9k_queue_reset(sc, type);
+-			atomic_inc(&ah->intr_ref_cnt);
+ 			ath_dbg(common, RESET,
+ 				"GTT: Skipping interrupts\n");
+ 			goto out;
+@@ -478,7 +471,7 @@ void ath9k_tasklet(unsigned long data)
+ 	ath9k_btcoex_handle_interrupt(sc, status);
+ 
+ 	/* re-enable hardware interrupt */
+-	ath9k_hw_enable_interrupts(ah);
++	ath9k_hw_resume_interrupts(ah);
+ out:
+ 	spin_unlock(&sc->sc_pcu_lock);
+ 	ath9k_ps_restore(sc);
+@@ -542,7 +535,9 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 		return IRQ_NONE;
+ 
+ 	/* Cache the status */
+-	sc->intrstatus = status;
++	spin_lock(&sc->intr_lock);
++	sc->intrstatus |= status;
++	spin_unlock(&sc->intr_lock);
+ 
+ 	if (status & SCHED_INTR)
+ 		sched = true;
+@@ -588,7 +583,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+ 	if (sched) {
+ 		/* turn off every interrupt */
+-		ath9k_hw_disable_interrupts(ah);
++		ath9k_hw_kill_interrupts(ah);
+ 		tasklet_schedule(&sc->intr_tq);
+ 	}
+ 
+-- 
+2.11.0
