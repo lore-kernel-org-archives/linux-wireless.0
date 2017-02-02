@@ -1,77 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33643 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751532AbdBESPz (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34896 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751463AbdBBMRQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Feb 2017 13:15:55 -0500
-Subject: Re: rtlwifi: rtl8192c_common: "BUG: KASAN: slab-out-of-bounds"
-To: Larry Finger <Larry.Finger@lwfinger.net>
-References: <beff9033-0051-fd0f-87fe-8269a0d9c8d0@gmail.com>
- <f5682c5a-6c2c-8a35-61b6-1d7a30d2c1f6@gmail.com>
- <edbcbe3f-9b5d-cead-5885-27bc55ef550b@lwfinger.net>
- <b100135b-97c4-b2bc-4f19-2574e573878b@gmail.com>
- <3f1ad9bc-c065-4f1f-be78-70c0702867b4@lwfinger.net>
- <03153d2a-abfd-78b4-4365-b80ec718e3e1@gmail.com>
- <92f6dcb7-bbee-533a-7d49-21670286a3f3@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Dmitry Osipenko <digetx@gmail.com>
-Message-ID: <ae46e5de-9c43-d941-1d11-51d5aef791ea@gmail.com> (sfid-20170205_191626_742652_3AF1CD8D)
-Date: Sun, 5 Feb 2017 21:15:51 +0300
+        Thu, 2 Feb 2017 07:17:16 -0500
+Received: by mail-lf0-f67.google.com with SMTP id v186so1226146lfa.2
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 04:17:15 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2 1/7] brcmfmac: switch to C function (__brcmf_err) for printing errors
+Date: Thu,  2 Feb 2017 13:16:53 +0100
+Message-Id: <20170202121659.21130-1-zajec5@gmail.com> (sfid-20170202_131729_017000_FFCC1AFB)
 MIME-Version: 1.0
-In-Reply-To: <92f6dcb7-bbee-533a-7d49-21670286a3f3@lwfinger.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05.02.2017 20:30, Larry Finger wrote:
-> On 02/05/2017 05:34 AM, Dmitry Osipenko wrote:
->> BTW, I have an issue with the 8192cu: WiFi stops to work after a while (3-15
->> minutes) if I enable WMM QoS on the AP. There is nothing suspicious in KMSG,
->> connection is up but no packets go in/out. I tried to enable debug messages in
->> the driver, so when the WiFi stops to work I see that some "temperature/led"
->> notify still going on in the driver, but nothing happens when I try to initiate
->> a transfer (say to open a web page) - the log is silent, like the requests are
->> getting stuck/dropped somewhere before reaching the driver. Is it a known issue?
->> With the QoS disabled everything works hunky-dory, however I get 2x-4x faster
->> download speed with QoS enabled (while it works.)
->>
->> I noticed that rtl92c_init_edca_param() isn't wired in the driver, so I suppose
->> the QoS isn't implemented yet, right?
->>
->> If it is an expected behaviour, I think at least printing a warning message in
->> the KMSG like "QoS unimplemented, you may expect problems" should be good enough
->> to avoid confusion.
-> 
-> As you have already seen, I decided to defer the more invasive patch. When
-> backporting to stable, the smaller the change the better.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-That is a right approach.
+This will allow extending code and using more detailed messages e.g.
+with the help of dev_err. Note that *two separated* brcmf_err macros
+were replaced thanks to using a simple CONFIG_BRCMDBG symbol check in
+the body.
 
-> I have no knowledge of the internals of the RTL8192CU chip. As a result, the
-> kinds of changes I can make are limited. I do know that the chip does implement
-> QoS. I also noticed that the set_qos() callback routine was very different in
-> rtl8192ce than in rtl8192cu. Attached is an untested patch to make the CU
-> routine look like the CE version. Please see if it makes a difference.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/common.c | 19 +++++++++++++++++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 16 ----------------
+ 2 files changed, 19 insertions(+), 16 deletions(-)
 
-Thank you a lot, unfortunately it doesn't help.
-
-> Driver rtl8192cu has never been maintained by Realtek, and it will likely be
-> removed from the kernel in the next few cycles. As you are running a new kernel,
-> I would recommend rtl8xxxu instead. That driver has high reliability, and the
-> speed is improving. Your other option would be a driver offered by the vendor of
-> your particular device. Realtek used to have these drivers on their web site,
-> but they now seem to have been removed. If your vendor does not have a driver,
-> http://www.edimax.com/edimax/mw/cufiles/files/download/Driver_Utility/transfer/Wireless/NIC/EW-7811Un/EW-7811Un_Linux_driver_v1.0.0.5.zip
-> should work.
-
-Oh, I wasn't aware of rtl8xxxu. Thought it is a driver for some other HW. Thanks
-a lot for pointing to it, will give it a whirl.
-
-I'm maintaining a personal fork of a downstream driver for a dozen kernel
-releases now, need a hostapd sometime. Fortunately, it's not a big burden.
-
-Thank you a lot again, keep up the good work.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index f7c8c2e80349..05fb778ddd0f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -218,6 +218,25 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	return err;
+ }
+ 
++#ifndef CONFIG_BRCM_TRACING
++void __brcmf_err(const char *func, const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
++
++	if (!net_ratelimit() && !IS_ENABLED(CONFIG_BRCMDBG))
++		return;
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++	pr_err("%s: %pV", func, &vaf);
++
++	va_end(args);
++}
++#endif
++
+ #if defined(CONFIG_BRCM_TRACING) || defined(CONFIG_BRCMDBG)
+ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...)
+ {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 6687812770cc..5fef79473c87 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -45,26 +45,10 @@
+ #undef pr_fmt
+ #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+ 
+-/* Macro for error messages. net_ratelimit() is used when driver
+- * debugging is not selected. When debugging the driver error
+- * messages are as important as other tracing or even more so.
+- */
+-#ifndef CONFIG_BRCM_TRACING
+-#ifdef CONFIG_BRCMDBG
+-#define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
+-#else
+-#define brcmf_err(fmt, ...)						\
+-	do {								\
+-		if (net_ratelimit())					\
+-			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
+-	} while (0)
+-#endif
+-#else
+ __printf(2, 3)
+ void __brcmf_err(const char *func, const char *fmt, ...);
+ #define brcmf_err(fmt, ...) \
+ 	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
+-#endif
+ 
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+ __printf(3, 4)
 -- 
-Dmitry
+2.11.0
