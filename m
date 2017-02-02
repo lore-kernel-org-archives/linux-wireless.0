@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:35965 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753849AbdBGXFa (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34398 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbdBBVdg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 18:05:30 -0500
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Madalin Bucur <madalin.bucur@nxp.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Timur Tabi <timur@codeaurora.org>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
-        Woojung Huh <woojung.huh@microchip.com>
-Subject: [PATCH net-next v2 07/12] net: mvneta: fix build errors when linux/phy*.h is removed from net/dsa.h
-Date: Tue,  7 Feb 2017 15:03:00 -0800
-Message-Id: <20170207230305.18222-8-f.fainelli@gmail.com> (sfid-20170208_000624_480204_01F84CAB)
-In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
+        Thu, 2 Feb 2017 16:33:36 -0500
+Received: by mail-lf0-f66.google.com with SMTP id q89so46565lfi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 13:33:36 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 1/9] brcmfmac: merge two brcmf_err macros into one
+Date: Thu,  2 Feb 2017 22:33:13 +0100
+Message-Id: <20170202213321.11591-1-zajec5@gmail.com> (sfid-20170202_223357_807426_63BBE980)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-drivers/net/ethernet/marvell/mvneta.c:2694:26: error: storage size of 'status' isn't known
-drivers/net/ethernet/marvell/mvneta.c:2695:26: error: storage size of 'changed' isn't known
-drivers/net/ethernet/marvell/mvneta.c:2695:9: error: variable 'changed' has initializer but incomplete type
-drivers/net/ethernet/marvell/mvneta.c:2709:2: error: implicit declaration of function 'fixed_phy_update_state' [-Werror=implicit-function-declaration]
+This allows simplifying the code by adding a simple IS_ENABLED check for
+CONFIG_BRCMDB symbol.
 
-Add linux/phy_fixed.h to mvneta.c
-
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/ethernet/marvell/mvneta.c | 1 +
- 1 file changed, 1 insertion(+)
+V3: Re-add this patch (it was initially submited as RFC)
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/ethernet/marvell/mvneta.c b/drivers/net/ethernet/marvell/mvneta.c
-index 0f4d1697be46..fdf71720e707 100644
---- a/drivers/net/ethernet/marvell/mvneta.c
-+++ b/drivers/net/ethernet/marvell/mvneta.c
-@@ -28,6 +28,7 @@
- #include <linux/of_mdio.h>
- #include <linux/of_net.h>
- #include <linux/phy.h>
-+#include <linux/phy_fixed.h>
- #include <linux/platform_device.h>
- #include <linux/skbuff.h>
- #include <net/hwbm.h>
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 6687812770cc..1fe4aa973a92 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -45,20 +45,16 @@
+ #undef pr_fmt
+ #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+ 
++#ifndef CONFIG_BRCM_TRACING
+ /* Macro for error messages. net_ratelimit() is used when driver
+  * debugging is not selected. When debugging the driver error
+  * messages are as important as other tracing or even more so.
+  */
+-#ifndef CONFIG_BRCM_TRACING
+-#ifdef CONFIG_BRCMDBG
+-#define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
+-#else
+ #define brcmf_err(fmt, ...)						\
+ 	do {								\
+-		if (net_ratelimit())					\
++		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
+ 			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
+ 	} while (0)
+-#endif
+ #else
+ __printf(2, 3)
+ void __brcmf_err(const char *func, const char *fmt, ...);
 -- 
-2.9.3
+2.11.0
