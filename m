@@ -1,85 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:35775 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750910AbdBJV4G (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:37102 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751071AbdBBTkF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 16:56:06 -0500
-Received: by mail-pf0-f172.google.com with SMTP id 202so8964822pfx.2
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2017 13:55:30 -0800 (PST)
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH - REGRESSION] mwifiex: don't enable/disable IRQ 0 during suspend/resume
-Date: Fri, 10 Feb 2017 13:55:25 -0800
-Message-Id: <20170210215525.139701-1-briannorris@chromium.org> (sfid-20170210_225630_818077_6A80213F)
+        Thu, 2 Feb 2017 14:40:05 -0500
+To: =?UTF-8?Q?Amadeusz_S=c5=82awi=c5=84ski?=
+        <amadeusz.slawinski@tieto.com>, ath10k@lists.infradead.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
+ <1486030773-30600-2-git-send-email-amadeusz.slawinski@tieto.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <24b67aa9-53e0-a47b-d189-92ee337de671@dd-wrt.com> (sfid-20170202_204055_486055_6F9166EB)
+Date: Thu, 2 Feb 2017 20:20:50 +0100
+MIME-Version: 1.0
+In-Reply-To: <1486030773-30600-2-git-send-email-amadeusz.slawinski@tieto.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 2/3] ath10k: use size_t for len variables
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we don't have an out-of-band wakeup IRQ configured through DT (as
-most platforms don't), then we fall out of this function with
-'irq_wakeup == 0'. Other code (e.g., mwifiex_disable_wake() and
-mwifiex_enable_wake()) treats 'irq_wakeup >= 0' as a valid IRQ, and so
-we end up calling {enable,disable}_irq() on IRQ 0.
+consider that you changed the length of this datatype on 64 bit systems.
+unsigned int is always 32 bit, but size_t may be 64 bit too
 
-That seems bad, so let's not do that.
 
-Same problem as fixed in this patch:
+Am 02.02.2017 um 11:19 schrieb Amadeusz Sławiński:
+> cleanup to consolidate type used for len variables
+>
+> Signed-off-by: Amadeusz Sławiński <amadeusz.slawinski@tieto.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/core.c     |  2 +-
+>   drivers/net/wireless/ath/ath10k/debug.c    | 49 +++++++++++++++---------------
+>   drivers/net/wireless/ath/ath10k/spectral.c |  7 +++--
+>   3 files changed, 29 insertions(+), 29 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 749e381..2aa6bc7 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -349,7 +349,7 @@ void ath10k_core_get_fw_features_str(struct ath10k *ar,
+>   				     char *buf,
+>   				     size_t buf_len)
+>   {
+> -	unsigned int len = 0;
+> +	size_t len = 0;
+>   	int i;
+>   
+>   	for (i = 0; i < ATH10K_FW_FEATURE_COUNT; i++) {
+> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> index 82a4c67..f649236 100644
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -235,7 +235,7 @@ static ssize_t ath10k_read_wmi_services(struct file *file,
+>   {
+>   	struct ath10k *ar = file->private_data;
+>   	char *buf;
+> -	unsigned int len = 0, buf_len = 4096;
+> +	size_t len = 0, buf_len = 4096;
+>   	const char *name;
+>   	ssize_t ret_cnt;
+>   	bool enabled;
+> @@ -524,7 +524,7 @@ static ssize_t ath10k_fw_stats_read(struct file *file, char __user *user_buf,
+>   				    size_t count, loff_t *ppos)
+>   {
+>   	const char *buf = file->private_data;
+> -	unsigned int len = strlen(buf);
+> +	size_t len = strlen(buf);
+>   
+>   	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+>   }
+> @@ -542,17 +542,16 @@ static ssize_t ath10k_debug_fw_reset_stats_read(struct file *file,
+>   						size_t count, loff_t *ppos)
+>   {
+>   	struct ath10k *ar = file->private_data;
+> -	int ret, len, buf_len;
+> +	int ret;
+> +	size_t len = 0, buf_len = 500;
+>   	char *buf;
+>   
+> -	buf_len = 500;
+>   	buf = kmalloc(buf_len, GFP_KERNEL);
+>   	if (!buf)
+>   		return -ENOMEM;
+>   
+>   	spin_lock_bh(&ar->data_lock);
+>   
+> -	len = 0;
+>   	len += scnprintf(buf + len, buf_len - len,
+>   			 "fw_crash_counter\t\t%d\n", ar->stats.fw_crash_counter);
+>   	len += scnprintf(buf + len, buf_len - len,
+> @@ -691,7 +690,7 @@ static ssize_t ath10k_read_chip_id(struct file *file, char __user *user_buf,
+>   				   size_t count, loff_t *ppos)
+>   {
+>   	struct ath10k *ar = file->private_data;
+> -	unsigned int len;
+> +	size_t len;
+>   	char buf[50];
+>   
+>   	len = scnprintf(buf, sizeof(buf), "0x%08x\n", ar->chip_id);
+> @@ -726,8 +725,8 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+>   	struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
+>   	struct ath10k_dump_file_data *dump_data;
+>   	struct ath10k_tlv_dump_data *dump_tlv;
+> -	int hdr_len = sizeof(*dump_data);
+> -	unsigned int len, sofar = 0;
+> +	size_t hdr_len = sizeof(*dump_data);
+> +	size_t len, sofar = 0;
+>   	unsigned char *buf;
+>   
+>   	len = hdr_len;
+> @@ -844,7 +843,7 @@ static ssize_t ath10k_reg_addr_read(struct file *file,
+>   {
+>   	struct ath10k *ar = file->private_data;
+>   	u8 buf[32];
+> -	unsigned int len = 0;
+> +	size_t len = 0;
+>   	u32 reg_addr;
+>   
+>   	mutex_lock(&ar->conf_mutex);
+> @@ -892,7 +891,7 @@ static ssize_t ath10k_reg_value_read(struct file *file,
+>   {
+>   	struct ath10k *ar = file->private_data;
+>   	u8 buf[48];
+> -	unsigned int len;
+> +	size_t len;
+>   	u32 reg_addr, reg_val;
+>   	int ret;
+>   
+> @@ -1115,7 +1114,7 @@ static ssize_t ath10k_read_htt_stats_mask(struct file *file,
+>   {
+>   	struct ath10k *ar = file->private_data;
+>   	char buf[32];
+> -	unsigned int len;
+> +	size_t len;
+>   
+>   	len = scnprintf(buf, sizeof(buf), "%lu\n", ar->debug.htt_stats_mask);
+>   
+> @@ -1169,7 +1168,7 @@ static ssize_t ath10k_read_htt_max_amsdu_ampdu(struct file *file,
+>   	struct ath10k *ar = file->private_data;
+>   	char buf[64];
+>   	u8 amsdu, ampdu;
+> -	unsigned int len;
+> +	size_t len;
+>   
+>   	mutex_lock(&ar->conf_mutex);
+>   
+> @@ -1229,7 +1228,7 @@ static ssize_t ath10k_read_fw_dbglog(struct file *file,
+>   				     size_t count, loff_t *ppos)
+>   {
+>   	struct ath10k *ar = file->private_data;
+> -	unsigned int len;
+> +	size_t len;
+>   	char buf[96];
+>   
+>   	len = scnprintf(buf, sizeof(buf), "0x%16llx %u\n",
+> @@ -1555,11 +1554,10 @@ static ssize_t ath10k_read_ani_enable(struct file *file, char __user *user_buf,
+>   				      size_t count, loff_t *ppos)
+>   {
+>   	struct ath10k *ar = file->private_data;
+> -	int len = 0;
+> +	size_t len;
+>   	char buf[32];
+>   
+> -	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
+> -			ar->ani_enabled);
+> +	len = scnprintf(buf, sizeof(buf), "%d\n", ar->ani_enabled);
+>   
+>   	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+>   }
+> @@ -1584,11 +1582,10 @@ static ssize_t ath10k_read_nf_cal_period(struct file *file,
+>   					 size_t count, loff_t *ppos)
+>   {
+>   	struct ath10k *ar = file->private_data;
+> -	unsigned int len;
+> +	size_t len;
+>   	char buf[32];
+>   
+> -	len = scnprintf(buf, sizeof(buf), "%d\n",
+> -			ar->debug.nf_cal_period);
+> +	len = scnprintf(buf, sizeof(buf), "%d\n", ar->debug.nf_cal_period);
+>   
+>   	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+>   }
+> @@ -1684,9 +1681,10 @@ void ath10k_debug_tpc_stats_process(struct ath10k *ar,
+>   }
+>   
+>   static void ath10k_tpc_stats_print(struct ath10k_tpc_stats *tpc_stats,
+> -				   unsigned int j, char *buf, unsigned int *len)
+> +				   unsigned int j, char *buf, size_t *len)
+>   {
+> -	unsigned int i, buf_len;
+> +	int i;
+> +	size_t buf_len;
+>   	static const char table_str[][5] = { "CDD",
+>   					     "STBC",
+>   					     "TXBF" };
+> @@ -1726,7 +1724,8 @@ static void ath10k_tpc_stats_fill(struct ath10k *ar,
+>   				  struct ath10k_tpc_stats *tpc_stats,
+>   				  char *buf)
+>   {
+> -	unsigned int len, j, buf_len;
+> +	int j;
+> +	size_t len, buf_len;
+>   
+>   	len = 0;
+>   	buf_len = ATH10K_TPC_CONFIG_BUF_SIZE;
+> @@ -1860,7 +1859,7 @@ static ssize_t ath10k_tpc_stats_read(struct file *file, char __user *user_buf,
+>   				     size_t count, loff_t *ppos)
+>   {
+>   	const char *buf = file->private_data;
+> -	unsigned int len = strlen(buf);
+> +	size_t len = strlen(buf);
+>   
+>   	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+>   }
+> @@ -2284,7 +2283,7 @@ static ssize_t ath10k_debug_fw_checksums_read(struct file *file,
+>   					      size_t count, loff_t *ppos)
+>   {
+>   	struct ath10k *ar = file->private_data;
+> -	unsigned int len = 0, buf_len = 4096;
+> +	size_t len = 0, buf_len = 4096;
+>   	ssize_t ret_cnt;
+>   	char *buf;
+>   
+> @@ -2500,7 +2499,7 @@ void ath10k_dbg_dump(struct ath10k *ar,
+>   		     const void *buf, size_t len)
+>   {
+>   	char linebuf[256];
+> -	unsigned int linebuflen;
+> +	size_t linebuflen;
+>   	const void *ptr;
+>   
+>   	if (ath10k_debug_mask & mask) {
+> diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
+> index 2ffc1fe..c061d69 100644
+> --- a/drivers/net/wireless/ath/ath10k/spectral.c
+> +++ b/drivers/net/wireless/ath/ath10k/spectral.c
+> @@ -278,7 +278,7 @@ static ssize_t read_file_spec_scan_ctl(struct file *file, char __user *user_buf,
+>   {
+>   	struct ath10k *ar = file->private_data;
+>   	char *mode = "";
+> -	unsigned int len;
+> +	size_t len;
+>   	enum ath10k_spectral_mode spectral_mode;
+>   
+>   	mutex_lock(&ar->conf_mutex);
+> @@ -370,7 +370,7 @@ static ssize_t read_file_spectral_count(struct file *file,
+>   {
+>   	struct ath10k *ar = file->private_data;
+>   	char buf[32];
+> -	unsigned int len;
+> +	size_t len;
+>   	u8 spectral_count;
+>   
+>   	mutex_lock(&ar->conf_mutex);
+> @@ -422,7 +422,8 @@ static ssize_t read_file_spectral_bins(struct file *file,
+>   {
+>   	struct ath10k *ar = file->private_data;
+>   	char buf[32];
+> -	unsigned int len, bins, fft_size, bin_scale;
+> +	unsigned int bins, fft_size, bin_scale;
+> +	size_t len;
+>   
+>   	mutex_lock(&ar->conf_mutex);
+>   
 
-https://patchwork.kernel.org/patch/9531693/
-[PATCH v2 2/3] btmrvl: set irq_bt to -1 when failed to parse it
 
-with the difference that:
-(a) this one is actually a regression and
-(b) this affects both device tree and non-device-tree systems
-
-While fixing the regression, also drop the verbosity on the parse
-failure, so we don't see this when a DT node is present but doesn't have
-an interrupt property (this is perfectly legal):
-
-[   21.999000] mwifiex_pcie 0000:01:00.0: fail to parse irq_wakeup from device tree
-
-Fixes: 853402a00823 ("mwifiex: Enable WoWLAN for both sdio and pcie")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-This is a 4.10 regression. Not sure if it's critical to push quickly, or if it
-should just be tagged -stable and pushed in 4.11.
-
- drivers/net/wireless/marvell/mwifiex/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index e5c3a8aa3929..c246d8efb6fc 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1569,13 +1569,13 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
- 	struct device *dev = adapter->dev;
- 
- 	if (!dev->of_node)
--		return;
-+		goto err_exit;
- 
- 	adapter->dt_node = dev->of_node;
- 	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
- 	if (!adapter->irq_wakeup) {
--		dev_info(dev, "fail to parse irq_wakeup from device tree\n");
--		return;
-+		dev_dbg(dev, "fail to parse irq_wakeup from device tree\n");
-+		goto err_exit;
- 	}
- 
- 	ret = devm_request_irq(dev, adapter->irq_wakeup,
-@@ -1595,7 +1595,7 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
- 	return;
- 
- err_exit:
--	adapter->irq_wakeup = 0;
-+	adapter->irq_wakeup = -1;
- }
- 
- /*
 -- 
-2.11.0.483.g087da7b7c-goog
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
