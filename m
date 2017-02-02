@@ -1,201 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29262 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751281AbdBYNps (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33269 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751519AbdBBMRS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Feb 2017 08:45:48 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv2 3/4] cfg80211: Add Support set btcoex priority value
-Date: Sat, 25 Feb 2017 19:07:52 +0530
-Message-ID: <1488029873-14600-4-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170225_145114_012376_A3AAECF4)
-In-Reply-To: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
+        Thu, 2 Feb 2017 07:17:18 -0500
+Received: by mail-lf0-f65.google.com with SMTP id x1so1239079lff.0
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 04:17:17 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2 2/7] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
+Date: Thu,  2 Feb 2017 13:16:54 +0100
+Message-Id: <20170202121659.21130-2-zajec5@gmail.com> (sfid-20170202_131726_201488_3C180D08)
+In-Reply-To: <20170202121659.21130-1-zajec5@gmail.com>
+References: <20170202121659.21130-1-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-This change enables user to set btcoex priority by using
-NL80211_ATTR_BTCOEX_PRIORITY attribute for the driver which
-has the btcoex priority capability. Driver should expose such
-capability and make use of this priority to decide whom to share the radio
-(either bluetooth or WLAN). When the high priority wlan frames are queued
-driver or firmware will signal to block BT activity.
-Capable drivers should advertise this support through
-btcoex_priority_support.
+This will allow getting struct device reference from the passed
+brcmf_pub for the needs of dev_err. More detailed messages are really
+important for home routers which frequently have 2 (or even 3) wireless
+cards supported by brcmfmac.
 
-This will be useful to avoid connection lost or packet drop
-issue when BT is active on long time.
+Note that all calls are yet to be updated as for now brcmf_err macro
+always passes NULL. This will be handled in following patch to make this
+change easier to review.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- include/net/cfg80211.h       |   10 ++++++++--
- include/uapi/linux/nl80211.h |    7 +++++++
- net/wireless/nl80211.c       |   16 +++++++++++++++-
- net/wireless/rdev-ops.h      |    8 +++++---
- net/wireless/trace.h         |   10 ++++++----
- 5 files changed, 41 insertions(+), 10 deletions(-)
+V2: Add missing include
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h        | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h      | 9 +++++----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 4 +++-
+ 4 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a9aae03..3f44aac 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2817,7 +2817,10 @@ struct cfg80211_nan_func {
-  *
-  * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
-  * @set_btcoex: Use this callback to call driver API when user wants to
-- *	enable/disable btcoex.
-+ *	enable/disable btcoex and use this callback to set wlan high priority over
-+ *	Bluetooth. This capability will be exposed by the driver using
-+ *	btcoex_priority_support boolean flag. When BTCOEX enabled,
-+ *	the high priority wlan frames will have more priority than BT.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3102,7 +3105,8 @@ struct cfg80211_ops {
- 	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
- 					    struct net_device *dev,
- 					    const bool enabled);
--	int     (*set_btcoex)(struct wiphy *wiphy, bool enabled);
-+	int     (*set_btcoex)(struct wiphy *wiphy, bool enabled,
-+			      int btcoex_priority);
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index 76693df34742..35d4801a62e6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -17,6 +17,8 @@
+ #ifndef BRCMFMAC_BUS_H
+ #define BRCMFMAC_BUS_H
  
- /*
-@@ -3738,6 +3742,8 @@ struct wiphy {
- 
- 	u8 nan_supported_bands;
- 
-+	bool btcoex_priority_support;
++#include <linux/device.h>
 +
- 	char priv[0] __aligned(NETDEV_ALIGN);
- };
+ #include "debug.h"
  
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 30d691f..94b6eff 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2019,6 +2019,12 @@ enum nl80211_commands {
-  *     the btcoex feature. When used with %NL80211_CMD_SET_BTCOEX it contains
-  *     either 0 for disable or 1 for enable btcoex.
-  *
-+ * @NL80211_ATTR_BTCOEX_PRIORITY: This is for the driver which
-+ *     support btcoex priority feature. It used with %NL80211_CMD_SET_BTCOEX.
-+ *     This will have u32 BITMAP value which represents
-+ *     frame(bk, be, vi, vo, mgmt, beacon) type and that will have more
-+ *     priority than a BT traffic.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2431,6 +2437,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_TIMEOUT_REASON,
+ /* IDs of the 6 default common rings of msgbuf protocol */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 05fb778ddd0f..0978fb4c9066 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -219,7 +219,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ }
  
- 	NL80211_ATTR_BTCOEX_OP,
-+	NL80211_ATTR_BTCOEX_PRIORITY,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bd203c2..56518c4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -411,6 +411,7 @@ enum nl80211_multicast_groups {
- 	},
- 	[NL80211_ATTR_TIMEOUT_REASON] = { .type = NLA_U32 },
- 	[NL80211_ATTR_BTCOEX_OP] = { .type = NLA_U8 },
-+	[NL80211_ATTR_BTCOEX_PRIORITY] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -11970,7 +11971,9 @@ static int nl80211_set_multicast_to_unicast(struct sk_buff *skb,
- static int nl80211_set_btcoex(struct sk_buff *skb, struct genl_info *info)
+ #ifndef CONFIG_BRCM_TRACING
+-void __brcmf_err(const char *func, const char *fmt, ...)
++void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
  {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wiphy *wiphy = &rdev->wiphy;
- 	u8 val = 0;
-+	int btcoex_priority = -1;
+ 	struct va_format vaf;
+ 	va_list args;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 5fef79473c87..012401e6be74 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -19,6 +19,8 @@
  
- 	if (!rdev->ops->set_btcoex)
- 		return -ENOTSUPP;
-@@ -11984,9 +11987,20 @@ static int nl80211_set_btcoex(struct sk_buff *skb, struct genl_info *info)
- 	if (val > 1)
- 		return -EINVAL;
+ #include <linux/net.h>	/* net_ratelimit() */
  
-+	if (wiphy->btcoex_priority_support)
-+		btcoex_priority = 0;
++struct brcmf_pub;
 +
-+	if (info->attrs[NL80211_ATTR_BTCOEX_PRIORITY]) {
-+		if (!wiphy->btcoex_priority_support)
-+			return -EOPNOTSUPP;
-+
-+		btcoex_priority =
-+		nla_get_u32(info->attrs[NL80211_ATTR_BTCOEX_PRIORITY]);
-+
-+	}
+ /* message levels */
+ #define BRCMF_TRACE_VAL		0x00000002
+ #define BRCMF_INFO_VAL		0x00000004
+@@ -45,10 +47,10 @@
+ #undef pr_fmt
+ #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
  
- set_btcoex:
--	return rdev_set_btcoex(rdev, val);
-+	return rdev_set_btcoex(rdev, val, btcoex_priority);
- }
+-__printf(2, 3)
+-void __brcmf_err(const char *func, const char *fmt, ...);
++__printf(3, 4)
++void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...);
+ #define brcmf_err(fmt, ...) \
+-	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
++	__brcmf_err(NULL, __func__, fmt, ##__VA_ARGS__)
  
- #define NL80211_FLAG_NEED_WIPHY		0x01
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 6592f14..7c0c139 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1155,13 +1155,15 @@ static inline int rdev_set_qos_map(struct cfg80211_registered_device *rdev,
- }
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+ __printf(3, 4)
+@@ -91,7 +93,6 @@ do {									\
  
- static inline int
--rdev_set_btcoex(struct cfg80211_registered_device *rdev, bool enabled)
-+rdev_set_btcoex(struct cfg80211_registered_device *rdev, bool enabled,
-+		int btcoex_priority)
+ extern int brcmf_msg_level;
+ 
+-struct brcmf_pub;
+ #ifdef DEBUG
+ void brcmf_debugfs_init(void);
+ void brcmf_debugfs_exit(void);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+index fe6755944b7b..329cb65eb78b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+@@ -18,10 +18,12 @@
+ 
+ #ifndef __CHECKER__
+ #define CREATE_TRACE_POINTS
++#include "bus.h"
++#include "core.h"
+ #include "tracepoint.h"
+ #include "debug.h"
+ 
+-void __brcmf_err(const char *func, const char *fmt, ...)
++void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
  {
- 	int ret = -ENOTSUPP;
- 
--	trace_rdev_set_btcoex(&rdev->wiphy, enabled);
--	ret = rdev->ops->set_btcoex(&rdev->wiphy, enabled);
-+	trace_rdev_set_btcoex(&rdev->wiphy, enabled, btcoex_priority);
-+	ret = rdev->ops->set_btcoex(&rdev->wiphy, enabled, btcoex_priority);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-+
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index c3970b1..4f88f50 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3048,18 +3048,20 @@
- );
- 
- TRACE_EVENT(rdev_set_btcoex,
--	TP_PROTO(struct wiphy *wiphy, bool enabled),
--	TP_ARGS(wiphy, enabled),
-+	TP_PROTO(struct wiphy *wiphy, bool enabled, int btcoex_priority),
-+	TP_ARGS(wiphy, enabled, btcoex_priority),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		__field(bool, enabled)
-+		__field(int, btcoex_priority)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		__entry->enabled = enabled;
-+		__entry->btcoex_priority = btcoex_priority;
- 	),
--	TP_printk(WIPHY_PR_FMT, ", enabled=%d",
--		  WIPHY_PR_ARG, __entry->enabled)
-+	TP_printk(WIPHY_PR_FMT, ", enabled=%d btcoex_priority :%d",
-+		  WIPHY_PR_ARG, __entry->enabled, __entry->btcoex_priority)
- );
- 
- DEFINE_EVENT(wiphy_wdev_evt, rdev_abort_scan,
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
 -- 
-1.7.9.5
+2.11.0
