@@ -1,97 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58756 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751804AbdBXA3L (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33166 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751081AbdBBAGA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 19:29:11 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 162/306] mac80211-hwsim: add length checks before allocating skb.
-Date: Thu, 23 Feb 2017 16:28:29 -0800
-Message-Id: <1487896109-23851-7-git-send-email-greearb@candelatech.com> (sfid-20170224_012924_608239_582B171A)
-In-Reply-To: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
-References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
+        Wed, 1 Feb 2017 19:06:00 -0500
+Received: by mail-pg0-f66.google.com with SMTP id 194so33984pgd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2017 16:05:38 -0800 (PST)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH] mac80211: Remove VHT Capabilities/Operation IEs from mesh beacon if VHT was disabled
+Date: Thu,  2 Feb 2017 09:05:28 +0900
+Message-Id: <1485993928-3822-1-git-send-email-masashi.honma@gmail.com> (sfid-20170202_010830_234400_9D5F5AB0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+When wpa_supplicant.conf includes disable_ht=1, the beacon of the mesh
+node does not have HT Capabilities/Operation IEs. However, the beacon
+of the mesh node has VHT Capabilities/Operation IEs even though
+wpa_supplicant.conf includes disable_vht=1.
 
-Modify the receive-from-user-space logic to do length
-and 'is-down' checks before trying to allocate an skb.
+This patch removes VHT Capabilities/Operation IEs when the
+wpa_supplicant.conf includes disable_vht=1. We recognize the local peer
+as 11ac ready, when it has more than 80MHz band width. Because
+net/mac80211/util.c#ieee80211_build_preq_ies_band() uses 80MHz threshold
+for VHT Capabilities IE inclusion.
 
-And, if we are going to ignore the pkt due to radio idle,
-then do not return an error code to user-space.  User-space
-cannot reliably know exactly when a radio is idle or not.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 43 +++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 19 deletions(-)
+ net/mac80211/mesh.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 48ddf5d..3a96933 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3020,25 +3020,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
- 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 9c23172..a30be19 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -469,9 +469,9 @@ int mesh_add_vht_cap_ie(struct ieee80211_sub_if_data *sdata,
  
--	/* Allocate new skb here */
--	skb = alloc_skb(frame_data_len, GFP_KERNEL);
--	if (skb == NULL) {
--		if (net_ratelimit())
--			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
--			       frame_data_len);
--		goto out;
--	}
--
--	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
--		if (net_ratelimit())
--			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
--			       frame_data_len, IEEE80211_MAX_DATA_LEN);
--		goto out;
--	}
--
--	/* Copy the data */
--	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
--
- 	data2 = get_hwsim_data_ref_from_addr(dst);
+ 	sband = local->hw.wiphy->bands[band];
+ 	if (!sband->vht_cap.vht_supported ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
++	    !(sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_80 ||
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_80P80 ||
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_160))
+ 		return 0;
  
- 	if (!data2) {
-@@ -3067,9 +3048,33 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 		if (((cnt++ & 0x3FF) == 0x3FF) && net_ratelimit())
- 			printk(KERN_DEBUG " hwsim rx-nl: radio %pM idle: %d or not started: %d cnt: %d\n",
- 			       dst, data2->idle, !data2->started, cnt);
-+		/* Fail silently, no need to bug user-space about this, since lots of races
-+		 * in up/down interface, and the user-space app cannot keep perfectly
-+		 * in sync.
-+		 */
-+		return 0;
-+	}
-+
-+	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
-+			       frame_data_len, IEEE80211_MAX_DATA_LEN);
-+		goto out;
-+	}
-+
-+
-+	/* Allocate new skb here */
-+	skb = alloc_skb(frame_data_len, GFP_KERNEL);
-+	if (skb == NULL) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
-+			       frame_data_len);
- 		goto out;
- 	}
+ 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_vht_cap))
+@@ -506,9 +506,9 @@ int mesh_add_vht_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	vht_cap = &sband->vht_cap;
  
-+	/* Copy the data */
-+	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
-+
- 	/* A frame is received from user space */
- 	memset(&rx_status, 0, sizeof(rx_status));
- 	if (info->attrs[HWSIM_ATTR_FREQ]) {
+ 	if (!vht_cap->vht_supported ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
++	    !(sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_80 ||
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_80P80 ||
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_160))
+ 		return 0;
+ 
+ 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_vht_operation))
 -- 
-2.4.11
+2.7.4
