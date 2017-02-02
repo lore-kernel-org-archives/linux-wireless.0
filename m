@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36332 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750808AbdBBNLR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 08:11:17 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51416 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751041AbdBBKBl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Feb 2017 05:01:41 -0500
+Date: Thu, 2 Feb 2017 10:56:53 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: Felix Fietkau <nbd@nbd.name>
 Cc: linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Subject: Re: [PATCH v4 3/3] mt76: add driver code for MT76x2e
-References: <20170202115208.8614-1-nbd@nbd.name>
-        <20170202115208.8614-4-nbd@nbd.name>
-        <0eecf8bd-1bfc-ce97-d58c-60d072e9521f@nbd.name>
-Date: Thu, 02 Feb 2017 15:11:01 +0200
-In-Reply-To: <0eecf8bd-1bfc-ce97-d58c-60d072e9521f@nbd.name> (Felix Fietkau's
-        message of "Thu, 2 Feb 2017 13:53:47 +0100")
-Message-ID: <87d1f0ohzu.fsf@kamboji.qca.qualcomm.com> (sfid-20170202_141120_687545_5C781D1E)
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Vishal Thanki <vishalthanki@gmail.com>
+Subject: Re: [PATCH v3] rt2x00: avoid introducing a USB dependency in the
+Message-ID: <20170202095653.GA23113@redhat.com> (sfid-20170202_110144_443828_24416AC9)
+References: <1485863050-24895-1-git-send-email-sgruszka@redhat.com>
+ <c8a64272-26b1-71d8-4557-9d38cbc83927@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c8a64272-26b1-71d8-4557-9d38cbc83927@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+On Wed, Feb 01, 2017 at 05:33:38PM +0100, Felix Fietkau wrote:
+> > v1 -> v2 do not break shutdown sequence
+> > v2 -> v3 update patch to current kernel version
+> What happened to the subject? It ends mid-sentence.
 
-> On 2017-02-02 12:52, Felix Fietkau wrote:
->> This is a 2x2 PCIe 802.11ac chipset by MediaTek
->> 
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> Kalle, Please also add:
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
->
-> Or should I resend?
+I somehow truncated it during rework, will post fixed one.
 
-No need, I can add that during commit. But I would like that Lorenzo
-himself replies to this email with the Signed-off-by line.
-
--- 
-Kalle Valo
+Thanks
+Stanislaw
