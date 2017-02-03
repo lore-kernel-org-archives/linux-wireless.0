@@ -1,142 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59806 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751298AbdBOOCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 09:02:15 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:38016 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753168AbdBCOka (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Feb 2017 09:40:30 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/5] ieee80211: rename CCFS1/CCFS2 to CCFS0/CCFS1
-Date: Wed, 15 Feb 2017 15:02:06 +0100
-Message-Id: <20170215140210.19393-1-johannes@sipsolutions.net> (sfid-20170215_150219_779324_A1F73CEB)
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:38:04 +0200
+Message-Id: <20170203143812.7525-18-luca@coelho.fi> (sfid-20170203_154034_049543_7814D627)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 17/25] iwlwifi: pcie: fix the set of DMA memory mask
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-This matches the spec, and otherwise things are really
-confusing with the next patch adding CCFS2.
+Our 9000 device supports 64 bit DMA address for RX only, and
+not for TX.
+Setting DMA mask to 64 for the whole device is erroneous - we
+can do it only for a000 devices where device is capable of
+both RX & TX DMA with 64 bit address space.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 96a6497bc3ed ("iwlwifi: pcie: add 9000 series multi queue rx DMA support")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/tdls.c |  2 +-
- include/linux/ieee80211.h                   |  4 ++--
- net/mac80211/spectmgmt.c                    |  4 ++--
- net/mac80211/util.c                         | 22 +++++++++++-----------
- 4 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
-index df9704de0715..5fc8319ed302 100644
---- a/drivers/net/wireless/marvell/mwifiex/tdls.c
-+++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
-@@ -349,7 +349,7 @@ static int mwifiex_tdls_add_vht_oper(struct mwifiex_private *priv,
- 		chan_bw = IEEE80211_VHT_CHANWIDTH_USE_HT;
- 		break;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index c1d99d15796d..b28d99f61a35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2953,16 +2953,12 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 				       PCIE_LINK_STATE_CLKPM);
  	}
--	vht_oper->center_freq_seg1_idx =
-+	vht_oper->center_freq_seg0_idx =
- 			mwifiex_get_center_freq_index(priv, BAND_AAC,
- 						      bss_desc->channel,
- 						      chan_bw);
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 0dd9498c694f..4a15e77d9d66 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1525,14 +1525,14 @@ enum ieee80211_vht_chanwidth {
-  * This structure is the "VHT operation element" as
-  * described in 802.11ac D3.0 8.4.2.161
-  * @chan_width: Operating channel width
-+ * @center_freq_seg0_idx: center freq segment 0 index
-  * @center_freq_seg1_idx: center freq segment 1 index
-- * @center_freq_seg2_idx: center freq segment 2 index
-  * @basic_mcs_set: VHT Basic MCS rate set
-  */
- struct ieee80211_vht_operation {
- 	u8 chan_width;
-+	u8 center_freq_seg0_idx;
- 	u8 center_freq_seg1_idx;
--	u8 center_freq_seg2_idx;
- 	__le16 basic_mcs_set;
- } __packed;
  
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index 97f4c9d6b54c..0782e486fe89 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -132,9 +132,9 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 		struct ieee80211_vht_operation vht_oper = {
- 			.chan_width =
- 				wide_bw_chansw_ie->new_channel_width,
--			.center_freq_seg1_idx =
-+			.center_freq_seg0_idx =
- 				wide_bw_chansw_ie->new_center_freq_seg0,
--			.center_freq_seg2_idx =
-+			.center_freq_seg1_idx =
- 				wide_bw_chansw_ie->new_center_freq_seg1,
- 			/* .basic_mcs_set doesn't matter */
- 		};
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ac59fbd280df..7a37ce78bb38 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2413,13 +2413,13 @@ u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
- 	*pos++ = WLAN_EID_VHT_OPERATION;
- 	*pos++ = sizeof(struct ieee80211_vht_operation);
- 	vht_oper = (struct ieee80211_vht_operation *)pos;
--	vht_oper->center_freq_seg1_idx = ieee80211_frequency_to_channel(
-+	vht_oper->center_freq_seg0_idx = ieee80211_frequency_to_channel(
- 							chandef->center_freq1);
- 	if (chandef->center_freq2)
--		vht_oper->center_freq_seg2_idx =
-+		vht_oper->center_freq_seg1_idx =
- 			ieee80211_frequency_to_channel(chandef->center_freq2);
- 	else
--		vht_oper->center_freq_seg2_idx = 0x00;
-+		vht_oper->center_freq_seg1_idx = 0x00;
- 
- 	switch (chandef->width) {
- 	case NL80211_CHAN_WIDTH_160:
-@@ -2428,11 +2428,11 @@ u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
- 		 * workaround.
- 		 */
- 		vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80MHZ;
--		vht_oper->center_freq_seg2_idx = vht_oper->center_freq_seg1_idx;
-+		vht_oper->center_freq_seg1_idx = vht_oper->center_freq_seg0_idx;
- 		if (chandef->chan->center_freq < chandef->center_freq1)
--			vht_oper->center_freq_seg1_idx -= 8;
-+			vht_oper->center_freq_seg0_idx -= 8;
- 		else
--			vht_oper->center_freq_seg1_idx += 8;
-+			vht_oper->center_freq_seg0_idx += 8;
- 		break;
- 	case NL80211_CHAN_WIDTH_80P80:
- 		/*
-@@ -2491,9 +2491,9 @@ bool ieee80211_chandef_vht_oper(const struct ieee80211_vht_operation *oper,
- 	if (!oper)
- 		return false;
- 
--	cf1 = ieee80211_channel_to_frequency(oper->center_freq_seg1_idx,
-+	cf1 = ieee80211_channel_to_frequency(oper->center_freq_seg0_idx,
- 					     chandef->chan->band);
--	cf2 = ieee80211_channel_to_frequency(oper->center_freq_seg2_idx,
-+	cf2 = ieee80211_channel_to_frequency(oper->center_freq_seg1_idx,
- 					     chandef->chan->band);
- 
- 	switch (oper->chan_width) {
-@@ -2503,11 +2503,11 @@ bool ieee80211_chandef_vht_oper(const struct ieee80211_vht_operation *oper,
- 		new.width = NL80211_CHAN_WIDTH_80;
- 		new.center_freq1 = cf1;
- 		/* If needed, adjust based on the newer interop workaround. */
--		if (oper->center_freq_seg2_idx) {
-+		if (oper->center_freq_seg1_idx) {
- 			unsigned int diff;
- 
--			diff = abs(oper->center_freq_seg2_idx -
--				   oper->center_freq_seg1_idx);
-+			diff = abs(oper->center_freq_seg1_idx -
-+				   oper->center_freq_seg0_idx);
- 			if (diff == 8) {
- 				new.width = NL80211_CHAN_WIDTH_160;
- 				new.center_freq1 = cf2;
+-	if (cfg->mq_rx_supported)
+-		addr_size = 64;
+-	else
+-		addr_size = 36;
+-
+ 	if (cfg->use_tfh) {
++		addr_size = 64;
+ 		trans_pcie->max_tbs = IWL_TFH_NUM_TBS;
+ 		trans_pcie->tfd_size = sizeof(struct iwl_tfh_tfd);
+-
+ 	} else {
++		addr_size = 36;
+ 		trans_pcie->max_tbs = IWL_NUM_OF_TBS;
+ 		trans_pcie->tfd_size = sizeof(struct iwl_tfd);
+ 	}
 -- 
-2.9.3
+2.11.0
