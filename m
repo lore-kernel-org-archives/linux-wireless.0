@@ -1,95 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:33026 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933822AbdBVXH5 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37848 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752721AbdBCOi2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Feb 2017 18:07:57 -0500
-Received: by mail-qk0-f195.google.com with SMTP id x71so2622556qkb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2017 15:06:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20170222213057.GA33925@ubuntu-hedt>
-References: <20170218063515.16071-1-ryan@mounce.com.au> <20170222213057.GA33925@ubuntu-hedt>
-From: Ryan Mounce <ryan@mounce.com.au>
-Date: Thu, 23 Feb 2017 09:35:53 +1030
-Message-ID: <CAN+fvRb8R_3QyrnFFp0gd8PCcFXwbitNyh8K=ONqbmsGTrBsHQ@mail.gmail.com> (sfid-20170223_001058_739420_4AD8E69A)
-Subject: Re: [PATCH] wireless-regdb: Update rules for Australia (AU) and add
- 60GHz rules
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Fri, 3 Feb 2017 09:38:28 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Beni Lev <beni.lev@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:37:51 +0200
+Message-Id: <20170203143812.7525-5-luca@coelho.fi> (sfid-20170203_153833_060647_B6DB0EFC)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 04/25] iwlwifi: mvm: Use aux queue for offchannel frames in dqa
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 February 2017 at 08:00, Seth Forshee <seth.forshee@canonical.com> wrote:
-> On Sat, Feb 18, 2017 at 05:05:15PM +1030, Ryan Mounce wrote:
->> Sourced from the latest legislation at
->> https://www.legislation.gov.au/Details/F2016C0043
->
-> This link isn't working for me.
+From: Beni Lev <beni.lev@intel.com>
 
-Oops, I truncated that URL. Working link (also in the patch itself):
-https://www.legislation.gov.au/Details/F2016C00432
+Since offchannel activity doesn't always require a BSS, e.g. ANQP
+sessions, offchannel frames should not use the BSS queue, because it
+might not be initialized.
+Use the auxilary queue instead
 
->> The current rules exceed legal limits between 5250-5330MHz, and permit
->> illegal operation in 5600-5650MHz (reserved for weather radar).
->
-> The changes also increases the limits for most other ranges, by quite a
-> bit in some cases. Seems that this should also be mentioned in the
-> changelog, and I'd like to be able to check those changes against the
-> documentation.
+Fixes: e3118ad74d7e ("iwlwifi: mvm: support tdls in dqa mode")
+Signed-off-by: Beni Lev <beni.lev@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-All of the updated power limits are converted to dBm but otherwise
-straight out of the document, so they shouldn't be a problem. I'll
-update the changelog to note this.
-
-The frequency ranges have been "rounded down" to conform with the
-apparent convention of only including ranges used by standard 802.11
-channels, rather than using the actual frequency ranges as has been
-done for some countries (and most 60GHz rules). My preference is the
-latter so that there is a clear correlation between the regdb and
-relevant documentation, and so that the regdb may become useful beyond
-802.11. With your blessing as maintainer I will also make this change
-to the patch.
-
-Regards,
-Ryan Mounce
-
-> Thanks,
-> Seth
->
->>
->> Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
->> ---
->>  db.txt | 15 ++++++++++-----
->>  1 file changed, 10 insertions(+), 5 deletions(-)
->>
->> diff --git a/db.txt b/db.txt
->> index 05108e0..b951e0c 100644
->> --- a/db.txt
->> +++ b/db.txt
->> @@ -85,12 +85,17 @@ country AT: DFS-ETSI
->>       # 60 GHz band channels 1-4, ref: Etsi En 302 567
->>       (57000 - 66000 @ 2160), (40)
->>
->> +# Source:
->> +# https://www.legislation.gov.au/Details/F2016C00432
->> +# Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B
->>  country AU: DFS-ETSI
->> -     (2402 - 2482 @ 40), (20)
->> -     (5170 - 5250 @ 80), (17), AUTO-BW
->> -     (5250 - 5330 @ 80), (24), DFS, AUTO-BW
->> -     (5490 - 5710 @ 160), (24), DFS
->> -     (5735 - 5835 @ 80), (30)
->> +     (2402 - 2482 @ 40), (36)
->> +     (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
->> +     (5250 - 5330 @ 80), (23), NO-OUTDOOR, AUTO-BW, DFS
->> +     (5490 - 5590 @ 80), (30), DFS
->> +     (5650 - 5730 @ 80), (30), DFS
->> +     (5735 - 5835 @ 80), (36)
->> +     (57000 - 66000 @ 2160), (43), NO-OUTDOOR
->>
->>  country AW: DFS-ETSI
->>       (2402 - 2482 @ 40), (20)
->> --
->> 2.11.0
->>
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 2b2db38eee3e..ea5d5b0d85b3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -570,9 +570,10 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 	 * (this is not possible for unicast packets as a TLDS discovery
+ 	 * response are sent without a station entry); otherwise use the
+ 	 * AUX station.
+-	 * In DQA mode, if vif is of type STATION and frames are not multicast,
+-	 * they should be sent from the BSS queue. For example, TDLS setup
+-	 * frames should be sent on this queue, as they go through the AP.
++	 * In DQA mode, if vif is of type STATION and frames are not multicast
++	 * or offchannel, they should be sent from the BSS queue.
++	 * For example, TDLS setup frames should be sent on this queue,
++	 * as they go through the AP.
+ 	 */
+ 	sta_id = mvm->aux_sta.sta_id;
+ 	if (info.control.vif) {
+@@ -594,7 +595,8 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 			if (ap_sta_id != IWL_MVM_STATION_COUNT)
+ 				sta_id = ap_sta_id;
+ 		} else if (iwl_mvm_is_dqa_supported(mvm) &&
+-			   info.control.vif->type == NL80211_IFTYPE_STATION) {
++			   info.control.vif->type == NL80211_IFTYPE_STATION &&
++			   queue != mvm->aux_queue) {
+ 			queue = IWL_MVM_DQA_BSS_CLIENT_QUEUE;
+ 		}
+ 	}
+-- 
+2.11.0
