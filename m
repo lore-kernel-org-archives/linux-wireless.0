@@ -1,73 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout02.posteo.de ([185.67.36.142]:56107 "EHLO mout02.posteo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754928AbdBGQxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 11:53:15 -0500
-From: Tobias Guggenmos <slartibartfas421@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: rtlwifi: rtl8192c_common: "BUG: KASAN: slab-out-of-bounds"
-Date: Tue, 07 Feb 2017 17:45:47 +0100
-Message-ID: <46454409.lUoPi3ZtJt@slartibartfas> (sfid-20170207_175355_255005_1FE980A9)
-In-Reply-To: <fbe5786e-54eb-b8a7-1540-64a913692361@lwfinger.net>
-References: <beff9033-0051-fd0f-87fe-8269a0d9c8d0@gmail.com> <1486376979.14226.9.camel@sipsolutions.net> <fbe5786e-54eb-b8a7-1540-64a913692361@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3654023.x75vBVevz6"; micalg="pgp-sha256"; protocol="application/pgp-signature"
+Received: from paleale.coelho.fi ([176.9.41.70]:38096 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751131AbdBCQnM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Feb 2017 11:43:12 -0500
+Message-ID: <1486140182.26003.100.camel@coelho.fi> (sfid-20170203_174340_259638_239FF08D)
+From: Luca Coelho <luca@coelho.fi>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>,
+        "matti.gottlieb@intel.com" <matti.gottlieb@intel.com>,
+        "sara.sharon@intel.com" <sara.sharon@intel.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+Date: Fri, 03 Feb 2017 18:43:02 +0200
+In-Reply-To: <8520D5D51A55D047800579B094147198263E067A@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198263E067A@XAP-PVEXMBX02.xlnx.xilinx.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Issues with FW with Intel 720 wifi card
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3654023.x75vBVevz6
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Hi Bharat,
 
-Am Montag, 6. Februar 2017, 09:45:31 CET schrieb Larry Finger:
-> On 02/06/2017 04:29 AM, Johannes Berg wrote:
-> > On Sat, 2017-02-04 at 12:41 -0600, Larry Finger wrote:
-> >> On 02/04/2017 10:58 AM, Dmitry Osipenko wrote:
-> >>> Seems the problem is caused by rtl92c_dm_*() casting .priv to
-> >>> "struct
-> >>> rtl_pci_priv", while it is "struct rtl_usb_priv".
-> >> 
-> >> Those routines are shared by rtl8192ce and rtl8192cu, thus we need to
-> >> make that
-> >> difference in cast to be immaterial. I think we need to move "struct
-> >> bt_coexist_info" to the beginning of both rtlpci_priv and
-> >> rtl_usb_priv. Then it
-> >> should not matter.
-> > 
-> > I think you really should consider putting a struct rtl_common into
-> > that or something, and getting rid of all the casting that causes this
-> > problem to start with?
+
+On Fri, 2017-02-03 at 16:27 +0000, Bharat Kumar Gogada wrote:
+> Hi,
 > 
-> The fix you suggest is prepared and will be submitted soon. As it is much
-> more invasive with ~150 insertions and ~160 deletions, I decided not to
-> have it be the one that is pushed to all stable kernels from 4.0 onward.
+> Im using linux 4.6 kernel, I get following error when I do interface up.
 > 
-> Larry
+> Here is the boot log.
+> [    4.407681] iwlwifi 0000:01:00.0: loaded firmware version 16.242414.0 op_mode iwlmvm
+> [    4.407742] iwlwifi 0000:01:00.0: Detected Intel(R) Wireless N 7260, REV=0x144
+> [    4.407831] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
+> [    4.408116] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
+> 
+> When I do interface up I get following :
+> [    9.419999] iwlwifi 0000:01:00.0: Failed to load firmware chunk!
+> [    9.425947] iwlwifi 0000:01:00.0: Could not load the [0] uCode section
+> [    9.432472] iwlwifi 0000:01:00.0: Failed to start INIT ucode: -110
+> [    9.438899] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -110
+> [    9.444858] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
 
-This is possibly related to the following Fedora Bug:
-https://bugzilla.redhat.com/show_bug.cgi?id=1391987
+It's hard to say why this is happening.
 
 
---nextPart3654023.x75vBVevz6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+> I downloaded firmware from here
+> https://wireless.wiki.kernel.org/en/users/Drivers/iwlwifi
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Why did you have to download the firmware? Doesn't your distro include
+the binaries from linux-firmware.git?
 
-iQEcBAABCAAGBQJYmfm7AAoJEHWN/oaUcOECveQH/3YtI204WhAQc2HCAIfnsBjm
-a6BGPdR8jdnv9xt2h63srh/R4N0SNLgmFYHQjqr4G9CSn1TbLe+G0v9R/F6a2UBG
-/8h4z+7k81uXf7VpUUpFA4rCSdYz0LFEe9wsqY6v1FtQPyfpRPb7fZgZf4s1c5Di
-DYVV4P64bRiRQT+lf9k7+S3pqjQ1Tf2VHBAVun66J0zCinG0qc9tSegwxjGINsQp
-PeeyZh/og3tCiLYakUpCZjVWJL5HbtL06yFLRTm8kz0YYC4TdzrValU573pnCAKp
-LoxIA/MppDemzKzQbPH4RtTxESFTmgo09LgOD6RmU+FNy4lrrbGL1LKn0wsEQI0=
-=ZNPy
------END PGP SIGNATURE-----
+The firmware you are using is version 16, but that kernel already
+supports version -17.  I recommend you try to take the latest firmware
+for the 7260 NIC from our copy of linux-firmware.git[2].
 
---nextPart3654023.x75vBVevz6--
+If this doesn't help, the best thing to do would be to report this as a
+bug in bugzilla.kernel.org following the instructions in our wiki[1]. 
+This way we can help you more easily.
+
+
+[1] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
+[2] http://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git/plain/iwlwifi-7260-17.ucode
+
+--
+Cheers,
+Luca.
