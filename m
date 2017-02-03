@@ -1,147 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f195.google.com ([209.85.217.195]:35192 "EHLO
-        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751250AbdBFGBT (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38056 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753359AbdBCOlM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 01:01:19 -0500
-Received: by mail-ua0-f195.google.com with SMTP id 96so6350776uaq.2
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2017 22:01:18 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <ee13dae1-d01f-baff-a4d3-fe3e77fa85ec@leopoldosoria.com>
-References: <CA+icZUXtJG18ejLynO1FB0BS5Guqr35-Bn0_Obht-VyGNO4tAg@mail.gmail.com>
- <6df84be9db053beae03eb31ece0ab2d7@mail.leopoldosoria.com> <CA+icZUVZ5mz4NmvrQit3Mz3GEbobR265Yd8YjVKF90=MBNQkAQ@mail.gmail.com>
- <db60d707-1cfe-f9b1-8d63-87e0121101e4@leopoldosoria.com> <ee13dae1-d01f-baff-a4d3-fe3e77fa85ec@leopoldosoria.com>
-From: Sedat Dilek <sedat.dilek@gmail.com>
-Date: Mon, 6 Feb 2017 07:01:17 +0100
-Message-ID: <CA+icZUV-J0+jY8U=5_UwDf1Z7Qgnqswn+gAPhWm8YYkhqWLJjw@mail.gmail.com> (sfid-20170206_070206_079995_8D0DCD0F)
-Subject: Re: Installing driver for Ubuntu 16.04 Intel(R) Wireless WiFi Link 4965AGN
-To: Leopoldo <info@leopoldosoria.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Fri, 3 Feb 2017 09:41:12 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:38:10 +0200
+Message-Id: <20170203143812.7525-24-luca@coelho.fi> (sfid-20170203_154125_204023_8B38CB50)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 23/25] iwlwifi: support two phys for a000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 5, 2017 at 6:31 PM, Leopoldo <info@leopoldosoria.com> wrote:
-> Dear Sedat,
->
-> Did you have the chance to have a look to this?
->
+From: Sara Sharon <sara.sharon@intel.com>
 
-No.
-If it was not clear said: I did not promise to look at it, I just said
-sent the logs and people here can look at it.
+Support differentiating between two phys for a000 devices
+in order to load the correct firmware.
+Eventually when moving completely to the new phy we will be
+able to remove this.
 
-- Sedat -
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c   | 30 +++++++++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h    |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  8 ++++++-
+ 4 files changed, 33 insertions(+), 9 deletions(-)
 
-> Kind regards.
->
-> Leopoldo
->
->
-> El 16/01/17 a las 21:33, Leopoldo escribi=C3=B3:
->
-> Dear Sedat,
->
-> Please, find attached the requested 2 files.
->
-> Thanking you invaluable collaboration.
->
-> Leopoldo
->
->
-> El 02/01/17 a las 20:39, Sedat Dilek escribi=C3=B3:
->
-> On Mon, Jan 2, 2017 at 7:11 PM,  <info@leopoldosoria.com> wrote:
->
-> Dear Madam Sedat,
->
-> Hehe, my family name is indeed a female first name - Sedat is male.
->
-> Thank you for your answer.
->
-> I already consulted Ubuntu Community but it is not so nice for a beginner
-> like me. I tried several recomedations from them, but no way.  So, I
-> thought, it is better to ask to the source.
->
-> Yes, I have the firmware you mention, but wifi doesn't work. The icon app=
-ear
-> in the top bar but it doesn't seem to be conected. It doesn't seach
-> conections even when wifi is activated. The ligh of wifi simbol in the
-> laptop lights some times but others it doesn't.
->
-> It's difficult to answer without knowing anything about your hardware,
-> your WLAN infrastructure and your WLAN setup on Ubuntu/xenial.
->
-> It might be helpful if you attach your linux-config and dmesg output.
->
-> $ cp -v /boot/config-$(uname -r) /tmp
-> $ dmesg > /tmp/dmesg.txt
->
-> Attach those two files from /tmp directory and people can look at this.
->
-> - Sedat -
->
-> Any help is welcome and I won't forget ladies next time, sorry.
->
-> Thank you for your help and have a happy new year 2017 also.
->
-> Regards,
-> Leopoldo
->
->
->
->
-> El 02-01-2017 15:06, Sedat Dilek escribi=C3=B3:
->
-> On Mon, Jan 2, 2017 at 2:11 PM,  <info@leopoldosoria.com> wrote:
->
-> Dear Sirs,
-> Which of the below drivers should I install for my Lenovo 3000 V200?
-> I am runing Ubuntu 16.04
->
-> Intel=C2=AE Wireless WiFi Link 4965AGN
-> 2.6.24+ iwlwifi-4965-ucode-4.44.14.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.15.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.17.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.1.18.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.1.20.tgz
-> 2.6.24+ iwlwifi-4965-ucode-228.57.1.21.tgz
-> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.21.tgz
-> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.23.tgz
-> 2.6.28+ (?)     iwlwifi-4965-ucode-228.61.2.24.tgz
->
-> Ans how shoudl I proceed for intalling the right driver?
->
-> Thank you
->
-> [ What about the Ladies, Sir :-)? ]
->
-> Happy new 2017!
->
-> You need the linux-firmware [1] package.
-> Normally, Ubuntu/xenial should ship it.
->
-> Check if you have...
->
-> /lib/firmware/iwlwifi-4965-2.ucode
->
-> ...file.
->
-> Not sure why you are asking or what is not working.
-> AFAICS, Ubuntu should have some nice wikis explaining a WLAN setup.
-> A good strategy will always be to consult your distro's help before askin=
-g
-> here.
->
-> [3] as a gift.
->
-> Regards,
-> - Sedat -
->
-> [1] http://packages.ubuntu.com/xenial/linux-firmware
-> [2] http://packages.ubuntu.com/xenial/all/linux-firmware/filelist
-> [3] http://www.catb.org/~esr/faqs/smart-questions.html
->
->
->
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index 82f18d967c40..15dd7f6137c8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -72,9 +72,13 @@
+ #define IWL_A000_SMEM_OFFSET		0x400000
+ #define IWL_A000_SMEM_LEN		0x68000
+ 
+-#define IWL_A000_FW_PRE "iwlwifi-Qu-a0-jf-b0-"
+-#define IWL_A000_MODULE_FIRMWARE(api) \
+-	IWL_A000_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL_A000_JF_FW_PRE "iwlwifi-Qu-a0-jf-b0-"
++#define IWL_A000_HR_FW_PRE "iwlwifi-Qu-a0-hr-a0-"
++
++#define IWL_A000_HR_MODULE_FIRMWARE(api) \
++	IWL_A000_HR_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL_A000_JF_MODULE_FIRMWARE(api) \
++	IWL_A000_JF_FW_PRE "-" __stringify(api) ".ucode"
+ 
+ #define NVM_HW_SECTION_NUM_FAMILY_A000		10
+ 
+@@ -116,11 +120,22 @@ static const struct iwl_ht_params iwl_a000_ht_params = {
+ 	.mq_rx_supported = true,					\
+ 	.vht_mu_mimo_supported = true,					\
+ 	.mac_addr_from_csr = true,					\
+-	.use_tfh = true
++	.use_tfh = true,						\
++	.rf_id = true
++
++const struct iwl_cfg iwla000_2ac_cfg_hr = {
++		.name = "Intel(R) Dual Band Wireless AC a000",
++		.fw_name_pre = IWL_A000_HR_FW_PRE,
++		IWL_DEVICE_A000,
++		.ht_params = &iwl_a000_ht_params,
++		.nvm_ver = IWL_A000_NVM_VERSION,
++		.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
+ 
+-const struct iwl_cfg iwla000_2ac_cfg = {
++const struct iwl_cfg iwla000_2ac_cfg_jf = {
+ 		.name = "Intel(R) Dual Band Wireless AC a000",
+-		.fw_name_pre = IWL_A000_FW_PRE,
++		.fw_name_pre = IWL_A000_JF_FW_PRE,
+ 		IWL_DEVICE_A000,
+ 		.ht_params = &iwl_a000_ht_params,
+ 		.nvm_ver = IWL_A000_NVM_VERSION,
+@@ -128,4 +143,5 @@ const struct iwl_cfg iwla000_2ac_cfg = {
+ 		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ };
+ 
+-MODULE_FIRMWARE(IWL_A000_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_A000_HR_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_A000_JF_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 2660cc4b9f8c..94f8a51b633e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -455,7 +455,8 @@ extern const struct iwl_cfg iwl9260_2ac_cfg;
+ extern const struct iwl_cfg iwl9270_2ac_cfg;
+ extern const struct iwl_cfg iwl9460_2ac_cfg;
+ extern const struct iwl_cfg iwl9560_2ac_cfg;
+-extern const struct iwl_cfg iwla000_2ac_cfg;
++extern const struct iwl_cfg iwla000_2ac_cfg_hr;
++extern const struct iwl_cfg iwla000_2ac_cfg_jf;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index d73e9d436027..4ee3b621ec27 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -349,6 +349,7 @@ enum {
+ /* RF_ID value */
+ #define CSR_HW_RF_ID_TYPE_JF		(0x00105000)
+ #define CSR_HW_RF_ID_TYPE_LC		(0x00101000)
++#define CSR_HW_RF_ID_TYPE_HR		(0x00109000)
+ 
+ /* EEPROM REG */
+ #define CSR_EEPROM_REG_READ_VALID_MSK	(0x00000001)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 43c2475346ac..618894ecfd22 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -533,7 +533,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg)},
+ 
+ /* a000 Series */
+-	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
+@@ -673,6 +673,12 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			cfg = &iwl9000lc_2ac_cfg;
+ 			iwl_trans->cfg = cfg;
+ 		}
++
++		if (cfg == &iwla000_2ac_cfg_hr &&
++		    iwl_trans->hw_rf_id == CSR_HW_RF_ID_TYPE_JF) {
++			cfg = &iwla000_2ac_cfg_jf;
++			iwl_trans->cfg = cfg;
++		}
+ 	}
+ #endif
+ 
+-- 
+2.11.0
