@@ -1,39 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49126 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751439AbdBHPGb (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38066 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752286AbdBCOl0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 10:06:31 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: select WANT_DEV_COREDUMP
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170207222933.12701-1-johannes@sipsolutions.net>
-References: <20170207222933.12701-1-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Message-ID: <c34b8f1afabe4ae3ad36642565a1f212@eusanexr01a.eu.qualcomm.com> (sfid-20170208_160634_276809_14E5526A)
-Date: Wed, 8 Feb 2017 07:05:06 -0800
+        Fri, 3 Feb 2017 09:41:26 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:38:08 +0200
+Message-Id: <20170203143812.7525-22-luca@coelho.fi> (sfid-20170203_154148_551051_65743E29)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 21/25] iwlwifi: remove unnecessary argument to iwl_drv_start()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This is necessary so that - if ath10k is the only driver using
-> dev_coredump*() - the functionality is built into the kernel.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+When iwl_drv_start() is called, trans->cfg must already be set, so
+there's no need to pass cfg separately, since it can be accessed
+directly from trans->cfg.
 
-5524ddd4c1f1 ath10k: select WANT_DEV_COREDUMP
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  | 5 ++---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.h  | 4 +---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 +-
+ 3 files changed, 4 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index d22821501676..899223e8414c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1504,8 +1504,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	kfree(pieces);
+ }
+ 
+-struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
+-			      const struct iwl_cfg *cfg)
++struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
+ {
+ 	struct iwl_drv *drv;
+ 	int ret;
+@@ -1518,7 +1517,7 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
+ 
+ 	drv->trans = trans;
+ 	drv->dev = trans->dev;
+-	drv->cfg = cfg;
++	drv->cfg = trans->cfg;
+ 
+ 	init_completion(&drv->request_firmware_complete);
+ 	INIT_LIST_HEAD(&drv->list);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.h b/drivers/net/wireless/intel/iwlwifi/iwl-drv.h
+index f6eacfdbc265..6c537e04864e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.h
+@@ -118,15 +118,13 @@ struct iwl_cfg;
+  * iwl_drv_start - start the drv
+  *
+  * @trans_ops: the ops of the transport
+- * @cfg: device specific constants / virtual functions
+  *
+  * starts the driver: fetches the firmware. This should be called by bus
+  * specific system flows implementations. For example, the bus specific probe
+  * function should do bus related operations only, and then call to this
+  * function. It returns the driver object or %NULL if an error occurred.
+  */
+-struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
+-			      const struct iwl_cfg *cfg);
++struct iwl_drv *iwl_drv_start(struct iwl_trans *trans);
+ 
+ /**
+  * iwl_drv_stop - stop the drv
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 2f8134b2a504..43c2475346ac 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -677,7 +677,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ #endif
+ 
+ 	pci_set_drvdata(pdev, iwl_trans);
+-	iwl_trans->drv = iwl_drv_start(iwl_trans, cfg);
++	iwl_trans->drv = iwl_drv_start(iwl_trans);
+ 
+ 	if (IS_ERR(iwl_trans->drv)) {
+ 		ret = PTR_ERR(iwl_trans->drv);
 -- 
-https://patchwork.kernel.org/patch/9561349/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
