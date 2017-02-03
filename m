@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f169.google.com ([209.85.128.169]:33194 "EHLO
-        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751266AbdBUK2Q (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37904 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753429AbdBCOil (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 05:28:16 -0500
-Received: by mail-wr0-f169.google.com with SMTP id 97so589388wrb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 02:28:16 -0800 (PST)
-From: Marcin Rokicki <marcin.rokicki@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com
-Subject: [PATCH v2] ath10k: Remove return statement from a void function
-Date: Tue, 21 Feb 2017 11:28:11 +0100
-Message-Id: <1487672891-8584-1-git-send-email-marcin.rokicki@tieto.com> (sfid-20170221_112820_261636_78E4E980)
+        Fri, 3 Feb 2017 09:38:41 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:37:56 +0200
+Message-Id: <20170203143812.7525-10-luca@coelho.fi> (sfid-20170203_153850_208827_68331465)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 09/25] iwlwifi: mvm: reduce usage of IEEE80211_SKB_CB()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The empty 'return;' statement in a void function should be
-used to return from somewhere else than the end.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Marcin Rokicki <marcin.rokicki@tieto.com>
+There's already a variable with the result in scope, use that.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Changes for v2
- -remove only return statement instead of empty err label
-  which can be used in the future
-
----
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 59729aa..a22d3c9 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2311,7 +2311,7 @@ static void ath10k_core_register_work(struct work_struct *work)
- 	/* TODO: It's probably a good idea to release device from the driver
- 	 * but calling device_release_driver() here will cause a deadlock.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index ea5d5b0d85b3..e2f82c10b019 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -543,9 +543,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 	 * queue. STATION (HS2.0) uses the auxiliary context of the FW,
+ 	 * and hence needs to be sent on the aux queue
  	 */
--	return;
-+	;
- }
+-	if (IEEE80211_SKB_CB(skb)->hw_queue == IWL_MVM_OFFCHANNEL_QUEUE &&
++	if (skb_info->hw_queue == IWL_MVM_OFFCHANNEL_QUEUE &&
+ 	    skb_info->control.vif->type == NL80211_IFTYPE_STATION)
+-		IEEE80211_SKB_CB(skb)->hw_queue = mvm->aux_queue;
++		skb_info->hw_queue = mvm->aux_queue;
  
- int ath10k_core_register(struct ath10k *ar, u32 chip_id)
+ 	memcpy(&info, skb->cb, sizeof(info));
+ 
 -- 
-2.7.4
+2.11.0
