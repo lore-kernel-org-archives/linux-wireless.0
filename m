@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48140 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751034AbdBWKqa (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38034 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752663AbdBCOkm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 05:46:30 -0500
-Date: Thu, 23 Feb 2017 13:45:09 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: thierry.escande@linux.intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] NFC Digital: Add target NFC-DEP support
-Message-ID: <20170223104509.GB27526@mwanda> (sfid-20170223_114826_747274_167FECF1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 3 Feb 2017 09:40:42 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:38:06 +0200
+Message-Id: <20170203143812.7525-20-luca@coelho.fi> (sfid-20170203_154046_840110_CE03C662)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 19/25] iwlwifi: mvm: align copy-break SKB payload for MQ RX
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Thierry Escande,
+From: Johannes Berg <johannes.berg@intel.com>
 
-The patch 1c7a4c24fbfd: "NFC Digital: Add target NFC-DEP support"
-from Sep 19, 2013, leads to the following static checker warning:
+When a small frame is copied completely into the skb->head, the code
+doesn't take alignment into account, making mac80211 copy it again
+later on architectures that need the alignment. Avoid this by taking
+the PAD flag from the device into account when copying.
 
-	net/nfc/digital_dep.c:1303 digital_tg_recv_dep_req()
-	error: double free of 'resp'
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-net/nfc/digital_dep.c
-  1287  
-  1288                  goto free_resp;
-  1289          }
-  1290  
-  1291          rc = nfc_tm_data_received(ddev->nfc_dev, resp);
-
-This function does a kfree_skb() on the error path.  I don't know about
-the success path.  Other code seems to assume it frees on success so
-maybe?
-
-  1292  
-  1293  exit:
-  1294          kfree_skb(ddev->chaining_skb);
-  1295          ddev->chaining_skb = NULL;
-  1296  
-  1297          ddev->atn_count = 0;
-  1298  
-  1299          kfree_skb(ddev->saved_skb);
-  1300          ddev->saved_skb = NULL;
-  1301  
-  1302          if (rc)
-  1303                  kfree_skb(resp);
-
-Of course kfree_skb() is refcounted but I think this has to be a bug.
-
-  1304  
-  1305          return;
-  1306  
-  1307  free_resp:
-  1308          dev_kfree_skb(resp);
-
-But then we do dev_kfree_skb() here.  It's not clear to me why sometimes
-we use regular kfree_skb() but not here.
-
-  1309  }
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 6c802cee900c..c154ab42c80d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -149,8 +149,17 @@ static void iwl_mvm_create_skb(struct sk_buff *skb, struct ieee80211_hdr *hdr,
+ 	unsigned int headlen, fraglen, pad_len = 0;
+ 	unsigned int hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+-	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD)
++	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
+ 		pad_len = 2;
++
++		/*
++		 * If the device inserted padding it means that (it thought)
++		 * the 802.11 header wasn't a multiple of 4 bytes long. In
++		 * this case, reserve two bytes at the start of the SKB to
++		 * align the payload properly in case we end up copying it.
++		 */
++		skb_reserve(skb, pad_len);
++	}
+ 	len -= pad_len;
+ 
+ 	/* If frame is small enough to fit in skb->head, pull it completely.
+-- 
+2.11.0
