@@ -1,68 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42720 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750800AbdBOJCh (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37826 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752721AbdBCOiZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 04:02:37 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Doru <gucea.doru@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k_htc_fw@lists.infradead.org,
-        andra.paraschiv7@gmail.com, costin.raiciu@cs.pub.ro,
-        dragos.niculescu@cs.pub.ro
-Subject: Re: [RFC-PATCH] ath9k_htc: Adjust beacon timers for Power Save
-References: <1487100985-4194-1-git-send-email-gucea.doru@gmail.com>
-Date: Wed, 15 Feb 2017 11:02:32 +0200
-In-Reply-To: <1487100985-4194-1-git-send-email-gucea.doru@gmail.com> (Doru's
-        message of "Tue, 14 Feb 2017 21:36:25 +0200")
-Message-ID: <87r32z968n.fsf@purkki.adurom.net> (sfid-20170215_100538_699206_46F9F335)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 3 Feb 2017 09:38:25 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:37:47 +0200
+Message-Id: <20170203143812.7525-1-luca@coelho.fi> (sfid-20170203_153828_914227_CC0AEC7C)
+Subject: [PATCH 00/25] iwlwifi: updates intended for v4.11 2017-02-03
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doru <gucea.doru@gmail.com> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> From: Doru Gucea <gucea.doru@gmail.com>
->
-> Each time we receive a beacon we need to adjust the hardware
-> timers for next DTIM and next TBTT.
->
-> Before this commit, the Power Save behaviour was incorrect.
-> The scenario was:
-> - STA receives a beacon from AP with TIM unset;
-> - mac80211 layers puts the chip to sleep;
-> - chip is woken up by mac80211's software timer reponsible for
-> beacon miss after 7 * beacon_interval period.
->
-> Normally the chip should sleep at most DTIM period. This commit
-> configures hardware timers for waking up the chip correctly.
->
-> More details on the wiki:
-> https://github.com/doru91/linux-stable/wiki/Single-Interface-Power-Save
->
-> Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
->  net/mac80211/mlme.c                           | 6 ++++++
->  2 files changed, 10 insertions(+)
+Hi,
 
-[...]
+Here's my second series for v4.11.  These are the changes:
 
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -3536,6 +3536,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
->  			sdata->vif.bss_conf.sync_dtim_count = 0;
->  	}
->  
-> +	/* trigger hardware timers adjustment
-> +	 * this needs to be done before beacon filtering
-> +	 */
-> +	changed |= BSS_CHANGED_BEACON_INFO;
-> +	ieee80211_bss_info_change_notify(sdata, changed);
+  * A bunch of bugfixes for the DQA code;
+  * Work on support for new A000 devices continues;
+  * Some clean-ups and general improvements;
 
-You shouldn't mix driver and mac80211 changes in the same patch, I
-suspect Johannes didn't even notice this change because of that. Create
-a new patchset with two patches, one for ath9k and another for mac80211.
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Beni Lev (1):
+  iwlwifi: mvm: Use aux queue for offchannel frames in dqa
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: fix PS-Poll enablement
+
+Golan Ben-Ami (1):
+  iwlwifi: mvm: support v2 of mfuart load notification
+
+Johannes Berg (7):
+  iwlwifi: mvm: reduce usage of IEEE80211_SKB_CB()
+  iwlwifi: mvm: fix D3 replay counter value
+  iwlwifi: mvm: set AID to firmware only for associated stations
+  iwlwifi: mvm: overwrite skb info later
+  iwlwifi: mvm/pcie: adjust A-MSDU tx_cmd length in PCIe
+  iwlwifi: mvm: align copy-break SKB payload for MQ RX
+  iwlwifi: pcie: fix another RF-kill race
+
+Liad Kaufman (1):
+  iwlwifi: mvm: release static queues on bcast release
+
+Luca Coelho (2):
+  iwlwifi: remove unnecessary argument to iwl_drv_start()
+  iwlwifi: remove unnecessary cfg element in iwl_drv
+
+Sara Sharon (12):
+  iwlwifi: mvm: support unification of INIT and RT images
+  iwlwifi: mvm: cleanup incorrect and redundant define
+  iwlwifi: mvm: support new statistics APIs
+  iwlwifi: mvm: support new scan API
+  iwlwifi: mvm: always free inactive queue when moving ownership
+  iwlwifi: mvm: support new alive notification
+  iwlwifi: mvm: synchronize firmware DMA paging memory
+  iwlwifi: pcie: fix the set of DMA memory mask
+  iwlwifi: mvm: fix pending frame counter calculation
+  iwlwifi: mvm: cleanup iwl_mvm_tx_mpdu a bit
+  iwlwifi: support two phys for a000 devices
+  iwlwifi: mvm: support new beacon template command
+
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c      |  30 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   3 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  25 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.h       |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |   4 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    |   7 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-scan.h   | 106 ++++--
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-stats.h  |  29 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  29 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |  90 ++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c    |   4 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 354 +++++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  | 105 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  24 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  18 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  24 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c     |  44 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  70 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  11 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 230 +++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 227 +++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 112 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  16 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  17 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   2 +
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   8 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  23 +-
+ 30 files changed, 1035 insertions(+), 587 deletions(-)
 
 -- 
-Kalle Valo
+2.11.0
