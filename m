@@ -1,108 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52402 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750815AbdBKR5c (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33064 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751376AbdBCRcz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Feb 2017 12:57:32 -0500
-Message-ID: <589F50B8.4020609@candelatech.com> (sfid-20170211_185739_161817_D8F1FA52)
-Date: Sat, 11 Feb 2017 09:58:16 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-Subject: Re: VHT 160Mhz and nss related config.
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com> <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com> <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
-In-Reply-To: <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 3 Feb 2017 12:32:55 -0500
+Received: by mail-oi0-f67.google.com with SMTP id j15so1916509oih.0
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2017 09:32:55 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 04/11 V3] rtlwifi: btcoexist: Add vendor definition for new btcoexist
+Date: Fri,  3 Feb 2017 11:32:25 -0600
+Message-Id: <20170120212716.29887-5-Larry.Finger@lwfinger.net> (sfid-20170203_183306_624185_7AB0AC70)
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/10/2017 08:37 PM, Adrian Chadd wrote:
-> On 10 February 2017 at 20:22, Sebastian Gottschall
-> <s.gottschall@dd-wrt.com> wrote:
->> i really can't believe this. if this is true the  160 mhz mode would not
->> make any sense.
->> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is identical. so
->> vht160 would not increase performance in any way
->
-> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
-> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
-> transmit 2x2 rates to different MU-MIMO peers.
->
-> That's the outstanding question I have - is it like, 2x2 MU only, or
-> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
-> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
-> group each) all going at the same time?
->
-> I'm .. not even sure how you're supposed to cleanly negotiate that you
-> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
-> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I think using the max-rx-rate logic might could imply this, but I am not sure
-many drivers fill this out properly.
+Routine halbtc_get() will need to be able to get the vendor ID.
 
-Looks like a mess waiting to happen to me.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+V2 - no changes
+V3 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 7 +++++++
+ 2 files changed, 10 insertions(+)
 
-Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not certain you
-can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
-
-So, from what I know currently, 80+80 is not that useful on the 9984 NIC...
-
-Thanks,
-Ben
-
->
->
-> -adrian
->
->>
->> Am 10.02.2017 um 23:58 schrieb Ben Greear:
->>>
->>> So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4 MIMO at
->>> VHT80, but
->>> it can do only 2x2 MIMO at VHT160/80+80.
->>>
->>> When configuring a peer, we need to tell the firmware the number of
->>> spatial streams
->>> of the peer at VHT160 and at VHT80 and lower.  They are not the same
->>> value.
->>>
->>> I cannot think of any standard way to get this information based on VHT
->>> capabilities
->>> and such.  Currently, one could just assume VHT160 NSS is 1/2 of the VHT80
->>> NSS,
->>> but that is unlikely to be true for all vendors.
->>>
->>> Any ideas?
->>>
->>> Thanks,
->>> Ben
->>>
->>
->>
->> --
->> Mit freundlichen Grüssen / Regards
->>
->> Sebastian Gottschall / CTO
->>
->> NewMedia-NET GmbH - DD-WRT
->> Firmensitz:  Berliner Ring 101, 64625 Bensheim
->> Registergericht: Amtsgericht Darmstadt, HRB 25473
->> Geschäftsführer: Peter Steinhäuser, Christian Scheele
->> http://www.dd-wrt.com
->> email: s.gottschall@dd-wrt.com
->> Tel.: +496251-582650 / Fax: +496251-5826565
->>
->>
->> _______________________________________________
->> ath10k mailing list
->> ath10k@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/ath10k
->
-
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 91cc139..8a0e773 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -335,6 +335,9 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	case BTC_GET_U4_BT_PATCH_VER:
+ 		*u32_tmp = halbtc_get_bt_patch_version(btcoexist);
+ 		break;
++	case BTC_GET_U4_VENDOR:
++		*u32_tmp = BTC_VENDOR_OTHER;
++		break;
+ 	case BTC_GET_U1_WIFI_DOT11_CHNL:
+ 		*u8_tmp = rtlphy->current_channel;
+ 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index eb89011..f9e7c5e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -228,6 +228,7 @@ enum btc_get_type {
+ 	BTC_GET_U4_WIFI_FW_VER,
+ 	BTC_GET_U4_WIFI_LINK_STATUS,
+ 	BTC_GET_U4_BT_PATCH_VER,
++	BTC_GET_U4_VENDOR,
+ 
+ 	/* type u1Byte */
+ 	BTC_GET_U1_WIFI_DOT11_CHNL,
+@@ -245,6 +246,12 @@ enum btc_get_type {
+ 	BTC_GET_MAX
+ };
+ 
++enum btc_vendor {
++	BTC_VENDOR_LENOVO,
++	BTC_VENDOR_ASUS,
++	BTC_VENDOR_OTHER
++};
++
+ enum btc_set_type {
+ 	/* type bool */
+ 	BTC_SET_BL_BT_DISABLE,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.10.2
