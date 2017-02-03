@@ -1,84 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.aperture-lab.de ([138.201.29.205]:53448 "EHLO
-        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751520AbdBCHL3 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36405 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbdBCRcs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 02:11:29 -0500
-From: =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
-To: netdev@vger.kernel.org
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        James Morris <jmorris@namei.org>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Patrick McHardy <kaber@trash.net>,
-        Moni Shoua <monis@voltaire.com>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
-Subject: [PATCH net] ipv6: Fix IPv6 packet loss in scenarios involving roaming + snooping switches
-Date: Fri,  3 Feb 2017 08:11:03 +0100
-Message-Id: <20170203071103.25976-1-linus.luessing@c0d3.blue> (sfid-20170203_081203_272237_D0921153)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Fri, 3 Feb 2017 12:32:48 -0500
+Received: by mail-oi0-f68.google.com with SMTP id u143so1892512oif.3
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2017 09:32:48 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>, shaofu <shaofu@realtek.com>
+Subject: [PATCH 02/11 V3] rtlwifi: Set retry limit depends on vif type.
+Date: Fri,  3 Feb 2017 11:32:23 -0600
+Message-Id: <20170120212716.29887-3-Larry.Finger@lwfinger.net> (sfid-20170203_183302_981198_1D213491)
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When for instance a mobile Linux device roams from one access point to
-another with both APs sharing the same broadcast domain and a
-multicast snooping switch in between:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-1)    (c) <~~~> (AP1) <--[SSW]--> (AP2)
+We assign different retry limit according to vif type, because
+it can boost performance in field.
 
-2)              (AP1) <--[SSW]--> (AP2) <~~~> (c)
-
-Then currently IPv6 multicast packets will get lost for (c) until an
-MLD Querier sends its next query message. The packet loss occurs
-because upon roaming the Linux host so far stayed silent regarding
-MLD and the snooping switch will therefore be unaware of the
-multicast topology change for a while.
-
-This patch fixes this by always resending MLD reports when an interface
-change happens, for instance from NO-CARRIER to CARRIER state.
-
-Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
-
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: shaofu <shaofu@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-
-Initial problem report was sent to the bridge mailing list a while ago:
-- https://lists.linuxfoundation.org/pipermail/bridge/2015-September/009754.html
-
-The RFCs concerning IGMP, MLD and snooping switches seem a have a hole
-concerning roaming. A request for clarification to mcast-wifi@ietf.org
-was left unanswered, unfortunately:
-- https://mailarchive.ietf.org/arch/msg/mcast-wifi/Ghn2cGy1oN2ZwG1qaQO9SE13g6g
-
-However, simply resending reports seems to be the straight forward way
-to me to fix the issue mentioned above.
+V2 - no changes
+V3 - no changes
 ---
- net/ipv6/addrconf.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/core.c | 21 ++++++++++++++++++---
+ drivers/net/wireless/realtek/rtlwifi/pci.c  |  7 +++++++
+ drivers/net/wireless/realtek/rtlwifi/ps.c   |  3 +++
+ 3 files changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index f60e88e..81f7b4e 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -3386,9 +3386,15 @@ static int addrconf_notify(struct notifier_block *this, unsigned long event,
- 			}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 179a699..a4f8e32 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -233,6 +233,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	int err = 0;
++	u8 retry_limit = 0x30;
  
- 			if (idev) {
--				if (idev->if_flags & IF_READY)
--					/* device is already configured. */
-+				if (idev->if_flags & IF_READY) {
-+					/* device is already configured -
-+					 * but resend MLD reports, we might
-+					 * have roamed and need to update
-+					 * multicast snooping switches
-+					 */
-+					ipv6_mc_up(idev);
- 					break;
-+				}
- 				idev->if_flags |= IF_READY;
- 			}
+ 	if (mac->vif) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+@@ -271,6 +272,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
+ 				(u8 *)(&mac->basic_rates));
  
++		retry_limit = 0x07;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		mac->p2p = P2P_ROLE_GO;
+@@ -287,6 +289,8 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 			mac->basic_rates = 0xff0;
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
+ 					      (u8 *)(&mac->basic_rates));
++
++		retry_limit = 0x07;
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+@@ -300,6 +304,8 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 			mac->basic_rates = 0xff0;
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
+ 				(u8 *)(&mac->basic_rates));
++
++		retry_limit = 0x07;
+ 		break;
+ 	default:
+ 		pr_err("operation mode %d is not supported!\n",
+@@ -321,6 +327,10 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 	memcpy(mac->mac_addr, vif->addr, ETH_ALEN);
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
+ 
++	mac->retry_long = retry_limit;
++	mac->retry_short = retry_limit;
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++			(u8 *)(&retry_limit));
+ out:
+ 	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ 	return err;
+@@ -645,10 +655,15 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+ 			 "IEEE80211_CONF_CHANGE_RETRY_LIMITS %x\n",
+ 			 hw->conf.long_frame_max_tx_count);
+-		mac->retry_long = hw->conf.long_frame_max_tx_count;
+-		mac->retry_short = hw->conf.long_frame_max_tx_count;
+-		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++		/* brought up everything changes (changed == ~0) indicates first
++		 * open, so use our default value instead of that of wiphy.
++		 */
++		if (changed != ~0) {
++			mac->retry_long = hw->conf.long_frame_max_tx_count;
++			mac->retry_short = hw->conf.long_frame_max_tx_count;
++			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
+ 				(u8 *)(&hw->conf.long_frame_max_tx_count));
++		}
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 665cdb2..376239e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1214,6 +1214,10 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+ 	mac->current_ampdu_density = 7;
+ 	mac->current_ampdu_factor = 3;
+ 
++	/*Retry Limit*/
++	mac->retry_short = 7;
++	mac->retry_long = 7;
++
+ 	/*QOS*/
+ 	rtlpci->acm_method = EACMWAY2_SW;
+ 
+@@ -1814,6 +1818,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
+ 
+ 	int err;
+ 
+@@ -1831,6 +1836,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ 			 "Failed to config hardware!\n");
+ 		return err;
+ 	}
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++			&rtlmac->retry_long);
+ 
+ 	rtlpriv->cfg->ops->enable_interrupt(hw);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "enable_interrupt OK\n");
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index 4f83270..0d15287 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -34,6 +34,7 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
+ 
+ 	/*<1> reset trx ring */
+ 	if (rtlhal->interface == INTF_PCI)
+@@ -46,6 +47,8 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+ 	/*<2> Enable Adapter */
+ 	if (rtlpriv->cfg->ops->hw_init(hw))
+ 		return false;
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++			&rtlmac->retry_long);
+ 	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+ 
+ 	/*<3> Enable Interrupt */
 -- 
-2.1.4
+2.10.2
