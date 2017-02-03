@@ -1,99 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55390 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752730AbdBMVcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 16:32:24 -0500
-MIME-Version: 1.0
-In-Reply-To: <58A15454.4030602@denx.de>
-References: <1486444924-18444-1-git-send-email-hs@denx.de> <20170210155114.pvjahqqjqurw5jdc@rob-hp-laptop>
- <58A15454.4030602@denx.de>
-From: Rob Herring <robh@kernel.org>
-Date: Mon, 13 Feb 2017 15:31:57 -0600
-Message-ID: <CAL_JsqKM4fEcfPekYkt-+TVNXE3nMF1AEfSHWW+3wAgdYDMXEg@mail.gmail.com> (sfid-20170213_223452_652420_BC4B1B8B)
-Subject: Re: [PATCH] Make EN2 pin optional in the TRF7970A driver
-To: Heiko Schocher <hs@denx.de>
-Cc: netdev <netdev@vger.kernel.org>, Guan Ben <ben.guan@cn.bosch.com>,
-        Mark Jonas <mark.jonas@de.bosch.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from paleale.coelho.fi ([176.9.41.70]:38050 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752729AbdBCOlI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Feb 2017 09:41:08 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:38:01 +0200
+Message-Id: <20170203143812.7525-15-luca@coelho.fi> (sfid-20170203_154124_826114_401CE3F0)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 14/25] iwlwifi: mvm: overwrite skb info later
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 13, 2017 at 12:38 AM, Heiko Schocher <hs@denx.de> wrote:
-> Hello Rob,
->
->
-> Am 10.02.2017 um 16:51 schrieb Rob Herring:
->>
->> On Tue, Feb 07, 2017 at 06:22:04AM +0100, Heiko Schocher wrote:
->>>
->>> From: Guan Ben <ben.guan@cn.bosch.com>
->>>
->>> Make the EN2 pin optional. This is useful for boards,
->>> which have this pin fix wired, for example to ground.
->>>
->>> Signed-off-by: Guan Ben <ben.guan@cn.bosch.com>
->>> Signed-off-by: Mark Jonas <mark.jonas@de.bosch.com>
->>> Signed-off-by: Heiko Schocher <hs@denx.de>
->>>
->>> ---
->>>
->>>   .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
->>>   drivers/nfc/trf7970a.c                             | 26
->>> ++++++++++++----------
->>>   2 files changed, 16 insertions(+), 14 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>> b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>> index 32b35a0..5889a3d 100644
->>> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>> @@ -5,8 +5,8 @@ Required properties:
->>>   - spi-max-frequency: Maximum SPI frequency (<= 2000000).
->>>   - interrupt-parent: phandle of parent interrupt handler.
->>>   - interrupts: A single interrupt specifier.
->>> -- ti,enable-gpios: Two GPIO entries used for 'EN' and 'EN2' pins on the
->>> -  TRF7970A.
->>> +- ti,enable-gpios: One or two GPIO entries used for 'EN' and 'EN2' pins
->>> on the
->>> +  TRF7970A. EN2 is optional.
->>
->>
->> Could EN ever be optional/fixed? If so, perhaps deprecate this property
->> and do 2 properties, one for each pin.
->
->
-> The hardware I have has the EN2 pin fix connected to ground. Looking
-> into http://www.ti.com/lit/ds/slos743k/slos743k.pdf page 19 table 6-3
-> and 6-4 the EN2 pin is a don;t core if EN = 1. If EN = 0 EN2 pin
-> selects between Power Down and Sleep Mode ... I see no reason why
-> this is not possible/allowed ...
->
-> Hmm.. I do not like the idea of deprecating the "ti,enable-gpios"
-> property into 2 seperate properties ... but if this would be a reason
-> for not accepting this patch, I can do this ... How should I name
-> the 2 new properties?
+From: Johannes Berg <johannes.berg@intel.com>
 
-I guess if this ever happens, then we just add "ti,enable2-gpios" and
-ti,enable-gpios continues to point to EN. We don't need to deprecate
-anything (or maybe just deprecate having both GPIOs on single
-property).
+We don't really need clear the skb's status area nor store the
+dev_cmd into it until we really commit to the frame by handing
+it to the transport - defer those operations until just before
+we do that.
 
-In that case,
+This doesn't entirely fix the bug with frames not getting sent
+out after having been deferred due to DQA, because it doesn't
+restore the info->driver_data[0] place that was already set to
+zero (or another value) by the A-MSDU logic.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Fixes: commit 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
->
-> "ti,pin-enable"  and "ti,pin-enable2" ?
->
-> bye,
-> Heiko
-> --
-> DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index e2f82c10b019..0dcf0ebab45d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -466,7 +466,6 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		      struct ieee80211_sta *sta, u8 sta_id)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
+ 	struct iwl_device_cmd *dev_cmd;
+ 	struct iwl_tx_cmd *tx_cmd;
+ 
+@@ -486,12 +485,18 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	iwl_mvm_set_tx_cmd_rate(mvm, tx_cmd, info, sta, hdr->frame_control);
+ 
++	return dev_cmd;
++}
++
++static void iwl_mvm_skb_prepare_status(struct sk_buff *skb,
++				       struct iwl_device_cmd *cmd)
++{
++	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
++
+ 	memset(&skb_info->status, 0, sizeof(skb_info->status));
+ 	memset(skb_info->driver_data, 0, sizeof(skb_info->driver_data));
+ 
+-	skb_info->driver_data[1] = dev_cmd;
+-
+-	return dev_cmd;
++	skb_info->driver_data[1] = cmd;
+ }
+ 
+ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
+@@ -607,6 +612,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 	if (!dev_cmd)
+ 		return -1;
+ 
++	/* From now on, we cannot access info->control */
++	iwl_mvm_skb_prepare_status(skb, dev_cmd);
++
+ 	tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
+ 
+ 	/* Copy MAC header from skb into command buffer */
+@@ -917,7 +925,6 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		goto drop;
+ 
+ 	tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
+-	/* From now on, we cannot access info->control */
+ 
+ 	/*
+ 	 * we handle that entirely ourselves -- for uAPSD the firmware
+@@ -1024,6 +1031,9 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	IWL_DEBUG_TX(mvm, "TX to [%d|%d] Q:%d - seq: 0x%x\n", mvmsta->sta_id,
+ 		     tid, txq_id, IEEE80211_SEQ_TO_SN(seq_number));
+ 
++	/* From now on, we cannot access info->control */
++	iwl_mvm_skb_prepare_status(skb, dev_cmd);
++
+ 	if (iwl_trans_tx(mvm->trans, skb, dev_cmd, txq_id))
+ 		goto drop_unlock_sta;
+ 
+-- 
+2.11.0
