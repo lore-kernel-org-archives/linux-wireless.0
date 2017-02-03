@@ -1,90 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:26683 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754761AbdBQBpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2017 20:45:16 -0500
-Date: Fri, 17 Feb 2017 09:45:11 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kbuild-all@01.org,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Subject: Re: [kbuild-all]
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6: error:
- redefinition of 'brcmf_debugfs_init'
-Message-ID: <20170217014511.vmjvote5mkgcmm2w@wfg-t540p.sh.intel.com> (sfid-20170217_024541_343895_4B04ADEA)
-References: <201702071839.Ej9MjmlI%fengguang.wu@intel.com>
- <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org>
- <87inoamqh6.fsf@kamboji.qca.qualcomm.com>
- <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
- <59013c13-af43-cf9f-8e3e-14d97e48f0dd@broadcom.com>
- <87efyymp2q.fsf@kamboji.qca.qualcomm.com>
- <8ff44e41-97c7-4ae5-6850-65ad407fd788@broadcom.com>
- <8737fe46kn.fsf@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-In-Reply-To: <8737fe46kn.fsf@codeaurora.org>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:34019 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750974AbdBCRfc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Feb 2017 12:35:32 -0500
+Received: by mail-ot0-f193.google.com with SMTP id 73so2945194otj.1
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2017 09:35:32 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 0/7 v2] Make changes in debugging in btcoexist
+Date: Fri,  3 Feb 2017 11:35:14 -0600
+Message-Id: <20170203173521.6635-1-Larry.Finger@lwfinger.net> (sfid-20170203_183535_637039_6ED524AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+These changes convert the various files in btcoexist to use the same
+debugging macros as the rest of the parts of the drivers. In addition,
+one typo is fixed in rtl8821ae.
 
-On Thu, Feb 16, 2017 at 03:18:48PM +0200, Kalle Valo wrote:
->Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> On 16-2-2017 11:01, Kalle Valo wrote:
->>> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
->>>
->>>> On 16-2-2017 10:39, Rafał Miłecki wrote:
->>>>> On 02/16/2017 10:31 AM, Kalle Valo wrote:
->>>>>> (Adding linux-wireless)
->>>>>>
->>>>>> Arend or Rafał, would you be able to look at this build problem? Kbuild
->>>>>> found the build errors below, apparently a very old issue. It just
->>>>>> blames me now because I moved the driver to a new directory :)
->>>>
->>>> It is a very old issue. The thing is that the issue can not really occur
->>>> because we have this:
->>>>
->>>> # common flags
->>>> subdir-ccflags-$(CONFIG_BRCMDBG)        += -DDEBUG
->>>>
->>>> in drivers/net/wireless/broadcom/brcm80211/Makefile. So no clue what
->>>> happens in the "kbuild test robot" scenario.
->>>
->>> I actually tried to reproduce this with kbuild bot's instructions and
->>> was surprised to see that the build worked ok for me. So the issue is
->>> not that simple.
->>
->> Hi Kalle,
->>
->> Here is the old email exchange we had about this [1]. In my opinion this
->> is a Kbuild issue that needs to be looked into.
->>
->> Regards,
->> Arend
->>
->> [1] http://www.spinics.net/lists/linux-wireless/msg142122.html
->
->Heh, I had completely forgotten that we had discussed this before :)
->
->Fengguang and the kbuild bot team, do you have any ideas why only the
->bot is seeing this?
+This is all material for 4.11.
 
-I guess the root cause is due to the robot's doing partial builds like
-these
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2 - Fix some "WARNING: possible condition with no effect (if == else)".
+---
 
-        make drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.o
-        make drivers/net/wireless/broadcom/brcm80211/brcmfmac/
+Larry Finger (7):
+  rtlwifi: rtl8821ae: Fix typo in symbol for bandwidth numbers
+  rtlwifi: btcoexist: Convert halbtc8192e2ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8723b1ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8723b2ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8821a1ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtc8821a2ant.c to use standard
+    debugging
+  rtlwifi: btcoexist: Convert halbtcoutsrc.c to use standard debugging
 
-The solution I come about is to climb up to higher level dirs like 
+ .../wireless/realtek/rtlwifi/btcoexist/Makefile    |    7 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  237 +++--
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  827 ++++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  973 +++++++++---------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  898 +++++++++--------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 1055 +++++++++++---------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |    4 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   12 -
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   |   10 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |    8 +-
+ 10 files changed, 2163 insertions(+), 1868 deletions(-)
 
-        make drivers/net/wireless/
-
-which is less likely to have Makefile tricks and still maintain fast
-enough build tests.
-
-Thanks,
-Fengguang
+-- 
+2.10.2
