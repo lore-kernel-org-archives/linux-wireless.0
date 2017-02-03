@@ -1,151 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:35683 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753788AbdBUQQl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26093 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752268AbdBCVrT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:41 -0500
-Received: by mail-lf0-f67.google.com with SMTP id z127so9537552lfa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:35 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 17/21] ath10k: htt: High latency TX support
-Date: Tue, 21 Feb 2017 17:15:37 +0100
-Message-Id: <1487693741-10042-18-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171738_978691_FD9B4933)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 3 Feb 2017 16:47:19 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [RFC PATCH 0/2] mac80211: use crypto shash for AES cmac
+Date: Fri, 3 Feb 2017 21:47:15 +0000
+Message-ID: <20170203214707.GA14147@jouni.qca.qualcomm.com> (sfid-20170203_224730_331822_955DBD20)
+References: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
+In-Reply-To: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add HTT TX function for HL interfaces.
-Intended for SDIO and USB.
+On Fri, Feb 03, 2017 at 07:25:53PM +0000, Ard Biesheuvel wrote:
+> The mac80211 aes_cmac code reimplements the CMAC algorithm based on the
+> core AES cipher, which is rather restrictive in how platforms can satisfy
+> the dependency on this algorithm. For instance, SIMD implementations may
+> have a considerable setup time, which cannot be amortized over the entire
+> input when calling into the crypto API one block at a time. Also, it prev=
+ents
+> the use of more secure fixed time implementations, since not all AES driv=
+ers
+> expose the cipher interface.
+>=20
+> So switch aes_cmac to use a cmac(aes) shash. This requires a preparatory
+> patch so that we can remove the open coded implementation, which it share=
+s
+> with the fils aead driver. That driver could receive the same treatment, =
+in
+> which case we could replace patch #1 with one that carries it over first.
+>=20
+> Note that this is an RFC. I have no idea how I would go about testing thi=
+s
+> code, but I am on a mission to remove as many dependencies on the generic
+> AES cipher as I can.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |  9 ++--
- drivers/net/wireless/ath/ath10k/htt_tx.c | 72 +++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/mac.c    |  5 ++-
- 3 files changed, 80 insertions(+), 6 deletions(-)
+Neither the BIP nor FILS cases have any real speed requirements taken
+into account how rarely they end up being used in practice (there is
+really no use case for BIP today and FILS is used only once per
+association). That said, there should be no issues with moving these to
+a more generic mechanism assuming one is available now (I don't think
+that was the case when I was working on BIP and I was too lazy to figure
+out how to convert it or the newer FILS implementation)..
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index bdee2e7..85ad46c 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1822,9 +1822,12 @@ int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool is_mgmt,
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
- void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
- int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu);
--int ath10k_htt_tx(struct ath10k_htt *htt,
--		  enum ath10k_hw_txrx_mode txmode,
--		  struct sk_buff *msdu);
-+int ath10k_htt_tx_ll(struct ath10k_htt *htt,
-+		     enum ath10k_hw_txrx_mode txmode,
-+		     struct sk_buff *msdu);
-+int ath10k_htt_tx_hl(struct ath10k_htt *htt,
-+		     enum ath10k_hw_txrx_mode txmode,
-+		     struct sk_buff *msdu);
- void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
- 					     struct sk_buff *skb);
- int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index ca899e1..a714aa8 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -945,8 +945,76 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	return res;
- }
- 
--int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
--		  struct sk_buff *msdu)
-+#define HTT_TX_HL_NEEDED_HEADROOM \
-+	(unsigned int)(sizeof(struct htt_cmd_hdr) + \
-+	sizeof(struct htt_data_tx_desc) + \
-+	sizeof(struct ath10k_htc_hdr))
-+
-+int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-+		     struct sk_buff *msdu)
-+{
-+	struct ath10k *ar = htt->ar;
-+	int res, data_len;
-+	struct htt_cmd_hdr *cmd_hdr;
-+	struct htt_data_tx_desc *tx_desc;
-+	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
-+	u8 flags0;
-+	u16 flags1 = 0;
-+
-+	data_len = msdu->len;
-+	flags0 = SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
-+
-+	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
-+
-+	if (msdu->ip_summed == CHECKSUM_PARTIAL &&
-+	    !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
-+		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
-+	}
-+
-+	/* Prepend the HTT header and TX desc struct to the data message
-+	 * and realloc the skb if it does not have enough headroom.
-+	 */
-+	if (skb_headroom(msdu) < HTT_TX_HL_NEEDED_HEADROOM) {
-+		struct sk_buff *tmp_skb = msdu;
-+
-+		ath10k_dbg(htt->ar, ATH10K_DBG_HTT,
-+			   "Not enough headroom in skb. Current headroom: %u, needed: %u. Reallocating...\n",
-+			   skb_headroom(msdu), HTT_TX_HL_NEEDED_HEADROOM);
-+		msdu = skb_realloc_headroom(msdu, HTT_TX_HL_NEEDED_HEADROOM);
-+		kfree_skb(tmp_skb);
-+		if (!msdu) {
-+			ath10k_warn(htt->ar, "htt hl tx: Unable to realloc skb!\n");
-+			res = -ENOMEM;
-+			goto out;
-+		}
-+	}
-+
-+	skb_push(msdu, sizeof(*cmd_hdr));
-+	skb_push(msdu, sizeof(*tx_desc));
-+	cmd_hdr = (struct htt_cmd_hdr *)msdu->data;
-+	tx_desc = (struct htt_data_tx_desc *)(msdu->data + sizeof(*cmd_hdr));
-+
-+	cmd_hdr->msg_type = HTT_H2T_MSG_TYPE_TX_FRM;
-+	tx_desc->flags0 = flags0;
-+	tx_desc->flags1 = __cpu_to_le16(flags1);
-+	tx_desc->len = __cpu_to_le16(data_len);
-+	tx_desc->id = 0;
-+	tx_desc->frags_paddr = 0; /* always zero */
-+	/* Initialize peer_id to INVALID_PEER because this is NOT
-+	 * Reinjection path
-+	 */
-+	tx_desc->peerid = __cpu_to_le32(HTT_INVALID_PEERID);
-+
-+	res = ath10k_htc_send(&htt->ar->htc, htt->eid, msdu);
-+
-+out:
-+	return res;
-+}
-+
-+int ath10k_htt_tx_ll(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-+		     struct sk_buff *msdu)
- {
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3029f25..6d2da19 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3531,7 +3531,10 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
- 
- 	switch (txpath) {
- 	case ATH10K_MAC_TX_HTT:
--		ret = ath10k_htt_tx(htt, txmode, skb);
-+		if (ar->is_high_latency)
-+			ret = ath10k_htt_tx_hl(htt, txmode, skb);
-+		else
-+			ret = ath10k_htt_tx_ll(htt, txmode, skb);
- 		break;
- 	case ATH10K_MAC_TX_HTT_MGMT:
- 		ret = ath10k_htt_mgmt_tx(htt, skb);
--- 
-2.7.4
+mac80211_hwsim show allow some of the testing to be done with wlantest
+confirming the results in user space (*). I think that would cover all
+of BIP (net/mac80211/aes_cmac.c), but not FILS. For FILS, we do not
+currently have a convenient mechanism for running two different
+instances of kernel or even just mac80211 in the setup, so that would
+likely need testing with real WLAN hardware. I don't currently have a
+good setup for testing this (was using Backports-based solution in the
+past instead of full kernel build and Backports is a bit behind the
+current state..), but I guess I'll need to build something functional
+for this eventually.. Once that's in working condition on two devices,
+it would be straightforward to run a test (snapshot of hostap.git build
+to enable FILS functionality and go through one FILS authentication
+round)..
+
+Another alternative would be to extend wlantest to decrypt/validate FIPS
+AEAD use case based on keys exposed from hostapd or wpa_supplicant.
+There has not been sufficient use case for that so far and I have not
+bothered working on it yet.
+
+
+By the way, FILS AEAD uses SIV mode and I'm not sure it is supported in
+the current crypto code, so that would be one additional piece to take
+care of when considering net/mac80211/fils_aead.c conversion.
+
+
+(*)
+http://buildbot.w1.fi/hwsim/
+http://w1.fi/cgit/hostap/tree/tests/hwsim/vm/example-vm-setup.txt
+
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
