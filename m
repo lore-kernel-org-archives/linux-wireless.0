@@ -1,75 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41310 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751478AbdB0WjN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 17:39:13 -0500
-From: Hans de Goede <hdegoede@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH v2 2/4] brcmfmac: p2p and normal ap access are not always possible at the same time
-Date: Mon, 27 Feb 2017 22:45:37 +0100
-Message-Id: <20170227214539.16422-2-hdegoede@redhat.com> (sfid-20170227_233950_775262_10BFA03C)
-In-Reply-To: <20170227214539.16422-1-hdegoede@redhat.com>
-References: <20170227214539.16422-1-hdegoede@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from paleale.coelho.fi ([176.9.41.70]:37994 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753381AbdBCOkI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Feb 2017 09:40:08 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  3 Feb 2017 16:37:59 +0200
+Message-Id: <20170203143812.7525-13-luca@coelho.fi> (sfid-20170203_154010_527980_A9A86517)
+In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
+References: <20170203143812.7525-1-luca@coelho.fi>
+Subject: [PATCH 12/25] iwlwifi: mvm: fix D3 replay counter value
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware responding with -EBUSY when trying to add an extra virtual-if
-is a normal thing, do not print an error for this.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+This fixes a long-standing bug that was introduced when this code
+was introduced: cfg80211 passes a pointer, but we treat it as if
+it was passing a value. The result is that we pass the pointer to
+the firmware, instead of the value. It's not clear how this could
+ever have worked, unless the firmware is ignoring this value.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 ++++++++++----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5 ++++-
- 2 files changed, 14 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 7ffc4ab..c54e8b4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -688,11 +688,17 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
- 		return ERR_PTR(-EINVAL);
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index b02d7fc5116f..c7eb1983c4f9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -91,7 +91,7 @@ void iwl_mvm_set_rekey_data(struct ieee80211_hw *hw,
+ 	memcpy(mvmvif->rekey_data.kek, data->kek, NL80211_KEK_LEN);
+ 	memcpy(mvmvif->rekey_data.kck, data->kck, NL80211_KCK_LEN);
+ 	mvmvif->rekey_data.replay_ctr =
+-		cpu_to_le64(be64_to_cpup((__be64 *)&data->replay_ctr));
++		cpu_to_le64(be64_to_cpup((__be64 *)data->replay_ctr));
+ 	mvmvif->rekey_data.valid = true;
  
--	if (IS_ERR(wdev))
--		brcmf_err("add iface %s type %d failed: err=%d\n",
--			  name, type, (int)PTR_ERR(wdev));
--	else
-+	if (IS_ERR(wdev)) {
-+		err = PTR_ERR(wdev);
-+		if (err != -EBUSY)
-+			brcmf_err("add iface %s type %d failed: err=%d\n",
-+				  name, type, err);
-+		else
-+			brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
-+				  name, type, err);
-+	} else {
- 		brcmf_cfg80211_update_proto_addr_mode(wdev);
-+	}
- 
- 	return wdev;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index de19c7c..b5df0a0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2090,7 +2090,10 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
- 	/* Initialize P2P Discovery in the firmware */
- 	err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
- 	if (err < 0) {
--		brcmf_err("set p2p_disc error\n");
-+		if (err != -EBUSY)
-+			brcmf_err("set p2p_disc error\n");
-+		else
-+			brcmf_dbg(INFO, "set p2p_disc error\n");
- 		brcmf_fweh_p2pdev_setup(pri_ifp, false);
- 		brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
- 		goto fail;
+ 	mutex_unlock(&mvm->mutex);
 -- 
-2.9.3
+2.11.0
