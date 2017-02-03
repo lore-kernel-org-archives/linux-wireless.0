@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:52599 "EHLO mail.toke.dk"
+Received: from narfation.org ([79.140.41.39]:56490 "EHLO v3-1039.vlinux.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751225AbdBLPWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Feb 2017 10:22:08 -0500
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
-References: <20170212132931.43510-1-nbd@nbd.name>
-Date: Sun, 12 Feb 2017 16:22:02 +0100
-In-Reply-To: <20170212132931.43510-1-nbd@nbd.name> (Felix Fietkau's message of
-        "Sun, 12 Feb 2017 14:29:31 +0100")
-Message-ID: <87lgtb5t9h.fsf@alrua-karlstad> (sfid-20170212_162211_939797_FB82A50C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        id S1752272AbdBCNwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Feb 2017 08:52:45 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+        Thorsten Horstmann <thorsten@defutech.de>,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH] mac80211: Fix adding of mesh vendor IEs
+Date: Fri,  3 Feb 2017 14:38:29 +0100
+Message-Id: <20170203133829.3219-1-sven@narfation.org> (sfid-20170203_145249_969240_F468065B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+From: Thorsten Horstmann <thorsten@defutech.de>
 
-> ath_tx_count_airtime is doing a lot of unnecessary work:
->
-> - Redundant station lookup
-> - Redundant rcu_read_lock/unlock
-> - Useless memcpy of bf->rates
-> - Useless NULL check of bf->bf_mpdu
-> - Redundant lookup of the skb tid
->
-> Additionally, it tries to look up the mac80211 queue index from the txq,
-> which fails if the frame was delivered via the power save queue.
->
-> This patch fixes all of these issues by passing down the right set of
-> pointers instead of doing extra work
->
-> Cc: stable@vger.kernel.org
-> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling betwee=
-n stations")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+The function ieee80211_ie_split_vendor doesn't return 0 on errors. Instead
+it returns any offset < ielen when WLAN_EID_VENDOR_SPECIFIC is found. The
+return value in mesh_add_vendor_ies must therefore be checked against
+ifmsh->ie_len and not 0. Otherwise all ifmsh->ie starting with
+WLAN_EID_VENDOR_SPECIFIC will be rejected.
 
-Not sure if there's anything for stable to do with this; don't think the
-airtime fairness code has gone into a release yet? Otherwise:
+Fixes: 082ebb0c258d ("mac80211: fix mesh beacon format")
+Signed-off-by: Thorsten Horstmann <thorsten@defutech.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+[sven@narfation.org: Add commit message]
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ net/mac80211/mesh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
-
--Toke
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index d36c7f4c0c7e..6e7b6a07b7d5 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -335,7 +335,7 @@ int mesh_add_vendor_ies(struct ieee80211_sub_if_data *sdata,
+ 	/* fast-forward to vendor IEs */
+ 	offset = ieee80211_ie_split_vendor(ifmsh->ie, ifmsh->ie_len, 0);
+ 
+-	if (offset) {
++	if (offset < ifmsh->ie_len) {
+ 		len = ifmsh->ie_len - offset;
+ 		data = ifmsh->ie + offset;
+ 		if (skb_tailroom(skb) < len)
+-- 
+2.11.0
