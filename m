@@ -1,113 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58752 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751650AbdBXA3K (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9406 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750890AbdBDOjX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 19:29:10 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 160/306] mac80211-hwsim: add rate-limited debugging for rx-netlink
-Date: Thu, 23 Feb 2017 16:28:27 -0800
-Message-Id: <1487896109-23851-5-git-send-email-greearb@candelatech.com> (sfid-20170224_012925_413696_4E3C0418)
-In-Reply-To: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
-References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
+        Sat, 4 Feb 2017 09:39:23 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [RFC PATCH 0/2] mac80211: use crypto shash for AES cmac
+Date: Sat, 4 Feb 2017 14:39:16 +0000
+Message-ID: <20170204143913.GA24691@jouni.qca.qualcomm.com> (sfid-20170204_153931_133055_3B538C0F)
+References: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170203214707.GA14147@jouni.qca.qualcomm.com>
+ <CAKv+Gu9zp+vptF2mHP5MW=x_K5m7WQgMxNNSD5hn93aT_-99xA@mail.gmail.com>
+ <20170204113514.GA4350@jouni.qca.qualcomm.com>
+ <CAKv+Gu9p_yng=_=sri8VtRpBCpvL-r1iZ=YgEqNhuQf55p1xBA@mail.gmail.com>
+In-Reply-To: <CAKv+Gu9p_yng=_=sri8VtRpBCpvL-r1iZ=YgEqNhuQf55p1xBA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Sat, Feb 04, 2017 at 02:24:36PM +0000, Ard Biesheuvel wrote:
+> There is another issue I spotted: the skcipher you allocate may be of
+> the async variant, which may return from skcipher_encrypt() with
+> -EINPROGRESS as soon as it has queued the request. Since you don't
+> deal with that result, you should allocate a sync cipher explicitly:
 
-This makes it easier to understand why wmediumd (or similar)
-is getting errors when sending frames to the kernel.
+> diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
+> -       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, 0);
+> +       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, CRYPTO_ALG_ASYNC);
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 42 ++++++++++++++++++++++++++---------
- 1 file changed, 32 insertions(+), 10 deletions(-)
+> -       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, 0);
+> +       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, CRYPTO_ALG_ASYNC);
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 8d494ac..aaba126 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3010,8 +3010,11 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
- 	    !info->attrs[HWSIM_ATTR_FRAME] ||
- 	    !info->attrs[HWSIM_ATTR_RX_RATE] ||
--	    !info->attrs[HWSIM_ATTR_SIGNAL])
-+	    !info->attrs[HWSIM_ATTR_SIGNAL]) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: Missing required attribute\n");
- 		goto out;
-+	}
- 
- 	dst = (void *)nla_data(info->attrs[HWSIM_ATTR_ADDR_RECEIVER]);
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
-@@ -3019,29 +3022,50 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 
- 	/* Allocate new skb here */
- 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
--	if (skb == NULL)
--		goto err;
-+	if (skb == NULL) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
-+			       frame_data_len);
-+		goto out;
-+	}
- 
--	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
--		goto err;
-+	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
-+			       frame_data_len, IEEE80211_MAX_DATA_LEN);
-+		goto out;
-+	}
- 
- 	/* Copy the data */
- 	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
- 
- 	data2 = get_hwsim_data_ref_from_addr(dst);
--	if (!data2)
-+
-+	if (!data2) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: Cannot find radio %pM\n",
-+			       dst);
- 		goto out;
-+	}
- 
- 	if (hwsim_net_get_netgroup(genl_info_net(info)) != data2->netgroup)
- 		goto out;
- 
--	if (info->snd_portid != data2->wmediumd)
-+	if (info->snd_portid != data2->wmediumd) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: portid mismatch, snd_portid: %d  portid %d\n",
-+			       info->snd_portid, data2->wmediumd);
- 		goto out;
-+	}
- 
- 	/* check if radio is configured properly */
- 
--	if (data2->idle || !data2->started)
-+	if (data2->idle || !data2->started) {
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: radio %pM idle: %d or not started: %d\n",
-+			       dst, data2->idle, !data2->started);
- 		goto out;
-+	}
- 
- 	/* A frame is received from user space */
- 	memset(&rx_status, 0, sizeof(rx_status));
-@@ -3084,8 +3108,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	ieee80211_rx_irqsafe(data2->hw, skb);
- 
- 	return 0;
--err:
--	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
- out:
- 	dev_kfree_skb(skb);
- 	return -EINVAL;
--- 
-2.4.11
+Thanks! Can you send this as a full contribution or do you want me to
+do that? I did run this through all the FILS test cases with
+mac80211_hwsim.
+
+> Thanks for the instructions and thanks for testing. If I manage to run
+> this locally, I will follow up with an alternative patch #1 that
+> switches FILS to use cmac(aes) as well (which looks reasonably
+> feasible now that I understand the code)
+
+If you have any issues in getting the hwsim test setup working, please
+let me know. I'm trying to make it easy for anyone to run those tests in
+hopes of improving quality of Linux WLAN contributions and what gets
+applied into cfg80211 or mac80211 (or hostap.git for that matter). In
+particular the latest step-by-step guide I added for the VM version (*)
+was hoping to show how that can be done in 15 minutes from scratch..
+
+
+(*) http://w1.fi/cgit/hostap/plain/tests/hwsim/vm/example-vm-setup.txt
+
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
