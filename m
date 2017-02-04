@@ -1,92 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:36283 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753783AbdBVEzp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24051 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753923AbdBDMAX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 23:55:45 -0500
-Date: Tue, 21 Feb 2017 23:55:43 -0500
-From: Tahia Khan <tahia.khan@gmail.com>
-To: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
-        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: renames struct tstrRSSI and its members
- u8Index, u8Full
-Message-ID: <20170222045543.GA27847@coolbox> (sfid-20170222_055556_219020_84BCCE66)
+        Sat, 4 Feb 2017 07:00:23 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH] mac80211: Fix FILS AEAD protection in Association Request frame
+Date: Sat, 4 Feb 2017 13:59:22 +0200
+Message-ID: <1486209562-23415-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20170204_130029_863904_A7D25D47)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes multiple camel case checks on struct tstrRSSI from checkpatch.pl:
+Incorrect num_elem parameter value (1 vs. 5) was used in the
+aes_siv_encrypt() call. This resulted in only the first one of the five
+AAD vectors to SIV getting included in calculation. This does not
+protect all the contents correctly and would not interoperate with a
+standard compliant implementation.
 
-Avoid CamelCase: <tstrRSSI>
-Avoid CamelCase: <u8Full>
-Avoid CamelCase: <u8Index>
+Fix this by using the correct number. A matching fix is needed in the AP
+side (hostapd) to get FILS authentication working properly.
 
-Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
+Fixes: 39404feee691 ("mac80211: FILS AEAD protection for station mode association frames")
+Reported-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.h       |  8 ++++----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ net/mac80211/fils_aead.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index cff1698..c9cf23b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -70,9 +70,9 @@ enum connect_status {
- 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
- };
+If there is still time, it would be nice to get this included in Linux
+4.10 since fils_aead.c is being added there. If not, Cc: stable could be
+added.
+
+diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
+index ecfdd97..e795aaa 100644
+--- a/net/mac80211/fils_aead.c
++++ b/net/mac80211/fils_aead.c
+@@ -272,7 +272,7 @@ int fils_encrypt_assoc_req(struct sk_buff *skb,
+ 	crypt_len = skb->data + skb->len - encr;
+ 	skb_put(skb, AES_BLOCK_SIZE);
+ 	return aes_siv_encrypt(assoc_data->fils_kek, assoc_data->fils_kek_len,
+-			       encr, crypt_len, 1, addr, len, encr);
++			       encr, crypt_len, 5, addr, len, encr);
+ }
  
--struct tstrRSSI {
--	u8 u8Full;
--	u8 u8Index;
-+struct tstr_RSSI {
-+	u8 u8_full;
-+	u8 u8_index;
- 	s8 as8RSSI[NUM_RSSI];
- };
- 
-@@ -93,7 +93,7 @@ struct network_info {
- 	u8 *ies;
- 	u16 ies_len;
- 	void *join_params;
--	struct tstrRSSI str_rssi;
-+	struct tstr_RSSI str_rssi;
- 	u64 tsf_hi;
- };
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index f7ce47c..30285b9 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -205,8 +205,8 @@ static u32 get_rssi_avg(struct network_info *network_info)
- {
- 	u8 i;
- 	int rssi_v = 0;
--	u8 num_rssi = (network_info->str_rssi.u8Full) ?
--		       NUM_RSSI : (network_info->str_rssi.u8Index);
-+	u8 num_rssi = (network_info->str_rssi.u8_full) ?
-+		       NUM_RSSI : (network_info->str_rssi.u8_index);
- 
- 	for (i = 0; i < num_rssi; i++)
- 		rssi_v += network_info->str_rssi.as8RSSI[i];
-@@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	} else {
- 		ap_index = ap_found;
- 	}
--	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
-+	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8_index;
- 	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
- 	if (rssi_index == NUM_RSSI) {
- 		rssi_index = 0;
--		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
-+		last_scanned_shadow[ap_index].str_rssi.u8_full = 1;
- 	}
--	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
-+	last_scanned_shadow[ap_index].str_rssi.u8_index = rssi_index;
- 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
- 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
- 	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
+ int fils_decrypt_assoc_resp(struct ieee80211_sub_if_data *sdata,
 -- 
 2.7.4
