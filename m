@@ -1,392 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35190 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751623AbdBUK0Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 05:26:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Avraham Stern <avraham.stern@intel.com>
-Subject: [RFC] nl80211/cfg80211: Add API for setting the PMK to the driver
-Date: Tue, 21 Feb 2017 11:26:09 +0100
-Message-Id: <20170221102609.15332-1-johannes@sipsolutions.net> (sfid-20170221_112620_658479_9F86D653)
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:35506 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750876AbdBDP3J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 4 Feb 2017 10:29:09 -0500
+From: Dmitry Osipenko <digetx@gmail.com>
+Subject: rtlwifi: rtl8192c_common: "BUG: KASAN: slab-out-of-bounds"
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: linux-wireless@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Message-ID: <beff9033-0051-fd0f-87fe-8269a0d9c8d0@gmail.com> (sfid-20170204_162944_624665_6D2A538B)
+Date: Sat, 4 Feb 2017 18:29:04 +0300
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+Hello,
 
-Add API for setting the PMK to the driver. For FT support, allow
-setting also the PMK-R0 Name.
+I ran a 4.9.7 kernel with CONFIG_KASAN=y on my machine and it detected the
+following problem:
 
-This can be used by drivers that support 4-Way handshake offload
-while IEEE802.1X authentication is managed by upper layers.
+[   23.012238] rtl8192cu: MAC auto ON okay!
+[   23.045656] rtl8192cu: Tx queue select: 0x05
+[   23.541152] ==================================================================
+[   23.541160] BUG: KASAN: slab-out-of-bounds in
+rtl92c_dm_bt_coexist+0x858/0x1e40 [rtl8192c_common] at addr ffff8801c90edb08
+[   23.541161] Read of size 1 by task kworker/0:1/38
+[   23.541163] page:ffffea0007243800 count:1 mapcount:0 mapping:          (null)
+index:0x0 compound_mapcount: 0
+[   23.543194] flags: 0x8000000000004000(head)
+[   23.545178] page dumped because: kasan: bad access detected
+[   23.545181] CPU: 0 PID: 38 Comm: kworker/0:1 Not tainted 4.9.7-gentoo #3
+[   23.545182] Hardware name: Gigabyte Technology Co., Ltd. To be filled by
+O.E.M./Z77-DS3H, BIOS F11a 11/13/2013
+[   23.545186] Workqueue: rtl92c_usb rtl_watchdog_wq_callback [rtlwifi]
+[   23.545187]  0000000000000000 ffffffff829eea33 ffff8801d7f0fa30 ffff8801c90edb08
+[   23.545189]  ffffffff824c0f09 ffff8801d4abee80 0000000000000004 0000000000000297
+[   23.545191]  ffffffffc070b57c ffff8801c7aa7c48 ffff880100000004 ffffffff000003e8
+[   23.545192] Call Trace:
+[   23.545197]  [<ffffffff829eea33>] ? dump_stack+0x5c/0x79
+[   23.545200]  [<ffffffff824c0f09>] ? kasan_report_error+0x4b9/0x4e0
+[   23.545202]  [<ffffffffc070b57c>] ? _usb_read_sync+0x15c/0x280 [rtl_usb]
+[   23.545204]  [<ffffffff824c0f75>] ? __asan_report_load1_noabort+0x45/0x50
+[   23.545206]  [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40
+[rtl8192c_common]
+[   23.545208]  [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40
+[rtl8192c_common]
+[   23.545210]  [<ffffffffc06d0cbe>] ? rtl92c_dm_rf_saving+0x96e/0x1330
+[rtl8192c_common]
+[   23.545212]  [<ffffffffc06dab80>] ? rtl92c_dm_watchdog+0x1130/0x4590
+[rtl8192c_common]
+[   23.545214]  [<ffffffffc06d9a50>] ? rtl92c_dm_dynamic_txpower+0x9e0/0x9e0
+[rtl8192c_common]
+[   23.545216]  [<ffffffff8222038d>] ? pick_next_entity+0x18d/0x400
+[   23.545218]  [<ffffffff8223fdde>] ? pick_next_task_fair+0xa6e/0xf60
+[   23.545220]  [<ffffffff8207548a>] ? __switch_to+0x7ba/0x1160
+[   23.545223]  [<ffffffffc0689a2b>] ? rtl_watchdog_wq_callback+0xb7b/0x1190
+[rtlwifi]
+[   23.545225]  [<ffffffffc0688eb0>] ? rtl_tx_mgmt_proc+0x2c0/0x2c0 [rtlwifi]
+[   23.545228]  [<ffffffff82d1ecfe>] ? drm_fb_helper_dirty_work+0x25e/0x2f0
+[   23.545230]  [<ffffffff83c65d20>] ? io_schedule_timeout+0x390/0x390
+[   23.545233]  [<ffffffff82b8cef0>] ? update_attr.isra.2+0x170/0x170
+[   23.545234]  [<ffffffff82b80a01>] ? fb_flashcursor+0x331/0x3e0
+[   23.545237]  [<ffffffff821d7af9>] ? process_one_work+0x539/0x12b0
+[   23.545239]  [<ffffffff821d894f>] ? worker_thread+0xdf/0x13e0
+[   23.545240]  [<ffffffff8225343c>] ? __wake_up_common+0xbc/0x160
+[   23.545242]  [<ffffffff821d8870>] ? process_one_work+0x12b0/0x12b0
+[   23.545244]  [<ffffffff821e7f89>] ? kthread+0x1b9/0x210
+[   23.545245]  [<ffffffff821e7dd0>] ? kthread_park+0x80/0x80
+[   23.545247]  [<ffffffff821e7dd0>] ? kthread_park+0x80/0x80
+[   23.545248]  [<ffffffff821e7dd0>] ? kthread_park+0x80/0x80
+[   23.545250]  [<ffffffff83c724c5>] ? ret_from_fork+0x25/0x30
+[   23.545251] Memory state around the buggy address:
+[   23.545253]  ffff8801c90eda00: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.545254]  ffff8801c90eda80: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.545255] >ffff8801c90edb00: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.545256]                       ^
+[   23.545257]  ffff8801c90edb80: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.545257]  ffff8801c90edc00: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.545258] ==================================================================
+[   23.545258] Disabling lock debugging due to kernel taint
+[   23.545300] ==================================================================
+[   23.545303] BUG: KASAN: slab-out-of-bounds in
+rtl92c_dm_watchdog+0x3dfb/0x4590 [rtl8192c_common] at addr ffff8801c90edb1c
+[   23.545304] Read of size 4 by task kworker/0:1/38
+[   23.545305] page:ffffea0007243800 count:1 mapcount:0 mapping:          (null)
+index:0x0 compound_mapcount: 0
+[   23.547353] flags: 0x8000000000004000(head)
+[   23.547354] page dumped because: kasan: bad access detected
+[   23.547355] CPU: 0 PID: 38 Comm: kworker/0:1 Tainted: G    B
+4.9.7-gentoo #3
+[   23.547356] Hardware name: Gigabyte Technology Co., Ltd. To be filled by
+O.E.M./Z77-DS3H, BIOS F11a 11/13/2013
+[   23.547358] Workqueue: rtl92c_usb rtl_watchdog_wq_callback [rtlwifi]
+[   23.547360]  0000000000000000 ffffffff829eea33 ffff8801d7f0fa80 ffff8801c90edb1c
+[   23.547361]  ffffffff824c0f09 ffff8801c90e0748 ffff8801c90e1420 0000000000000297
+[   23.547363]  ffff8801c90e1420 ffffffff824c0f75 ffff8801c90edb08 ffff8801c90edb08
+[   23.547363] Call Trace:
+[   23.547367]  [<ffffffff829eea33>] ? dump_stack+0x5c/0x79
+[   23.547368]  [<ffffffff824c0f09>] ? kasan_report_error+0x4b9/0x4e0
+[   23.547370]  [<ffffffff824c0f75>] ? __asan_report_load1_noabort+0x45/0x50
+[   23.547371]  [<ffffffff824c1015>] ? __asan_report_load4_noabort+0x45/0x50
+[   23.547373]  [<ffffffffc06dd84b>] ? rtl92c_dm_watchdog+0x3dfb/0x4590
+[rtl8192c_common]
+[   23.547375]  [<ffffffffc06dd84b>] ? rtl92c_dm_watchdog+0x3dfb/0x4590
+[rtl8192c_common]
+[   23.547377]  [<ffffffffc06d9a50>] ? rtl92c_dm_dynamic_txpower+0x9e0/0x9e0
+[rtl8192c_common]
+[   23.547378]  [<ffffffff8222038d>] ? pick_next_entity+0x18d/0x400
+[   23.547380]  [<ffffffff8223fdde>] ? pick_next_task_fair+0xa6e/0xf60
+[   23.547381]  [<ffffffff8207548a>] ? __switch_to+0x7ba/0x1160
+[   23.547383]  [<ffffffffc0689a2b>] ? rtl_watchdog_wq_callback+0xb7b/0x1190
+[rtlwifi]
+[   23.547385]  [<ffffffffc0688eb0>] ? rtl_tx_mgmt_proc+0x2c0/0x2c0 [rtlwifi]
+[   23.547387]  [<ffffffff82d1ecfe>] ? drm_fb_helper_dirty_work+0x25e/0x2f0
+[   23.547388]  [<ffffffff83c65d20>] ? io_schedule_timeout+0x390/0x390
+[   23.547390]  [<ffffffff82b8cef0>] ? update_attr.isra.2+0x170/0x170
+[   23.547391]  [<ffffffff82b80a01>] ? fb_flashcursor+0x331/0x3e0
+[   23.547393]  [<ffffffff821d7af9>] ? process_one_work+0x539/0x12b0
+[   23.547394]  [<ffffffff821d894f>] ? worker_thread+0xdf/0x13e0
+[   23.547396]  [<ffffffff8225343c>] ? __wake_up_common+0xbc/0x160
+[   23.547398]  [<ffffffff821d8870>] ? process_one_work+0x12b0/0x12b0
+[   23.547399]  [<ffffffff821e7f89>] ? kthread+0x1b9/0x210
+[   23.547400]  [<ffffffff821e7dd0>] ? kthread_park+0x80/0x80
+[   23.547401]  [<ffffffff821e7dd0>] ? kthread_park+0x80/0x80
+[   23.547403]  [<ffffffff821e7dd0>] ? kthread_park+0x80/0x80
+[   23.547404]  [<ffffffff83c724c5>] ? ret_from_fork+0x25/0x30
+[   23.547405] Memory state around the buggy address:
+[   23.547406]  ffff8801c90eda00: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.547407]  ffff8801c90eda80: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.547407] >ffff8801c90edb00: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.547408]                             ^
+[   23.547409]  ffff8801c90edb80: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.547410]  ffff8801c90edc00: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+[   23.547410] ==================================================================
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-We reused the PSK feature bit here since the 4-way-HS is the same,
-but perhaps we should split it if some firmware/driver can't or
-doesn't want to implement both?
----
- include/linux/ieee80211.h    |  3 ++
- include/net/cfg80211.h       | 27 ++++++++++++
- include/uapi/linux/nl80211.h | 23 ++++++++--
- net/wireless/nl80211.c       | 99 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 25 +++++++++++
- net/wireless/trace.h         | 60 +++++++++++++++++++++++++++
- 6 files changed, 234 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 2049e983a994..fb1f533e75b3 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2356,8 +2356,11 @@ enum ieee80211_sa_query_action {
- 
- #define WLAN_MAX_KEY_LEN		32
- 
-+#define WLAN_PMK_NAME_LEN		16
- #define WLAN_PMKID_LEN			16
-+#define WLAN_PMK_LEN_EAP_LEAP		16
- #define WLAN_PMK_LEN			32
-+#define WLAN_PMK_LEN_SUITE_B_192	48
- 
- #define WLAN_OUI_WFA			0x506f9a
- #define WLAN_OUI_TYPE_WFA_P2P		9
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4ca968927d60..a68c6db6ac55 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2507,6 +2507,23 @@ struct cfg80211_nan_func {
- };
- 
- /**
-+ * struct cfg80211_pmk_conf - PMK configuration
-+ *
-+ * @aa: authenticator address
-+ * @pmk_len: PMK length in bytes.
-+ * @pmk: the PMK material
-+ * @pmk_r0_name: PMK-R0 Name. NULL if not applicable (i.e., the PMK
-+ *	is not PMK-R0). When pmk_r0_name is not NULL, the pmk field
-+ *	holds PMK-R0.
-+ */
-+struct cfg80211_pmk_conf {
-+	const u8 *aa;
-+	u8 pmk_len;
-+	const u8 *pmk;
-+	const u8 *pmk_r0_name;
-+};
-+
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -2823,6 +2840,11 @@ struct cfg80211_nan_func {
-  *	All other parameters must be ignored.
-  *
-  * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
-+ *
-+ * @set_pmk: configure the PMK to be used for offloaded 4-Way handshake.
-+ *	(invoked with the wireless_dev mutex held)
-+ * @del_pmk: delete the previously configured PMK for the given authenticator.
-+ *	(invoked with the wireless_dev mutex held)
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3111,6 +3133,11 @@ struct cfg80211_ops {
- 	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
- 					    struct net_device *dev,
- 					    const bool enabled);
-+
-+	int	(*set_pmk)(struct wiphy *wiphy, struct net_device *dev,
-+			   const struct cfg80211_pmk_conf *conf);
-+	int	(*del_pmk)(struct wiphy *wiphy, struct net_device *dev,
-+			   const u8 *aa);
- };
- 
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ba102c937750..6ca7fb4a3d71 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -901,6 +901,14 @@
-  *	does not result in a change for the current association. Currently,
-  *	only the %NL80211_ATTR_IE data is used and updated with this command.
-  *
-+ * @NL80211_CMD_SET_PMK: For offloaded 4-Way handshake, set the PMK or PMK-R0
-+ *	for the given authenticator address (specified with &NL80211_ATTR_MAC).
-+ *	When &NL80211_ATTR_PMKR0_NAME is set, &NL80211_ATTR_PMK specifies the
-+ *	PMK-R0, otherwise it specifies the PMK.
-+ * @NL80211_CMD_DEL_PMK: For offloaded 4-Way handshake, delete the previously
-+ *	configured PMK for the authenticator address identified by
-+ *	&NL80211_ATTR_MAC.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1100,6 +1108,9 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_UPDATE_CONNECT_PARAMS,
- 
-+	NL80211_CMD_SET_PMK,
-+	NL80211_CMD_DEL_PMK,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2012,8 +2023,12 @@ enum nl80211_commands {
-  *	u32 attribute with an &enum nl80211_timeout_reason value. This is used,
-  *	e.g., with %NL80211_CMD_CONNECT event.
-  *
-- * @NL80211_ATTR_PMK: PSK for offloaded 4-Way Handshake. Relevant only
-- *	with %NL80211_CMD_CONNECT (for WPA/WPA2-PSK networks).
-+ * @NL80211_ATTR_PMK: PMK for offloaded 4-Way Handshake. Relevant with
-+ *	%NL80211_CMD_CONNECT (for WPA/WPA2-PSK networks) when PSK is used, or
-+ *	with %NL80211_CMD_SET_PMK when 802.1X authentication is used.
-+ *	When &NL80211_ATTR_PMKR0_NAME is specified, this attribute specifies
-+ *	the PMK-R0.
-+ * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -2427,6 +2442,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_TIMEOUT_REASON,
- 
- 	NL80211_ATTR_PMK,
-+	NL80211_ATTR_PMKR0_NAME,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-@@ -4766,7 +4782,8 @@ enum nl80211_feature_flags {
-  *	RSSI threshold values to monitor rather than exactly one threshold.
-  * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_OFFLOAD_STA: Device supports
-  *	doing 4-way handshake in station mode (PSK is passed as part
-- *	of the connect command).
-+ *	of the connect command and the PMK for 802.1X is set with the
-+ *	%NL80211_CMD_SET_PMK command.)
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 34b551edbc4f..a78bc4c27ed0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12075,6 +12075,90 @@ static int nl80211_set_multicast_to_unicast(struct sk_buff *skb,
- 	return rdev_set_multicast_to_unicast(rdev, dev, enabled);
- }
- 
-+static int nl80211_set_pmk(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_pmk_conf pmk_conf = {};
-+	int ret;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION &&
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+		return -EOPNOTSUPP;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_OFFLOAD_STA))
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC] || !info->attrs[NL80211_ATTR_PMK])
-+		return -EINVAL;
-+
-+	wdev_lock(wdev);
-+	if (!wdev->current_bss) {
-+		ret = -ENOTCONN;
-+		goto out;
-+	}
-+
-+	pmk_conf.aa = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	if (memcmp(pmk_conf.aa, wdev->current_bss->pub.bssid, ETH_ALEN)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	pmk_conf.pmk = nla_data(info->attrs[NL80211_ATTR_PMK]);
-+	pmk_conf.pmk_len = nla_len(info->attrs[NL80211_ATTR_PMK]);
-+	if (pmk_conf.pmk_len != WLAN_PMK_LEN &&
-+	    pmk_conf.pmk_len != WLAN_PMK_LEN_SUITE_B_192) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_PMKR0_NAME]) {
-+		int r0_name_len = nla_len(info->attrs[NL80211_ATTR_PMKR0_NAME]);
-+
-+		if (r0_name_len != WLAN_PMK_NAME_LEN) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		pmk_conf.pmk_r0_name =
-+			nla_data(info->attrs[NL80211_ATTR_PMKR0_NAME]);
-+	}
-+
-+	ret = rdev_set_pmk(rdev, dev, &pmk_conf);
-+out:
-+	wdev_unlock(wdev);
-+	return ret;
-+}
-+
-+static int nl80211_del_pmk(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	const u8 *aa;
-+	int ret;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION &&
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+		return -EOPNOTSUPP;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_OFFLOAD_STA))
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC])
-+		return -EINVAL;
-+
-+	wdev_lock(wdev);
-+	aa = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	ret = rdev_del_pmk(rdev, dev, aa);
-+	wdev_unlock(wdev);
-+
-+	return ret;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -12950,6 +13034,21 @@ static const struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_PMK,
-+		.doit = nl80211_set_pmk,
-+		.policy = nl80211_policy,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
-+		.cmd = NL80211_CMD_DEL_PMK,
-+		.doit = nl80211_del_pmk,
-+		.policy = nl80211_policy,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index f2baf5921091..06698552f1f2 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1165,4 +1165,29 @@ rdev_set_coalesce(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-+
-+static inline int rdev_set_pmk(struct cfg80211_registered_device *rdev,
-+			       struct net_device *dev,
-+			       struct cfg80211_pmk_conf *pmk_conf)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_rdev_set_pmk(&rdev->wiphy, dev, pmk_conf);
-+	if (rdev->ops->set_pmk)
-+		ret = rdev->ops->set_pmk(&rdev->wiphy, dev, pmk_conf);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
-+static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
-+			       struct net_device *dev, const u8 *aa)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_rdev_del_pmk(&rdev->wiphy, dev, aa);
-+	if (rdev->ops->del_pmk)
-+		ret = rdev->ops->del_pmk(&rdev->wiphy, dev, aa);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index fd55786f0462..47a5e8d4b113 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2252,6 +2252,66 @@ TRACE_EVENT(rdev_tdls_cancel_channel_switch,
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(addr))
- );
- 
-+TRACE_EVENT(rdev_set_pmk,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 struct cfg80211_pmk_conf *pmk_conf),
-+
-+	TP_ARGS(wiphy, netdev, pmk_conf),
-+
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(aa)
-+		__field(u8, pmk_len)
-+		__field(u8, pmk_r0_name_len)
-+		__dynamic_array(u8, pmk, pmk_conf->pmk_len)
-+		__dynamic_array(u8, pmk_r0_name, WLAN_PMK_NAME_LEN)
-+	),
-+
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(aa, pmk_conf->aa);
-+		__entry->pmk_len = pmk_conf->pmk_len;
-+		__entry->pmk_r0_name_len =
-+		pmk_conf->pmk_r0_name ? WLAN_PMK_NAME_LEN : 0;
-+		memcpy(__get_dynamic_array(pmk), pmk_conf->pmk,
-+		       pmk_conf->pmk_len);
-+		memcpy(__get_dynamic_array(pmk_r0_name), pmk_conf->pmk_r0_name,
-+		       pmk_conf->pmk_r0_name ? WLAN_PMK_NAME_LEN : 0);
-+	),
-+
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT
-+		  "pmk_len=%u, pmk: %s pmk_r0_name: %s", WIPHY_PR_ARG,
-+		  NETDEV_PR_ARG, MAC_PR_ARG(aa), __entry->pmk_len,
-+		  __print_array(__get_dynamic_array(pmk),
-+				__get_dynamic_array_len(pmk), 1),
-+		  __entry->pmk_r0_name_len ?
-+		  __print_array(__get_dynamic_array(pmk_r0_name),
-+				__get_dynamic_array_len(pmk_r0_name), 1) : "")
-+);
-+
-+TRACE_EVENT(rdev_del_pmk,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, const u8 *aa),
-+
-+	TP_ARGS(wiphy, netdev, aa),
-+
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(aa)
-+	),
-+
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(aa, aa);
-+	),
-+
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT,
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(aa))
-+);
-+
- /*************************************************************
-  *	     cfg80211 exported functions traces		     *
-  *************************************************************/
 -- 
-2.9.3
+Dmitry
