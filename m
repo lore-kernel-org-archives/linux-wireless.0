@@ -1,92 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753080AbdBUOcd (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:60128 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751582AbdBDBP6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:33 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 10/10] wil6210: add oob_mode for AP certification
-Date: Tue, 21 Feb 2017 16:32:08 +0200
-Message-Id: <1487687528-12832-11-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153242_652283_ADBA723A)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 3 Feb 2017 20:15:58 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, linux-nfc@ml01.01.org
+Subject: [PATCH resend 2/4] nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
+References: <871sveu579.fsf@mail.parknet.co.jp>
+Date: Sat, 04 Feb 2017 10:15:55 +0900
+In-Reply-To: <871sveu579.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
+        "Sat, 04 Feb 2017 10:15:22 +0900")
+Message-ID: <87wpd6sqlw.fsf@mail.parknet.co.jp> (sfid-20170204_021622_670013_3EE69EFE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
 
-Add a new value to the oob_mode module parameter for
-supporting AP certification.
-All enabled values of oob_mode (>0) are intended only
-for debugging and diagnostics.
+Now, NFC_EVENT_DEVICE_ADDED doesn't send NFC_ATTR_RF_MODE. But
+NFC_CMD_GET_DEVICE send.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+To get NFC_ATTR_RF_MODE, we have to call NFC_CMD_GET_DEVICE just for
+NFC_ATTR_RF_MODE when get NFC_EVENT_DEVICE_ADDED.
+
+This fixes those inconsistent.
+
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 24 ++++++++++++++++++------
- drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
- 2 files changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 3206aea..c33cc4a 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -30,8 +30,8 @@
- module_param(debug_fw, bool, 0444);
- MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
- 
--static bool oob_mode;
--module_param(oob_mode, bool, 0444);
-+static u8 oob_mode;
-+module_param(oob_mode, byte, 0444);
- MODULE_PARM_DESC(oob_mode,
- 		 " enable out of the box (OOB) mode in FW, for diagnostics and certification");
- 
-@@ -642,13 +642,25 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
- 	wil_w(wil, RGF_USER_USER_CPU_0, 1);
+ net/nfc/netlink.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+diff -puN net/nfc/netlink.c~nfc-send-same-info net/nfc/netlink.c
+--- linux/net/nfc/netlink.c~nfc-send-same-info	2016-12-18 22:16:55.805686290 +0900
++++ linux-hirofumi/net/nfc/netlink.c	2016-12-18 22:16:55.806686296 +0900
+@@ -311,6 +311,17 @@ free_msg:
+ 	return -EMSGSIZE;
  }
  
--static void wil_set_oob_mode(struct wil6210_priv *wil, bool enable)
-+static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
++static int nfc_genl_setup_device_added(struct nfc_dev *dev, struct sk_buff *msg)
++{
++	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
++	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
++	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
++	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
++	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
++		return -1;
++	return 0;
++}
++
+ int nfc_genl_device_added(struct nfc_dev *dev)
  {
--	wil_info(wil, "enable=%d\n", enable);
--	if (enable)
-+	wil_info(wil, "oob_mode to %d\n", mode);
-+	switch (mode) {
-+	case 0:
-+		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE |
-+		      BIT_USER_OOB_R2_MODE);
-+		break;
-+	case 1:
-+		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_R2_MODE);
- 		wil_s(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
--	else
-+		break;
-+	case 2:
- 		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
-+		wil_s(wil, RGF_USER_USAGE_6, BIT_USER_OOB_R2_MODE);
-+		break;
-+	default:
-+		wil_err(wil, "invalid oob_mode: %d\n", mode);
-+	}
- }
+ 	struct sk_buff *msg;
+@@ -325,10 +336,7 @@ int nfc_genl_device_added(struct nfc_dev
+ 	if (!hdr)
+ 		goto free_msg;
  
- static int wil_target_reset(struct wil6210_priv *wil)
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index cb825cc..fee1891 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -140,6 +140,7 @@ struct RGF_ICR {
- #define RGF_USER_USAGE_1		(0x880004)
- #define RGF_USER_USAGE_6		(0x880018)
- 	#define BIT_USER_OOB_MODE		BIT(31)
-+	#define BIT_USER_OOB_R2_MODE		BIT(30)
- #define RGF_USER_HW_MACHINE_STATE	(0x8801dc)
- 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
- #define RGF_USER_USER_CPU_0		(0x8801e0)
+-	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
+-	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
+-	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
+-	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up))
++	if (nfc_genl_setup_device_added(dev, msg))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+@@ -604,11 +612,7 @@ static int nfc_genl_send_device(struct s
+ 	if (cb)
+ 		genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
+ 
+-	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
+-	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
+-	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
+-	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
+-	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
++	if (nfc_genl_setup_device_added(dev, msg))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+_
 -- 
-1.9.1
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
