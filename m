@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51722 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750998AbdBUIs0 (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35785 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750955AbdBDTdD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 03:48:26 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v6 1/3] cfg80211: Accept multiple RSSI thresholds for CQM
-References: <20170210090231.14696-1-andrew.zaborowski@intel.com>
-        <1487147264.4026.13.camel@sipsolutions.net>
-        <87vasb96ep.fsf@purkki.adurom.net>
-        <CAOq732LwAs6bG5dPMuBWA7MnSMLSRyySEq-2y2niDU0ZsFRNfA@mail.gmail.com>
-Date: Tue, 21 Feb 2017 10:48:13 +0200
-In-Reply-To: <CAOq732LwAs6bG5dPMuBWA7MnSMLSRyySEq-2y2niDU0ZsFRNfA@mail.gmail.com>
-        (Andrew Zaborowski's message of "Tue, 21 Feb 2017 02:44:10 +0100")
-Message-ID: <87d1ecdj5e.fsf@kamboji.qca.qualcomm.com> (sfid-20170221_094829_718074_58F29CC0)
+        Sat, 4 Feb 2017 14:33:03 -0500
+Subject: Re: rtlwifi: rtl8192c_common: "BUG: KASAN: slab-out-of-bounds"
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>
+References: <beff9033-0051-fd0f-87fe-8269a0d9c8d0@gmail.com>
+ <f5682c5a-6c2c-8a35-61b6-1d7a30d2c1f6@gmail.com>
+ <edbcbe3f-9b5d-cead-5885-27bc55ef550b@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Dmitry Osipenko <digetx@gmail.com>
+Message-ID: <b100135b-97c4-b2bc-4f19-2574e573878b@gmail.com> (sfid-20170204_203332_024008_52FBEE01)
+Date: Sat, 4 Feb 2017 22:32:59 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <edbcbe3f-9b5d-cead-5885-27bc55ef550b@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew Zaborowski <andrew.zaborowski@intel.com> writes:
+On 04.02.2017 21:41, Larry Finger wrote:
+> On 02/04/2017 10:58 AM, Dmitry Osipenko wrote:
+>> Seems the problem is caused by rtl92c_dm_*() casting .priv to "struct
+>> rtl_pci_priv", while it is "struct rtl_usb_priv".
+> 
+> Those routines are shared by rtl8192ce and rtl8192cu, thus we need to make that
+> difference in cast to be immaterial. I think we need to move "struct
+> bt_coexist_info" to the beginning of both rtlpci_priv and rtl_usb_priv. Then it
+> should not matter.
+> 
+> I do not have a gcc version new enough to turn KASAN testing on, thus the
+> attached patch is only compile tested. Does it fix the problem?
 
-> Hi,
->
-> On 15 February 2017 at 09:58, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>> On Fri, 2017-02-10 at 10:02 +0100, Andrew Zaborowski wrote:
->>>> Change the SET CQM command's RSSI threshold attribute to accept any
->>>> number of thresholds as a sorted array.  The API should be backwards
->>>> compatible so that if one s32 threshold value is passed, the old
->>>> mechanism is enabled.  The netlink event generated is the same in
->>>> both cases.
->>>
->>> I've applied this now, thanks for your patience :)
->>>
->>> I got a bit confused - and then fixed it up - patchwork has giving your
->>> name as "Andrzej Zaborowski" which apparently you didn't really want
->>> (any more). I've fixed it for these patches to be as the patches you
->>> sent, but no guarantees I've done this before or will remember to do
->>> that in the future - if you can somehow change your name in patchwork
->>> (patchwork.kernel.org) that would be good.
->
-> Thanks, changed it for consistency now.
->
->>
->> IIRC if you haven't registered to patchwork.kernel.org it's possible to
->> change the name easily. But after registration the user needs to contact
->> helpdesk to change the name.
->
-> Indeed I was able to set name on registration today but can see no way
-> to modify it.  The project's mailing list has a thread about a patch
-> that's about to be backported to the patchwork.kernel.org version
-> though,
-> https://github.com/getpatchwork/patchwork/commit/d365402fb98dfb2c4aea4b58346096f85bdfa0c3
+Thank you for the patch, it indeed fixes the bug.
 
-Great, that's exactly the right way to fix this. Thanks for letting us
-now.
+I noticed that struct rtl_priv contains .btcoexist, isn't it duplicated in the
+struct rtl_pci_priv?
 
 -- 
-Kalle Valo
+Dmitry
