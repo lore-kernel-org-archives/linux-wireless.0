@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:35027 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751468AbdB1BYZ (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:60134 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751582AbdBDBQa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 20:24:25 -0500
-Received: by mail-it0-f66.google.com with SMTP id 203so38451ith.2
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 17:23:28 -0800 (PST)
-Received: from mail-io0-f172.google.com (mail-io0-f172.google.com. [209.85.223.172])
-        by smtp.gmail.com with ESMTPSA id 10sm2255948itm.12.2017.02.27.17.23.26
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 27 Feb 2017 17:23:26 -0800 (PST)
-Received: by mail-io0-f172.google.com with SMTP id g18so308036ioe.0
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 17:23:26 -0800 (PST)
+        Fri, 3 Feb 2017 20:16:30 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, linux-nfc@ml01.01.org
+Subject: [PATCH resend 3/4] nfc: Fix RC-S380* needs zero-length packet
+References: <871sveu579.fsf@mail.parknet.co.jp>
+        <87wpd6sqlw.fsf@mail.parknet.co.jp>
+Date: Sat, 04 Feb 2017 10:16:28 +0900
+In-Reply-To: <87wpd6sqlw.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
+        "Sat, 04 Feb 2017 10:15:55 +0900")
+Message-ID: <87shnusqkz.fsf_-_@mail.parknet.co.jp> (sfid-20170204_021648_510644_DB1E43E8)
 MIME-Version: 1.0
-In-Reply-To: <2155efb0-1325-0089-fbb1-cc63cc289745@candelatech.com>
-References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
- <20170223120211.22358-2-andrew.zaborowski@intel.com> <1488202062.28431.7.camel@sipsolutions.net>
- <CAOq732JzrGxFUa5BiuO=Sz7gscRV7PFxOOyy1xf6mtmQfUqkaA@mail.gmail.com> <2155efb0-1325-0089-fbb1-cc63cc289745@candelatech.com>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Tue, 28 Feb 2017 02:23:26 +0100
-Message-ID: <CAOq732+MZt=mytXrZko0uw=EsBWvQpZ49wg3CxFPVn0uGGNyog@mail.gmail.com> (sfid-20170228_022540_786896_92DE16A0)
-Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in NEW_RADIO/GET_RADIO
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-On 27 February 2017 at 18:10, Ben Greear <greearb@candelatech.com> wrote:
-> On 02/27/2017 07:26 AM, Andrew Zaborowski wrote:
->> As it turns out it can be read from /sys, but I do need it so I can
->> know what to put in HWSIM_ATTR_ADDR_RECEIVER based on the destination
->> addr in the frame or if I want to forward the frame to all radios.  Or
->> is there another way to know that?
->>
->>>
->>> I'd actually prefer to *only* have the wiphy index, and I don't really
->>> see a problem with moving the wiphy_idx from struct
->>> cfg80211_registered_device to struct wiphy.
->>
->>
->> Ok, I'll try that.  get_wiphy_idx can stay in place, not sure if I
->> should just drop it.
->>
->> By having *only* the wiphy index you don't mean dropping the radio
->> names altogether?  The don't seem useful but userspace may expect
->> them.
->
->
-> I find the name and addr more useful than an 'index', because if you
-> remove/add
-> a virtual phy, then the index will probably change, even if name and MAC
+If sent packet size is wMaxPacketSize boundary, this device doesn't
+answer. To fix this, we have to send zero-length packet in usb spec.
 
-I don't think you can remove/add a phy without removing the hwsim
-radio.  A hwsim radio is tied to some wiphy at all times.
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+---
 
-> addr may stay
-> the same (and so probably be the same logical entitity).
+ drivers/nfc/port100.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-They may stay the same or not, you can't assume either.  Sorry I don't
-understand your point.
+diff -puN drivers/nfc/port100.c~nfc-need-zero-packet drivers/nfc/port100.c
+--- linux-ibmpc/drivers/nfc/port100.c~nfc-need-zero-packet	2016-12-31 18:27:14.814753508 +0900
++++ linux-ibmpc-hirofumi/drivers/nfc/port100.c	2016-12-31 18:32:12.928334607 +0900
+@@ -1540,6 +1540,7 @@ static int port100_probe(struct usb_inte
+ 	usb_fill_bulk_urb(dev->out_urb, dev->udev,
+ 			  usb_sndbulkpipe(dev->udev, out_endpoint),
+ 			  NULL, 0, port100_send_complete, dev);
++	dev->out_urb->transfer_flags = URB_ZERO_PACKET;
+ 
+ 	dev->skb_headroom = PORT100_FRAME_HEADER_LEN +
+ 			    PORT100_COMM_RF_HEAD_MAX_LEN;
+_
 
-Best regards
+-- 
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
