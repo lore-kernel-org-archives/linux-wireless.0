@@ -1,45 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34681 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932343AbdBPQN4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41683 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753811AbdBDLf3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2017 11:13:56 -0500
-From: Dmitry Tunin <hanipouspilot@gmail.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dmitry Tunin <hanipouspilot@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH] ath9k_htc: Add support of AirTies 1eda:2315 AR9271 device
-Date: Thu, 16 Feb 2017 19:13:42 +0300
-Message-Id: <1487261622-21338-1-git-send-email-hanipouspilot@gmail.com> (sfid-20170216_171559_164699_9F271D89)
+        Sat, 4 Feb 2017 06:35:29 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [RFC PATCH 0/2] mac80211: use crypto shash for AES cmac
+Date: Sat, 4 Feb 2017 11:35:22 +0000
+Message-ID: <20170204113514.GA4350@jouni.qca.qualcomm.com> (sfid-20170204_123547_823574_B2FB7520)
+References: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170203214707.GA14147@jouni.qca.qualcomm.com>
+ <CAKv+Gu9zp+vptF2mHP5MW=x_K5m7WQgMxNNSD5hn93aT_-99xA@mail.gmail.com>
+In-Reply-To: <CAKv+Gu9zp+vptF2mHP5MW=x_K5m7WQgMxNNSD5hn93aT_-99xA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T:  Bus=01 Lev=02 Prnt=02 Port=02 Cnt=01 Dev#=  7 Spd=480 MxCh= 0
-D:  Ver= 2.00 Cls=ff(vend.) Sub=ff Prot=ff MxPS=64 #Cfgs=  1
-P:  Vendor=1eda ProdID=2315 Rev=01.08
-S:  Manufacturer=ATHEROS
-S:  Product=USB2.0 WLAN
-S:  SerialNumber=12345
-C:  #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
-I:  If#= 0 Alt= 0 #EPs= 6 Cls=ff(vend.) Sub=00 Prot=00 Driver=(none)
+On Fri, Feb 03, 2017 at 09:55:36PM +0000, Ard Biesheuvel wrote:
+> OK, that looks like something I could figure out how to use. But are
+> you saying the CMAC code is never called in practice?
 
-Signed-off-by: Dmitry Tunin <hanipouspilot@gmail.com>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/ath/ath9k/hif_usb.c | 1 +
- 1 file changed, 1 insertion(+)
+It will get called if there is a frame that were to need to use BIP.
+There are some APs that do send broadcast addressed Deauthentication and
+Disassociation frames when terminating the network and those would get
+here. In theory, someone could come up with a new Action frame use case
+as well with a group addressed Robust Action frame, but no such thing is
+defined today. Anyway, this will be needed for certification purposes
+and to block DoS with broadcast addressed Deauthentication and
+Disassociation frames even if there is not really a common use case
+using BIP frames today.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index de2d212..05dd056 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -37,6 +37,7 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x0cf3, 0xb002) }, /* Ubiquiti WifiStation */
- 	{ USB_DEVICE(0x057c, 0x8403) }, /* AVM FRITZ!WLAN 11N v2 USB */
- 	{ USB_DEVICE(0x0471, 0x209e) }, /* Philips (or NXP) PTA01 */
-+	{ USB_DEVICE(0x1eda, 0x2315) }, /* AirTies */
- 
- 	{ USB_DEVICE(0x0cf3, 0x7015),
- 	  .driver_info = AR9287_USB },  /* Atheros */
--- 
-2.7.4
+> I did spot something peculiar when looking at the code: if I am
+> reading the following sequence correctly (from
+> fils_encrypt_assoc_req())
+
+> addr[0] =3D mgmt->sa;
+...
+> addr[4] =3D capab;
+> len[4] =3D encr - capab;
+>=20
+> crypt_len =3D skb->data + skb->len - encr;
+> skb_put(skb, AES_BLOCK_SIZE);
+> return aes_siv_encrypt(assoc_data->fils_kek, assoc_data->fils_kek_len,
+>       encr, crypt_len, 1, addr, len, encr);
+>=20
+> the addr[]/len[] arrays are populated with 5 (addr, len) pairs, but
+> only one is actually passed into aes_siv_encrypt()? This is actually
+> the main reason I stopped looking into whether I could convert it to
+> CMAC, because I couldn't figure it out.
+
+Argh.. Thanks for finding this!
+
+That is indeed supposed to have num_elems =3D=3D 5. This "works" since the
+other end of the exchange is actually in user space (hostapd) and a
+similar error is there..
+
+This comes from the development history of FILS support.. The draft
+standard changed this AES-SIV AAD design from P802.11ai/D7.0 to D8.0
+from a single AAD vector with concatenated fields to separate vectors.
+Clearly I added the vectors here in addr[] and len[] arrays, but forgot
+to update the num_elems parameter in this direction (STA->AP); the other
+direction for Association Response frame is actually using correct
+number of AAD vectors.
+
+I'll fix this in hostapd and mac80211.
+
+
+I did not actually remember that the AP side was still in hostapd for
+FILS AEAD in case of mac80211, but with that in mind, the answer to your
+earlier question about testing these becomes much simpler.. All you need
+to do is this with hostap.git hwsim tests:
+
+hostap/tests/hwsim/vm$ ./vm-run.sh ap_cipher_bip fils_sk_erp
+Starting test run in a virtual machine
+./run-all.sh: passing the following args to run-tests.py: ap_cipher_bip fil=
+s_sk_erp=20
+START ap_cipher_bip 1/2
+PASS ap_cipher_bip 0.703048 2017-02-04 11:21:35.341174
+START fils_sk_erp 2/2
+PASS fils_sk_erp 0.667927 2017-02-04 11:21:36.029205
+passed all 2 test case(s)
+ALL-PASSED
+
+
+ap_cipher_bip uses wlantest to verify the BIP (AES-128-CMAC) protection
+in the frames and fils_sk_erp goes through FILS AEAD exchange with one
+side of the operation in mac80211 and the other one in hostapd. This
+should be able to discover if something is broken in the AES related
+changes in crypto.
+
+And this particular example run here was with your two patches applied,
+to the proposed net/mac80211/aes_cmac.c change seems to work fine.
+
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
