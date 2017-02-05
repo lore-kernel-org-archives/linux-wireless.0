@@ -1,140 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36623 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751501AbdBSMgh (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:36560 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751970AbdBEPZa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 07:36:37 -0500
-Received: by mail-qk0-f195.google.com with SMTP id p22so12211626qka.3
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 04:36:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b21a95a8-2a84-7bba-24b2-6d2ab3d255c1@dd-wrt.com>
-References: <20170218063515.16071-1-ryan@mounce.com.au> <9d768854-e41d-fdb1-967d-7fdd7d692226@dd-wrt.com>
- <CAN+fvRYkbeV8yXuA+J1HVtZemB+j-07wvHkbouEpgzL-7SE6-Q@mail.gmail.com> <b21a95a8-2a84-7bba-24b2-6d2ab3d255c1@dd-wrt.com>
-From: Ryan Mounce <ryan@mounce.com.au>
-Date: Sun, 19 Feb 2017 23:06:21 +1030
-Message-ID: <CAN+fvRbXvLcU57aTRNxeBhWP0QQmbodiUbSjarPGf1HKTisJbA@mail.gmail.com> (sfid-20170219_133715_923695_BD6D4E80)
-Subject: Re: [PATCH] wireless-regdb: Update rules for Australia (AU) and add
- 60GHz rules
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-        wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Sun, 5 Feb 2017 10:25:30 -0500
+Received: by mail-wr0-f181.google.com with SMTP id k90so11228929wrc.3
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2017 07:25:29 -0800 (PST)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: johannes@sipsolutions.net, jouni@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, davem@davemloft.net,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH v2 1/2] mac80211: fils_aead: Use crypto api CMAC shash rather than bare cipher
+Date: Sun,  5 Feb 2017 15:23:27 +0000
+Message-Id: <1486308208-3252-2-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170205_162537_717346_D94BB1E3)
+In-Reply-To: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
+References: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Australian regulations differ from most of Europe, the USA and even
-New Zealand (which shares AS/NZS 4268) in that any unlicensed
-operation between 5600-5650MHz is prohibited outright, rather than
-being allowed after an extended DFS channel availability check.
+Switch the FILS AEAD code to use a cmac(aes) shash instantiated by the
+crypto API rather than reusing the open coded implementation in
+aes_cmac_vector(). This makes the code more understandable, and allows
+platforms to implement cmac(aes) in a more secure (*) and efficient way
+than is typically possible when using the AES cipher directly.
 
-The situation appears to be similar in Canada, the regdb has
-previously been amended to reflect this.
+So replace the crypto_cipher by a crypto_shash, and update the aes_s2v()
+routine to call the shash interface directly.
 
-https://git.kernel.org/cgit/linux/kernel/git/sforshee/wireless-regdb.git/co=
-mmit/db.txt?id=3Dce7697d3def48f87427b3a3c285b46241af3b79d
+* In particular, the generic table based AES implementation is sensitive
+  to known-plaintext timing attacks on the key, to which AES based MAC
+  algorithms are especially vulnerable, given that their plaintext is not
+  usually secret. Time invariant alternatives are available (e.g., based
+  on SIMD algorithms), but may incur a setup cost that is prohibitive when
+  operating on a single block at a time, which is why they don't usually
+  expose the cipher API.
 
-On 19 February 2017 at 22:46, Sebastian Gottschall
-<s.gottschall@dd-wrt.com> wrote:
-> Am 19.02.2017 um 01:01 schrieb Ryan Mounce:
->>
->> Hi Sebastian,
->>
->> There is no explicit channel width restriction in the document,
->> however the only band in which the current regdb rules permit 160MHz
->> operation (5490-5710MHz) would result in an overlap with the
->> restricted weather radar band 5600-5650MHz.
->
-> thats the case for all countries, so this couldnt be a argument. dfs shou=
-ld
-> handle this
->
->>
->> While remaining in compliance with both 802.11 and Australian law,
->> contiguous 160MHz operation in 5GHz is only permitted between
->> 5170-5330MHz which spans two bands with slightly different
->> requirements, hence AUTO-BW.
->>
->> Regards,
->> Ryan Mounce
->>
->> ryan@mounce.com.au
->>
->> On 19 February 2017 at 07:15, Sebastian Gottschall
->> <s.gottschall@dd-wrt.com> wrote:
->>>
->>> maybe i'm blind. but you reduced the channel width from 160 to 80 mhz.
->>> but i
->>> can't find any restriction in the document in a quick review
->>>
->>> Sebastian
->>>
->>>
->>> Am 18.02.2017 um 07:35 schrieb Ryan Mounce:
->>>>
->>>> Sourced from the latest legislation at
->>>> https://www.legislation.gov.au/Details/F2016C0043
->>>>
->>>> The current rules exceed legal limits between 5250-5330MHz, and permit
->>>> illegal operation in 5600-5650MHz (reserved for weather radar).
->>>>
->>>> Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
->>>> ---
->>>>    db.txt | 15 ++++++++++-----
->>>>    1 file changed, 10 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git a/db.txt b/db.txt
->>>> index 05108e0..b951e0c 100644
->>>> --- a/db.txt
->>>> +++ b/db.txt
->>>> @@ -85,12 +85,17 @@ country AT: DFS-ETSI
->>>>          # 60 GHz band channels 1-4, ref: Etsi En 302 567
->>>>          (57000 - 66000 @ 2160), (40)
->>>>    +# Source:
->>>> +# https://www.legislation.gov.au/Details/F2016C00432
->>>> +# Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B
->>>>    country AU: DFS-ETSI
->>>> -       (2402 - 2482 @ 40), (20)
->>>> -       (5170 - 5250 @ 80), (17), AUTO-BW
->>>> -       (5250 - 5330 @ 80), (24), DFS, AUTO-BW
->>>> -       (5490 - 5710 @ 160), (24), DFS
->>>> -       (5735 - 5835 @ 80), (30)
->>>> +       (2402 - 2482 @ 40), (36)
->>>> +       (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
->>>> +       (5250 - 5330 @ 80), (23), NO-OUTDOOR, AUTO-BW, DFS
->>>> +       (5490 - 5590 @ 80), (30), DFS
->>>> +       (5650 - 5730 @ 80), (30), DFS
->>>> +       (5735 - 5835 @ 80), (36)
->>>> +       (57000 - 66000 @ 2160), (43), NO-OUTDOOR
->>>>      country AW: DFS-ETSI
->>>>          (2402 - 2482 @ 40), (20)
->>>
->>>
->>>
->>> --
->>> Mit freundlichen Gr=C3=BCssen / Regards
->>>
->>> Sebastian Gottschall / CTO
->>>
->>> NewMedia-NET GmbH - DD-WRT
->>> Firmensitz:  Berliner Ring 101, 64625 Bensheim
->>> Registergericht: Amtsgericht Darmstadt, HRB 25473
->>> Gesch=C3=A4ftsf=C3=BChrer: Peter Steinh=C3=A4user, Christian Scheele
->>> http://www.dd-wrt.com
->>> email: s.gottschall@dd-wrt.com
->>> Tel.: +496251-582650 / Fax: +496251-5826565
->>>
->
->
-> --
-> Mit freundlichen Gr=C3=BCssen / Regards
->
-> Sebastian Gottschall / CTO
->
-> NewMedia-NET GmbH - DD-WRT
-> Firmensitz:  Berliner Ring 101, 64625 Bensheim
-> Registergericht: Amtsgericht Darmstadt, HRB 25473
-> Gesch=C3=A4ftsf=C3=BChrer: Peter Steinh=C3=A4user, Christian Scheele
-> http://www.dd-wrt.com
-> email: s.gottschall@dd-wrt.com
-> Tel.: +496251-582650 / Fax: +496251-5826565
->
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
+ net/mac80211/Kconfig     |  1 +
+ net/mac80211/aes_cmac.h  |  4 --
+ net/mac80211/fils_aead.c | 74 +++++++++-----------
+ 3 files changed, 35 insertions(+), 44 deletions(-)
+
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 3891cbd2adea..76e30f4797fb 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -6,6 +6,7 @@ config MAC80211
+ 	select CRYPTO_AES
+ 	select CRYPTO_CCM
+ 	select CRYPTO_GCM
++	select CRYPTO_CMAC
+ 	select CRC32
+ 	---help---
+ 	  This option enables the hardware independent IEEE 802.11
+diff --git a/net/mac80211/aes_cmac.h b/net/mac80211/aes_cmac.h
+index c827e1d5de8b..3702041f44fd 100644
+--- a/net/mac80211/aes_cmac.h
++++ b/net/mac80211/aes_cmac.h
+@@ -11,10 +11,6 @@
+ 
+ #include <linux/crypto.h>
+ 
+-void gf_mulx(u8 *pad);
+-void aes_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
+-		     const u8 *addr[], const size_t *len, u8 *mac,
+-		     size_t mac_len);
+ struct crypto_cipher *ieee80211_aes_cmac_key_setup(const u8 key[],
+ 						   size_t key_len);
+ void ieee80211_aes_cmac(struct crypto_cipher *tfm, const u8 *aad,
+diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
+index ecfdd97758a3..a294a57e856d 100644
+--- a/net/mac80211/fils_aead.c
++++ b/net/mac80211/fils_aead.c
+@@ -9,66 +9,60 @@
+ 
+ #include <crypto/aes.h>
+ #include <crypto/algapi.h>
++#include <crypto/hash.h>
+ #include <crypto/skcipher.h>
+ 
+ #include "ieee80211_i.h"
+ #include "aes_cmac.h"
+ #include "fils_aead.h"
+ 
+-static int aes_s2v(struct crypto_cipher *tfm,
++static void gf_mulx(u8 *pad)
++{
++	u64 a = get_unaligned_be64(pad);
++	u64 b = get_unaligned_be64(pad + 8);
++
++	put_unaligned_be64((a << 1) | (b >> 63), pad);
++	put_unaligned_be64((b << 1) ^ ((a >> 63) ? 0x87 : 0), pad + 8);
++}
++
++static int aes_s2v(struct crypto_shash *tfm,
+ 		   size_t num_elem, const u8 *addr[], size_t len[], u8 *v)
+ {
+ 	u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
++	struct shash_desc *desc;
++	u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR;
+ 	size_t i;
+-	const u8 *data[2];
+-	size_t data_len[2], data_elems;
++
++	desc = (struct shash_desc *)buf;
++	desc->tfm = tfm;
+ 
+ 	/* D = AES-CMAC(K, <zero>) */
+-	memset(tmp, 0, AES_BLOCK_SIZE);
+-	data[0] = tmp;
+-	data_len[0] = AES_BLOCK_SIZE;
+-	aes_cmac_vector(tfm, 1, data, data_len, d, AES_BLOCK_SIZE);
++	crypto_shash_digest(desc, (u8[AES_BLOCK_SIZE]){}, AES_BLOCK_SIZE, d);
+ 
+ 	for (i = 0; i < num_elem - 1; i++) {
+ 		/* D = dbl(D) xor AES_CMAC(K, Si) */
+ 		gf_mulx(d); /* dbl */
+-		aes_cmac_vector(tfm, 1, &addr[i], &len[i], tmp,
+-				AES_BLOCK_SIZE);
++		crypto_shash_digest(desc, addr[i], len[i], tmp);
+ 		crypto_xor(d, tmp, AES_BLOCK_SIZE);
+ 	}
+ 
++	crypto_shash_init(desc);
++
+ 	if (len[i] >= AES_BLOCK_SIZE) {
+ 		/* len(Sn) >= 128 */
+-		size_t j;
+-		const u8 *pos;
+-
+ 		/* T = Sn xorend D */
+-
+-		/* Use a temporary buffer to perform xorend on Sn (addr[i]) to
+-		 * avoid modifying the const input argument.
+-		 */
+-		data[0] = addr[i];
+-		data_len[0] = len[i] - AES_BLOCK_SIZE;
+-		pos = addr[i] + data_len[0];
+-		for (j = 0; j < AES_BLOCK_SIZE; j++)
+-			tmp[j] = pos[j] ^ d[j];
+-		data[1] = tmp;
+-		data_len[1] = AES_BLOCK_SIZE;
+-		data_elems = 2;
++		crypto_shash_update(desc, addr[i], len[i] - AES_BLOCK_SIZE);
++		crypto_xor(d, addr[i] + len[i] - AES_BLOCK_SIZE,
++			   AES_BLOCK_SIZE);
+ 	} else {
+ 		/* len(Sn) < 128 */
+ 		/* T = dbl(D) xor pad(Sn) */
+ 		gf_mulx(d); /* dbl */
+-		memset(tmp, 0, AES_BLOCK_SIZE);
+-		memcpy(tmp, addr[i], len[i]);
+-		tmp[len[i]] = 0x80;
+-		crypto_xor(d, tmp, AES_BLOCK_SIZE);
+-		data[0] = d;
+-		data_len[0] = sizeof(d);
+-		data_elems = 1;
++		crypto_xor(d, addr[i], len[i]);
++		d[len[i]] ^= 0x80;
+ 	}
+ 	/* V = AES-CMAC(K, T) */
+-	aes_cmac_vector(tfm, data_elems, data, data_len, v, AES_BLOCK_SIZE);
++	crypto_shash_finup(desc, d, AES_BLOCK_SIZE, v);
+ 
+ 	return 0;
+ }
+@@ -80,7 +74,7 @@ static int aes_siv_encrypt(const u8 *key, size_t key_len,
+ 			   size_t len[], u8 *out)
+ {
+ 	u8 v[AES_BLOCK_SIZE];
+-	struct crypto_cipher *tfm;
++	struct crypto_shash *tfm;
+ 	struct crypto_skcipher *tfm2;
+ 	struct skcipher_request *req;
+ 	int res;
+@@ -95,14 +89,14 @@ static int aes_siv_encrypt(const u8 *key, size_t key_len,
+ 
+ 	/* S2V */
+ 
+-	tfm = crypto_alloc_cipher("aes", 0, 0);
++	tfm = crypto_alloc_shash("cmac(aes)", 0, 0);
+ 	if (IS_ERR(tfm))
+ 		return PTR_ERR(tfm);
+ 	/* K1 for S2V */
+-	res = crypto_cipher_setkey(tfm, key, key_len);
++	res = crypto_shash_setkey(tfm, key, key_len);
+ 	if (!res)
+ 		res = aes_s2v(tfm, num_elem, addr, len, v);
+-	crypto_free_cipher(tfm);
++	crypto_free_shash(tfm);
+ 	if (res)
+ 		return res;
+ 
+@@ -157,7 +151,7 @@ static int aes_siv_decrypt(const u8 *key, size_t key_len,
+ 			   size_t num_elem, const u8 *addr[], size_t len[],
+ 			   u8 *out)
+ {
+-	struct crypto_cipher *tfm;
++	struct crypto_shash *tfm;
+ 	struct crypto_skcipher *tfm2;
+ 	struct skcipher_request *req;
+ 	struct scatterlist src[1], dst[1];
+@@ -210,14 +204,14 @@ static int aes_siv_decrypt(const u8 *key, size_t key_len,
+ 
+ 	/* S2V */
+ 
+-	tfm = crypto_alloc_cipher("aes", 0, 0);
++	tfm = crypto_alloc_shash("cmac(aes)", 0, 0);
+ 	if (IS_ERR(tfm))
+ 		return PTR_ERR(tfm);
+ 	/* K1 for S2V */
+-	res = crypto_cipher_setkey(tfm, key, key_len);
++	res = crypto_shash_setkey(tfm, key, key_len);
+ 	if (!res)
+ 		res = aes_s2v(tfm, num_elem, addr, len, check);
+-	crypto_free_cipher(tfm);
++	crypto_free_shash(tfm);
+ 	if (res)
+ 		return res;
+ 	if (memcmp(check, frame_iv, AES_BLOCK_SIZE) != 0)
+-- 
+2.7.4
