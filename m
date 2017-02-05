@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:34584 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750828AbdBWK0I (ORCPT
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:34029 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751453AbdBEPZV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 05:26:08 -0500
-Received: by mail-qt0-f180.google.com with SMTP id n21so24760497qta.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 02:26:08 -0800 (PST)
-Subject: Re: [RFC v2 1/2] cfg80211: support 4-way handshake offloading for
- WPA/WPA2-PSK
-To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
-References: <20170221123758.5339-1-johannes@sipsolutions.net>
- <20170221144335.GA17601@w1.fi> <1487688369.15350.3.camel@sipsolutions.net>
- <1487688447.15350.4.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <70536003-75fb-102d-00e0-6ccd0fe559cc@broadcom.com> (sfid-20170223_112612_126835_BECA6A12)
-Date: Thu, 23 Feb 2017 10:56:17 +0100
-MIME-Version: 1.0
-In-Reply-To: <1487688447.15350.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Sun, 5 Feb 2017 10:25:21 -0500
+Received: by mail-wr0-f173.google.com with SMTP id o16so11269419wra.1
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2017 07:25:20 -0800 (PST)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: johannes@sipsolutions.net, jouni@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, davem@davemloft.net,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH v2 0/2] mac80211: use crypto shash for AES cmac
+Date: Sun,  5 Feb 2017 15:23:26 +0000
+Message-Id: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170205_162525_170787_E6A78D9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is something I spotted while working on AES in various modes for
+ARM and arm64.
 
+The mac80211 aes_cmac code reimplements the CMAC algorithm based on the
+core AES cipher, which is rather restrictive in how platforms can satisfy
+the dependency on this algorithm. For instance, SIMD implementations may
+have a considerable setup time, which cannot be amortized over the entire
+input when calling into the crypto API one block at a time. Also, it prevents
+the use of more secure fixed time implementations, since not all AES drivers
+expose the cipher interface.
 
-On 21-2-2017 15:47, Johannes Berg wrote:
-> 
->> The .len verifies that it's at least that long. We're thus ignoring
->> additional bytes in the PSK case if they're present, which I suppose
->> we should fix by checking the exact length in the code separately.
->>
+So switch aes_cmac to use a cmac(aes) shash. Before updating the aes_cmac code
+in patch #2, the FILS AEAD code is moved to using a cmac(aes) shash supplied by
+the crypto API so that we can remove the open coded version entirely in the
+second patch.
 
-libnl seems to have the notion of min_len and max_len in its policy
-definition, but the kernel does not so .len is actually min_len indeed.
+NOTE: Jouni has been so kind to test patch #2, and confirmed that it is working.
+      I have not tested patch #1 myself, mainly because the test methodology
+      requires downloading Ubuntu installer images, and I am currently on a
+      metered 3G connection (and will be for another couple of weeks)
 
-> IOW, I'll add this:
-> 
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -8044,6 +8044,8 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
->  		if (!wiphy_ext_feature_isset(&rdev->wiphy,
->  					     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK))
->  			return -EINVAL;
-> +		if (nla_len(info->attrs[NL80211_ATTR_PMK]) != WLAN_PMK_LEN)
-> +			return -EINVAL;
+Ard Biesheuvel (2):
+  mac80211: fils_aead: Use crypto api CMAC shash rather than bare cipher
+  mac80211: aes-cmac: switch to shash CMAC driver
 
-Makes sense.
+ net/mac80211/Kconfig     |   1 +
+ net/mac80211/aes_cmac.c  | 130 +++++---------------
+ net/mac80211/aes_cmac.h  |  15 +--
+ net/mac80211/fils_aead.c |  74 +++++------
+ net/mac80211/key.h       |   2 +-
+ 5 files changed, 70 insertions(+), 152 deletions(-)
 
-Regards,
-Arend
-
->  		settings->psk = nla_data(info->attrs[NL80211_ATTR_PMK]);
->  	}
->  
-> 
-> johannes
-> 
+-- 
+2.7.4
