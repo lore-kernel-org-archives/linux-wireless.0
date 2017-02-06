@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:60120 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751582AbdBDBP0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35544 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751001AbdBFLvE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 20:15:26 -0500
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        linux-wireless@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-nfc@ml01.01.org
-Subject: [PATCH resend 1/4] nfc: Add support RC-S380P to port100
-Date: Sat, 04 Feb 2017 10:15:22 +0900
-Message-ID: <871sveu579.fsf@mail.parknet.co.jp> (sfid-20170204_021600_754598_BB9F5455)
+        Mon, 6 Feb 2017 06:51:04 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        shaofu <shaofu@realtek.com>
+Subject: Re: [PATCH 01/11 V2] rtlwifi: Fix programing CAM content sequence.
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+        <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+        <20170120212716.29887-2-Larry.Finger@lwfinger.net>
+Date: Mon, 06 Feb 2017 13:50:59 +0200
+In-Reply-To: <20170120212716.29887-2-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Wed, 1 Feb 2017 14:48:03 -0600")
+Message-ID: <87inona670.fsf@codeaurora.org> (sfid-20170206_125108_120922_C804D090)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
+> From: Ping-Ke Shih <pkshih@realtek.com>
+>
+> There is a potential race condition when the control byte of a CAM
+> entry is written first. Write in reverse order to correct the condition.
+>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: shaofu <shaofu@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> V2 - no changes
 
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
----
+Weird, I don't see any of the v2 patches in patchwork:
 
- drivers/nfc/port100.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+https://patchwork.kernel.org/project/linux-wireless/list/?state=*&page=1
 
-diff -puN drivers/nfc/port100.c~nfc-add-rcs380p drivers/nfc/port100.c
---- linux/drivers/nfc/port100.c~nfc-add-rcs380p	2016-12-18 22:16:53.503673411 +0900
-+++ linux-hirofumi/drivers/nfc/port100.c	2016-12-18 22:16:53.504673416 +0900
-@@ -21,8 +21,9 @@
- 
- #define VERSION "0.1"
- 
--#define SONY_VENDOR_ID    0x054c
--#define RCS380_PRODUCT_ID 0x06c1
-+#define SONY_VENDOR_ID		0x054c
-+#define RCS380S_PRODUCT_ID	0x06c1
-+#define RCS380P_PRODUCT_ID	0x06c3
- 
- #define PORT100_PROTOCOLS (NFC_PROTO_JEWEL_MASK    | \
- 			   NFC_PROTO_MIFARE_MASK   | \
-@@ -1477,7 +1478,8 @@ static struct nfc_digital_ops port100_di
- };
- 
- static const struct usb_device_id port100_table[] = {
--	{ USB_DEVICE(SONY_VENDOR_ID, RCS380_PRODUCT_ID), },
-+	{ USB_DEVICE(SONY_VENDOR_ID, RCS380S_PRODUCT_ID), },
-+	{ USB_DEVICE(SONY_VENDOR_ID, RCS380P_PRODUCT_ID), },
- 	{ }
- };
- MODULE_DEVICE_TABLE(usb, port100_table);
-_
+I do see other recent patches from you Larry, but not this set. Can you
+resubmit, please?
 
 -- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Kalle Valo
