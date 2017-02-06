@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59364 "EHLO mx2.suse.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37194 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751431AbdBUSCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 13:02:13 -0500
-Date: Tue, 21 Feb 2017 19:02:10 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Subject: Re: [PATCH V2 1/2] firmware: add more flexible
- request_firmware_async function
-Message-ID: <20170221180210.GL31264@wotan.suse.de> (sfid-20170221_190216_457454_BC6FAD20)
-References: <20170215222948.21030-1-zajec5@gmail.com>
- <20170216072636.7128-1-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20170216072636.7128-1-zajec5@gmail.com>
+        id S1750956AbdBFIr5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Feb 2017 03:47:57 -0500
+Message-ID: <1486370872.14226.6.camel@sipsolutions.net> (sfid-20170206_094806_472930_39562865)
+Subject: Re: [PATCH v2 1/2] mac80211: fils_aead: Use crypto api CMAC shash
+ rather than bare cipher
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, jouni@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, davem@davemloft.net
+Date: Mon, 06 Feb 2017 09:47:52 +0100
+In-Reply-To: <1486308208-3252-2-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170205_162529_852496_51AF58D1)
+References: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
+         <1486308208-3252-2-git-send-email-ard.biesheuvel@linaro.org>
+         (sfid-20170205_162529_852496_51AF58D1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 08:26:35AM +0100, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> So far we got only one function for loading firmware asynchronously:
-> request_firmware_nowait. It didn't allow much customization of firmware
-> loading process - there is only one bool uevent argument. Moreover this
-> bool also controls user helper in an unclear way.
-> 
-> Resolve this problem by adding a one flexible function and making old
-> request_firmware_nowait a simple inline using new solution. This
-> implementation:
-> 1) Modifies only single bits on existing code
-> 2) Doesn't require adjusting / rewriting current drivers
-> 3) Adds new function for drivers that need more control over loading a
->    firmware. Thanks to using flags more features can be added later.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
-> This patch is based on top of
-> [PATCH V2 RESEND] firmware: simplify defining and handling FW_OPT_FALLBACK
-> applied on top of Linux 4.10-rc8.
-> 
-> Ming/Luis/Greg: assuming this gets a positive review, could someone of you pick
-> this patchset? Second patch modifies brcmfmac, I'll try to get a proper Ack for
-> that one.
-> Unless you want this to go through wireless tree, then let me know please.
 
-As I noted in the v1 post, just exposing all the flags under the hood is not
-enough to ensure sanity here. Additionally just flags won't cut it to make this
-as flexible as we need. I've addressed this in the driver data series, so I'll
-take this feature request and fold it in there.
+>  {
+>  	u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
+> +	struct shash_desc *desc;
+> +	u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)]
+> CRYPTO_MINALIGN_ATTR;
+>  	size_t i;
+> -	const u8 *data[2];
+> -	size_t data_len[2], data_elems;
+> +
+> +	desc = (struct shash_desc *)buf;
+> +	desc->tfm = tfm;
+> 
+> +	crypto_shash_digest(desc, (u8[AES_BLOCK_SIZE]){},
+> AES_BLOCK_SIZE, d);
 
-  Luis
+That's an interesting expression in there. Can we name it into a real
+variable? :)
+
+I'm also slightly worried about stack usage now - do we know none of
+this goes into an sg list eventually?
+
+johannes
