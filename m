@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59122 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56112 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753193AbdBGH4t (ORCPT
+        with ESMTP id S1751496AbdBFOBq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 02:56:49 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: don't include mac80211.h
+        Mon, 6 Feb 2017 09:01:46 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170105123835.20995-1-johannes@sipsolutions.net>
-References: <20170105123835.20995-1-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
 Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Message-Id: <20170207075649.056AC60A09@smtp.codeaurora.org> (sfid-20170207_085652_982818_CC3D2CC7)
-Date: Tue,  7 Feb 2017 07:56:49 +0000 (UTC)
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 14/25] iwlwifi: mvm: overwrite skb info later
+References: <20170203143812.7525-1-luca@coelho.fi>
+        <20170203143812.7525-15-luca@coelho.fi>
+Date: Mon, 06 Feb 2017 16:01:41 +0200
+In-Reply-To: <20170203143812.7525-15-luca@coelho.fi> (Luca Coelho's message of
+        "Fri, 3 Feb 2017 16:38:01 +0200")
+Message-ID: <874m07a056.fsf@codeaurora.org> (sfid-20170206_150157_052469_F20A3513)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Luca Coelho <luca@coelho.fi> writes:
+
 > From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This driver doesn't use mac80211, so it shouldn't include mac80211.h,
-> include only the necessary cfg80211.h instead.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>
+> We don't really need clear the skb's status area nor store the
+> dev_cmd into it until we really commit to the frame by handing
+> it to the transport - defer those operations until just before
+> we do that.
+>
+> This doesn't entirely fix the bug with frames not getting sent
+> out after having been deferred due to DQA, because it doesn't
+> restore the info->driver_data[0] place that was already set to
+> zero (or another value) by the A-MSDU logic.
+>
+> Fixes: commit 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-50d55b6d3f1c mwifiex: don't include mac80211.h
+s/commit // :)
 
 -- 
-https://patchwork.kernel.org/patch/9498969/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
