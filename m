@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56444 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753082AbdBNMvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 07:51:16 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH 09/10] rt2800: use TXOP_BACKOFF for probe frames
-Date: Tue, 14 Feb 2017 13:46:07 +0100
-Message-Id: <1487076368-7020-10-git-send-email-sgruszka@redhat.com> (sfid-20170214_135217_025439_E30C7971)
-In-Reply-To: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
-References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57886 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752215AbdBFPU1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Feb 2017 10:20:27 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2017-02-06
+Date: Mon, 06 Feb 2017 17:19:52 +0200
+Message-ID: <874m07ny7b.fsf@kamboji.qca.qualcomm.com> (sfid-20170206_162135_145844_F8B34FEA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even if we do not set AMPDU bit in TXWI, device still can aggregate
-frame and send it with rate not corresponding to requested. That mean
-we can do not sent probe frames with requested rate. To prevent that
-use TXOP_BACKOFF for probe frames.
+Hi Dave,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+one more fix I still would like to get to 4.10 if possible. Please let
+me know if there are any problems.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-index e1660b9..a2c1ca5 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-@@ -372,15 +372,16 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
- 
- 	/*
- 	 * Determine IFS values
--	 * - Use TXOP_BACKOFF for management frames except beacons
-+	 * - Use TXOP_BACKOFF for probe and management frames except beacons
- 	 * - Use TXOP_SIFS for fragment bursts
- 	 * - Use TXOP_HTTXOP for everything else
- 	 *
- 	 * Note: rt2800 devices won't use CTS protection (if used)
- 	 * for frames not transmitted with TXOP_HTTXOP
- 	 */
--	if (ieee80211_is_mgmt(hdr->frame_control) &&
--	    !ieee80211_is_beacon(hdr->frame_control))
-+	if ((ieee80211_is_mgmt(hdr->frame_control) &&
-+	     !ieee80211_is_beacon(hdr->frame_control)) ||
-+	    (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
- 		txdesc->u.ht.txop = TXOP_BACKOFF;
- 	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
- 		txdesc->u.ht.txop = TXOP_SIFS;
--- 
-1.8.3.1
+Kalle
+
+The following changes since commit 2b1d530cb3157f828fcaadd259613f59db3c6d1c:
+
+  MAINTAINERS: ath9k-devel is closed (2017-01-28 09:15:50 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-02-06
+
+for you to fetch changes up to 52f5631a4c056ad01682393be56d2be237e81610:
+
+  rtlwifi: rtl8192ce: Fix loading of incorrect firmware (2017-01-31 09:05:25 +0200)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.10
+
+Only one important fix for rtlwifi which fixes a regression introduced
+in 4.9 and which caused problems for many users.
+
+----------------------------------------------------------------
+Jurij Smakov (1):
+      rtlwifi: rtl8192ce: Fix loading of incorrect firmware
+
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
