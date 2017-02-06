@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout02.posteo.de ([185.67.36.142]:37124 "EHLO mout02.posteo.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35950 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751165AbdBWU1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 15:27:24 -0500
-Message-ID: <1487881302.20481.3.camel@embedded.rocks> (sfid-20170223_212735_422616_35EB62EB)
-Subject: brcmfmac: problem using  WPS with wpa_supplicant on BCM43362
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Date: Thu, 23 Feb 2017 21:21:42 +0100
+        id S1751299AbdBFHAv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Feb 2017 02:00:51 -0500
+Message-ID: <1486364443.14226.4.camel@sipsolutions.net> (sfid-20170206_080125_637129_07631148)
+Subject: Re: [PATCH] nl80211: Fix mesh HT operation check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 06 Feb 2017 08:00:43 +0100
+In-Reply-To: <1485388573-4264-1-git-send-email-masashi.honma@gmail.com> (sfid-20170126_005626_612572_27CA0ED2)
+References: <1485388573-4264-1-git-send-email-masashi.honma@gmail.com>
+         (sfid-20170126_005626_612572_27CA0ED2)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2017-01-26 at 08:56 +0900, Masashi Honma wrote:
+> commit 9757235f451c27deaa88925399f070ff6fcea832 ('nl80211: correct
+> checks for NL80211_MESHCONF_HT_OPMODE value') missed to mask a flag
+> when replacing FILL_IN_MESH_PARAM_IF_SET with checking codes. This
+> could drop the received HT operation value when called by
+> nl80211_update_mesh_config().
 
-I am using Linux Kernel v4.9.9 and wpa_supplicant 2.6. When running
-'wpa_cli wps_pin any', the following messages are printed:
+Applied, thanks.
 
-"""
-> wps_pin any         
-[ 4011.779108] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error : -30
-[ 4011.786190] brcmfmac: brcmf_config_ap_mgmt_ie: Set Beacon IE Failed
-"""
-
-.. and nothing happens. The data sheet for the BCM43362 states that the
-module supports WPS.
-
-Best regards,
-Jörg Krause
+johannes
