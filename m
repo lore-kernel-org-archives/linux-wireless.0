@@ -1,70 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo68.mail-out.ovh.net ([178.32.228.68]:42090 "EHLO
-        mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdBXOUU (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:41396 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753487AbdBFPz6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 09:20:20 -0500
-Received: from player750.ha.ovh.net (b6.ovh.net [213.186.33.56])
-        by mo68.mail-out.ovh.net (Postfix) with ESMTP id EC4673F5BC
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 14:44:09 +0100 (CET)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 24 Feb 2017 14:43:59 +0100
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH 4.12 1/2] brcmfmac: don't use 43602a1 firmware for 43602a0
- chipset
-In-Reply-To: <c7c82c1f-df42-c4a2-4f1f-1ff4928590d1@broadcom.com>
-References: <20170224122739.1778-1-zajec5@gmail.com>
- <c7c82c1f-df42-c4a2-4f1f-1ff4928590d1@broadcom.com>
-Message-ID: <6d84044d4d51bbe99492b3cf06b1cae1@milecki.pl> (sfid-20170224_152023_699495_ABD487CB)
+        Mon, 6 Feb 2017 10:55:58 -0500
+Date: Mon, 06 Feb 2017 10:55:55 -0500 (EST)
+Message-Id: <20170206.105555.2143912222030576748.davem@davemloft.net> (sfid-20170206_165605_546630_9C9B5886)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2017-02-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170206083637.31792-1-johannes@sipsolutions.net>
+References: <20170206083637.31792-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-24 14:21, Arend Van Spriel wrote:
-> On 24-2-2017 13:27, Rafał Miłecki wrote:
->> From: Rafał Miłecki <rafal@milecki.pl>
->> 
->> 43602a0 uses chip revision 0 compared to 43602a1 with revision 1. In
->> brcmfmac there is support for 43602a1 and from what I know supporting
->> 43602a0 would require loading a different firmware.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon,  6 Feb 2017 09:36:36 +0100
+
+> I know it's super late, but I was travelling last week and the
+> whole FILS AEAD thing only played out over the weekend anyway.
+> Since the FILS code is all new in this cycle, it'd be good to
+> have the fixes, and the others are a bit older but still would
+> be good to fix sooner rather than later, I think.
 > 
-> This is not necessarily true. It depends on whether the rom image is
-> different or not and there is no way to tell up front. So if a0 has 
-> same
-> rom image as a1 the firmware is compatible and no distinction is 
-> needed.
-> This tends to be the case for chips that only change the digit and not
-> the letter in the chip revision. Anyway, I do not know if a0 has
-> different rom image, but the a0 was never sold so there is no harm in
-> keeping it as is.
+> Please pull and let me know if there's any problem.
 
-Just to be sure (I don't have such a good hardware knowledge):
-1) Does ROM image mean some code that is permanently on the device?
-2) Does firmware mean code we upload from the host driver?
-
-I'm not sure if I understand the rest of your description.
-
-AFAIU first you said ROM image tends to be the same on chipset 
-variations using
-the same letter. If this is so, why we need different firmware for 
-43602a0 and
-43602a1? Or different firmware for 43570a0 and 43570a2?
-
-Also if what you said about sharing one ROM image between chip 
-variations using
-the same letter was correct, shouldn't you expect the same ROM image on 
-43602a0
-and 43602a1?
-
-Forgive me if something of this is obvious for you, I just don't have 
-access to
-any Broadcom internal documentation :)
+Ok, pulled, thanks Johannes.
