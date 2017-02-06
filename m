@@ -1,135 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f48.google.com ([209.85.214.48]:37350 "EHLO
-        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750943AbdBMKRX (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35256 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751909AbdBFNC7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 05:17:23 -0500
-Received: by mail-it0-f48.google.com with SMTP id x75so33265384itb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2017 02:17:23 -0800 (PST)
-Subject: Re: [PATCH] brcmfmac: Use net_device_stats from struct net_device
-To: Tobias Klauser <tklauser@distanz.ch>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org
-References: <20170213101409.8205-1-tklauser@distanz.ch>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <c21b6055-2f98-45e4-7414-bf66f4bff4d8@broadcom.com> (sfid-20170213_111735_522567_7755042B)
-Date: Mon, 13 Feb 2017 11:17:18 +0100
+        Mon, 6 Feb 2017 08:02:59 -0500
+Received: by mail-io0-f196.google.com with SMTP id m98so9145318iod.2
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 05:02:59 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev 2.1 update Feb 06
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        Rob Echlin <rob@echlin.ca>, lwn@lwn.net
+Message-ID: <bb5b53b7-ae46-e08c-f996-2dbc96fa1c29@mojatatu.com> (sfid-20170206_140439_058041_DFCC7F0E)
+Date: Mon, 6 Feb 2017 08:02:51 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170213101409.8205-1-tklauser@distanz.ch>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-2-2017 11:14, Tobias Klauser wrote:
-> Instead of using a private copy of struct net_device_stats in struct
-> brcm_if, use stats from struct net_device.  Also remove the now
-> unnecessary .ndo_get_stats function.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
-> ---
->  .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 26 +++++++---------------
->  .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 --
->  2 files changed, 8 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> index b73a55b00fa7..60da86a8d95b 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -249,10 +249,10 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
->  
->  done:
->  	if (ret) {
-> -		ifp->stats.tx_dropped++;
-> +		ndev->stats.tx_dropped++;
->  	} else {
-> -		ifp->stats.tx_packets++;
-> -		ifp->stats.tx_bytes += skb->len;
-> +		ndev->stats.tx_packets++;
-> +		ndev->stats.tx_bytes += skb->len;
->  	}
->  
->  	/* Return ok: we always eat the packet */
-> @@ -296,15 +296,15 @@ void brcmf_txflowblock(struct device *dev, bool state)
->  void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
->  {
->  	if (skb->pkt_type == PACKET_MULTICAST)
-> -		ifp->stats.multicast++;
-> +		ifp->ndev->stats.multicast++;
->  
->  	if (!(ifp->ndev->flags & IFF_UP)) {
->  		brcmu_pkt_buf_free_skb(skb);
->  		return;
->  	}
->  
-> -	ifp->stats.rx_bytes += skb->len;
-> -	ifp->stats.rx_packets++;
-> +	ifp->ndev->stats.rx_bytes += skb->len;
-> +	ifp->ndev->stats.rx_packets++;
->  
->  	brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
->  	if (in_interrupt())
-> @@ -327,7 +327,7 @@ static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
->  
->  	if (ret || !(*ifp) || !(*ifp)->ndev) {
->  		if (ret != -ENODATA && *ifp)
-> -			(*ifp)->stats.rx_errors++;
-> +			(*ifp)->ndev->stats.rx_errors++;
->  		brcmu_pkt_buf_free_skb(skb);
->  		return -ENODATA;
->  	}
-> @@ -388,7 +388,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
->  	}
->  
->  	if (!success)
-> -		ifp->stats.tx_errors++;
-> +		ifp->ndev->stats.tx_errors++;
->  
->  	brcmu_pkt_buf_free_skb(txp);
->  }
-> @@ -411,15 +411,6 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
->  	}
->  }
->  
-> -static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
-> -{
-> -	struct brcmf_if *ifp = netdev_priv(ndev);
-> -
-> -	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
-> -
-> -	return &ifp->stats;
-> -}
-> -
->  static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
->  				    struct ethtool_drvinfo *info)
->  {
-> @@ -492,7 +483,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
->  static const struct net_device_ops brcmf_netdev_ops_pri = {
->  	.ndo_open = brcmf_netdev_open,
->  	.ndo_stop = brcmf_netdev_stop,
-> -	.ndo_get_stats = brcmf_netdev_get_stats,
->  	.ndo_start_xmit = brcmf_netdev_start_xmit,
->  	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
->  	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-> index de3197be5491..6aecd8dfd824 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-> @@ -171,7 +171,6 @@ enum brcmf_netif_stop_reason {
->   * @drvr: points to device related information.
->   * @vif: points to cfg80211 specific interface information.
->   * @ndev: associated network device.
-> - * @stats: interface specific network statistics.
->   * @multicast_work: worker object for multicast provisioning.
->   * @ndoffload_work: worker object for neighbor discovery offload configuration.
->   * @fws_desc: interface specific firmware-signalling descriptor.
-> @@ -187,7 +186,6 @@ struct brcmf_if {
->  	struct brcmf_pub *drvr;
->  	struct brcmf_cfg80211_vif *vif;
->  	struct net_device *ndev;
-> -	struct net_device_stats stats;
->  	struct work_struct multicast_work;
->  	struct work_struct ndoffload_work;
->  	struct brcmf_fws_mac_descriptor *fws_desc;
-> 
+A few announcements:
+- We expect to open up registration and announce hotel and location
+this week.
+
+- We are pleased to announce the first netdev 2.1 sponsor!
+Many thanks to Mellanox who has been a strong supporter of the netdev
+community. Mellanox is first to cross the netdev2.1 sponsor line with a
+silver.
+
+The Call for Proposals is still open, submit early
+to avoid the hazards of last minute traffic. Refer to:
+http://netdevconf.org/2.1/submit-proposal.html
+
+cheers,
+jamal
