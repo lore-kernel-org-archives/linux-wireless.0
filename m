@@ -1,58 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 7.mo3.mail-out.ovh.net ([46.105.57.200]:55915 "EHLO
-        7.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750790AbdBANeR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38554 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750953AbdBFRhb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 08:34:17 -0500
-Received: from player690.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo3.mail-out.ovh.net (Postfix) with ESMTP id 0DB4C9DAD6
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Feb 2017 10:55:39 +0100 (CET)
-Subject: Re: [PATCH 4.10-rc3 05/13] net: bgmac: fix build errors when
- linux/phy*.h is removed from net/dsa.h
-To: Russell King <rmk+kernel@armlinux.org.uk>,
-        linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
- <E1cYdx2-0000WP-Ot@rmk-PC.armlinux.org.uk>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Message-ID: <889087dc-aefe-4c09-45f1-a84d60b8869b@milecki.pl> (sfid-20170201_143423_555936_0E404730)
-Date: Wed, 1 Feb 2017 10:55:28 +0100
-MIME-Version: 1.0
-In-Reply-To: <E1cYdx2-0000WP-Ot@rmk-PC.armlinux.org.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 6 Feb 2017 12:37:31 -0500
+Message-ID: <1486402642.26003.141.camel@coelho.fi> (sfid-20170206_183734_781926_42FF8134)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Mon, 06 Feb 2017 19:37:22 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-5zexLNiVty6fGIdciClB"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2017-02-06
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2017 08:18 PM, Russell King wrote:
-> drivers/net/ethernet/broadcom/bgmac.c:1015:17: error: dereferencing pointer to incomplete type 'struct mii_bus'
-> drivers/net/ethernet/broadcom/bgmac.c:1185:2: error: implicit declaration of function 'phy_start' [-Werror=implicit-function-declaration]
-> drivers/net/ethernet/broadcom/bgmac.c:1198:2: error: implicit declaration of function 'phy_stop' [-Werror=implicit-function-declaration]
-> drivers/net/ethernet/broadcom/bgmac.c:1239:9: error: implicit declaration of function 'phy_mii_ioctl' [-Werror=implicit-function-declaration]
-> drivers/net/ethernet/broadcom/bgmac.c:1389:28: error: 'phy_ethtool_get_link_ksettings' undeclared here (not in a function)
-> drivers/net/ethernet/broadcom/bgmac.c:1390:28: error: 'phy_ethtool_set_link_ksettings' undeclared here (not in a function)
-> drivers/net/ethernet/broadcom/bgmac.c:1403:13: error: dereferencing pointer to incomplete type 'struct phy_device'
-> drivers/net/ethernet/broadcom/bgmac.c:1417:3: error: implicit declaration of function 'phy_print_status' [-Werror=implicit-function-declaration]
-> drivers/net/ethernet/broadcom/bgmac.c:1424:26: error: storage size of 'fphy_status' isn't known
-> drivers/net/ethernet/broadcom/bgmac.c:1424:9: error: variable 'fphy_status' has initializer but incomplete type
-> drivers/net/ethernet/broadcom/bgmac.c:1425:11: warning: excess elements in struct initializer
-> drivers/net/ethernet/broadcom/bgmac.c:1425:3: error: unknown field 'link' specified in initializer
-> drivers/net/ethernet/broadcom/bgmac.c:1426:12: note: in expansion of macro 'SPEED_1000'
-> drivers/net/ethernet/broadcom/bgmac.c:1426:3: error: unknown field 'speed' specified in initializer
-> drivers/net/ethernet/broadcom/bgmac.c:1427:13: note: in expansion of macro 'DUPLEX_FULL'
-> drivers/net/ethernet/broadcom/bgmac.c:1427:3: error: unknown field 'duplex' specified in initializer
-> drivers/net/ethernet/broadcom/bgmac.c:1432:12: error: implicit declaration of function 'fixed_phy_register' [-Werror=implicit-function-declaration]
-> drivers/net/ethernet/broadcom/bgmac.c:1432:31: error: 'PHY_POLL' undeclared (first use in this function)
-> drivers/net/ethernet/broadcom/bgmac.c:1438:8: error: implicit declaration of function 'phy_connect_direct' [-Werror=implicit-function-declaration]
-> drivers/net/ethernet/broadcom/bgmac.c:1439:6: error: 'PHY_INTERFACE_MODE_MII' undeclared (first use in this function)
-> drivers/net/ethernet/broadcom/bgmac.c:1521:2: error: implicit declaration of function 'phy_disconnect' [-Werror=implicit-function-declaration]
-> drivers/net/ethernet/broadcom/bgmac.c:1541:15: error: expected declaration specifiers or '...' before string constant
->
-> Add linux/phy.h to bgmac.c
->
-> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-Acked-by: Rafał Miłecki <rafal@milecki.pl>
+--=-5zexLNiVty6fGIdciClB
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Kalle,
+
+Here's my second pull-request intended for v4.11.  Just the usual set of
+fixes, cleanups and improvements, together with the continued work on
+support for new hardware.  A bit more details in the tag description.
+
+I have sent this out before and kbuildbot didn't find any issues.  I
+have also removed my favorite mistakes, namely the "commit" after the
+Fixes tag. ;)
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit 36401cb7ffae731295a6dd1ce2b40d7ad74245f4=
+:
+
+  brcmfmac: be more verbose when PSM's watchdog fires (2017-02-02 08:14:26 =
++0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2017-02-06
+
+for you to fetch changes up to 8364fbb497f00de21d6d347194fa8b6bbae1d6f5:
+
+  iwlwifi: mvm: support new beacon template command (2017-02-06 19:19:27 +0=
+200)
+
+----------------------------------------------------------------
+Second batch of improvements and fixes for v4.11.
+
+  * A bunch of bugfixes for the DQA code;
+  * Work on support for new A000 devices continues;
+  * Some clean-ups and general improvements
+
+----------------------------------------------------------------
+Beni Lev (1):
+      iwlwifi: mvm: Use aux queue for offchannel frames in dqa
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: fix PS-Poll enablement
+
+Golan Ben-Ami (1):
+      iwlwifi: mvm: support v2 of mfuart load notification
+
+Johannes Berg (7):
+      iwlwifi: mvm: reduce usage of IEEE80211_SKB_CB()
+      iwlwifi: mvm: fix D3 replay counter value
+      iwlwifi: mvm: set AID to firmware only for associated stations
+      iwlwifi: mvm: overwrite skb info later
+      iwlwifi: mvm/pcie: adjust A-MSDU tx_cmd length in PCIe
+      iwlwifi: mvm: align copy-break SKB payload for MQ RX
+      iwlwifi: pcie: fix another RF-kill race
+
+Liad Kaufman (1):
+      iwlwifi: mvm: release static queues on bcast release
+
+Luca Coelho (2):
+      iwlwifi: remove unnecessary argument to iwl_drv_start()
+      iwlwifi: remove unnecessary cfg element in iwl_drv
+
+Sara Sharon (12):
+      iwlwifi: mvm: support unification of INIT and RT images
+      iwlwifi: mvm: cleanup incorrect and redundant define
+      iwlwifi: mvm: support new statistics APIs
+      iwlwifi: mvm: support new scan API
+      iwlwifi: mvm: always free inactive queue when moving ownership
+      iwlwifi: mvm: support new alive notification
+      iwlwifi: mvm: synchronize firmware DMA paging memory
+      iwlwifi: pcie: fix the set of DMA memory mask
+      iwlwifi: mvm: fix pending frame counter calculation
+      iwlwifi: mvm: cleanup iwl_mvm_tx_mpdu a bit
+      iwlwifi: support two phys for a000 devices
+      iwlwifi: mvm: support new beacon template command
+
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c         |  30 +++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h       |   3 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h          |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c          |  25 +++---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.h          |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c           |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h   |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h  | 106 ++++++++++++++=
++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h |  29 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h    |  29 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h       |  90 +++++++-------=
+-----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c       |   4 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c           | 354 ++++++++++++++=
+++++++++++++++++++++++++++++++++---------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c     | 105 ++++++++++++--=
+--------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     |  24 +----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h          |  18 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c          |  24 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c        |  44 ++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c           |  70 +++++++++++---=
+-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c         |  11 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c         | 230 ++++++++++++++=
++++++++++++++++++++--------------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c          | 227 ++++++++++++++=
+++++++++++++++++++++-------------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h          |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c           | 112 +++++++++-----=
+---------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c        |  16 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c         |  17 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h    |   2 +
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c          |   4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c       |   8 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c          |  23 ++++-
+ 30 files changed, 1035 insertions(+), 587 deletions(-)
+--=-5zexLNiVty6fGIdciClB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAliYtFIACgkQoUecoho8
+xfo36w/8C+39wiMBCg+CTrXSYph/pne6EjxZ+srpvSDm2Ir40foz+wmDIzIcNUTQ
+dgLRG66W3xvlNRRqcdgcAOopcMAaM4jaLFDYHu6sUl2RoeDmXpesHXioDWMLM4jv
+zU2vxg6D5kFoz+tXrTeCpFHarpcOw8CCWVv3GOnL3ut1aqjN3e0ys2T5ZwwssteU
+HyS+wUHDYSe2piLLNKXgqnO9zRx3ddY0Brlmht2gJq7TevEzxHvQ72aFQlYoZm7Z
+H7dRI0tkMPqTp5xFiPso11eXiQaFVhxG5w/GaigzCHO3BfHzsmzQzlLoJo9Gb8c6
+/Pe6+sa1ho3FdryNeaqsR5DKfcwjC+uRk1yAo18iMKTturT+jSzmYp8yksYhRhaJ
+TT3e56USaDVTUfW0Ntew5zzmRVeLTq+QU232FsIYxR1EbnEhWNwf0JkHhCIGaW4D
+6Xl5sURXw3TqWJd1dyBFrMYLHiHP/nfhSFPkH2LgRmCDmkoEcwOtBLc3xoE8+n3I
+yMIVL696Y4G4YDMcQTGPyaypYS9E4lMRjmTPow4HECqbW2EtfHJoG1TNLXF18yaE
+JWws0oRPv19XSrpdv/2sLZUMYXeHWfzBddhR2SJa9ODYuS5p9oA8pzTAgkDC1D5s
+dKI64M+G1eGL/K1ROm+5VIODBC54CzoIeNowMWeZYkNimXnFZkk=
+=Rs7K
+-----END PGP SIGNATURE-----
+
+--=-5zexLNiVty6fGIdciClB--
