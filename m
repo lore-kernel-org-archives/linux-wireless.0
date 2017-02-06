@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:35395 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752775AbdBHKsE (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:38713 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751038AbdBFKtm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 05:48:04 -0500
-Received: by mail-pf0-f177.google.com with SMTP id f144so41600429pfa.2
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 02:47:15 -0800 (PST)
-Subject: Re: [PATCH V3 3/9] brcmfmac: merge two remaining brcmf_err macros
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170202213321.11591-1-zajec5@gmail.com>
- <20170202213321.11591-3-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <585f9747-7171-3021-5df5-e0dd12c5dccd@broadcom.com> (sfid-20170208_115157_877988_46FEB6E9)
-Date: Wed, 8 Feb 2017 10:52:10 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170202213321.11591-3-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Mon, 6 Feb 2017 05:49:42 -0500
+Received: by mail-wm0-f46.google.com with SMTP id r141so108339714wmg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 02:49:41 -0800 (PST)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+        jouni@qca.qualcomm.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH v3 0/2] mac80211: use crypto shash for AES cmac
+Date: Mon,  6 Feb 2017 10:49:26 +0000
+Message-Id: <1486378168-31028-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170206_114945_875316_098ED205)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2-2-2017 22:33, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> Now we always have __brcmf_err function we can do perfectly fine with
-> just one macro.
+This is something I spotted while working on AES in various modes for
+ARM and arm64.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
-> V3: Add this (new) patch
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 14 +++++---------
->  1 file changed, 5 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> index 441a6661eac0..066126123e96 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> @@ -47,20 +47,16 @@
->  
->  __printf(2, 3)
->  void __brcmf_err(const char *func, const char *fmt, ...);
-> -#ifndef CONFIG_BRCM_TRACING
-> -/* Macro for error messages. net_ratelimit() is used when driver
-> - * debugging is not selected. When debugging the driver error
-> - * messages are as important as other tracing or even more so.
-> +/* Macro for error messages. When debugging / tracing the driver all error
-> + * messages are important to us.
->   */
->  #define brcmf_err(fmt, ...)						\
->  	do {								\
-> -		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
-> +		if (IS_ENABLED(CONFIG_BRCMDBG) ||			\
-> +		    IS_ENABLED(CONFIG_BRCM_TRACING) ||			\
-> +		    net_ratelimit())					\
->  			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
->  	} while (0)
-> -#else
-> -#define brcmf_err(fmt, ...) \
-> -	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
-> -#endif
->  
->  #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
->  __printf(3, 4)
-> 
+The mac80211 aes_cmac code reimplements the CMAC algorithm based on the
+core AES cipher, which is rather restrictive in how platforms can satisfy
+the dependency on this algorithm. For instance, SIMD implementations may
+have a considerable setup time, which cannot be amortized over the entire
+input when calling into the crypto API one block at a time. Also, it prevents
+the use of more secure fixed time implementations, since not all AES drivers
+expose the cipher interface.
+
+So switch aes_cmac to use a cmac(aes) shash. Before updating the aes_cmac code
+in patch #2, the FILS AEAD code is moved to using a cmac(aes) shash supplied by
+the crypto API so that we can remove the open coded version entirely in the
+second patch.
+
+v3: - use more idiomatic SHASH_DESC_ON_STACK to allocate the shash descriptors
+    - replace compound literal zero vectors with explicitly defined ones
+    - drop a redundant memcpy() in #2
+
+Ard Biesheuvel (2):
+  mac80211: fils_aead: Use crypto api CMAC shash rather than bare cipher
+  mac80211: aes-cmac: switch to shash CMAC driver
+
+ net/mac80211/Kconfig     |   1 +
+ net/mac80211/aes_cmac.c  | 126 ++++----------------
+ net/mac80211/aes_cmac.h  |  15 +--
+ net/mac80211/fils_aead.c |  74 +++++-------
+ net/mac80211/key.h       |   2 +-
+ 5 files changed, 66 insertions(+), 152 deletions(-)
+
+-- 
+2.7.4
