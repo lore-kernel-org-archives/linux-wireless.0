@@ -1,106 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:34075 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751370AbdBJPd6 (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:54111 "EHLO
+        helcar.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751376AbdBFJBJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 10:33:58 -0500
+        Mon, 6 Feb 2017 04:01:09 -0500
+Date: Mon, 6 Feb 2017 17:00:39 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH] mac80211: Allocate a sync skcipher explicitly for FILS
+ AEAD
+Message-ID: <20170206090039.GA9467@gondor.apana.org.au> (sfid-20170206_100303_921394_0107D93F)
+References: <1486224522-26392-1-git-send-email-jouni@qca.qualcomm.com>
+ <1486364077.14226.1.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1486712222.2192.3.camel@perches.com>
-References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
- <CAJ-VmonrHpS3MArM9ohHgLvb6xspP_gnVVeJWA9F-pjUpJ+LZA@mail.gmail.com>
- <87y3xi4b28.fsf@qca.qualcomm.com> <5899DDD7.7000605@candelatech.com>
- <87tw82il32.fsf@kamboji.qca.qualcomm.com> <CAJ-Vmom7k3Tsgs8tRHQppmL7XxADS3V24AGOQY5QgkrSgr5Qzg@mail.gmail.com>
- <1486712222.2192.3.camel@perches.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Fri, 10 Feb 2017 07:31:58 -0800
-Message-ID: <CAJ-Vmo=UrnDVzGAKYZa0qXq5UVb09AZHzmWMtctvtXyu==nzyA@mail.gmail.com> (sfid-20170210_163452_251821_E8C090BA)
-Subject: Re: [PATCH 1/3] ath10k: remove ath10k_vif_to_arvif()
-To: Joe Perches <joe@perches.com>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        Ben Greear <greearb@candelatech.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        =?UTF-8?B?QW1hZGV1c3ogU8WCYXdpxYRza2k=?=
-        <amadeusz.slawinski@tieto.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1486364077.14226.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 February 2017 at 23:37, Joe Perches <joe@perches.com> wrote:
-> On Thu, 2017-02-09 at 23:14 -0800, Adrian Chadd wrote:
->
->> If there
->> were accessors for the skb data / len fields (like we do for mbufs)
->> then porting the code would've involved about 5,000 less changed
->> lines.
->
-> What generic mechanisms would you suggest to make
-> porting easier between bsd and linux and what in
-> your opinion are the best naming schemes to make
-> these functions easiest to read and implement
-> without resorting to excessive identifier lengths?
->
-> If you have some, please provide examples.
+On Mon, Feb 06, 2017 at 07:54:37AM +0100, Johannes Berg wrote:
+> Hi,
+> 
+> > The skcipher could have been of the async variant which may return
+> > from skcipher_encrypt() with -EINPROGRESS after having queued the
+> > request.
+> > The FILS AEAD implementation here does not have code for dealing with
+> > that possibility, so allocate a sync cipher explicitly to avoid
+> > potential issues with hardware accelerators.
+> 
+> > -	tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, 0);
+> > +	tfm2 = crypto_alloc_skcipher("ctr(aes)", 0,
+> > CRYPTO_ALG_ASYNC);
+> 
+> I'll apply this, after having found some code elsewhere that does
+> something similar, but I'll note that this is super confusing, since
+> the only documentation mentioning this flag says:
+> 
+> The mask flag restricts the type of cipher. The only allowed flag is
+> CRYPTO_ALG_ASYNC to restrict the cipher lookup function to
+> asynchronous ciphers. Usually, a caller provides a 0 for the mask flag.
 
-(Why not, it's pre-coffee o'clock.)
+The type and mask are used as follows when checking an algorithm:
 
-The biggest barriers are direct struct accessors. Most of the time the
-kernels have similar enough semantics that I can just implement a
-linux shim layer (like we do for graphics layer porting from Linux.)
-Eg, having skb_data(skb) (and skb_data_const(skb)) + skb_len(skb)
-instead of skb->data and skb->len would remove a lot of churn. Having
-say, a vif_to_drvpriv() method analogous to ath10k_vif_to_arvif()
-would also simplify the changes. For the rest of it we can just use a
-linux-like shim layer to get everything else working pretty darn well.
+	alg->type & mask == type & mask
 
-But the biggest thing that helps is a quasi HAL code structure. I know
-HAL is a dirty word, so think of it more as "how would one separate
-out the OS interface layer from the rest of the driver." A good
-example in ath10k is the difference between say, wmi.c, the pci /
-copyengine code and mac.c.
+So to request a synchronous algorithm (that is, one with the
+CRYPTO_ALG_ASYNC bit set to zero), you would set type to 0 and
+mask to CRYPTO_ALG_ASYNC.
 
-* the pci / copyengine code is almost 100% compilable on other
-platforms, save the differences in little things (malloc, free, KVA
-versus physical memory allocation, bounce buffering, sync'ing, etc.) A
-sufficiently refactored driver like ath10k where almost all of that
-stuff happens in the pci/copyengine code made porting that much less
-painful.
-
-* the wmi code is almost exclusively portable - besides the
-malloc/free, etc mechanical changes which honestly can be stubbed, it
-uses the lower layers (pci/ce, hif, htc, etc) for doing actual work,
-and the upper layer uses a well-defined API + callback mechanism for
-getting work done. Porting that was mechanical but reasonably easy.
-
-* however, the mac.c code contains both code which sends commands to
-the firmware (vif create/destroy, pdev commands, station
-associate/update/destroy, crypto key handling, peer rate control, etc)
-/and/ very linux mac80211/cfg80211 specific bits. If mac.c were split
-into mac-mac80211.c (which was /just/ mac80211, cfg80211, etc bits)
-and mac-utils.c (the bits that actually /sent/ the commands,
-responses, all the support code, etc) then my port would just
-implement mac-net80211.c as a completely new file, and the rest would
-just be modified as required by porting.
-
-A lot of the ath10k headers too mix linux specific things (eg struct
-device, dependencies) with hardware specific definitions for say,
-register accesses. I split out the register and firmware command /
-structures into separate header files that didn't mingle OS and driver
-specific structures to make it much easier to reuse that code. I find
-that good driver writing hygiene in any case.
-
-I'm not expecting an intel ethernet driver style HAL separation,
-although that'd certainly make life easier in porting over drivers.
-But just having inlined accessor functions for most things and some
-stricter driver structure for OS touch points (dma setup/teardown,
-bounce buffer stuff, mac80211/cfg80211, ethtool, etc APIs) would make
-porting and testing things a lot easier. :-)
-
-2c, and I'll do the porting/reimplementing work anyway regardless of
-how much coffee it requires,
-
-
-
--adrian
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
