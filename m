@@ -1,91 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:33437 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752083AbdBKEhr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 23:37:47 -0500
-Received: by mail-wr0-f195.google.com with SMTP id i10so16990683wrb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2017 20:37:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com> <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Fri, 10 Feb 2017 20:37:44 -0800
-Message-ID: <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com> (sfid-20170211_053757_023831_31C68E47)
-Subject: Re: VHT 160Mhz and nss related config.
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:38585 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932076AbdBGUUs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 15:20:48 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, sgruszka@redhat.com,
+        devicetree@vger.kernel.org, Rob Herring <robh@kernel.org>
+Subject: [PATCH v5 1/3] Documentation: dt: net: add mt76 wireless device binding
+Date: Tue,  7 Feb 2017 21:20:33 +0100
+Message-Id: <20170207202035.64224-2-nbd@nbd.name> (sfid-20170207_212127_066916_C46E4A7B)
+In-Reply-To: <20170207202035.64224-1-nbd@nbd.name>
+References: <20170207202035.64224-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 February 2017 at 20:22, Sebastian Gottschall
-<s.gottschall@dd-wrt.com> wrote:
-> i really can't believe this. if this is true the  160 mhz mode would not
-> make any sense.
-> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is identical. so
-> vht160 would not increase performance in any way
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ .../bindings/net/wireless/mediatek,mt76.txt        | 24 ++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
 
-Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
-perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
-transmit 2x2 rates to different MU-MIMO peers.
-
-That's the outstanding question I have - is it like, 2x2 MU only, or
-is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
-have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
-group each) all going at the same time?
-
-I'm .. not even sure how you're supposed to cleanly negotiate that you
-can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
-sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
-
-
--adrian
-
->
-> Am 10.02.2017 um 23:58 schrieb Ben Greear:
->>
->> So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4 MIMO a=
-t
->> VHT80, but
->> it can do only 2x2 MIMO at VHT160/80+80.
->>
->> When configuring a peer, we need to tell the firmware the number of
->> spatial streams
->> of the peer at VHT160 and at VHT80 and lower.  They are not the same
->> value.
->>
->> I cannot think of any standard way to get this information based on VHT
->> capabilities
->> and such.  Currently, one could just assume VHT160 NSS is 1/2 of the VHT=
-80
->> NSS,
->> but that is unlikely to be true for all vendors.
->>
->> Any ideas?
->>
->> Thanks,
->> Ben
->>
->
->
-> --
-> Mit freundlichen Gr=C3=BCssen / Regards
->
-> Sebastian Gottschall / CTO
->
-> NewMedia-NET GmbH - DD-WRT
-> Firmensitz:  Berliner Ring 101, 64625 Bensheim
-> Registergericht: Amtsgericht Darmstadt, HRB 25473
-> Gesch=C3=A4ftsf=C3=BChrer: Peter Steinh=C3=A4user, Christian Scheele
-> http://www.dd-wrt.com
-> email: s.gottschall@dd-wrt.com
-> Tel.: +496251-582650 / Fax: +496251-5826565
->
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+new file mode 100644
+index 000000000000..19522ab97d62
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+@@ -0,0 +1,24 @@
++* MediaTek mt76xx devices
++
++This node provides properties for configuring the MediaTek mt76xx wireless
++device. The node is expected to be specified as a child node of the PCI
++controller to which the wireless chip is connected.
++
++Optional properties:
++
++- mac-address: See ethernet.txt in the parent directory
++- local-mac-address: See ethernet.txt in the parent directory
++- ieee80211-freq-limit: See ieee80211.txt
++- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
++
++&pcie {
++	status = "okay";
++
++	pcie0 {
++		wifi@0,0 {
++			reg = <0x0000 0 0 0 0>;
++			ieee80211-freq-limit = <5000000 6000000>;
++			mediatek,mtd-eeprom = <&factory 0x8000>;
++		};
++	};
++};
+-- 
+2.11.0
