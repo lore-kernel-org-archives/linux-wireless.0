@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752823AbdBUOcX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39377 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752011AbdBGJBL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:23 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 05/10] wil6210: missing reinit_completion in HALP voting
-Date: Tue, 21 Feb 2017 16:32:03 +0200
-Message-Id: <1487687528-12832-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153228_193348_A3481744)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 7 Feb 2017 04:01:11 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,1/3] ath9k: rename tx_complete_work to hw_check_work
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170202091452.11939-1-nbd@nbd.name>
+References: <20170202091452.11939-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
+Message-ID: <b4d288b79fd544a58b9571e06e9fa1c0@eusanexr01a.eu.qualcomm.com> (sfid-20170207_100114_697170_75D52B0E)
+Date: Tue, 7 Feb 2017 01:01:07 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After setting HALP ICR bit, we keep it set until HALP unvote.
-Masking HALP ICR should protect the driver from hitting the HALP ICR
-over and over again. However, in case there is another MISC ICR
-we will read the HALP ICR and issue a completion. This can lead to
-a case where HALP voting is completed immediately, as the completion
-is already set.
-Reinit the HALP completion before the actual vote will clear previous
-completions and protect from such cases.
+Felix Fietkau <nbd@nbd.name> wrote:
+> Also include common MAC alive check. This should make the hang checks
+> more reliable for modes where beacons are not sent and is used as a
+> starting point for further hang check improvements
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 1 +
- 1 file changed, 1 insertion(+)
+3 patches applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 21b7fac..dddde94 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1158,6 +1158,7 @@ void wil_halp_vote(struct wil6210_priv *wil)
- 		    wil->halp.ref_cnt);
- 
- 	if (++wil->halp.ref_cnt == 1) {
-+		reinit_completion(&wil->halp.comp);
- 		wil6210_set_halp(wil);
- 		rc = wait_for_completion_timeout(&wil->halp.comp, to_jiffies);
- 		if (!rc) {
+d63ffc45c5d3 ath9k: rename tx_complete_work to hw_check_work
+a34d0a0da1ab ath9k_hw: check if the chip failed to wake up
+3a5e969bb2f6 ath9k: fix race condition in enabling/disabling IRQs
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9551439/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
