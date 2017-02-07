@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:39475 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751617AbdB0Kg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 05:36:59 -0500
-Date: Mon, 27 Feb 2017 11:36:14 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Rob Herring <robh@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Marcel Holtmann <marcel.holtmann@intel.com>
-Subject: Re: [PATCH] NFC: remove TI nfcwilink driver
-Message-ID: <20170227103614.GE13501@zurbaran.ger.intel.com> (sfid-20170227_113735_923875_D19A22FD)
-References: <20170125222307.3044-1-robh@kernel.org>
- <3B67FD13-A482-4BEF-B619-DD9AF9CC129F@holtmann.org>
- <CAL_JsqL1c9vU0R0m73UXi6wvPscqNT9ZAxX8FxhMmLFGMRAeVQ@mail.gmail.com>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:33167 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754935AbdBGTX6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 14:23:58 -0500
+Received: by mail-qk0-f173.google.com with SMTP id s140so99073121qke.0
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2017 11:23:52 -0800 (PST)
+Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
+To: Paolo Abeni <pabeni@redhat.com>, Kalle Valo <kvalo@codeaurora.org>
+References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Franky Lin <franky.lin@broadcom.com>,
+        hante Meuleman <hante.meuleman@broadcom.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com> (sfid-20170207_202407_272775_E6909E42)
+Date: Tue, 7 Feb 2017 20:23:47 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqL1c9vU0R0m73UXi6wvPscqNT9ZAxX8FxhMmLFGMRAeVQ@mail.gmail.com>
+In-Reply-To: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rob,
+On 7-2-2017 17:50, Paolo Abeni wrote:
+> the skbs can be held by the driver for a long time, so we need
+> to clear any state on xmit to avoid hanging other subsystems.
+> The skbs are already orphaned later in cmsg code, so we just
+> need to clear the nf/dst/secpath.
+> Do it early, while the relevant entries are hopefully still
+> hot in the cache.
 
-On Fri, Feb 24, 2017 at 02:56:48PM -0600, Rob Herring wrote:
-> On Wed, Jan 25, 2017 at 11:54 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> > Hi Rob,
-> >
-> >> It appears that TI WiLink devices including NFC (WL185x/WL189x) never
-> >> shipped. The only information I found were announcements in Feb
-> >> 2012 about the parts. There's been no activity on this driver besided
-> >> common changes since initially added in Jan 2012. There's also no in
-> >> users that instantiate the platform device (nor DT bindings).
-> >>
-> >> This is a first step in removing TI ST (shared transport) driver in
-> >> favor of extending the BT hci_ll driver to support WL183x chips.
-> >
-> > since the firmware files TINfcInit_* also never made it into the linux-firmware tree, I have no idea who is using this driver. I am actually fine with removing it since it would be easy enough to bring back based on hci_ll driver once there is hardware to test this on.
+What is this about really? A bit more background about the issue might
+help understanding the need for this patch. Is this really specific to
+brcmfmac. For instance is something similar already done in mac80211?
+
+Regards,
+Arend
+
+> Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> Ping. Someone going to pick up this patch?
-I'll take it, I need to catch up with pending NFC patches this week.
-
-Cheers,
-Samuel.
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 9e6f60a..5a8d57b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -22,6 +22,7 @@
+>  #include <net/rtnetlink.h>
+>  #include <net/addrconf.h>
+>  #include <net/ipv6.h>
+> +#include <net/xfrm.h>
+>  #include <brcmu_utils.h>
+>  #include <brcmu_wifi.h>
+>  
+> @@ -243,6 +244,13 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>  	if ((skb->priority == 0) || (skb->priority > 7))
+>  		skb->priority = cfg80211_classify8021d(skb, NULL);
+>  
+> +	/* we can keep the skb for a long time; avoid starving other
+> +	 * subsystems
+> +	 */
+> +	nf_reset(skb);
+> +	skb_dst_drop(skb);
+> +	secpath_reset(skb);
+> +
+>  	ret = brcmf_proto_tx_queue_data(drvr, ifp->ifidx, skb);
+>  	if (ret < 0)
+>  		brcmf_txfinalize(ifp, skb, false);
+> 
