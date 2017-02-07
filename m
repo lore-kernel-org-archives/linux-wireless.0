@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f46.google.com ([209.85.214.46]:38359 "EHLO
-        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751412AbdBFJIl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34814 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752983AbdBGJAP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 04:08:41 -0500
-Received: by mail-it0-f46.google.com with SMTP id c7so52675791itd.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 01:08:40 -0800 (PST)
+        Tue, 7 Feb 2017 04:00:15 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1486370872.14226.6.camel@sipsolutions.net>
-References: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
- <1486308208-3252-2-git-send-email-ard.biesheuvel@linaro.org> <1486370872.14226.6.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 6 Feb 2017 09:08:39 +0000
-Message-ID: <CAKv+Gu9KdJCzkWtGYDaK_6_WgW4aZ4Wtm-O581STyDKj7RzyrA@mail.gmail.com> (sfid-20170206_101042_358338_268EF06D)
-Subject: Re: [PATCH v2 1/2] mac80211: fils_aead: Use crypto api CMAC shash
- rather than bare cipher
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: wcn36xx: Implement cancel_hw_scan
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170201152747.838-1-bjorn.andersson@linaro.org>
+References: <20170201152747.838-1-bjorn.andersson@linaro.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+CC: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <wcn36xx@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, "Mart Raudsepp" <leio@gentoo.org>
+Message-ID: <f5840edc6a4f41d7a8183b8a90219235@eusanexr01a.eu.qualcomm.com> (sfid-20170207_100045_458222_A5C0925F)
+Date: Tue, 7 Feb 2017 01:00:06 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 February 2017 at 08:47, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->>  {
->>       u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
->> +     struct shash_desc *desc;
->> +     u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)]
->> CRYPTO_MINALIGN_ATTR;
+Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
+> In the event that the wcn36xx interface is brought down while a hw_scan
+> is active we must abort and wait for the ongoing scan to signal
+> completion to mac80211.
+> 
+> Reported-by: Mart Raudsepp <leio@gentoo.org>
+> Fixes: 886039036c20 ("wcn36xx: Implement firmware assisted scan")
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Tested-by: Mart Raudsepp <leio@gentoo.org>
 
-I realised we have a more idiomatic SHASH_DESC_ON_STACK for this.
+Patch applied to ath-next branch of ath.git, thanks.
 
->>       size_t i;
->> -     const u8 *data[2];
->> -     size_t data_len[2], data_elems;
->> +
->> +     desc = (struct shash_desc *)buf;
->> +     desc->tfm = tfm;
->>
->> +     crypto_shash_digest(desc, (u8[AES_BLOCK_SIZE]){},
->> AES_BLOCK_SIZE, d);
->
-> That's an interesting expression in there. Can we name it into a real
-> variable? :)
->
+03c95dbef642 wcn36xx: Implement cancel_hw_scan
 
-Sure, if you prefer.
+-- 
+https://patchwork.kernel.org/patch/9550795/
 
-> I'm also slightly worried about stack usage now - do we know none of
-> this goes into an sg list eventually?
->
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-Shashes do not usually use scatterlists: the shash API does not use
-them, but uses u8[] arrays and lengths everywhere, and shashes are
-explicitly synchronous, which means they are unsuitable for being
-exposed on top of a high latency peripheral that uses DMA.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
