@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40892 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:34396 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751453AbdBNIf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 03:35:27 -0500
-Message-ID: <1487061321.4705.1.camel@sipsolutions.net> (sfid-20170214_093531_052095_12BA284F)
-Subject: Re: [PATCH] iw: Fix bitrate output when no rate info found
+        id S1752404AbdBGWa0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 17:30:26 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Feb 2017 09:35:21 +0100
-In-Reply-To: <1487049663-2942-1-git-send-email-masashi.honma@gmail.com> (sfid-20170214_062128_423199_C6B65399)
-References: <1487049663-2942-1-git-send-email-masashi.honma@gmail.com>
-         (sfid-20170214_062128_423199_C6B65399)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] ath10k: select WANT_DEV_COREDUMP
+Date: Tue,  7 Feb 2017 23:29:33 +0100
+Message-Id: <20170207222933.12701-1-johannes@sipsolutions.net> (sfid-20170207_233234_963526_A0F33D2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-02-14 at 14:21 +0900, Masashi Honma wrote:
-> Previously, bitrate showed uninitialized buffer when no rate info
-> found.
+From: Johannes Berg <johannes.berg@intel.com>
 
-When would this happen?
+This is necessary so that - if ath10k is the only driver using
+dev_coredump*() - the functionality is built into the kernel.
 
-I'm not really sure this is right - perhaps we don't have
-RATE_INFO_BITRATE(32), but still have the MCS data?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath10k/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-How about we just add "(unknown)" or so and not return here?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index db1ca629cbd6..b4241cf9b7ed 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -3,6 +3,7 @@ config ATH10K
+         depends on MAC80211 && HAS_DMA
+ 	select ATH_COMMON
+ 	select CRC32
++	select WANT_DEV_COREDUMP
+         ---help---
+           This module adds support for wireless adapters based on
+           Atheros IEEE 802.11ac family of chipsets.
+-- 
+2.9.3
