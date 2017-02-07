@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:36314 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752367AbdBORyG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 12:54:06 -0500
-Date: Wed, 15 Feb 2017 12:54:03 -0500 (EST)
-Message-Id: <20170215.125403.419777696065228170.davem@davemloft.net> (sfid-20170215_185431_943794_F18DDFBE)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        mst@redhat.com, jasowang@redhat.com,
-        virtualization@lists.linux-foundation.org,
-        mareklindner@neomailbox.ch, sw@simonwunderlich.de, a@unstable.cc,
-        sgruszka@redhat.com, johannes.berg@intel.com
-Subject: Re: [PATCH] average: change to declare precision, not factor
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170215084926.29482-1-johannes@sipsolutions.net>
-References: <20170215084926.29482-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:57978 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754288AbdBGOdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 09:33:32 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wil6210: include moduleparam.h
+Date: Tue,  7 Feb 2017 15:33:28 +0100
+Message-Id: <20170207143328.22529-1-johannes@sipsolutions.net> (sfid-20170207_153335_648991_048987D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 15 Feb 2017 09:49:26 +0100
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Declaring the factor is counter-intuitive, and people are prone
-> to using small(-ish) values even when that makes no sense.
-> 
-> Change the DECLARE_EWMA() macro to take the fractional precision,
-> in bits, rather than a factor, and update all users.
-> 
-> While at it, add some more documentation.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> Unless I hear any objections, I will take this through my tree.
+This now declares a module parameter, so include the necessary
+header file for that.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 6aa3ff4240a9..035ff5974058 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <linux/etherdevice.h>
++#include <linux/moduleparam.h>
+ #include "wil6210.h"
+ #include "wmi.h"
+ 
+-- 
+2.9.3
