@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout02.posteo.de ([185.67.36.142]:55807 "EHLO mout02.posteo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751246AbdBXIwy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 03:52:54 -0500
-Message-ID: <1487926307.3812.1.camel@embedded.rocks> (sfid-20170224_095431_524994_9B9C4BB9)
-Subject: Re: brcmfmac: problem using WPS with wpa_supplicant on BCM43362
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Date: Fri, 24 Feb 2017 09:51:47 +0100
-In-Reply-To: <dd241eff-7e0d-26c1-1758-b3f4d51bc359@broadcom.com>
-References: <1487881302.20481.3.camel@embedded.rocks>
-         <dd241eff-7e0d-26c1-1758-b3f4d51bc359@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:35965 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753849AbdBGXFa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 18:05:30 -0500
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Timur Tabi <timur@codeaurora.org>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
+        Woojung Huh <woojung.huh@microchip.com>
+Subject: [PATCH net-next v2 07/12] net: mvneta: fix build errors when linux/phy*.h is removed from net/dsa.h
+Date: Tue,  7 Feb 2017 15:03:00 -0800
+Message-Id: <20170207230305.18222-8-f.fainelli@gmail.com> (sfid-20170208_000624_480204_01F84CAB)
+In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
-On Fri, 2017-02-24 at 09:16 +0100, Arend Van Spriel wrote:
-> 
-> On 23-2-2017 21:21, Jörg Krause wrote:
-> > Hi,
-> > 
-> > I am using Linux Kernel v4.9.9 and wpa_supplicant 2.6. When running
-> > 'wpa_cli wps_pin any', the following messages are printed:
-> > 
-> > """
-> > > wps_pin any         
-> > 
-> > [ 4011.779108] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error :
-> > -30
-> > [ 4011.786190] brcmfmac: brcmf_config_ap_mgmt_ie: Set Beacon IE
-> > Failed
-> > """
-> > 
-> > .. and nothing happens. The data sheet for the BCM43362 states that
-> > the
-> > module supports WPS.
-> 
-> Hi Jörg,
-> 
-> We have never tested WPS with brcmfmac. Most of it is in firmware so
-> it
-> might work. We had some fixes related to setting management IE, but
-> it
-> should be in 4.9. I did not check it (yet).
+drivers/net/ethernet/marvell/mvneta.c:2694:26: error: storage size of 'status' isn't known
+drivers/net/ethernet/marvell/mvneta.c:2695:26: error: storage size of 'changed' isn't known
+drivers/net/ethernet/marvell/mvneta.c:2695:9: error: variable 'changed' has initializer but incomplete type
+drivers/net/ethernet/marvell/mvneta.c:2709:2: error: implicit declaration of function 'fixed_phy_update_state' [-Werror=implicit-function-declaration]
 
-I've tested WPS on another board, the Banana Pro, which also has the
-BCM43362 and it works with Linux v4.9.12. So, I'll look why it does not
-work on my custom board.
+Add linux/phy_fixed.h to mvneta.c
 
-Jörg
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/net/ethernet/marvell/mvneta.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/marvell/mvneta.c b/drivers/net/ethernet/marvell/mvneta.c
+index 0f4d1697be46..fdf71720e707 100644
+--- a/drivers/net/ethernet/marvell/mvneta.c
++++ b/drivers/net/ethernet/marvell/mvneta.c
+@@ -28,6 +28,7 @@
+ #include <linux/of_mdio.h>
+ #include <linux/of_net.h>
+ #include <linux/phy.h>
++#include <linux/phy_fixed.h>
+ #include <linux/platform_device.h>
+ #include <linux/skbuff.h>
+ #include <net/hwbm.h>
+-- 
+2.9.3
