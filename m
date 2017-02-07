@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:36646 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751045AbdBBQRD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 11:17:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
-References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Thu, 2 Feb 2017 08:17:00 -0800
-Message-ID: <CAJ-VmonrHpS3MArM9ohHgLvb6xspP_gnVVeJWA9F-pjUpJ+LZA@mail.gmail.com> (sfid-20170202_171738_657081_76345A36)
-Subject: Re: [PATCH 1/3] ath10k: remove ath10k_vif_to_arvif()
-To: =?UTF-8?B?QW1hZGV1c3ogU8WCYXdpxYRza2k=?=
-        <amadeusz.slawinski@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:44352 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753651AbdBGQ7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 11:59:15 -0500
+From: Paolo Abeni <pabeni@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        hante Meuleman <hante.meuleman@broadcom.com>
+Subject: [PATCH net] brcmfmac: clear skb head state on xmit
+Date: Tue,  7 Feb 2017 17:50:36 +0100
+Message-Id: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com> (sfid-20170207_175919_375794_98298A73)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hiya,
+the skbs can be held by the driver for a long time, so we need
+to clear any state on xmit to avoid hanging other subsystems.
+The skbs are already orphaned later in cmsg code, so we just
+need to clear the nf/dst/secpath.
+Do it early, while the relevant entries are hopefully still
+hot in the cache.
 
-Removing this method makes the diff to FreeBSD larger, as "vif" in
-FreeBSD is a different pointer.
+Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-(Yes, I have ath10k on freebsd working and I'd like to find a way to
-reduce the diff moving forward.)
-
-
-
--adrian
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 9e6f60a..5a8d57b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -22,6 +22,7 @@
+ #include <net/rtnetlink.h>
+ #include <net/addrconf.h>
+ #include <net/ipv6.h>
++#include <net/xfrm.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+ 
+@@ -243,6 +244,13 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 	if ((skb->priority == 0) || (skb->priority > 7))
+ 		skb->priority = cfg80211_classify8021d(skb, NULL);
+ 
++	/* we can keep the skb for a long time; avoid starving other
++	 * subsystems
++	 */
++	nf_reset(skb);
++	skb_dst_drop(skb);
++	secpath_reset(skb);
++
+ 	ret = brcmf_proto_tx_queue_data(drvr, ifp->ifidx, skb);
+ 	if (ret < 0)
+ 		brcmf_txfinalize(ifp, skb, false);
+-- 
+2.9.3
