@@ -1,141 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33594 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753735AbdBUQQl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40754 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752530AbdBGILM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:41 -0500
-Received: by mail-lf0-f65.google.com with SMTP id 86so5300154lfv.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:40 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 08/21] ath10k: sdio get target info
-Date: Tue, 21 Feb 2017 17:15:28 +0100
-Message-Id: <1487693741-10042-9-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171737_752399_B969E9D5)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        Tue, 7 Feb 2017 03:11:12 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Dmitry Osipenko <digetx@gmail.com>
+Subject: Re: [PATCH] rtlwifi: rtl8192c-common: Fix "BUG: KASAN:
+References: <20170205162422.26963-1-Larry.Finger@lwfinger.net>
+Date: Tue, 07 Feb 2017 10:11:07 +0200
+In-Reply-To: <20170205162422.26963-1-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Sun, 5 Feb 2017 10:24:22 -0600")
+Message-ID: <877f525skk.fsf@codeaurora.org> (sfid-20170207_091122_742477_826EE8BF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Special BMI get target info function for SDIO.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/bmi.c  | 70 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/bmi.h  |  2 +
- drivers/net/wireless/ath/ath10k/core.c |  5 ++-
- 3 files changed, 76 insertions(+), 1 deletion(-)
+> Kernels built with CONFIG_KASAN=y report the following BUG for rtl8192cu
+> and rtl8192c-common:
+>
+> ==================================================================
+> BUG: KASAN: slab-out-of-bounds in rtl92c_dm_bt_coexist+0x858/0x1e40
+>      [rtl8192c_common] at addr ffff8801c90edb08
+> Read of size 1 by task kworker/0:1/38
+> page:ffffea0007243800 count:1 mapcount:0 mapping:          (null)
+>      index:0x0 compound_mapcount: 0
+> flags: 0x8000000000004000(head)
+> page dumped because: kasan: bad access detected
+> CPU: 0 PID: 38 Comm: kworker/0:1 Not tainted 4.9.7-gentoo #3
+> Hardware name: Gigabyte Technology Co., Ltd. To be filled by
+>      O.E.M./Z77-DS3H, BIOS F11a 11/13/2013
+> Workqueue: rtl92c_usb rtl_watchdog_wq_callback [rtlwifi]
+>   0000000000000000 ffffffff829eea33 ffff8801d7f0fa30 ffff8801c90edb08
+>   ffffffff824c0f09 ffff8801d4abee80 0000000000000004 0000000000000297
+>   ffffffffc070b57c ffff8801c7aa7c48 ffff880100000004 ffffffff000003e8
+> Call Trace:
+>   [<ffffffff829eea33>] ? dump_stack+0x5c/0x79
+>   [<ffffffff824c0f09>] ? kasan_report_error+0x4b9/0x4e0
+>   [<ffffffffc070b57c>] ? _usb_read_sync+0x15c/0x280 [rtl_usb]
+>   [<ffffffff824c0f75>] ? __asan_report_load1_noabort+0x45/0x50
+>   [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40 [rtl8192c_common]
+>   [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40 [rtl8192c_common]
+>   [<ffffffffc06d0cbe>] ? rtl92c_dm_rf_saving+0x96e/0x1330 [rtl8192c_common]
+> ...
+>
+> The problem is due to rtl8192ce and rtl8192cu sharing routines, and having
+> different layouts of struct rtl_pci_priv, which is used by rtl8192ce, and
+> struct rtl_usb_priv, which is used by rtl8192cu. The problem was resolved
+> by placing the struct bt_coexist_info at the head of each of those private
+> areas.
+>
+> Reported-and-tested-by: Dmitry Osipenko <digetx@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> # 4.0+
+> Cc: Dmitry Osipenko <digetx@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
-index abeee20..54aaa1c0 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.c
-+++ b/drivers/net/wireless/ath/ath10k/bmi.c
-@@ -97,6 +97,76 @@ int ath10k_bmi_get_target_info(struct ath10k *ar,
- 	return 0;
- }
- 
-+#define TARGET_VERSION_SENTINAL 0xffffffffu
-+
-+int ath10k_bmi_get_target_info_sdio(struct ath10k *ar,
-+				    struct bmi_target_info *target_info)
-+{
-+	struct bmi_cmd cmd;
-+	union bmi_resp resp;
-+	u32 cmdlen = sizeof(cmd.id) + sizeof(cmd.get_target_info);
-+	u32 resplen, tmp, ver_len;
-+	int ret;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi get target info SDIO\n");
-+
-+	if (ar->bmi.done_sent) {
-+		ath10k_warn(ar, "BMI Get Target Info Command disallowed\n");
-+		return -EBUSY;
-+	}
-+
-+	cmd.id = __cpu_to_le32(BMI_GET_TARGET_INFO);
-+
-+	/* Step 1: Read 4 bytes of the target info and check if it is
-+	 * the special sentinal version word or the first word in the
-+	 * version response.
-+	 */
-+	resplen = sizeof(u32);
-+	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen, &tmp, &resplen);
-+	if (ret) {
-+		ath10k_warn(ar, "unable to read from device\n");
-+		return ret;
-+	}
-+
-+	/* Some SDIO boards have a special sentinal byte before the real
-+	 * version response.
-+	 */
-+	if (tmp == TARGET_VERSION_SENTINAL) {
-+		/* Step 1b: Read the version length */
-+		resplen = sizeof(u32);
-+		ret = ath10k_hif_exchange_bmi_msg(ar, NULL, 0, &tmp,
-+						  &resplen);
-+		if (ret) {
-+			ath10k_warn(ar, "unable to read from device\n");
-+			return ret;
-+		}
-+	}
-+
-+	ver_len = __le32_to_cpu(tmp);
-+
-+	/* Step 2: Check the target info length */
-+	if (ver_len != sizeof(resp.get_target_info)) {
-+		ath10k_warn(ar, "Unexpected target info len: %u. Expected: %zu\n",
-+			    ver_len, sizeof(resp.get_target_info));
-+		return -EINVAL;
-+	}
-+
-+	/* Step 3: Read the rest of the version response */
-+	resplen = sizeof(resp.get_target_info) - sizeof(u32);
-+	ret = ath10k_hif_exchange_bmi_msg(ar, NULL, 0,
-+					  &resp.get_target_info.version,
-+					  &resplen);
-+	if (ret) {
-+		ath10k_warn(ar, "unable to read from device\n");
-+		return ret;
-+	}
-+
-+	target_info->version = __le32_to_cpu(resp.get_target_info.version);
-+	target_info->type    = __le32_to_cpu(resp.get_target_info.type);
-+
-+	return 0;
-+}
-+
- int ath10k_bmi_read_memory(struct ath10k *ar,
- 			   u32 address, void *buffer, u32 length)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
-index a65f262..2043d00 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.h
-+++ b/drivers/net/wireless/ath/ath10k/bmi.h
-@@ -197,6 +197,8 @@ void ath10k_bmi_start(struct ath10k *ar);
- int ath10k_bmi_done(struct ath10k *ar);
- int ath10k_bmi_get_target_info(struct ath10k *ar,
- 			       struct bmi_target_info *target_info);
-+int ath10k_bmi_get_target_info_sdio(struct ath10k *ar,
-+				    struct bmi_target_info *target_info);
- int ath10k_bmi_read_memory(struct ath10k *ar, u32 address,
- 			   void *buffer, u32 length);
- int ath10k_bmi_write_memory(struct ath10k *ar, u32 address,
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index eae502e..a0b331d 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2186,7 +2186,10 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 	}
- 
- 	memset(&target_info, 0, sizeof(target_info));
--	ret = ath10k_bmi_get_target_info(ar, &target_info);
-+	if (ar->hif.bus == ATH10K_BUS_SDIO)
-+		ret = ath10k_bmi_get_target_info_sdio(ar, &target_info);
-+	else
-+		ret = ath10k_bmi_get_target_info(ar, &target_info);
- 	if (ret) {
- 		ath10k_err(ar, "could not get target info (%d)\n", ret);
- 		goto err_power_down;
+Patchwork incorrectly parsed this mail, my guess is because of the long
+'========' line:
+
+https://patchwork.kernel.org/patch/9556171/
+
+So I applied this manually to wireless-drivers-next:
+
+6773386f977c rtlwifi: rtl8192c-common: Fix "BUG: KASAN:
+
+Thanks.
+
 -- 
-2.7.4
+Kalle Valo
