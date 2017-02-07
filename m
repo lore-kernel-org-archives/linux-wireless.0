@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:35891 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751429AbdBOTDk (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36220 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753849AbdBGXLy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 14:03:40 -0500
-Received: by mail-it0-f65.google.com with SMTP id f200so11124743itf.3
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 11:03:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87r32z968n.fsf@purkki.adurom.net>
-References: <1487100985-4194-1-git-send-email-gucea.doru@gmail.com> <87r32z968n.fsf@purkki.adurom.net>
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Wed, 15 Feb 2017 21:03:39 +0200
-Message-ID: <CANfLQrawJ=zmHz=rSwVED8AgJvyEHGR7r_5xXRR0FnfmkhaBtA@mail.gmail.com> (sfid-20170215_200343_090964_47F7D8F4)
-Subject: Re: [RFC-PATCH] ath9k_htc: Adjust beacon timers for Power Save
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        ath9k_htc_fw@lists.infradead.org,
-        Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        Costin Raiciu <costin.raiciu@cs.pub.ro>,
-        Dragos N <dragos.niculescu@cs.pub.ro>
-Content-Type: text/plain; charset=UTF-8
+        Tue, 7 Feb 2017 18:11:54 -0500
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Timur Tabi <timur@codeaurora.org>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
+        Woojung Huh <woojung.huh@microchip.com>
+Subject: [PATCH net-next v2 04/12] net: lan78xx: fix build errors when linux/phy*.h is removed from net/dsa.h
+Date: Tue,  7 Feb 2017 15:02:57 -0800
+Message-Id: <20170207230305.18222-5-f.fainelli@gmail.com> (sfid-20170208_001207_277902_D1FD6C6D)
+In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 15, 2017 at 11:02 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Doru <gucea.doru@gmail.com> writes:
->
->> From: Doru Gucea <gucea.doru@gmail.com>
->>
->> Each time we receive a beacon we need to adjust the hardware
->> timers for next DTIM and next TBTT.
->>
->> Before this commit, the Power Save behaviour was incorrect.
->> The scenario was:
->> - STA receives a beacon from AP with TIM unset;
->> - mac80211 layers puts the chip to sleep;
->> - chip is woken up by mac80211's software timer reponsible for
->> beacon miss after 7 * beacon_interval period.
->>
->> Normally the chip should sleep at most DTIM period. This commit
->> configures hardware timers for waking up the chip correctly.
->>
->> More details on the wiki:
->> https://github.com/doru91/linux-stable/wiki/Single-Interface-Power-Save
->>
->> Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
->>  net/mac80211/mlme.c                           | 6 ++++++
->>  2 files changed, 10 insertions(+)
->
-> [...]
->
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -3536,6 +3536,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
->>                       sdata->vif.bss_conf.sync_dtim_count = 0;
->>       }
->>
->> +     /* trigger hardware timers adjustment
->> +      * this needs to be done before beacon filtering
->> +      */
->> +     changed |= BSS_CHANGED_BEACON_INFO;
->> +     ieee80211_bss_info_change_notify(sdata, changed);
->
-> You shouldn't mix driver and mac80211 changes in the same patch, I
-> suspect Johannes didn't even notice this change because of that. Create
-> a new patchset with two patches, one for ath9k and another for mac80211.
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
-Thanks, I've just sent two patches as you suggested.
+drivers/net/usb/lan78xx.c:394:33: sparse: expected ; at end of declaration
+drivers/net/usb/lan78xx.c:394:33: sparse: Expected } at end of struct-union-enum-specifier
+drivers/net/usb/lan78xx.c:394:33: sparse: got interface
+drivers/net/usb/lan78xx.c:403:1: sparse: Expected ; at the end of type declaration
+drivers/net/usb/lan78xx.c:403:1: sparse: got }
 
->
-> --
-> Kalle Valo
+Add linux/phy.h to lan78xx.c
+
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+---
+ drivers/net/usb/lan78xx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/usb/lan78xx.c b/drivers/net/usb/lan78xx.c
+index 08f8703e4d54..9889a70ff4f6 100644
+--- a/drivers/net/usb/lan78xx.c
++++ b/drivers/net/usb/lan78xx.c
+@@ -35,6 +35,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/microchipphy.h>
++#include <linux/phy.h>
+ #include "lan78xx.h"
+ 
+ #define DRIVER_AUTHOR	"WOOJUNG HUH <woojung.huh@microchip.com>"
+-- 
+2.9.3
