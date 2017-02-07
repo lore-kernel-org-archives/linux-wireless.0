@@ -1,89 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35063 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753511AbdBHGh7 (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36193 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754348AbdBGXFa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 01:37:59 -0500
-From: David Lin <dlin@marvell.com>
-To: Steve deRosier <derosier@gmail.com>
-CC: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Tue, 7 Feb 2017 18:05:30 -0500
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Jiri Slaby <jirislaby@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Chor Teck Law <ctlaw@marvell.com>,
-        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
-Date: Wed, 8 Feb 2017 06:30:59 +0000
-Message-ID: <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com> (sfid-20170208_074003_133309_27A29C6A)
-References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
- <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
- <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
- <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com>
- <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
-In-Reply-To: <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Timur Tabi <timur@codeaurora.org>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
+        Woojung Huh <woojung.huh@microchip.com>
+Subject: [PATCH net-next v2 12/12] net: dsa: remove unnecessary phy*.h includes
+Date: Tue,  7 Feb 2017 15:03:05 -0800
+Message-Id: <20170207230305.18222-13-f.fainelli@gmail.com> (sfid-20170208_000652_034565_F598BF71)
+In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-c3RldmUuZGVyb3NpZXJAZ21haWwuY29tIFttYWlsdG86c3RldmUuZGVyb3NpZXJAZ21haWwuY29t
-XSB3cm90ZToNCj4gT24gVHVlLCBGZWIgNywgMjAxNyBhdCAxMDoxNSBQTSwgRGF2aWQgTGluIDxk
-bGluQG1hcnZlbGwuY29tPiB3cm90ZToNCj4gPj4gUmFmYcWCIE1pxYJlY2tpIFttYWlsdG86emFq
-ZWM1QGdtYWlsLmNvbV0gd3JvdGU6DQo+ID4+IE9uIDcgRmVicnVhcnkgMjAxNyBhdCAyMDoxMiwg
-U3RldmUgZGVSb3NpZXIgPGRlcm9zaWVyQGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4+ID4+ICsgLyog
-bG9vayBmb3IgYWxsIG1hdGNoaW5nIHByb3BlcnR5IG5hbWVzICovDQo+ID4+ID4+ICsgZm9yX2Vh
-Y2hfcHJvcGVydHlfb2Zfbm9kZShwcml2LT5kdF9ub2RlLCBwcm9wKSB7IGlmDQo+ID4+ID4+ICsg
-KHN0cmNtcChwcm9wLT5uYW1lLCAibWFydmVsbCwyZ2h6IikgPT0gMCkNCj4gPj4gPj4gKyBwcml2
-LT5kaXNhYmxlXzJnID0gdHJ1ZTsNCj4gPj4gPj4gKyBpZiAoc3RyY21wKHByb3AtPm5hbWUsICJt
-YXJ2ZWxsLDVnaHoiKSA9PSAwKQ0KPiA+PiA+PiArIHByaXYtPmRpc2FibGVfNWcgPSB0cnVlOw0K
-PiA+PiA+PiArIGlmIChzdHJjbXAocHJvcC0+bmFtZSwgIm1hcnZlbGwsY2hhaW5tYXNrIikgPT0g
-MCkgeyBwcm9wX3ZhbHVlID0NCj4gPj4gPj4gKyBiZTMyX3RvX2NwdSgqKChfX2JlMzIgKilwcm9w
-LT52YWx1ZSkpOyBpZiAocHJvcF92YWx1ZSA9PSAyKQ0KPiA+PiA+PiArIHByaXYtPmFudGVubmFf
-dHggPSBBTlRFTk5BX1RYXzI7DQo+ID4+ID4+ICsNCj4gPj4gPj4gKyBwcm9wX3ZhbHVlID0gYmUz
-Ml90b19jcHUoKigoX19iZTMyICopIChwcm9wLT52YWx1ZSArIDQpKSk7IGlmDQo+ID4+ID4+ICsg
-KHByb3BfdmFsdWUgPT0gMikNCj4gPj4gPj4gKyBwcml2LT5hbnRlbm5hX3J4ID0gQU5URU5OQV9S
-WF8yOw0KPiA+PiA+PiArIH0NCj4gPj4gPj4gKyB9DQo+ID4+ID4+ICsNCj4gPj4gPj4gKyBwcml2
-LT5wd3Jfbm9kZSA9IG9mX2ZpbmRfbm9kZV9ieV9uYW1lKHByaXYtPmR0X25vZGUsDQo+ID4+ID4+
-ICsgICAgICAibWFydmVsbCxwb3dlcnRhYmxlIik7DQo+ID4+ID4+ICsjZW5kaWYNCj4gPj4gPj4g
-K30NCj4gPj4gPg0KPiA+PiA+IEFGQUlDVCwgdGhlcmUncyBubyBkb2N1bWVudGF0aW9uIGZvciB0
-aGVzZSBEVCBiaW5kaW5ncy4gVGhlIG13bHdpZmkNCj4gPj4gPiBub2RlIGFuZCB0aGUgbWFydmVs
-bCxwb3dlcnRhYmxlIGJvdGggbmVlZCBmdWxsIGRvY3VtZW50YXRpb24gaW4NCj4gPj4gPiBEb2N1
-bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvLi4uIC4NCj4gPj4gPg0KPiA+PiA+IEZyYW5r
-bHkgSSBoYXZlIGEgZmVlbGluZyBJJ20gZ29pbmcgdG8gbmVlZCB0aGVzZSBEVCBub2RlcyBhbmQg
-SSdkDQo+ID4+ID4gbGlrZSB0byBub3QgaGF2ZSB0byBndWVzcy1hbmQtY2hlY2sgYmFzZWQgb24g
-dGhlIGNvZGUuDQo+ID4+DQo+ID4+IFBsZWFzZSB1c2UgaWVlZTgwMjExLWZyZXEtbGltaXQ6DQo+
-ID4+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2RhdmVtL25l
-dC1uZXh0LmdpdC9jb21taQ0KPiA+PiB0Lz9pZD1iMw0KPiA+PiAzMGIyNWVhYWJkYTAwZDc0ZTQ3
-NTY2ZDkyMDA5MDdkYTM4MTg5Ng0KPiA+Pg0KPiA+PiBNb3N0IGxpa2VseSB3aXRoIHdpcGh5X3Jl
-YWRfb2ZfZnJlcV9saW1pdHMgaGVscGVyOg0KPiA+PiBodHRwczovL2dpdC5rZXJuZWwub3JnL2Nn
-aXQvbGludXgva2VybmVsL2dpdC9kYXZlbS9uZXQtbmV4dC5naXQvY29tbWkNCj4gPj4gdC8/aWQ9
-ZTYNCj4gPj4gOTFhYzJmNzViNjliZWU3NDNmMDM3MGQ3OTQ1NGJhNDQyOWIxNzUNCj4gPg0KPiA+
-IEkgYWxyZWFkeSByZXBsaWVkIG1lYW5pbmcgb2YgdGhlc2UgcGFyYW1ldGVyczoNCj4gPiA8bWFy
-dmVsbCwyZ2h6PiBpcyB1c2VkIHRvIGRpc2FibGUgMmcgYmFuZC4NCj4gPiA8bWFydmVsbCw1Z2h6
-PiBpcyB1c2VkIHRvIGRpc2FibGUgNWcgYmFuZC4NCj4gPiA8bWFydmVsbCwgY2hhaW5tYXNrPiBp
-cyB1c2VkIHRvIHNwZWNpZnkgYW50ZW5uYSBudW1iZXIgKGlmIGRlZmF1bHQgbnVtYmVyDQo+IGlz
-IHN1aXRhYmxlIGZvciB5b3UsIHRoZXJlIGlzIG5vIG5lZWQgdG8gdXNlIHRoaXMgcGFyYW1ldGVy
-KS4NCj4gPiA8bWFydmVsbCxwb3dlcnRhYmxlPiBzaG91bGQgbm90IGJlIHVzZWQgZm9yIGNoaXAg
-d2l0aCBkZXZpY2UgcG93ZXIgdGFibGUuDQo+IEluIGZhY3QsIHRoaXMgcGFyYW1ldGVyIHNob3Vs
-ZCBub3QgYmUgdXNlZCBhbnkgbW9yZS4NCj4gPg0KPiANCj4gRGF2aWQsIEkgdGhpbmsgeW91J3Jl
-IG5vdCB1bmRlcnN0YW5kaW5nIHRoZSBjb21tZW50LCBvciBhdCBsZWFzdCB0aGF0J3Mgd2hhdCBp
-dA0KPiBsb29rcyBsaWtlIHRvIG1lLiBZZXMsIHlvdSBkaWQgcmVwbHkgYXMgdG8gdGhlIG1lYW5p
-bmcuDQo+IEFuZCwgeW91ciByZXBseSwgd2hpbGUgaW5mb3JtYXRpdmUsIGRpZG4ndCB0ZWxsIHVz
-IHlvdSB1bmRlcnN0b29kIGFuZCB3ZXJlDQo+IHdpbGxpbmcgdG8gZml4IHRoZSBwcm9ibGVtLiBJ
-IGRvdWJ0IHlvdSBtZWFudCBpdCB0aGlzIHdheSwgYnV0IGl0IGZlZWxzIGRlZmVuc2l2ZQ0KPiBh
-bmQgbGlrZSBhIGJydXNoLW9mZi4NCj4gDQo+IEZpcnN0IG9mZiwgeW91IHdpbGwgc3RpbGwgaGF2
-ZSB0byBkb2N1bWVudCBhbnkgRFQgYmluZGluZ3MgeW91J3JlIGFkZGluZy4gSnVzdA0KPiBiZWNh
-dXNlIHlvdSBhbnN3ZXIgdGhlIHF1ZXN0aW9uIGluIHRoZSByZXZpZXcgZG9lc24ndCBtZWFuIHlv
-dSdyZSBub3QNCj4gcmVzcG9uc2libGUgZm9yIGRvaW5nIHNvLg0KPiANCj4gQW5kIHNlY29uZCBv
-ZmYsIEkgdGhpbmsgdGhhdCBSYWZhbCAoYW5kIHNvcnJ5IGFib3V0IG15IHNwZWxsaW5nLCBsb29r
-cyBsaWtlDQo+IHRoZXJlJ3Mgc29tZSBzb3J0IG9mIGFjY2VudCBvbiB0aGUgbCB0aGF0IEkgZG9u
-J3Qga25vdyBob3cgdG8gbWFrZSBteQ0KPiBrZXlib2FyZCBkbykgaXMgc2F5aW5nOiB0aGVyZSdz
-IGFscmVhZHkgc29tZSBnZW5lcmljIGJpbmRpbmdzIHRoYXQgY2FuIGJlIHVzZWQNCj4gdG8gZGlz
-YWJsZSB0aGUgMmcgb3IgNWcgYmFuZHMuIEdyYW50ZWQgdGhleSdyZSBldmVuIG5ld2VyIHRoYW4g
-eW91ciBwYXRjaCwNCj4gYnV0IEkgZG8gdGhpbmsgaWYgc2FpZCBiaW5kaW5ncyBleGlzdCBhbmQg
-YXJlIGFwcHJvcHJpYXRlLCB5b3Ugc2hvdWxkIHVzZSB0aGVtLg0KPiANCj4gLSBTdGV2ZQ0KDQpU
-aGVzZSBwYXJhbWV0ZXJzIGFyZSBtYXJ2ZWxsIHByb3ByaWV0YXJ5IHBhcmFtZXRlcnMsIEkgZG9u
-J3QgdGhpbmsgaXQgc2hvdWxkIGJlIGFkZGVkIHRvIERUIGJpbmRpbmdzLg0KDQpCVFcsIDxtYXJ2
-ZWxsLDJnaHo+IGFuZCA8bWFydmVsbCw1Z2h6PiBhcmUgb25seSB1c2VkIGZvciBtd2x3aWZpIHRv
-IHJlcG9ydCBzdXBwb3J0ZWQgYmFuZHMsIGl0IGlzIG5vdCByZWxhdGVkIHRvIGxpbWl0YXRpb24g
-b2YgZnJlcXVlbmN5Lg0K
+From: Russell King <rmk+kernel@armlinux.org.uk>
+
+Including phy.h and phy_fixed.h into net/dsa.h causes phy*.h to be an
+unnecessary dependency for quite a large amount of the kernel.  There's
+very little which actually requires definitions from phy.h in net/dsa.h
+- the include itself only wants the declaration of a couple of
+structures and IFNAMSIZ.
+
+Add linux/if.h for IFNAMSIZ, declarations for the structures, phy.h to
+mv88e6xxx.h as it needs it for phy_interface_t, and remove both phy.h
+and phy_fixed.h from net/dsa.h.
+
+This patch reduces from around 800 files rebuilt to around 40 - even
+with ccache, the time difference is noticable.
+
+Tested-by: Vivien Didelot <vivien.didelot@savoirfairelinux.com>
+Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+---
+ drivers/net/dsa/mv88e6xxx/mv88e6xxx.h | 1 +
+ include/net/dsa.h                     | 5 +++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h b/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
+index 8a21800374f3..91c4dd25c2d3 100644
+--- a/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
++++ b/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
+@@ -15,6 +15,7 @@
+ #include <linux/if_vlan.h>
+ #include <linux/irq.h>
+ #include <linux/gpio/consumer.h>
++#include <linux/phy.h>
+ 
+ #ifndef UINT64_MAX
+ #define UINT64_MAX		(u64)(~((u64)0))
+diff --git a/include/net/dsa.h b/include/net/dsa.h
+index b49b2004891e..4e13e695f025 100644
+--- a/include/net/dsa.h
++++ b/include/net/dsa.h
+@@ -11,17 +11,18 @@
+ #ifndef __LINUX_NET_DSA_H
+ #define __LINUX_NET_DSA_H
+ 
++#include <linux/if.h>
+ #include <linux/if_ether.h>
+ #include <linux/list.h>
+ #include <linux/notifier.h>
+ #include <linux/timer.h>
+ #include <linux/workqueue.h>
+ #include <linux/of.h>
+-#include <linux/phy.h>
+-#include <linux/phy_fixed.h>
+ #include <linux/ethtool.h>
+ 
+ struct tc_action;
++struct phy_device;
++struct fixed_phy_status;
+ 
+ enum dsa_tag_protocol {
+ 	DSA_TAG_PROTO_NONE = 0,
+-- 
+2.9.3
