@@ -1,111 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm.newmedia-net.de ([217.113.179.122]:46403 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752199AbdBMVTf (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.9]:35581 "EHLO
+        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752149AbdBGFWN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 16:19:35 -0500
-To: Ben Greear <greearb@candelatech.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
- <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
- <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
- <589F50B8.4020609@candelatech.com>
- <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
- <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <e9458be2-e3bd-1b40-b690-7c96702b25d7@dd-wrt.com> (sfid-20170213_221940_717225_40002E89)
-Date: Mon, 13 Feb 2017 22:19:27 +0100
-MIME-Version: 1.0
-In-Reply-To: <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: VHT 160Mhz and nss related config.
+        Tue, 7 Feb 2017 00:22:13 -0500
+From: Heiko Schocher <hs@denx.de>
+To: netdev@vger.kernel.org
+Cc: Guan Ben <ben.guan@cn.bosch.com>,
+        Mark Jonas <mark.jonas@de.bosch.com>,
+        Heiko Schocher <hs@denx.de>, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH] Make EN2 pin optional in the TRF7970A driver
+Date: Tue,  7 Feb 2017 06:22:04 +0100
+Message-Id: <1486444924-18444-1-git-send-email-hs@denx.de> (sfid-20170207_062259_545469_286AF178)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 13.02.2017 um 20:56 schrieb Ben Greear:
-> On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
->> Am 11.02.2017 um 18:58 schrieb Ben Greear:
->>> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
->>>> On 10 February 2017 at 20:22, Sebastian Gottschall
->>>> <s.gottschall@dd-wrt.com> wrote:
->>>>> i really can't believe this. if this is true the  160 mhz mode 
->>>>> would not
->>>>> make any sense.
->>>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is 
->>>>> identical. so
->>>>> vht160 would not increase performance in any way
->>>>
->>>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
->>>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
->>>> transmit 2x2 rates to different MU-MIMO peers.
->>>>
->>>> That's the outstanding question I have - is it like, 2x2 MU only, or
->>>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
->>>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
->>>> group each) all going at the same time?
->>>>
->>>> I'm .. not even sure how you're supposed to cleanly negotiate that you
->>>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
->>>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
->>>
->>> I think using the max-rx-rate logic might could imply this, but I am 
->>> not sure
->>> many drivers fill this out properly.
->>>
->>> Looks like a mess waiting to happen to me.
->>>
->>> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not 
->>> certain you
->>> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
->>>
->>> So, from what I know currently, 80+80 is not that useful on the 9984 
->>> NIC...
->> never tried 80+80 since i need to enhance the channel logic alot in 
->> my firmware code to handle it. would be great enough if vht160 would 
->> work as expected and
->> i'm not sure right now if it really works, even if the interface 
->> initialized correctly it assocs only with vht80
->
-> Looks like it is working with the hack I posted:
->
-> Station 04:f0:21:2e:49:65 (on wlan2)
->     inactive time:    0 ms
->     rx bytes:    64902998
->     rx packets:    37918
->     tx bytes:    64760298
->     tx packets:    42239
->     tx retries:    0
->     tx failed:    0
->     signal:      -43 dBm
->     signal avg:    -42 dBm
->     tx bitrate:    1053.0 MBit/s VHT-MCS 6 160MHz VHT-NSS 2
->     rx bitrate:    1560.0 MBit/s VHT-MCS 8 160MHz short GI VHT-NSS 2
->     authorized:    yes
->     authenticated:    yes
->     preamble:    long
->     WMM/WME:    yes
->     MFP:        no
->     TDLS peer:    no
->     connected time:    156 seconds
->
-> Thanks,
-> Ben
-cool. let me check it on my devices
->
->
+From: Guan Ben <ben.guan@cn.bosch.com>
 
+Make the EN2 pin optional. This is useful for boards,
+which have this pin fix wired, for example to ground.
 
+Signed-off-by: Guan Ben <ben.guan@cn.bosch.com>
+Signed-off-by: Mark Jonas <mark.jonas@de.bosch.com>
+Signed-off-by: Heiko Schocher <hs@denx.de>
+
+---
+
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
+ drivers/nfc/trf7970a.c                             | 26 ++++++++++++----------
+ 2 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index 32b35a0..5889a3d 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -5,8 +5,8 @@ Required properties:
+ - spi-max-frequency: Maximum SPI frequency (<= 2000000).
+ - interrupt-parent: phandle of parent interrupt handler.
+ - interrupts: A single interrupt specifier.
+-- ti,enable-gpios: Two GPIO entries used for 'EN' and 'EN2' pins on the
+-  TRF7970A.
++- ti,enable-gpios: One or two GPIO entries used for 'EN' and 'EN2' pins on the
++  TRF7970A. EN2 is optional.
+ - vin-supply: Regulator for supply voltage to VIN pin
+ 
+ Optional SoC Specific Properties:
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 26c9dbb..75079fb 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1885,8 +1885,10 @@ static int trf7970a_power_up(struct trf7970a *trf)
+ 	usleep_range(5000, 6000);
+ 
+ 	if (!(trf->quirks & TRF7970A_QUIRK_EN2_MUST_STAY_LOW)) {
+-		gpio_set_value(trf->en2_gpio, 1);
+-		usleep_range(1000, 2000);
++		if (gpio_is_valid(trf->en2_gpio)) {
++			gpio_set_value(trf->en2_gpio, 1);
++			usleep_range(1000, 2000);
++		}
+ 	}
+ 
+ 	gpio_set_value(trf->en_gpio, 1);
+@@ -1914,7 +1916,8 @@ static int trf7970a_power_down(struct trf7970a *trf)
+ 	}
+ 
+ 	gpio_set_value(trf->en_gpio, 0);
+-	gpio_set_value(trf->en2_gpio, 0);
++	if (gpio_is_valid(trf->en2_gpio))
++		gpio_set_value(trf->en2_gpio, 0);
+ 
+ 	ret = regulator_disable(trf->regulator);
+ 	if (ret)
+@@ -2032,15 +2035,14 @@ static int trf7970a_probe(struct spi_device *spi)
+ 
+ 	trf->en2_gpio = of_get_named_gpio(np, "ti,enable-gpios", 1);
+ 	if (!gpio_is_valid(trf->en2_gpio)) {
+-		dev_err(trf->dev, "No EN2 GPIO property\n");
+-		return trf->en2_gpio;
+-	}
+-
+-	ret = devm_gpio_request_one(trf->dev, trf->en2_gpio,
+-			GPIOF_DIR_OUT | GPIOF_INIT_LOW, "trf7970a EN2");
+-	if (ret) {
+-		dev_err(trf->dev, "Can't request EN2 GPIO: %d\n", ret);
+-		return ret;
++		dev_info(trf->dev, "No EN2 GPIO property\n");
++	} else {
++		ret = devm_gpio_request_one(trf->dev, trf->en2_gpio,
++				GPIOF_DIR_OUT | GPIOF_INIT_LOW, "trf7970a EN2");
++		if (ret) {
++			dev_err(trf->dev, "Can't request EN2 GPIO: %d\n", ret);
++			return ret;
++		}
+ 	}
+ 
+ 	if (of_property_read_bool(np, "en2-rf-quirk"))
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.7.4
