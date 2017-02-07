@@ -1,74 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:12996 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751986AbdB1OJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 09:09:37 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 2/2] NFC: pn544: Add GPIO ACPI mapping table
-Date: Tue, 28 Feb 2017 16:08:09 +0200
-Message-Id: <20170228140809.84921-2-andriy.shevchenko@linux.intel.com> (sfid-20170228_151024_386829_BA21906D)
-In-Reply-To: <20170228140809.84921-1-andriy.shevchenko@linux.intel.com>
-References: <20170228140809.84921-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:35724 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754300AbdBGXFa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 18:05:30 -0500
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Timur Tabi <timur@codeaurora.org>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
+        Woojung Huh <woojung.huh@microchip.com>
+Subject: [PATCH net-next v2 11/12] net: ath5k: fix build errors when linux/phy*.h is removed from net/dsa.h
+Date: Tue,  7 Feb 2017 15:03:04 -0800
+Message-Id: <20170207230305.18222-12-f.fainelli@gmail.com> (sfid-20170208_000754_525486_9E758702)
+In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+Fix these errors reported by the 0-day builder by replacing the
+linux/export.h include with linux/module.h.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+In file included from include/linux/platform_device.h:14:0,
+                 from drivers/net/wireless/ath/ath5k/ahb.c:20:
+include/linux/device.h:1463:1: warning: data definition has no type or storage class
+ module_init(__driver##_init); \
+ ^
+include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+  module_driver(__platform_driver, platform_driver_register, \
+  ^~~~~~~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+ module_platform_driver(ath_ahb_driver);
+ ^~~~~~~~~~~~~~~~~~~~~~
+include/linux/device.h:1463:1: error: type defaults to 'int' in declaration of 'module_init' [-Werror=implicit-int]
+ module_init(__driver##_init); \
+ ^
+include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+  module_driver(__platform_driver, platform_driver_register, \
+  ^~~~~~~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+ module_platform_driver(ath_ahb_driver);
+ ^~~~~~~~~~~~~~~~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
+In file included from include/linux/platform_device.h:14:0,
+                 from drivers/net/wireless/ath/ath5k/ahb.c:20:
+include/linux/device.h:1468:1: warning: data definition has no type or storage class
+ module_exit(__driver##_exit);
+ ^
+include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+  module_driver(__platform_driver, platform_driver_register, \
+  ^~~~~~~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+ module_platform_driver(ath_ahb_driver);
+ ^~~~~~~~~~~~~~~~~~~~~~
+include/linux/device.h:1468:1: error: type defaults to 'int' in declaration of 'module_exit' [-Werror=implicit-int]
+ module_exit(__driver##_exit);
+ ^
+include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+  module_driver(__platform_driver, platform_driver_register, \
+  ^~~~~~~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+ module_platform_driver(ath_ahb_driver);
+ ^~~~~~~~~~~~~~~~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
+In file included from include/linux/platform_device.h:14:0,
+                 from drivers/net/wireless/ath/ath5k/ahb.c:20:
+drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_exit' defined but not used [-Wunused-function]
+ module_platform_driver(ath_ahb_driver);
+                        ^
+include/linux/device.h:1464:20: note: in definition of macro 'module_driver'
+ static void __exit __driver##_exit(void) \
+                    ^~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+ module_platform_driver(ath_ahb_driver);
+ ^~~~~~~~~~~~~~~~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_init' defined but not used [-Wunused-function]
+ module_platform_driver(ath_ahb_driver);
+                        ^
+include/linux/device.h:1459:19: note: in definition of macro 'module_driver'
+ static int __init __driver##_init(void) \
+                   ^~~~~~~~
+drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+ module_platform_driver(ath_ahb_driver);
+ ^~~~~~~~~~~~~~~~~~~~~~
+
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/nfc/pn544/i2c.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/net/wireless/ath/ath5k/ahb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 2df3176205c4..5364bbd5ce55 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -874,6 +874,15 @@ static void pn544_hci_i2c_fw_work(struct work_struct *work)
- 	}
- }
+diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+index 2ca88b593e4c..c0794f5988b3 100644
+--- a/drivers/net/wireless/ath/ath5k/ahb.c
++++ b/drivers/net/wireless/ath/ath5k/ahb.c
+@@ -16,10 +16,10 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
  
-+static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
-+static const struct acpi_gpio_params firmware_gpios = { 2, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_pn544_default_gpios[] = {
-+	{ "enable-gpios", &enable_gpios, 1 },
-+	{ "firmware-gpios", &firmware_gpios, 1 },
-+	{ },
-+};
-+
- static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
-@@ -982,6 +991,11 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
- 		return -ENODEV;
- 	}
- 
-+	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(&client->dev),
-+				      acpi_pn544_default_gpios);
-+	if (r)
-+		return r;
-+
- 	phy = devm_kzalloc(&client->dev, sizeof(struct pn544_i2c_phy),
- 			   GFP_KERNEL);
- 	if (!phy)
-@@ -1092,6 +1106,7 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
- 		pdata->free_resources();
- 	}
- 
-+	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
- 	return 0;
- }
- 
++#include <linux/module.h>
+ #include <linux/nl80211.h>
+ #include <linux/platform_device.h>
+ #include <linux/etherdevice.h>
+-#include <linux/export.h>
+ #include <ath25_platform.h>
+ #include "ath5k.h"
+ #include "debug.h"
 -- 
-2.11.0
+2.9.3
