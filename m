@@ -1,111 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38010 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752721AbdBCOkQ (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:35275 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751728AbdBGD3w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:40:16 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:37:58 +0200
-Message-Id: <20170203143812.7525-12-luca@coelho.fi> (sfid-20170203_154033_786525_91FE9949)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 11/25] iwlwifi: mvm: synchronize firmware DMA paging memory
+        Mon, 6 Feb 2017 22:29:52 -0500
+Received: by mail-ot0-f194.google.com with SMTP id 65so12745291otq.2
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 19:29:51 -0800 (PST)
+Subject: Re: [PATCH 01/11 V3] rtlwifi: Fix programing CAM content sequence.
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+ <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+ <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+ <20170120212716.29887-2-Larry.Finger@lwfinger.net>
+ <87bmufa3nu.fsf@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        shaofu <shaofu@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <00451ab5-c356-0466-e501-6e08f3839201@lwfinger.net> (sfid-20170207_042956_362509_B057CD57)
+Date: Mon, 6 Feb 2017 21:29:49 -0600
+MIME-Version: 1.0
+In-Reply-To: <87bmufa3nu.fsf@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 02/06/2017 06:45 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>
+>> There is a potential race condition when the control byte of a CAM
+>> entry is written first. Write in reverse order to correct the condition.
+>>
+>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+>> Signed-off-by: shaofu <shaofu@realtek.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>> V2 - no changes
+>> V3 - no changes
+>
+> I missed in my reply to v2 that you had already sent v3 from this
+> patchset. Strange that I don't see this v3 patchset either in patchwork,
+> only v1.
+>
+> Try submitting v4 in case it was just a temporary glitch in patchwork.
+> But if that doesn't help I'll apply these manually.
 
-When driver needs to access the contents of a streaming DMA buffer
-without unmapping it it should call dma_sync_single_for_cpu().
-Once the call has been made, the CPU "owns" the DMA buffer and can
-work with it as needed.
-Before the device accesses the buffer, however, ownership should be
-transferred back to it with dma_sync_single_for_device().
-Both calls weren't performed by the driver, resulting with odd paging
-errors on some platforms. Fix it.
+I have no idea why that patchsets are missing. I will send V4 shortly.
 
-Fixes: a6c4fb4441f4 ("iwlwifi: mvm: Add FW paging mechanism for the UMAC on PCI")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c |  4 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 23 ++++++++++++++++++++---
- 2 files changed, 24 insertions(+), 3 deletions(-)
+Sorry I did not respond more quickly. I was out of my office today.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index e7b3b712d778..a027b11bbdb3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -811,12 +811,16 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 			struct iwl_fw_error_dump_paging *paging;
- 			struct page *pages =
- 				mvm->fw_paging_db[i].fw_paging_block;
-+			dma_addr_t addr = mvm->fw_paging_db[i].fw_paging_phys;
- 
- 			dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PAGING);
- 			dump_data->len = cpu_to_le32(sizeof(*paging) +
- 						     PAGING_BLOCK_SIZE);
- 			paging = (void *)dump_data->data;
- 			paging->index = cpu_to_le32(i);
-+			dma_sync_single_for_cpu(mvm->trans->dev, addr,
-+						PAGING_BLOCK_SIZE,
-+						DMA_BIDIRECTIONAL);
- 			memcpy(paging->data, page_address(pages),
- 			       PAGING_BLOCK_SIZE);
- 			dump_data = iwl_fw_error_next_data(dump_data);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 8fd3c2b12ea2..c42ef8681b75 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -214,6 +214,10 @@ static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
- 	memcpy(page_address(mvm->fw_paging_db[0].fw_paging_block),
- 	       image->sec[sec_idx].data,
- 	       mvm->fw_paging_db[0].fw_paging_size);
-+	dma_sync_single_for_device(mvm->trans->dev,
-+				   mvm->fw_paging_db[0].fw_paging_phys,
-+				   mvm->fw_paging_db[0].fw_paging_size,
-+				   DMA_BIDIRECTIONAL);
- 
- 	IWL_DEBUG_FW(mvm,
- 		     "Paging: copied %d CSS bytes to first block\n",
-@@ -228,9 +232,16 @@ static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
- 	 * loop stop at num_of_paging_blk since that last block is not full.
- 	 */
- 	for (idx = 1; idx < mvm->num_of_paging_blk; idx++) {
--		memcpy(page_address(mvm->fw_paging_db[idx].fw_paging_block),
-+		struct iwl_fw_paging *block = &mvm->fw_paging_db[idx];
-+
-+		memcpy(page_address(block->fw_paging_block),
- 		       image->sec[sec_idx].data + offset,
--		       mvm->fw_paging_db[idx].fw_paging_size);
-+		       block->fw_paging_size);
-+		dma_sync_single_for_device(mvm->trans->dev,
-+					   block->fw_paging_phys,
-+					   block->fw_paging_size,
-+					   DMA_BIDIRECTIONAL);
-+
- 
- 		IWL_DEBUG_FW(mvm,
- 			     "Paging: copied %d paging bytes to block %d\n",
-@@ -242,9 +253,15 @@ static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
- 
- 	/* copy the last paging block */
- 	if (mvm->num_of_pages_in_last_blk > 0) {
--		memcpy(page_address(mvm->fw_paging_db[idx].fw_paging_block),
-+		struct iwl_fw_paging *block = &mvm->fw_paging_db[idx];
-+
-+		memcpy(page_address(block->fw_paging_block),
- 		       image->sec[sec_idx].data + offset,
- 		       FW_PAGING_SIZE * mvm->num_of_pages_in_last_blk);
-+		dma_sync_single_for_device(mvm->trans->dev,
-+					   block->fw_paging_phys,
-+					   block->fw_paging_size,
-+					   DMA_BIDIRECTIONAL);
- 
- 		IWL_DEBUG_FW(mvm,
- 			     "Paging: copied %d pages in the last block %d\n",
--- 
-2.11.0
+Larry
