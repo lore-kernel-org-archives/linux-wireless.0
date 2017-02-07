@@ -1,150 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:34873 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbdBJDug (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51170 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752059AbdBGH3L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Feb 2017 22:50:36 -0500
-Received: by mail-wr0-f195.google.com with SMTP id o16so13870785wra.2
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2017 19:50:35 -0800 (PST)
-Received: from localhost.localdomain ([92.176.165.227])
-        by smtp.gmail.com with ESMTPSA id o143sm1072087wmd.3.2017.02.09.19.50.33
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 09 Feb 2017 19:50:33 -0800 (PST)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v5 2/3] mac80211: Add set_cqm_rssi_range_config
-Date: Fri, 10 Feb 2017 04:50:22 +0100
-Message-Id: <20170210035023.11471-2-andrew.zaborowski@intel.com> (sfid-20170210_045048_885631_F91CB32B)
-In-Reply-To: <20170210035023.11471-1-andrew.zaborowski@intel.com>
-References: <20170210035023.11471-1-andrew.zaborowski@intel.com>
+        Tue, 7 Feb 2017 02:29:11 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+Subject: Re: [PATCH 00/11 V4] rtlwifi: Various updates
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+Date: Tue, 07 Feb 2017 09:29:06 +0200
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Mon, 6 Feb 2017 21:29:57 -0600")
+Message-ID: <87y3xi7931.fsf@codeaurora.org> (sfid-20170207_082915_608736_0D53BFAD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support .set_cqm_rssi_range_config if the beacons are available for
-processing in mac80211.  There's no reason that this couldn't be
-offloaded by mac80211-based drivers but there's no driver method for
-that added in this patch.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
----
-changes in v3:
- - set NL80211_EXT_FEATURE_CQM_RSSI_LIST automatically in
-   ieee80211_register_hw based on the default interface's
-   IEEE80211_VIF_BEACON_FILTER flag.
-changes in v4:
- - drop the above attempt and set NL80211_EXT_FEATURE_CQM_RSSI_LIST
-   in a separate patch in each driver.
----
- include/net/mac80211.h |  6 ++++++
- net/mac80211/cfg.c     | 28 ++++++++++++++++++++++++++++
- net/mac80211/mlme.c    | 24 ++++++++++++++++++++++++
- 3 files changed, 58 insertions(+)
+> These 11 changes fix a number of deficiencies. None of them are
+> serious enough to be pushed to stable; however they help in the
+> stability of the drivers, and in the robustness of authentication/
+> association.
+>
+> This material should be sent to the 4.11 stream.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>
+> V2 - Fix Kalle's comment about unended loops. It now runs a maximum of 200 times.
+> V3 - Fix "WARNING: possible condition with no effect (if == else)" found by Test Robot
+> V4 - No chenges -resubmitting as requested by Kalle.
+> ---
+> Larry Finger (1):
+>   rtlwifi: btcoexist: Change logging in halbtc8192e2ant.c
+>
+> Ping-Ke Shih (10):
+>   rtlwifi: Fix programing CAM content sequence.
+>   rtlwifi: Set retry limit depends on vif type.
+>   rtlwifi: Add a new enumeration value to btc_set_type
+>   rtlwifi: btcoexist: Add vendor definition for new btcoexist
+>   rtlwifi: rtl8723be: btcoexist: Add single_ant_path
+>   rtlwifi: move btcoex's ant_num declaration
+>   rtlwifi: rtl8723be: btcoex: add package_type function to btcoex
+>   rtlwifi: btcoex: move bt_type declaration
+>   rtlwifi: rtl8723be: fix ant_sel code
+>   rtlwifi: Add work queue for c2h cmd.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b9a08cd..3edb469 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -501,6 +501,10 @@ struct ieee80211_mu_group_data {
-  *	implies disabled. As with the cfg80211 callback, a change here should
-  *	cause an event to be sent indicating where the current value is in
-  *	relation to the newly configured threshold.
-+ * @cqm_rssi_low: Connection quality monitor RSSI lower threshold, a zero value
-+ *	implies disabled.  This is an alternative mechanism to the single
-+ *	threshold event and can't be enabled simultaneously with it.
-+ * @cqm_rssi_high: Connection quality monitor RSSI upper threshold.
-  * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
-  * @arp_addr_list: List of IPv4 addresses for hardware ARP filtering. The
-  *	may filter ARP queries targeted for other addresses than listed here.
-@@ -553,6 +557,8 @@ struct ieee80211_bss_conf {
- 	u16 ht_operation_mode;
- 	s32 cqm_rssi_thold;
- 	u32 cqm_rssi_hyst;
-+	s32 cqm_rssi_low;
-+	s32 cqm_rssi_high;
- 	struct cfg80211_chan_def chandef;
- 	struct ieee80211_mu_group_data mu_group;
- 	__be32 arp_addr_list[IEEE80211_BSS_ARP_ADDR_LIST_LEN];
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ac879bb..9c7490c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2630,6 +2630,33 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
- 
- 	bss_conf->cqm_rssi_thold = rssi_thold;
- 	bss_conf->cqm_rssi_hyst = rssi_hyst;
-+	bss_conf->cqm_rssi_low = 0;
-+	bss_conf->cqm_rssi_high = 0;
-+	sdata->u.mgd.last_cqm_event_signal = 0;
-+
-+	/* tell the driver upon association, unless already associated */
-+	if (sdata->u.mgd.associated &&
-+	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
-+
-+	return 0;
-+}
-+
-+static int ieee80211_set_cqm_rssi_range_config(struct wiphy *wiphy,
-+					       struct net_device *dev,
-+					       s32 rssi_low, s32 rssi_high)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_vif *vif = &sdata->vif;
-+	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
-+
-+	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
-+		return -EOPNOTSUPP;
-+
-+	bss_conf->cqm_rssi_low = rssi_low;
-+	bss_conf->cqm_rssi_high = rssi_high;
-+	bss_conf->cqm_rssi_thold = 0;
-+	bss_conf->cqm_rssi_hyst = 0;
- 	sdata->u.mgd.last_cqm_event_signal = 0;
- 
- 	/* tell the driver upon association, unless already associated */
-@@ -3639,6 +3666,7 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.mgmt_tx = ieee80211_mgmt_tx,
- 	.mgmt_tx_cancel_wait = ieee80211_mgmt_tx_cancel_wait,
- 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
-+	.set_cqm_rssi_range_config = ieee80211_set_cqm_rssi_range_config,
- 	.mgmt_frame_register = ieee80211_mgmt_frame_register,
- 	.set_antenna = ieee80211_set_antenna,
- 	.get_antenna = ieee80211_get_antenna,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6e90301..2398693 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3430,6 +3430,30 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+	if (bss_conf->cqm_rssi_low &&
-+	    ifmgd->count_beacon_signal >= IEEE80211_SIGNAL_AVE_MIN_COUNT) {
-+		int sig = -ewma_beacon_signal_read(&ifmgd->ave_beacon_signal);
-+		int last_event = ifmgd->last_cqm_event_signal;
-+		int low = bss_conf->cqm_rssi_low;
-+		int high = bss_conf->cqm_rssi_high;
-+
-+		if (sig < low &&
-+		    (last_event == 0 || last_event >= low)) {
-+			ifmgd->last_cqm_event_signal = sig;
-+			ieee80211_cqm_rssi_notify(
-+				&sdata->vif,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+				sig, GFP_KERNEL);
-+		} else if (sig > high &&
-+			   (last_event == 0 || last_event <= high)) {
-+			ifmgd->last_cqm_event_signal = sig;
-+			ieee80211_cqm_rssi_notify(
-+				&sdata->vif,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+				sig, GFP_KERNEL);
-+		}
-+	}
-+
- 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
- 		mlme_dbg_ratelimited(sdata,
- 				     "cancelling AP probe due to a received beacon\n");
+Thanks, as patchwork doesn't seem to detect this patchset I applied these
+manually:
+
+1e75622c630b rtlwifi: Fix programing CAM content sequence.
+8d0d43e34208 rtlwifi: Set retry limit depends on vif type.
+6f85c03bc34c rtlwifi: Add a new enumeration value to btc_set_type
+1a2814739fe5 rtlwifi: btcoexist: Add vendor definition for new btcoexist
+d46fa3e47aeb rtlwifi: btcoexist: Change logging in halbtc8192e2ant.c
+db8cb0095b0e rtlwifi: rtl8723be: btcoexist: Add single_ant_path
+0de9b5db9fbf rtlwifi: move btcoex's ant_num declaration
+7fe1fe75c311 rtlwifi: rtl8723be: btcoex: add package_type function to btcoex
+e0215c142026 rtlwifi: btcoex: move bt_type declaration
+0ff78adeef11 rtlwifi: rtl8723be: fix ant_sel code
+cceb0a597320 rtlwifi: Add work queue for c2h cmd.
+
 -- 
-2.9.3
+Kalle Valo
