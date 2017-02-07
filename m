@@ -1,74 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:34114 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751202AbdBXNbt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22185 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751959AbdBGI6b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 08:31:49 -0500
-Received: by mail-qt0-f169.google.com with SMTP id n21so16526672qta.1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 05:31:48 -0800 (PST)
-Subject: Re: [PATCH 4.12] brcmfmac: put chip into passive mode (when
- attaching) just once
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170224131027.29880-1-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <cbcb8722-15bb-bf6e-f329-972797b02028@broadcom.com> (sfid-20170224_143626_399150_446FA8EC)
-Date: Fri, 24 Feb 2017 14:31:43 +0100
+        Tue, 7 Feb 2017 03:58:31 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170224131027.29880-1-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath10k: fix reading sram contents for QCA4019
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1485887811-23313-1-git-send-email-arnagara@qti.qualcomm.com>
+References: <1485887811-23313-1-git-send-email-arnagara@qti.qualcomm.com>
+To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        <arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <263756ea946749a08c85691739345bee@eusanexr01a.eu.qualcomm.com> (sfid-20170207_095834_873586_DDB40969)
+Date: Tue, 7 Feb 2017 00:58:27 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24-2-2017 14:10, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
+> With QCA4019 platform, SRAM address can be accessed directly from host but
+> currently, we are assuming sram addresses cannot be accessed directly and
+> hence we convert the addresses.
 > 
-> It avoids some unnecessary work. Most likely there wasn't much sense in
-> doing this before bus reset anyway, as reset is supposed to put chip
-> into default state. In PCIe code (only bus implementing reset) we e.g.
-> use watchdog to perform a chip "reboot".
-
-Sorry, but removing the fisrt passive call will cause chip lockups for
-sure on certain systems. We learned the hard way :-p
-
-Regards,
-Arend
-
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
+> While there, clean up growing hw checks during conversion of target CPU
+> address to CE address. Now we have function pointer pertaining to different
+> chips.
 > 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-> index 05f22ff81d60..670f2f50f9e5 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-> @@ -967,16 +967,14 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
->  	if (ret)
->  		return ret;
->  
-> -	/* assure chip is passive for core access */
-> -	brcmf_chip_set_passive(&ci->pub);
-> -
->  	/* Call bus specific reset function now. Cores have been determined
->  	 * but further access may require a chip specific reset at this point.
->  	 */
-> -	if (ci->ops->reset) {
-> +	if (ci->ops->reset)
->  		ci->ops->reset(ci->ctx, &ci->pub);
-> -		brcmf_chip_set_passive(&ci->pub);
-> -	}
-> +
-> +	/* assure chip is passive for core access */
-> +	brcmf_chip_set_passive(&ci->pub);
->  
->  	return brcmf_chip_get_raminfo(ci);
->  }
-> 
+> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+7f622593cc5a ath10k: fix reading sram contents for QCA4019
+
+-- 
+https://patchwork.kernel.org/patch/9548043/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
