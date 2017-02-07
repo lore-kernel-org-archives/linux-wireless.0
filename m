@@ -1,103 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernelconcepts.de ([188.40.83.200]:49640 "EHLO
-        mail.kernelconcepts.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbdBVJyi (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35156 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751414AbdBGDaf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Feb 2017 04:54:38 -0500
-Received: from [93.227.204.184] (helo=vbox.localnet)
-        by mail.kernelconcepts.de with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.84_2)
-        (envelope-from <hilberg@kernelconcepts.de>)
-        id 1cgTdQ-0001kf-NH
-        for linux-wireless@vger.kernel.org; Wed, 22 Feb 2017 10:54:56 +0100
-From: Christian Hilberg <hilberg@kernelconcepts.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [rtl8xxxu] rtl8192cu (0bda:8176) on linux-4.9.11 (arm) high sirq rate
-Date: Wed, 22 Feb 2017 10:54:26 +0100
-Message-ID: <1911802.4OUzV9TSOC@vbox> (sfid-20170222_105444_763948_77C4FC30)
-In-Reply-To: <1581189.s4o7FEpKoz@vbox>
-References: <1581189.s4o7FEpKoz@vbox>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1860135.zBNqNBjcmF"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+        Mon, 6 Feb 2017 22:30:35 -0500
+Received: by mail-oi0-f68.google.com with SMTP id x84so7947503oix.2
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 19:30:24 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 07/11 V4] rtlwifi: move btcoex's ant_num declaration
+Date: Mon,  6 Feb 2017 21:30:04 -0600
+Message-Id: <20170120212716.29887-8-Larry.Finger@lwfinger.net> (sfid-20170207_043049_796422_E81DA44F)
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1860135.zBNqNBjcmF
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Hi again,
+File halbtcoutsrc.c is a better place for routine rtl_get_hwpg_ant_num()
+than file rtl_btc.c.
 
-Am Montag, 20. Februar 2017, 14:51:54 CET schrieb Christian Hilberg:
-> Hi all,
-> 
-> currently I'm testing rtl8xxxu on an ARM device (i.mx28, armv5te) under
-> linux-4.9.11 with a RealTek 8192cu (0bda:8176) wifi dongle. Since
-> I had to set CONFIG_RTL8XXXU_UNTESTED, I'm prepared to see some
-> rough edges here and there. :-)
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+V2 - no changes
+V3 - no changes
+V4 - no changes
+---
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c    | 12 ++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c     | 11 -----------
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h     |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c          |  2 ++
+ 4 files changed, 15 insertions(+), 12 deletions(-)
 
-The rtl8xxxu driver identifies the device as "8188CU", and so does lsusb.
-
-> The driver actually works and I'm getting a stable connection on
-> a WPA2 secured wifi network. As a firmware blob, the driver loads
-> the "rtl8192cufw_TMSC.bin", which I extracted from [0].
-> 
-> However, the sirg rate is rather high (between 20% to 50% in top),
-> as soon as the device is getting upped, that is, as soon as IFF_UP
-> gets written to the device via ioctl().
-
-I've dug further into this.
-
-It shows that if in the driver's rtl8xxxu_identify_chip() routine for the 
-RTL8188C variant I set priv->usb_interrupts = 0, then the sirq load vanishes
-and the driver apparently still works:
-
----8<---
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/
-net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 82d949ede294..2daacfd059b8 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -1687,7 +1687,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv 
-*priv)
-                priv->rx_paths = 1;
-                priv->tx_paths = 1;
-                priv->rtl_chip = RTL8188C;
--               priv->usb_interrupts = 1;
-+               priv->usb_interrupts = 0;
-                priv->has_wifi = 1;
-        }
----8<---
-
-Seems to me that rtl8xxxu_int_complete() does nothing with the URB data but to 
-re-submit it (just to satisfy hardware which wants its interrupts to be 
-handled maybe?).
-
-I'm not at all clear whether the above change would be the Right Thing to do.
-Jes, do you have any thoughts on this? Are there 8188CU variants which need
-interrupts to be handled?
-
-Regards,
-
-	Christian
-
-> [0]
-> http://ftp.de.debian.org/debian/pool/non-free/f/firmware-nonfree/firmware-r
-> ealtek_20161130-2_all.deb
-
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 8e382a8..3958422 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -151,6 +151,18 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+ 	return rtlpriv->btcoexist.btc_info.single_ant_path;
+ }
+ 
++u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
++{
++	u8 num;
++
++	if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2)
++		num = 2;
++	else
++		num = 1;
++
++	return num;
++}
++
+ static void halbtc_leave_lps(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index d3fd921..54e893c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -178,17 +178,6 @@ struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
+ }
+ EXPORT_SYMBOL(rtl_btc_get_ops_pointer);
+ 
+-u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+-{
+-	u8 num;
+-
+-	if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2)
+-		num = 2;
+-	else
+-		num = 1;
+-
+-	return num;
+-}
+ 
+ enum rt_media_status mgnt_link_status_query(struct ieee80211_hw *hw)
+ {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index 65c1c52..bba7e23e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -46,9 +46,9 @@ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
+ 
+ struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
+ 
+-u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv);
+ u8 rtl_get_hwpg_bt_exist(struct rtl_priv *rtlpriv);
+ u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv);
++u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv);
+ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv);
+ enum rt_media_status mgnt_link_status_query(struct ieee80211_hw *hw);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 8e82c0c..b46874b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -2653,6 +2653,8 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
+ 		value = hwinfo[EEPROM_RF_BT_SETTING_8723B];
+ 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8723B;
+ 		rtlpriv->btcoexist.btc_info.ant_num = (value & 0x1);
++		rtlpriv->btcoexist.btc_info.single_ant_path =
++			 (value & 0x40);	/*0xc3[6]*/
+ 	} else {
+ 		rtlpriv->btcoexist.btc_info.btcoexist = 0;
+ 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8723B;
 -- 
-
---nextPart1860135.zBNqNBjcmF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQSyhVWrDvSbjNh+VgSjfCBKHNEMEQUCWK1f0gAKCRCjfCBKHNEM
-ESDuAKDutvvktt2stZCtowuP95+/VRZgvQCeJmNJ8j+CMZdts6Xf9ZK6UZVbm18=
-=SpNL
------END PGP SIGNATURE-----
-
---nextPart1860135.zBNqNBjcmF--
+2.10.2
