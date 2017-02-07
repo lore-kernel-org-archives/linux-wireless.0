@@ -1,97 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49170 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:38584 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751265AbdBXTha (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 14:37:30 -0500
-Message-ID: <1487965047.30601.2.camel@sipsolutions.net> (sfid-20170224_203734_401490_C2A8774F)
-Subject: Re: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to
- suspend async: error -16)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oliver Freyermuth <o.freyermuth@googlemail.com>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 24 Feb 2017 20:37:27 +0100
-In-Reply-To: <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com> (sfid-20170224_185135_976515_957672BC)
-References: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com>
-         <1487938277.2540.13.camel@sipsolutions.net>
-         <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com>
-         (sfid-20170224_185135_976515_957672BC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1754585AbdBGUUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Feb 2017 15:20:43 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, sgruszka@redhat.com
+Subject: [PATCH v5 0/3] mt76: add new wireless driver for MediaTek MT76x2 PCIe chips
+Date: Tue,  7 Feb 2017 21:20:32 +0100
+Message-Id: <20170207202035.64224-1-nbd@nbd.name> (sfid-20170207_212126_795185_FF3EA3D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-02-24 at 19:51 +0100, Oliver Freyermuth wrote:
-> 
-> Thanks for your reply and the suggestion! I have put the two lines
-> directly after the last #include
-> in both files, i.e. both drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-> and net/mac80211/ieee80211_i.h . 
-> Sadly, none of them triggers when trying to enter suspend. 
-> 
-> I still get:
-> [   85.308756] dpm_run_callback(): wiphy_suspend+0x0/0x97 [cfg80211]
-> returns -16
-> [   85.308757] PM: Device phy0 failed to suspend async: error -16
-> [   85.310518] sd 5:0:0:0: [sdb] Stopping disk
-> [   85.857976] PM: Some devices failed to suspend, or early wake
-> event detected
-> with nothing in between. 
+Changes since v4:
+- Cleanups suggested by Stanislaw Gruszka
+- Device tree fixes suggested by Rob Herring
+- EEPROM MAC address parsing fix
 
-I'd have expected the message to show up *before* the first one
-(dpm_run_callback) you quoted, because this one already has the -16
-return value printed, and it must've been generated before that.
+Changes since v3:
+- DFS fixes
+- stability fixes
+- use wiphy_read_of_freq_limits
 
-I just tried on one of my systems, but it's not exactly the same kernel
-version (would be difficult to install right now), and it works just
-fine for me. Perhaps there's something going on with your system.
+Changes since v2:
+- lots of checkpatch cleanups
+- various tx path (and other) fixes
+- use the new bitfield API
+- documented device tree bindings
 
-> Just to make sure, I can confirm the change is effective, since I get
-> many of:
-> [   57.819114] WARNING: CPU: 4 PID: 4092 at
-> drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1503
-> iwl_mvm_rx_tx_cmd+0x51e/0x579 [iwlmvm]
-> (with the tracebacks) for example when connecting to a different
-> network. But none of these when trying to suspend...
+Felix Fietkau (3):
+  Documentation: dt: net: add mt76 wireless device binding
+  mt76: add common code shared between multiple chipsets
+  mt76: add driver code for MT76x2e
 
-Oops. I didn't see this instance of EBUSY in the success path - it's
-used for a comparison that probably never triggered. Anyway, no harm
-done apart from logging lots of useless stack traces :)
+ .../bindings/net/wireless/mediatek,mt76.txt        |  24 +
+ drivers/net/wireless/mediatek/Kconfig              |   1 +
+ drivers/net/wireless/mediatek/Makefile             |   1 +
+ drivers/net/wireless/mediatek/mt76/Kconfig         |  10 +
+ drivers/net/wireless/mediatek/mt76/Makefile        |  15 +
+ drivers/net/wireless/mediatek/mt76/debugfs.c       |  76 ++
+ drivers/net/wireless/mediatek/mt76/dma.c           | 451 ++++++++++++
+ drivers/net/wireless/mediatek/mt76/dma.h           |  38 +
+ drivers/net/wireless/mediatek/mt76/eeprom.c        | 112 +++
+ drivers/net/wireless/mediatek/mt76/mac80211.c      | 344 +++++++++
+ drivers/net/wireless/mediatek/mt76/mmio.c          |  61 ++
+ drivers/net/wireless/mediatek/mt76/mt76.h          | 355 ++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        | 223 ++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_core.c   |  88 +++
+ .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    | 133 ++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c    | 493 +++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h    |  80 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    | 184 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.h    |  68 ++
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 644 +++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h | 181 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   | 784 +++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    | 738 +++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    | 189 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 534 ++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    | 452 ++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h    | 136 ++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_pci.c    | 109 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 691 ++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 566 +++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.c  |  23 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  | 144 ++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     | 255 +++++++
+ drivers/net/wireless/mediatek/mt76/trace.c         |  23 +
+ drivers/net/wireless/mediatek/mt76/trace.h         |  71 ++
+ drivers/net/wireless/mediatek/mt76/tx.c            | 511 ++++++++++++++
+ drivers/net/wireless/mediatek/mt76/util.c          |  78 ++
+ drivers/net/wireless/mediatek/mt76/util.h          |  44 ++
+ 38 files changed, 8930 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+ create mode 100644 drivers/net/wireless/mediatek/mt76/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/mt76/Makefile
+ create mode 100644 drivers/net/wireless/mediatek/mt76/debugfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/dma.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/dma.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mac80211.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mmio.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_core.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/trace.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/trace.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/util.h
 
-> Any other ideas on where I could look, or how I could trace the
-> origin of this -16? 
-
-(see below)
-
-> You are right about the bug report - I provided the wrong link,
-> sorry. 
-> The report I meant is here:
-> https://bugzilla.redhat.com/show_bug.cgi?id=1362311
-> for a 7260 similar to mine. 
-
-Yes, that one looks like the same as yours.
-
-> I believe that 
->  https://bugzilla.kernel.org/show_bug.cgi?id=109591#c25
-> i.e. comment 25 was made by the same person who just hijacked that
-> kernel
-> bug report even though it was indeed for a very different hardware. 
-
-Ok, that's possible.
-
-So let's see. The error *isn't* generated by mac80211 or iwlwifi, but
-it's still returned through wiphy_suspend(). That function just calls
-mac80211 though, and never generates any error conditions by itself. As
-a consequence, this must be generated in some callee of wiphy_suspend()
-that *isn't* in mac80211/iwlwifi...
-
-__ieee80211_suspend() also doesn't generate any error codes by itself,
-let's take a look at iwlmvm's suspend (called through drv_suspend()),
-that's iwl_mvm_suspend().
-
-Oh. Can you see if you have CONFIG_IWLWIFI_PCIE_RTPM enabled in your
-configuration? If you do, please turn it off and see if that fixes it.
-
-This still looks fishy in the code though, but let's see if that's the
-problem first.
-
-johannes
+-- 
+2.11.0
