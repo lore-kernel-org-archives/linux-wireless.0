@@ -1,87 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:34652 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753620AbdBRTZn (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:35034 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753798AbdBGXKv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Feb 2017 14:25:43 -0500
-Received: by mail-wm0-f49.google.com with SMTP id 196so15347587wmm.1
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Feb 2017 11:25:42 -0800 (PST)
-Subject: Re: brcmfmac: BCM4343A0 P2P mode problem
-To: Stefan Holzmann <stefan.holzmann@gmx.net>
-References: <trinity-8050cb18-f2b8-4b78-a32c-96b49de20725-1487367187777@3capp-gmx-bs71>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Message-ID: <b0f8b5ce-3728-cd85-6dc4-fd49e6b140aa@broadcom.com> (sfid-20170218_202546_903098_6CF9023D)
-Date: Sat, 18 Feb 2017 20:25:39 +0100
-MIME-Version: 1.0
-In-Reply-To: <trinity-8050cb18-f2b8-4b78-a32c-96b49de20725-1487367187777@3capp-gmx-bs71>
-Content-Type: text/plain; charset=utf-8
+        Tue, 7 Feb 2017 18:10:51 -0500
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Timur Tabi <timur@codeaurora.org>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
+        Woojung Huh <woojung.huh@microchip.com>
+Subject: [PATCH net-next v2 01/12] net: sunrpc: fix build errors when linux/phy*.h is removed from net/dsa.h
+Date: Tue,  7 Feb 2017 15:02:54 -0800
+Message-Id: <20170207230305.18222-2-f.fainelli@gmail.com> (sfid-20170208_001106_732903_27ED3259)
+In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
+Removing linux/phy.h from net/dsa.h reveals a build error in the sunrpc
+code:
 
-On 17-2-2017 22:33, Stefan Holzmann wrote:
-> Hello,
-> 
-> I have problems to get WiFi P2P on a Nanopi NEO Air board up and running. The board uses a AP6212 WiFi module with the BCM4343A0 SDIO chipset (ID: 0xa9a6).
+net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_rdma_bc_put':
+net/sunrpc/xprtrdma/svc_rdma_backchannel.c:277:2: error: implicit declaration of function 'module_put' [-Werror=implicit-function-declaration]
+net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_setup_rdma_bc':
+net/sunrpc/xprtrdma/svc_rdma_backchannel.c:348:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
 
-Hi Stefan
+Fix this by adding linux/module.h to svc_rdma_backchannel.c
 
-FYI, SDIO ID: A9A6 is BCM43430.
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Acked-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
+---
+ net/sunrpc/xprtrdma/svc_rdma_backchannel.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Connecting to an AP as normal WiFi client is working without problems.
-> 
-> I can also discover other WiFi P2P nodes using wpa_cli p2p_peers, but when I try to connect using wpa_cli p2p_connect the connection attempt fails with the following log.
-> 
-> Are there any known problems with this kernel/wpa_supplicant combination for this chipset? Why the interface type can't be changed to P2P_CLIENT? I also tried to use the "p2pon" driver option but when I try to start wpa_supplicant on the P2P interface I get an kernel crash.
-
-You may need to start wpa_supplicant with '-puse_p2p_group_interface=1'.
-
-The use of p2pon parameter is not recommended on recent kernel and 2.x
-wpa_supplicant. It requires specific wpa_supplicant command line.
-
-Regards,
-Arend
-
-> Kernel Log:
-> 
-> [  222.972232] brcmfmac: brcmf_cfg80211_escan_handler: scan not ready, bsscfgidx=1
-> [  222.979577] brcmfmac: brcmf_fweh_event_worker: event handler failed (69) 
-> 
-> [  237.677557] brcmfmac: brcmf_cfg80211_change_iface Enter, bsscfgidx=0, type=8
-> [  237.677569] brcmfmac: brcmf_cfg80211_change_iface Exit
-> [  237.677641] brcmfmac: brcmf_netdev_open Enter, bsscfgidx=0
-> [  237.677648] brcmfmac: brcmf_sdio_bus_txctl Enter
-> [  237.677664] brcmfmac: brcmf_sdio_dpc Enter
-> [  237.677674] brcmfmac: brcmf_sdio_tx_ctrlframe Enter
-> [  237.677716] brcmfmac: brcmf_sdio_bus_rxctl Enter
-> [  237.678232] brcmfmac: brcmf_sdio_isr Enter
-> [  237.678244] brcmfmac: brcmf_sdio_dpc Enter
-> [  237.678288] brcmfmac: brcmf_sdio_readframes Enter
-> [  237.678315] brcmfmac: brcmf_sdio_read_control Enter
-> [  237.678359] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 27 expected 27
-> [  237.678365] brcmfmac: brcmf_fil_cmd_data Failed: BCME_UNSUPPORTED (-23)
-> [  237.678370] brcmfmac: brcmf_fil_iovar_data_get ifidx=0, name=toe_ol, len=4
-> [  237.678372] brcmutil: data
-> [  237.678380] 00000000: 84 85 13 c0
->  
-> 
-> wpa_supplicant Log:
-> nl80211: Set mode ifindex 2 iftype 8 (P2P_CLIENT)
-> nl80211: Failed to set interface 2 to mode 8: -22 (Invalid argument)
-> nl80211: Try mode change after setting interface down
-> nl80211: Set mode ifindex 2 iftype 8 (P2P_CLIENT)
-> nl80211: Failed to set interface 2 to mode 8: -22 (Invalid argument)
-> nl80211: Interface mode change to 8 from 2 failed
->  
-> 
-> Kernel: 4.10.0-rc5
-> wpa_supplicant: v2.6
-> WiFI Firmware version = wl0: Jun  6 2014 14:50:39 version 7.10.226.49 (r) FWID 01-8962686a
->  
-> 
-> Best Regards,
-> Stefan Holzmann
-> 
+diff --git a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
+index 288e35c2d8f4..cb1e48e54eb1 100644
+--- a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
++++ b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
+@@ -4,6 +4,7 @@
+  * Support for backward direction RPCs on RPC/RDMA (server-side).
+  */
+ 
++#include <linux/module.h>
+ #include <linux/sunrpc/svc_rdma.h>
+ #include "xprt_rdma.h"
+ 
+-- 
+2.9.3
