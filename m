@@ -1,127 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:60139 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751582AbdBDBQ7 (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:32794 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932707AbdBGXLd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 20:16:59 -0500
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        linux-wireless@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-nfc@ml01.01.org
-Subject: [PATCH resend 4/4] nfc: Fix hangup of RC-S380* in port100_send_ack()
-References: <871sveu579.fsf@mail.parknet.co.jp>
-        <87wpd6sqlw.fsf@mail.parknet.co.jp>
-        <87shnusqkz.fsf_-_@mail.parknet.co.jp>
-Date: Sat, 04 Feb 2017 10:16:56 +0900
-In-Reply-To: <87shnusqkz.fsf_-_@mail.parknet.co.jp> (OGAWA Hirofumi's message
-        of "Sat, 04 Feb 2017 10:16:28 +0900")
-Message-ID: <87o9yisqk7.fsf_-_@mail.parknet.co.jp> (sfid-20170204_021721_809402_B843FD25)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 7 Feb 2017 18:11:33 -0500
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Timur Tabi <timur@codeaurora.org>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
+        Woojung Huh <woojung.huh@microchip.com>
+Subject: [PATCH net-next v2 03/12] net: macb: fix build errors when linux/phy*.h is removed from net/dsa.h
+Date: Tue,  7 Feb 2017 15:02:56 -0800
+Message-Id: <20170207230305.18222-4-f.fainelli@gmail.com> (sfid-20170208_001234_191726_154F5B64)
+In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
-If port100_send_ack() was called twice or more, it has race to hangup.
+drivers/net/ethernet/cadence/macb.h:862:33: sparse: expected ; at end of declaration
+drivers/net/ethernet/cadence/macb.h:862:33: sparse: Expected } at end of struct-union-enum-specifier
+drivers/net/ethernet/cadence/macb.h:862:33: sparse: got phy_interface
+drivers/net/ethernet/cadence/macb.h:877:1: sparse: Expected ; at the end of type declaration
+drivers/net/ethernet/cadence/macb.h:877:1: sparse: got }
+In file included from drivers/net/ethernet/cadence/macb_pci.c:29:0:
+drivers/net/ethernet/cadence/macb.h:862:2: error: unknown type name 'phy_interface_t'
+     phy_interface_t  phy_interface;
+     ^~~~~~~~~~~~~~~
 
-  port100_send_ack()          port100_send_ack()
-    init_completion()
-    [...]
-    dev->cmd_cancel = true
-                                /* this removes previous from completion */
-                                init_completion()
-				[...]
-                                dev->cmd_cancel = true
-                                wait_for_completion()
-    /* never be waked up */
-    wait_for_completion()
+Add linux/phy.h to macb.h
 
-Like above race, this code is not assuming port100_send_ack() is
-called twice or more.
-
-To fix, this checks dev->cmd_cancel to know if prior cancel is
-in-flight or not. And never be remove prior task from completion by
-using reinit_completion(), so this guarantees to be waked up properly
-soon or later.
-
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
 ---
+ drivers/net/ethernet/cadence/macb.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/nfc/port100.c |   37 ++++++++++++++++++++++++-------------
- 1 file changed, 24 insertions(+), 13 deletions(-)
-
-diff -puN drivers/nfc/port100.c~nfc-port100-hang-fix drivers/nfc/port100.c
---- linux-ibmpc/drivers/nfc/port100.c~nfc-port100-hang-fix	2017-01-03 12:32:13.261785257 +0900
-+++ linux-ibmpc-hirofumi/drivers/nfc/port100.c	2017-01-03 12:33:51.965364300 +0900
-@@ -726,23 +726,33 @@ static int port100_submit_urb_for_ack(st
+diff --git a/drivers/net/ethernet/cadence/macb.h b/drivers/net/ethernet/cadence/macb.h
+index a2cf91223003..234a49eaccfd 100644
+--- a/drivers/net/ethernet/cadence/macb.h
++++ b/drivers/net/ethernet/cadence/macb.h
+@@ -10,6 +10,8 @@
+ #ifndef _MACB_H
+ #define _MACB_H
  
- static int port100_send_ack(struct port100 *dev)
- {
--	int rc;
-+	int rc = 0;
- 
- 	mutex_lock(&dev->out_urb_lock);
- 
--	init_completion(&dev->cmd_cancel_done);
--
--	usb_kill_urb(dev->out_urb);
-+	/*
-+	 * If prior cancel is in-flight (dev->cmd_cancel == true), we
-+	 * can skip to send cancel. Then this will wait the prior
-+	 * cancel, or merged into the next cancel rarely if next
-+	 * cancel was started before waiting done. In any case, this
-+	 * will be waked up soon or later.
-+	 */
-+	if (!dev->cmd_cancel) {
-+		reinit_completion(&dev->cmd_cancel_done);
- 
--	dev->out_urb->transfer_buffer = ack_frame;
--	dev->out_urb->transfer_buffer_length = sizeof(ack_frame);
--	rc = usb_submit_urb(dev->out_urb, GFP_KERNEL);
-+		usb_kill_urb(dev->out_urb);
- 
--	/* Set the cmd_cancel flag only if the URB has been successfully
--	 * submitted. It will be reset by the out URB completion callback
--	 * port100_send_complete().
--	 */
--	dev->cmd_cancel = !rc;
-+		dev->out_urb->transfer_buffer = ack_frame;
-+		dev->out_urb->transfer_buffer_length = sizeof(ack_frame);
-+		rc = usb_submit_urb(dev->out_urb, GFP_KERNEL);
++#include <linux/phy.h>
 +
-+		/*
-+		 * Set the cmd_cancel flag only if the URB has been
-+		 * successfully submitted. It will be reset by the out
-+		 * URB completion callback port100_send_complete().
-+		 */
-+		dev->cmd_cancel = !rc;
-+	}
- 
- 	mutex_unlock(&dev->out_urb_lock);
- 
-@@ -929,8 +939,8 @@ static void port100_send_complete(struct
- 	struct port100 *dev = urb->context;
- 
- 	if (dev->cmd_cancel) {
-+		complete_all(&dev->cmd_cancel_done);
- 		dev->cmd_cancel = false;
--		complete(&dev->cmd_cancel_done);
- 	}
- 
- 	switch (urb->status) {
-@@ -1546,6 +1556,7 @@ static int port100_probe(struct usb_inte
- 			    PORT100_COMM_RF_HEAD_MAX_LEN;
- 	dev->skb_tailroom = PORT100_FRAME_TAIL_LEN;
- 
-+	init_completion(&dev->cmd_cancel_done);
- 	INIT_WORK(&dev->cmd_complete_work, port100_wq_cmd_complete);
- 
- 	/* The first thing to do with the Port-100 is to set the command type
-_
-
+ #define MACB_GREGS_NBR 16
+ #define MACB_GREGS_VERSION 2
+ #define MACB_MAX_QUEUES 8
 -- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+2.9.3
