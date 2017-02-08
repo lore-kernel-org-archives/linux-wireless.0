@@ -1,96 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:61713 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750987AbdBNV3A (ORCPT
+Received: from mail-it0-f41.google.com ([209.85.214.41]:36452 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754723AbdBHOSS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 16:29:00 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Mathias Kresin <dev@kresin.me>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] rt2500usb: don't mark register accesses as inline
-Date: Tue, 14 Feb 2017 22:28:33 +0100
-Message-Id: <20170214212846.2809141-1-arnd@arndb.de> (sfid-20170214_222938_908042_55ACAD69)
+        Wed, 8 Feb 2017 09:18:18 -0500
+Received: by mail-it0-f41.google.com with SMTP id c7so100870597itd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 06:18:12 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev 2.1 seeking netdev conferences reporter(s)
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        Rob Echlin <rob@echlin.ca>, lwn@lwn.net, people@netdevconf.org
+Message-ID: <93554e3e-2913-2cb7-16f8-043e06670db4@mojatatu.com> (sfid-20170208_151853_691875_2E04FBFA)
+Date: Wed, 8 Feb 2017 09:10:59 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_KASAN is set, we get a rather large stack here:
+Folks,
 
-drivers/net/wireless/ralink/rt2x00/rt2500usb.c: In function 'rt2500usb_set_device_state':
-drivers/net/wireless/ralink/rt2x00/rt2500usb.c:1074:1: error: the frame size of 3032 bytes is larger than 100 bytes [-Werror=frame-larger-than=]
+We are seeking for qualified people who love to write to cover the
+netdev 2.1 conference.
+The idea is to attend the different sessions and describe what
+was discussed in a timely manner. We would like to publish the
+events on a daily basis.
 
-If we don't force those functions to be inline, the compiler can figure this
-out better itself and not inline the functions when doing so would be harmful,
-reducing the stack size to a merge 256 bytes.
+Requirements:
+1) Passion about netdev
+2) Knowledge of the different technical topics under discussion.
+We will work to have you access knowledgeable people in the
+different topics including the speaker.
+3) Average writting skills. We will work to give you access to
+people who have better writing skills than you.
+4) Desire to be famous
 
-Note that there is another problem that manifests in this driver, as a result
-of the typecheck() macro causing even larger stack frames.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/ralink/rt2x00/rt2500usb.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-index 62357465fe29..0d2670a56c4c 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-@@ -55,7 +55,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
-  * If the csr_mutex is already held then the _lock variants must
-  * be used instead.
-  */
--static inline void rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
-+static void rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
- 					   const unsigned int offset,
- 					   u16 *value)
- {
-@@ -66,7 +66,7 @@ static inline void rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
- 	*value = le16_to_cpu(reg);
- }
- 
--static inline void rt2500usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
-+static void rt2500usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
- 						const unsigned int offset,
- 						u16 *value)
- {
-@@ -77,16 +77,7 @@ static inline void rt2500usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
- 	*value = le16_to_cpu(reg);
- }
- 
--static inline void rt2500usb_register_multiread(struct rt2x00_dev *rt2x00dev,
--						const unsigned int offset,
--						void *value, const u16 length)
--{
--	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
--				      USB_VENDOR_REQUEST_IN, offset,
--				      value, length);
--}
--
--static inline void rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
-+static void rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
- 					    const unsigned int offset,
- 					    u16 value)
- {
-@@ -96,7 +87,7 @@ static inline void rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
- 				      &reg, sizeof(reg));
- }
- 
--static inline void rt2500usb_register_write_lock(struct rt2x00_dev *rt2x00dev,
-+static void rt2500usb_register_write_lock(struct rt2x00_dev *rt2x00dev,
- 						 const unsigned int offset,
- 						 u16 value)
- {
-@@ -106,7 +97,7 @@ static inline void rt2500usb_register_write_lock(struct rt2x00_dev *rt2x00dev,
- 				       &reg, sizeof(reg), REGISTER_TIMEOUT);
- }
- 
--static inline void rt2500usb_register_multiwrite(struct rt2x00_dev *rt2x00dev,
-+static void rt2500usb_register_multiwrite(struct rt2x00_dev *rt2x00dev,
- 						 const unsigned int offset,
- 						 void *value, const u16 length)
- {
--- 
-2.9.0
+cheers,
+jamal
