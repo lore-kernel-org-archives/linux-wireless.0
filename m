@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37778 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751878AbdBCIlh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 03:41:37 -0500
-Message-ID: <1486111291.26003.86.camel@coelho.fi> (sfid-20170203_094140_652766_58404640)
-From: Luca Coelho <luca@coelho.fi>
-To: Kyle McMartin <kyle@infradead.org>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
-        linux-firmware@kernel.org,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Fri, 03 Feb 2017 10:41:31 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi firmwares update 2017-02-03
+Received: from mx1.redhat.com ([209.132.183.28]:58004 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754477AbdBHNIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 08:08:54 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 3/3] rt2x00: remove queue_entry from skbdesc
+Date: Wed,  8 Feb 2017 13:51:31 +0100
+Message-Id: <1486558291-1615-4-git-send-email-sgruszka@redhat.com> (sfid-20170208_140921_580809_0BB9E4C4)
+In-Reply-To: <1486558291-1615-1-git-send-email-sgruszka@redhat.com>
+References: <1486558291-1615-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kyle,
+queue_entry field of skbdesc is not read any more, remove it to allow
+skbdesc contain other data.
 
-We have updated some of our old firmware releases and also added a new
-release, version 27, for the newer devices.  More details in the tag
-description.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 3 ---
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.h | 2 --
+ 2 files changed, 5 deletions(-)
 
-Please pull or let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-
-The following changes since commit 6d3bc8886517d171068fd1263176b8b5c51df204:
-
-  Fix permissions on ti-connectivity firmware from 05e9fe59 (2017-01-13 10:14:07 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2017-02-03
-
-for you to fetch changes up to b689306274099710f9f85eaab584604ca11ee54a:
-
-  iwlwifi: add -27 firmware for 3168, 7265D, 8000C and 8265 (2017-02-03 10:20:54 +0200)
-
-----------------------------------------------------------------
-* update -17 firmware binaries for iwlwifi devices 3260, 7260 and 7265
-* update -22 firmware binaries for iwlwifi devices 7265D, 8000C and 8265
-* add -27 firmware binaries for iwlwifi devices 3168, 7265D, 8000C and 8265
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: update -22 firmware for 7265D and up
-
-Luca Coelho (2):
-      iwlwifi: update -17 firmware for 3260, 7260 and 7265
-      iwlwifi: add -27 firmware for 3168, 7265D, 8000C and 8265
-
- WHENCE                 |  24 ++++++++++++++++++------
- iwlwifi-3160-17.ucode  | Bin 918268 -> 918268 bytes
- iwlwifi-3168-27.ucode  | Bin 0 -> 1032168 bytes
- iwlwifi-7260-17.ucode  | Bin 1049340 -> 1049340 bytes
- iwlwifi-7265-17.ucode  | Bin 1180412 -> 1180412 bytes
- iwlwifi-7265D-22.ucode | Bin 1028316 -> 1028376 bytes
- iwlwifi-7265D-27.ucode | Bin 0 -> 1032452 bytes
- iwlwifi-8000C-22.ucode | Bin 2120860 -> 2120860 bytes
- iwlwifi-8000C-27.ucode | Bin 0 -> 2227284 bytes
- iwlwifi-8265-22.ucode  | Bin 1811984 -> 1811984 bytes
- iwlwifi-8265-27.ucode  | Bin 0 -> 2234528 bytes
- 11 files changed, 18 insertions(+), 6 deletions(-)
- create mode 100644 iwlwifi-3168-27.ucode
- create mode 100644 iwlwifi-7265D-27.ucode
- create mode 100644 iwlwifi-8000C-27.ucode
- create mode 100644 iwlwifi-8265-27.ucode
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index 380daf4..e1660b9 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -83,7 +83,6 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct queue_entry *entry, gfp_t gfp)
+ 	 */
+ 	skbdesc = get_skb_frame_desc(skb);
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+-	skbdesc->entry = entry;
+ 
+ 	if (rt2x00_has_cap_flag(rt2x00dev, REQUIRE_DMA)) {
+ 		dma_addr_t skb_dma;
+@@ -689,7 +688,6 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
+ 		goto out;
+ 	}
+ 
+-	skbdesc->entry = entry;
+ 	entry->skb = skb;
+ 
+ 	/*
+@@ -774,7 +772,6 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	skbdesc = get_skb_frame_desc(intf->beacon->skb);
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+-	skbdesc->entry = intf->beacon;
+ 
+ 	/*
+ 	 * Send beacon to hardware.
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
+index 2233b91..22d1881 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
+@@ -116,8 +116,6 @@ struct skb_frame_desc {
+ 	__le32 iv[2];
+ 
+ 	dma_addr_t skb_dma;
+-
+-	struct queue_entry *entry;
+ };
+ 
+ /**
+-- 
+1.8.3.1
