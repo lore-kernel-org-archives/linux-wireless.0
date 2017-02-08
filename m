@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60346 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751014AbdBJX0P (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39406 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751654AbdBHQXK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 18:26:15 -0500
-Subject: Re: VHT 160Mhz and nss related config.
-To: Adrian Chadd <adrian.chadd@gmail.com>
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
- <CAJ-Vmo=-JBrkmUPcYrRbARYuWv_=-MeQpPwAN_0J3v8pA5mPnw@mail.gmail.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <c2e26f4e-f6a9-c662-b1a1-d0e0eb144af8@candelatech.com> (sfid-20170211_002618_824601_C158CA58)
-Date: Fri, 10 Feb 2017 15:26:13 -0800
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=-JBrkmUPcYrRbARYuWv_=-MeQpPwAN_0J3v8pA5mPnw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 8 Feb 2017 11:23:10 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 17:51:48 +0200
+Message-Id: <20170208155149.1704-8-luca@coelho.fi> (sfid-20170208_172313_995409_1DF78C62)
+In-Reply-To: <20170208155149.1704-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+ <20170208155149.1704-1-luca@coelho.fi>
+Subject: [PATCH 16/17] iwlwifi: mvm: Fix removal of IGTK
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/10/2017 03:23 PM, Adrian Chadd wrote:
-> Is it limited on both tx and rx or only one?
+From: Ilan Peer <ilan.peer@intel.com>
 
-Both, as I understand it.  I think maybe we could use the max-tx-rate and max-rx-rate
-fields in the vht mcs info field to give user-space a clue.
+When removing an IGTK, iwl_mvm_send_sta_igtk() was
+called before station ID was retrieved, so the function
+was invoked with an invalid station ID. Fix this by first
+getting the station ID.
 
-Thanks,
-Ben
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=192411
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
->
->
->
-> Adrian
->
-> On Feb 10, 2017 2:58 PM, "Ben Greear" <greearb@candelatech.com <mailto:greearb@candelatech.com>> wrote:
->
->     So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4 MIMO at VHT80, but
->     it can do only 2x2 MIMO at VHT160/80+80.
->
->     When configuring a peer, we need to tell the firmware the number of spatial streams
->     of the peer at VHT160 and at VHT80 and lower.  They are not the same value.
->
->     I cannot think of any standard way to get this information based on VHT capabilities
->     and such.  Currently, one could just assume VHT160 NSS is 1/2 of the VHT80 NSS,
->     but that is unlikely to be true for all vendors.
->
->     Any ideas?
->
->     Thanks,
->     Ben
->
->     --
->     Ben Greear <greearb@candelatech.com <mailto:greearb@candelatech.com>>
->     Candela Technologies Inc  http://www.candelatech.com
->
-
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 1bad933b3ad4..c35fabdf85da 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -3047,6 +3047,11 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
+ 
+ 	/* Get the station from the mvm local station table */
+ 	mvm_sta = iwl_mvm_get_key_sta(mvm, vif, sta);
++	if (!mvm_sta) {
++		IWL_ERR(mvm, "Failed to find station\n");
++		return -EINVAL;
++	}
++	sta_id = mvm_sta->sta_id;
+ 
+ 	IWL_DEBUG_WEP(mvm, "mvm remove dynamic key: idx=%d sta=%d\n",
+ 		      keyconf->keyidx, sta_id);
+@@ -3074,8 +3079,6 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
+ 		return 0;
+ 	}
+ 
+-	sta_id = mvm_sta->sta_id;
+-
+ 	ret = __iwl_mvm_remove_sta_key(mvm, sta_id, keyconf, mcast);
+ 	if (ret)
+ 		return ret;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.11.0
