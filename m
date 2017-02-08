@@ -1,91 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f52.google.com ([209.85.214.52]:37794 "EHLO
-        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751387AbdBXAEV (ORCPT
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:32795 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753313AbdBHLOk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 19:04:21 -0500
-Received: by mail-it0-f52.google.com with SMTP id 203so4790753ith.0
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 16:03:00 -0800 (PST)
-Received: from mail-it0-f45.google.com (mail-it0-f45.google.com. [209.85.214.45])
-        by smtp.gmail.com with ESMTPSA id o191sm2434366iod.11.2017.02.23.16.02.59
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 23 Feb 2017 16:02:59 -0800 (PST)
-Received: by mail-it0-f45.google.com with SMTP id h10so4145632ith.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 16:02:59 -0800 (PST)
+        Wed, 8 Feb 2017 06:14:40 -0500
+Received: by mail-pg0-f53.google.com with SMTP id 204so48352335pge.0
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 03:14:39 -0800 (PST)
+Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
+To: Paolo Abeni <pabeni@redhat.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
+ <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com>
+ <1486543119.2533.3.camel@redhat.com>
+ <CACna6rxc6kAtAbknMGVoW5jWoxnUibD83jcVsHmU6gWhSVTWzQ@mail.gmail.com>
+ <1486546181.2533.5.camel@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        hante Meuleman <hante.meuleman@broadcom.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <7b8afd8d-1096-0e65-a0c2-868e6e061892@broadcom.com> (sfid-20170208_121833_407514_95EE2D5B)
+Date: Wed, 8 Feb 2017 11:43:39 +0100
 MIME-Version: 1.0
-In-Reply-To: <484d045e-d4ca-2073-9a16-8d3556027d75@uni-rostock.de>
-References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
- <20170223120211.22358-2-andrew.zaborowski@intel.com> <484d045e-d4ca-2073-9a16-8d3556027d75@uni-rostock.de>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Fri, 24 Feb 2017 01:02:58 +0100
-Message-ID: <CAOq732JfGKgdtVtjew5EXua+4mkyO+DZttSG-8F2q3yyxy_M2g@mail.gmail.com> (sfid-20170224_010424_640787_467D61B9)
-Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in NEW_RADIO/GET_RADIO
-To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1486546181.2533.5.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 February 2017 at 20:01, Benjamin Beichler
-<Benjamin.Beichler@uni-rostock.de> wrote:
->> Add a HWSIM_ATTR_RADIO_ADDR attribute to those to events/response so
->> that a userspace medium can query the list of addresses in the
->> simulator.
+On 8-2-2017 10:29, Paolo Abeni wrote:
+> On Wed, 2017-02-08 at 09:52 +0100, Rafał Miłecki wrote:
+>> On 8 February 2017 at 09:38, Paolo Abeni <pabeni@redhat.com> wrote:
+>>> On Tue, 2017-02-07 at 20:23 +0100, Arend Van Spriel wrote:
+>>>> On 7-2-2017 17:50, Paolo Abeni wrote:
+>>>>> the skbs can be held by the driver for a long time, so we need
+>>>>> to clear any state on xmit to avoid hanging other subsystems.
+>>>>> The skbs are already orphaned later in cmsg code, so we just
+>>>>> need to clear the nf/dst/secpath.
+>>>>> Do it early, while the relevant entries are hopefully still
+>>>>> hot in the cache.
+>>>>
+>>>> What is this about really? A bit more background about the issue
+>>>> might
+>>>> help understanding the need for this patch. Is this really
+>>>> specific
+>>>> to
+>>>> brcmfmac. For instance is something similar already done in
+>>>> mac80211?
+>>>
+>>> The issue is apparently driver specific, as reported in:
+>>>
+>>> https://bugzilla.redhat.com/show_bug.cgi?id=1294415
+>>>
+>>> This is caused by xmit skbs carrying a notrack ct entry not being
+>>> freed
+>>> by the device driver in a timely manner. Removing the ct module
+>>> waits
+>>> for such entries refcount going to zero and hangs the kernel in
+>>> busy
+>>> loop (for several minutes).
+>>>
+>>> The relevant skbs are icmp6 packets (ND if I recall correctly, they
+>>> bcast packets at the mac level).
+>>>
+>>> The only other known device driver suffering for the issue is the
+>>> infiniband ipoib driver, I send a separate patch for it.
+>>>
+>>> I lack the broadcom h/w, but with infiniband the bug can be
+>>> reproduced
+>>> with the following steps:
+>>>
+>>> - ensure ipv6 is enabled on the target device, and firewalld is
+>>> running
+>>> (e.g. the module nf_conntrack_ipv6 is loaded)
+>>> - assign a static ip to the device
+>>> - shut down the firewall (e.g. try to remove the module
+>>> nf_conntrack)
+>>>
+>>> For the brcmfmac driver most probably it is necessary being
+>>> disassociated from the AP before shutting down the firewall (but I
+>>> can't double check). This is probably why mac80211 does not suffer
+>>> this
+>>> issue.
+>>>
+>>> The root cause for the issue could be actually a firmware issue,
+>>> any
+>>> better clues are more than welcome!
 >>
->> When a userspace medium needs to handle a broadcast frame it can't
->> easily implement the equivalent of what the default kernel medium does
->> because it doesn't know who to forward the frame to.  The
->> HWSIM_CMD_GET_RADIO command is a little useless in this respect.
->> Userspace needs to use HWSIM_CMD_GET_RADIO, then cross-reference the
->> radio names with wiphy names using NL80211_CMD_GET_WIPHY dump, map the
->> wiphy names to wiphy indexes (those are more useful than wiphy names
->> because they don't change -- a wiphy name change doesn't generate an
->> event so this can't be easily tracked), and use the
->> NL80211_CMD_GET_INTERFACES dump to obtain the wiphy_idx to mac address
->> mapping.
-> I'm a bit confused, I think the medium should always know by its
-> internal knowledge base, which node would be reachable by a broadcast.
+>> Do I get this correctly brcmfmac gets some skb for transmitting it
+>> and
+>> doesn't free it for few minutes? It sounds like some bug that should
+>> be fixed instead of hiding it.
+> 
+> I mostly agreed, but please also note that early clearing the skb head
+> state makes sense from a performance pov: we can do the costly,
+> required, atomic operations while the data is still hot in the cpu L1
+> cache.
+> 
+> I'm unable to find anything obvious at the driver level, and I think
+> the root cause could be in the firmware. I hope some more knowledgeable
+> than me on this topics can have a better look.
 
-So it depends on your architecture really, you can have a setup where
-one userspace program creates all of the radios and registers as a
-medium.  In this case the program will know what nodes exist, but it
-still won't have the hardware addresses to use in
-HWSIM_ATTR_ADDR_RECEIVER because there's no way to query them through
-netlink (?).  Unless you assume that each consecutive radio gets
-42:00:00:00:<n>:00 assigned.  That would only work if no radios have
-been created before your program started because you <n> values could
-be off.
+Hi Paolo,
 
-But you might also want to do your testing from a script that first
-creates the radios using one utility program and runs the medium as a
-separate program.  In that case that program can't do the equivalent
-of what the kernel medium does.
+I agree with Rafał that several minutes for an skb to be freed is a red
+flag. Now I know our driver and firmware but not played to much with
+IPv6 and firewalls. Hopefully I have all the netfilter stuff in my
+kernel when I try to reproduce it over here.
 
->
-> We are also working on the MAC-Management of hwsim, which especially got
-> weird, if you try to manage many nodes within one kernel. But I don't
-> understand how this array with addresses could help to improve. When
-> these addresses do not exactly match to the preconfigured MACs of hwsim,
-> the frames would not be delivered, since they are only checked against
-> the internal ones (or you may add a check against your list).
-
-Those addresses I try to expose are exactly the preconfigured MACs.
-
-Looking at this some more I found you can retrieve those addresses
-from /sys/class/ieee80211/<wiphy>/addresses (there seems to be no
-nl80211 API for this) since those are always in sync with the hwsim
-addresses, the only issue would be mapping radios to wiphys by name.
-
->
-> I test to use a internal hashmap, which maps a receiver MAC-Address of a
-> Frame to a corresponding wiphy node to efficiently deliver frames.
-> Additionally it would allow to add VIF with different MAC-Addresses (see
-> corresponding Callback for this) and update the hashmap according to
-> this. I believe you want to do something similar, but in the userspace.
-
-Yes, either use a lookup table for unicast frames, or deliver all
-frames (unicast or multicast) to all radios same as the kernel radio
-does.
-
-Best regards
+Regards,
+Arend
