@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36233 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751125AbdBXN3p (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:53246 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754105AbdBHQQF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 08:29:45 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: fix kernel crash after shutdown command timeout
-Date: Fri, 24 Feb 2017 18:59:24 +0530
-Message-ID: <1487942964-3193-1-git-send-email-akarwar@marvell.com> (sfid-20170224_142950_056098_022BEA9F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 8 Feb 2017 11:16:05 -0500
+Date: Wed, 08 Feb 2017 11:06:26 -0500 (EST)
+Message-Id: <20170208.110626.346978547122180233.davem@davemloft.net> (sfid-20170208_171634_852478_C76C0D66)
+To: f.fainelli@gmail.com
+Cc: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org, andrew@lunn.ch,
+        anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com,
+        felix.manlunas@caviumnetworks.com, bfields@fieldses.org,
+        jlayton@poochiereds.net, jirislaby@gmail.com, kvalo@codeaurora.org,
+        mcgrof@do-not-panic.com, madalin.bucur@nxp.com,
+        UNGLinuxDriver@microchip.com, nab@linux-iscsi.org,
+        mickflemm@gmail.com, nicolas.ferre@atmel.com,
+        raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org,
+        satananda.burla@caviumnetworks.com,
+        thomas.petazzoni@free-electrons.com, timur@codeaurora.org,
+        trond.myklebust@primarydata.com,
+        vivien.didelot@savoirfairelinux.com, woojung.huh@microchip.com
+Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h
+ include
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We observed a SHUTDOWN command timeout during reboot stress test due
-to a corner case firmware bug. It leads to use-after-free on adapter
-structure pointer and crash.
-
-We already have a cancel_work_sync() call in teardown thread. This
-issue is fixed by having this call just before mwifiex_remove_card().
-At this point no further work will be scheduled.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 3 +--
- drivers/net/wireless/marvell/mwifiex/sdio.c | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index a0d9180..f31c5ea 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -294,8 +294,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
--	cancel_work_sync(&card->work);
--
- 	reg = card->pcie.reg;
- 	if (reg)
- 		ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
-@@ -312,6 +310,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
- 	}
- 
-+	cancel_work_sync(&card->work);
- 	mwifiex_remove_card(adapter);
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index a4b356d..9534b47 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -387,8 +387,6 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
--	cancel_work_sync(&card->work);
--
- 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
- 
- 	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
-@@ -400,6 +398,7 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
- 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
- 	}
- 
-+	cancel_work_sync(&card->work);
- 	mwifiex_remove_card(adapter);
- }
- 
--- 
-1.9.1
+RnJvbTogRmxvcmlhbiBGYWluZWxsaSA8Zi5mYWluZWxsaUBnbWFpbC5jb20+DQpEYXRlOiBUdWUs
+ICA3IEZlYiAyMDE3IDE1OjAyOjUzIC0wODAwDQoNCj4gSSdtIGhvcGluZyB0aGlzIGRvZXNuJ3Qg
+Y29uZmxpY3Qgd2l0aCB3aGF0J3MgYWxyZWFkeSBpbiBuZXQtbmV4dC4uLg0KPiANCj4gRGF2aWQs
+IHRoaXMgc2hvdWxkIHByb2JhYmx5IGdvIHZpYSB5b3VyIHRyZWUgY29uc2lkZXJpbmcgdGhlIGRp
+ZmZzdGF0Lg0KDQpJIHRoaW5rIHlvdSBuZWVkIG9uZSBtb3JlIHJlc3Bpbi4gIEFyZSB5b3UgZG9p
+bmcgYW4gYWxsbW9kY29uZmlnIGJ1aWxkPw0KSWYgbm90LCBmb3Igc29tZXRoaW5nIGxpa2UgdGhp
+cyBpdCdzIGEgbXVzdDoNCg0KZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL3dpbDYyMTAvY2ZnODAy
+MTEuYzoyNDozMDogZXJyb3I6IGV4cGVjdGVkIKEpoiBiZWZvcmUgoWJvb2yiDQogbW9kdWxlX3Bh
+cmFtKGRpc2FibGVfYXBfc21lLCBib29sLCAwNDQ0KTsNCiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIF4NCmRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL2NmZzgwMjExLmM6MjU6
+MzQ6IGVycm9yOiBleHBlY3RlZCChKaIgYmVmb3JlIHN0cmluZyBjb25zdGFudA0KIE1PRFVMRV9Q
+QVJNX0RFU0MoZGlzYWJsZV9hcF9zbWUsICIgbGV0IHVzZXIgc3BhY2UgaGFuZGxlIEFQIG1vZGUg
+U01FIik7DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXg0KTGlrZSBsaWtlIHRo
+YXQgZmlsZSBuZWVkcyBsaW51eC9tb2R1bGUuaCBpbmNsdWRlZC4NCg0KVGhhbmtzLg0K
