@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50538 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752860AbdBAR3M (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52903 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751096AbdBHXCr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 12:29:12 -0500
+        Wed, 8 Feb 2017 18:02:47 -0500
+Date: Wed, 8 Feb 2017 15:53:39 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Justin Bronder <justin@kuvee.com>
+Subject: Re: [Patch] NFC: trf7970a:
+Message-ID: <20170208225339.GA26286@animalcreek.com> (sfid-20170209_000253_044788_BD7EAC9A)
+References: <CAO7Z3WJwf80mCqubSYTeK=BHN9sd=mzmL9th4Su-E25de6TmAg@mail.gmail.com>
+ <20161214155743.GA22282@animalcreek.com>
+ <CAO7Z3WKqhS5Q6qAaDs8364KP5-7ma=b_ic2B10=njngMmp5noQ@mail.gmail.com>
+ <20161214171010.GA29321@animalcreek.com>
+ <CAO7Z3WLpp0YVxXxo6M11PMPu+5OaA1fRhNQNoPJ-b4LRCPrLAg@mail.gmail.com>
+ <20161214223123.GA10281@animalcreek.com>
+ <20161216045210.GA29196@animalcreek.com>
+ <20161216203538.GA12608@animalcreek.com>
+ <CAO7Z3W+grhLnP05bPShheuvSet08CoYhFStDpDVgztf=Wz42Fw@mail.gmail.com>
+ <20161219030733.GA14962@animalcreek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 01 Feb 2017 22:59:09 +0530
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 2/2] mac80211: store tx power value from user to
- station
-In-Reply-To: <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
- <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
- <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
-Message-ID: <7584a5235b49b7799a2c15f91fb03794@codeaurora.org> (sfid-20170201_182918_962556_009F1374)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161219030733.GA14962@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-01 00:30, Ben Greear wrote:
-> On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
->> This patch introduce a new driver callback drv_sta_set_txpwr. This API 
->> will
->> copy the transmit power value passed from user space and call the 
->> driver
->> callback to set the tx power for the station.
->> 
->> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
->> ---
->>  include/net/mac80211.h    |  6 ++++++
->>  net/mac80211/cfg.c        |  7 +++++++
->>  net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
->>  net/mac80211/driver-ops.h |  5 +++++
->>  net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
->>  5 files changed, 66 insertions(+)
->> 
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index 5345d35..e059d5a 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
->>   *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 
->> 2).
->>   * @support_p2p_ps: indicates whether the STA supports P2P PS 
->> mechanism or not.
->>   * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by 
->> rate control.
->> + * @txpwr: indicates the tx power, in dBm, to be used when sending 
->> data frames
->> + *	to the STA. Value of 0 means, automatic (default) tx power.
+On Sun, Dec 18, 2016 at 08:07:33PM -0700, Mark Greer wrote:
+> On Sat, Dec 17, 2016 at 04:19:04PM -0500, Geoff Lansberry wrote:
+> > Mark,   from our consultant:
+> > 
+> > It isn't important whether the flood script is successful in writing
+> > or not. The point of it is to force a segfault by making many
+> > requests. It needs to run for several hundred iterations (successful
+> > or not) in order to generate the segfault.
 > 
-> Atheros NICs use 1/2 dBm increments internally, so maybe pass down mBm
-> to the driver so you don't
-> loose the granularity?  (Other NICs may potentially have even finer 
-> control.)
-> 
+> So neard crashes even when the write fails??  Okay, I'll let it run for
+> a while tomorrow (Monday).
 
-ath10k firmware expects values to be in dBm and the calculations 
-regarding 1/2 dBm is taken care in firmware.
+[Okay, so not exactly "tomorrow" but I did get back to this.]
+
+Geoff, a few things:
+
+1) Any update on these issues?
+
+2) Do you have all of the NFC-related patches from the nfc-next master
+branch?  In particular, do you have all of Thierry's patches to
+net/nfc/digial_*.c dated around June-July 2016?  Without those patches,
+I see a panic; with them, I don't.
+
+3) Assuming you have all of those patches, please revert the one with the
+summary line of, "NFC: digital: Set the command pending flag", and tell me
+if that stops the "Bogus state" messages.  I don't know which repo/branch
+you're using so I can't provide a commit id.
 
 Thanks,
-Ashok
-> Thanks,
-> Ben
+
+Mark
+--
