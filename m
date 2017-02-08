@@ -1,145 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38902 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753259AbdBGUky (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:35049 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751932AbdBHOlu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 15:40:54 -0500
-From: Luca Coelho <luca@coelho.fi>
+        Wed, 8 Feb 2017 09:41:50 -0500
+Received: by mail-wm0-f46.google.com with SMTP id v186so50092172wmd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 06:40:44 -0800 (PST)
+From: Koen Vandeputte <koen.vandeputte@ncentric.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Tue,  7 Feb 2017 22:40:44 +0200
-Message-Id: <20170207204044.1950-1-luca@coelho.fi> (sfid-20170207_214057_501756_95B1D39C)
-Subject: [PATCH] nl80211: add HT/VHT capabilities to AP parameters
+        Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        Piotr Gawlowicz <gawlowicz@tkn.tu-berlin.de>,
+        =?UTF-8?q?Miko=C5=82aj=20Chwalisz?= <chwalisz@tkn.tu-berlin.de>
+Subject: [PATCH] mac80211: fix CSA in IBSS mode
+Date: Wed,  8 Feb 2017 15:32:05 +0100
+Message-Id: <1486564325-14251-1-git-send-email-koen.vandeputte@ncentric.com> (sfid-20170208_154234_171021_DE7F57CE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add the missing IBSS capability flag during capability init as it needs
+to be inserted into the generated beacon in order for CSA to work.
 
-For the benefit of drivers that rebuild IEs in firmware, parse the
-IEs for HT/VHT capabilities and the respective membership selector
-in the (extended) supported rates. This avoids duplicating the same
-code into all drivers that need this information.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Piotr Gawlowicz <gawlowicz@tkn.tu-berlin.de>
+Signed-off-by: Mikołaj Chwalisz <chwalisz@tkn.tu-berlin.de>
+Tested-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
 ---
- include/linux/ieee80211.h |  3 ++-
- include/net/cfg80211.h    |  8 ++++++++
- net/wireless/nl80211.c    | 47 ++++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 56 insertions(+), 2 deletions(-)
+ net/mac80211/ibss.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 02768de209d6..0dd9498c694f 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1043,8 +1043,9 @@ struct ieee80211_mgmt {
- 	} u;
- } __packed __aligned(2);
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index a31d307..98999d3 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -487,14 +487,14 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct beacon_data *presp, *old_presp;
+ 	struct cfg80211_bss *cbss;
+ 	const struct cfg80211_bss_ies *ies;
+-	u16 capability = 0;
++	u16 capability = WLAN_CAPABILITY_IBSS;
+ 	u64 tsf;
+ 	int ret = 0;
  
--/* Supported Rates value encodings in 802.11n-2009 7.3.2.2 */
-+/* Supported rates membership selectors */
- #define BSS_MEMBERSHIP_SELECTOR_HT_PHY	127
-+#define BSS_MEMBERSHIP_SELECTOR_VHT_PHY	126
+ 	sdata_assert_lock(sdata);
  
- /* mgmt header + 1 byte category code */
- #define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 870549480e9b..5cfd2806a078 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -748,6 +748,10 @@ struct cfg80211_bitrate_mask {
-  * @pbss: If set, start as a PCP instead of AP. Relevant for DMG
-  *	networks.
-  * @beacon_rate: bitrate to be used for beacons
-+ * @ht_cap: HT capabilities (or %NULL if HT isn't enabled)
-+ * @vht_cap: VHT capabilities (or %NULL if VHT isn't enabled)
-+ * @ht_required: stations must support HT
-+ * @vht_required: stations must support VHT
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -768,6 +772,10 @@ struct cfg80211_ap_settings {
- 	const struct cfg80211_acl_data *acl;
- 	bool pbss;
- 	struct cfg80211_bitrate_mask beacon_rate;
-+
-+	const struct ieee80211_ht_cap *ht_cap;
-+	const struct ieee80211_vht_cap *vht_cap;
-+	bool ht_required, vht_required;
- };
+ 	if (ifibss->privacy)
+-		capability = WLAN_CAPABILITY_PRIVACY;
++		capability |= WLAN_CAPABILITY_PRIVACY;
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 63dfa60a29ef..e023b55477ec 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-- * Copyright 2015-2016	Intel Deutschland GmbH
-+ * Copyright 2015-2017	Intel Deutschland GmbH
-  */
- 
- #include <linux/if.h>
-@@ -3743,6 +3743,49 @@ static int nl80211_parse_beacon(struct nlattr *attrs[],
- 	return 0;
- }
- 
-+static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
-+					    const u8 *rates)
-+{
-+	int i;
-+
-+	if (!rates)
-+		return;
-+
-+	for (i = 0; i < rates[1]; i++) {
-+		if (rates[2 + i] == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
-+			params->ht_required = true;
-+		if (rates[2 + i] == BSS_MEMBERSHIP_SELECTOR_VHT_PHY)
-+			params->vht_required = true;
-+	}
-+}
-+
-+/*
-+ * Since the nl80211 API didn't include, from the beginning, attributes about
-+ * HT/VHT requirements/capabilities, we parse them out of the IEs for the
-+ * benefit of drivers that rebuild IEs in the firmware.
-+ */
-+static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
-+{
-+	const struct cfg80211_beacon_data *bcn = &params->beacon;
-+	size_t ies_len = bcn->beacon_ies_len;
-+	const u8 *ies = bcn->beacon_ies;
-+	const u8 *rates;
-+	const u8 *cap;
-+
-+	rates = cfg80211_find_ie(WLAN_EID_SUPP_RATES, ies, ies_len);
-+	nl80211_check_ap_rate_selectors(params, rates);
-+
-+	rates = cfg80211_find_ie(WLAN_EID_EXT_SUPP_RATES, ies, ies_len);
-+	nl80211_check_ap_rate_selectors(params, rates);
-+
-+	cap = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies, ies_len);
-+	if (cap && cap[1] >= sizeof(*params->ht_cap))
-+		params->ht_cap = (void *)(cap + 2);
-+	cap = cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY, ies, ies_len);
-+	if (cap && cap[1] >= sizeof(*params->vht_cap))
-+		params->vht_cap = (void *)(cap + 2);
-+}
-+
- static bool nl80211_get_ap_channel(struct cfg80211_registered_device *rdev,
- 				   struct cfg80211_ap_settings *params)
- {
-@@ -3971,6 +4014,8 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 			return PTR_ERR(params.acl);
- 	}
- 
-+	nl80211_calculate_ap_params(&params);
-+
- 	wdev_lock(wdev);
- 	err = rdev_start_ap(rdev, dev, &params);
- 	if (!err) {
+ 	cbss = cfg80211_get_bss(sdata->local->hw.wiphy, ifibss->chandef.chan,
+ 				ifibss->bssid, ifibss->ssid,
 -- 
-2.11.0
+2.7.4
