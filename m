@@ -1,197 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37896 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753442AbdBCOif (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:38:35 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:37:55 +0200
-Message-Id: <20170203143812.7525-9-luca@coelho.fi> (sfid-20170203_153838_943907_588CB61C)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 08/25] iwlwifi: mvm: always free inactive queue when moving ownership
+Received: from mx1.redhat.com ([209.132.183.28]:40282 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754083AbdBHJ3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 04:29:43 -0500
+Message-ID: <1486546181.2533.5.camel@redhat.com> (sfid-20170208_103246_368506_3440A0D9)
+Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
+From: Paolo Abeni <pabeni@redhat.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        hante Meuleman <hante.meuleman@broadcom.com>
+Date: Wed, 08 Feb 2017 10:29:41 +0100
+In-Reply-To: <CACna6rxc6kAtAbknMGVoW5jWoxnUibD83jcVsHmU6gWhSVTWzQ@mail.gmail.com>
+References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
+         <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com>
+         <1486543119.2533.3.camel@redhat.com>
+         <CACna6rxc6kAtAbknMGVoW5jWoxnUibD83jcVsHmU6gWhSVTWzQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Wed, 2017-02-08 at 09:52 +0100, Rafał Miłecki wrote:
+> On 8 February 2017 at 09:38, Paolo Abeni <pabeni@redhat.com> wrote:
+> > On Tue, 2017-02-07 at 20:23 +0100, Arend Van Spriel wrote:
+> > > On 7-2-2017 17:50, Paolo Abeni wrote:
+> > > > the skbs can be held by the driver for a long time, so we need
+> > > > to clear any state on xmit to avoid hanging other subsystems.
+> > > > The skbs are already orphaned later in cmsg code, so we just
+> > > > need to clear the nf/dst/secpath.
+> > > > Do it early, while the relevant entries are hopefully still
+> > > > hot in the cache.
+> > > 
+> > > What is this about really? A bit more background about the issue
+> > > might
+> > > help understanding the need for this patch. Is this really
+> > > specific
+> > > to
+> > > brcmfmac. For instance is something similar already done in
+> > > mac80211?
+> > 
+> > The issue is apparently driver specific, as reported in:
+> > 
+> > https://bugzilla.redhat.com/show_bug.cgi?id=1294415
+> > 
+> > This is caused by xmit skbs carrying a notrack ct entry not being
+> > freed
+> > by the device driver in a timely manner. Removing the ct module
+> > waits
+> > for such entries refcount going to zero and hangs the kernel in
+> > busy
+> > loop (for several minutes).
+> > 
+> > The relevant skbs are icmp6 packets (ND if I recall correctly, they
+> > bcast packets at the mac level).
+> > 
+> > The only other known device driver suffering for the issue is the
+> > infiniband ipoib driver, I send a separate patch for it.
+> > 
+> > I lack the broadcom h/w, but with infiniband the bug can be
+> > reproduced
+> > with the following steps:
+> > 
+> > - ensure ipv6 is enabled on the target device, and firewalld is
+> > running
+> > (e.g. the module nf_conntrack_ipv6 is loaded)
+> > - assign a static ip to the device
+> > - shut down the firewall (e.g. try to remove the module
+> > nf_conntrack)
+> > 
+> > For the brcmfmac driver most probably it is necessary being
+> > disassociated from the AP before shutting down the firewall (but I
+> > can't double check). This is probably why mac80211 does not suffer
+> > this
+> > issue.
+> > 
+> > The root cause for the issue could be actually a firmware issue,
+> > any
+> > better clues are more than welcome!
+> 
+> Do I get this correctly brcmfmac gets some skb for transmitting it
+> and
+> doesn't free it for few minutes? It sounds like some bug that should
+> be fixed instead of hiding it.
 
-If iwl_mvm_find_free_queue() doesn't find a free queue, it will
-return an inactive one.
-However, not all the call paths free this queue before reassigning
-it, which is a bug.
-Check it in other paths and act accordingly.
+I mostly agreed, but please also note that early clearing the skb head
+state makes sense from a performance pov: we can do the costly,
+required, atomic operations while the data is still hot in the cpu L1
+cache.
 
-Fixes: 9794c64f302d ("iwlwifi: mvm: support dqa queue inactivation upon timeout")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 101 ++++++++++++++++++---------
- 1 file changed, 69 insertions(+), 32 deletions(-)
+I'm unable to find anything obvious at the driver level, and I think
+the root cause could be in the firmware. I hope some more knowledgeable
+than me on this topics can have a better look.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 40e7fc5f1f1f..962920861ccf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -457,6 +457,52 @@ static int iwl_mvm_remove_sta_queue_marking(struct iwl_mvm *mvm, int queue)
- 	return disable_agg_tids;
- }
- 
-+static int iwl_mvm_free_inactive_queue(struct iwl_mvm *mvm, int queue,
-+				       bool same_sta)
-+{
-+	struct iwl_mvm_sta *mvmsta;
-+	u8 txq_curr_ac, sta_id, tid;
-+	unsigned long disable_agg_tids = 0;
-+	int ret;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	spin_lock_bh(&mvm->queue_info_lock);
-+	txq_curr_ac = mvm->queue_info[queue].mac80211_ac;
-+	sta_id = mvm->queue_info[queue].ra_sta_id;
-+	tid = mvm->queue_info[queue].txq_tid;
-+	spin_unlock_bh(&mvm->queue_info_lock);
-+
-+	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, sta_id);
-+
-+	disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
-+	/* Disable the queue */
-+	if (disable_agg_tids)
-+		iwl_mvm_invalidate_sta_queue(mvm, queue,
-+					     disable_agg_tids, false);
-+
-+	ret = iwl_mvm_disable_txq(mvm, queue,
-+				  mvmsta->vif->hw_queue[txq_curr_ac],
-+				  tid, 0);
-+	if (ret) {
-+		/* Re-mark the inactive queue as inactive */
-+		spin_lock_bh(&mvm->queue_info_lock);
-+		mvm->queue_info[queue].status = IWL_MVM_QUEUE_INACTIVE;
-+		spin_unlock_bh(&mvm->queue_info_lock);
-+		IWL_ERR(mvm,
-+			"Failed to free inactive queue %d (ret=%d)\n",
-+			queue, ret);
-+
-+		return ret;
-+	}
-+
-+	/* If TXQ is allocated to another STA, update removal in FW */
-+	if (!same_sta)
-+		iwl_mvm_invalidate_sta_queue(mvm, queue, 0, true);
-+
-+	return 0;
-+}
-+
- static int iwl_mvm_get_shared_queue(struct iwl_mvm *mvm,
- 				    unsigned long tfd_queue_mask, u8 ac)
- {
-@@ -645,7 +691,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 		iwl_mvm_get_wd_timeout(mvm, mvmsta->vif, false, false);
- 	u8 mac_queue = mvmsta->vif->hw_queue[ac];
- 	int queue = -1;
--	bool using_inactive_queue = false;
-+	bool using_inactive_queue = false, same_sta = false;
- 	unsigned long disable_agg_tids = 0;
- 	enum iwl_mvm_agg_state queue_state;
- 	bool shared_queue = false;
-@@ -702,6 +748,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	    mvm->queue_info[queue].status == IWL_MVM_QUEUE_INACTIVE) {
- 		mvm->queue_info[queue].status = IWL_MVM_QUEUE_RESERVED;
- 		using_inactive_queue = true;
-+		same_sta = mvm->queue_info[queue].ra_sta_id == mvmsta->sta_id;
- 		IWL_DEBUG_TX_QUEUES(mvm,
- 				    "Re-assigning TXQ %d: sta_id=%d, tid=%d\n",
- 				    queue, mvmsta->sta_id, tid);
-@@ -748,38 +795,9 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	 * first
- 	 */
- 	if (using_inactive_queue) {
--		u8 txq_curr_ac, sta_id;
--
--		spin_lock_bh(&mvm->queue_info_lock);
--		txq_curr_ac = mvm->queue_info[queue].mac80211_ac;
--		sta_id = mvm->queue_info[queue].ra_sta_id;
--		spin_unlock_bh(&mvm->queue_info_lock);
--
--		disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
--		/* Disable the queue */
--		if (disable_agg_tids)
--			iwl_mvm_invalidate_sta_queue(mvm, queue,
--						     disable_agg_tids, false);
--
--		ret = iwl_mvm_disable_txq(mvm, queue,
--					  mvmsta->vif->hw_queue[txq_curr_ac],
--					  tid, 0);
--		if (ret) {
--			IWL_ERR(mvm,
--				"Failed to free inactive queue %d (ret=%d)\n",
--				queue, ret);
--
--			/* Re-mark the inactive queue as inactive */
--			spin_lock_bh(&mvm->queue_info_lock);
--			mvm->queue_info[queue].status = IWL_MVM_QUEUE_INACTIVE;
--			spin_unlock_bh(&mvm->queue_info_lock);
--
-+		ret = iwl_mvm_free_inactive_queue(mvm, queue, same_sta);
-+		if (ret)
- 			return ret;
--		}
--
--		/* If TXQ is allocated to another STA, update removal in FW */
--		if (sta_id != mvmsta->sta_id)
--			iwl_mvm_invalidate_sta_queue(mvm, queue, 0, true);
- 	}
- 
- 	IWL_DEBUG_TX_QUEUES(mvm,
-@@ -1095,6 +1113,7 @@ static int iwl_mvm_reserve_sta_stream(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	int queue;
-+	bool using_inactive_queue = false, same_sta = false;
- 
- 	/*
- 	 * Check for inactive queues, so we don't reach a situation where we
-@@ -1118,6 +1137,14 @@ static int iwl_mvm_reserve_sta_stream(struct iwl_mvm *mvm,
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 		IWL_ERR(mvm, "No available queues for new station\n");
- 		return -ENOSPC;
-+	} else if (mvm->queue_info[queue].status == IWL_MVM_QUEUE_INACTIVE) {
-+		/*
-+		 * If this queue is already allocated but inactive we'll need to
-+		 * first free this queue before enabling it again, we'll mark
-+		 * it as reserved to make sure no new traffic arrives on it
-+		 */
-+		using_inactive_queue = true;
-+		same_sta = mvm->queue_info[queue].ra_sta_id == mvmsta->sta_id;
- 	}
- 	mvm->queue_info[queue].status = IWL_MVM_QUEUE_RESERVED;
- 
-@@ -1125,6 +1152,9 @@ static int iwl_mvm_reserve_sta_stream(struct iwl_mvm *mvm,
- 
- 	mvmsta->reserved_queue = queue;
- 
-+	if (using_inactive_queue)
-+		iwl_mvm_free_inactive_queue(mvm, queue, same_sta);
-+
- 	IWL_DEBUG_TX_QUEUES(mvm, "Reserving data queue #%d for sta_id %d\n",
- 			    queue, mvmsta->sta_id);
- 
-@@ -2231,6 +2261,13 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			IWL_ERR(mvm, "Failed to allocate agg queue\n");
- 			goto release_locks;
- 		}
-+		/*
-+		 * TXQ shouldn't be in inactive mode for non-DQA, so getting
-+		 * an inactive queue from iwl_mvm_find_free_queue() is
-+		 * certainly a bug
-+		 */
-+		WARN_ON(mvm->queue_info[txq_id].status ==
-+			IWL_MVM_QUEUE_INACTIVE);
- 
- 		/* TXQ hasn't yet been enabled, so mark it only as reserved */
- 		mvm->queue_info[txq_id].status = IWL_MVM_QUEUE_RESERVED;
--- 
-2.11.0
+Thank you,
+
+Paolo
