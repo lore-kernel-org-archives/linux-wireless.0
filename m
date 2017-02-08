@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:44315 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751563AbdBHW5F (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:35395 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752775AbdBHKsE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 17:57:05 -0500
-Date: Wed, 8 Feb 2017 15:56:51 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Justin Bronder <justin@kuvee.com>,
-        linux-nfc <linux-nfc@lists.01.org>
-Subject: Re: [Patch] NFC: trf7970a:
-Message-ID: <20170208225651.GB26286@animalcreek.com> (sfid-20170208_235729_506726_D92CDFFC)
-References: <20161214155743.GA22282@animalcreek.com>
- <CAO7Z3WKqhS5Q6qAaDs8364KP5-7ma=b_ic2B10=njngMmp5noQ@mail.gmail.com>
- <20161214171010.GA29321@animalcreek.com>
- <CAO7Z3WLpp0YVxXxo6M11PMPu+5OaA1fRhNQNoPJ-b4LRCPrLAg@mail.gmail.com>
- <20161214223123.GA10281@animalcreek.com>
- <20161216045210.GA29196@animalcreek.com>
- <20161216203538.GA12608@animalcreek.com>
- <CAO7Z3W+grhLnP05bPShheuvSet08CoYhFStDpDVgztf=Wz42Fw@mail.gmail.com>
- <20161219030733.GA14962@animalcreek.com>
- <20170208225339.GA26286@animalcreek.com>
+        Wed, 8 Feb 2017 05:48:04 -0500
+Received: by mail-pf0-f177.google.com with SMTP id f144so41600429pfa.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 02:47:15 -0800 (PST)
+Subject: Re: [PATCH V3 3/9] brcmfmac: merge two remaining brcmf_err macros
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170202213321.11591-1-zajec5@gmail.com>
+ <20170202213321.11591-3-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <585f9747-7171-3021-5df5-e0dd12c5dccd@broadcom.com> (sfid-20170208_115157_877988_46FEB6E9)
+Date: Wed, 8 Feb 2017 10:52:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170208225339.GA26286@animalcreek.com>
+In-Reply-To: <20170202213321.11591-3-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just realized that the linux-nfc is not CC'd so adding it.
+On 2-2-2017 22:33, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Now we always have __brcmf_err function we can do perfectly fine with
+> just one macro.
 
-On Wed, Feb 08, 2017 at 03:53:39PM -0700, Mark Greer wrote:
-> On Sun, Dec 18, 2016 at 08:07:33PM -0700, Mark Greer wrote:
-> > On Sat, Dec 17, 2016 at 04:19:04PM -0500, Geoff Lansberry wrote:
-> > > Mark,   from our consultant:
-> > > 
-> > > It isn't important whether the flood script is successful in writing
-> > > or not. The point of it is to force a segfault by making many
-> > > requests. It needs to run for several hundred iterations (successful
-> > > or not) in order to generate the segfault.
-> > 
-> > So neard crashes even when the write fails??  Okay, I'll let it run for
-> > a while tomorrow (Monday).
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V3: Add this (new) patch
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
 > 
-> [Okay, so not exactly "tomorrow" but I did get back to this.]
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> index 441a6661eac0..066126123e96 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> @@ -47,20 +47,16 @@
+>  
+>  __printf(2, 3)
+>  void __brcmf_err(const char *func, const char *fmt, ...);
+> -#ifndef CONFIG_BRCM_TRACING
+> -/* Macro for error messages. net_ratelimit() is used when driver
+> - * debugging is not selected. When debugging the driver error
+> - * messages are as important as other tracing or even more so.
+> +/* Macro for error messages. When debugging / tracing the driver all error
+> + * messages are important to us.
+>   */
+>  #define brcmf_err(fmt, ...)						\
+>  	do {								\
+> -		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
+> +		if (IS_ENABLED(CONFIG_BRCMDBG) ||			\
+> +		    IS_ENABLED(CONFIG_BRCM_TRACING) ||			\
+> +		    net_ratelimit())					\
+>  			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
+>  	} while (0)
+> -#else
+> -#define brcmf_err(fmt, ...) \
+> -	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
+> -#endif
+>  
+>  #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+>  __printf(3, 4)
 > 
-> Geoff, a few things:
-> 
-> 1) Any update on these issues?
-> 
-> 2) Do you have all of the NFC-related patches from the nfc-next master
-> branch?  In particular, do you have all of Thierry's patches to
-> net/nfc/digial_*.c dated around June-July 2016?  Without those patches,
-> I see a panic; with them, I don't.
-> 
-> 3) Assuming you have all of those patches, please revert the one with the
-> summary line of, "NFC: digital: Set the command pending flag", and tell me
-> if that stops the "Bogus state" messages.  I don't know which repo/branch
-> you're using so I can't provide a commit id.
-> 
-> Thanks,
-> 
-> Mark
-> --
