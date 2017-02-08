@@ -1,105 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34299 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753773AbdBUQQf (ORCPT
+Received: from mail-io0-f175.google.com ([209.85.223.175]:36437 "EHLO
+        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753478AbdBHHpw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:35 -0500
-Received: by mail-lf0-f67.google.com with SMTP id h67so3752539lfg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:35 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 21/21] ath10k: dma fixes for high latency devices
-Date: Tue, 21 Feb 2017 17:15:41 +0100
-Message-Id: <1487693741-10042-22-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171706_683656_0A146AF2)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        Wed, 8 Feb 2017 02:45:52 -0500
+Received: by mail-io0-f175.google.com with SMTP id j13so109727730iod.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2017 23:45:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1486537227.4603.2.camel@sipsolutions.net>
+References: <1486378168-31028-1-git-send-email-ard.biesheuvel@linaro.org>
+ <1486378168-31028-2-git-send-email-ard.biesheuvel@linaro.org> <1486537227.4603.2.camel@sipsolutions.net>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 8 Feb 2017 07:45:51 +0000
+Message-ID: <CAKv+Gu9Be-bA-Trn5cMwVvf4+yMm8w2Krm59WGAhdM3bxBSJfw@mail.gmail.com> (sfid-20170208_084817_810576_801F3841)
+Subject: Re: [PATCH v3 1/2] mac80211: fils_aead: Use crypto api CMAC shash
+ rather than bare cipher
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several DMA related functions (such as the dma_map_xxx functions)
-are not used with high latency devices and don't need to be invoked
-in this case.
+On 8 February 2017 at 07:00, Johannes Berg <johannes@sipsolutions.net> wrote:
+> This looks strange to me:
+>
+>> +static int aes_s2v(struct crypto_shash *tfm,
+>>                  size_t num_elem, const u8 *addr[], size_t len[],
+>> u8 *v)
+>>  {
+>> -     u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
+>> +     u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE] = {};
+>> +     SHASH_DESC_ON_STACK(desc, tfm);
+>
+> desc declared
+>
+>>
+>> +     crypto_shash_digest(desc, tmp, AES_BLOCK_SIZE, d);
+>
+> used here
+>
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c    | 13 ++++++++-----
- drivers/net/wireless/ath/ath10k/htt_rx.c |  3 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +++
- drivers/net/wireless/ath/ath10k/txrx.c   |  5 +++--
- 4 files changed, 16 insertions(+), 8 deletions(-)
+Each digest() call combines a init()/update()/final() sequence
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 3eaa9a8..b5fddd7 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -134,11 +134,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	ath10k_htc_prepare_tx_skb(ep, skb);
- 
- 	skb_cb->eid = eid;
--	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
--	ret = dma_mapping_error(dev, skb_cb->paddr);
--	if (ret) {
--		ret = -EIO;
--		goto err_credits;
-+	if (!ar->is_high_latency) {
-+		skb_cb->paddr = dma_map_single(dev, skb->data, skb->len,
-+					       DMA_TO_DEVICE);
-+		ret = dma_mapping_error(dev, skb_cb->paddr);
-+		if (ret) {
-+			ret = -EIO;
-+			goto err_credits;
-+		}
- 	}
- 
- 	sg_item.transfer_id = ep->eid;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index c90570f..96e73b4 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2485,7 +2485,8 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
--		ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
-+		if (!ar->is_high_latency)
-+			ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
- 		break;
- 	case HTT_T2H_MSG_TYPE_SEC_IND: {
- 		struct ath10k *ar = htt->ar;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index a714aa8..190d002 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -409,6 +409,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
- 	if (htt->tx_mem_allocated)
- 		return 0;
- 
-+	if (ar->is_high_latency)
-+		return 0;
-+
- 	ret = ath10k_htt_tx_alloc_buf(htt);
- 	if (ret)
- 		goto free_idr_pending_tx;
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 9852c5d..5e27f6da 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -89,11 +89,12 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
- 	ath10k_htt_tx_dec_pending(htt);
--	if (htt->num_pending_tx == 0)
-+	if (!ar->is_high_latency && (htt->num_pending_tx == 0))
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
--	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-+	if (!ar->is_high_latency)
-+		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
- 	ath10k_report_offchan_tx(htt->ar, msdu);
- 
--- 
-2.7.4
+>> +     crypto_shash_init(desc);
+>
+> but initialized now?
+>
+
+... for the 6th time, or so. The final vector may require two
+update()s, so we cannot use digest() here. But we can use finup() for
+the last one, which combines update() and final().
+
+Hence,
+
+init()/finup()
+
+or
+
+init()/update()/finup()
+
+depending on the length of the last vector.
