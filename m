@@ -1,46 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35918 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750881AbdBFG5N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 01:57:13 -0500
-Message-ID: <1486364230.14226.3.camel@sipsolutions.net> (sfid-20170206_075716_122285_3318724F)
-Subject: Re: [PATCH] mac80211: Fix adding of mesh vendor IEs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Eckelmann <sven@narfation.org>, linux-wireless@vger.kernel.org
-Cc: Thorsten Horstmann <thorsten@defutech.de>,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Date: Mon, 06 Feb 2017 07:57:10 +0100
-In-Reply-To: <20170203133829.3219-1-sven@narfation.org> (sfid-20170203_145249_969240_F468065B)
-References: <20170203133829.3219-1-sven@narfation.org>
-         (sfid-20170203_145249_969240_F468065B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:39178 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932096AbdBHL2l (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 06:28:41 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 13:23:08 +0200
+Message-Id: <20170208112322.29413-4-luca@coelho.fi> (sfid-20170208_122900_217104_81CCBBDD)
+In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+Subject: [PATCH 03/17] iwlwifi: pcie: re-configure IVAR table after suspend-resume
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-02-03 at 14:38 +0100, Sven Eckelmann wrote:
-> From: Thorsten Horstmann <thorsten@defutech.de>
-> 
-> The function ieee80211_ie_split_vendor doesn't return 0 on errors.
-> Instead
-> it returns any offset < ielen when WLAN_EID_VENDOR_SPECIFIC is found.
-> The
-> return value in mesh_add_vendor_ies must therefore be checked against
-> ifmsh->ie_len and not 0. Otherwise all ifmsh->ie starting with
-> WLAN_EID_VENDOR_SPECIFIC will be rejected.
-> 
-> Fixes: 082ebb0c258d ("mac80211: fix mesh beacon format")
-> Signed-off-by: Thorsten Horstmann <thorsten@defutech.de>
-> Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.
-> de>
-> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-> [sven@narfation.org: Add commit message]
-> Signed-off-by: Sven Eckelmann <sven@narfation.org>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-I'm impressed by how many people signed this off without thinking about
-a commit message ... :)
+During the suspend/resume flow some HW blocks are reset.  This causes
+the IVAR table to be completely erased.  This table is where interrupt
+causes are bound to specific IRQs.  When the table is empty the
+interrupt handlers are not called correctly.  Fix this by reconfiguring
+the IVAR table after resume.
 
-Anyway, applied.
+Fixes: 2e5d4a8f61dc ("iwlwifi: pcie: Add new configuration to enable MSIX")
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 25 ++++++++++++++++++-------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index e7a26f594386..bb2a9a151957 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1152,13 +1152,19 @@ static void iwl_pcie_conf_msix_hw(struct iwl_trans_pcie *trans_pcie)
+ 	struct iwl_trans *trans = trans_pcie->trans;
+ 
+ 	if (!trans_pcie->msix_enabled) {
+-		if (trans->cfg->mq_rx_supported)
++		if (trans->cfg->mq_rx_supported &&
++		    test_bit(STATUS_DEVICE_ENABLED, &trans->status))
+ 			iwl_write_prph(trans, UREG_CHICK,
+ 				       UREG_CHICK_MSI_ENABLE);
+ 		return;
+ 	}
+-
+-	iwl_write_prph(trans, UREG_CHICK, UREG_CHICK_MSIX_ENABLE);
++	/*
++	 * The IVAR table needs to be configured again after reset,
++	 * but if the device is disabled, we can't write to
++	 * prph.
++	 */
++	if (test_bit(STATUS_DEVICE_ENABLED, &trans->status))
++		iwl_write_prph(trans, UREG_CHICK, UREG_CHICK_MSIX_ENABLE);
+ 
+ 	/*
+ 	 * Each cause from the causes list above and the RX causes is
+@@ -1457,6 +1463,7 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
+ 				    enum iwl_d3_status *status,
+ 				    bool test,  bool reset)
+ {
++	struct iwl_trans_pcie *trans_pcie =  IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 val;
+ 	int ret;
+ 
+@@ -1469,11 +1476,15 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
+ 	iwl_pcie_enable_rx_wake(trans, true);
+ 
+ 	/*
+-	 * Also enables interrupts - none will happen as the device doesn't
+-	 * know we're waking it up, only when the opmode actually tells it
+-	 * after this call.
++	 * Reconfigure IVAR table in case of MSIX or reset ict table in
++	 * MSI mode since HW reset erased it.
++	 * Also enables interrupts - none will happen as
++	 * the device doesn't know we're waking it up, only when
++	 * the opmode actually tells it after this call.
+ 	 */
+-	iwl_pcie_reset_ict(trans);
++	iwl_pcie_conf_msix_hw(trans_pcie);
++	if (!trans_pcie->msix_enabled)
++		iwl_pcie_reset_ict(trans);
+ 	iwl_enable_interrupts(trans);
+ 
+ 	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-- 
+2.11.0
