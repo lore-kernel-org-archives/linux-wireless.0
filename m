@@ -1,72 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34348 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbdBSQVq (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49049 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753481AbdBHHaG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 11:21:46 -0500
-Received: by mail-lf0-f68.google.com with SMTP id q89so7223904lfi.1
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 08:21:45 -0800 (PST)
-Subject: Re: [RFC v3 0/8] ath10k sdio support
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
- <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
- <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com>
- <877f4ngii5.fsf@kamboji.qca.qualcomm.com>
- <8737fagu28.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <e8e1a379-129a-a8c3-9e1f-fb4c70fd0ab6@gmail.com> (sfid-20170219_172150_087153_EEFC4857)
-Date: Sun, 19 Feb 2017 17:21:43 +0100
+        Wed, 8 Feb 2017 02:30:06 -0500
+From: David Lin <dlin@marvell.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Steve deRosier <derosier@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Johannes Berg" <johannes@sipsolutions.net>,
+        Chor Teck Law <ctlaw@marvell.com>,
+        "James Lin" <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
+Date: Wed, 8 Feb 2017 07:28:41 +0000
+Message-ID: <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com> (sfid-20170208_083012_480009_46409A53)
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+ <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
+ <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
+ <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com>
+ <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
+ <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com>
+ <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
+In-Reply-To: <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <8737fagu28.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok, I'll do another round of checkpatch before I submit anything.
-I couldn't find the script you mentioned though (ath10k-check).
-Is it some kind of checkpatch wrapper?
-
-Anyway, I have a few warnings related to 'line over 80 chars' that
-is really hard to get rid of (without breaking indentation etc.) so
-I won't do anything about those for now.
-
-Then there are some other warnings about the BIT macro being preferred
-over (1 << x). I have used (1 << x) in some files despite the checkpatch
-warning in order to keep the patches consistent with the existing code.
-I think the best approach is to have a separate round of cleanup-patches
-replacing all (1 << x) with BIT(x).
-
---
-Erik
-
-On 2017-02-19 14:59, Valo, Kalle wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
->>
->>> I was actually about to email you about this.
->>>
->>> I have made a few more updates to the sdio code so I think it would be
->>> best if I could submit a new series of patches based on this code (v4).
->>>
->>> Then you can tweak it (v5).
->>>
->>> It is only minor updates to the HIF layer (added QCA9377 support) and
->>> a setup of some pll registers.
->>
->> Ok, that sounds good. I'll wait for v4.
->
-> Forgot to mention can you run ath10k-check before submitting them, it
-> shows few problems:
->
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checking_code
->
-> But if you wonder what this is about it's checkpatch warning about camel
-> case (doesn't like the lower case x character):
->
-> drivers/net/wireless/ath/ath10k/sdio.h:68: <ATH10K_SDIO_DRIVE_DTSx_TYPE_C>
->
-> I guess I have a bug in the script when it parses checkpatch output.
->
+PiBGcm9tOiBSYWZhxYIgTWnFgmVja2kgW21haWx0bzp6YWplYzVAZ21haWwuY29tXSB3b3J0ZToN
+Cj4gU2VudDogV2VkbmVzZGF5LCBGZWJydWFyeSAwOCwgMjAxNyAzOjI0IFBNDQo+IE9uIDggRmVi
+cnVhcnkgMjAxNyBhdCAwNzozMCwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPiB3cm90ZToN
+Cj4gPiBzdGV2ZS5kZXJvc2llckBnbWFpbC5jb20gW21haWx0bzpzdGV2ZS5kZXJvc2llckBnbWFp
+bC5jb21dIHdyb3RlOg0KPiA+PiBPbiBUdWUsIEZlYiA3LCAyMDE3IGF0IDEwOjE1IFBNLCBEYXZp
+ZCBMaW4gPGRsaW5AbWFydmVsbC5jb20+IHdyb3RlOg0KPiA+PiA+PiBSYWZhxYIgTWnFgmVja2kg
+W21haWx0bzp6YWplYzVAZ21haWwuY29tXSB3cm90ZToNCj4gPj4gPj4gUGxlYXNlIHVzZSBpZWVl
+ODAyMTEtZnJlcS1saW1pdDoNCj4gPj4gPj4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xp
+bnV4L2tlcm5lbC9naXQvZGF2ZW0vbmV0LW5leHQuZ2l0L2NvDQo+ID4+ID4+IG1taQ0KPiA+PiA+
+PiB0Lz9pZD1iMw0KPiA+PiA+PiAzMGIyNWVhYWJkYTAwZDc0ZTQ3NTY2ZDkyMDA5MDdkYTM4MTg5
+Ng0KPiA+PiA+Pg0KPiA+PiA+PiBNb3N0IGxpa2VseSB3aXRoIHdpcGh5X3JlYWRfb2ZfZnJlcV9s
+aW1pdHMgaGVscGVyOg0KPiA+PiA+PiBodHRwczovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgv
+a2VybmVsL2dpdC9kYXZlbS9uZXQtbmV4dC5naXQvY28NCj4gPj4gPj4gbW1pDQo+ID4+ID4+IHQv
+P2lkPWU2DQo+ID4+ID4+IDkxYWMyZjc1YjY5YmVlNzQzZjAzNzBkNzk0NTRiYTQ0MjliMTc1DQo+
+ID4+ID4NCj4gPj4gPiBJIGFscmVhZHkgcmVwbGllZCBtZWFuaW5nIG9mIHRoZXNlIHBhcmFtZXRl
+cnM6DQo+ID4+ID4gPG1hcnZlbGwsMmdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDJnIGJhbmQuDQo+
+ID4+ID4gPG1hcnZlbGwsNWdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDVnIGJhbmQuDQo+ID4+ID4g
+PG1hcnZlbGwsIGNoYWlubWFzaz4gaXMgdXNlZCB0byBzcGVjaWZ5IGFudGVubmEgbnVtYmVyIChp
+ZiBkZWZhdWx0DQo+ID4+ID4gbnVtYmVyDQo+ID4+IGlzIHN1aXRhYmxlIGZvciB5b3UsIHRoZXJl
+IGlzIG5vIG5lZWQgdG8gdXNlIHRoaXMgcGFyYW1ldGVyKS4NCj4gPj4gPiA8bWFydmVsbCxwb3dl
+cnRhYmxlPiBzaG91bGQgbm90IGJlIHVzZWQgZm9yIGNoaXAgd2l0aCBkZXZpY2UgcG93ZXINCj4g
+dGFibGUuDQo+ID4+IEluIGZhY3QsIHRoaXMgcGFyYW1ldGVyIHNob3VsZCBub3QgYmUgdXNlZCBh
+bnkgbW9yZS4NCj4gPj4gPg0KPiA+Pg0KPiA+PiBEYXZpZCwgSSB0aGluayB5b3UncmUgbm90IHVu
+ZGVyc3RhbmRpbmcgdGhlIGNvbW1lbnQsIG9yIGF0IGxlYXN0DQo+ID4+IHRoYXQncyB3aGF0IGl0
+IGxvb2tzIGxpa2UgdG8gbWUuIFllcywgeW91IGRpZCByZXBseSBhcyB0byB0aGUgbWVhbmluZy4N
+Cj4gPj4gQW5kLCB5b3VyIHJlcGx5LCB3aGlsZSBpbmZvcm1hdGl2ZSwgZGlkbid0IHRlbGwgdXMg
+eW91IHVuZGVyc3Rvb2QgYW5kDQo+ID4+IHdlcmUgd2lsbGluZyB0byBmaXggdGhlIHByb2JsZW0u
+IEkgZG91YnQgeW91IG1lYW50IGl0IHRoaXMgd2F5LCBidXQNCj4gPj4gaXQgZmVlbHMgZGVmZW5z
+aXZlIGFuZCBsaWtlIGEgYnJ1c2gtb2ZmLg0KPiA+Pg0KPiA+PiBGaXJzdCBvZmYsIHlvdSB3aWxs
+IHN0aWxsIGhhdmUgdG8gZG9jdW1lbnQgYW55IERUIGJpbmRpbmdzIHlvdSdyZQ0KPiA+PiBhZGRp
+bmcuIEp1c3QgYmVjYXVzZSB5b3UgYW5zd2VyIHRoZSBxdWVzdGlvbiBpbiB0aGUgcmV2aWV3IGRv
+ZXNuJ3QNCj4gPj4gbWVhbiB5b3UncmUgbm90IHJlc3BvbnNpYmxlIGZvciBkb2luZyBzby4NCj4g
+Pj4NCj4gPj4gQW5kIHNlY29uZCBvZmYsIEkgdGhpbmsgdGhhdCBSYWZhbCAoYW5kIHNvcnJ5IGFi
+b3V0IG15IHNwZWxsaW5nLA0KPiA+PiBsb29rcyBsaWtlIHRoZXJlJ3Mgc29tZSBzb3J0IG9mIGFj
+Y2VudCBvbiB0aGUgbCB0aGF0IEkgZG9uJ3Qga25vdyBob3cNCj4gPj4gdG8gbWFrZSBteSBrZXli
+b2FyZCBkbykgaXMgc2F5aW5nOiB0aGVyZSdzIGFscmVhZHkgc29tZSBnZW5lcmljDQo+ID4+IGJp
+bmRpbmdzIHRoYXQgY2FuIGJlIHVzZWQgdG8gZGlzYWJsZSB0aGUgMmcgb3IgNWcgYmFuZHMuIEdy
+YW50ZWQNCj4gPj4gdGhleSdyZSBldmVuIG5ld2VyIHRoYW4geW91ciBwYXRjaCwgYnV0IEkgZG8g
+dGhpbmsgaWYgc2FpZCBiaW5kaW5ncyBleGlzdCBhbmQNCj4gYXJlIGFwcHJvcHJpYXRlLCB5b3Ug
+c2hvdWxkIHVzZSB0aGVtLg0KPiA+Pg0KPiA+PiAtIFN0ZXZlDQo+ID4NCj4gPiBUaGVzZSBwYXJh
+bWV0ZXJzIGFyZSBtYXJ2ZWxsIHByb3ByaWV0YXJ5IHBhcmFtZXRlcnMsIEkgZG9uJ3QgdGhpbmsg
+aXQgc2hvdWxkDQo+IGJlIGFkZGVkIHRvIERUIGJpbmRpbmdzLg0KPiANCj4gU3RldmUgaXMgY29y
+cmVjdC4NCj4gDQo+IFlvdSBoYXZlIHRvIGRvY3VtZW50IG5ldyBwcm9wZXJ0aWVzLCBqdXN0IGJl
+Y2F1c2UgdGhleSBhcmUgTWFydmVsbCBzcGVjaWZpYw0KPiBkb2Vzbid0IGNoYW5nZSBhbnl0aGlu
+Zy4gWW91IGp1c3QgZG9jdW1lbnQgdGhlbSBpbiBhIHByb3BlciBwbGFjZS4NCj4gDQoNCkFsbCBy
+aWdodC4gSSB3aWxsIGRvIHRoYXQuDQoNCj4gDQo+ID4gQlRXLCA8bWFydmVsbCwyZ2h6PiBhbmQg
+PG1hcnZlbGwsNWdoej4gYXJlIG9ubHkgdXNlZCBmb3IgbXdsd2lmaSB0byByZXBvcnQNCj4gc3Vw
+cG9ydGVkIGJhbmRzLCBpdCBpcyBub3QgcmVsYXRlZCB0byBsaW1pdGF0aW9uIG9mIGZyZXF1ZW5j
+eS4NCj4gDQo+IEhvdyByZXBvcnRpbmcgYSBzaW5nbGUgYmFuZCBkb2Vzbid0IGxpbWl0IHJlcG9y
+dGVkIGZyZXF1ZW5jaWVzPyBZb3UgY2FuDQo+IGFjaGlldmUgZXhhY3RseSB0aGUgc2FtZSB1c2lu
+ZyBnZW5lcmljIHByb3BlcnR5LCBzbyB0aGVyZSBpcyBubyBwbGFjZSBmb3INCj4gTWFydmVsbCBz
+cGVjaWZpYyBvbmVzLg0KPiANCj4gSW4gZmFjdCB0aGVyZSB3ZXJlIGRyaXZlcnMgb2YgMyB2ZW5k
+b3JzIHJlcXVpcmluZyBiYW5kL2ZyZXEtcmVsYXRlZCBkZXNjcmlwdGlvbg0KPiBpbiBEVDogQnJv
+YWRjb20sIE1hcnZlbGwgJiBNZWRpYXRlay4gVGhpcyBwcm9wZXJ0eSB3YXMgZGlzY3Vzc2VkICYg
+ZGVzaWduZWQNCj4gdG8gc3VwcG9ydCBhbGwgbGltaXRhdGlvbiBjYXNlcyB3ZSBmb3VuZCBwb3Nz
+aWJsZSB0byBtYWtlIGl0IHVzYWJsZSB3aXRoDQo+IChob3BlZnVsbHkpIGFsbCBkcml2ZXJzLg0K
+PiANCg0KSSBvbmx5IG5lZWQgc2ltcGxlIHdheSB0byBkaXNhYmxlIDJnIG9yIDVnIGJhbmQuIEkg
+d2lsbCBmb2xsb3cgeW91ciBzdWdnZXN0aW9uIHRvIGRvY3VtZW50IHRoZXNlIG1hcnZlbGwgcHJv
+cHJpZXRhcnkgcGFyYW1ldGVycy4NCg0KVGhhbmtzLA0KRGF2aWQNCg0KPiAtLQ0KPiBSYWZhxYIN
+Cg==
