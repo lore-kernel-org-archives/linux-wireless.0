@@ -1,202 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59836 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751267AbdBOODB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 09:03:01 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 3/5] mac80211: add ability to parse CCFS2
-Date: Wed, 15 Feb 2017 15:02:54 +0100
-Message-Id: <20170215140256.19455-3-johannes@sipsolutions.net> (sfid-20170215_150306_762737_97DBD5F3)
-In-Reply-To: <20170215140256.19455-1-johannes@sipsolutions.net>
-References: <20170215140256.19455-1-johannes@sipsolutions.net>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35063 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753511AbdBHGh7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 01:37:59 -0500
+From: David Lin <dlin@marvell.com>
+To: Steve deRosier <derosier@gmail.com>
+CC: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Chor Teck Law <ctlaw@marvell.com>,
+        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
+Date: Wed, 8 Feb 2017 06:30:59 +0000
+Message-ID: <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com> (sfid-20170208_074003_133309_27A29C6A)
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+ <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
+ <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
+ <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com>
+ <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
+In-Reply-To: <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-With newer VHT implementations, it's necessary to look at the
-HT operation's CCFS2 field to identify the actual bandwidth
-used.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c        |  4 +++-
- net/mac80211/ieee80211_i.h |  4 +++-
- net/mac80211/mesh.c        |  4 +++-
- net/mac80211/mlme.c        |  3 ++-
- net/mac80211/spectmgmt.c   |  5 ++++-
- net/mac80211/util.c        | 48 ++++++++++++++++++++++++++++++----------------
- 6 files changed, 47 insertions(+), 21 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 98999d3d5262..a5c0c5818da5 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1065,7 +1065,9 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
- 			struct ieee80211_vht_cap cap_ie;
- 			struct ieee80211_sta_vht_cap cap = sta->sta.vht_cap;
- 
--			ieee80211_chandef_vht_oper(elems->vht_operation,
-+			ieee80211_chandef_vht_oper(&local->hw,
-+						   elems->vht_operation,
-+						   elems->ht_operation,
- 						   &chandef);
- 			memcpy(&cap_ie, elems->vht_cap_elem, sizeof(cap_ie));
- 			ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4047fc528977..b0690c2d7f7d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2074,7 +2074,9 @@ u8 *ieee80211_add_wmm_info_ie(u8 *buf, u8 qosinfo);
- /* channel management */
- bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
- 			       struct cfg80211_chan_def *chandef);
--bool ieee80211_chandef_vht_oper(const struct ieee80211_vht_operation *oper,
-+bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
-+				const struct ieee80211_vht_operation *oper,
-+				const struct ieee80211_ht_operation *htop,
- 				struct cfg80211_chan_def *chandef);
- u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c);
- 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index c28b0af9c1f2..1b60b4350517 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -92,7 +92,9 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
- 	cfg80211_chandef_create(&sta_chan_def, sdata->vif.bss_conf.chandef.chan,
- 				NL80211_CHAN_NO_HT);
- 	ieee80211_chandef_ht_oper(ie->ht_operation, &sta_chan_def);
--	ieee80211_chandef_vht_oper(ie->vht_operation, &sta_chan_def);
-+	ieee80211_chandef_vht_oper(&sdata->local->hw,
-+				   ie->vht_operation, ie->ht_operation,
-+				   &sta_chan_def);
- 
- 	if (!cfg80211_chandef_compatible(&sdata->vif.bss_conf.chandef,
- 					 &sta_chan_def))
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 23986934d7af..2ff3040ebb09 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -213,7 +213,8 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	vht_chandef = *chandef;
--	if (!ieee80211_chandef_vht_oper(vht_oper, &vht_chandef)) {
-+	if (!ieee80211_chandef_vht_oper(&sdata->local->hw,
-+					vht_oper, ht_oper, &vht_chandef)) {
- 		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
- 			sdata_info(sdata,
- 				   "AP VHT information is invalid, disable VHT\n");
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index 0782e486fe89..5a013b53b4f0 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -138,6 +138,7 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 				wide_bw_chansw_ie->new_center_freq_seg1,
- 			/* .basic_mcs_set doesn't matter */
- 		};
-+		struct ieee80211_ht_operation ht_oper = {};
- 
- 		/* default, for the case of IEEE80211_VHT_CHANWIDTH_USE_HT,
- 		 * to the previously parsed chandef
-@@ -145,7 +146,9 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 		new_vht_chandef = csa_ie->chandef;
- 
- 		/* ignore if parsing fails */
--		if (!ieee80211_chandef_vht_oper(&vht_oper, &new_vht_chandef))
-+		if (!ieee80211_chandef_vht_oper(&sdata->local->hw,
-+						&vht_oper, &ht_oper,
-+						&new_vht_chandef))
- 			new_vht_chandef.chan = NULL;
- 
- 		if (sta_flags & IEEE80211_STA_DISABLE_80P80MHZ &&
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7a37ce78bb38..152aae54b67f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2482,49 +2482,65 @@ bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
- 	return true;
- }
- 
--bool ieee80211_chandef_vht_oper(const struct ieee80211_vht_operation *oper,
-+bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
-+				const struct ieee80211_vht_operation *oper,
-+				const struct ieee80211_ht_operation *htop,
- 				struct cfg80211_chan_def *chandef)
- {
- 	struct cfg80211_chan_def new = *chandef;
--	int cf1, cf2;
-+	int cf0, cf1;
-+	int ccfs0, ccfs1, ccfs2;
-+	int ccf0, ccf1;
- 
--	if (!oper)
-+	if (!oper || !htop)
- 		return false;
- 
--	cf1 = ieee80211_channel_to_frequency(oper->center_freq_seg0_idx,
--					     chandef->chan->band);
--	cf2 = ieee80211_channel_to_frequency(oper->center_freq_seg1_idx,
--					     chandef->chan->band);
-+	ccfs0 = oper->center_freq_seg0_idx;
-+	ccfs1 = oper->center_freq_seg1_idx;
-+	ccfs2 = (le16_to_cpu(htop->operation_mode) &
-+				IEEE80211_HT_OP_MODE_CCFS2_MASK)
-+			>> IEEE80211_HT_OP_MODE_CCFS2_SHIFT;
-+
-+	/* when parsing (and we know how to) CCFS1 and CCFS2 are equivalent */
-+	ccf0 = ccfs0;
-+	ccf1 = ccfs1;
-+	if (!ccfs1 && ieee80211_hw_check(hw, SUPPORTS_VHT_EXT_NSS_BW))
-+		ccf1 = ccfs2;
-+
-+	cf0 = ieee80211_channel_to_frequency(ccf0, chandef->chan->band);
-+	cf1 = ieee80211_channel_to_frequency(ccf1, chandef->chan->band);
- 
- 	switch (oper->chan_width) {
- 	case IEEE80211_VHT_CHANWIDTH_USE_HT:
-+		/* just use HT information directly */
- 		break;
- 	case IEEE80211_VHT_CHANWIDTH_80MHZ:
- 		new.width = NL80211_CHAN_WIDTH_80;
--		new.center_freq1 = cf1;
-+		new.center_freq1 = cf0;
- 		/* If needed, adjust based on the newer interop workaround. */
--		if (oper->center_freq_seg1_idx) {
-+		if (ccf1) {
- 			unsigned int diff;
- 
--			diff = abs(oper->center_freq_seg1_idx -
--				   oper->center_freq_seg0_idx);
-+			diff = abs(ccf1 - ccf0);
- 			if (diff == 8) {
- 				new.width = NL80211_CHAN_WIDTH_160;
--				new.center_freq1 = cf2;
-+				new.center_freq1 = cf1;
- 			} else if (diff > 8) {
- 				new.width = NL80211_CHAN_WIDTH_80P80;
--				new.center_freq2 = cf2;
-+				new.center_freq2 = cf1;
- 			}
- 		}
- 		break;
- 	case IEEE80211_VHT_CHANWIDTH_160MHZ:
-+		/* deprecated encoding */
- 		new.width = NL80211_CHAN_WIDTH_160;
--		new.center_freq1 = cf1;
-+		new.center_freq1 = cf0;
- 		break;
- 	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
-+		/* deprecated encoding */
- 		new.width = NL80211_CHAN_WIDTH_80P80;
--		new.center_freq1 = cf1;
--		new.center_freq2 = cf2;
-+		new.center_freq1 = cf0;
-+		new.center_freq2 = cf1;
- 		break;
- 	default:
- 		return false;
--- 
-2.9.3
+c3RldmUuZGVyb3NpZXJAZ21haWwuY29tIFttYWlsdG86c3RldmUuZGVyb3NpZXJAZ21haWwuY29t
+XSB3cm90ZToNCj4gT24gVHVlLCBGZWIgNywgMjAxNyBhdCAxMDoxNSBQTSwgRGF2aWQgTGluIDxk
+bGluQG1hcnZlbGwuY29tPiB3cm90ZToNCj4gPj4gUmFmYcWCIE1pxYJlY2tpIFttYWlsdG86emFq
+ZWM1QGdtYWlsLmNvbV0gd3JvdGU6DQo+ID4+IE9uIDcgRmVicnVhcnkgMjAxNyBhdCAyMDoxMiwg
+U3RldmUgZGVSb3NpZXIgPGRlcm9zaWVyQGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4+ID4+ICsgLyog
+bG9vayBmb3IgYWxsIG1hdGNoaW5nIHByb3BlcnR5IG5hbWVzICovDQo+ID4+ID4+ICsgZm9yX2Vh
+Y2hfcHJvcGVydHlfb2Zfbm9kZShwcml2LT5kdF9ub2RlLCBwcm9wKSB7IGlmDQo+ID4+ID4+ICsg
+KHN0cmNtcChwcm9wLT5uYW1lLCAibWFydmVsbCwyZ2h6IikgPT0gMCkNCj4gPj4gPj4gKyBwcml2
+LT5kaXNhYmxlXzJnID0gdHJ1ZTsNCj4gPj4gPj4gKyBpZiAoc3RyY21wKHByb3AtPm5hbWUsICJt
+YXJ2ZWxsLDVnaHoiKSA9PSAwKQ0KPiA+PiA+PiArIHByaXYtPmRpc2FibGVfNWcgPSB0cnVlOw0K
+PiA+PiA+PiArIGlmIChzdHJjbXAocHJvcC0+bmFtZSwgIm1hcnZlbGwsY2hhaW5tYXNrIikgPT0g
+MCkgeyBwcm9wX3ZhbHVlID0NCj4gPj4gPj4gKyBiZTMyX3RvX2NwdSgqKChfX2JlMzIgKilwcm9w
+LT52YWx1ZSkpOyBpZiAocHJvcF92YWx1ZSA9PSAyKQ0KPiA+PiA+PiArIHByaXYtPmFudGVubmFf
+dHggPSBBTlRFTk5BX1RYXzI7DQo+ID4+ID4+ICsNCj4gPj4gPj4gKyBwcm9wX3ZhbHVlID0gYmUz
+Ml90b19jcHUoKigoX19iZTMyICopIChwcm9wLT52YWx1ZSArIDQpKSk7IGlmDQo+ID4+ID4+ICsg
+KHByb3BfdmFsdWUgPT0gMikNCj4gPj4gPj4gKyBwcml2LT5hbnRlbm5hX3J4ID0gQU5URU5OQV9S
+WF8yOw0KPiA+PiA+PiArIH0NCj4gPj4gPj4gKyB9DQo+ID4+ID4+ICsNCj4gPj4gPj4gKyBwcml2
+LT5wd3Jfbm9kZSA9IG9mX2ZpbmRfbm9kZV9ieV9uYW1lKHByaXYtPmR0X25vZGUsDQo+ID4+ID4+
+ICsgICAgICAibWFydmVsbCxwb3dlcnRhYmxlIik7DQo+ID4+ID4+ICsjZW5kaWYNCj4gPj4gPj4g
+K30NCj4gPj4gPg0KPiA+PiA+IEFGQUlDVCwgdGhlcmUncyBubyBkb2N1bWVudGF0aW9uIGZvciB0
+aGVzZSBEVCBiaW5kaW5ncy4gVGhlIG13bHdpZmkNCj4gPj4gPiBub2RlIGFuZCB0aGUgbWFydmVs
+bCxwb3dlcnRhYmxlIGJvdGggbmVlZCBmdWxsIGRvY3VtZW50YXRpb24gaW4NCj4gPj4gPiBEb2N1
+bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvLi4uIC4NCj4gPj4gPg0KPiA+PiA+IEZyYW5r
+bHkgSSBoYXZlIGEgZmVlbGluZyBJJ20gZ29pbmcgdG8gbmVlZCB0aGVzZSBEVCBub2RlcyBhbmQg
+SSdkDQo+ID4+ID4gbGlrZSB0byBub3QgaGF2ZSB0byBndWVzcy1hbmQtY2hlY2sgYmFzZWQgb24g
+dGhlIGNvZGUuDQo+ID4+DQo+ID4+IFBsZWFzZSB1c2UgaWVlZTgwMjExLWZyZXEtbGltaXQ6DQo+
+ID4+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2RhdmVtL25l
+dC1uZXh0LmdpdC9jb21taQ0KPiA+PiB0Lz9pZD1iMw0KPiA+PiAzMGIyNWVhYWJkYTAwZDc0ZTQ3
+NTY2ZDkyMDA5MDdkYTM4MTg5Ng0KPiA+Pg0KPiA+PiBNb3N0IGxpa2VseSB3aXRoIHdpcGh5X3Jl
+YWRfb2ZfZnJlcV9saW1pdHMgaGVscGVyOg0KPiA+PiBodHRwczovL2dpdC5rZXJuZWwub3JnL2Nn
+aXQvbGludXgva2VybmVsL2dpdC9kYXZlbS9uZXQtbmV4dC5naXQvY29tbWkNCj4gPj4gdC8/aWQ9
+ZTYNCj4gPj4gOTFhYzJmNzViNjliZWU3NDNmMDM3MGQ3OTQ1NGJhNDQyOWIxNzUNCj4gPg0KPiA+
+IEkgYWxyZWFkeSByZXBsaWVkIG1lYW5pbmcgb2YgdGhlc2UgcGFyYW1ldGVyczoNCj4gPiA8bWFy
+dmVsbCwyZ2h6PiBpcyB1c2VkIHRvIGRpc2FibGUgMmcgYmFuZC4NCj4gPiA8bWFydmVsbCw1Z2h6
+PiBpcyB1c2VkIHRvIGRpc2FibGUgNWcgYmFuZC4NCj4gPiA8bWFydmVsbCwgY2hhaW5tYXNrPiBp
+cyB1c2VkIHRvIHNwZWNpZnkgYW50ZW5uYSBudW1iZXIgKGlmIGRlZmF1bHQgbnVtYmVyDQo+IGlz
+IHN1aXRhYmxlIGZvciB5b3UsIHRoZXJlIGlzIG5vIG5lZWQgdG8gdXNlIHRoaXMgcGFyYW1ldGVy
+KS4NCj4gPiA8bWFydmVsbCxwb3dlcnRhYmxlPiBzaG91bGQgbm90IGJlIHVzZWQgZm9yIGNoaXAg
+d2l0aCBkZXZpY2UgcG93ZXIgdGFibGUuDQo+IEluIGZhY3QsIHRoaXMgcGFyYW1ldGVyIHNob3Vs
+ZCBub3QgYmUgdXNlZCBhbnkgbW9yZS4NCj4gPg0KPiANCj4gRGF2aWQsIEkgdGhpbmsgeW91J3Jl
+IG5vdCB1bmRlcnN0YW5kaW5nIHRoZSBjb21tZW50LCBvciBhdCBsZWFzdCB0aGF0J3Mgd2hhdCBp
+dA0KPiBsb29rcyBsaWtlIHRvIG1lLiBZZXMsIHlvdSBkaWQgcmVwbHkgYXMgdG8gdGhlIG1lYW5p
+bmcuDQo+IEFuZCwgeW91ciByZXBseSwgd2hpbGUgaW5mb3JtYXRpdmUsIGRpZG4ndCB0ZWxsIHVz
+IHlvdSB1bmRlcnN0b29kIGFuZCB3ZXJlDQo+IHdpbGxpbmcgdG8gZml4IHRoZSBwcm9ibGVtLiBJ
+IGRvdWJ0IHlvdSBtZWFudCBpdCB0aGlzIHdheSwgYnV0IGl0IGZlZWxzIGRlZmVuc2l2ZQ0KPiBh
+bmQgbGlrZSBhIGJydXNoLW9mZi4NCj4gDQo+IEZpcnN0IG9mZiwgeW91IHdpbGwgc3RpbGwgaGF2
+ZSB0byBkb2N1bWVudCBhbnkgRFQgYmluZGluZ3MgeW91J3JlIGFkZGluZy4gSnVzdA0KPiBiZWNh
+dXNlIHlvdSBhbnN3ZXIgdGhlIHF1ZXN0aW9uIGluIHRoZSByZXZpZXcgZG9lc24ndCBtZWFuIHlv
+dSdyZSBub3QNCj4gcmVzcG9uc2libGUgZm9yIGRvaW5nIHNvLg0KPiANCj4gQW5kIHNlY29uZCBv
+ZmYsIEkgdGhpbmsgdGhhdCBSYWZhbCAoYW5kIHNvcnJ5IGFib3V0IG15IHNwZWxsaW5nLCBsb29r
+cyBsaWtlDQo+IHRoZXJlJ3Mgc29tZSBzb3J0IG9mIGFjY2VudCBvbiB0aGUgbCB0aGF0IEkgZG9u
+J3Qga25vdyBob3cgdG8gbWFrZSBteQ0KPiBrZXlib2FyZCBkbykgaXMgc2F5aW5nOiB0aGVyZSdz
+IGFscmVhZHkgc29tZSBnZW5lcmljIGJpbmRpbmdzIHRoYXQgY2FuIGJlIHVzZWQNCj4gdG8gZGlz
+YWJsZSB0aGUgMmcgb3IgNWcgYmFuZHMuIEdyYW50ZWQgdGhleSdyZSBldmVuIG5ld2VyIHRoYW4g
+eW91ciBwYXRjaCwNCj4gYnV0IEkgZG8gdGhpbmsgaWYgc2FpZCBiaW5kaW5ncyBleGlzdCBhbmQg
+YXJlIGFwcHJvcHJpYXRlLCB5b3Ugc2hvdWxkIHVzZSB0aGVtLg0KPiANCj4gLSBTdGV2ZQ0KDQpU
+aGVzZSBwYXJhbWV0ZXJzIGFyZSBtYXJ2ZWxsIHByb3ByaWV0YXJ5IHBhcmFtZXRlcnMsIEkgZG9u
+J3QgdGhpbmsgaXQgc2hvdWxkIGJlIGFkZGVkIHRvIERUIGJpbmRpbmdzLg0KDQpCVFcsIDxtYXJ2
+ZWxsLDJnaHo+IGFuZCA8bWFydmVsbCw1Z2h6PiBhcmUgb25seSB1c2VkIGZvciBtd2x3aWZpIHRv
+IHJlcG9ydCBzdXBwb3J0ZWQgYmFuZHMsIGl0IGlzIG5vdCByZWxhdGVkIHRvIGxpbWl0YXRpb24g
+b2YgZnJlcXVlbmN5Lg0K
