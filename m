@@ -1,35 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41196 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752142AbdBHIah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 03:30:37 -0500
-Message-ID: <1486542634.4603.9.camel@sipsolutions.net> (sfid-20170208_093157_173239_83B1175A)
-Subject: Re: [PATCH v2 1/3] mac80211: fix mesh moving average stuck
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
-Date: Wed, 08 Feb 2017 09:30:34 +0100
-In-Reply-To: <1485893272-6893-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1485893272-6893-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:35431 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932065AbdBHJPx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 04:15:53 -0500
+Received: by mail-pg0-f48.google.com with SMTP id 194so47470099pgd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 01:15:53 -0800 (PST)
+Subject: Re: [PATCH V3 2/9] brcmfmac: switch to C function (__brcmf_err) for
+ printing errors
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170202213321.11591-1-zajec5@gmail.com>
+ <20170202213321.11591-2-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <8c08cba5-3d96-689a-c958-c743fd1cb422@broadcom.com> (sfid-20170208_101855_522377_E4A8E549)
+Date: Wed, 8 Feb 2017 10:15:47 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170202213321.11591-2-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-01-31 at 12:07 -0800, Rajkumar Manoharan wrote:
-> As moving average is not considering fractional part after
-> certain ratio, it will stuck at the same state. For example
-> with current values, moving average stuck at 96 and it will
-> not move forward. Fortunately current threshold is matching
-> against 95%. If thresold is increased more than 96, mesh path
-> never be deactivated under worst case. Fix failure average
-> movement by bumping up average at stuck state.
+On 2-2-2017 22:33, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This will allow extending code and using more detailed messages e.g.
+> with the help of dev_err.
 
-This is ... really strange to me.
-
-Can't we just actually take into account fractional parts instead?
-
-I think you should instead convert this to the EMWA helpers (see
-include/linux/average.h).
-
-johannes
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V3: Keep IS_ENABLED check in the macro as suggested by Felix
+> ---
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/common.c    | 16 ++++++++++++++++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h |  6 +++---
+>  2 files changed, 19 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> index f7c8c2e80349..33b133f7e63a 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> @@ -218,6 +218,22 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+>  	return err;
+>  }
+>  
+> +#ifndef CONFIG_BRCM_TRACING
+> +void __brcmf_err(const char *func, const char *fmt, ...)
+> +{
+> +	struct va_format vaf;
+> +	va_list args;
+> +
+> +	va_start(args, fmt);
+> +
+> +	vaf.fmt = fmt;
+> +	vaf.va = &args;
+> +	pr_err("%s: %pV", func, &vaf);
+> +
+> +	va_end(args);
+> +}
+> +#endif
+> +
+>  #if defined(CONFIG_BRCM_TRACING) || defined(CONFIG_BRCMDBG)
+>  void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...)
+>  {
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> index 1fe4aa973a92..441a6661eac0 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> @@ -45,6 +45,8 @@
+>  #undef pr_fmt
+>  #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+>  
+> +__printf(2, 3)
+> +void __brcmf_err(const char *func, const char *fmt, ...);
+>  #ifndef CONFIG_BRCM_TRACING
+>  /* Macro for error messages. net_ratelimit() is used when driver
+>   * debugging is not selected. When debugging the driver error
+> @@ -53,11 +55,9 @@
+>  #define brcmf_err(fmt, ...)						\
+>  	do {								\
+>  		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
+> -			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
+> +			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
+>  	} while (0)
+>  #else
+> -__printf(2, 3)
+> -void __brcmf_err(const char *func, const char *fmt, ...);
+>  #define brcmf_err(fmt, ...) \
+>  	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
+>  #endif
+> 
