@@ -1,109 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:34331 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751391AbdBEQYl (ORCPT
+Received: from llsa731-a03.servidoresdns.net ([82.223.190.25]:56070 "EHLO
+        llsa731-a03.servidoresdns.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750946AbdBHUNi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Feb 2017 11:24:41 -0500
-Received: by mail-ot0-f194.google.com with SMTP id 73so7799400otj.1
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2017 08:24:41 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Dmitry Osipenko <digetx@gmail.com>
-Subject: [PATCH] rtlwifi: rtl8192c-common: Fix "BUG: KASAN:
-Date: Sun,  5 Feb 2017 10:24:22 -0600
-Message-Id: <20170205162422.26963-1-Larry.Finger@lwfinger.net> (sfid-20170205_172450_879705_EDABE09D)
+        Wed, 8 Feb 2017 15:13:38 -0500
+Subject: Re: Installing driver for Ubuntu 16.04 Intel(R) Wireless WiFi Link
+ 4965AGN
+To: sedat.dilek@gmail.com
+References: <CA+icZUXtJG18ejLynO1FB0BS5Guqr35-Bn0_Obht-VyGNO4tAg@mail.gmail.com>
+ <6df84be9db053beae03eb31ece0ab2d7@mail.leopoldosoria.com>
+ <CA+icZUVZ5mz4NmvrQit3Mz3GEbobR265Yd8YjVKF90=MBNQkAQ@mail.gmail.com>
+ <db60d707-1cfe-f9b1-8d63-87e0121101e4@leopoldosoria.com>
+ <ee13dae1-d01f-baff-a4d3-fe3e77fa85ec@leopoldosoria.com>
+ <CA+icZUV-J0+jY8U=5_UwDf1Z7Qgnqswn+gAPhWm8YYkhqWLJjw@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Leopoldo <info@leopoldosoria.com>
+Message-ID: <ecfcf4da-aa7c-a451-6642-5ff05a6d9fe9@leopoldosoria.com> (sfid-20170208_211424_786373_1BB4104A)
+Date: Wed, 8 Feb 2017 21:12:01 +0100
+MIME-Version: 1.0
+In-Reply-To: <CA+icZUV-J0+jY8U=5_UwDf1Z7Qgnqswn+gAPhWm8YYkhqWLJjw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernels built with CONFIG_KASAN=y report the following BUG for rtl8192cu
-and rtl8192c-common:
+Dear Sedat,
 
-==================================================================
-BUG: KASAN: slab-out-of-bounds in rtl92c_dm_bt_coexist+0x858/0x1e40
-     [rtl8192c_common] at addr ffff8801c90edb08
-Read of size 1 by task kworker/0:1/38
-page:ffffea0007243800 count:1 mapcount:0 mapping:          (null)
-     index:0x0 compound_mapcount: 0
-flags: 0x8000000000004000(head)
-page dumped because: kasan: bad access detected
-CPU: 0 PID: 38 Comm: kworker/0:1 Not tainted 4.9.7-gentoo #3
-Hardware name: Gigabyte Technology Co., Ltd. To be filled by
-     O.E.M./Z77-DS3H, BIOS F11a 11/13/2013
-Workqueue: rtl92c_usb rtl_watchdog_wq_callback [rtlwifi]
-  0000000000000000 ffffffff829eea33 ffff8801d7f0fa30 ffff8801c90edb08
-  ffffffff824c0f09 ffff8801d4abee80 0000000000000004 0000000000000297
-  ffffffffc070b57c ffff8801c7aa7c48 ffff880100000004 ffffffff000003e8
-Call Trace:
-  [<ffffffff829eea33>] ? dump_stack+0x5c/0x79
-  [<ffffffff824c0f09>] ? kasan_report_error+0x4b9/0x4e0
-  [<ffffffffc070b57c>] ? _usb_read_sync+0x15c/0x280 [rtl_usb]
-  [<ffffffff824c0f75>] ? __asan_report_load1_noabort+0x45/0x50
-  [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40 [rtl8192c_common]
-  [<ffffffffc06d7a88>] ? rtl92c_dm_bt_coexist+0x858/0x1e40 [rtl8192c_common]
-  [<ffffffffc06d0cbe>] ? rtl92c_dm_rf_saving+0x96e/0x1330 [rtl8192c_common]
-...
+Absolutely clear. As you are my primary contact there, you can extent my 
+question to the people there.
 
-The problem is due to rtl8192ce and rtl8192cu sharing routines, and having
-different layouts of struct rtl_pci_priv, which is used by rtl8192ce, and
-struct rtl_usb_priv, which is used by rtl8192cu. The problem was resolved
-by placing the struct bt_coexist_info at the head of each of those private
-areas.
+I much appreciate your assistance.
 
-Reported-and-tested-by: Dmitry Osipenko <digetx@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> # 4.0+
-Cc: Dmitry Osipenko <digetx@gmail.com>
----
+Kind regards,
 
-Kalle,
+Leopoldo
 
-This bug has been in the code since kernel 4.0. To my knowledge, it has
-never caused a crash, thus I see no particular need to rush the fix to
-mainline. Including it in 4.11 should be OK.
 
-I have a better fix in mind that is much more invasive, but that will not
-need to be backported to older kernels as this change will fix the bug.
-That second fix will be submitted later.
-
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/pci.h | 4 ++--
- drivers/net/wireless/realtek/rtlwifi/usb.h | 3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
-index 578b1d9..d9039ea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
-@@ -271,10 +271,10 @@ struct mp_adapter {
- };
- 
- struct rtl_pci_priv {
-+	struct bt_coexist_info bt_coexist;
-+	struct rtl_led_ctl ledctl;
- 	struct rtl_pci dev;
- 	struct mp_adapter ndis_adapter;
--	struct rtl_led_ctl ledctl;
--	struct bt_coexist_info bt_coexist;
- };
- 
- #define rtl_pcipriv(hw)		(((struct rtl_pci_priv *)(rtl_priv(hw))->priv))
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.h b/drivers/net/wireless/realtek/rtlwifi/usb.h
-index a6d43d2..cdb9e06 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.h
-@@ -146,8 +146,9 @@ struct rtl_usb {
- };
- 
- struct rtl_usb_priv {
--	struct rtl_usb dev;
-+	struct bt_coexist_info bt_coexist;
- 	struct rtl_led_ctl ledctl;
-+	struct rtl_usb dev;
- };
- 
- #define rtl_usbpriv(hw)	 (((struct rtl_usb_priv *)(rtl_priv(hw))->priv))
--- 
-2.10.2
+El 06/02/17 a las 07:01, Sedat Dilek escribió:
+> On Sun, Feb 5, 2017 at 6:31 PM, Leopoldo <info@leopoldosoria.com> wrote:
+>> Dear Sedat,
+>>
+>> Did you have the chance to have a look to this?
+>>
+> No.
+> If it was not clear said: I did not promise to look at it, I just said
+> sent the logs and people here can look at it.
+>
+> - Sedat -
+>
+>> Kind regards.
+>>
+>> Leopoldo
+>>
+>>
+>> El 16/01/17 a las 21:33, Leopoldo escribió:
+>>
+>> Dear Sedat,
+>>
+>> Please, find attached the requested 2 files.
+>>
+>> Thanking you invaluable collaboration.
+>>
+>> Leopoldo
+>>
+>>
+>> El 02/01/17 a las 20:39, Sedat Dilek escribió:
+>>
+>> On Mon, Jan 2, 2017 at 7:11 PM,  <info@leopoldosoria.com> wrote:
+>>
+>> Dear Madam Sedat,
+>>
+>> Hehe, my family name is indeed a female first name - Sedat is male.
+>>
+>> Thank you for your answer.
+>>
+>> I already consulted Ubuntu Community but it is not so nice for a beginner
+>> like me. I tried several recomedations from them, but no way.  So, I
+>> thought, it is better to ask to the source.
+>>
+>> Yes, I have the firmware you mention, but wifi doesn't work. The icon appear
+>> in the top bar but it doesn't seem to be conected. It doesn't seach
+>> conections even when wifi is activated. The ligh of wifi simbol in the
+>> laptop lights some times but others it doesn't.
+>>
+>> It's difficult to answer without knowing anything about your hardware,
+>> your WLAN infrastructure and your WLAN setup on Ubuntu/xenial.
+>>
+>> It might be helpful if you attach your linux-config and dmesg output.
+>>
+>> $ cp -v /boot/config-$(uname -r) /tmp
+>> $ dmesg > /tmp/dmesg.txt
+>>
+>> Attach those two files from /tmp directory and people can look at this.
+>>
+>> - Sedat -
+>>
+>> Any help is welcome and I won't forget ladies next time, sorry.
+>>
+>> Thank you for your help and have a happy new year 2017 also.
+>>
+>> Regards,
+>> Leopoldo
+>>
+>>
+>>
+>>
+>> El 02-01-2017 15:06, Sedat Dilek escribió:
+>>
+>> On Mon, Jan 2, 2017 at 2:11 PM,  <info@leopoldosoria.com> wrote:
+>>
+>> Dear Sirs,
+>> Which of the below drivers should I install for my Lenovo 3000 V200?
+>> I am runing Ubuntu 16.04
+>>
+>> Intel® Wireless WiFi Link 4965AGN
+>> 2.6.24+ iwlwifi-4965-ucode-4.44.14.tgz
+>> 2.6.24+ iwlwifi-4965-ucode-4.44.15.tgz
+>> 2.6.24+ iwlwifi-4965-ucode-4.44.17.tgz
+>> 2.6.24+ iwlwifi-4965-ucode-4.44.1.18.tgz
+>> 2.6.24+ iwlwifi-4965-ucode-4.44.1.20.tgz
+>> 2.6.24+ iwlwifi-4965-ucode-228.57.1.21.tgz
+>> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.21.tgz
+>> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.23.tgz
+>> 2.6.28+ (?)     iwlwifi-4965-ucode-228.61.2.24.tgz
+>>
+>> Ans how shoudl I proceed for intalling the right driver?
+>>
+>> Thank you
+>>
+>> [ What about the Ladies, Sir :-)? ]
+>>
+>> Happy new 2017!
+>>
+>> You need the linux-firmware [1] package.
+>> Normally, Ubuntu/xenial should ship it.
+>>
+>> Check if you have...
+>>
+>> /lib/firmware/iwlwifi-4965-2.ucode
+>>
+>> ...file.
+>>
+>> Not sure why you are asking or what is not working.
+>> AFAICS, Ubuntu should have some nice wikis explaining a WLAN setup.
+>> A good strategy will always be to consult your distro's help before asking
+>> here.
+>>
+>> [3] as a gift.
+>>
+>> Regards,
+>> - Sedat -
+>>
+>> [1] http://packages.ubuntu.com/xenial/linux-firmware
+>> [2] http://packages.ubuntu.com/xenial/all/linux-firmware/filelist
+>> [3] http://www.catb.org/~esr/faqs/smart-questions.html
+>>
+>>
+>>
