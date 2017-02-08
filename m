@@ -1,67 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42128 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751564AbdB0KJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 05:09:29 -0500
-From: Hans de Goede <hdegoede@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH 1/4] brcmfmac: Do not print the firmware version as an error
-Date: Mon, 27 Feb 2017 11:01:37 +0100
-Message-Id: <20170227100140.5190-2-hdegoede@redhat.com> (sfid-20170227_111006_348368_3916AB27)
-In-Reply-To: <20170227100140.5190-1-hdegoede@redhat.com>
-References: <20170227100140.5190-1-hdegoede@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:39168 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753789AbdBHL22 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 06:28:28 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 13:23:07 +0200
+Message-Id: <20170208112322.29413-3-luca@coelho.fi> (sfid-20170208_122839_539081_62FC8872)
+In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+Subject: [PATCH 02/17] iwlwifi: pcie: separate between SW and HW MSIX configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using pr_err for things which are not errors is a bad idea. E.g. it
-will cause the plymouth bootsplash screen to drop back to the text
-console so that the user can see the error, which is not what we
-normally want to happen.
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-Instead add a new brcmf_info macro and use that.
+The MSIX configuration flow includes two different stages:
+configuring the HW by writing to the IVAR table and configuring the SW
+to reflect the HW configuration.
+The HW configuration is needed on each HW reset,
+whereas the SW configuration is only needed during the init flow.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 3 +++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 3e15d64..6d565f1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	strsep(&ptr, "\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f795ebea4c4a..e7a26f594386 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1147,7 +1147,7 @@ static void iwl_pcie_map_rx_causes(struct iwl_trans *trans)
+ 		iwl_write8(trans, CSR_MSIX_RX_IVAR(1), val);
+ }
  
- 	/* Print fw version info */
--	brcmf_err("Firmware version = %s\n", buf);
-+	brcmf_info("Firmware version = %s\n", buf);
+-static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
++static void iwl_pcie_conf_msix_hw(struct iwl_trans_pcie *trans_pcie)
+ {
+ 	struct iwl_trans *trans = trans_pcie->trans;
  
- 	/* locate firmware version number for ethtool */
- 	ptr = strrchr(buf, ' ') + 1;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-index 6687812..d0d8180 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-@@ -59,11 +59,14 @@
- 			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
- 	} while (0)
- #endif
-+#define brcmf_info(fmt, ...)	pr_info("%s: " fmt, __func__, ##__VA_ARGS__)
- #else
- __printf(2, 3)
- void __brcmf_err(const char *func, const char *fmt, ...);
- #define brcmf_err(fmt, ...) \
- 	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
-+/* For tracing purposes treat info messages as errors */
-+#define brcmf_info brcm_err
- #endif
+@@ -1170,12 +1170,20 @@ static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
+ 	iwl_pcie_map_rx_causes(trans);
  
- #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+ 	iwl_pcie_map_non_rx_causes(trans);
++}
++
++static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
++{
++	struct iwl_trans *trans = trans_pcie->trans;
++
++	iwl_pcie_conf_msix_hw(trans_pcie);
+ 
+-	trans_pcie->fh_init_mask =
+-		~iwl_read32(trans, CSR_MSIX_FH_INT_MASK_AD);
++	if (!trans_pcie->msix_enabled)
++		return;
++
++	trans_pcie->fh_init_mask = ~iwl_read32(trans, CSR_MSIX_FH_INT_MASK_AD);
+ 	trans_pcie->fh_mask = trans_pcie->fh_init_mask;
+-	trans_pcie->hw_init_mask =
+-		~iwl_read32(trans, CSR_MSIX_HW_INT_MASK_AD);
++	trans_pcie->hw_init_mask = ~iwl_read32(trans, CSR_MSIX_HW_INT_MASK_AD);
+ 	trans_pcie->hw_mask = trans_pcie->hw_init_mask;
+ }
+ 
+@@ -1675,6 +1683,7 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
+ 	iwl_pcie_apm_init(trans);
+ 
+ 	iwl_pcie_init_msix(trans_pcie);
++
+ 	/* From now on, the op_mode will be kept updated about RF kill state */
+ 	iwl_enable_rfkill_int(trans);
+ 
 -- 
-2.9.3
+2.11.0
