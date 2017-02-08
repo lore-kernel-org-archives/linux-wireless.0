@@ -1,111 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:34919 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751287AbdBAVJU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 16:09:20 -0500
-Received: by mail-ot0-f194.google.com with SMTP id 65so46779270otq.2
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2017 13:09:19 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/7] rtlwifi: rtl8821ae: Fix typo in symbol for bandwidth numbers
-Date: Wed,  1 Feb 2017 15:08:51 -0600
-Message-Id: <20170201210857.26516-2-Larry.Finger@lwfinger.net> (sfid-20170201_220926_440632_B0C0578E)
-In-Reply-To: <20170201210857.26516-1-Larry.Finger@lwfinger.net>
-References: <20170201210857.26516-1-Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:55586 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753475AbdBHLr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 06:47:28 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Vishal Thanki <vishalthanki@gmail.com>
+Subject: [PATCH 1/2] rt2x00usb: do not anchor rx and tx urb's
+Date: Wed,  8 Feb 2017 12:18:09 +0100
+Message-Id: <1486552690-27597-1-git-send-email-sgruszka@redhat.com> (sfid-20170208_124733_205071_058D2473)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In several places, "BANDWITH" is used when "BANDWIDTH" should have been
-used.
+We might kill TX or RX urb during rt2x00usb_flush_entry(), what can
+cause anchor list corruption like shown below:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+[ 2074.035633] WARNING: CPU: 2 PID: 14480 at lib/list_debug.c:33 __list_add+0xac/0xc0
+[ 2074.035634] list_add corruption. prev->next should be next (ffff88020f362c28), but was dead000000000100. (prev=ffff8801d161bb70).
+<snip>
+[ 2074.035670] Call Trace:
+[ 2074.035672]  [<ffffffff813bde47>] dump_stack+0x63/0x8c
+[ 2074.035674]  [<ffffffff810a2231>] __warn+0xd1/0xf0
+[ 2074.035676]  [<ffffffff810a22af>] warn_slowpath_fmt+0x5f/0x80
+[ 2074.035678]  [<ffffffffa073855d>] ? rt2x00usb_register_write_lock+0x3d/0x60 [rt2800usb]
+[ 2074.035679]  [<ffffffff813dbe4c>] __list_add+0xac/0xc0
+[ 2074.035681]  [<ffffffff81591c6c>] usb_anchor_urb+0x4c/0xa0
+[ 2074.035683]  [<ffffffffa07322af>] rt2x00usb_kick_rx_entry+0xaf/0x100 [rt2x00usb]
+[ 2074.035684]  [<ffffffffa0732322>] rt2x00usb_clear_entry+0x22/0x30 [rt2x00usb]
+
+To fix do not anchor TX and RX urb's, it is not needed as during
+shutdown we kill those urbs in rt2x00usb_free_entries().
+
+Cc: Vishal Thanki <vishalthanki@gmail.com>
+Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 10 +++++-----
- drivers/net/wireless/realtek/rtlwifi/wifi.h          |  8 ++++----
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index c60f07a..8da874c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -988,7 +988,7 @@ static void _rtl8812ae_phy_cross_reference_ht_and_vht_txpower_limit(struct ieee8
- 	s8 temp_pwrlmt = 0;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+index 5a2bf9f..fe13dd0 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+@@ -319,10 +319,8 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
+ 			  entry->skb->data, length,
+ 			  rt2x00usb_interrupt_txdone, entry);
  
- 	for (regulation = 0; regulation < MAX_REGULATION_NUM; ++regulation) {
--		for (bw = 0; bw < MAX_5G_BANDWITH_NUM; ++bw) {
-+		for (bw = 0; bw < MAX_5G_BANDWIDTH_NUM; ++bw) {
- 			for (channel = 0; channel < CHANNEL_MAX_NUMBER_5G; ++channel) {
- 				for (rate_section = 0; rate_section < MAX_RATE_SECTION_NUM; ++rate_section) {
- 					temp_pwrlmt = rtlphy->txpwr_limit_5g[regulation]
-@@ -1163,7 +1163,7 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
- 	_rtl8812ae_phy_cross_reference_ht_and_vht_txpower_limit(hw);
+-	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
+-		usb_unanchor_urb(entry_priv->urb);
+ 		if (status == -ENODEV)
+ 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+@@ -410,10 +408,8 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
+ 			  entry->skb->data, entry->skb->len,
+ 			  rt2x00usb_interrupt_rxdone, entry);
  
- 	for (regulation = 0; regulation < MAX_REGULATION_NUM; ++regulation) {
--		for (bw = 0; bw < MAX_2_4G_BANDWITH_NUM; ++bw) {
-+		for (bw = 0; bw < MAX_2_4G_BANDWIDTH_NUM; ++bw) {
- 			for (channel = 0; channel < CHANNEL_MAX_NUMBER_2G; ++channel) {
- 				for (rate_section = 0; rate_section < MAX_RATE_SECTION_NUM; ++rate_section) {
- 					/* obtain the base dBm values in 2.4G band
-@@ -1219,7 +1219,7 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
- 		}
- 	}
- 	for (regulation = 0; regulation < MAX_REGULATION_NUM; ++regulation) {
--		for (bw = 0; bw < MAX_5G_BANDWITH_NUM; ++bw) {
-+		for (bw = 0; bw < MAX_5G_BANDWIDTH_NUM; ++bw) {
- 			for (channel = 0; channel < CHANNEL_MAX_NUMBER_5G; ++channel) {
- 				for (rate_section = 0; rate_section < MAX_RATE_SECTION_NUM; ++rate_section) {
- 					/* obtain the base dBm values in 5G band
-@@ -1296,7 +1296,7 @@ static void _rtl8821ae_phy_init_txpower_limit(struct ieee80211_hw *hw)
- 		 "=====> _rtl8821ae_phy_init_txpower_limit()!\n");
- 
- 	for (i = 0; i < MAX_REGULATION_NUM; ++i) {
--		for (j = 0; j < MAX_2_4G_BANDWITH_NUM; ++j)
-+		for (j = 0; j < MAX_2_4G_BANDWIDTH_NUM; ++j)
- 			for (k = 0; k < MAX_RATE_SECTION_NUM; ++k)
- 				for (m = 0; m < CHANNEL_MAX_NUMBER_2G; ++m)
- 					for (l = 0; l < MAX_RF_PATH_NUM; ++l)
-@@ -1305,7 +1305,7 @@ static void _rtl8821ae_phy_init_txpower_limit(struct ieee80211_hw *hw)
- 							= MAX_POWER_INDEX;
- 	}
- 	for (i = 0; i < MAX_REGULATION_NUM; ++i) {
--		for (j = 0; j < MAX_5G_BANDWITH_NUM; ++j)
-+		for (j = 0; j < MAX_5G_BANDWIDTH_NUM; ++j)
- 			for (k = 0; k < MAX_RATE_SECTION_NUM; ++k)
- 				for (m = 0; m < CHANNEL_MAX_NUMBER_5G; ++m)
- 					for (l = 0; l < MAX_RF_PATH_NUM; ++l)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 1785100..826459f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -157,8 +157,8 @@ enum rtl8192c_h2c_cmd {
- #define MAX_REGULATION_NUM		4
- #define MAX_RF_PATH_NUM			4
- #define MAX_RATE_SECTION_NUM		6
--#define MAX_2_4G_BANDWITH_NUM		4
--#define MAX_5G_BANDWITH_NUM		4
-+#define MAX_2_4G_BANDWIDTH_NUM		4
-+#define MAX_5G_BANDWIDTH_NUM		4
- #define	MAX_RF_PATH			4
- #define	MAX_CHNL_GROUP_24G		6
- #define	MAX_CHNL_GROUP_5G		14
-@@ -1265,12 +1265,12 @@ struct rtl_phy {
- 	u8 cur_bw40_txpwridx;
- 
- 	s8 txpwr_limit_2_4g[MAX_REGULATION_NUM]
--			   [MAX_2_4G_BANDWITH_NUM]
-+			   [MAX_2_4G_BANDWIDTH_NUM]
- 			   [MAX_RATE_SECTION_NUM]
- 			   [CHANNEL_MAX_NUMBER_2G]
- 			   [MAX_RF_PATH_NUM];
- 	s8 txpwr_limit_5g[MAX_REGULATION_NUM]
--			 [MAX_5G_BANDWITH_NUM]
-+			 [MAX_5G_BANDWIDTH_NUM]
- 			 [MAX_RATE_SECTION_NUM]
- 			 [CHANNEL_MAX_NUMBER_5G]
- 			 [MAX_RF_PATH_NUM];
+-	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
+-		usb_unanchor_urb(entry_priv->urb);
+ 		if (status == -ENODEV)
+ 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
 -- 
-2.10.2
+1.8.3.1
