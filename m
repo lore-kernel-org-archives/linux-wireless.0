@@ -1,102 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:12019
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750873AbdBXGjK (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39312 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754670AbdBHPxM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 01:39:10 -0500
-Date: Fri, 24 Feb 2017 07:39:06 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Tahia Khan <tahia.khan@gmail.com>
-cc: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
-        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [Outreachy kernel] [PATCH v3 3/3] staging: wilc1000: Rename
- network_info member str_rssi to rssi_history
-In-Reply-To: <6fd3f34baa31c00a77e2805d5d8a820b3ac7a43f.1487912400.git.tahia.khan@gmail.com>
-Message-ID: <alpine.DEB.2.20.1702240738340.2095@hadrien> (sfid-20170224_073927_669986_0CFD0A90)
-References: <cover.1487912400.git.tahia.khan@gmail.com> <6fd3f34baa31c00a77e2805d5d8a820b3ac7a43f.1487912400.git.tahia.khan@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Wed, 8 Feb 2017 10:53:12 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 17:51:41 +0200
+Message-Id: <20170208155149.1704-1-luca@coelho.fi> (sfid-20170208_165315_536605_71AA38A3)
+In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+Subject: [PATCH 09/17] iwlwifi: pcie: don't increment / decrement a bool
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
+David reported that the code I added uses the decrement
+and increment operator on a boolean variable.
 
-On Fri, 24 Feb 2017, Tahia Khan wrote:
+Fix that.
 
-> Change name of str_rssi to rssi_history within the network_info struct for clarity.
->
-> Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
+Fixes: 0cd58eaab148 ("iwlwifi: pcie: allow the op_mode to block the tx queues")
+Reported-by: David Binderman <dcb314@hotmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
-
-Good job at cutting up the patch in a meaningful way.
-
-julia
-
-> ---
->  drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
->  2 files changed, 8 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-> index 9712d89..10101f8 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.h
-> +++ b/drivers/staging/wilc1000/coreconfigurator.h
-> @@ -93,7 +93,7 @@ struct network_info {
->  	u8 *ies;
->  	u16 ies_len;
->  	void *join_params;
-> -	struct rssi_history_buffer str_rssi;
-> +	struct rssi_history_buffer rssi_history;
->  	u64 tsf_hi;
->  };
->
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index 9601ab8..4a6fe90 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -205,11 +205,11 @@ static u32 get_rssi_avg(struct network_info *network_info)
->  {
->  	u8 i;
->  	int rssi_v = 0;
-> -	u8 num_rssi = (network_info->str_rssi.full) ?
-> -		       NUM_RSSI : (network_info->str_rssi.index);
-> +	u8 num_rssi = (network_info->rssi_history.full) ?
-> +		       NUM_RSSI : (network_info->rssi_history.index);
->
->  	for (i = 0; i < num_rssi; i++)
-> -		rssi_v += network_info->str_rssi.samples[i];
-> +		rssi_v += network_info->rssi_history.samples[i];
->
->  	rssi_v /= num_rssi;
->  	return rssi_v;
-> @@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
->  	} else {
->  		ap_index = ap_found;
->  	}
-> -	rssi_index = last_scanned_shadow[ap_index].str_rssi.index;
-> -	last_scanned_shadow[ap_index].str_rssi.samples[rssi_index++] = pstrNetworkInfo->rssi;
-> +	rssi_index = last_scanned_shadow[ap_index].rssi_history.index;
-> +	last_scanned_shadow[ap_index].rssi_history.samples[rssi_index++] = pstrNetworkInfo->rssi;
->  	if (rssi_index == NUM_RSSI) {
->  		rssi_index = 0;
-> -		last_scanned_shadow[ap_index].str_rssi.full = true;
-> +		last_scanned_shadow[ap_index].rssi_history.full = true;
->  	}
-> -	last_scanned_shadow[ap_index].str_rssi.index = rssi_index;
-> +	last_scanned_shadow[ap_index].rssi_history.index = rssi_index;
->  	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
->  	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
->  	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
-> --
-> 2.7.4
->
-> --
-> You received this message because you are subscribed to the Google Groups "outreachy-kernel" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to outreachy-kernel+unsubscribe@googlegroups.com.
-> To post to this group, send email to outreachy-kernel@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/outreachy-kernel/6fd3f34baa31c00a77e2805d5d8a820b3ac7a43f.1487912400.git.tahia.khan%40gmail.com.
-> For more options, visit https://groups.google.com/d/optout.
->
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index cf5bda06042c..10937309641a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -279,7 +279,7 @@ struct iwl_txq {
+ 	bool frozen;
+ 	u8 active;
+ 	bool ampdu;
+-	bool block;
++	int block;
+ 	unsigned long wd_timeout;
+ 	struct sk_buff_head overflow_q;
+ 
+-- 
+2.11.0
