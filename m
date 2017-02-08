@@ -1,125 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:36537 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751246AbdBXCun (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:34514 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750946AbdBHTu3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 21:50:43 -0500
-Received: by mail-qk0-f194.google.com with SMTP id r90so1331990qki.3
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 18:50:40 -0800 (PST)
+        Wed, 8 Feb 2017 14:50:29 -0500
+Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h
+ include
+To: Kalle Valo <kvalo@codeaurora.org>,
+        David Miller <davem@davemloft.net>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
+ <20170208.110626.346978547122180233.davem@davemloft.net>
+ <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
+Cc: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org, andrew@lunn.ch,
+        anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com,
+        felix.manlunas@caviumnetworks.com, bfields@fieldses.org,
+        jlayton@poochiereds.net, jirislaby@gmail.com,
+        mcgrof@do-not-panic.com, madalin.bucur@nxp.com,
+        UNGLinuxDriver@microchip.com, nab@linux-iscsi.org,
+        mickflemm@gmail.com, nicolas.ferre@atmel.com,
+        raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org,
+        satananda.burla@caviumnetworks.com,
+        thomas.petazzoni@free-electrons.com, timur@codeaurora.org,
+        trond.myklebust@primarydata.com,
+        vivien.didelot@savoirfairelinux.com, woojung.huh@microchip.com
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com> (sfid-20170208_205100_383758_E63C3188)
+Date: Wed, 8 Feb 2017 11:45:11 -0800
 MIME-Version: 1.0
-In-Reply-To: <20170223153532.GA3479@ubuntu-hedt>
-References: <20170223130142.GA90803@ubuntu-hedt> <20170223135253.1681-1-ryan@mounce.com.au>
- <20170223153532.GA3479@ubuntu-hedt>
-From: Ryan Mounce <ryan@mounce.com.au>
-Date: Fri, 24 Feb 2017 13:20:24 +1030
-Message-ID: <CAN+fvRYhW4hhHfyzvE8uJZ+qu8hneUni_je=3kdNe+bPa+WQxA@mail.gmail.com> (sfid-20170224_035047_561919_1E1FD992)
-Subject: Re: [PATCH v2] wireless-regdb: Update rules for Australia (AU) and
- add 60GHz rules
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 February 2017 at 02:05, Seth Forshee <seth.forshee@canonical.com> wrote:
-> On Fri, Feb 24, 2017 at 12:22:53AM +1030, Ryan Mounce wrote:
->> Sourced from the current legislation at
->> https://www.legislation.gov.au/Details/F2016C00432
+On 02/08/2017 08:11 AM, Kalle Valo wrote:
+> David Miller <davem@davemloft.net> writes:
+> 
+>> From: Florian Fainelli <f.fainelli@gmail.com>
+>> Date: Tue,  7 Feb 2017 15:02:53 -0800
 >>
->> The current rules exceed legal limits between 5250-5330MHz, and permit
->> illegal operation in 5600-5650MHz (disallowed regardless of DFS).
+>>> I'm hoping this doesn't conflict with what's already in net-next...
+>>>
+>>> David, this should probably go via your tree considering the diffstat.
 >>
->> Frequency ranges and EIRP limits for all ranges have been updated to
->> match items 59-63, 65 in the linked document. As the rules for AU have
->> never previously mirrored local regulations, changes include a
->> significant increase in the allowable 2.4GHz EIRP and smaller increases
->> in most other bands.
+>> I think you need one more respin.  Are you doing an allmodconfig build?
+
+I did not, instead tried to test each driver individually in different
+configurations...
+
+>> If not, for something like this it's a must:
 >>
->> In order to allow 80MHz operation between 5650-5730MHz (bordering two
->> bands) the lower, more restrictive band has been rounded up by 5MHz.
->>
->> Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
->> ---
->>  db.txt | 15 ++++++++++-----
->>  1 file changed, 10 insertions(+), 5 deletions(-)
->>
->> diff --git a/db.txt b/db.txt
->> index 05108e0..00e81b6 100644
->> --- a/db.txt
->> +++ b/db.txt
->> @@ -85,12 +85,17 @@ country AT: DFS-ETSI
->>       # 60 GHz band channels 1-4, ref: Etsi En 302 567
->>       (57000 - 66000 @ 2160), (40)
->>
->> +# Source:
->> +# https://www.legislation.gov.au/Details/F2016C00432
->> +# Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B
->>  country AU: DFS-ETSI
->> -     (2402 - 2482 @ 40), (20)
->> -     (5170 - 5250 @ 80), (17), AUTO-BW
->> -     (5250 - 5330 @ 80), (24), DFS, AUTO-BW
->> -     (5490 - 5710 @ 160), (24), DFS
->> -     (5735 - 5835 @ 80), (30)
->> +     (2400 - 2483.5 @ 40), (36)
->
-> The mention of ETSI EN 300 328 in item 55 (a) leads me to believe that
-> this is the limit we should be using, i.e. 500 mW. It is a bit confusing
-> though since it seems like such devices would also fall under "digital
-> modulation transmitters."
+>> drivers/net/wireless/ath/wil6210/cfg80211.c:24:30: error: expected ‘)’ before ‘bool’
+>>  module_param(disable_ap_sme, bool, 0444);
+>>                               ^
+>> drivers/net/wireless/ath/wil6210/cfg80211.c:25:34: error: expected ‘)’ before string constant
+>>  MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
+>>                                   ^
+>> Like like that file needs linux/module.h included.
+> 
+> Johannes already fixed a similar (or same) problem in my tree:
+> 
+> wil6210: include moduleparam.h
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=949c2d0096753d518ef6e0bd8418c8086747196b
+> 
+> I'm planning to send you a pull request tomorrow which contains that
+> one.
 
-Item 55 applies only to frequency hopping transmitters e.g. Bluetooth.
-As a local, I can say with some degree of certainty that 4W/36dBm is
-the correct 2.4GHz ISM EIRP for Australia. It is advertised as the
-EIRP in the 802.11d IE of commercial devices e.g. Cisco Aironet APs
-and widely deployed ISP gateways in Australia, among other devices
-that have received relevant approvals.
+Thanks Kalle!
 
->> +     (5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
->
-> This looks correct.
->
->> +     (5250 - 5350 @ 80), (23), NO-OUTDOOR, AUTO-BW, DFS
->
-> Since this range requires TPC we need to set the power limit at 100 mW.
->
->> +     (5470 - 5600 @ 80), (30), DFS
->> +     (5650 - 5730 @ 80), (30), DFS
->
-> These ranges also require TPC so we need to set the limit at 500 mW.
-
-I was unsure about this one. Setting this to 27dBm also affects the
-802.11d country information IE, however when the DFS flag is set a 3dB
-802.11h power constraint IE is also advertised so stations will limit
-themselves to (27-3)=24dBm/250mW.
-
-Given the choice between unnecessarily halving transmit power on
-stations and potentially transmitting at twice the permissible power
-on APs without TPC I agree that the conservative approach should be
-taken for now. Ideally I think that the actual EIRP limits should be
-in the regdb and a 3dB constraint should be applied automatically on
-APs that cannot support TPC when the DFS flag is set.
-
->> +     (5730 - 5850 @ 80), (36)
->
-> In the document the ranges are 5650-5725 MHz and 5725-5850 MHz. I
-> suspect that the existing rules fudge that to line up with the wifi
-> channels, which technically is okay because the rules in the former
-> range are more restrictive. I wonder if we shouldn't be recording them
-> here as per the document and adding AUTO-BW. Johannes, any thoughts?
-
-I've tested with AUTO-BW and it doesn't work in this case as channel
-144 will be disabled if it doesn't exist entirely within one band.
-Fudging the more restrictive rules by a mere 5MHz to fit 802.11
-channels seems to be the status quo.
-
->> +     (57000 - 66000 @ 2160), (43), NO-OUTDOOR
->
-> This looks correct.
->
-> Thanks,
-> Seth
-
-
-Regards,
-Ryan Mounce
+David, can you hold on this series until Kalle's pull request gets
+submitted? Past this error, allmodconfig builds fine with this patch
+series (just tested). Thanks!
+-- 
+Florian
