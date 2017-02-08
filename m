@@ -1,56 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42284 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752437AbdB1Nxi (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39166 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752511AbdBHL20 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 08:53:38 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1SDOfT2003655
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 05:24:56 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 28uaamfs6r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 05:24:56 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH] MAINTAINERS: update for mwifiex driver maintainers
-Date: Tue, 28 Feb 2017 18:54:31 +0530
-Message-ID: <1488288271-10731-1-git-send-email-akarwar@marvell.com> (sfid-20170228_145348_342272_68CF1340)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 8 Feb 2017 06:28:26 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 13:23:05 +0200
+Message-Id: <20170208112322.29413-1-luca@coelho.fi> (sfid-20170208_122900_516443_A7263FFB)
+Subject: [PATCH 00/17] iwlwifi: updates intended for v4.11 2017-02-08
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi & Xinming are starting to take a more active role in the
-mwifiex driver maintainership here onwards on account of organizational
-changes.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-CC: Xinming Hu <huxm@marvell.com>
-CC: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- MAINTAINERS | 2 ++
- 1 file changed, 2 insertions(+)
+Hi,
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index d8f71f2..9252718 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7772,6 +7772,8 @@ F:	drivers/net/ethernet/marvell/mvneta.*
- MARVELL MWIFIEX WIRELESS DRIVER
- M:	Amitkumar Karwar <akarwar@marvell.com>
- M:	Nishant Sarmukadam <nishants@marvell.com>
-+M:	Ganapathi Bhat <gbhat@marvell.com>
-+M:	Xinming Hu <huxm@marvell.com>
- L:	linux-wireless@vger.kernel.org
- S:	Maintained
- F:	drivers/net/wireless/marvell/mwifiex/
+This is the third and final pull-request before 4.11's merge window.
+This time I concentrated in bugfixes:
+
+* Fix 802.11w, which was failing to due an IGTK bug;
+* A few more bugzilla bug fixes;
+* A channel-switch race condition fix;
+* Some fixes related to suspend/resume with new HW;
+* The RF-kill saga continues;
+* And some other fixes here and there...
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (1):
+  iwlwifi: mvm: Fix CSA received immediately after association
+
+Emmanuel Grumbach (5):
+  iwlwifi: mvm: use the PROBE_RESP_QUEUE to send deauth to unknown
+    station
+  iwlwifi: pcie: don't increment / decrement a bool
+  iwlwifi: make RTPM depend on EXPERT
+  iwlwifi: dvm: don't call << operator with a negative value
+  iwlwifi: mvm: don't call << operator with a negative value
+
+Golan Ben Ami (2):
+  iwlwifi: pcie: Re-configure IVAR table after stop device
+  iwlwifi: pcie: set STATUS_RFKILL immediately after interrupt
+
+Golan Ben-Ami (1):
+  iwlwifi: mvm: avoid exceeding the allowed print length
+
+Goodstein, Mordechay (1):
+  iwlwifi: mvm: avoid race condition in ADD_STA.
+
+Gregory Greenman (1):
+  iwlwifi: mvm: fix a print of NSS for HT rate
+
+Haim Dreyfuss (3):
+  iwlwifi: pcie: move msix conf functions above other functions
+  iwlwifi: pcie: separate between SW and HW MSIX configuration
+  iwlwifi: pcie: re-configure IVAR table after suspend-resume
+
+Ilan Peer (1):
+  iwlwifi: mvm: Fix removal of IGTK
+
+Sara Sharon (2):
+  iwlwifi: mvm: fix references to first_agg_queue in DQA mode
+  iwlwifi: mvm: fix reorder timer re-arming
+
+ drivers/net/wireless/intel/iwlwifi/Kconfig         |   7 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c        |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  20 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  15 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  17 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   8 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 243 ++++++++++++---------
+ 11 files changed, 188 insertions(+), 145 deletions(-)
+
 -- 
-1.9.1
+2.11.0
