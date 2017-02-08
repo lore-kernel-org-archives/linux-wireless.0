@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54556 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751524AbdBFMpq (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:34299 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751143AbdBHTc1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 07:45:46 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        shaofu <shaofu@realtek.com>
-Subject: Re: [PATCH 01/11 V3] rtlwifi: Fix programing CAM content sequence.
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-        <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-        <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-        <20170120212716.29887-2-Larry.Finger@lwfinger.net>
-Date: Mon, 06 Feb 2017 14:45:41 +0200
-In-Reply-To: <20170120212716.29887-2-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Fri, 3 Feb 2017 11:32:22 -0600")
-Message-ID: <87bmufa3nu.fsf@codeaurora.org> (sfid-20170206_134558_961216_D69172C4)
+        Wed, 8 Feb 2017 14:32:27 -0500
+Received: by mail-it0-f66.google.com with SMTP id o185so16478938itb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 11:30:39 -0800 (PST)
+Date: Wed, 8 Feb 2017 11:21:42 -0800
+From: Brian Norris <computersforpeace@gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Subject: Re: [PATCH V2] mtd: bcm47xxsflash: use platform_(set|get)_drvdata
+Message-ID: <20170208192142.GA94627@google.com> (sfid-20170208_203331_221040_70B0939D)
+References: <20170116162818.12094-1-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170116162818.12094-1-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-
-> From: Ping-Ke Shih <pkshih@realtek.com>
->
-> There is a potential race condition when the control byte of a CAM
-> entry is written first. Write in reverse order to correct the condition.
->
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: shaofu <shaofu@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Mon, Jan 16, 2017 at 05:28:18PM +0100, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> We have generic place & helpers for storing platform driver data so
+> there is no reason for using custom priv pointer.
+> 
+> This allows cleaning up struct bcma_sflash from unneeded fields.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 > ---
-> V2 - no changes
-> V3 - no changes
+> Kalle: This is mtd focused patch, so I guess it should go through mtd tree. Do
+>        you find bcma change important enough to care to Ack it? :)
 
-I missed in my reply to v2 that you had already sent v3 from this
-patchset. Strange that I don't see this v3 patchset either in patchwork,
-only v1.
-
-Try submitting v4 in case it was just a temporary glitch in patchwork.
-But if that doesn't help I'll apply these manually.
-
--- 
-Kalle Valo
+Applied to l2-mtd.git.
