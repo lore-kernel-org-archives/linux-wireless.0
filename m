@@ -1,120 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33624 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753748AbdBUQQ3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39164 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752511AbdBHL2X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:29 -0500
-Received: by mail-lf0-f68.google.com with SMTP id 86so5300454lfv.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:28 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 16/21] ath10k: add start_once support
-Date: Tue, 21 Feb 2017 17:15:36 +0100
-Message-Id: <1487693741-10042-17-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_172342_926590_36B65ACE)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        Wed, 8 Feb 2017 06:28:23 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 13:23:09 +0200
+Message-Id: <20170208112322.29413-5-luca@coelho.fi> (sfid-20170208_122859_672091_96F9059B)
+In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+Subject: [PATCH 04/17] iwlwifi: pcie: Re-configure IVAR table after stop device
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add possibility to configure the driver to only start target once.
-This can reduce startup time of SDIO devices significantly since
-loading the firmware can take a substantial amount of time.
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-The patch is also necessary for high latency devices in general
-since it does not seem to be possible to rerun the BMI phase
-(fw upload) without power-cycling the device.
+When getting RF_KILL and disabling radio, the device gets stopped
+and reset. This erases the IVAR table that matches the interrupt
+to its cause, and is essential for MSIX proper functionality.
+Till now, the table wasn't re-configured after the reset, and
+therefore the interrupt that enabled radio didn't fire on the
+right irq, and the driver didn't handle it correctly.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+To fix this, configure the IVAR table again after resetting the
+device.
+
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 19 +++++++++++++++----
- drivers/net/wireless/ath/ath10k/core.h |  2 ++
- drivers/net/wireless/ath/ath10k/hw.h   |  6 ++++++
- 3 files changed, 23 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 6b667c7..0a177bf 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1919,6 +1919,9 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 	int status;
- 	u32 val;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index bb2a9a151957..7f05fc56587a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1246,6 +1246,15 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 	usleep_range(1000, 2000);
  
-+	if (ar->is_started && ar->hw_params.start_once)
-+		return 0;
-+
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
-@@ -2138,6 +2141,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 	if (status)
- 		goto err_hif_stop;
- 
-+	ar->is_started = true;
- 	return 0;
- 
- err_hif_stop:
-@@ -2190,6 +2194,7 @@ void ath10k_core_stop(struct ath10k *ar)
- 	ath10k_htt_tx_stop(&ar->htt);
- 	ath10k_htt_rx_free(&ar->htt);
- 	ath10k_wmi_detach(ar);
-+	ar->is_started = false;
- }
- EXPORT_SYMBOL(ath10k_core_stop);
- 
-@@ -2291,12 +2296,18 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_unlock;
- 	}
- 
--	ath10k_debug_print_boot_info(ar);
--	ath10k_core_stop(ar);
-+	/* Leave target running if hw_params.start_once is set */
-+	if (ar->hw_params.start_once) {
-+		mutex_unlock(&ar->conf_mutex);
-+	} else {
-+		ath10k_debug_print_boot_info(ar);
-+		ath10k_core_stop(ar);
- 
--	mutex_unlock(&ar->conf_mutex);
-+		mutex_unlock(&ar->conf_mutex);
-+
-+		ath10k_hif_power_down(ar);
-+	}
- 
--	ath10k_hif_power_down(ar);
- 	return 0;
- 
- err_unlock:
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index e3cdaba..6be6e66 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -780,6 +780,8 @@ struct ath10k {
- 
- 	bool is_high_latency;
- 
-+	bool is_started;
-+
- 	struct {
- 		enum ath10k_bus bus;
- 		const struct ath10k_hif_ops *ops;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index bc4fd43..cf88aba 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -466,6 +466,12 @@ struct ath10k_hw_params {
- 	bool is_high_latency;
- 
- 	enum ath10k_bus bus;
-+
-+	/* Specifies whether or not the device should be started once.
-+	 * If set, the device will be started once by the early fw probe
-+	 * and it will not be terminated afterwards.
+ 	/*
++	 * Upon stop, the IVAR table gets erased, so msi-x won't
++	 * work. This causes a bug in RF-KILL flows, since the interrupt
++	 * that enables radio won't fire on the correct irq, and the
++	 * driver won't be able to handle the interrupt.
++	 * Configure the IVAR table again after reset.
 +	 */
-+	bool start_once;
- };
- 
- struct htt_rx_desc;
++	iwl_pcie_conf_msix_hw(trans_pcie);
++
++	/*
+ 	 * Upon stop, the APM issues an interrupt if HW RF kill is set.
+ 	 * This is a bug in certain verions of the hardware.
+ 	 * Certain devices also keep sending HW RF kill interrupt all
 -- 
-2.7.4
+2.11.0
