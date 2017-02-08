@@ -1,126 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32813 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751782AbdB0LsL (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:36716 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752874AbdBHLET (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 06:48:11 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V2 2/3] cfg80211: Disallow moving out of operating DFS channel in non-ETSI
-Date: Mon, 27 Feb 2017 17:04:34 +0530
-Message-ID: <1488195275-29371-3-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170227_124815_532752_1775AE7E)
-In-Reply-To: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
+        Wed, 8 Feb 2017 06:04:19 -0500
+Received: by mail-pg0-f43.google.com with SMTP id v184so48234592pgv.3
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 03:03:16 -0800 (PST)
+Subject: Re: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the
+ __brcmf_err
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170202213321.11591-1-zajec5@gmail.com>
+ <20170202213321.11591-4-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <2812805e-9108-284f-2165-34624d603364@broadcom.com> (sfid-20170208_120551_037010_260AA49C)
+Date: Wed, 8 Feb 2017 10:54:53 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170202213321.11591-4-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For non-ETSI regulatory domain, CAC result on DFS channel
-may not be valid once moving out of that channel (as done
-during remain-on-channel, scannning and off-channel tx).
-Running CAC on an operating DFS channel after every off-channel
-operation will only add complexity and disturb the current
-link. Better do not allow any off-channel switch from a DFS
-operating channel in non-ETSI domain.
+On 2-2-2017 22:33, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This will allow getting struct device reference from the passed
+> brcmf_pub for the needs of dev_err. More detailed messages are really
+> important for home routers which frequently have 2 (or even 3) wireless
+> cards supported by brcmfmac.
+> 
+> Note that all calls are yet to be updated as for now brcmf_err macro
+> always passes NULL. This will be handled in following patch to make this
+> change easier to review.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- net/wireless/nl80211.c | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+I prefer brcmf_err() to have struct device reference directly instead of
+using brcmf_pub. That would remove the need for patches 5 till 7 as bus
+specific code already has struct device. So I have acked the first three
+patches, but would like to revise 8 and 9.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d516527..b15903b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6556,6 +6556,19 @@ static int nl80211_parse_random_mac(struct nlattr **attrs,
- 	return 0;
- }
- 
-+static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev)
-+{
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	if (!cfg80211_beaconing_iface_active(wdev))
-+		return true;
-+
-+	if (!(wdev->chandef.chan->flags & IEEE80211_CHAN_RADAR))
-+		return true;
-+
-+	return regulatory_pre_cac_allowed(wdev->wiphy);
-+}
-+
- static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -6681,6 +6694,25 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 
- 	request->n_channels = i;
- 
-+	wdev_lock(wdev);
-+	if (!cfg80211_off_channel_oper_allowed(wdev)) {
-+		struct ieee80211_channel *chan;
-+
-+		if (request->n_channels != 1) {
-+			wdev_unlock(wdev);
-+			err = -EBUSY;
-+			goto out_free;
-+		}
-+
-+		chan = request->channels[0];
-+		if (chan->center_freq != wdev->chandef.chan->center_freq) {
-+			wdev_unlock(wdev);
-+			err = -EBUSY;
-+			goto out_free;
-+		}
-+	}
-+	wdev_unlock(wdev);
-+
- 	i = 0;
- 	if (n_ssids) {
- 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
-@@ -9103,6 +9135,7 @@ static int nl80211_remain_on_channel(struct sk_buff *skb,
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct wireless_dev *wdev = info->user_ptr[1];
- 	struct cfg80211_chan_def chandef;
-+	const struct cfg80211_chan_def *compat_chandef;
- 	struct sk_buff *msg;
- 	void *hdr;
- 	u64 cookie;
-@@ -9131,6 +9164,18 @@ static int nl80211_remain_on_channel(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
-+	wdev_lock(wdev);
-+	if (!cfg80211_off_channel_oper_allowed(wdev) &&
-+	    !cfg80211_chandef_identical(&wdev->chandef, &chandef)) {
-+		compat_chandef = cfg80211_chandef_compatible(&wdev->chandef,
-+							     &chandef);
-+		if (compat_chandef != &chandef) {
-+			wdev_unlock(wdev);
-+			return -EBUSY;
-+		}
-+	}
-+	wdev_unlock(wdev);
-+
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!msg)
- 		return -ENOMEM;
-@@ -9306,6 +9351,13 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	if (!chandef.chan && params.offchan)
- 		return -EINVAL;
- 
-+	wdev_lock(wdev);
-+	if (params.offchan && !cfg80211_off_channel_oper_allowed(wdev)) {
-+		wdev_unlock(wdev);
-+		return -EBUSY;
-+	}
-+	wdev_unlock(wdev);
-+
- 	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
- 	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
- 
--- 
-1.9.1
+Kalle,
+
+I acked the first three patches. Can those three still go in for 4.11?
+
+Regards,
+Arend
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V2: Add missing include
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h        | 2 ++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     | 2 +-
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h      | 9 +++++----
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 4 +++-
+>  4 files changed, 11 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+> index 76693df34742..35d4801a62e6 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+> @@ -17,6 +17,8 @@
+>  #ifndef BRCMFMAC_BUS_H
+>  #define BRCMFMAC_BUS_H
+>  
+> +#include <linux/device.h>
+> +
+>  #include "debug.h"
+>  
+>  /* IDs of the 6 default common rings of msgbuf protocol */
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> index 33b133f7e63a..f8ce597c4781 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> @@ -219,7 +219,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+>  }
+>  
+>  #ifndef CONFIG_BRCM_TRACING
+> -void __brcmf_err(const char *func, const char *fmt, ...)
+> +void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+>  {
+>  	struct va_format vaf;
+>  	va_list args;
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> index 066126123e96..99acc095c834 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> @@ -19,6 +19,8 @@
+>  
+>  #include <linux/net.h>	/* net_ratelimit() */
+>  
+> +struct brcmf_pub;
+> +
+>  /* message levels */
+>  #define BRCMF_TRACE_VAL		0x00000002
+>  #define BRCMF_INFO_VAL		0x00000004
+> @@ -45,8 +47,8 @@
+>  #undef pr_fmt
+>  #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+>  
+> -__printf(2, 3)
+> -void __brcmf_err(const char *func, const char *fmt, ...);
+> +__printf(3, 4)
+> +void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...);
+>  /* Macro for error messages. When debugging / tracing the driver all error
+>   * messages are important to us.
+>   */
+> @@ -55,7 +57,7 @@ void __brcmf_err(const char *func, const char *fmt, ...);
+>  		if (IS_ENABLED(CONFIG_BRCMDBG) ||			\
+>  		    IS_ENABLED(CONFIG_BRCM_TRACING) ||			\
+>  		    net_ratelimit())					\
+> -			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
+> +			__brcmf_err(NULL, __func__, fmt, ##__VA_ARGS__);\
+>  	} while (0)
+>  
+>  #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+> @@ -99,7 +101,6 @@ do {									\
+>  
+>  extern int brcmf_msg_level;
+>  
+> -struct brcmf_pub;
+>  #ifdef DEBUG
+>  void brcmf_debugfs_init(void);
+>  void brcmf_debugfs_exit(void);
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+> index fe6755944b7b..329cb65eb78b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+> @@ -18,10 +18,12 @@
+>  
+>  #ifndef __CHECKER__
+>  #define CREATE_TRACE_POINTS
+> +#include "bus.h"
+> +#include "core.h"
+>  #include "tracepoint.h"
+>  #include "debug.h"
+>  
+> -void __brcmf_err(const char *func, const char *fmt, ...)
+> +void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+>  {
+>  	struct va_format vaf = {
+>  		.fmt = fmt,
+> 
