@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0085.outbound.protection.outlook.com ([104.47.38.85]:22592
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750916AbdBCQ2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 11:28:00 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>,
-        "matti.gottlieb@intel.com" <matti.gottlieb@intel.com>,
-        "sara.sharon@intel.com" <sara.sharon@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-Subject: Issues with FW with Intel 720 wifi card
-Date: Fri, 3 Feb 2017 16:27:47 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263E067A@XAP-PVEXMBX02.xlnx.xilinx.com> (sfid-20170203_172822_310137_38AAD573)
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.29.96]:55392 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754234AbdBHPlA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 10:41:00 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [1/2] rt2x00usb: do not anchor rx and tx urb's
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1486552690-27597-1-git-send-email-sgruszka@redhat.com>
+References: <1486552690-27597-1-git-send-email-sgruszka@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Vishal Thanki <vishalthanki@gmail.com>
+Message-Id: <20170208153002.536D460A01@smtp.codeaurora.org> (sfid-20170208_164114_881679_1709E08A)
+Date: Wed,  8 Feb 2017 15:30:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> We might kill TX or RX urb during rt2x00usb_flush_entry(), what can
+> cause anchor list corruption like shown below:
+> 
+> [ 2074.035633] WARNING: CPU: 2 PID: 14480 at lib/list_debug.c:33 __list_add+0xac/0xc0
+> [ 2074.035634] list_add corruption. prev->next should be next (ffff88020f362c28), but was dead000000000100. (prev=ffff8801d161bb70).
+> <snip>
+> [ 2074.035670] Call Trace:
+> [ 2074.035672]  [<ffffffff813bde47>] dump_stack+0x63/0x8c
+> [ 2074.035674]  [<ffffffff810a2231>] __warn+0xd1/0xf0
+> [ 2074.035676]  [<ffffffff810a22af>] warn_slowpath_fmt+0x5f/0x80
+> [ 2074.035678]  [<ffffffffa073855d>] ? rt2x00usb_register_write_lock+0x3d/0x60 [rt2800usb]
+> [ 2074.035679]  [<ffffffff813dbe4c>] __list_add+0xac/0xc0
+> [ 2074.035681]  [<ffffffff81591c6c>] usb_anchor_urb+0x4c/0xa0
+> [ 2074.035683]  [<ffffffffa07322af>] rt2x00usb_kick_rx_entry+0xaf/0x100 [rt2x00usb]
+> [ 2074.035684]  [<ffffffffa0732322>] rt2x00usb_clear_entry+0x22/0x30 [rt2x00usb]
+> 
+> To fix do not anchor TX and RX urb's, it is not needed as during
+> shutdown we kill those urbs in rt2x00usb_free_entries().
+> 
+> Cc: Vishal Thanki <vishalthanki@gmail.com>
+> Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Im using linux 4.6 kernel, I get following error when I do interface up.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-Here is the boot log.
-[    4.407681] iwlwifi 0000:01:00.0: loaded firmware version 16.242414.0 op=
-_mode iwlmvm
-[    4.407742] iwlwifi 0000:01:00.0: Detected Intel(R) Wireless N 7260, REV=
-=3D0x144
-[    4.407831] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
-[    4.408116] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
+93c7018ec16b rt2x00usb: do not anchor rx and tx urb's
+0488a6121dfe rt2x00usb: fix anchor initialization
 
-When I do interface up I get following :
-[    9.419999] iwlwifi 0000:01:00.0: Failed to load firmware chunk!
-[    9.425947] iwlwifi 0000:01:00.0: Could not load the [0] uCode section
-[    9.432472] iwlwifi 0000:01:00.0: Failed to start INIT ucode: -110
-[    9.438899] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -110
-[    9.444858] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
+-- 
+https://patchwork.kernel.org/patch/9562337/
 
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-I downloaded firmware from here
-https://wireless.wiki.kernel.org/en/users/Drivers/iwlwifi
-
-Is there anything im missing ?
-
-Regards,
-Bharat
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
