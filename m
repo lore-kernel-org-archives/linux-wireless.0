@@ -1,72 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42220 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751261AbdBLQka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Feb 2017 11:40:30 -0500
-Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
-References: <20170212132931.43510-1-nbd@nbd.name>
- <87lgtb5t9h.fsf@alrua-karlstad>
- <fbda67b4-7db6-984a-af50-610ec25d2fe0@nbd.name>
- <87d1entltw.fsf@kamboji.qca.qualcomm.com>
- <61049ab3-a15e-b1cf-ca1d-4840a8aa35d9@nbd.name>
- <87efz35pt4.fsf@alrua-karlstad>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <e8a1dd5f-79a2-28b4-6cc7-fc1b28a6f327@nbd.name> (sfid-20170212_174033_148136_53E102D8)
-Date: Sun, 12 Feb 2017 17:40:27 +0100
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35630 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753894AbdBHIwP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 03:52:15 -0500
+Received: by mail-oi0-f65.google.com with SMTP id x84so10536503oix.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 00:52:15 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <87efz35pt4.fsf@alrua-karlstad>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1486543119.2533.3.camel@redhat.com>
+References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
+ <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com> <1486543119.2533.3.camel@redhat.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 8 Feb 2017 09:52:14 +0100
+Message-ID: <CACna6rxc6kAtAbknMGVoW5jWoxnUibD83jcVsHmU6gWhSVTWzQ@mail.gmail.com> (sfid-20170208_095525_140782_B1671BCE)
+Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
+To: Paolo Abeni <pabeni@redhat.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        hante Meuleman <hante.meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-12 17:36, Toke Høiland-Jørgensen wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
-> 
->> On 2017-02-12 17:28, Kalle Valo wrote:
->>> Felix Fietkau <nbd@nbd.name> writes:
->>> 
->>>> On 2017-02-12 16:22, Toke Høiland-Jørgensen wrote:
->>>>> Felix Fietkau <nbd@nbd.name> writes:
->>>>> 
->>>>>> ath_tx_count_airtime is doing a lot of unnecessary work:
->>>>>>
->>>>>> - Redundant station lookup
->>>>>> - Redundant rcu_read_lock/unlock
->>>>>> - Useless memcpy of bf->rates
->>>>>> - Useless NULL check of bf->bf_mpdu
->>>>>> - Redundant lookup of the skb tid
->>>>>>
->>>>>> Additionally, it tries to look up the mac80211 queue index from the txq,
->>>>>> which fails if the frame was delivered via the power save queue.
->>> 
->>> What does this mean in practise, what's the user level impact?
->>> 
->>>>>> This patch fixes all of these issues by passing down the right set of
->>>>>> pointers instead of doing extra work
->>>>>>
->>>>>> Cc: stable@vger.kernel.org
->>>>>> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling
->>>>>> between stations")
->>>>>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->>>>> 
->>>>> Not sure if there's anything for stable to do with this; don't think the
->>>>> airtime fairness code has gone into a release yet? Otherwise:
->>>>> 
->>>>> Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
->>>>
->>>> I added this, because I'm not sure this patch will make it to 4.10 in
->>>> time, since we're really close to a release. I assume this patch will
->>>> probably go into 4.11.
->>> 
->>> Yeah, to try to get a patch to 4.10 at this point needs to be a really
->>> high profile regression. That is if Linus doesn't release 4.10 today, of
->>> course.
->> The symptoms are kernel crashes at least when operating in AP mode.
->> It's pretty severe, so getting it into 4.10 would be preferable.
-> 
-> I'm confused now. Wasn't the airtime fairness patch queued for 4.11?
-I'll check again, maybe I got the git-describe output wrong.
+On 8 February 2017 at 09:38, Paolo Abeni <pabeni@redhat.com> wrote:
+> On Tue, 2017-02-07 at 20:23 +0100, Arend Van Spriel wrote:
+>> On 7-2-2017 17:50, Paolo Abeni wrote:
+>> > the skbs can be held by the driver for a long time, so we need
+>> > to clear any state on xmit to avoid hanging other subsystems.
+>> > The skbs are already orphaned later in cmsg code, so we just
+>> > need to clear the nf/dst/secpath.
+>> > Do it early, while the relevant entries are hopefully still
+>> > hot in the cache.
+>>
+>> What is this about really? A bit more background about the issue
+>> might
+>> help understanding the need for this patch. Is this really specific
+>> to
+>> brcmfmac. For instance is something similar already done in mac80211?
+>
+> The issue is apparently driver specific, as reported in:
+>
+> https://bugzilla.redhat.com/show_bug.cgi?id=3D1294415
+>
+> This is caused by xmit skbs carrying a notrack ct entry not being freed
+> by the device driver in a timely manner. Removing the ct module waits
+> for such entries refcount going to zero and hangs the kernel in busy
+> loop (for several minutes).
+>
+> The relevant skbs are icmp6 packets (ND if I recall correctly, they
+> bcast packets at the mac level).
+>
+> The only other known device driver suffering for the issue is the
+> infiniband ipoib driver, I send a separate patch for it.
+>
+> I lack the broadcom h/w, but with infiniband the bug can be reproduced
+> with the following steps:
+>
+> - ensure ipv6 is enabled on the target device, and firewalld is running
+> (e.g. the module nf_conntrack_ipv6 is loaded)
+> - assign a static ip to the device
+> - shut down the firewall (e.g. try to remove the module nf_conntrack)
+>
+> For the brcmfmac driver most probably it is necessary being
+> disassociated from the AP before shutting down the firewall (but I
+> can't double check). This is probably why mac80211 does not suffer this
+> issue.
+>
+> The root cause for the issue could be actually a firmware issue, any
+> better clues are more than welcome!
 
-- Felix
+Do I get this correctly brcmfmac gets some skb for transmitting it and
+doesn't free it for few minutes? It sounds like some bug that should
+be fixed instead of hiding it.
+
+--=20
+Rafa=C5=82
