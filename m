@@ -1,60 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:33842 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751177AbdBUVrA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 16:47:00 -0500
-Received: by mail-wm0-f50.google.com with SMTP id 196so31841229wmm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 13:46:59 -0800 (PST)
-Received: from ?IPv6:2a01:5c0:1a:21d1:d0f2:ed9a:2d47:e07e? ([2a01:5c0:1a:21d1:d0f2:ed9a:2d47:e07e])
-        by smtp.googlemail.com with ESMTPSA id o70sm19034286wmi.26.2017.02.21.13.46.57
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 21 Feb 2017 13:46:57 -0800 (PST)
-From: Oliver Freyermuth <o.freyermuth@googlemail.com>
-Subject: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to suspend
- async: error -16)
-To: linux-wireless@vger.kernel.org
-Message-ID: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com> (sfid-20170221_224703_956817_094A0B1B)
-Date: Tue, 21 Feb 2017 22:46:56 +0100
+Received: from mga06.intel.com ([134.134.136.31]:26958 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932431AbdBHOfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 09:35:12 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/17] iwlwifi: updates intended for v4.11 2017-02-08
+Date: Wed, 8 Feb 2017 14:31:39 +0000
+Message-ID: <1486564297.10952.12.camel@intel.com> (sfid-20170208_153532_072753_95FDF966)
+References: <20170208112322.29413-1-luca@coelho.fi>
+         <87vaskn4bo.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87vaskn4bo.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear wireless experts, 
-
-I have been trying to get basic WoWLAN to work with the following configuration:
-- Intel Corporation Wireless 7260 (rev 73) with in-tree iwlwifi driver
-- Kernel 4.10.0 (on Gentoo Linux)
-- Very recent firmware version for the card and revision:
-iwlwifi 0000:0a:00.0: loaded firmware version 17.459231.0 op_mode iwlmvm
-iwlwifi 0000:0a:00.0: Detected Intel(R) Dual Band Wireless AC 7260, REV=0x144
-
-I try to do:
-$ iw phy phy0 wowlan enable magic-packet
-$ iw phy phy0 wowlan show
-WoWLAN is enabled:
- * wake up on magic packet
-
-However, when trying to suspend to RAM ( echo mem > /sys/power/state ), I get:
-[46656.403767] dpm_run_callback(): wiphy_suspend+0x0/0x97 [cfg80211] returns -16
-[46656.403769] PM: Device phy0 failed to suspend async: error -16
-[46656.967002] PM: Some devices failed to suspend, or early wake event detected
-
-It also happens with more complex configurations (e.g. TCP connection WoWLAN mode). 
-
-Only after:
-$ iw phy phy0 wowlan disable
-I can suspend normally again. 
-
-I found an earlier report here:
-https://bugzilla.kernel.org/show_bug.cgi?id=109591#c25
-from somebody using kernel 4.6. 
-
-Is this a known issue? Is WoWLAN supposed to work with this hardware (I guess it's quite wide-spread)? 
-
-If possible, please ping me directly in replies, I am not subscribed to the list (but will try to check gmane regularly). 
-
-Cheers and thanks for any support, 
-	Oliver
+T24gV2VkLCAyMDE3LTAyLTA4IGF0IDE2OjI5ICswMjAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBM
+dWNhIENvZWxobyA8bHVjYUBjb2VsaG8uZmk+IHdyaXRlczoNCj4gDQo+ID4gVGhpcyBpcyB0aGUg
+dGhpcmQgYW5kIGZpbmFsIHB1bGwtcmVxdWVzdCBiZWZvcmUgNC4xMSdzIG1lcmdlIHdpbmRvdy4N
+Cj4gPiBUaGlzIHRpbWUgSSBjb25jZW50cmF0ZWQgaW4gYnVnZml4ZXM6DQo+ID4gDQo+ID4gKiBG
+aXggODAyLjExdywgd2hpY2ggd2FzIGZhaWxpbmcgdG8gZHVlIGFuIElHVEsgYnVnOw0KPiA+ICog
+QSBmZXcgbW9yZSBidWd6aWxsYSBidWcgZml4ZXM7DQo+ID4gKiBBIGNoYW5uZWwtc3dpdGNoIHJh
+Y2UgY29uZGl0aW9uIGZpeDsNCj4gPiAqIFNvbWUgZml4ZXMgcmVsYXRlZCB0byBzdXNwZW5kL3Jl
+c3VtZSB3aXRoIG5ldyBIVzsNCj4gPiAqIFRoZSBSRi1raWxsIHNhZ2EgY29udGludWVzOw0KPiA+
+ICogQW5kIHNvbWUgb3RoZXIgZml4ZXMgaGVyZSBhbmQgdGhlcmUuLi4NCj4gPiANCj4gPiBBcyB1
+c3VhbCwgSSdtIHB1c2hpbmcgdGhpcyB0byBhIHBlbmRpbmcgYnJhbmNoLCBmb3Iga2J1aWxkIGJv
+dCwgYW5kDQo+ID4gd2lsbCBzZW5kIGEgcHVsbC1yZXF1ZXN0IGxhdGVyLg0KPiA+IA0KPiA+IFBs
+ZWFzZSByZXZpZXcuDQo+IA0KPiBJIG9ubHkgc2VlIHBhdGNoZXMgMS04IGluIHRoZSBtYWlsaW5n
+IGxpc3Qgb3IgaW4gbXkgaW5ib3gsIHdoYXQgaGFwcGVuZWQNCj4gdG8gdGhlIHJlc3Q/DQoNCk5v
+dCBzdXJlLCBtYXliZSB0aGV5IGFyZSBzdGlsbCBxdWV1ZWQgaW4gbXkgc2VydmVyPyBMZXQgbWUg
+Y2hlY2suDQoNCi0tDQpMdWNhLg==
