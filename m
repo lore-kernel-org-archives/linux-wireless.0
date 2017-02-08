@@ -1,67 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36062 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751075AbdBAUtM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50776 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753378AbdBHPbW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 15:49:12 -0500
-Received: by mail-oi0-f66.google.com with SMTP id u143so31631685oif.3
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2017 12:49:11 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
+        Wed, 8 Feb 2017 10:31:22 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] rt61pci: use entry directly
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1486558291-1615-2-git-send-email-sgruszka@redhat.com>
+References: <1486558291-1615-2-git-send-email-sgruszka@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
 Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>, shaofu <shaofu@realtek.com>
-Subject: [PATCH 01/11 V2] rtlwifi: Fix programing CAM content sequence.
-Date: Wed,  1 Feb 2017 14:48:03 -0600
-Message-Id: <20170120212716.29887-2-Larry.Finger@lwfinger.net> (sfid-20170201_214958_165456_7AC0AE9A)
-In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Message-Id: <20170208153107.C3B3B609C6@smtp.codeaurora.org> (sfid-20170208_163251_218299_FE82879B)
+Date: Wed,  8 Feb 2017 15:31:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-There is a potential race condition when the control byte of a CAM
-entry is written first. Write in reverse order to correct the condition.
+3 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-V2 - no changes
----
- drivers/net/wireless/realtek/rtlwifi/cam.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+80a97eae3046 rt61pci: use entry directly
+2ceb813798e1 rt2x00: call entry directly in rt2x00_dump_frame
+cf81db30a6ed rt2x00: remove queue_entry from skbdesc
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/cam.c b/drivers/net/wireless/realtek/rtlwifi/cam.c
-index a0605d8..f7a7dcb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/cam.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/cam.c
-@@ -45,12 +45,13 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
- 
- 	u32 target_command;
- 	u32 target_content = 0;
--	u8 entry_i;
-+	int entry_i;
- 
- 	RT_PRINT_DATA(rtlpriv, COMP_SEC, DBG_DMESG, "Key content :",
- 		      key_cont_128, 16);
- 
--	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
-+	/* 0-1 config + mac, 2-5 fill 128key,6-7 are reserved */
-+	for (entry_i = CAM_CONTENT_COUNT - 1; entry_i >= 0; entry_i--) {
- 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
- 		target_command = target_command | BIT(31) | BIT(16);
- 
-@@ -102,7 +103,6 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
- 					target_content);
- 			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM],
- 					target_command);
--			udelay(100);
- 
- 			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
- 				 "WRITE A4: %x\n", target_content);
 -- 
-2.10.2
+https://patchwork.kernel.org/patch/9562469/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
