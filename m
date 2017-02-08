@@ -1,38 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34396 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752404AbdBGWa0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 17:30:26 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] ath10k: select WANT_DEV_COREDUMP
-Date: Tue,  7 Feb 2017 23:29:33 +0100
-Message-Id: <20170207222933.12701-1-johannes@sipsolutions.net> (sfid-20170207_233234_963526_A0F33D2D)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41217 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751886AbdBHMKN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 07:10:13 -0500
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+        <arnagara@codeaurora.org>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Subject: [PATCH v3] iw: Add support for controlling tx power for per station
+Date: Wed, 8 Feb 2017 17:31:17 +0530
+Message-ID: <1486555277-25258-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20170208_131118_350049_87BE682C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch allows userspace to set transmit power, in mBm units, to a
+station associated to the AP.
 
-This is necessary so that - if ath10k is the only driver using
-dev_coredump*() - the functionality is built into the kernel.
+To set a limit tx power of 2000 mBm:
+iw wlan0 station set <mac-addr> txpwr limit 2000
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+To revert the user defined tx power for a station:
+iw wlan0 station set <mac-addr> txpwr auto
+
+Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+v3:
+	- rebased
 
-diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-index db1ca629cbd6..b4241cf9b7ed 100644
---- a/drivers/net/wireless/ath/ath10k/Kconfig
-+++ b/drivers/net/wireless/ath/ath10k/Kconfig
-@@ -3,6 +3,7 @@ config ATH10K
-         depends on MAC80211 && HAS_DMA
- 	select ATH_COMMON
- 	select CRC32
-+	select WANT_DEV_COREDUMP
-         ---help---
-           This module adds support for wireless adapters based on
-           Atheros IEEE 802.11ac family of chipsets.
+ station.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
+
+diff --git a/station.c b/station.c
+index f3e3da8..8364593 100644
+--- a/station.c
++++ b/station.c
+@@ -569,6 +569,7 @@ COMMAND(station, del, "<MAC address> [subtype <subtype>] [reason-code <code>]",
+ static const struct cmd *station_set_plink;
+ static const struct cmd *station_set_vlan;
+ static const struct cmd *station_set_mesh_power_mode;
++static const struct cmd *station_set_txpwr;
+ 
+ static const struct cmd *select_station_cmd(int argc, char **argv)
+ {
+@@ -580,6 +581,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
+ 		return station_set_vlan;
+ 	if (strcmp(argv[1], "mesh_power_mode") == 0)
+ 		return station_set_mesh_power_mode;
++	if (strcmp(argv[1], "txpwr") == 0)
++		return station_set_txpwr;
+ 	return NULL;
+ }
+ 
+@@ -731,6 +734,72 @@ COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
+ 	"Set link-specific mesh power mode for this station",
+ 	select_station_cmd, station_set_mesh_power_mode);
+ 
++static int handle_station_set_txpwr(struct nl80211_state *state,
++				    struct nl_msg *msg,
++				    int argc, char **argv,
++				    enum id_input id)
++{
++	enum nl80211_tx_power_setting type;
++	unsigned char mac_addr[ETH_ALEN];
++	unsigned int sta_txpwr = 0;
++	char *err = NULL;
++
++	if (argc != 3 && argc != 4)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
++	}
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++	argc--;
++	argv++;
++
++	if (strcmp("txpwr", argv[0]) != 0)
++		return 1;
++	argc--;
++	argv++;
++
++	if (!strcmp(argv[0], "auto"))
++		type = NL80211_TX_POWER_AUTOMATIC;
++	else if (!strcmp(argv[0], "limit"))
++		type = NL80211_TX_POWER_LIMITED;
++	else {
++		printf("Invalid parameter: %s\n", argv[0]);
++		return 2;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_STA_TX_POWER_SETTING, type);
++
++	if (type != NL80211_TX_POWER_AUTOMATIC) {
++		if (argc != 2) {
++			printf("Missing TX power level argument.\n");
++			return 2;
++		}
++
++		argc--;
++		argv++;
++
++		sta_txpwr = strtoul(argv[0], &err, 0);
++		NLA_PUT_U32(msg, NL80211_ATTR_STA_TX_POWER, sta_txpwr);
++	}
++
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND_ALIAS(station, set, "<MAC address> txpwr <auto|limit> [<tx power mBm>]",
++	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_txpwr,
++	"Set Tx power for this station.",
++	select_station_cmd, station_set_txpwr);
++
+ static int handle_station_dump(struct nl80211_state *state,
+ 			       struct nl_msg *msg,
+ 			       int argc, char **argv,
 -- 
-2.9.3
+1.9.1
