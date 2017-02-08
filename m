@@ -1,79 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33700 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753701AbdBHKrG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39184 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932199AbdBHL2s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 05:47:06 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Paolo Abeni <pabeni@redhat.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        hante Meuleman <hante.meuleman@broadcom.com>
-Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
-References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
-        <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com>
-        <1486543119.2533.3.camel@redhat.com>
-Date: Wed, 08 Feb 2017 12:27:42 +0200
-In-Reply-To: <1486543119.2533.3.camel@redhat.com> (Paolo Abeni's message of
-        "Wed, 08 Feb 2017 09:38:39 +0100")
-Message-ID: <87zihxm0yp.fsf@kamboji.qca.qualcomm.com> (sfid-20170208_115114_089628_C54BB1ED)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 8 Feb 2017 06:28:48 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 13:23:12 +0200
+Message-Id: <20170208112322.29413-8-luca@coelho.fi> (sfid-20170208_122900_803983_429C1029)
+In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+Subject: [PATCH 07/17] iwlwifi: mvm: fix reorder timer re-arming
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paolo Abeni <pabeni@redhat.com> writes:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> On Tue, 2017-02-07 at 20:23 +0100, Arend Van Spriel wrote:
->> On 7-2-2017 17:50, Paolo Abeni wrote:
->> > the skbs can be held by the driver for a long time, so we need
->> > to clear any state on xmit to avoid hanging other subsystems.
->> > The skbs are already orphaned later in cmsg code, so we just
->> > need to clear the nf/dst/secpath.
->> > Do it early, while the relevant entries are hopefully still
->> > hot in the cache.
->> 
->> What is this about really? A bit more background about the issue
->> might
->> help understanding the need for this patch. Is this really specific
->> to
->> brcmfmac. For instance is something similar already done in mac80211?
->
-> The issue is apparently driver specific, as reported in:
->
-> https://bugzilla.redhat.com/show_bug.cgi?id=1294415
->
-> This is caused by xmit skbs carrying a notrack ct entry not being freed
-> by the device driver in a timely manner. Removing the ct module waits
-> for such entries refcount going to zero and hangs the kernel in busy
-> loop (for several minutes).
->
-> The relevant skbs are icmp6 packets (ND if I recall correctly, they
-> bcast packets at the mac level).
->
-> The only other known device driver suffering for the issue is the
-> infiniband ipoib driver, I send a separate patch for it.
->
-> I lack the broadcom h/w, but with infiniband the bug can be reproduced
-> with the following steps:
->
-> - ensure ipv6 is enabled on the target device, and firewalld is running
-> (e.g. the module nf_conntrack_ipv6 is loaded)
-> - assign a static ip to the device
-> - shut down the firewall (e.g. try to remove the module nf_conntrack)
->
-> For the brcmfmac driver most probably it is necessary being
-> disassociated from the AP before shutting down the firewall (but I
-> can't double check). This is probably why mac80211 does not suffer this
-> issue.
->
-> The root cause for the issue could be actually a firmware issue, any
-> better clues are more than welcome!
+When NSSN is behind the reorder buffer due to timeout
+the reorder timer isn't getting re-armed until NSSN
+catches up. Fix it.
 
-BTW, you should have added all this to the commit log. After reading the
-original description it left more questions open than answered them.
+Fixes: 0690405fef29 ("iwlwifi: mvm: add reorder timeout per frame")
 
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index c154ab42c80d..d79e9c2a2654 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -418,7 +418,7 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 
+ 	/* ignore nssn smaller than head sn - this can happen due to timeout */
+ 	if (iwl_mvm_is_sn_less(nssn, ssn, reorder_buf->buf_size))
+-		return;
++		goto set_timer;
+ 
+ 	while (iwl_mvm_is_sn_less(ssn, nssn, reorder_buf->buf_size)) {
+ 		int index = ssn % reorder_buf->buf_size;
+@@ -441,6 +441,7 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 	}
+ 	reorder_buf->head_sn = nssn;
+ 
++set_timer:
+ 	if (reorder_buf->num_stored && !reorder_buf->removed) {
+ 		u16 index = reorder_buf->head_sn % reorder_buf->buf_size;
+ 
 -- 
-Kalle Valo
+2.11.0
