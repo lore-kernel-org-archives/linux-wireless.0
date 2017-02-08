@@ -1,96 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:33467 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751534AbdBTBRv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 20:17:51 -0500
-Received: by mail-ot0-f195.google.com with SMTP id j49so2682811otb.0
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 17:17:50 -0800 (PST)
-Subject: Re: [PATCH v2] rtl8187: Enable monitor mode to fix multicast
- reception
-To: Nils Holland <nholland@tisys.org>, linux-wireless@vger.kernel.org
-References: <20170219235919.GA15763@tisys.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <94f6a947-afcc-ad49-cc54-ffa28294d370@lwfinger.net> (sfid-20170220_021816_978940_545E93B1)
-Date: Sun, 19 Feb 2017 19:17:47 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170219235919.GA15763@tisys.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:42624 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932096AbdBHJ65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 04:58:57 -0500
+Message-ID: <1486547933.24745.2.camel@sipsolutions.net> (sfid-20170208_110004_175667_76D33593)
+Subject: Re: [PATCH v4 3/5] cfg80211: Accept multiple RSSI thresholds for CQM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 08 Feb 2017 10:58:53 +0100
+In-Reply-To: <20170125114344.8179-3-andrew.zaborowski@intel.com> (sfid-20170125_124407_436433_080482FC)
+References: <20170125114344.8179-1-andrew.zaborowski@intel.com>
+         <20170125114344.8179-3-andrew.zaborowski@intel.com>
+         (sfid-20170125_124407_436433_080482FC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2017 05:59 PM, Nils Holland wrote:
-> The rtl8187 cards don't seem to receive multicast frames, which,
-> among other things, makes them fail to receive RAs in IPv6 networks.
-> The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
-> have the desired effect.
->
-> Fix the issue by setting RTL818X_RX_CONF_MONITOR instead, which puts the
-> card into monitor mode and resolves the problem so that multicast frames
-> are sucessfully passed to the kernel.
->
-> The existence of the problem and the effectiveness of the solution has
-> originally been confirmed on an 8187B based card with the USB id of
-> 0bda:8197. Subsequent testing by Larry Finger on an 8187L based card,
-> which follows the second (8187, i.e. "non-b") code path in the driver,
-> has confirmed that the fix does not cause any noticeable regresssions
-> there either.
->
-> Signed-off-by: Nils Holland <nholland@tisys.org>
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> This method doesn't have a hysteresis parameter because there's no
+> benefit to the cfg80211 code from having the hysteresis be handled by
+> hardware/driver in terms of the number of wakeups.  At the same time
+> it would likely be less consistent between drivers if offloaded or
+> done in the drivers.
 
-Thanks,
+I'm not really sure I buy this.
 
-Larry
+What if I configure a few ranges, and let's say one of the boundaries
+is -50dBm. Now if I sit just on that value of -50dBm and thus my signal
+fluctuates say -48..-52, I'd have to continuously wake up the host.
 
-> ---
->  drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 16 +++++++---------
->  1 file changed, 7 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-> index 231f84db9ab0..56a8686cd367 100644
-> --- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-> +++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-> @@ -946,8 +946,7 @@ static int rtl8187_start(struct ieee80211_hw *dev)
->  		      (7 << 13 /* RX FIFO threshold NONE */) |
->  		      (7 << 10 /* MAX RX DMA */) |
->  		      RTL818X_RX_CONF_RX_AUTORESETPHY |
-> -		      RTL818X_RX_CONF_ONLYERLPKT |
-> -		      RTL818X_RX_CONF_MULTICAST;
-> +		      RTL818X_RX_CONF_ONLYERLPKT;
->  		priv->rx_conf = reg;
->  		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
->
-> @@ -1319,12 +1318,11 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
->  		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
->  	if (changed_flags & FIF_CONTROL)
->  		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
-> -	if (changed_flags & FIF_OTHER_BSS)
-> -		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
-> -	if (*total_flags & FIF_ALLMULTI || multicast > 0)
-> -		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
-> +	if (*total_flags & FIF_OTHER_BSS ||
-> +	    *total_flags & FIF_ALLMULTI || multicast > 0)
-> +		priv->rx_conf |= RTL818X_RX_CONF_MONITOR;
->  	else
-> -		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
-> +		priv->rx_conf &= ~RTL818X_RX_CONF_MONITOR;
->
->  	*total_flags = 0;
->
-> @@ -1332,10 +1330,10 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
->  		*total_flags |= FIF_FCSFAIL;
->  	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
->  		*total_flags |= FIF_CONTROL;
-> -	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
-> +	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR) {
->  		*total_flags |= FIF_OTHER_BSS;
-> -	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
->  		*total_flags |= FIF_ALLMULTI;
-> +	}
->
->  	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
->  }
->
+You try to avoid that here, I think:
+
++	if (low > (s32) (last - hyst))
++		low = last - hyst;
++	if (high < (s32) (last + hyst))
++		high = last + hyst;
+
+but it's not clear to me that this is effective?
+
+Let's see. last is -52, so low will be -60 and high will be -50.
+
+Let's say hyst is 3 since I chose the ranges so closely. I'm guessing a
+higher hysteresis and larger ranges would actually be better, but let's
+stick to this for the sake of the example.
+
+last-hyst = -55, so low isn't > that, low = -60
+last+hyst = -49, so high = -49
+
+but now it still fluctuates around -50, so if I next hit -48 you do the
+same dance again with -50/-40, getting -51/-40 and never really
+applying a full hysteresis, no?
+
+I'll probably see an intermediate value of -50 at some point, but I'll
+never actually *report* it, so "last" can switch between -48 and -52
+constantly in this scenario, no?
+
+
+I think it would make sense to unconditionally apply the hysteresis to
+low/high, i.e. always set
+ low = low - hyst
+ high = high + hyst
+
+so that you get "sticky" ranges once you're in them?
+
+
+
+> +	if (!wiphy_ext_feature_isset(&rdev->wiphy,
+> +			
+> 	     NL80211_EXT_FEATURE_CQM_RSSI_LIST))
+> +		return
+> -EOPNOTSUPP;
+
+
+That check should be earlier in the function
+cfg80211_cqm_rssi_update(), no?
+
+
+
+johannes
