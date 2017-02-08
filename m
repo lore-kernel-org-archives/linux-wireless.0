@@ -1,50 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45907 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753486AbdBJU14 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 15:27:56 -0500
-From: <ryanhsu@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC: <ryanhsu@qca.qualcomm.com>
-Subject: [PATCH] ath10k: fix the garage chars in board file name creation
-Date: Fri, 10 Feb 2017 12:27:09 -0800
-Message-ID: <1486758429-18665-1-git-send-email-ryanhsu@qca.qualcomm.com> (sfid-20170210_212805_877911_CE55B78D)
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:42540 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752899AbdBHJvC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 04:51:02 -0500
+Message-ID: <1486544774.4603.12.camel@sipsolutions.net> (sfid-20170208_105212_376843_C3DA29E4)
+Subject: Re: [PATCH] cfg80211: make rdev assignment clearer in
+ nl80211_testmode_dump()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 08 Feb 2017 10:06:14 +0100
+In-Reply-To: <20170207201356.4752-1-luca@coelho.fi>
+References: <20170207201356.4752-1-luca@coelho.fi>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+On Tue, 2017-02-07 at 22:13 +0200, Luca Coelho wrote:
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Avoid assigning rdev to NULL when we already have it and getting it
+> again from the wiphy index, by moving this code to relevant if block.
 
-The variant[] string will be valid only if the bdf_ext is set.
+Applied.
 
-The string memory needs to be null-terminated to avoid the undefined garbage
-appended by the subsequent board file name creation.
-
-ath10k_pci 0000:04:00.0: failed to fetch board data for
-"bus=pci,vendor=168c,device=003e,subsystem-vendor=168c,subsystem-device=3363��P�����"
-from ath10k/QCA6174/hw3.0/board-2.bin
-
-Fixes: f2593cb1b291 ("ath10k: Search SMBIOS for OEM board file extension")
-Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c27e7ea..014a87e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1122,7 +1122,7 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
- 					 size_t name_len)
- {
- 	/* strlen(',variant=') + strlen(ar->id.bdf_ext) */
--	char variant[9 + ATH10K_SMBIOS_BDF_EXT_STR_LENGTH];
-+	char variant[9 + ATH10K_SMBIOS_BDF_EXT_STR_LENGTH] = { 0 };
- 
- 	if (ar->id.bmi_ids_valid) {
- 		scnprintf(name, name_len,
--- 
-1.9.1
+johannes
