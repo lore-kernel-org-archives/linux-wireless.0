@@ -1,131 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50523 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751246AbdBYNqI (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52105 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932096AbdBHIWc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Feb 2017 08:46:08 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv2 4/4] mac80211: Add support to set/update btcoex priority value
-Date: Sat, 25 Feb 2017 19:07:53 +0530
-Message-ID: <1488029873-14600-5-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170225_145114_586289_CE86EED1)
-In-Reply-To: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
+        Wed, 8 Feb 2017 03:22:32 -0500
+From: David Lin <dlin@marvell.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Steve deRosier <derosier@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Johannes Berg" <johannes@sipsolutions.net>,
+        Chor Teck Law <ctlaw@marvell.com>,
+        "James Lin" <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
+Date: Wed, 8 Feb 2017 07:55:08 +0000
+Message-ID: <4b33da1fb23a476ca5bc21eb74f1ffd2@SC-EXCH02.marvell.com> (sfid-20170208_092245_325365_2FC55939)
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+ <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
+ <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
+ <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com>
+ <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
+ <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com>
+ <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
+ <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com>
+ <CACna6rwE1YE6bokFehgRNsyRGNGORbrYcnuUR-df286h0K4KXw@mail.gmail.com>
+In-Reply-To: <CACna6rwE1YE6bokFehgRNsyRGNGORbrYcnuUR-df286h0K4KXw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
-
-This patch add support to set or modify the btcoex priority value
-for the driver which has btcoex priority feature support.
-
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- include/net/mac80211.h    |    6 ++++--
- net/mac80211/cfg.c        |    5 +++--
- net/mac80211/driver-ops.h |    7 ++++---
- net/mac80211/trace.h      |   12 +++++++++---
- 4 files changed, 20 insertions(+), 10 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 57717f1..33890b4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3448,7 +3448,8 @@ enum ieee80211_reconfig_type {
-  *	ieee80211_nan_func_terminated() with
-  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
-  * @set_btcoex_: Called when BTCOEX is enabled/disabled, use
-- *     this callback to enable or disable btcoex.
-+ *     this callback to enable or disable btcoex and use this callback to
-+ *     set btcoex_priority. BTCOEX should be enabled to set this priority.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3730,7 +3731,8 @@ struct ieee80211_ops {
- 	void (*del_nan_func)(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    u8 instance_id);
--	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled);
-+	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled,
-+			  int btcoex_priority);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7e17eff..c640e7d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3574,11 +3574,12 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
- 	return 0;
- }
- 
--static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled)
-+static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled,
-+				int btcoex_priority)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 
--	return drv_set_btcoex(local, enabled);
-+	return drv_set_btcoex(local, enabled, btcoex_priority);
- }
- 
- const struct cfg80211_ops mac80211_config_ops = {
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 16d9c98..3826202 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1249,13 +1249,14 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
- }
- 
- static inline int drv_set_btcoex(struct ieee80211_local *local,
--				 bool enabled)
-+				 bool enabled, int btcoex_priority)
- {
- 	int ret = -EOPNOTSUPP;
- 
--	trace_drv_set_btcoex(local, enabled);
-+	trace_drv_set_btcoex(local, enabled, btcoex_priority);
- 	if (local->ops->set_btcoex)
--		ret = local->ops->set_btcoex(&local->hw, enabled);
-+		ret = local->ops->set_btcoex(&local->hw, enabled,
-+					     btcoex_priority);
- 
- 	trace_drv_return_int(local, ret);
- 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 0d9b5a0..c3efca9 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -743,17 +743,23 @@
- );
- 
- TRACE_EVENT(drv_set_btcoex,
--	TP_PROTO(struct ieee80211_local *local, bool enabled),
--	TP_ARGS(local, enabled),
-+	TP_PROTO(struct ieee80211_local *local, bool enabled,
-+		 int btcoex_priority),
-+	TP_ARGS(local, enabled, btcoex_priority),
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
- 		__field(bool, enabled)
-+		__field(int, btcoex_priority)
- 	),
- 	TP_fast_assign(
- 		LOCAL_ASSIGN;
- 		__entry->enabled = enabled;
-+		__entry->btcoex_priority = btcoex_priority;
- 	),
--	TP_printk(LOCAL_PR_FMT " enabled:%d", LOCAL_PR_ARG, __entry->enabled)
-+	TP_printk(
-+		LOCAL_PR_FMT " enabled:%d btcoex_priority :%d",
-+		LOCAL_PR_ARG, __entry->enabled, __entry->btcoex_priority
-+	)
- );
- 
- TRACE_EVENT(drv_set_coverage_class,
--- 
-1.7.9.5
+PiBGcm9tOiBSYWZhxYIgTWnFgmVja2kgW21haWx0bzp6YWplYzVAZ21haWwuY29tXSB3b3J0ZTog
+DQo+IE9uIDggRmVicnVhcnkgMjAxNyBhdCAwODoyOCwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwu
+Y29tPiB3cm90ZToNCj4gPj4gRnJvbTogUmFmYcWCIE1pxYJlY2tpIFttYWlsdG86emFqZWM1QGdt
+YWlsLmNvbV0gd29ydGU6DQo+ID4+IFNlbnQ6IFdlZG5lc2RheSwgRmVicnVhcnkgMDgsIDIwMTcg
+MzoyNCBQTSBPbiA4IEZlYnJ1YXJ5IDIwMTcgYXQNCj4gPj4gMDc6MzAsIERhdmlkIExpbiA8ZGxp
+bkBtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+ID4+ID4gc3RldmUuZGVyb3NpZXJAZ21haWwuY29tIFtt
+YWlsdG86c3RldmUuZGVyb3NpZXJAZ21haWwuY29tXSB3cm90ZToNCj4gPj4gPj4gT24gVHVlLCBG
+ZWIgNywgMjAxNyBhdCAxMDoxNSBQTSwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPiB3cm90
+ZToNCj4gPj4gPj4gPj4gUmFmYcWCIE1pxYJlY2tpIFttYWlsdG86emFqZWM1QGdtYWlsLmNvbV0g
+d3JvdGU6DQo+ID4+ID4+ID4+IFBsZWFzZSB1c2UgaWVlZTgwMjExLWZyZXEtbGltaXQ6DQo+ID4+
+ID4+ID4+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2RhdmVt
+L25ldC1uZXh0LmdpdA0KPiA+PiA+PiA+PiAvY28NCj4gPj4gPj4gPj4gbW1pDQo+ID4+ID4+ID4+
+IHQvP2lkPWIzDQo+ID4+ID4+ID4+IDMwYjI1ZWFhYmRhMDBkNzRlNDc1NjZkOTIwMDkwN2RhMzgx
+ODk2DQo+ID4+ID4+ID4+DQo+ID4+ID4+ID4+IE1vc3QgbGlrZWx5IHdpdGggd2lwaHlfcmVhZF9v
+Zl9mcmVxX2xpbWl0cyBoZWxwZXI6DQo+ID4+ID4+ID4+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcv
+Y2dpdC9saW51eC9rZXJuZWwvZ2l0L2RhdmVtL25ldC1uZXh0LmdpdA0KPiA+PiA+PiA+PiAvY28N
+Cj4gPj4gPj4gPj4gbW1pDQo+ID4+ID4+ID4+IHQvP2lkPWU2DQo+ID4+ID4+ID4+IDkxYWMyZjc1
+YjY5YmVlNzQzZjAzNzBkNzk0NTRiYTQ0MjliMTc1DQo+ID4+ID4+ID4NCj4gPj4gPj4gPiBJIGFs
+cmVhZHkgcmVwbGllZCBtZWFuaW5nIG9mIHRoZXNlIHBhcmFtZXRlcnM6DQo+ID4+ID4+ID4gPG1h
+cnZlbGwsMmdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDJnIGJhbmQuDQo+ID4+ID4+ID4gPG1hcnZl
+bGwsNWdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDVnIGJhbmQuDQo+ID4+ID4+ID4gPG1hcnZlbGws
+IGNoYWlubWFzaz4gaXMgdXNlZCB0byBzcGVjaWZ5IGFudGVubmEgbnVtYmVyIChpZg0KPiA+PiA+
+PiA+IGRlZmF1bHQgbnVtYmVyDQo+ID4+ID4+IGlzIHN1aXRhYmxlIGZvciB5b3UsIHRoZXJlIGlz
+IG5vIG5lZWQgdG8gdXNlIHRoaXMgcGFyYW1ldGVyKS4NCj4gPj4gPj4gPiA8bWFydmVsbCxwb3dl
+cnRhYmxlPiBzaG91bGQgbm90IGJlIHVzZWQgZm9yIGNoaXAgd2l0aCBkZXZpY2UNCj4gPj4gPj4g
+PiBwb3dlcg0KPiA+PiB0YWJsZS4NCj4gPj4gPj4gSW4gZmFjdCwgdGhpcyBwYXJhbWV0ZXIgc2hv
+dWxkIG5vdCBiZSB1c2VkIGFueSBtb3JlLg0KPiA+PiA+PiA+DQo+ID4+ID4+DQo+ID4+ID4+IERh
+dmlkLCBJIHRoaW5rIHlvdSdyZSBub3QgdW5kZXJzdGFuZGluZyB0aGUgY29tbWVudCwgb3IgYXQg
+bGVhc3QNCj4gPj4gPj4gdGhhdCdzIHdoYXQgaXQgbG9va3MgbGlrZSB0byBtZS4gWWVzLCB5b3Ug
+ZGlkIHJlcGx5IGFzIHRvIHRoZSBtZWFuaW5nLg0KPiA+PiA+PiBBbmQsIHlvdXIgcmVwbHksIHdo
+aWxlIGluZm9ybWF0aXZlLCBkaWRuJ3QgdGVsbCB1cyB5b3UgdW5kZXJzdG9vZA0KPiA+PiA+PiBh
+bmQgd2VyZSB3aWxsaW5nIHRvIGZpeCB0aGUgcHJvYmxlbS4gSSBkb3VidCB5b3UgbWVhbnQgaXQg
+dGhpcw0KPiA+PiA+PiB3YXksIGJ1dCBpdCBmZWVscyBkZWZlbnNpdmUgYW5kIGxpa2UgYSBicnVz
+aC1vZmYuDQo+ID4+ID4+DQo+ID4+ID4+IEZpcnN0IG9mZiwgeW91IHdpbGwgc3RpbGwgaGF2ZSB0
+byBkb2N1bWVudCBhbnkgRFQgYmluZGluZ3MgeW91J3JlDQo+ID4+ID4+IGFkZGluZy4gSnVzdCBi
+ZWNhdXNlIHlvdSBhbnN3ZXIgdGhlIHF1ZXN0aW9uIGluIHRoZSByZXZpZXcgZG9lc24ndA0KPiA+
+PiA+PiBtZWFuIHlvdSdyZSBub3QgcmVzcG9uc2libGUgZm9yIGRvaW5nIHNvLg0KPiA+PiA+Pg0K
+PiA+PiA+PiBBbmQgc2Vjb25kIG9mZiwgSSB0aGluayB0aGF0IFJhZmFsIChhbmQgc29ycnkgYWJv
+dXQgbXkgc3BlbGxpbmcsDQo+ID4+ID4+IGxvb2tzIGxpa2UgdGhlcmUncyBzb21lIHNvcnQgb2Yg
+YWNjZW50IG9uIHRoZSBsIHRoYXQgSSBkb24ndCBrbm93DQo+ID4+ID4+IGhvdyB0byBtYWtlIG15
+IGtleWJvYXJkIGRvKSBpcyBzYXlpbmc6IHRoZXJlJ3MgYWxyZWFkeSBzb21lDQo+ID4+ID4+IGdl
+bmVyaWMgYmluZGluZ3MgdGhhdCBjYW4gYmUgdXNlZCB0byBkaXNhYmxlIHRoZSAyZyBvciA1ZyBi
+YW5kcy4NCj4gPj4gPj4gR3JhbnRlZCB0aGV5J3JlIGV2ZW4gbmV3ZXIgdGhhbiB5b3VyIHBhdGNo
+LCBidXQgSSBkbyB0aGluayBpZiBzYWlkDQo+ID4+ID4+IGJpbmRpbmdzIGV4aXN0IGFuZA0KPiA+
+PiBhcmUgYXBwcm9wcmlhdGUsIHlvdSBzaG91bGQgdXNlIHRoZW0uDQo+ID4+ID4+DQo+ID4+ID4+
+IC0gU3RldmUNCj4gPj4gPg0KPiA+PiA+IFRoZXNlIHBhcmFtZXRlcnMgYXJlIG1hcnZlbGwgcHJv
+cHJpZXRhcnkgcGFyYW1ldGVycywgSSBkb24ndCB0aGluaw0KPiA+PiA+IGl0IHNob3VsZA0KPiA+
+PiBiZSBhZGRlZCB0byBEVCBiaW5kaW5ncy4NCj4gPj4NCj4gPj4gU3RldmUgaXMgY29ycmVjdC4N
+Cj4gPj4NCj4gPj4gWW91IGhhdmUgdG8gZG9jdW1lbnQgbmV3IHByb3BlcnRpZXMsIGp1c3QgYmVj
+YXVzZSB0aGV5IGFyZSBNYXJ2ZWxsDQo+ID4+IHNwZWNpZmljIGRvZXNuJ3QgY2hhbmdlIGFueXRo
+aW5nLiBZb3UganVzdCBkb2N1bWVudCB0aGVtIGluIGEgcHJvcGVyDQo+IHBsYWNlLg0KPiA+Pg0K
+PiA+DQo+ID4gQWxsIHJpZ2h0LiBJIHdpbGwgZG8gdGhhdC4NCj4gPg0KPiA+Pg0KPiA+PiA+IEJU
+VywgPG1hcnZlbGwsMmdoej4gYW5kIDxtYXJ2ZWxsLDVnaHo+IGFyZSBvbmx5IHVzZWQgZm9yIG13
+bHdpZmkgdG8NCj4gPj4gPiByZXBvcnQNCj4gPj4gc3VwcG9ydGVkIGJhbmRzLCBpdCBpcyBub3Qg
+cmVsYXRlZCB0byBsaW1pdGF0aW9uIG9mIGZyZXF1ZW5jeS4NCj4gPj4NCj4gPj4gSG93IHJlcG9y
+dGluZyBhIHNpbmdsZSBiYW5kIGRvZXNuJ3QgbGltaXQgcmVwb3J0ZWQgZnJlcXVlbmNpZXM/IFlv
+dQ0KPiA+PiBjYW4gYWNoaWV2ZSBleGFjdGx5IHRoZSBzYW1lIHVzaW5nIGdlbmVyaWMgcHJvcGVy
+dHksIHNvIHRoZXJlIGlzIG5vDQo+ID4+IHBsYWNlIGZvciBNYXJ2ZWxsIHNwZWNpZmljIG9uZXMu
+DQo+ID4+DQo+ID4+IEluIGZhY3QgdGhlcmUgd2VyZSBkcml2ZXJzIG9mIDMgdmVuZG9ycyByZXF1
+aXJpbmcgYmFuZC9mcmVxLXJlbGF0ZWQNCj4gPj4gZGVzY3JpcHRpb24gaW4gRFQ6IEJyb2FkY29t
+LCBNYXJ2ZWxsICYgTWVkaWF0ZWsuIFRoaXMgcHJvcGVydHkgd2FzDQo+ID4+IGRpc2N1c3NlZCAm
+IGRlc2lnbmVkIHRvIHN1cHBvcnQgYWxsIGxpbWl0YXRpb24gY2FzZXMgd2UgZm91bmQNCj4gPj4g
+cG9zc2libGUgdG8gbWFrZSBpdCB1c2FibGUgd2l0aA0KPiA+PiAoaG9wZWZ1bGx5KSBhbGwgZHJp
+dmVycy4NCj4gPj4NCj4gPg0KPiA+IEkgb25seSBuZWVkIHNpbXBsZSB3YXkgdG8gZGlzYWJsZSAy
+ZyBvciA1ZyBiYW5kLiBJIHdpbGwgZm9sbG93IHlvdXIgc3VnZ2VzdGlvbg0KPiB0byBkb2N1bWVu
+dCB0aGVzZSBtYXJ2ZWxsIHByb3ByaWV0YXJ5IHBhcmFtZXRlcnMuDQo+IA0KPiBTZXJpb3VzbHk/
+IFJlZnVzaW5nIHRvIHVzZSBnZW5lcmljIGJpbmRpbmcgYmVjYXVzZSB5b3UgdGhpbmsgbWFydmVs
+bCw1Z2h6OyBpcw0KPiBzaW1wbGVyIHRoYW4gaWVlZTgwMjExLWZyZXEtbGltaXQgPSA8MjQwMjAw
+MCAyNDgyMDAwPjsgKG5vdCB0byBtZW50aW9uIHlvdXINCj4gcHJvcGVydHkgc2VlbXMgcmV2ZXJz
+ZWQhKT8NCj4gDQo+IEkgZG9uJ3Qga25vdyBob3cgZWxzZSB0byBleHBsYWluIHRoaXMgdG8geW91
+LiBXZSBkb24ndCB3YW50IGR1cGxpY2F0ZWQNCj4gcHJvcGVydGllcyB3aGVyZSBvbmUgY2FuIHdv
+cmsuIEp1c3QgdXNlIGV4aXN0aW5nIG9uZS4gRG9uJ3QgYWRkIG5ldyBvbmUgZXZlbg0KPiBpZiBk
+b2N1bWVudGVkLg0KPiANCg0KQWxsIHJpZ2h0LiBJIHdpbGwgY2hlY2sgYW5kIGxldCBwYXRjaCB2
+MTAgdG8gdXNlIGl0LiBGb3IgcHJldmlvdXMgcGFyYW1ldGVycywgdGhleSB3aWxsIG9ubHkgYmUg
+dXNlZCBieSBwcmV2aW91cyBPcGVuV3J0IHByb2plY3RzLg0KDQpUaGFua3MsDQpEYXZpZA0KDQo+
+IC0tDQo+IFJhZmHFgg0K
