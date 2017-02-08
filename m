@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55392 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754234AbdBHPlA (ORCPT
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58710 "EHLO
+        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbdBHFBO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 10:41:00 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] rt2x00usb: do not anchor rx and tx urb's
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1486552690-27597-1-git-send-email-sgruszka@redhat.com>
-References: <1486552690-27597-1-git-send-email-sgruszka@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Vishal Thanki <vishalthanki@gmail.com>
-Message-Id: <20170208153002.536D460A01@smtp.codeaurora.org> (sfid-20170208_164114_881679_1709E08A)
-Date: Wed,  8 Feb 2017 15:30:02 +0000 (UTC)
+        Wed, 8 Feb 2017 00:01:14 -0500
+Message-ID: <1486529606.13263.29.camel@haakon3.risingtidesystems.com> (sfid-20170208_060125_227419_ADDA38E0)
+Subject: Re: [PATCH net-next v2 08/12] iscsi: fix build errors when
+ linux/phy*.h is removed from net/dsa.h
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Timur Tabi <timur@codeaurora.org>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
+        Woojung Huh <woojung.huh@microchip.com>
+Date: Tue, 07 Feb 2017 20:53:26 -0800
+In-Reply-To: <20170207230305.18222-9-f.fainelli@gmail.com>
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
+         <20170207230305.18222-9-f.fainelli@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> We might kill TX or RX urb during rt2x00usb_flush_entry(), what can
-> cause anchor list corruption like shown below:
+Hi Florian,
+
+On Tue, 2017-02-07 at 15:03 -0800, Florian Fainelli wrote:
+> From: Russell King <rmk+kernel@armlinux.org.uk>
 > 
-> [ 2074.035633] WARNING: CPU: 2 PID: 14480 at lib/list_debug.c:33 __list_add+0xac/0xc0
-> [ 2074.035634] list_add corruption. prev->next should be next (ffff88020f362c28), but was dead000000000100. (prev=ffff8801d161bb70).
-> <snip>
-> [ 2074.035670] Call Trace:
-> [ 2074.035672]  [<ffffffff813bde47>] dump_stack+0x63/0x8c
-> [ 2074.035674]  [<ffffffff810a2231>] __warn+0xd1/0xf0
-> [ 2074.035676]  [<ffffffff810a22af>] warn_slowpath_fmt+0x5f/0x80
-> [ 2074.035678]  [<ffffffffa073855d>] ? rt2x00usb_register_write_lock+0x3d/0x60 [rt2800usb]
-> [ 2074.035679]  [<ffffffff813dbe4c>] __list_add+0xac/0xc0
-> [ 2074.035681]  [<ffffffff81591c6c>] usb_anchor_urb+0x4c/0xa0
-> [ 2074.035683]  [<ffffffffa07322af>] rt2x00usb_kick_rx_entry+0xaf/0x100 [rt2x00usb]
-> [ 2074.035684]  [<ffffffffa0732322>] rt2x00usb_clear_entry+0x22/0x30 [rt2x00usb]
+> drivers/target/iscsi/iscsi_target_login.c:1135:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
 > 
-> To fix do not anchor TX and RX urb's, it is not needed as during
-> shutdown we kill those urbs in rt2x00usb_free_entries().
+> Add linux/module.h to iscsi_target_login.c.
 > 
-> Cc: Vishal Thanki <vishalthanki@gmail.com>
-> Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> ---
 
-2 patches applied to wireless-drivers-next.git, thanks.
-
-93c7018ec16b rt2x00usb: do not anchor rx and tx urb's
-0488a6121dfe rt2x00usb: fix anchor initialization
-
--- 
-https://patchwork.kernel.org/patch/9562337/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
