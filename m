@@ -1,127 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.zhinst.com ([212.126.164.98]:59020 "EHLO mail.zhinst.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751007AbdBMKOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 05:14:15 -0500
-From: Tobias Klauser <tklauser@distanz.ch>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Subject: [PATCH] brcmfmac: Use net_device_stats from struct net_device
-Date: Mon, 13 Feb 2017 11:14:09 +0100
-Message-Id: <20170213101409.8205-1-tklauser@distanz.ch> (sfid-20170213_111424_933592_E2DAB5FA)
+Received: from 2.mo1.mail-out.ovh.net ([178.32.119.250]:36541 "EHLO
+        2.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752003AbdBHRFg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 12:05:36 -0500
+Received: from player691.ha.ovh.net (b9.ovh.net [213.186.33.59])
+        by mo1.mail-out.ovh.net (Postfix) with ESMTP id A17B3503A3
+        for <linux-wireless@vger.kernel.org>; Wed,  8 Feb 2017 16:10:41 +0100 (CET)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 08 Feb 2017 16:09:58 +0100
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        =?UTF-8?Q?Rafa=C5=82?= =?UTF-8?Q?_Mi=C5=82ecki?=
+        <zajec5@gmail.com>, Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the
+ __brcmf_err
+In-Reply-To: <87tw84loop.fsf@kamboji.qca.qualcomm.com>
+References: <20170202213321.11591-1-zajec5@gmail.com>
+ <20170202213321.11591-4-zajec5@gmail.com>
+ <2812805e-9108-284f-2165-34624d603364@broadcom.com>
+ <209e8eef55927a76470d44482c6d0090@milecki.pl>
+ <87tw84loop.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <9c5aaa679783efa47b4e4fb6896f8ee2@milecki.pl> (sfid-20170208_180621_263815_AB8F6871)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using a private copy of struct net_device_stats in struct
-brcm_if, use stats from struct net_device.  Also remove the now
-unnecessary .ndo_get_stats function.
+On 2017-02-08 15:52, Kalle Valo wrote:
+> Rafał Miłecki <rafal@milecki.pl> writes:
+> 
+>> On 2017-02-08 10:54, Arend Van Spriel wrote:
+>>> On 2-2-2017 22:33, Rafał Miłecki wrote:
+>>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>> 
+>>>> This will allow getting struct device reference from the passed
+>>>> brcmf_pub for the needs of dev_err. More detailed messages are 
+>>>> really
+>>>> important for home routers which frequently have 2 (or even 3)
+>>>> wireless
+>>>> cards supported by brcmfmac.
+>>>> 
+>>>> Note that all calls are yet to be updated as for now brcmf_err macro
+>>>> always passes NULL. This will be handled in following patch to make
+>>>> this
+>>>> change easier to review.
+>>> 
+>>> I prefer brcmf_err() to have struct device reference directly
+>>> instead of
+>>> using brcmf_pub. That would remove the need for patches 5 till 7 as 
+>>> bus
+>>> specific code already has struct device. So I have acked the first
+>>> three
+>>> patches, but would like to revise 8 and 9.
+>>> 
+>>> Kalle,
+>>> 
+>>> I acked the first three patches. Can those three still go in for 
+>>> 4.11?
+>> 
+>> Sounds OK to me. Kalle, I ack Arend's request if it isn't too late.
+> 
+> Ok, I'll try. My plan is to get everything ready for linux-next by
+> tomorrow morning (Finland time), let's see how it goes.
+> 
+> Related to this, Rafał are you still deleting the patches from 
+> patchwork
+> which should be dropped? I think you are as I can't see patches 4-9
+> anymore.
+> 
+> Now that my patchwork setup is much better (compared to how it was over
+> a year ago) I would actually prefer that you don't do that anymore. The
+> problem is that when you delete the patch from patchwork it completely
+> disappears from patchwork and I can't check the patch or discussion
+> anymore. And I'm so accustomed to use patchwork that only seldom I use
+> email to find the patch.
+> 
+> So it would be better to leave the patches as is and let me drop them
+> (=change the state Changes Requested, Rejected or similar), which is
+> trivial with my script. Otherwise I get this unsure feeling of what
+> happened to the patch :)
 
-Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 26 +++++++---------------
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 --
- 2 files changed, 8 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index b73a55b00fa7..60da86a8d95b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -249,10 +249,10 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 
- done:
- 	if (ret) {
--		ifp->stats.tx_dropped++;
-+		ndev->stats.tx_dropped++;
- 	} else {
--		ifp->stats.tx_packets++;
--		ifp->stats.tx_bytes += skb->len;
-+		ndev->stats.tx_packets++;
-+		ndev->stats.tx_bytes += skb->len;
- 	}
- 
- 	/* Return ok: we always eat the packet */
-@@ -296,15 +296,15 @@ void brcmf_txflowblock(struct device *dev, bool state)
- void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
- {
- 	if (skb->pkt_type == PACKET_MULTICAST)
--		ifp->stats.multicast++;
-+		ifp->ndev->stats.multicast++;
- 
- 	if (!(ifp->ndev->flags & IFF_UP)) {
- 		brcmu_pkt_buf_free_skb(skb);
- 		return;
- 	}
- 
--	ifp->stats.rx_bytes += skb->len;
--	ifp->stats.rx_packets++;
-+	ifp->ndev->stats.rx_bytes += skb->len;
-+	ifp->ndev->stats.rx_packets++;
- 
- 	brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
- 	if (in_interrupt())
-@@ -327,7 +327,7 @@ static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
- 
- 	if (ret || !(*ifp) || !(*ifp)->ndev) {
- 		if (ret != -ENODATA && *ifp)
--			(*ifp)->stats.rx_errors++;
-+			(*ifp)->ndev->stats.rx_errors++;
- 		brcmu_pkt_buf_free_skb(skb);
- 		return -ENODATA;
- 	}
-@@ -388,7 +388,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
- 	}
- 
- 	if (!success)
--		ifp->stats.tx_errors++;
-+		ifp->ndev->stats.tx_errors++;
- 
- 	brcmu_pkt_buf_free_skb(txp);
- }
-@@ -411,15 +411,6 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
- 	}
- }
- 
--static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
--{
--	struct brcmf_if *ifp = netdev_priv(ndev);
--
--	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
--
--	return &ifp->stats;
--}
--
- static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
- 				    struct ethtool_drvinfo *info)
- {
-@@ -492,7 +483,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
- static const struct net_device_ops brcmf_netdev_ops_pri = {
- 	.ndo_open = brcmf_netdev_open,
- 	.ndo_stop = brcmf_netdev_stop,
--	.ndo_get_stats = brcmf_netdev_get_stats,
- 	.ndo_start_xmit = brcmf_netdev_start_xmit,
- 	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
- 	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index de3197be5491..6aecd8dfd824 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -171,7 +171,6 @@ enum brcmf_netif_stop_reason {
-  * @drvr: points to device related information.
-  * @vif: points to cfg80211 specific interface information.
-  * @ndev: associated network device.
-- * @stats: interface specific network statistics.
-  * @multicast_work: worker object for multicast provisioning.
-  * @ndoffload_work: worker object for neighbor discovery offload configuration.
-  * @fws_desc: interface specific firmware-signalling descriptor.
-@@ -187,7 +186,6 @@ struct brcmf_if {
- 	struct brcmf_pub *drvr;
- 	struct brcmf_cfg80211_vif *vif;
- 	struct net_device *ndev;
--	struct net_device_stats stats;
- 	struct work_struct multicast_work;
- 	struct work_struct ndoffload_work;
- 	struct brcmf_fws_mac_descriptor *fws_desc;
--- 
-2.11.0
+Yeah, that was me (marked 4-9 as Changes Requested), sorry ;) I won't be 
+messing with patches in the future.
