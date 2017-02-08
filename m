@@ -1,87 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from celine.tisys.org ([85.25.117.166]:57022 "EHLO celine.tisys.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750792AbdBSBfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Feb 2017 20:35:43 -0500
-Received: from tisys.org (ip1f1368d2.dynamic.kabel-deutschland.de [31.19.104.210])
-        by celine.tisys.org (Postfix) with ESMTPSA id 999C75141500
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 02:35:38 +0100 (CET)
-Date: Sun, 19 Feb 2017 02:35:32 +0100
-From: Nils Holland <nholland@tisys.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:39348 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754792AbdBHPxM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 10:53:12 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH] Fix rtl8187 multicast reception
-Message-ID: <20170219013520.GA3190@tisys.org> (sfid-20170219_023604_590463_F55C5EAE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: kvalo@codeaurora.org, Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 17:51:46 +0200
+Message-Id: <20170208155149.1704-6-luca@coelho.fi> (sfid-20170208_165326_082637_FD74E21E)
+In-Reply-To: <20170208155149.1704-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+ <20170208155149.1704-1-luca@coelho.fi>
+Subject: [PATCH 14/17] iwlwifi: mvm: Fix CSA received immediately after association
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtl8187 doesn't seem to receive multicast data, which, among other
-thinks, make it fail to receive RAs in IPv6 networks.
+From: Avraham Stern <avraham.stern@intel.com>
 
-The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
-have any effect at all. Fix this issue by setting
-RTL818X_RX_CONF_MONITOR instead, which puts the card into monitor mode,
-and fixes the problem.
+The session protection set for association is only removed when
+BSS_CHANGED_BEACON_INFO is set and BSS_CHANGED_ASSOC is not set.
 
-Signed-off-by: Nils Holland <nholland@tisys.org>
+However, mac80211 may set both on association (in case a beacon was
+already received). In this case, mac80211 will not set
+BSS_CHANGED_BEACON_INFO on the next beacons because it has already
+notified the beacon change, so the session protection is never removed
+(until the session protection ends).
+
+When a CSA is received within this time, the station will fail to
+folllow the channel switch because it cannot schedule the time event.
+
+Fix this by removing the session protection when
+BSS_CHANGED_BEACON_INFO and BSS_CHANGED_ASSOC are both set.
+
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-The problem and solution have been tested on an rtl8187b (0bda:8197), but
-the fix changes behavior on other cards supported by the driver as well
-(like non-b 8187's). Due to lack of hardware, I unfortunately cannot say
-if the issue exists on these cards in the first place, or if the fix has
-any unwanted consequences there.
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-If people consider it a bad idea to just always put the card into monitor
-mode (for example, for performance reasons), I could imagine rewriting this
-patch so that a module parameter controls this behavior instead.
-
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index 231f84db9ab0..56a8686cd367 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -946,8 +946,7 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 		      (7 << 13 /* RX FIFO threshold NONE */) |
- 		      (7 << 10 /* MAX RX DMA */) |
- 		      RTL818X_RX_CONF_RX_AUTORESETPHY |
--		      RTL818X_RX_CONF_ONLYERLPKT |
--		      RTL818X_RX_CONF_MULTICAST;
-+		      RTL818X_RX_CONF_ONLYERLPKT;
- 		priv->rx_conf = reg;
- 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
- 
-@@ -1319,12 +1318,11 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
- 	if (changed_flags & FIF_CONTROL)
- 		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
--	if (changed_flags & FIF_OTHER_BSS)
--		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
--	if (*total_flags & FIF_ALLMULTI || multicast > 0)
--		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
-+	if (*total_flags & FIF_OTHER_BSS ||
-+	    *total_flags & FIF_ALLMULTI || multicast > 0)
-+		priv->rx_conf |= RTL818X_RX_CONF_MONITOR;
- 	else
--		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
-+		priv->rx_conf &= ~RTL818X_RX_CONF_MONITOR;
- 
- 	*total_flags = 0;
- 
-@@ -1332,10 +1330,10 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 		*total_flags |= FIF_FCSFAIL;
- 	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
- 		*total_flags |= FIF_CONTROL;
--	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
-+	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR) {
- 		*total_flags |= FIF_OTHER_BSS;
--	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
- 		*total_flags |= FIF_ALLMULTI;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 15ecd3aba71b..7253b92792bf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2008,16 +2008,16 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 		if (fw_has_capa(&mvm->fw->ucode_capa,
+ 				IWL_UCODE_TLV_CAPA_UMAC_SCAN))
+ 			iwl_mvm_config_scan(mvm);
+-	} else if (changes & BSS_CHANGED_BEACON_INFO) {
 +	}
++
++	if (changes & BSS_CHANGED_BEACON_INFO) {
+ 		/*
+-		 * We received a beacon _after_ association so
++		 * We received a beacon from the associated AP so
+ 		 * remove the session protection.
+ 		 */
+ 		iwl_mvm_remove_time_event(mvm, mvmvif,
+ 					  &mvmvif->time_event_data);
+-	}
  
- 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
- }
+-	if (changes & BSS_CHANGED_BEACON_INFO) {
+ 		iwl_mvm_sf_update(mvm, vif, false);
+ 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+ 	}
 -- 
-2.11.1
+2.11.0
