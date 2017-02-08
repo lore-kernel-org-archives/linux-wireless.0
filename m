@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35119 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbdBEBFD (ORCPT
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:35093 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932096AbdBHJ5g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Feb 2017 20:05:03 -0500
-Subject: Re: rtlwifi: rtl8192c_common: "BUG: KASAN: slab-out-of-bounds"
-To: Dmitry Osipenko <digetx@gmail.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>
-References: <beff9033-0051-fd0f-87fe-8269a0d9c8d0@gmail.com>
- <f5682c5a-6c2c-8a35-61b6-1d7a30d2c1f6@gmail.com>
- <edbcbe3f-9b5d-cead-5885-27bc55ef550b@lwfinger.net>
- <b100135b-97c4-b2bc-4f19-2574e573878b@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <3f1ad9bc-c065-4f1f-be78-70c0702867b4@lwfinger.net> (sfid-20170205_020610_967188_9C54A3CB)
-Date: Sat, 4 Feb 2017 19:05:01 -0600
+        Wed, 8 Feb 2017 04:57:36 -0500
+Received: by mail-pg0-f49.google.com with SMTP id 194so47791707pgd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 01:56:56 -0800 (PST)
+Subject: Re: [PATCH 1/5] nl80211: fix validation of scheduled scan info for
+ wowlan netdetect
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com>
+ <1486545047.4603.14.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <338abd1d-dda3-8d6c-0d9a-a5a997f0781e@broadcom.com> (sfid-20170208_105741_303700_38C69844)
+Date: Wed, 8 Feb 2017 10:56:49 +0100
 MIME-Version: 1.0
-In-Reply-To: <b100135b-97c4-b2bc-4f19-2574e573878b@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1486545047.4603.14.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2017 01:32 PM, Dmitry Osipenko wrote:
-> On 04.02.2017 21:41, Larry Finger wrote:
->> On 02/04/2017 10:58 AM, Dmitry Osipenko wrote:
->>> Seems the problem is caused by rtl92c_dm_*() casting .priv to "struct
->>> rtl_pci_priv", while it is "struct rtl_usb_priv".
->>
->> Those routines are shared by rtl8192ce and rtl8192cu, thus we need to make that
->> difference in cast to be immaterial. I think we need to move "struct
->> bt_coexist_info" to the beginning of both rtlpci_priv and rtl_usb_priv. Then it
->> should not matter.
->>
->> I do not have a gcc version new enough to turn KASAN testing on, thus the
->> attached patch is only compile tested. Does it fix the problem?
->
-> Thank you for the patch, it indeed fixes the bug.
->
-> I noticed that struct rtl_priv contains .btcoexist, isn't it duplicated in the
-> struct rtl_pci_priv?
 
-Thanks for testing. When I submit the patch, is it OK to cite your reporting and 
-testing?
 
-Yes, the bt_coexist_info structure is in two different places. I will change the 
-code in rtl8192c-common and rtl8192ce to use only the one in rtlpriv. That 
-should satisfy the problem you reported, as well as clean up the code.
+On 8-2-2017 10:10, Johannes Berg wrote:
+> On Fri, 2017-01-27 at 12:09 +0000, Arend van Spriel wrote:
+>> For wowlan netdetect a separate limit is defined for the number of
+>> matchsets. Currently, this limit is ignored and the regular limit
+>> for scheduled scan matchsets, ie. struct wiphy::max_match_sets, is
+>> used for the net-detect case as well.
+> 
+> Applied.
+> 
+> This means that brmcfmac is now broken in mac80211-next for a bit, but
+> once it hits net-next and I merge back everything will be fine again,
+> so just a few days (and I assume nobody us using brcmfmac from
+> mac80211-next anyway ... wireless-testing will be fine)
 
-Thanks again,
+Well. Almost nobody :-p
 
-Larry
+Gr. AvS
