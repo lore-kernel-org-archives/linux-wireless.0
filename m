@@ -1,54 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24051 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753923AbdBDMAX (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39352 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754793AbdBHPxM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Feb 2017 07:00:23 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH] mac80211: Fix FILS AEAD protection in Association Request frame
-Date: Sat, 4 Feb 2017 13:59:22 +0200
-Message-ID: <1486209562-23415-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20170204_130029_863904_A7D25D47)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 8 Feb 2017 10:53:12 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  8 Feb 2017 17:51:45 +0200
+Message-Id: <20170208155149.1704-5-luca@coelho.fi> (sfid-20170208_165320_050614_DA4C610F)
+In-Reply-To: <20170208155149.1704-1-luca@coelho.fi>
+References: <20170208112322.29413-1-luca@coelho.fi>
+ <20170208155149.1704-1-luca@coelho.fi>
+Subject: [PATCH 13/17] iwlwifi: pcie: set STATUS_RFKILL immediately after interrupt
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Incorrect num_elem parameter value (1 vs. 5) was used in the
-aes_siv_encrypt() call. This resulted in only the first one of the five
-AAD vectors to SIV getting included in calculation. This does not
-protect all the contents correctly and would not interoperate with a
-standard compliant implementation.
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-Fix this by using the correct number. A matching fix is needed in the AP
-side (hostapd) to get FILS authentication working properly.
+Currently, when getting a RFKILL interrupt, the transport enters a flow
+in which it stops the device, disables other interrupts, etc. After
+stopping the device, the transport resets the hw, and sleeps. During
+the sleep, a context switch occurs and host commands are sent by upper
+layers (e.g. mvm) to the fw. This is possible since the op_mode layer
+and the transport layer hold different mutexes.
 
-Fixes: 39404feee691 ("mac80211: FILS AEAD protection for station mode association frames")
-Reported-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Since the STATUS_RFKILL bit isn't set, the transport layer doesn't
+recognize that RFKILL was toggled on, and no commands can actually be
+sent, so it enqueues the command to the tx queue and sets a timer on
+the queue.
+
+After switching context back to stopping the device, STATUS_RFKILL is
+set, and then the transport can't send the command to the fw.
+This eventually results in a queue hang.
+
+Fix this by setting STATUS_RFKILL immediately when
+the interrupt is fired.
+
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/fils_aead.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-If there is still time, it would be nice to get this included in Linux
-4.10 since fils_aead.c is being added there. If not, Cc: stable could be
-added.
-
-diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
-index ecfdd97..e795aaa 100644
---- a/net/mac80211/fils_aead.c
-+++ b/net/mac80211/fils_aead.c
-@@ -272,7 +272,7 @@ int fils_encrypt_assoc_req(struct sk_buff *skb,
- 	crypt_len = skb->data + skb->len - encr;
- 	skb_put(skb, AES_BLOCK_SIZE);
- 	return aes_siv_encrypt(assoc_data->fils_kek, assoc_data->fils_kek_len,
--			       encr, crypt_len, 1, addr, len, encr);
-+			       encr, crypt_len, 5, addr, len, encr);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index e1bf6da20909..de94dfdf2ec9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1609,6 +1609,9 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
  
- int fils_decrypt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 		mutex_lock(&trans_pcie->mutex);
+ 		hw_rfkill = iwl_is_rfkill_set(trans);
++		if (hw_rfkill)
++			set_bit(STATUS_RFKILL, &trans->status);
++
+ 		IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
+ 			 hw_rfkill ? "disable radio" : "enable radio");
+ 
+@@ -1617,7 +1620,6 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
+ 		mutex_unlock(&trans_pcie->mutex);
+ 		if (hw_rfkill) {
+-			set_bit(STATUS_RFKILL, &trans->status);
+ 			if (test_and_clear_bit(STATUS_SYNC_HCMD_ACTIVE,
+ 					       &trans->status))
+ 				IWL_DEBUG_RF_KILL(trans,
+@@ -1954,6 +1956,9 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 
+ 		mutex_lock(&trans_pcie->mutex);
+ 		hw_rfkill = iwl_is_rfkill_set(trans);
++		if (hw_rfkill)
++			set_bit(STATUS_RFKILL, &trans->status);
++
+ 		IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
+ 			 hw_rfkill ? "disable radio" : "enable radio");
+ 
+@@ -1962,7 +1967,6 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
+ 		mutex_unlock(&trans_pcie->mutex);
+ 		if (hw_rfkill) {
+-			set_bit(STATUS_RFKILL, &trans->status);
+ 			if (test_and_clear_bit(STATUS_SYNC_HCMD_ACTIVE,
+ 					       &trans->status))
+ 				IWL_DEBUG_RF_KILL(trans,
 -- 
-2.7.4
+2.11.0
