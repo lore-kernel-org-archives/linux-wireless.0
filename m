@@ -1,64 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0141.hostedemail.com ([216.40.44.141]:48310 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751199AbdBWMzU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 07:55:20 -0500
-Message-ID: <1487854470.14159.24.camel@perches.com> (sfid-20170223_135524_626503_A6B8AB52)
-Subject: Re: [PATCH v2] ath10k: Remove return statement from a void function
-From: Joe Perches <joe@perches.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Marcin Rokicki <marcin.rokicki@tieto.com>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 23 Feb 2017 04:54:30 -0800
-In-Reply-To: <b7ac6892-4cbd-bd60-382f-5c51e9ae588a@broadcom.com>
-References: <1487672891-8584-1-git-send-email-marcin.rokicki@tieto.com>
-         <b7ac6892-4cbd-bd60-382f-5c51e9ae588a@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42500 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754019AbdBHJrT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Feb 2017 04:47:19 -0500
+Message-ID: <1486547234.24745.0.camel@sipsolutions.net> (sfid-20170208_104859_249231_FD2A7ED7)
+Subject: Re: [PATCH v4 2/5] cfg80211: Pass new RSSI level in CQM RSSI
+ notification
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 08 Feb 2017 10:47:14 +0100
+In-Reply-To: <20170125114344.8179-2-andrew.zaborowski@intel.com> (sfid-20170125_124406_676314_6B2FAD43)
+References: <20170125114344.8179-1-andrew.zaborowski@intel.com>
+         <20170125114344.8179-2-andrew.zaborowski@intel.com>
+         (sfid-20170125_124406_676314_6B2FAD43)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-02-22 at 20:54 +0100, Arend Van Spriel wrote:
-> 
-> On 21-2-2017 11:28, Marcin Rokicki wrote:
-> > The empty 'return;' statement in a void function should be
-> > used to return from somewhere else than the end.
-> > 
-> > Signed-off-by: Marcin Rokicki <marcin.rokicki@tieto.com>
-> > ---
-> > 
-> > Changes for v2
-> >  -remove only return statement instead of empty err label
-> >   which can be used in the future
-> > 
-> > ---
-> >  drivers/net/wireless/ath/ath10k/core.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> > index 59729aa..a22d3c9 100644
-> > --- a/drivers/net/wireless/ath/ath10k/core.c
-> > +++ b/drivers/net/wireless/ath/ath10k/core.c
-> > @@ -2311,7 +2311,7 @@ static void ath10k_core_register_work(struct work_struct *work)
-> >  	/* TODO: It's probably a good idea to release device from the driver
-> >  	 * but calling device_release_driver() here will cause a deadlock.
-> >  	 */
-> > -	return;
-> > +	;
-> 
-> Not exactly what I meant. Just drop the whole line include semicolon.
+Ok, I've applied patches 1-2 right now, that really makes sense
+regardless of the others.
 
-gcc doesn't support a goto label without a
-statement immediately before the end-of-function.
-
-ie:
-
-void foo(void)
-{
-	goto err;
-err:
-}
-
-fails to compile.
+johannes
