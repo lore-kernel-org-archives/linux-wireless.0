@@ -1,106 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:35521 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751073AbdBJEVB (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36561 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753601AbdBHHpT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Feb 2017 23:21:01 -0500
-Date: Thu, 9 Feb 2017 21:20:55 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: Mark Greer <mgreer@animalcreek.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Justin Bronder <justin@kuvee.com>,
-        linux-nfc <linux-nfc@lists.01.org>,
-        Jaret Cantu <jaret.cantu@timesys.com>
-Subject: Re: [Patch] NFC: trf7970a:
-Message-ID: <20170210042055.GA9104@animalcreek.com> (sfid-20170210_052107_258342_61C47201)
-References: <20161214223123.GA10281@animalcreek.com>
- <20161216045210.GA29196@animalcreek.com>
- <20161216203538.GA12608@animalcreek.com>
- <CAO7Z3W+grhLnP05bPShheuvSet08CoYhFStDpDVgztf=Wz42Fw@mail.gmail.com>
- <20161219030733.GA14962@animalcreek.com>
- <20170208225339.GA26286@animalcreek.com>
- <20170208225651.GB26286@animalcreek.com>
- <CAO7Z3WKxXz1SsvOH8v5Xvy0jSdw1-NU_zXyu0QakR3UHnYgrqA@mail.gmail.com>
- <20170209212706.GA26734@animalcreek.com>
- <CAO7Z3W+hS1KuKdA=n=X2cgsEEUtmS51EqFRw8PXMQXPQ5=_XqQ@mail.gmail.com>
+        Wed, 8 Feb 2017 02:45:19 -0500
+Received: by mail-oi0-f68.google.com with SMTP id u143so10416840oif.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2017 23:44:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAO7Z3W+hS1KuKdA=n=X2cgsEEUtmS51EqFRw8PXMQXPQ5=_XqQ@mail.gmail.com>
+In-Reply-To: <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com>
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+ <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
+ <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
+ <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com> <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
+ <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com> <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
+ <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 8 Feb 2017 08:44:46 +0100
+Message-ID: <CACna6rwE1YE6bokFehgRNsyRGNGORbrYcnuUR-df286h0K4KXw@mail.gmail.com> (sfid-20170208_084817_550407_7B01FD5E)
+Subject: Re: [PATCH v9] Add new mac80211 driver mwlwifi.
+To: David Lin <dlin@marvell.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Chor Teck Law <ctlaw@marvell.com>,
+        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 09, 2017 at 07:41:11PM -0500, Geoff Lansberry wrote:
-> On Thu, Feb 9, 2017 at 4:27 PM, Mark Greer <mgreer@animalcreek.com> wrote:
-> >
-> > On Thu, Feb 09, 2017 at 10:54:08AM -0500, Geoff Lansberry wrote:
-> > > On Wed, Feb 8, 2017 at 5:56 PM, Mark Greer <mgreer@animalcreek.com> wrote:
-> > > >
-> > > > I just realized that the linux-nfc is not CC'd so adding it.
-> > > >
-> > > > On Wed, Feb 08, 2017 at 03:53:39PM -0700, Mark Greer wrote:
-> > > > > On Sun, Dec 18, 2016 at 08:07:33PM -0700, Mark Greer wrote:
-> > > > > > On Sat, Dec 17, 2016 at 04:19:04PM -0500, Geoff Lansberry wrote:
-> > > > > > > Mark,   from our consultant:
-> > > > > > >
-> > > > > > > It isn't important whether the flood script is successful in writing
-> > > > > > > or not. The point of it is to force a segfault by making many
-> > > > > > > requests. It needs to run for several hundred iterations (successful
-> > > > > > > or not) in order to generate the segfault.
-> > > > > >
-> > > > > > So neard crashes even when the write fails??  Okay, I'll let it run for
-> > > > > > a while tomorrow (Monday).
-> > > > >
-> > > > > [Okay, so not exactly "tomorrow" but I did get back to this.]
-> > > > >
-> > > > > Geoff, a few things:
-> > > > >
-> > > > > 1) Any update on these issues?
-> > >
-> > > Yes - I've discovered the primary trigger of my problems.  I'm using
-> > > some very small tags from Murata, and they don't have a strong signal.
-> > > Sometimes when writing, the tags can get corrupted data written to
-> > > them. When the tag is verified by re-reading it, neard bails out
-> > > because it finds non-utf8 characters.  So far I have found it
-> > > impossible to rewrite a tag once it has been mal-formed.
-> >
-> > Okay, that's interesting.  neard still shouldn't bail out so we'll
-> > have to look at that.
-> 
-> This is the most critical thing for us right now.  Can you make a
-> malformed tag and try it to see if you have the same issue?  What I
-> typically see is 0xFE character too early in the string, or similarly
-> the length being too long for the string.  If you can do that, then
-> try to write or read it via neard.  If you can confirm the quitting
-> behavior, that will help a lot.  I can live with the corruption,
-> because I can detect it and re-write if it happens.
+On 8 February 2017 at 08:28, David Lin <dlin@marvell.com> wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki [mailto:zajec5@gmail.com] worte:
+>> Sent: Wednesday, February 08, 2017 3:24 PM
+>> On 8 February 2017 at 07:30, David Lin <dlin@marvell.com> wrote:
+>> > steve.derosier@gmail.com [mailto:steve.derosier@gmail.com] wrote:
+>> >> On Tue, Feb 7, 2017 at 10:15 PM, David Lin <dlin@marvell.com> wrote:
+>> >> >> Rafa=C5=82 Mi=C5=82ecki [mailto:zajec5@gmail.com] wrote:
+>> >> >> Please use ieee80211-freq-limit:
+>> >> >> https://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/co
+>> >> >> mmi
+>> >> >> t/?id=3Db3
+>> >> >> 30b25eaabda00d74e47566d9200907da381896
+>> >> >>
+>> >> >> Most likely with wiphy_read_of_freq_limits helper:
+>> >> >> https://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/co
+>> >> >> mmi
+>> >> >> t/?id=3De6
+>> >> >> 91ac2f75b69bee743f0370d79454ba4429b175
+>> >> >
+>> >> > I already replied meaning of these parameters:
+>> >> > <marvell,2ghz> is used to disable 2g band.
+>> >> > <marvell,5ghz> is used to disable 5g band.
+>> >> > <marvell, chainmask> is used to specify antenna number (if default
+>> >> > number
+>> >> is suitable for you, there is no need to use this parameter).
+>> >> > <marvell,powertable> should not be used for chip with device power
+>> table.
+>> >> In fact, this parameter should not be used any more.
+>> >> >
+>> >>
+>> >> David, I think you're not understanding the comment, or at least
+>> >> that's what it looks like to me. Yes, you did reply as to the meaning=
+.
+>> >> And, your reply, while informative, didn't tell us you understood and
+>> >> were willing to fix the problem. I doubt you meant it this way, but
+>> >> it feels defensive and like a brush-off.
+>> >>
+>> >> First off, you will still have to document any DT bindings you're
+>> >> adding. Just because you answer the question in the review doesn't
+>> >> mean you're not responsible for doing so.
+>> >>
+>> >> And second off, I think that Rafal (and sorry about my spelling,
+>> >> looks like there's some sort of accent on the l that I don't know how
+>> >> to make my keyboard do) is saying: there's already some generic
+>> >> bindings that can be used to disable the 2g or 5g bands. Granted
+>> >> they're even newer than your patch, but I do think if said bindings e=
+xist and
+>> are appropriate, you should use them.
+>> >>
+>> >> - Steve
+>> >
+>> > These parameters are marvell proprietary parameters, I don't think it =
+should
+>> be added to DT bindings.
+>>
+>> Steve is correct.
+>>
+>> You have to document new properties, just because they are Marvell speci=
+fic
+>> doesn't change anything. You just document them in a proper place.
+>>
+>
+> All right. I will do that.
+>
+>>
+>> > BTW, <marvell,2ghz> and <marvell,5ghz> are only used for mwlwifi to re=
+port
+>> supported bands, it is not related to limitation of frequency.
+>>
+>> How reporting a single band doesn't limit reported frequencies? You can
+>> achieve exactly the same using generic property, so there is no place fo=
+r
+>> Marvell specific ones.
+>>
+>> In fact there were drivers of 3 vendors requiring band/freq-related desc=
+ription
+>> in DT: Broadcom, Marvell & Mediatek. This property was discussed & desig=
+ned
+>> to support all limitation cases we found possible to make it usable with
+>> (hopefully) all drivers.
+>>
+>
+> I only need simple way to disable 2g or 5g band. I will follow your sugge=
+stion to document these marvell proprietary parameters.
 
-I don't have such a thing but I can always hack something to write bogus
-data.  I may not get to this until next week, though.
+Seriously? Refusing to use generic binding because you think
+marvell,5ghz;
+is simpler than
+ieee80211-freq-limit =3D <2402000 2482000>;
+(not to mention your property seems reversed!)?
 
-> > > > > 2) Do you have all of the NFC-related patches from the nfc-next master
-> > > > > branch?  In particular, do you have all of Thierry's patches to
-> > > > > net/nfc/digial_*.c dated around June-July 2016?  Without those patches,
-> > > > > I see a panic; with them, I don't.
-> > >
-> > > No, we don't.  the last patch I've got in our kernel version is yours
-> > > from 7-21-2014.  I'm inquiring with more experienced people to see how
-> > > to address that.
-> >
-> > Oh... Then you really need to update.  Look at the master branch in the
-> > nfc-next repo (git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git)
-> 
-> Those commits are in the latest ti build,
-> https://git.ti.com/ti-linux-kernel/ti-linux-kernel/commits/ti-linux-4.9.y,
->  so I've built that up.
+I don't know how else to explain this to you. We don't want duplicated
+properties where one can work. Just use existing one. Don't add new
+one even if documented.
 
-Yes, v4.9.y has everything so that's a good one to work from.
-
-> Unfortunately bricked the board and don't
-> have the dev tools to fix it with me.  Bummer, should be back into it
-> tomorrow.
-
-:(
+--=20
+Rafa=C5=82
