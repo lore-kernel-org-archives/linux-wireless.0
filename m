@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:32931 "EHLO
-        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752188AbdB1Kbq (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:36034 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752445AbdBIOfC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 05:31:46 -0500
-Received: by mail-oi0-f47.google.com with SMTP id 2so3746843oif.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 02:31:46 -0800 (PST)
+        Thu, 9 Feb 2017 09:35:02 -0500
+Received: by mail-qt0-f170.google.com with SMTP id k15so5231721qtg.3
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2017 06:34:39 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <89be1d04-640e-bd59-77d9-13ddde9979bb@broadcom.com>
-References: <20170227120606.15506-1-zajec5@gmail.com> <89be1d04-640e-bd59-77d9-13ddde9979bb@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 28 Feb 2017 11:00:45 +0100
-Message-ID: <CACna6rycudavYsCnbTVtDb+w8SvXvXJo7qyx9oW9xNCY2AtqNw@mail.gmail.com> (sfid-20170228_113207_869560_14B87EB7)
-Subject: Re: [PATCH 4.12] brcmfmac: get rid of brcmf_txflowblock helper function
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+In-Reply-To: <1486558291-1615-3-git-send-email-sgruszka@redhat.com>
+References: <1486558291-1615-1-git-send-email-sgruszka@redhat.com> <1486558291-1615-3-git-send-email-sgruszka@redhat.com>
+From: Jeroen Roovers <jer@airfi.aero>
+Date: Thu, 9 Feb 2017 15:34:38 +0100
+Message-ID: <CANCHnQpzBPX=Lcz2-YWHHwT-VxGE86_AoX=FG87Tg_Nq01Zimg@mail.gmail.com> (sfid-20170209_153511_823517_31540D43)
+Subject: Re: [PATCH 2/3] rt2x00: call entry directly in rt2x00_dump_frame
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2017 at 10:50, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 27-2-2017 13:06, Rafa=C5=82 Mi=C5=82ecki wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> This helper function is pretty trivial and we can easily do without it.
->> What's important though it's one of FWS (Firmware Signalling)
->> dependencies in core.c. The plan is to make FWS required by BCDC only so
->> we don't have to use/compile it when using msgbuf.
->
-> This is the same discussion as before. Our driver design really wants to
-> keep bus-specific code separated from common code. Adding more and more
-> include statements is breaking that design. Whether or not that
-> resembles the way other drivers do it is not really a consideration. So
-> I would rather like to see patches that improve that separation.
->
-> I will see if I can publish the design summary on our wiki page.
+On 8 February 2017 at 13:51, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>  drivers/net/wireless/ralink/rt2x00/rt2x00.h      | 4 ++--
 
-You may not like this solution, but if so, please suggest another one.
-Then we can discuss two of them & find a final one.
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> index ea299c4..26869b3 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> @@ -1400,11 +1400,11 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
+>   */
+>  #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+>  void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+> -                           enum rt2x00_dump_type type, struct sk_buff *skb);
+> +                           enum rt2x00_dump_type type, struct queue_entry *entry);
+>  #else
+>  static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+>                                           enum rt2x00_dump_type type,
+> -                                         struct sk_buff *skb)
+> +                                         struct queue_entry *entry)
+>  {
+>  }
+>  #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
 
-As you see I'm trying to drop fws dependency from core.c. It's what
-was very roughly discussed in:
-brcmfmac: initialize fws(ignal) for BCDC protocol only
-https://patchwork.kernel.org/patch/9349301/
+In the comment above that, you forgot to update:
 
-My guess if you have another patch for this, but since you didn't
-manage to release it since September, I'd really like to move things
-forward somehow.
+ * @skb: The skb containing the frame to be dumped.
+
+
+Cheers,
+     jer
