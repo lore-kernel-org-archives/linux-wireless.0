@@ -1,112 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752885AbdBUOcZ (ORCPT
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:35205 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752996AbdBIPzJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:25 -0500
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 06/10] wil6210: store bss object and use cfg80211_connect_bss()
-Date: Tue, 21 Feb 2017 16:32:04 +0200
-Message-Id: <1487687528-12832-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153230_216259_882BCD0D)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 9 Feb 2017 10:55:09 -0500
+Received: by mail-qt0-f180.google.com with SMTP id x49so7669538qtc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2017 07:54:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20170208225651.GB26286@animalcreek.com>
+References: <20161214155743.GA22282@animalcreek.com> <CAO7Z3WKqhS5Q6qAaDs8364KP5-7ma=b_ic2B10=njngMmp5noQ@mail.gmail.com>
+ <20161214171010.GA29321@animalcreek.com> <CAO7Z3WLpp0YVxXxo6M11PMPu+5OaA1fRhNQNoPJ-b4LRCPrLAg@mail.gmail.com>
+ <20161214223123.GA10281@animalcreek.com> <20161216045210.GA29196@animalcreek.com>
+ <20161216203538.GA12608@animalcreek.com> <CAO7Z3W+grhLnP05bPShheuvSet08CoYhFStDpDVgztf=Wz42Fw@mail.gmail.com>
+ <20161219030733.GA14962@animalcreek.com> <20170208225339.GA26286@animalcreek.com>
+ <20170208225651.GB26286@animalcreek.com>
+From: Geoff Lansberry <geoff@kuvee.com>
+Date: Thu, 9 Feb 2017 10:54:08 -0500
+Message-ID: <CAO7Z3WKxXz1SsvOH8v5Xvy0jSdw1-NU_zXyu0QakR3UHnYgrqA@mail.gmail.com> (sfid-20170209_165524_209669_52FC01EC)
+Subject: Re: [Patch] NFC: trf7970a:
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Justin Bronder <justin@kuvee.com>,
+        linux-nfc <linux-nfc@lists.01.org>,
+        Jaret Cantu <jaret.cantu@timesys.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+On Wed, Feb 8, 2017 at 5:56 PM, Mark Greer <mgreer@animalcreek.com> wrote:
+>
+> I just realized that the linux-nfc is not CC'd so adding it.
+>
+> On Wed, Feb 08, 2017 at 03:53:39PM -0700, Mark Greer wrote:
+> > On Sun, Dec 18, 2016 at 08:07:33PM -0700, Mark Greer wrote:
+> > > On Sat, Dec 17, 2016 at 04:19:04PM -0500, Geoff Lansberry wrote:
+> > > > Mark,   from our consultant:
+> > > >
+> > > > It isn't important whether the flood script is successful in writing
+> > > > or not. The point of it is to force a segfault by making many
+> > > > requests. It needs to run for several hundred iterations (successful
+> > > > or not) in order to generate the segfault.
+> > >
+> > > So neard crashes even when the write fails??  Okay, I'll let it run for
+> > > a while tomorrow (Monday).
+> >
+> > [Okay, so not exactly "tomorrow" but I did get back to this.]
+> >
+> > Geoff, a few things:
+> >
+> > 1) Any update on these issues?
 
-In a fast disconnect/connect sequence, cfg80211_connect_result() can
-fail to find the bss object which the driver is connecting to. Detailed
-sequence of events:
-* Driver is connected in STA mode
-* Disconnect request arrives from user space. Driver disconnects and
-  calls cfg80211_disconnected() which adds new event to the
-  cfg80211_wq worker thread
-* Connect request arrives from user space. cfg80211_connect() stores
-  ssid/ssid_len and calls rdev_connect()
-* __cfg80211_disconnected() runs in worker thread and zero
-  wdev->ssid_len
-* Connect succeeds. Driver calls cfg80211_connect_result() which fails
-  to find the bss because wdev->ssid_len is zero
+Yes - I've discovered the primary trigger of my problems.  I'm using
+some very small tags from Murata, and they don't have a strong signal.
+Sometimes when writing, the tags can get corrupted data written to
+them. When the tag is verified by re-reading it, neard bails out
+because it finds non-utf8 characters.  So far I have found it
+impossible to rewrite a tag once it has been mal-formed.
 
-To overcome this, upon connect request, store the bss object in the
-driver and upon connect completion pass it to kernel using
-cfg80211_connect_bss().
+> >
+> > 2) Do you have all of the NFC-related patches from the nfc-next master
+> > branch?  In particular, do you have all of Thierry's patches to
+> > net/nfc/digial_*.c dated around June-July 2016?  Without those patches,
+> > I see a panic; with them, I don't.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c |  1 +
- drivers/net/wireless/ath/wil6210/main.c     |  1 +
- drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
- drivers/net/wireless/ath/wil6210/wmi.c      | 14 +++++++++-----
- 4 files changed, 12 insertions(+), 5 deletions(-)
+No, we don't.  the last patch I've got in our kernel version is yours
+from 7-21-2014.  I'm inquiring with more experienced people to see how
+to address that.
+> >
+> > 3) Assuming you have all of those patches, please revert the one with the
+> > summary line of, "NFC: digital: Set the command pending flag", and tell me
+> > if that stops the "Bogus state" messages.  I don't know which repo/branch
+> > you're using so I can't provide a commit id.
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 581a4e2..39ee565 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -681,6 +681,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 	if (rc == 0) {
- 		netif_carrier_on(ndev);
- 		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
-+		wil->bss = bss;
- 		/* Connect can take lots of time */
- 		mod_timer(&wil->connect_timer,
- 			  jiffies + msecs_to_jiffies(2000));
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index dddde94..5d45fac 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -284,6 +284,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 			cfg80211_connect_result(ndev, bssid, NULL, 0, NULL, 0,
- 						WLAN_STATUS_UNSPECIFIED_FAILURE,
- 						GFP_KERNEL);
-+			wil->bss = NULL;
- 		}
- 		clear_bit(wil_status_fwconnecting, wil->status);
- 		break;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 89e7eb7..09e2fce 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -613,6 +613,7 @@ struct wil6210_priv {
- 	u16 channel; /* relevant in AP mode */
- 	int sinfo_gen;
- 	u32 ap_isolate; /* no intra-BSS communication */
-+	struct cfg80211_bss *bss; /* connected bss, relevant in STA mode */
- 	/* interrupt moderation */
- 	u32 tx_max_burst_duration;
- 	u32 tx_interframe_timeout;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index a7a4ac1..a2a895b 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -573,12 +573,16 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 						GFP_KERNEL);
- 			goto out;
- 		} else {
--			cfg80211_connect_result(ndev, evt->bssid,
--						assoc_req_ie, assoc_req_ielen,
--						assoc_resp_ie, assoc_resp_ielen,
--						WLAN_STATUS_SUCCESS,
--						GFP_KERNEL);
-+			struct wiphy *wiphy = wil_to_wiphy(wil);
-+
-+			cfg80211_ref_bss(wiphy, wil->bss);
-+			cfg80211_connect_bss(ndev, evt->bssid, wil->bss,
-+					     assoc_req_ie, assoc_req_ielen,
-+					     assoc_resp_ie, assoc_resp_ielen,
-+					     WLAN_STATUS_SUCCESS, GFP_KERNEL,
-+					     NL80211_TIMEOUT_UNSPECIFIED);
- 		}
-+		wil->bss = NULL;
- 	} else if ((wdev->iftype == NL80211_IFTYPE_AP) ||
- 		   (wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
- 		if (rc) {
--- 
-1.9.1
+No to the patches, but I found the commit you are talking about and
+will look at it.   Maybe possible to cherry pick it.
+> >
+> > Thanks,
+> >
+> > Mark
+> > --
