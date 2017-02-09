@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45542 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51102 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752782AbdBGHI3 (ORCPT
+        with ESMTP id S1751644AbdBIOKl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 02:08:29 -0500
+        Thu, 9 Feb 2017 09:10:41 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        shaofu <shaofu@realtek.com>
-Subject: Re: [PATCH 01/11 V3] rtlwifi: Fix programing CAM content sequence.
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-        <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-        <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-        <20170120212716.29887-2-Larry.Finger@lwfinger.net>
-        <87bmufa3nu.fsf@codeaurora.org>
-        <90709cde-bcca-eb57-3a61-4c318ed37c92@lwfinger.net>
-Date: Tue, 07 Feb 2017 09:08:24 +0200
-In-Reply-To: <90709cde-bcca-eb57-3a61-4c318ed37c92@lwfinger.net> (Larry
-        Finger's message of "Mon, 6 Feb 2017 23:42:50 -0600")
-Message-ID: <8737fq8olz.fsf@codeaurora.org> (sfid-20170207_080833_075403_016652CD)
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, target-devel@vger.kernel.org,
+        andrew@lunn.ch, anna.schumaker@netapp.com,
+        derek.chickles@caviumnetworks.com,
+        felix.manlunas@caviumnetworks.com, bfields@fieldses.org,
+        jlayton@poochiereds.net, jirislaby@gmail.com,
+        mcgrof@do-not-panic.com, madalin.bucur@nxp.com,
+        UNGLinuxDriver@microchip.com, nab@linux-iscsi.org,
+        mickflemm@gmail.com, nicolas.ferre@atmel.com,
+        raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org,
+        satananda.burla@caviumnetworks.com,
+        thomas.petazzoni@free-electrons.com, timur@codeaurora.org,
+        trond.myklebust@primarydata.com,
+        vivien.didelot@savoirfairelinux.com, woojung.huh@microchip.com
+Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h include
+References: <20170207230305.18222-1-f.fainelli@gmail.com>
+        <20170208.110626.346978547122180233.davem@davemloft.net>
+        <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
+        <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com>
+Date: Thu, 09 Feb 2017 16:10:06 +0200
+In-Reply-To: <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com> (Florian
+        Fainelli's message of "Wed, 8 Feb 2017 11:45:11 -0800")
+Message-ID: <877f4zjw01.fsf@kamboji.qca.qualcomm.com> (sfid-20170209_151059_167719_624D773F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Florian Fainelli <f.fainelli@gmail.com> writes:
 
-> On 02/06/2017 06:45 AM, Kalle Valo wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>
->>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>> If not, for something like this it's a must:
 >>>
->>> There is a potential race condition when the control byte of a CAM
->>> entry is written first. Write in reverse order to correct the condition.
->>>
->>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
->>> Signed-off-by: shaofu <shaofu@realtek.com>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> ---
->>> V2 - no changes
->>> V3 - no changes
->>
->> I missed in my reply to v2 that you had already sent v3 from this
->> patchset. Strange that I don't see this v3 patchset either in patchwork,
->> only v1.
->>
->> Try submitting v4 in case it was just a temporary glitch in patchwork.
->> But if that doesn't help I'll apply these manually.
+>>> drivers/net/wireless/ath/wil6210/cfg80211.c:24:30: error: expected =E2=
+=80=98)=E2=80=99 before =E2=80=98bool=E2=80=99
+>>>  module_param(disable_ap_sme, bool, 0444);
+>>>                               ^
+>>> drivers/net/wireless/ath/wil6210/cfg80211.c:25:34: error: expected =E2=
+=80=98)=E2=80=99 before string constant
+>>>  MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
+>>>                                   ^
+>>> Like like that file needs linux/module.h included.
+>>=20
+>> Johannes already fixed a similar (or same) problem in my tree:
+>>=20
+>> wil6210: include moduleparam.h
+>>=20
+>> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next=
+.git/commit/?id=3D949c2d0096753d518ef6e0bd8418c8086747196b
+>>=20
+>> I'm planning to send you a pull request tomorrow which contains that
+>> one.
 >
-> I have no idea why my patches are not getting handled by patchwork,
-> but V4 is not there either.
+> Thanks Kalle!
+>
+> David, can you hold on this series until Kalle's pull request gets
+> submitted? Past this error, allmodconfig builds fine with this patch
+> series (just tested). Thanks!
 
-Yeah, that's odd. I do see your patches on the mailing list so I guess
-something in this set is breaking patchwork's email parser. The only
-notable difference I saw that in our patches the tags were in this
-format:
+Just submitted the pull request:
 
-[PATCH 01/11 V4]
+https://patchwork.ozlabs.org/patch/726133/
 
-But normally we use something like this:
-
-[PATCH V4 01/11]
-
-I don't know if that would cause patchwork to fail and I don't really
-have time to investigate it right now. I'll just apply V4 manually now
-and let's hope that the problem doesn't reappear.
-
--- 
+--=20
 Kalle Valo
