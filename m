@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34398 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751298AbdBBVdg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39564 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751055AbdBIGHJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 16:33:36 -0500
-Received: by mail-lf0-f66.google.com with SMTP id q89so46565lfi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 13:33:36 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V3 1/9] brcmfmac: merge two brcmf_err macros into one
-Date: Thu,  2 Feb 2017 22:33:13 +0100
-Message-Id: <20170202213321.11591-1-zajec5@gmail.com> (sfid-20170202_223357_807426_63BBE980)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Thu, 9 Feb 2017 01:07:09 -0500
+Message-ID: <1486620346.10952.19.camel@coelho.fi> (sfid-20170209_070711_664811_125AB644)
+From: Luca Coelho <luca@coelho.fi>
+To: Kyle McMartin <kyle@infradead.org>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
+        linux-firmware@kernel.org,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Date: Thu, 09 Feb 2017 08:05:46 +0200
+In-Reply-To: <1486111291.26003.86.camel@coelho.fi>
+References: <1486111291.26003.86.camel@coelho.fi>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-uzcyG6YH1TpgMbXPfd5x"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi firmwares update 2017-02-03
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
 
-This allows simplifying the code by adding a simple IS_ENABLED check for
-CONFIG_BRCMDB symbol.
+--=-uzcyG6YH1TpgMbXPfd5x
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V3: Re-add this patch (it was initially submited as RFC)
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+Hi Kyle,
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-index 6687812770cc..1fe4aa973a92 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-@@ -45,20 +45,16 @@
- #undef pr_fmt
- #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
- 
-+#ifndef CONFIG_BRCM_TRACING
- /* Macro for error messages. net_ratelimit() is used when driver
-  * debugging is not selected. When debugging the driver error
-  * messages are as important as other tracing or even more so.
-  */
--#ifndef CONFIG_BRCM_TRACING
--#ifdef CONFIG_BRCMDBG
--#define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
--#else
- #define brcmf_err(fmt, ...)						\
- 	do {								\
--		if (net_ratelimit())					\
-+		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
- 			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
- 	} while (0)
--#endif
- #else
- __printf(2, 3)
- void __brcmf_err(const char *func, const char *fmt, ...);
--- 
-2.11.0
+On Fri, 2017-02-03 at 10:41 +0200, Luca Coelho wrote:
+> Hi Kyle,
+>=20
+> We have updated some of our old firmware releases and also added a new
+> release, version 27, for the newer devices.  More details in the tag
+> description.
+>=20
+> Please pull or let me know if there are any issues.
+
+Are there any issues with this?
+
+I forgot to say that I'm going to be sending the iwlwifi firmwares out
+now (as I have been maintaining the iwlwifi driver upstream).  Emmanuel
+can confirm that. :)
+
+--
+Cheers,
+Luca.
+--=-uzcyG6YH1TpgMbXPfd5x
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlicBroACgkQoUecoho8
+xfqE/BAAqtNoU304bh0nVKauzWAJUxqyciSMmj1l0LAlLPmvAuCP4nEiiXCZy4wi
+wFIVB2Ggltq+Foaf7oxDQwnSlEsnkRFSWcIZikK/O9xsRaXvnHBz4btA+kWTm+Vm
+Y23A+9quxPoYVoYd6VMyhy1CE/yLAbG2kTt0/mVDbcMHCCKiljo6AyrXOVvfAZZK
+jzpMbWK1DVWjF27w94wVV2tht00bwn/fprm9feQIKuYdZeStuMPJuk5RVn1s3nlU
+4CvOBRFxgwWneCAD9n+21329sCGKCnRa31EDECwzalK6ktfQBNf8Hn93jyWMz2sS
+nHrPa1Tt0kmCxQDSdkojdvm36nvdLDJc6ukiKbk9WTJVfjAt1vXBNRZ6pK2u71UT
+Ok1PBbtixj1rwD1b6+8vQRk6DJgwBO4pS4RqKJKWnEcey8obU2sGfBEIP0dKw55I
++8177s/xDVWSIvuhpJ2i1c0sbQZgOEfnLHNEfyGeiI+eu4yB8HjSyWBu5Mi6T6Aj
+d2IX4opPNnbSu+oZM0etkWmxWsEZPLZa35y7RRQYuQmQr2Xo4USQ4dKPK5kqVA1w
+8Nl9tfM/iaB/38OjIBybq9t3RFHaCBs3LV3U4A9s1fLqNeI+6FiY2PgNQCK7fNGC
+/2Tt2ps56JzQ0DpQlKh/lHRoVsxlbEBAILb/08GzVJnBvDGmudU=
+=EAHT
+-----END PGP SIGNATURE-----
+
+--=-uzcyG6YH1TpgMbXPfd5x--
