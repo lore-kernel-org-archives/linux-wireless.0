@@ -1,70 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:36531 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750968AbdBLAqR (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:34471 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752388AbdBJTo7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Feb 2017 19:46:17 -0500
-Received: by mail-ot0-f193.google.com with SMTP id 36so7471053otx.3
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Feb 2017 16:46:17 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH 2/3] rtlwifi: btcoexist: Fix if == else warnings in halbtc8821a1ant.c
-Date: Sat, 11 Feb 2017 18:46:04 -0600
-Message-Id: <20170212004605.1308-3-Larry.Finger@lwfinger.net> (sfid-20170212_014628_622499_C5369380)
-In-Reply-To: <20170212004605.1308-1-Larry.Finger@lwfinger.net>
-References: <20170212004605.1308-1-Larry.Finger@lwfinger.net>
+        Fri, 10 Feb 2017 14:44:59 -0500
+Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h
+ include
+To: David Miller <davem@davemloft.net>, kvalo@codeaurora.org
+References: <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
+ <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com>
+ <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
+ <20170210.135138.2084086346069765205.davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-mips@linux-mips.org,
+        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        target-devel@vger.kernel.org, andrew@lunn.ch,
+        anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com,
+        felix.manlunas@caviumnetworks.com, bfields@fieldses.org,
+        jlayton@poochiereds.net, jirislaby@gmail.com,
+        mcgrof@do-not-panic.com, madalin.bucur@nxp.com,
+        UNGLinuxDriver@microchip.com, nab@linux-iscsi.org,
+        mickflemm@gmail.com, nicolas.ferre@atmel.com,
+        raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org,
+        satananda.burla@caviumnetworks.com,
+        thomas.petazzoni@free-electrons.com, timur@codeaurora.org,
+        trond.myklebust@primarydata.com,
+        vivien.didelot@savoirfairelinux.com, woojung.huh@microchip.com
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <68d8c792-5d09-7cdc-4a94-8437bfb0299e@gmail.com> (sfid-20170210_204512_265374_52F374C6)
+Date: Fri, 10 Feb 2017 11:44:49 -0800
+MIME-Version: 1.0
+In-Reply-To: <20170210.135138.2084086346069765205.davem@davemloft.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 0-DAY kernel test infrastructure reports the following:
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c:1771:1-3: WARNING: possible condition with no effect (if == else)
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c:2126:3-5: WARNING: possible condition with no effect (if == else)
+On 02/10/2017 10:51 AM, David Miller wrote:
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Thu, 09 Feb 2017 16:10:06 +0200
+> 
+>> Florian Fainelli <f.fainelli@gmail.com> writes:
+>>
+>>>>> If not, for something like this it's a must:
+>>>>>
+>>>>> drivers/net/wireless/ath/wil6210/cfg80211.c:24:30: error: expected ‘)’ before ‘bool’
+>>>>>  module_param(disable_ap_sme, bool, 0444);
+>>>>>                               ^
+>>>>> drivers/net/wireless/ath/wil6210/cfg80211.c:25:34: error: expected ‘)’ before string constant
+>>>>>  MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
+>>>>>                                   ^
+>>>>> Like like that file needs linux/module.h included.
+>>>>
+>>>> Johannes already fixed a similar (or same) problem in my tree:
+>>>>
+>>>> wil6210: include moduleparam.h
+>>>>
+>>>> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=949c2d0096753d518ef6e0bd8418c8086747196b
+>>>>
+>>>> I'm planning to send you a pull request tomorrow which contains that
+>>>> one.
+>>>
+>>> Thanks Kalle!
+>>>
+>>> David, can you hold on this series until Kalle's pull request gets
+>>> submitted? Past this error, allmodconfig builds fine with this patch
+>>> series (just tested). Thanks!
+>>
+>> Just submitted the pull request:
+>>
+>> https://patchwork.ozlabs.org/patch/726133/
+> 
+> I've retried this patch series, and will push it out assuming the build
+> completes properly.
 
-Reported-by: kbuild-all@01.org
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Julia Lawall <julia.lawall@lip6.fr>
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c        | 18 +++---------------
- 1 file changed, 3 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 20562f0..8b689ed 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -1768,11 +1768,7 @@ static void btc8821a1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
- 	/* tdma and coex table*/
- 	halbtc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 5);
- 
--	if (BT_8821A_1ANT_WIFI_STATUS_NON_CONNECTED_ASSO_AUTH_SCAN ==
--	    wifi_status)
--		halbtc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
--	else
--		halbtc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+	halbtc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
- }
- 
- static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
-@@ -2123,16 +2119,8 @@ static void halbtc8821a1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 			wifi_rssi_state =
- 				 halbtc8821a1ant_WifiRssiState(btcoexist, 1, 2,
- 							       30, 0);
--			if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--			    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--				halbtc8821a1ant_limited_tx(btcoexist,
--							   NORMAL_EXEC, 1, 1,
--							   1, 1);
--			} else {
--				halbtc8821a1ant_limited_tx(btcoexist,
--							   NORMAL_EXEC, 1, 1,
--							   1, 1);
--			}
-+			halbtc8821a1ant_limited_tx(btcoexist,
-+						   NORMAL_EXEC, 1, 1, 1, 1);
- 		} else {
- 			halbtc8821a1ant_limited_tx(btcoexist, NORMAL_EXEC,
- 						   0, 0, 0, 0);
+I see it merged in net-next/master, thanks a lot this is going to save a
+lot of cycles in the future, thanks David!
 -- 
-2.10.2
+Florian
