@@ -1,61 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:36608 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752935AbdBUQrk (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:34075 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751370AbdBJPd6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:47:40 -0500
-Received: by mail-qt0-f182.google.com with SMTP id k15so116100985qtg.3
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:47:34 -0800 (PST)
+        Fri, 10 Feb 2017 10:33:58 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAKR_QVLpSWab-kF-f8=xqw+oWAfA966GDm7CtXrWfzmJz8gP-w@mail.gmail.com>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
- <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
- <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
- <87twbnueqv.fsf@kamboji.qca.qualcomm.com> <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>
- <871syn5fnb.fsf@qca.qualcomm.com> <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>
- <87polwq2nq.fsf@kamboji.qca.qualcomm.com> <027001d28c42$5042c910$f0c85b30$@acksys.fr>
- <87efyrd6lv.fsf@kamboji.qca.qualcomm.com> <CAKR_QVLpSWab-kF-f8=xqw+oWAfA966GDm7CtXrWfzmJz8gP-w@mail.gmail.com>
-From: Bruno Antunes <baantunes@gmail.com>
-Date: Tue, 21 Feb 2017 16:47:13 +0000
-Message-ID: <CABUTiXUjnBcTUhw6t3Pf+y8xAXmZ-t9OJ06pfhBx71EMqB_k9Q@mail.gmail.com> (sfid-20170221_174743_693525_7A878FF1)
-Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-To: Tom Psyborg <pozega.tomislav@gmail.com>
+In-Reply-To: <1486712222.2192.3.camel@perches.com>
+References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
+ <CAJ-VmonrHpS3MArM9ohHgLvb6xspP_gnVVeJWA9F-pjUpJ+LZA@mail.gmail.com>
+ <87y3xi4b28.fsf@qca.qualcomm.com> <5899DDD7.7000605@candelatech.com>
+ <87tw82il32.fsf@kamboji.qca.qualcomm.com> <CAJ-Vmom7k3Tsgs8tRHQppmL7XxADS3V24AGOQY5QgkrSgr5Qzg@mail.gmail.com>
+ <1486712222.2192.3.camel@perches.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Fri, 10 Feb 2017 07:31:58 -0800
+Message-ID: <CAJ-Vmo=UrnDVzGAKYZa0qXq5UVb09AZHzmWMtctvtXyu==nzyA@mail.gmail.com> (sfid-20170210_163452_251821_E8C090BA)
+Subject: Re: [PATCH 1/3] ath10k: remove ath10k_vif_to_arvif()
+To: Joe Perches <joe@perches.com>
 Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
+        Ben Greear <greearb@candelatech.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        =?UTF-8?B?QW1hZGV1c3ogU8WCYXdpxYRza2k=?=
+        <amadeusz.slawinski@tieto.com>,
         "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        voncken <cedric.voncken@acksys.fr>
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 February 2017 at 13:42, Tom Psyborg <pozega.tomislav@gmail.com> wrote:
-> have you tried this one
-> https://forum.lede-project.org/t/new-qca988x-firmware-with-mesh-support/1587
+On 9 February 2017 at 23:37, Joe Perches <joe@perches.com> wrote:
+> On Thu, 2017-02-09 at 23:14 -0800, Adrian Chadd wrote:
+>
+>> If there
+>> were accessors for the skb data / len fields (like we do for mbufs)
+>> then porting the code would've involved about 5,000 less changed
+>> lines.
+>
+> What generic mechanisms would you suggest to make
+> porting easier between bsd and linux and what in
+> your opinion are the best naming schemes to make
+> these functions easiest to read and implement
+> without resorting to excessive identifier lengths?
+>
+> If you have some, please provide examples.
 
->From my testing it does not work.
+(Why not, it's pre-coffee o'clock.)
 
->
-> On 21 February 2017 at 14:19, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->>
->> voncken <cedric.voncken@acksys.fr> writes:
->>
->> > Do you know if the firmware team planned to fix the VLAN issue on ath10k
->> > firmware?
->>
->> I reported it forward only this week.
->>
->> --
->> Kalle Valo
->> _______________________________________________
->> openwrt-devel mailing list
->> openwrt-devel@lists.openwrt.org
->> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
->
->
->
-> _______________________________________________
-> openwrt-devel mailing list
-> openwrt-devel@lists.openwrt.org
-> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
->
+The biggest barriers are direct struct accessors. Most of the time the
+kernels have similar enough semantics that I can just implement a
+linux shim layer (like we do for graphics layer porting from Linux.)
+Eg, having skb_data(skb) (and skb_data_const(skb)) + skb_len(skb)
+instead of skb->data and skb->len would remove a lot of churn. Having
+say, a vif_to_drvpriv() method analogous to ath10k_vif_to_arvif()
+would also simplify the changes. For the rest of it we can just use a
+linux-like shim layer to get everything else working pretty darn well.
+
+But the biggest thing that helps is a quasi HAL code structure. I know
+HAL is a dirty word, so think of it more as "how would one separate
+out the OS interface layer from the rest of the driver." A good
+example in ath10k is the difference between say, wmi.c, the pci /
+copyengine code and mac.c.
+
+* the pci / copyengine code is almost 100% compilable on other
+platforms, save the differences in little things (malloc, free, KVA
+versus physical memory allocation, bounce buffering, sync'ing, etc.) A
+sufficiently refactored driver like ath10k where almost all of that
+stuff happens in the pci/copyengine code made porting that much less
+painful.
+
+* the wmi code is almost exclusively portable - besides the
+malloc/free, etc mechanical changes which honestly can be stubbed, it
+uses the lower layers (pci/ce, hif, htc, etc) for doing actual work,
+and the upper layer uses a well-defined API + callback mechanism for
+getting work done. Porting that was mechanical but reasonably easy.
+
+* however, the mac.c code contains both code which sends commands to
+the firmware (vif create/destroy, pdev commands, station
+associate/update/destroy, crypto key handling, peer rate control, etc)
+/and/ very linux mac80211/cfg80211 specific bits. If mac.c were split
+into mac-mac80211.c (which was /just/ mac80211, cfg80211, etc bits)
+and mac-utils.c (the bits that actually /sent/ the commands,
+responses, all the support code, etc) then my port would just
+implement mac-net80211.c as a completely new file, and the rest would
+just be modified as required by porting.
+
+A lot of the ath10k headers too mix linux specific things (eg struct
+device, dependencies) with hardware specific definitions for say,
+register accesses. I split out the register and firmware command /
+structures into separate header files that didn't mingle OS and driver
+specific structures to make it much easier to reuse that code. I find
+that good driver writing hygiene in any case.
+
+I'm not expecting an intel ethernet driver style HAL separation,
+although that'd certainly make life easier in porting over drivers.
+But just having inlined accessor functions for most things and some
+stricter driver structure for OS touch points (dma setup/teardown,
+bounce buffer stuff, mac80211/cfg80211, ethtool, etc APIs) would make
+porting and testing things a lot easier. :-)
+
+2c, and I'll do the porting/reimplementing work anyway regardless of
+how much coffee it requires,
+
+
+
+-adrian
