@@ -1,91 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54916 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752481AbdBNVBk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 16:01:40 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes.berg@intel.com, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  allow overriding station bandwidth.
-Date: Tue, 14 Feb 2017 13:01:35 -0800
-Message-Id: <1487106095-23287-1-git-send-email-greearb@candelatech.com> (sfid-20170214_220143_477541_65E9EEB9)
+Received: from mail.zhinst.com ([212.126.164.98]:50186 "EHLO mail.zhinst.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751058AbdBJNRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Feb 2017 08:17:55 -0500
+From: Tobias Klauser <tklauser@distanz.ch>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] orinoco:  Use net_device_stats from struct net_device
+Date: Fri, 10 Feb 2017 14:03:13 +0100
+Message-Id: <20170210130313.27821-1-tklauser@distanz.ch> (sfid-20170210_141758_303524_665E7122)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Instead of using a private copy of struct net_device_stats in
+struct orinoco_private, use stats from struct net_device. Also remove
+the now unnecessary .ndo_get_stats function.
 
-This allows one to disable VHT160 (or 80+80) on hardware
-that might otherwise try to use it.  One potential reason
-to do this is that at least some 160Mhz/80+80 hardware can
-only do 2x2 at 160Mhz, but can do 4x4 at 80Mhz.  And, due to
-driver and firmware issues, it may effectively be limitted
-to 1x1 at 160Mhz for some NICs.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
 ---
- include/linux/ieee80211.h |  1 +
- net/mac80211/main.c       |  1 +
- net/mac80211/vht.c        | 23 +++++++++++++++++++++++
- 3 files changed, 25 insertions(+)
+ drivers/net/wireless/intersil/orinoco/main.c       | 27 ++++++----------------
+ drivers/net/wireless/intersil/orinoco/orinoco.h    |  2 --
+ .../net/wireless/intersil/orinoco/orinoco_usb.c    |  6 ++---
+ 3 files changed, 9 insertions(+), 26 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index a80516f..e5dc3a8 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1542,6 +1542,7 @@ struct ieee80211_vht_operation {
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ		0x00000004
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ	0x00000008
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK			0x0000000C
-+#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT			2
- #define IEEE80211_VHT_CAP_RXLDPC				0x00000010
- #define IEEE80211_VHT_CAP_SHORT_GI_80				0x00000020
- #define IEEE80211_VHT_CAP_SHORT_GI_160				0x00000040
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index ec5587d..1447b47 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -464,6 +464,7 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
- static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
- 	.vht_cap_info =
- 		cpu_to_le32(IEEE80211_VHT_CAP_RXLDPC |
-+			    IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK |
- 			    IEEE80211_VHT_CAP_SHORT_GI_80 |
- 			    IEEE80211_VHT_CAP_SHORT_GI_160 |
- 			    IEEE80211_VHT_CAP_RXSTBC_1 |
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 720c64c..5684e13 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -56,6 +56,29 @@ void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	__check_vhtcap_disable(sdata, vht_cap,
- 			       IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN);
+diff --git a/drivers/net/wireless/intersil/orinoco/main.c b/drivers/net/wireless/intersil/orinoco/main.c
+index 9d96b7c928f7..28cf97489001 100644
+--- a/drivers/net/wireless/intersil/orinoco/main.c
++++ b/drivers/net/wireless/intersil/orinoco/main.c
+@@ -294,14 +294,6 @@ int orinoco_stop(struct net_device *dev)
+ }
+ EXPORT_SYMBOL(orinoco_stop);
  
-+	/* Allow disabling 160Mhz or 80+80 */
-+	if (sdata->u.mgd.vht_capa_mask.vht_cap_info &
-+	    cpu_to_le32(IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
-+		u32 cap, n;
-+
-+		n = le32_to_cpu(sdata->u.mgd.vht_capa.vht_cap_info) &
-+			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
-+		n >>= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
-+		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
-+		cap >>= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
-+
-+		if (n < cap) {
-+			vht_cap->cap &=
-+				~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
-+			vht_cap->cap |=
-+				n << IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
-+
-+			/* Cannot do short GI 160 if we cannot do 160 or 80+80 */
-+			if (n == 0)
-+				vht_cap->cap &= ~IEEE80211_VHT_CAP_SHORT_GI_160;
-+		}
-+	}
-+
- 	/* Allow user to decrease AMPDU length exponent */
- 	if (sdata->u.mgd.vht_capa_mask.vht_cap_info &
- 	    cpu_to_le32(IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK)) {
+-struct net_device_stats *orinoco_get_stats(struct net_device *dev)
+-{
+-	struct orinoco_private *priv = ndev_priv(dev);
+-
+-	return &priv->stats;
+-}
+-EXPORT_SYMBOL(orinoco_get_stats);
+-
+ void orinoco_set_multicast_list(struct net_device *dev)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+@@ -433,7 +425,7 @@ EXPORT_SYMBOL(orinoco_process_xmit_skb);
+ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
++	struct net_device_stats *stats = &dev->stats;
+ 	struct hermes *hw = &priv->hw;
+ 	int err = 0;
+ 	u16 txfid = priv->txfid;
+@@ -593,10 +585,7 @@ static void __orinoco_ev_alloc(struct net_device *dev, struct hermes *hw)
+ 
+ static void __orinoco_ev_tx(struct net_device *dev, struct hermes *hw)
+ {
+-	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
+-
+-	stats->tx_packets++;
++	dev->stats.tx_packets++;
+ 
+ 	netif_wake_queue(dev);
+ 
+@@ -605,8 +594,7 @@ static void __orinoco_ev_tx(struct net_device *dev, struct hermes *hw)
+ 
+ static void __orinoco_ev_txexc(struct net_device *dev, struct hermes *hw)
+ {
+-	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
++	struct net_device_stats *stats = &dev->stats;
+ 	u16 fid = hermes_read_regn(hw, TXCOMPLFID);
+ 	u16 status;
+ 	struct hermes_txexc_data hdr;
+@@ -662,7 +650,7 @@ static void __orinoco_ev_txexc(struct net_device *dev, struct hermes *hw)
+ void orinoco_tx_timeout(struct net_device *dev)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
++	struct net_device_stats *stats = &dev->stats;
+ 	struct hermes *hw = &priv->hw;
+ 
+ 	printk(KERN_WARNING "%s: Tx timeout! "
+@@ -749,7 +737,7 @@ static void orinoco_rx_monitor(struct net_device *dev, u16 rxfid,
+ 	int len;
+ 	struct sk_buff *skb;
+ 	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
++	struct net_device_stats *stats = &dev->stats;
+ 	struct hermes *hw = &priv->hw;
+ 
+ 	len = le16_to_cpu(desc->data_len);
+@@ -840,7 +828,7 @@ static void orinoco_rx_monitor(struct net_device *dev, u16 rxfid,
+ void __orinoco_ev_rx(struct net_device *dev, struct hermes *hw)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
++	struct net_device_stats *stats = &dev->stats;
+ 	struct iw_statistics *wstats = &priv->wstats;
+ 	struct sk_buff *skb = NULL;
+ 	u16 rxfid, status;
+@@ -959,7 +947,7 @@ static void orinoco_rx(struct net_device *dev,
+ 		       struct sk_buff *skb)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
++	struct net_device_stats *stats = &dev->stats;
+ 	u16 status, fc;
+ 	int length;
+ 	struct ethhdr *hdr;
+@@ -2137,7 +2125,6 @@ static const struct net_device_ops orinoco_netdev_ops = {
+ 	.ndo_set_mac_address	= eth_mac_addr,
+ 	.ndo_validate_addr	= eth_validate_addr,
+ 	.ndo_tx_timeout		= orinoco_tx_timeout,
+-	.ndo_get_stats		= orinoco_get_stats,
+ };
+ 
+ /* Allocate private data.
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco.h b/drivers/net/wireless/intersil/orinoco/orinoco.h
+index 5fa1c3e3713f..430862a6a24b 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco.h
++++ b/drivers/net/wireless/intersil/orinoco/orinoco.h
+@@ -84,7 +84,6 @@ struct orinoco_private {
+ 
+ 	/* Net device stuff */
+ 	struct net_device *ndev;
+-	struct net_device_stats stats;
+ 	struct iw_statistics wstats;
+ 
+ 	/* Hardware control variables */
+@@ -206,7 +205,6 @@ int orinoco_process_xmit_skb(struct sk_buff *skb,
+ /* Common ndo functions exported for reuse by orinoco_usb */
+ int orinoco_open(struct net_device *dev);
+ int orinoco_stop(struct net_device *dev);
+-struct net_device_stats *orinoco_get_stats(struct net_device *dev);
+ void orinoco_set_multicast_list(struct net_device *dev);
+ int orinoco_change_mtu(struct net_device *dev, int new_mtu);
+ void orinoco_tx_timeout(struct net_device *dev);
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index bca6935a94db..98e1380b9917 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -403,8 +403,7 @@ static void ezusb_ctx_complete(struct request_context *ctx)
+ 
+ 		if ((ctx->out_rid == EZUSB_RID_TX) && upriv->dev) {
+ 			struct net_device *dev = upriv->dev;
+-			struct orinoco_private *priv = ndev_priv(dev);
+-			struct net_device_stats *stats = &priv->stats;
++			struct net_device_stats *stats = &dev->stats;
+ 
+ 			if (ctx->state != EZUSB_CTX_COMPLETE)
+ 				stats->tx_errors++;
+@@ -1183,7 +1182,7 @@ static int ezusb_program(struct hermes *hw, const char *buf,
+ static netdev_tx_t ezusb_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+-	struct net_device_stats *stats = &priv->stats;
++	struct net_device_stats *stats = &dev->stats;
+ 	struct ezusb_priv *upriv = priv->card;
+ 	u8 mic[MICHAEL_MIC_LEN + 1];
+ 	int err = 0;
+@@ -1556,7 +1555,6 @@ static const struct net_device_ops ezusb_netdev_ops = {
+ 	.ndo_set_mac_address	= eth_mac_addr,
+ 	.ndo_validate_addr	= eth_validate_addr,
+ 	.ndo_tx_timeout		= orinoco_tx_timeout,
+-	.ndo_get_stats		= orinoco_get_stats,
+ };
+ 
+ static int ezusb_probe(struct usb_interface *interface,
 -- 
-2.4.11
+2.11.0
