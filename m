@@ -1,69 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18218 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933303AbdBQLo0 (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:34873 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750947AbdBJDug (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Feb 2017 06:44:26 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: Fix a warning during channel switch with multiple vaps
-Date: Fri, 17 Feb 2017 17:15:02 +0530
-Message-ID: <1487331902-12034-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170217_124446_058188_F4BA2DC4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 9 Feb 2017 22:50:36 -0500
+Received: by mail-wr0-f195.google.com with SMTP id o16so13870785wra.2
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2017 19:50:35 -0800 (PST)
+Received: from localhost.localdomain ([92.176.165.227])
+        by smtp.gmail.com with ESMTPSA id o143sm1072087wmd.3.2017.02.09.19.50.33
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 09 Feb 2017 19:50:33 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v5 2/3] mac80211: Add set_cqm_rssi_range_config
+Date: Fri, 10 Feb 2017 04:50:22 +0100
+Message-Id: <20170210035023.11471-2-andrew.zaborowski@intel.com> (sfid-20170210_045048_885631_F91CB32B)
+In-Reply-To: <20170210035023.11471-1-andrew.zaborowski@intel.com>
+References: <20170210035023.11471-1-andrew.zaborowski@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Support .set_cqm_rssi_range_config if the beacons are available for
+processing in mac80211.  There's no reason that this couldn't be
+offloaded by mac80211-based drivers but there's no driver method for
+that added in this patch.
 
-Doing a channel switch via hostapd_cli seems to update
-the new channel context for each VAP's appropriately as below
-in 'ath10k_mac_update_vif_chan', hence we can safely suppress the
-warning that shows up during this operation and dump the warning only
-if no vaps are available for channel switch
-
-hostapd_cli -i wlan0 chan_switch 5 5200
-OK
-
-ath10k_pci : mac chanctx switch n_vifs 3 mode 1
-ath10k_pci : mac chanctx switch vdev_id 2 freq 5180->5200 width 0->0
-ath10k_pci : mac chanctx switch vdev_id 1 freq 5180->5200 width 0->0
-ath10k_pci : mac chanctx switch vdev_id 0 freq 5180->5200 width 0->0
-
-Call Trace:
-
-WARNING: backports-20161201-3.14.77-9ab3068/drivers/net/wireless/ath/ath10k/mac.c:7126
-[<c022f2d4>] (warn_slowpath_null) from [<bf7f150c>]
-(ath10k_reconfig_complete+0xe4/0x25c [ath10k_core])
-[<bf7f150c>] (ath10k_reconfig_complete [ath10k_core])
-[<bf7f35f0>] (ath10k_mac_vif_ap_csa_work+0x214/0x370 [ath10k_core])
-[<bf7f38b8>] (ath10k_mac_op_change_chanctx+0x108/0x128 [ath10k_core])
-[<bf782ac0>] (ieee80211_recalc_chanctx_min_def+0x30c/0x430 [mac80211])
-[<bf7830a4>] (ieee80211_recalc_smps_chanctx+0x2ec/0x840 [mac80211])
-[<bf7843e8>] (ieee80211_vif_use_reserved_context+0x7c/0xf8 [mac80211])
-[<bf7843e8>] (ieee80211_vif_use_reserved_context [mac80211])
-[<bf76e5d4>] (ieee80211_csa_finalize_work+0x5c/0x88 [mac80211])
-
-Fixes: d7bf4b4aba05 ("ath10k: fix ar->rx_channel updating logic")
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+changes in v3:
+ - set NL80211_EXT_FEATURE_CQM_RSSI_LIST automatically in
+   ieee80211_register_hw based on the default interface's
+   IEEE80211_VIF_BEACON_FILTER flag.
+changes in v4:
+ - drop the above attempt and set NL80211_EXT_FEATURE_CQM_RSSI_LIST
+   in a separate patch in each driver.
+---
+ include/net/mac80211.h |  6 ++++++
+ net/mac80211/cfg.c     | 28 ++++++++++++++++++++++++++++
+ net/mac80211/mlme.c    | 24 ++++++++++++++++++++++++
+ 3 files changed, 58 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d1b7edb..b416958 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7085,7 +7085,7 @@ static int ath10k_ampdu_action(struct ieee80211_hw *hw,
- 	lockdep_assert_held(&ar->data_lock);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b9a08cd..3edb469 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -501,6 +501,10 @@ struct ieee80211_mu_group_data {
+  *	implies disabled. As with the cfg80211 callback, a change here should
+  *	cause an event to be sent indicating where the current value is in
+  *	relation to the newly configured threshold.
++ * @cqm_rssi_low: Connection quality monitor RSSI lower threshold, a zero value
++ *	implies disabled.  This is an alternative mechanism to the single
++ *	threshold event and can't be enabled simultaneously with it.
++ * @cqm_rssi_high: Connection quality monitor RSSI upper threshold.
+  * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
+  * @arp_addr_list: List of IPv4 addresses for hardware ARP filtering. The
+  *	may filter ARP queries targeted for other addresses than listed here.
+@@ -553,6 +557,8 @@ struct ieee80211_bss_conf {
+ 	u16 ht_operation_mode;
+ 	s32 cqm_rssi_thold;
+ 	u32 cqm_rssi_hyst;
++	s32 cqm_rssi_low;
++	s32 cqm_rssi_high;
+ 	struct cfg80211_chan_def chandef;
+ 	struct ieee80211_mu_group_data mu_group;
+ 	__be32 arp_addr_list[IEEE80211_BSS_ARP_ADDR_LIST_LEN];
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ac879bb..9c7490c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2630,6 +2630,33 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
  
- 	WARN_ON(ctx && vifs);
--	WARN_ON(vifs && n_vifs != 1);
-+	WARN_ON(vifs && !n_vifs);
+ 	bss_conf->cqm_rssi_thold = rssi_thold;
+ 	bss_conf->cqm_rssi_hyst = rssi_hyst;
++	bss_conf->cqm_rssi_low = 0;
++	bss_conf->cqm_rssi_high = 0;
++	sdata->u.mgd.last_cqm_event_signal = 0;
++
++	/* tell the driver upon association, unless already associated */
++	if (sdata->u.mgd.associated &&
++	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
++
++	return 0;
++}
++
++static int ieee80211_set_cqm_rssi_range_config(struct wiphy *wiphy,
++					       struct net_device *dev,
++					       s32 rssi_low, s32 rssi_high)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_vif *vif = &sdata->vif;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++
++	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
++		return -EOPNOTSUPP;
++
++	bss_conf->cqm_rssi_low = rssi_low;
++	bss_conf->cqm_rssi_high = rssi_high;
++	bss_conf->cqm_rssi_thold = 0;
++	bss_conf->cqm_rssi_hyst = 0;
+ 	sdata->u.mgd.last_cqm_event_signal = 0;
  
- 	/* FIXME: Sort of an optimization and a workaround. Peers and vifs are
- 	 * on a linked list now. Doing a lookup peer -> vif -> chanctx for each
+ 	/* tell the driver upon association, unless already associated */
+@@ -3639,6 +3666,7 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.mgmt_tx = ieee80211_mgmt_tx,
+ 	.mgmt_tx_cancel_wait = ieee80211_mgmt_tx_cancel_wait,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
++	.set_cqm_rssi_range_config = ieee80211_set_cqm_rssi_range_config,
+ 	.mgmt_frame_register = ieee80211_mgmt_frame_register,
+ 	.set_antenna = ieee80211_set_antenna,
+ 	.get_antenna = ieee80211_get_antenna,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6e90301..2398693 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3430,6 +3430,30 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
++	if (bss_conf->cqm_rssi_low &&
++	    ifmgd->count_beacon_signal >= IEEE80211_SIGNAL_AVE_MIN_COUNT) {
++		int sig = -ewma_beacon_signal_read(&ifmgd->ave_beacon_signal);
++		int last_event = ifmgd->last_cqm_event_signal;
++		int low = bss_conf->cqm_rssi_low;
++		int high = bss_conf->cqm_rssi_high;
++
++		if (sig < low &&
++		    (last_event == 0 || last_event >= low)) {
++			ifmgd->last_cqm_event_signal = sig;
++			ieee80211_cqm_rssi_notify(
++				&sdata->vif,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
++				sig, GFP_KERNEL);
++		} else if (sig > high &&
++			   (last_event == 0 || last_event <= high)) {
++			ifmgd->last_cqm_event_signal = sig;
++			ieee80211_cqm_rssi_notify(
++				&sdata->vif,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++				sig, GFP_KERNEL);
++		}
++	}
++
+ 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
+ 		mlme_dbg_ratelimited(sdata,
+ 				     "cancelling AP probe due to a received beacon\n");
 -- 
-1.9.1
+2.9.3
