@@ -1,56 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38034 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752663AbdBCOkm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43825 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752316AbdBJM2E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:40:42 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:38:06 +0200
-Message-Id: <20170203143812.7525-20-luca@coelho.fi> (sfid-20170203_154046_840110_CE03C662)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 19/25] iwlwifi: mvm: align copy-break SKB payload for MQ RX
+        Fri, 10 Feb 2017 07:28:04 -0500
+Subject: [PATCH v2 1/4] ath10k: fetch firmware images in a loop
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 10 Feb 2017 14:26:32 +0200
+Message-ID: <148672959257.8556.14481306395015426550.stgit@potku.adurom.net> (sfid-20170210_132809_510951_347045AE)
+In-Reply-To: <148672934198.8556.5588600166627442652.stgit@potku.adurom.net>
+References: <148672934198.8556.5588600166627442652.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-When a small frame is copied completely into the skb->head, the code
-doesn't take alignment into account, making mac80211 copy it again
-later on architectures that need the alignment. Avoid this by taking
-the PAD flag from the device into account when copying.
+To make it easier to handle minimum and maximum firmware API numbers convert
+the firmware fetch functionality to a loop. If no firmware image is found print
+an error with minimum and maximum API numbers and the name of firmware
+directory. This is needed when we switch to using request_firmware_direct()
+which doesn't print any errors anymore.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Also add a new function for creating the fw file name dynamically which makes it
+easier to add new bus support, for example SDIO and USB, later.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+[kvalo@qca.qualcomm.com: remove sdio/usb part, new error message, clarify commit log]
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.c |   51 ++++++++++++++------------------
+ drivers/net/wireless/ath/ath10k/hw.h   |    4 +++
+ 2 files changed, 27 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 6c802cee900c..c154ab42c80d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -149,8 +149,17 @@ static void iwl_mvm_create_skb(struct sk_buff *skb, struct ieee80211_hdr *hdr,
- 	unsigned int headlen, fraglen, pad_len = 0;
- 	unsigned int hdrlen = ieee80211_hdrlen(hdr->frame_control);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c27e7ea38a65..9674c08464ab 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1358,44 +1358,39 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 	return ret;
+ }
  
--	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD)
-+	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
- 		pad_len = 2;
++static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
++				    size_t fw_name_len, int fw_api)
++{
++	scnprintf(fw_name, fw_name_len, "%s-%d.bin", ATH10K_FW_FILE_BASE, fw_api);
++}
 +
-+		/*
-+		 * If the device inserted padding it means that (it thought)
-+		 * the 802.11 header wasn't a multiple of 4 bytes long. In
-+		 * this case, reserve two bytes at the start of the SKB to
-+		 * align the payload properly in case we end up copying it.
-+		 */
-+		skb_reserve(skb, pad_len);
-+	}
- 	len -= pad_len;
+ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ {
+-	int ret;
++	int ret, i;
++	char fw_name[100];
  
- 	/* If frame is small enough to fit in skb->head, pull it completely.
--- 
-2.11.0
+ 	/* calibration file is optional, don't check for any errors */
+ 	ath10k_fetch_cal_file(ar);
+ 
+-	ar->fw_api = 5;
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
+-
+-	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API5_FILE,
+-					       &ar->normal_mode_fw.fw_file);
+-	if (ret == 0)
+-		goto success;
+-
+-	ar->fw_api = 4;
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
+-
+-	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API4_FILE,
+-					       &ar->normal_mode_fw.fw_file);
+-	if (ret == 0)
+-		goto success;
++	for (i = ATH10K_FW_API_MAX; i >= ATH10K_FW_API_MIN; i--) {
++		ar->fw_api = i;
++		ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n",
++			   ar->fw_api);
+ 
+-	ar->fw_api = 3;
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
++		ath10k_core_get_fw_name(ar, fw_name, sizeof(fw_name), ar->fw_api);
++		ret = ath10k_core_fetch_firmware_api_n(ar, fw_name,
++						       &ar->normal_mode_fw.fw_file);
++		if (!ret)
++			goto success;
++	}
+ 
+-	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API3_FILE,
+-					       &ar->normal_mode_fw.fw_file);
+-	if (ret == 0)
+-		goto success;
++	/* we end up here if we couldn't fetch any firmware */
+ 
+-	ar->fw_api = 2;
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
++	ath10k_err(ar, "Failed to find firmware-N.bin (N between %d and %d) from %s: %d",
++		   ATH10K_FW_API_MIN, ATH10K_FW_API_MAX, ar->hw_params.fw.dir,
++		   ret);
+ 
+-	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API2_FILE,
+-					       &ar->normal_mode_fw.fw_file);
+-	if (ret)
+-		return ret;
++	return ret;
+ 
+ success:
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "using fw api %d\n", ar->fw_api);
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 38aa7c95732e..f0fda0f2b3b4 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -128,6 +128,10 @@ enum qca9377_chip_id_rev {
+ #define QCA4019_HW_1_0_BOARD_DATA_FILE "board.bin"
+ #define QCA4019_HW_1_0_PATCH_LOAD_ADDR  0x1234
+ 
++#define ATH10K_FW_FILE_BASE		"firmware"
++#define ATH10K_FW_API_MAX		5
++#define ATH10K_FW_API_MIN		2
++
+ #define ATH10K_FW_API2_FILE		"firmware-2.bin"
+ #define ATH10K_FW_API3_FILE		"firmware-3.bin"
+ 
