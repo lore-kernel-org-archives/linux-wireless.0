@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f175.google.com ([74.125.82.175]:33319 "EHLO
-        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751222AbdBWVIK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63323 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751027AbdBJNUN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 16:08:10 -0500
-Received: by mail-ot0-f175.google.com with SMTP id k4so2455162otc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 13:08:10 -0800 (PST)
+        Fri, 10 Feb 2017 08:20:13 -0500
+Subject: [PATCH v2 4/4] ath10k: convert warning about non-existent OTP board
+ id to debug message
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 10 Feb 2017 14:27:07 +0200
+Message-ID: <148672962764.8556.11600829537505995398.stgit@potku.adurom.net> (sfid-20170210_142017_172284_5157864F)
+In-Reply-To: <148672934198.8556.5588600166627442652.stgit@potku.adurom.net>
+References: <148672934198.8556.5588600166627442652.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <2812805e-9108-284f-2165-34624d603364@broadcom.com>
-References: <20170202213321.11591-1-zajec5@gmail.com> <20170202213321.11591-4-zajec5@gmail.com>
- <2812805e-9108-284f-2165-34624d603364@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 23 Feb 2017 22:08:09 +0100
-Message-ID: <CACna6rxA_Nb_ha9jq73m6ynbYP9B+2Xd9XKGUTJBRJUciQofkw@mail.gmail.com> (sfid-20170223_220813_816642_C58B2389)
-Subject: Re: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 February 2017 at 10:54, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 2-2-2017 22:33, Rafa=C5=82 Mi=C5=82ecki wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> This will allow getting struct device reference from the passed
->> brcmf_pub for the needs of dev_err. More detailed messages are really
->> important for home routers which frequently have 2 (or even 3) wireless
->> cards supported by brcmfmac.
->>
->> Note that all calls are yet to be updated as for now brcmf_err macro
->> always passes NULL. This will be handled in following patch to make this
->> change easier to review.
->
-> I prefer brcmf_err() to have struct device reference directly instead of
-> using brcmf_pub. That would remove the need for patches 5 till 7 as bus
-> specific code already has struct device. So I have acked the first three
-> patches, but would like to revise 8 and 9.
+Currently ath10k unncessarily warns about board id not available from OTP:
 
-I'm a bit disappointed as this change of mind means I wasted quite
-some time by reworking all brcmf_err calls :(
+ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
+ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
+ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 1 testmode 1
+ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.9-2 api 5 features no-p2p,raw-mode crc32 b8d50af5
+ath10k_pci 0000:02:00.0: board id is not exist in otp, ignore it
+ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
+ath10k_pci 0000:02:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1
 
-I intentionally sent
-[PATCH RFC 2/2] brcmfmac: add brcmf_err_pub macro for better error messages
-2 weeks before the final patch, to make sure my design is alright &
-can be accepted :(
+But not all boards have the board id in OTP so this is not a problem and no
+need to confuse the user with that info. So this can be safely changed to a
+debug message.
 
-I'll work on another version of this patch & will send it as early RFC.
+Also fix grammar in the debug message.
 
---=20
-Rafa=C5=82
+Fixes: d2e202c06ca4 ("ath10k: ignore configuring the incorrect board_id")
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 6433fdd2c0c7..5e8dd3806622 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -701,7 +701,8 @@ static int ath10k_core_get_board_id_from_otp(struct ath10k *ar)
+ 
+ 	if ((result & ATH10K_BMI_BOARD_ID_STATUS_MASK) != 0 ||
+ 	    (board_id == 0)) {
+-		ath10k_warn(ar, "board id is not exist in otp, ignore it\n");
++		ath10k_dbg(ar, ATH10K_DBG_BOOT,
++			   "board id does not exist in otp, ignore it\n");
+ 		return -EOPNOTSUPP;
+ 	}
+ 
