@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:32883 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753349AbdBTNS5 (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:46238 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753534AbdBJTA6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 08:18:57 -0500
-Received: by mail-io0-f193.google.com with SMTP id d198so4499669ioe.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 05:18:28 -0800 (PST)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: Netdev 2.1 update Feb 20
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-        info@netdevconf.org, linux-wireless@vger.kernel.org,
-        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
-        Stephen Jaworski <jaws@mojatatu.com>, lwn@lwn.net,
-        people@netdevconf.org, Brenda Butler <bjb@mojatatu.com>
-Message-ID: <7ac4b86b-5346-e709-6c45-39271a902ef0@mojatatu.com> (sfid-20170220_141919_094024_74EAFE39)
-Date: Mon, 20 Feb 2017 08:18:15 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 10 Feb 2017 14:00:58 -0500
+Date: Fri, 10 Feb 2017 13:51:38 -0500 (EST)
+Message-Id: <20170210.135138.2084086346069765205.davem@davemloft.net> (sfid-20170210_200159_116750_3F93DC9D)
+To: kvalo@codeaurora.org
+Cc: f.fainelli@gmail.com, netdev@vger.kernel.org,
+        linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, target-devel@vger.kernel.org,
+        andrew@lunn.ch, anna.schumaker@netapp.com,
+        derek.chickles@caviumnetworks.com,
+        felix.manlunas@caviumnetworks.com, bfields@fieldses.org,
+        jlayton@poochiereds.net, jirislaby@gmail.com,
+        mcgrof@do-not-panic.com, madalin.bucur@nxp.com,
+        UNGLinuxDriver@microchip.com, nab@linux-iscsi.org,
+        mickflemm@gmail.com, nicolas.ferre@atmel.com,
+        raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org,
+        satananda.burla@caviumnetworks.com,
+        thomas.petazzoni@free-electrons.com, timur@codeaurora.org,
+        trond.myklebust@primarydata.com,
+        vivien.didelot@savoirfairelinux.com, woojung.huh@microchip.com
+Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h
+ include
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
+References: <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
+        <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com>
+        <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-A few announcements:
--Registration is open. Register early so we can plan better.
-https://onlineregistrations.ca/netdev21/
-
-hotel (If you can get the hotel cheaper online than conference
-rates please send us email, dont book ):
-http://www.netdevconf.org/2.1/hotel.html
-
-- We are pleased to announce our first Gold sponsor! We welcome back
-Redhat as sponsors and thank them for their commitment to the netdev
-community!
-
-- We are pleased to announce our first Platinum sponsor: Cumulus
-Networks. Cumulus has always been there for the netdev Community from
-our very first conference.  Thank you Cumulus!
-
-- Our hard working tech committee has accepted another proposal. This
-time veteran netdever Stephen Hemminger digs into the semantics of
-names. Names have consequences he says.
-
-Title: What's in a name?
----
-Network device names have existed from the earliest days of Unix
-networking and their usage has evolved. This talk is a look at some of
-the issues with network device names. kernel developers often think the
-problem is a userspace issue and nothing can be done but the names are
-a key part of the existing ABI.
-
-In the talk, I will cover how the choice of naming policy interacts
-with applications and cloud environments, what current expectations
-are, and how this interacts with cloud infrastructure. There is no
-solution but there are several things that can be done to improve
-the user experience. Will also give examples including Amazon, Azure,
-Google Compute as well as other non-Linux environments.
------
-
-Please note that The Call for Proposals is still open, submit early
-to avoid the hazards of last minute traffic. Refer to:
-http://netdevconf.org/2.1/submit-proposal.html
-
-cheers,
-jamal
+RnJvbTogS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1cm9yYS5vcmc+DQpEYXRlOiBUaHUsIDA5IEZl
+YiAyMDE3IDE2OjEwOjA2ICswMjAwDQoNCj4gRmxvcmlhbiBGYWluZWxsaSA8Zi5mYWluZWxsaUBn
+bWFpbC5jb20+IHdyaXRlczoNCj4gDQo+Pj4+IElmIG5vdCwgZm9yIHNvbWV0aGluZyBsaWtlIHRo
+aXMgaXQncyBhIG11c3Q6DQo+Pj4+DQo+Pj4+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2
+MjEwL2NmZzgwMjExLmM6MjQ6MzA6IGVycm9yOiBleHBlY3RlZCChKaIgYmVmb3JlIKFib29sog0K
+Pj4+PiAgbW9kdWxlX3BhcmFtKGRpc2FibGVfYXBfc21lLCBib29sLCAwNDQ0KTsNCj4+Pj4gICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgXg0KPj4+PiBkcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGgvd2lsNjIxMC9jZmc4MDIxMS5jOjI1OjM0OiBlcnJvcjogZXhwZWN0ZWQgoSmiIGJlZm9yZSBz
+dHJpbmcgY29uc3RhbnQNCj4+Pj4gIE1PRFVMRV9QQVJNX0RFU0MoZGlzYWJsZV9hcF9zbWUsICIg
+bGV0IHVzZXIgc3BhY2UgaGFuZGxlIEFQIG1vZGUgU01FIik7DQo+Pj4+ICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBeDQo+Pj4+IExpa2UgbGlrZSB0aGF0IGZpbGUgbmVlZHMgbGlu
+dXgvbW9kdWxlLmggaW5jbHVkZWQuDQo+Pj4gDQo+Pj4gSm9oYW5uZXMgYWxyZWFkeSBmaXhlZCBh
+IHNpbWlsYXIgKG9yIHNhbWUpIHByb2JsZW0gaW4gbXkgdHJlZToNCj4+PiANCj4+PiB3aWw2MjEw
+OiBpbmNsdWRlIG1vZHVsZXBhcmFtLmgNCj4+PiANCj4+PiBodHRwczovL2dpdC5rZXJuZWwub3Jn
+L2NnaXQvbGludXgva2VybmVsL2dpdC9rdmFsby93aXJlbGVzcy1kcml2ZXJzLW5leHQuZ2l0L2Nv
+bW1pdC8/aWQ9OTQ5YzJkMDA5Njc1M2Q1MThlZjZlMGJkODQxOGM4MDg2NzQ3MTk2Yg0KPj4+IA0K
+Pj4+IEknbSBwbGFubmluZyB0byBzZW5kIHlvdSBhIHB1bGwgcmVxdWVzdCB0b21vcnJvdyB3aGlj
+aCBjb250YWlucyB0aGF0DQo+Pj4gb25lLg0KPj4NCj4+IFRoYW5rcyBLYWxsZSENCj4+DQo+PiBE
+YXZpZCwgY2FuIHlvdSBob2xkIG9uIHRoaXMgc2VyaWVzIHVudGlsIEthbGxlJ3MgcHVsbCByZXF1
+ZXN0IGdldHMNCj4+IHN1Ym1pdHRlZD8gUGFzdCB0aGlzIGVycm9yLCBhbGxtb2Rjb25maWcgYnVp
+bGRzIGZpbmUgd2l0aCB0aGlzIHBhdGNoDQo+PiBzZXJpZXMgKGp1c3QgdGVzdGVkKS4gVGhhbmtz
+IQ0KPiANCj4gSnVzdCBzdWJtaXR0ZWQgdGhlIHB1bGwgcmVxdWVzdDoNCj4gDQo+IGh0dHBzOi8v
+cGF0Y2h3b3JrLm96bGFicy5vcmcvcGF0Y2gvNzI2MTMzLw0KDQpJJ3ZlIHJldHJpZWQgdGhpcyBw
+YXRjaCBzZXJpZXMsIGFuZCB3aWxsIHB1c2ggaXQgb3V0IGFzc3VtaW5nIHRoZSBidWlsZA0KY29t
+cGxldGVzIHByb3Blcmx5Lg0K
