@@ -1,97 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:32993 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751265AbdBWShN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2852 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751305AbdBJN3X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 13:37:13 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V4 2/2] brcmfmac: don't warn user about NVRAM if fallback to platform one succeeds
-Date: Thu, 23 Feb 2017 19:30:18 +0100
-Message-Id: <20170223183018.16704-2-zajec5@gmail.com> (sfid-20170223_193739_284370_7F6C58DE)
-In-Reply-To: <20170223183018.16704-1-zajec5@gmail.com>
-References: <20170221094754.15406-1-zajec5@gmail.com>
- <20170223183018.16704-1-zajec5@gmail.com>
+        Fri, 10 Feb 2017 08:29:23 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v4] ath10k: fix napi crash during rmmod when probe firmware fails
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <148672748569.28126.12259592472689214081.stgit@potku.adurom.net>
+References: <148672748569.28126.12259592472689214081.stgit@potku.adurom.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <9338c9758cbf43d7ad3a6c382236e7b2@eusanexr01a.eu.qualcomm.com> (sfid-20170210_142943_512567_65C63C3D)
+Date: Fri, 10 Feb 2017 04:46:55 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> This fixes the below crash when ath10k probe firmware fails, NAPI polling tries
+> to access a rx ring resource which was never allocated. An easy way to
+> reproduce this is easy to remove all the firmware files, load ath10k modules
+> and ath10k will crash when calling 'rmmod ath10k_pci'. The fix is to call
+> napi_enable() from ath10k_pci_hif_start() so that it matches with
+> napi_disable() being called from ath10k_pci_hif_stop().
+> 
+> Big thanks to Mohammed Shafi Shajakhan who debugged this and provided first
+> version of the fix. In this patch I just fix the actual problem in pci.c
+> instead of having a workaround in core.c.
+> 
+> BUG: unable to handle kernel NULL pointer dereference at (null)
+> IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
+> __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
+> 
+> Call Trace:
+> 
+> [<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90
+> [ath10k_core]
+> [<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0
+> [ath10k_core]
+> [<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80
+> [<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150
+> [<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]
+> [<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]
+> [<ffffffff817863af>] net_rx_action+0x20f/0x370
+> 
+> Reported-by: Ben Greear <greearb@candelatech.com>
+> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Failing to load NVRAM file isn't critical if we manage to get platform
-one in the fallback path. It means warnings like:
-[   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error -2
-are unnecessary & disturbing for people with platform NVRAM. This is
-very common case for Broadcom home routers.
+I'm planning to push this to 4.11.
 
-So instead of printing warning immediately with the firmware subsystem
-let's first try our fallback code. If that fails as well, then it's a
-right moment to print an error.
-
-This should reduce amount of false reports from users seeing this
-warning while having wireless working perfectly fine.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V2: Update commit message as it wasn't clear enough (thanks Andy) & add extra
-    messages to the firmware.c.
-V3: Set FW_OPT_UEVENT to don't change behavior
-V4: Switch to the new request_firmware_async syntax
----
- .../wireless/broadcom/brcm80211/brcmfmac/firmware.c    | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index c7c1e9906500..da7da1dc059d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 		raw_nvram = false;
- 	} else {
- 		data = bcm47xx_nvram_get_contents(&data_len);
--		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
--			goto fail;
-+		if (!data) {
-+			brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
-+			if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
-+				brcmf_err("Loading NVRAM from %s and using platform one both failed\n",
-+					  fwctx->nvram_name);
-+				goto fail;
-+			}
-+		}
- 		raw_nvram = true;
- 	}
- 
-@@ -491,6 +497,9 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- {
- 	struct brcmf_fw *fwctx = ctx;
-+	struct firmware_opts fw_opts = {
-+		.optional = true,
-+	};
- 	int ret;
- 
- 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
-@@ -504,9 +513,8 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- 		return;
- 	}
- 	fwctx->code = fw;
--	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
--				      fwctx->dev, GFP_KERNEL, fwctx,
--				      brcmf_fw_request_nvram_done);
-+	ret = request_firmware_async(fwctx->nvram_name, &fw_opts, fwctx->dev,
-+				     fwctx, brcmf_fw_request_nvram_done);
- 
- 	if (!ret)
- 		return;
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9566625/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
