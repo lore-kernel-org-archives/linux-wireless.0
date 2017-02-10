@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f53.google.com ([74.125.83.53]:36461 "EHLO
-        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751498AbdBTLDt (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59830 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbdBJW6c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 06:03:49 -0500
-Received: by mail-pg0-f53.google.com with SMTP id s67so6870431pgb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 03:02:57 -0800 (PST)
-Subject: Re: [RFC V3 0/5] cfg80211: support multiple scheduled scans
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1487155049-1892-1-git-send-email-arend.vanspriel@broadcom.com>
- <1487582393.5474.2.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <1404cf52-b570-3dfb-031b-ba8eaa28ace1@broadcom.com> (sfid-20170220_120353_836995_84122417)
-Date: Mon, 20 Feb 2017 11:55:22 +0100
+        Fri, 10 Feb 2017 17:58:32 -0500
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: VHT 160Mhz and nss related config.
+Message-ID: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com> (sfid-20170210_235835_296103_8149499F)
+Date: Fri, 10 Feb 2017 14:58:31 -0800
 MIME-Version: 1.0
-In-Reply-To: <1487582393.5474.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20-2-2017 10:19, Johannes Berg wrote:
-> On Wed, 2017-02-15 at 10:37 +0000, Arend van Spriel wrote:
->> Another review round for multiple scheduled scan support in nl80211.
->>
-> 
-> 
-> Looks fine to me. Not sure I see much value in splitting patches 4/5,
-> but whichever you prefer is fine with me.
+So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4 MIMO at VHT80, but
+it can do only 2x2 MIMO at VHT160/80+80.
 
-I was a bit in doubt on granularity of the patches. Let's see what I
-make of it when submitting a formal patch ;-)
+When configuring a peer, we need to tell the firmware the number of spatial streams
+of the peer at VHT160 and at VHT80 and lower.  They are not the same value.
 
-> Maybe some of the commit messages ("It mainly illustrates ...") could
-> use some rewording :)
+I cannot think of any standard way to get this information based on VHT capabilities
+and such.  Currently, one could just assume VHT160 NSS is 1/2 of the VHT80 NSS,
+but that is unlikely to be true for all vendors.
 
-Will do.
+Any ideas?
 
 Thanks,
-Arend
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
