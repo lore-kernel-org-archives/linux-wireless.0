@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41108 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932344AbdBHIWc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 03:22:32 -0500
-Message-ID: <1486542145.4603.8.camel@sipsolutions.net> (sfid-20170208_092244_925566_8B439F15)
-Subject: Re: [PATCH] mac80211: Remove VHT Capabilities/Operation IEs from
- mesh beacon if VHT was disabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 08 Feb 2017 09:22:25 +0100
-In-Reply-To: <1485993928-3822-1-git-send-email-masashi.honma@gmail.com> (sfid-20170202_010539_896076_48F54BDC)
-References: <1485993928-3822-1-git-send-email-masashi.honma@gmail.com>
-         (sfid-20170202_010539_896076_48F54BDC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:35775 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750910AbdBJV4G (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Feb 2017 16:56:06 -0500
+Received: by mail-pf0-f172.google.com with SMTP id 202so8964822pfx.2
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2017 13:55:30 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Rajat Jain <rajatja@google.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH - REGRESSION] mwifiex: don't enable/disable IRQ 0 during suspend/resume
+Date: Fri, 10 Feb 2017 13:55:25 -0800
+Message-Id: <20170210215525.139701-1-briannorris@chromium.org> (sfid-20170210_225630_818077_6A80213F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If we don't have an out-of-band wakeup IRQ configured through DT (as
+most platforms don't), then we fall out of this function with
+'irq_wakeup == 0'. Other code (e.g., mwifiex_disable_wake() and
+mwifiex_enable_wake()) treats 'irq_wakeup >= 0' as a valid IRQ, and so
+we end up calling {enable,disable}_irq() on IRQ 0.
 
-> This patch removes VHT Capabilities/Operation IEs when the
-> wpa_supplicant.conf includes disable_vht=1. We recognize the local
-> peer
-> as 11ac ready, when it has more than 80MHz band width. Because
-> net/mac80211/util.c#ieee80211_build_preq_ies_band() uses 80MHz
-> threshold
-> for VHT Capabilities IE inclusion.
+That seems bad, so let's not do that.
 
-I believe this is incorrect the way you've written it, we shouldn't
-disable VHT because 80 MHz isn't *used* right now.
+Same problem as fixed in this patch:
 
-The code you reference checks if 80 MHz was technically *supported*,
-and that's really only because we otherwise can't connect to a BSS
-network that supports VHT, since the AP might switch from 20/40 to
-80/160, and we can't say that we don't support 80 (since we have to
-support it if we support VHT.)
+https://patchwork.kernel.org/patch/9531693/
+[PATCH v2 2/3] btmrvl: set irq_bt to -1 when failed to parse it
 
->  	sband = local->hw.wiphy->bands[band];
->  	if (!sband->vht_cap.vht_supported ||
-> -	    sdata->vif.bss_conf.chandef.width ==
-> NL80211_CHAN_WIDTH_20_NOHT ||
-> -	    sdata->vif.bss_conf.chandef.width ==
-> NL80211_CHAN_WIDTH_5 ||
-> -	    sdata->vif.bss_conf.chandef.width ==
-> NL80211_CHAN_WIDTH_10)
-> +	    !(sdata->vif.bss_conf.chandef.width ==
-> NL80211_CHAN_WIDTH_80 ||
-> +	    sdata->vif.bss_conf.chandef.width ==
-> NL80211_CHAN_WIDTH_80P80 ||
-> +	    sdata->vif.bss_conf.chandef.width ==
-> NL80211_CHAN_WIDTH_160))
->  		return 0;
-> 
+with the difference that:
+(a) this one is actually a regression and
+(b) this affects both device tree and non-device-tree systems
 
-But using the current bandwidth as you do now seems incorrect to me.
+While fixing the regression, also drop the verbosity on the parse
+failure, so we don't see this when a DT node is present but doesn't have
+an interrupt property (this is perfectly legal):
 
-johannes
+[   21.999000] mwifiex_pcie 0000:01:00.0: fail to parse irq_wakeup from device tree
+
+Fixes: 853402a00823 ("mwifiex: Enable WoWLAN for both sdio and pcie")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+This is a 4.10 regression. Not sure if it's critical to push quickly, or if it
+should just be tagged -stable and pushed in 4.11.
+
+ drivers/net/wireless/marvell/mwifiex/main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index e5c3a8aa3929..c246d8efb6fc 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1569,13 +1569,13 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+ 	struct device *dev = adapter->dev;
+ 
+ 	if (!dev->of_node)
+-		return;
++		goto err_exit;
+ 
+ 	adapter->dt_node = dev->of_node;
+ 	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
+ 	if (!adapter->irq_wakeup) {
+-		dev_info(dev, "fail to parse irq_wakeup from device tree\n");
+-		return;
++		dev_dbg(dev, "fail to parse irq_wakeup from device tree\n");
++		goto err_exit;
+ 	}
+ 
+ 	ret = devm_request_irq(dev, adapter->irq_wakeup,
+@@ -1595,7 +1595,7 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+ 	return;
+ 
+ err_exit:
+-	adapter->irq_wakeup = 0;
++	adapter->irq_wakeup = -1;
+ }
+ 
+ /*
+-- 
+2.11.0.483.g087da7b7c-goog
