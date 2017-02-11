@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47598 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751313AbdBMTmI (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:35170 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752201AbdBKEW5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 14:42:08 -0500
-Subject: Re: VHT 160Mhz and nss related config.
-To: Johannes Berg <johannes@sipsolutions.net>,
+        Fri, 10 Feb 2017 23:22:57 -0500
+To: Ben Greear <greearb@candelatech.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
         ath10k <ath10k@lists.infradead.org>
 References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
- <1486969571.5142.3.camel@sipsolutions.net>
- <d53a8fac-b4e0-2fb2-c1e1-c537a2c5e8aa@candelatech.com>
- <1487014657.19813.3.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <0f30d7bf-b710-10a8-91e6-bfd75457cf75@candelatech.com> (sfid-20170213_204211_661407_45AC3B75)
-Date: Mon, 13 Feb 2017 11:42:07 -0800
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com> (sfid-20170211_052837_058007_1FAA6EF1)
+Date: Sat, 11 Feb 2017 05:22:51 +0100
 MIME-Version: 1.0
-In-Reply-To: <1487014657.19813.3.camel@sipsolutions.net>
+In-Reply-To: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: VHT 160Mhz and nss related config.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2017 11:37 AM, Johannes Berg wrote:
->
->>> This was recently added to the VHT capabilities in the spec, see
->>> Table 9-250 in 802.11-2016.
->
->> I don't have that spec...maybe you could post a patch that adds that
->> flag and/or other fields to the appropriate header files?  I can
->> attempt to add support to ath10k after that...
->
-> We're planning to, but it's not the most important thing on my list
-> right now ... I'll check where that's at now.
->
-> I can't even easily explain it, since it's really complicated.
+i really can't believe this. if this is true the  160 mhz mode would not 
+make any sense.
+the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is identical. so 
+vht160 would not increase performance in any way
 
-So, think it is worthwhile to use the max-rx-rate as a proxy
-until the 'real' spec is implemented?  If 2x2 160Mhz is super complicated,
-and yields no useful throughput improvement, then likely it will
-be a long time before someone implements it properly I'd guess.
+Am 10.02.2017 um 23:58 schrieb Ben Greear:
+> So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4 MIMO 
+> at VHT80, but
+> it can do only 2x2 MIMO at VHT160/80+80.
+>
+> When configuring a peer, we need to tell the firmware the number of 
+> spatial streams
+> of the peer at VHT160 and at VHT80 and lower.  They are not the same 
+> value.
+>
+> I cannot think of any standard way to get this information based on 
+> VHT capabilities
+> and such.  Currently, one could just assume VHT160 NSS is 1/2 of the 
+> VHT80 NSS,
+> but that is unlikely to be true for all vendors.
+>
+> Any ideas?
+>
+> Thanks,
+> Ben
+>
 
-Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
