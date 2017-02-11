@@ -1,128 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36561 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753601AbdBHHpT (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:36257 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751153AbdBKSJh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 02:45:19 -0500
-Received: by mail-oi0-f68.google.com with SMTP id u143so10416840oif.3
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2017 23:44:47 -0800 (PST)
+        Sat, 11 Feb 2017 13:09:37 -0500
+Subject: Re: [PATCH] rtlwifi: btcoexist: fix semicolon.cocci warnings
+To: Julia Lawall <julia.lawall@lip6.fr>
+References: <alpine.DEB.2.20.1702092111340.1985@hadrien>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Joe Perches <joe@perches.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kbuild-all@01.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <d4380ad0-c3bf-5483-b2df-982faae00522@lwfinger.net> (sfid-20170211_191007_598281_E1173D46)
+Date: Sat, 11 Feb 2017 12:09:35 -0600
 MIME-Version: 1.0
-In-Reply-To: <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com>
-References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
- <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
- <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
- <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com> <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
- <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com> <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
- <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 8 Feb 2017 08:44:46 +0100
-Message-ID: <CACna6rwE1YE6bokFehgRNsyRGNGORbrYcnuUR-df286h0K4KXw@mail.gmail.com> (sfid-20170208_084817_550407_7B01FD5E)
-Subject: Re: [PATCH v9] Add new mac80211 driver mwlwifi.
-To: David Lin <dlin@marvell.com>
-Cc: Steve deRosier <derosier@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Chor Teck Law <ctlaw@marvell.com>,
-        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <alpine.DEB.2.20.1702092111340.1985@hadrien>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 February 2017 at 08:28, David Lin <dlin@marvell.com> wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki [mailto:zajec5@gmail.com] worte:
->> Sent: Wednesday, February 08, 2017 3:24 PM
->> On 8 February 2017 at 07:30, David Lin <dlin@marvell.com> wrote:
->> > steve.derosier@gmail.com [mailto:steve.derosier@gmail.com] wrote:
->> >> On Tue, Feb 7, 2017 at 10:15 PM, David Lin <dlin@marvell.com> wrote:
->> >> >> Rafa=C5=82 Mi=C5=82ecki [mailto:zajec5@gmail.com] wrote:
->> >> >> Please use ieee80211-freq-limit:
->> >> >> https://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/co
->> >> >> mmi
->> >> >> t/?id=3Db3
->> >> >> 30b25eaabda00d74e47566d9200907da381896
->> >> >>
->> >> >> Most likely with wiphy_read_of_freq_limits helper:
->> >> >> https://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/co
->> >> >> mmi
->> >> >> t/?id=3De6
->> >> >> 91ac2f75b69bee743f0370d79454ba4429b175
->> >> >
->> >> > I already replied meaning of these parameters:
->> >> > <marvell,2ghz> is used to disable 2g band.
->> >> > <marvell,5ghz> is used to disable 5g band.
->> >> > <marvell, chainmask> is used to specify antenna number (if default
->> >> > number
->> >> is suitable for you, there is no need to use this parameter).
->> >> > <marvell,powertable> should not be used for chip with device power
->> table.
->> >> In fact, this parameter should not be used any more.
->> >> >
->> >>
->> >> David, I think you're not understanding the comment, or at least
->> >> that's what it looks like to me. Yes, you did reply as to the meaning=
-.
->> >> And, your reply, while informative, didn't tell us you understood and
->> >> were willing to fix the problem. I doubt you meant it this way, but
->> >> it feels defensive and like a brush-off.
->> >>
->> >> First off, you will still have to document any DT bindings you're
->> >> adding. Just because you answer the question in the review doesn't
->> >> mean you're not responsible for doing so.
->> >>
->> >> And second off, I think that Rafal (and sorry about my spelling,
->> >> looks like there's some sort of accent on the l that I don't know how
->> >> to make my keyboard do) is saying: there's already some generic
->> >> bindings that can be used to disable the 2g or 5g bands. Granted
->> >> they're even newer than your patch, but I do think if said bindings e=
-xist and
->> are appropriate, you should use them.
->> >>
->> >> - Steve
->> >
->> > These parameters are marvell proprietary parameters, I don't think it =
-should
->> be added to DT bindings.
->>
->> Steve is correct.
->>
->> You have to document new properties, just because they are Marvell speci=
-fic
->> doesn't change anything. You just document them in a proper place.
->>
+On 02/09/2017 02:12 PM, Julia Lawall wrote:
+> Remove unneeded semicolon.
 >
-> All right. I will do that.
+> Generated by: scripts/coccinelle/misc/semicolon.cocci
 >
->>
->> > BTW, <marvell,2ghz> and <marvell,5ghz> are only used for mwlwifi to re=
-port
->> supported bands, it is not related to limitation of frequency.
->>
->> How reporting a single band doesn't limit reported frequencies? You can
->> achieve exactly the same using generic property, so there is no place fo=
-r
->> Marvell specific ones.
->>
->> In fact there were drivers of 3 vendors requiring band/freq-related desc=
-ription
->> in DT: Broadcom, Marvell & Mediatek. This property was discussed & desig=
-ned
->> to support all limitation cases we found possible to make it usable with
->> (hopefully) all drivers.
->>
+> CC: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Julia Lawall <julia.lawall@lip6.fr>
+> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Thanks,
+
+Larry
+
+> ---
 >
-> I only need simple way to disable 2g or 5g band. I will follow your sugge=
-stion to document these marvell proprietary parameters.
-
-Seriously? Refusing to use generic binding because you think
-marvell,5ghz;
-is simpler than
-ieee80211-freq-limit =3D <2402000 2482000>;
-(not to mention your property seems reversed!)?
-
-I don't know how else to explain this to you. We don't want duplicated
-properties where one can work. Just use existing one. Don't add new
-one even if documented.
-
---=20
-Rafa=C5=82
+>  halbtc8821a2ant.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+> @@ -2877,7 +2877,7 @@ static void halbtc8821a2ant_action_pan_e
+>  					      false, false);
+>  			btc8821a2ant_sw_mech2(btcoexist, false, false,
+>  					      false, 0x18);
+> -		};
+> +		}
+>  	} else {
+>  		/* fw mechanism */
+>  		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+>
