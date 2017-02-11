@@ -1,106 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36193 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754348AbdBGXFa (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:55097 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750778AbdBKSVS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 18:05:30 -0500
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Madalin Bucur <madalin.bucur@nxp.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Timur Tabi <timur@codeaurora.org>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
-        Woojung Huh <woojung.huh@microchip.com>
-Subject: [PATCH net-next v2 12/12] net: dsa: remove unnecessary phy*.h includes
-Date: Tue,  7 Feb 2017 15:03:05 -0800
-Message-Id: <20170207230305.18222-13-f.fainelli@gmail.com> (sfid-20170208_000652_034565_F598BF71)
-In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
+        Sat, 11 Feb 2017 13:21:18 -0500
+To: Ben Greear <greearb@candelatech.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
+ <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
+ <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
+ <589F50B8.4020609@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com> (sfid-20170211_192121_961550_25C0F11B)
+Date: Sat, 11 Feb 2017 19:21:17 +0100
+MIME-Version: 1.0
+In-Reply-To: <589F50B8.4020609@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: VHT 160Mhz and nss related config.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+Am 11.02.2017 um 18:58 schrieb Ben Greear:
+> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
+>> On 10 February 2017 at 20:22, Sebastian Gottschall
+>> <s.gottschall@dd-wrt.com> wrote:
+>>> i really can't believe this. if this is true the  160 mhz mode would 
+>>> not
+>>> make any sense.
+>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is identical. so
+>>> vht160 would not increase performance in any way
+>>
+>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
+>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
+>> transmit 2x2 rates to different MU-MIMO peers.
+>>
+>> That's the outstanding question I have - is it like, 2x2 MU only, or
+>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
+>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
+>> group each) all going at the same time?
+>>
+>> I'm .. not even sure how you're supposed to cleanly negotiate that you
+>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
+>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
+>
+> I think using the max-rx-rate logic might could imply this, but I am 
+> not sure
+> many drivers fill this out properly.
+>
+> Looks like a mess waiting to happen to me.
+>
+> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not 
+> certain you
+> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
+>
+> So, from what I know currently, 80+80 is not that useful on the 9984 
+> NIC...
+never tried 80+80 since i need to enhance the channel logic alot in my 
+firmware code to handle it. would be great enough if vht160 would work 
+as expected and i'm not sure right now if it really works, even if the 
+interface initialized correctly it assocs only with vht80
+>
+> Thanks,
+> Ben
+>
+>>
+>>
+>> -adrian
+>>
+>>>
+>>> Am 10.02.2017 um 23:58 schrieb Ben Greear:
+>>>>
+>>>> So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4 
+>>>> MIMO at
+>>>> VHT80, but
+>>>> it can do only 2x2 MIMO at VHT160/80+80.
+>>>>
+>>>> When configuring a peer, we need to tell the firmware the number of
+>>>> spatial streams
+>>>> of the peer at VHT160 and at VHT80 and lower.  They are not the same
+>>>> value.
+>>>>
+>>>> I cannot think of any standard way to get this information based on 
+>>>> VHT
+>>>> capabilities
+>>>> and such.  Currently, one could just assume VHT160 NSS is 1/2 of 
+>>>> the VHT80
+>>>> NSS,
+>>>> but that is unlikely to be true for all vendors.
+>>>>
+>>>> Any ideas?
+>>>>
+>>>> Thanks,
+>>>> Ben
+>>>>
+>>>
+>>>
+>>> -- 
+>>> Mit freundlichen Grüssen / Regards
+>>>
+>>> Sebastian Gottschall / CTO
+>>>
+>>> NewMedia-NET GmbH - DD-WRT
+>>> Firmensitz:  Berliner Ring 101, 64625 Bensheim
+>>> Registergericht: Amtsgericht Darmstadt, HRB 25473
+>>> Geschäftsführer: Peter Steinhäuser, Christian Scheele
+>>> http://www.dd-wrt.com
+>>> email: s.gottschall@dd-wrt.com
+>>> Tel.: +496251-582650 / Fax: +496251-5826565
+>>>
+>>>
+>>> _______________________________________________
+>>> ath10k mailing list
+>>> ath10k@lists.infradead.org
+>>> http://lists.infradead.org/mailman/listinfo/ath10k
+>>
+>
+>
 
-Including phy.h and phy_fixed.h into net/dsa.h causes phy*.h to be an
-unnecessary dependency for quite a large amount of the kernel.  There's
-very little which actually requires definitions from phy.h in net/dsa.h
-- the include itself only wants the declaration of a couple of
-structures and IFNAMSIZ.
 
-Add linux/if.h for IFNAMSIZ, declarations for the structures, phy.h to
-mv88e6xxx.h as it needs it for phy_interface_t, and remove both phy.h
-and phy_fixed.h from net/dsa.h.
-
-This patch reduces from around 800 files rebuilt to around 40 - even
-with ccache, the time difference is noticable.
-
-Tested-by: Vivien Didelot <vivien.didelot@savoirfairelinux.com>
-Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
----
- drivers/net/dsa/mv88e6xxx/mv88e6xxx.h | 1 +
- include/net/dsa.h                     | 5 +++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h b/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
-index 8a21800374f3..91c4dd25c2d3 100644
---- a/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
-+++ b/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
-@@ -15,6 +15,7 @@
- #include <linux/if_vlan.h>
- #include <linux/irq.h>
- #include <linux/gpio/consumer.h>
-+#include <linux/phy.h>
- 
- #ifndef UINT64_MAX
- #define UINT64_MAX		(u64)(~((u64)0))
-diff --git a/include/net/dsa.h b/include/net/dsa.h
-index b49b2004891e..4e13e695f025 100644
---- a/include/net/dsa.h
-+++ b/include/net/dsa.h
-@@ -11,17 +11,18 @@
- #ifndef __LINUX_NET_DSA_H
- #define __LINUX_NET_DSA_H
- 
-+#include <linux/if.h>
- #include <linux/if_ether.h>
- #include <linux/list.h>
- #include <linux/notifier.h>
- #include <linux/timer.h>
- #include <linux/workqueue.h>
- #include <linux/of.h>
--#include <linux/phy.h>
--#include <linux/phy_fixed.h>
- #include <linux/ethtool.h>
- 
- struct tc_action;
-+struct phy_device;
-+struct fixed_phy_status;
- 
- enum dsa_tag_protocol {
- 	DSA_TAG_PROTO_NONE = 0,
 -- 
-2.9.3
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
