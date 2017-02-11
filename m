@@ -1,142 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm.newmedia-net.de ([217.113.179.122]:56978 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752330AbdBNKTg (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33061 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753435AbdBKLyq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 05:19:36 -0500
-To: Ben Greear <greearb@candelatech.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
- <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
- <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
- <589F50B8.4020609@candelatech.com>
- <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
- <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com>
- <f6d4b239-03af-976b-0c97-e7a5858f00da@dd-wrt.com>
- <58A23D68.5070507@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <1ba6afb2-13a6-2eea-c5aa-bcc084b0b8bc@dd-wrt.com> (sfid-20170214_112235_539403_D4A68DAD)
-Date: Tue, 14 Feb 2017 11:19:30 +0100
-MIME-Version: 1.0
-In-Reply-To: <58A23D68.5070507@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: VHT 160Mhz and nss related config.
+        Sat, 11 Feb 2017 06:54:46 -0500
+Received: by mail-pg0-f68.google.com with SMTP id 194so5048633pgd.0
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Feb 2017 03:54:46 -0800 (PST)
+From: Aaryn Coutanche <aaryncoutanche@gmail.com>
+To: jes.sorensen@gmail.com
+Cc: Aaryn Coutanche <aaryncoutanche@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8xxxu: Add (0x2357 0x0107) to the tested devices list.
+Date: Sun, 12 Feb 2017 00:54:27 +1300
+Message-Id: <1486814067-9874-1-git-send-email-aaryncoutanche@gmail.com> (sfid-20170211_125455_802236_0735D6F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-now the test result. yes. it assocs with VHT160 SGI in my case. but 
-performance is as expected identical to VHT80
+From: Aaryn Coutanche <aaryncoutanche@gmail.com>
 
-Am 14.02.2017 um 00:12 schrieb Ben Greear:
-> On 02/13/2017 02:48 PM, Sebastian Gottschall wrote:
->> Am 13.02.2017 um 20:56 schrieb Ben Greear:
->>> On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
->>>> Am 11.02.2017 um 18:58 schrieb Ben Greear:
->>>>> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
->>>>>> On 10 February 2017 at 20:22, Sebastian Gottschall
->>>>>> <s.gottschall@dd-wrt.com> wrote:
->>>>>>> i really can't believe this. if this is true the  160 mhz mode 
->>>>>>> would not
->>>>>>> make any sense.
->>>>>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is 
->>>>>>> identical. so
->>>>>>> vht160 would not increase performance in any way
->>>>>>
->>>>>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
->>>>>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
->>>>>> transmit 2x2 rates to different MU-MIMO peers.
->>>>>>
->>>>>> That's the outstanding question I have - is it like, 2x2 MU only, or
->>>>>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, 
->>>>>> can you
->>>>>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
->>>>>> group each) all going at the same time?
->>>>>>
->>>>>> I'm .. not even sure how you're supposed to cleanly negotiate 
->>>>>> that you
->>>>>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
->>>>>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
->>>>>
->>>>> I think using the max-rx-rate logic might could imply this, but I 
->>>>> am not sure
->>>>> many drivers fill this out properly.
->>>>>
->>>>> Looks like a mess waiting to happen to me.
->>>>>
->>>>> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am 
->>>>> not certain you
->>>>> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
->>>>>
->>>>> So, from what I know currently, 80+80 is not that useful on the 
->>>>> 9984 NIC...
->>>> never tried 80+80 since i need to enhance the channel logic alot in 
->>>> my firmware code to handle it. would be great enough if vht160 
->>>> would work as expected and
->>>> i'm not sure right now if it really works, even if the interface 
->>>> initialized correctly it assocs only with vht80
->>>
->>> Looks like it is working with the hack I posted:
->>>
->>> Station 04:f0:21:2e:49:65 (on wlan2)
->>>     inactive time:    0 ms
->>>     rx bytes:    64902998
->>>     rx packets:    37918
->>>     tx bytes:    64760298
->>>     tx packets:    42239
->>>     tx retries:    0
->>>     tx failed:    0
->>>     signal:      -43 dBm
->>>     signal avg:    -42 dBm
->>>     tx bitrate:    1053.0 MBit/s VHT-MCS 6 160MHz VHT-NSS 2
->>>     rx bitrate:    1560.0 MBit/s VHT-MCS 8 160MHz short GI VHT-NSS 2
->>>     authorized:    yes
->>>     authenticated:    yes
->>>     preamble:    long
->>>     WMM/WME:    yes
->>>     MFP:        no
->>>     TDLS peer:    no
->>>     connected time:    156 seconds
->>>
->>> Thanks,
->>> Ben
->>>
->>>
->> the hack you posted crashes the driver for me. i also see that this 
->> patch is based on the CT ath10k source. it doesnt apply clean to 
->> ath10k. needed to merge it
->> manually
->
-> Ok, I'm in the middle of a bunch of changes to support VHT overrides 
-> to allow
-> disabling VHT160/80+80 in station mode, and I'll push all my changes 
-> to my
-> tree when I get that implemented and testing.
->
-> I've about given up on getting ath10k patches upstream, but I'll get 
-> these changes into
-> ath10k-ct in LEDE sometime...
->
-> If you want to post the splat, just possibly I'll have a quick idea of 
-> why it
-> is crashing.
->
-> Thanks,
-> Ben
->
->
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 3a86675..2ad2b3a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -6196,6 +6196,9 @@ static struct usb_device_id dev_table[] = {
+ 	.driver_info = (unsigned long)&rtl8723au_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x818b, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192eu_fops},
++/* Tested by Aaryn Coutanche */
++{USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0107, 0xff, 0xff, 0xff),
++	.driver_info = (unsigned long)&rtl8192eu_fops},
+ /* Tested by Myckel Habets */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0109, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192eu_fops},
 -- 
-Mit freundlichen Grüssen / Regards
+2.7.4
 
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Signed-off-by: Aaryn Coutanche <aaryncoutanche@gmail.com>
