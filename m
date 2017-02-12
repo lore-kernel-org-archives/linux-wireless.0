@@ -1,38 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43176 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751376AbdBJJld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 04:41:33 -0500
-Message-ID: <1486719690.26422.0.camel@sipsolutions.net> (sfid-20170210_104138_739868_22714888)
-Subject: Re: [PATCH v4 3/5] cfg80211: Accept multiple RSSI thresholds for CQM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 10 Feb 2017 10:41:30 +0100
-In-Reply-To: <CAOq732LLG0UwwdUAimhosjVS+P98tiY=MsGAPFFkbtH1PNj_+A@mail.gmail.com> (sfid-20170210_103947_316227_78333C46)
-References: <20170125114344.8179-1-andrew.zaborowski@intel.com>
-         <20170125114344.8179-3-andrew.zaborowski@intel.com>
-         <1486547933.24745.2.camel@sipsolutions.net>
-         <CAOq732KyMG26f7X4NiOdChyF3Qq=X9YgvCunecai+UrQAByByA@mail.gmail.com>
-         <1486557177.24745.8.camel@sipsolutions.net>
-         <CAOq732LLG0UwwdUAimhosjVS+P98tiY=MsGAPFFkbtH1PNj_+A@mail.gmail.com>
-         (sfid-20170210_103947_316227_78333C46)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:52042 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751226AbdBLQ2v (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Feb 2017 11:28:51 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
+References: <20170212132931.43510-1-nbd@nbd.name>
+        <87lgtb5t9h.fsf@alrua-karlstad>
+        <fbda67b4-7db6-984a-af50-610ec25d2fe0@nbd.name>
+Date: Sun, 12 Feb 2017 18:28:43 +0200
+In-Reply-To: <fbda67b4-7db6-984a-af50-610ec25d2fe0@nbd.name> (Felix Fietkau's
+        message of "Sun, 12 Feb 2017 16:54:17 +0100")
+Message-ID: <87d1entltw.fsf@kamboji.qca.qualcomm.com> (sfid-20170212_172901_649596_B54BA98D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Felix Fietkau <nbd@nbd.name> writes:
 
-> I sent a version with this logic but came up with values that would
-> still cause the continous events as in your example, specifically
-> with a hyst of 3 and the reported RSSI values jumping between -51 and
-> -47. This could be avoided by changing operators between "less than"
-> and "less or equal" but I eventually sent a version with the "sticky"
-> ranges you suggested, I think that is just as good.
+> On 2017-02-12 16:22, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Felix Fietkau <nbd@nbd.name> writes:
+>>=20
+>>> ath_tx_count_airtime is doing a lot of unnecessary work:
+>>>
+>>> - Redundant station lookup
+>>> - Redundant rcu_read_lock/unlock
+>>> - Useless memcpy of bf->rates
+>>> - Useless NULL check of bf->bf_mpdu
+>>> - Redundant lookup of the skb tid
+>>>
+>>> Additionally, it tries to look up the mac80211 queue index from the txq,
+>>> which fails if the frame was delivered via the power save queue.
 
-Ah, I was just wondering why you'd sent a new version, hadn't checked
-the difference yet :)
+What does this mean in practise, what's the user level impact?
 
-Thanks for the note.
+>>> This patch fixes all of these issues by passing down the right set of
+>>> pointers instead of doing extra work
+>>>
+>>> Cc: stable@vger.kernel.org
+>>> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling
+>>> between stations")
+>>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>>=20
+>> Not sure if there's anything for stable to do with this; don't think the
+>> airtime fairness code has gone into a release yet? Otherwise:
+>>=20
+>> Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+>
+> I added this, because I'm not sure this patch will make it to 4.10 in
+> time, since we're really close to a release. I assume this patch will
+> probably go into 4.11.
 
-johannes
+Yeah, to try to get a patch to 4.10 at this point needs to be a really
+high profile regression. That is if Linus doesn't release 4.10 today, of
+course.
+
+--=20
+Kalle Valo
