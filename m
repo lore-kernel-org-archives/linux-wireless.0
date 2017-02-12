@@ -1,148 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42320 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:41935 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753700AbdBNL2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 06:28:33 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, greearb@candelatech.com,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 3/4] ieee80211: add new VHT capability fields/parsing
-Date: Tue, 14 Feb 2017 12:28:26 +0100
-Message-Id: <20170214112827.28216-3-johannes@sipsolutions.net> (sfid-20170214_123003_071861_B32E46B9)
-In-Reply-To: <20170214112827.28216-1-johannes@sipsolutions.net>
-References: <20170214112827.28216-1-johannes@sipsolutions.net>
+        id S1751265AbdBLQci (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Feb 2017 11:32:38 -0500
+Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20170212132931.43510-1-nbd@nbd.name>
+ <87lgtb5t9h.fsf@alrua-karlstad>
+ <fbda67b4-7db6-984a-af50-610ec25d2fe0@nbd.name>
+ <87d1entltw.fsf@kamboji.qca.qualcomm.com>
+Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <61049ab3-a15e-b1cf-ca1d-4840a8aa35d9@nbd.name> (sfid-20170212_173242_310843_CF66521A)
+Date: Sun, 12 Feb 2017 17:32:35 +0100
+MIME-Version: 1.0
+In-Reply-To: <87d1entltw.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2017-02-12 17:28, Kalle Valo wrote:
+> Felix Fietkau <nbd@nbd.name> writes:
+> 
+>> On 2017-02-12 16:22, Toke Høiland-Jørgensen wrote:
+>>> Felix Fietkau <nbd@nbd.name> writes:
+>>> 
+>>>> ath_tx_count_airtime is doing a lot of unnecessary work:
+>>>>
+>>>> - Redundant station lookup
+>>>> - Redundant rcu_read_lock/unlock
+>>>> - Useless memcpy of bf->rates
+>>>> - Useless NULL check of bf->bf_mpdu
+>>>> - Redundant lookup of the skb tid
+>>>>
+>>>> Additionally, it tries to look up the mac80211 queue index from the txq,
+>>>> which fails if the frame was delivered via the power save queue.
+> 
+> What does this mean in practise, what's the user level impact?
+> 
+>>>> This patch fixes all of these issues by passing down the right set of
+>>>> pointers instead of doing extra work
+>>>>
+>>>> Cc: stable@vger.kernel.org
+>>>> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling
+>>>> between stations")
+>>>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>>> 
+>>> Not sure if there's anything for stable to do with this; don't think the
+>>> airtime fairness code has gone into a release yet? Otherwise:
+>>> 
+>>> Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>>
+>> I added this, because I'm not sure this patch will make it to 4.10 in
+>> time, since we're really close to a release. I assume this patch will
+>> probably go into 4.11.
+> 
+> Yeah, to try to get a patch to 4.10 at this point needs to be a really
+> high profile regression. That is if Linus doesn't release 4.10 today, of
+> course.
+The symptoms are kernel crashes at least when operating in AP mode.
+It's pretty severe, so getting it into 4.10 would be preferable.
 
-IEEE 802.11-2016 extended the VHT capability fields to allow
-indicating the number of spatial streams depending on the
-actually used bandwidth, add support for decoding this.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h | 81 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 79 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4a7200c6c9ea..eecae214c47a 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1457,13 +1457,16 @@ struct ieee80211_ht_operation {
-  *	STA can receive. Rate expressed in units of 1 Mbps.
-  *	If this field is 0 this value should not be used to
-  *	consider the highest RX data rate supported.
-- *	The top 3 bits of this field are reserved.
-+ *	The top 3 bits of this field indicate the Maximum NSTS,total
-+ *	(a beamformee capability.)
-  * @tx_mcs_map: TX MCS map 2 bits for each stream, total 8 streams
-  * @tx_highest: Indicates highest long GI VHT PPDU data rate
-  *	STA can transmit. Rate expressed in units of 1 Mbps.
-  *	If this field is 0 this value should not be used to
-  *	consider the highest TX data rate supported.
-- *	The top 3 bits of this field are reserved.
-+ *	The top 2 bits of this field are reserved, the
-+ *	3rd bit from the top indiciates VHT Extended NSS BW
-+ *	Capability.
-  */
- struct ieee80211_vht_mcs_info {
- 	__le16 rx_mcs_map;
-@@ -1472,6 +1475,11 @@ struct ieee80211_vht_mcs_info {
- 	__le16 tx_highest;
- } __packed;
- 
-+#define IEEE80211_VHT_MAX_NSTS_TOTAL_SHIFT	13
-+#define IEEE80211_VHT_MAX_NSTS_TOTAL_MASK	(7 << IEEE80211_VHT_MAX_NSTS_TOTAL_SHIFT)
-+
-+#define IEEE80211_VHT_EXT_NSS_BW_CAPABLE	(1 << 13)
-+
- /**
-  * enum ieee80211_vht_mcs_support - VHT MCS support definitions
-  * @IEEE80211_VHT_MCS_SUPPORT_0_7: MCSes 0-7 are supported for the
-@@ -1547,6 +1555,7 @@ struct ieee80211_vht_operation {
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ		0x00000004
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ	0x00000008
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK			0x0000000C
-+#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT			2
- #define IEEE80211_VHT_CAP_RXLDPC				0x00000010
- #define IEEE80211_VHT_CAP_SHORT_GI_80				0x00000020
- #define IEEE80211_VHT_CAP_SHORT_GI_160				0x00000040
-@@ -1575,6 +1584,74 @@ struct ieee80211_vht_operation {
- #define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB	0x0c000000
- #define IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN			0x10000000
- #define IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN			0x20000000
-+#define IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT			30
-+#define IEEE80211_VHT_CAP_EXT_NSS_BW_MASK			0xc0000000
-+
-+static inline int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
-+					    enum ieee80211_vht_chanwidth bw)
-+{
-+	unsigned long w;
-+	int max_vht_nss;
-+	int ext_nss_bw;
-+	int supp_width;
-+
-+	if (cap->supp_mcs.rx_mcs_map == 0xffff)
-+		return 0;
-+
-+	w = cap->supp_mcs.rx_mcs_map ^ 0xffff;
-+	max_vht_nss = DIV_ROUND_UP(fls(w) + 1, 2);
-+
-+	if (!(cap->supp_mcs.tx_mcs_map & IEEE80211_VHT_EXT_NSS_BW_CAPABLE))
-+		return max_vht_nss;
-+
-+	ext_nss_bw = (le32_to_cpu(cap->vht_cap_info) &
-+					IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
-+			>> IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT;
-+	supp_width = (le32_to_cpu(cap->vht_cap_info) &
-+					IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)
-+			>> IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
-+
-+	/*
-+	 * Cover all the special cases according to IEEE 802.11-2016 Table 9-250.
-+	 * All other cases are either factor of 1 or not valid/supported.
-+	 */
-+	switch (bw) {
-+	case IEEE80211_VHT_CHANWIDTH_USE_HT:
-+	case IEEE80211_VHT_CHANWIDTH_80MHZ:
-+		if ((supp_width == 1 || supp_width == 2) &&
-+		    ext_nss_bw == 3)
-+			return 2 * max_vht_nss;
-+		break;
-+	case IEEE80211_VHT_CHANWIDTH_160MHZ:
-+		if (supp_width == 0 &&
-+		    (ext_nss_bw == 1 || ext_nss_bw == 2))
-+			return DIV_ROUND_UP(max_vht_nss, 2);
-+		if (supp_width == 0 &&
-+		    ext_nss_bw == 3)
-+			return DIV_ROUND_UP(3 * max_vht_nss, 4);
-+		if (supp_width == 1 &&
-+		    ext_nss_bw == 3)
-+			return 2 * max_vht_nss;
-+		break;
-+	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
-+		if (supp_width == 0 &&
-+		    ext_nss_bw == 2)
-+			return DIV_ROUND_UP(max_vht_nss, 2);
-+		if (supp_width == 0 &&
-+		    ext_nss_bw == 3)
-+			return DIV_ROUND_UP(3 * max_vht_nss, 4);
-+		if (supp_width == 1 &&
-+		    ext_nss_bw == 1)
-+			return DIV_ROUND_UP(max_vht_nss, 2);
-+		if (supp_width == 1 &&
-+		    ext_nss_bw == 2)
-+			return DIV_ROUND_UP(3 * max_vht_nss, 4);
-+		break;
-+	}
-+
-+	/* not covered or invalid combination received */
-+	return max_vht_nss;
-+}
- 
- /* Authentication algorithms */
- #define WLAN_AUTH_OPEN 0
--- 
-2.9.3
+- Felix
