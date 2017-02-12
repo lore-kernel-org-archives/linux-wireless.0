@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754812AbdBHPYy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 10:24:54 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:52599 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751225AbdBLPWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Feb 2017 10:22:08 -0500
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
+References: <20170212132931.43510-1-nbd@nbd.name>
+Date: Sun, 12 Feb 2017 16:22:02 +0100
+In-Reply-To: <20170212132931.43510-1-nbd@nbd.name> (Felix Fietkau's message of
+        "Sun, 12 Feb 2017 14:29:31 +0100")
+Message-ID: <87lgtb5t9h.fsf@alrua-karlstad> (sfid-20170212_162211_939797_FB82A50C)
 MIME-Version: 1.0
-Subject: Re: [V3,1/9] brcmfmac: merge two brcmf_err macros into one
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170202213321.11591-1-zajec5@gmail.com>
-References: <20170202213321.11591-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20170208152453.E79F660A1C@smtp.codeaurora.org> (sfid-20170208_162636_626398_22CFE2B3)
-Date: Wed,  8 Feb 2017 15:24:53 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> This allows simplifying the code by adding a simple IS_ENABLED check for
-> CONFIG_BRCMDB symbol.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Felix Fietkau <nbd@nbd.name> writes:
 
-3 patches applied to wireless-drivers-next.git, thanks.
+> ath_tx_count_airtime is doing a lot of unnecessary work:
+>
+> - Redundant station lookup
+> - Redundant rcu_read_lock/unlock
+> - Useless memcpy of bf->rates
+> - Useless NULL check of bf->bf_mpdu
+> - Redundant lookup of the skb tid
+>
+> Additionally, it tries to look up the mac80211 queue index from the txq,
+> which fails if the frame was delivered via the power save queue.
+>
+> This patch fixes all of these issues by passing down the right set of
+> pointers instead of doing extra work
+>
+> Cc: stable@vger.kernel.org
+> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling betwee=
+n stations")
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-9587a01a7ead brcmfmac: merge two brcmf_err macros into one
-087fa712a006 brcmfmac: switch to C function (__brcmf_err) for printing errors
-d0630555650a brcmfmac: merge two remaining brcmf_err macros
+Not sure if there's anything for stable to do with this; don't think the
+airtime fairness code has gone into a release yet? Otherwise:
 
--- 
-https://patchwork.kernel.org/patch/9553249/
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-Toke
