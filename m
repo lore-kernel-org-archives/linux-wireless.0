@@ -1,136 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37704 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753929AbdBPKSB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2017 05:18:01 -0500
-Received: by mail-wm0-f42.google.com with SMTP id v77so11310923wmv.0
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2017 02:18:00 -0800 (PST)
-Subject: Re: [PATCH V2 2/2] brcmfmac: don't warn user about NVRAM if fallback
- to platform one succeeds
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <20170215222948.21030-1-zajec5@gmail.com>
- <20170216072636.7128-1-zajec5@gmail.com>
- <20170216072636.7128-2-zajec5@gmail.com>
- <d2b1cb64-a829-b433-2370-f2c47b9d0a5d@broadcom.com>
- <894daa616fc3bbd875e075b3096dba8e@milecki.pl>
- <88182ec9-3344-7468-d3c3-33d9ffa532e2@broadcom.com>
- <31df911dc857c59b0d36e586f9542113@milecki.pl>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <9801884a-4d9e-39b0-1932-adefff1f186c@broadcom.com> (sfid-20170216_111841_385867_5743494B)
-Date: Thu, 16 Feb 2017 11:17:57 +0100
-MIME-Version: 1.0
-In-Reply-To: <31df911dc857c59b0d36e586f9542113@milecki.pl>
-Content-Type: text/plain; charset=utf-8
+Received: from nbd.name ([46.4.11.11]:38155 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751206AbdBLN3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Feb 2017 08:29:43 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, toke@toke.dk
+Subject: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
+Date: Sun, 12 Feb 2017 14:29:31 +0100
+Message-Id: <20170212132931.43510-1-nbd@nbd.name> (sfid-20170212_143215_125866_0B3F8C18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16-2-2017 10:32, Rafał Miłecki wrote:
-> On 2017-02-16 10:18, Arend Van Spriel wrote:
->> On 16-2-2017 10:04, Rafał Miłecki wrote:
->>> On 2017-02-16 09:38, Arend Van Spriel wrote:
->>>> On 16-2-2017 8:26, Rafał Miłecki wrote:
->>>>> From: Rafał Miłecki <rafal@milecki.pl>
->>>>>
->>>>> Failing to load NVRAM file isn't critical if we manage to get platform
->>>>> one in the fallback path. It means warnings like:
->>>>> [   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for
->>>>> brcm/brcmfmac43602-pcie.txt failed with error -2
->>>>> are unnecessary & disturbing for people with platform NVRAM. This is
->>>>> very common case for Broadcom home routers.
->>>>>
->>>>> So instead of printing warning immediately with the firmware subsystem
->>>>> let's first try our fallback code. If that fails as well, then it's a
->>>>> right moment to print an error.
->>>>>
->>>>> This should reduce amount of false reports from users seeing this
->>>>> warning while having wireless working perfectly fine.
->>>>
->>>> There are of course people with issues who take this warning as a straw
->>>> to clutch.
->>>>
->>>>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>>>> ---
->>>>> V2: Update commit message as it wasn't clear enough (thanks Andy) &
->>>>> add extra
->>>>>     messages to the firmware.c.
->>>>>
->>>>> Kalle, Arend: this patch is strictly related to the bigger 1/2. Could
->>>>> you ack
->>>>> this change as I expect this patchset to be picked by Ming, Luis or
->>>>> Greg?
->>>>> ---
->>>>>  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c  | 16
->>>>> +++++++++++-----
->>>>>  1 file changed, 11 insertions(+), 5 deletions(-)
->>>>>
->>>>> diff --git
->>>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>>> index c7c1e9906500..510a76d99eee 100644
->>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>>> @@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const
->>>>> struct firmware *fw, void *ctx)
->>>>>          raw_nvram = false;
->>>>>      } else {
->>>>>          data = bcm47xx_nvram_get_contents(&data_len);
->>>>> -        if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->>>>> -            goto fail;
->>>>> +        if (!data) {
->>>>> +            brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
->>>>> +            if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
->>>>> +                brcmf_err("Loading NVRAM from %s and using platform
->>>>> one both failed\n",
->>>>> +                      fwctx->nvram_name);
->>>>> +                goto fail;
->>>>> +            }
->>>>> +        }
->>>>>          raw_nvram = true;
->>>>>      }
->>>>>
->>>>> @@ -504,9 +510,9 @@ static void brcmf_fw_request_code_done(const
->>>>> struct firmware *fw, void *ctx)
->>>>>          return;
->>>>>      }
->>>>>      fwctx->code = fw;
->>>>> -    ret = request_firmware_nowait(THIS_MODULE, true,
->>>>> fwctx->nvram_name,
->>>>> -                      fwctx->dev, GFP_KERNEL, fwctx,
->>>>> -                      brcmf_fw_request_nvram_done);
->>>>> +    ret = request_firmware_async(THIS_MODULE, FW_OPT_NO_WARN,
->>>>> +                     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
->>>>> +                     fwctx, brcmf_fw_request_nvram_done);
->>>>
->>>> You changed the behaviour, because of your change in patch 1/2:
->>>>
->>>> -    fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
->>>> -        (uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
->>>> +    fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
->>>>
->>>> So: (FW_OPT_NOWAIT | FW_OPT_UEVENT) vs (FW_OPT_NOWAIT | FW_OPT_NO_WARN)
->>>
->>> Sorry, I didn't realize brcmfmac needs FW_OPT_UEVENT. I'll re-add it in
->>> V3, just
->>> let me wait to see if there will be more comments.
->>
->> To be honest whether or not FW_OPT_UEVENT is needed should not be
->> something a driver needs to concern about. It is really a system
->> configuration issue if you ask me. So the only thing we could do is to
->> have it just in case.
-> 
-> Drivers always got a choice (see bool uevent) so I didn't want to change
-> it.
+ath_tx_count_airtime is doing a lot of unnecessary work:
 
-Sure, I know. I just wanted to vent an opinion for the firmware_class
-maintainers.
+- Redundant station lookup
+- Redundant rcu_read_lock/unlock
+- Useless memcpy of bf->rates
+- Useless NULL check of bf->bf_mpdu
+- Redundant lookup of the skb tid
 
-Regards,
-Arend
+Additionally, it tries to look up the mac80211 queue index from the txq,
+which fails if the frame was delivered via the power save queue.
+
+This patch fixes all of these issues by passing down the right set of
+pointers instead of doing extra work
+
+Cc: stable@vger.kernel.org
+Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling between stations")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 52 +++++++++++------------------------
+ 1 file changed, 16 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 8f9a87915ba9..30efe79e9d89 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -723,51 +723,31 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
+     return bf_isampdu(bf) && !(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE);
+ }
+ 
+-static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_txq *txq,
+-				 struct ath_buf *bf, struct ath_tx_status *ts)
++static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_node *an,
++				 struct ath_atx_tid *tid, struct ath_buf *bf,
++				 struct ath_tx_status *ts)
+ {
+-	struct ath_node *an;
+-	struct ath_acq *acq = &sc->cur_chan->acq[txq->mac80211_qnum];
+-	struct sk_buff *skb;
+-	struct ieee80211_hdr *hdr;
+-	struct ieee80211_hw *hw = sc->hw;
+-	struct ieee80211_tx_rate rates[4];
+-	struct ieee80211_sta *sta;
+-	int i;
++	struct ath_txq *txq = tid->txq;
+ 	u32 airtime = 0;
+-
+-	skb = bf->bf_mpdu;
+-	if(!skb)
+-		return;
+-
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	memcpy(rates, bf->rates, sizeof(rates));
+-
+-	rcu_read_lock();
+-
+-	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
+-	if(!sta)
+-		goto exit;
+-
+-
+-	an = (struct ath_node *) sta->drv_priv;
++	int i;
+ 
+ 	airtime += ts->duration * (ts->ts_longretry + 1);
++	for(i = 0; i < ts->ts_rateindex; i++) {
++		int rate_dur = ath9k_hw_get_duration(sc->sc_ah, bf->bf_desc, i);
++		airtime += rate_dur * bf->rates[i].count;
++	}
+ 
+-	for(i=0; i < ts->ts_rateindex; i++)
+-		airtime += ath9k_hw_get_duration(sc->sc_ah, bf->bf_desc, i) * rates[i].count;
++	if (sc->airtime_flags & AIRTIME_USE_TX) {
++		int q = txq->mac80211_qnum;
++		struct ath_acq *acq = &sc->cur_chan->acq[q];
+ 
+-	if (!!(sc->airtime_flags & AIRTIME_USE_TX)) {
+ 		spin_lock_bh(&acq->lock);
+-		an->airtime_deficit[txq->mac80211_qnum] -= airtime;
+-		if (an->airtime_deficit[txq->mac80211_qnum] <= 0)
+-			__ath_tx_queue_tid(sc, ath_get_skb_tid(sc, an, skb));
++		an->airtime_deficit[q] -= airtime;
++		if (an->airtime_deficit[q] <= 0)
++			__ath_tx_queue_tid(sc, tid);
+ 		spin_unlock_bh(&acq->lock);
+ 	}
+ 	ath_debug_airtime(sc, an, 0, airtime);
+-
+-exit:
+-	rcu_read_unlock();
+ }
+ 
+ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+@@ -791,13 +771,13 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	ts->duration = ath9k_hw_get_duration(sc->sc_ah, bf->bf_desc,
+ 					     ts->ts_rateindex);
+-	ath_tx_count_airtime(sc, txq, bf, ts);
+ 
+ 	hdr = (struct ieee80211_hdr *) bf->bf_mpdu->data;
+ 	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
+ 	if (sta) {
+ 		struct ath_node *an = (struct ath_node *)sta->drv_priv;
+ 		tid = ath_get_skb_tid(sc, an, bf->bf_mpdu);
++		ath_tx_count_airtime(sc, an, tid, bf, ts);
+ 		if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
+ 			tid->clear_ps_filter = true;
+ 	}
+-- 
+2.11.0
