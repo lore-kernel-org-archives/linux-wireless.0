@@ -1,98 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48408 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753058AbdBNMvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 07:51:15 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH 08/10] rt2800: status based rate flags for nomatch case
-Date: Tue, 14 Feb 2017 13:46:06 +0100
-Message-Id: <1487076368-7020-9-git-send-email-sgruszka@redhat.com> (sfid-20170214_135217_592528_A1E38CF9)
-In-Reply-To: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
-References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+Received: from nm.newmedia-net.de ([217.113.179.122]:55599 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751153AbdBLK4L (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Feb 2017 05:56:11 -0500
+To: Ben Greear <greearb@candelatech.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
+ <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
+ <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
+ <589F50B8.4020609@candelatech.com>
+ <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
+ <02b7f70a-7da2-f2e4-8904-bdffc3ca90a1@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <159ba156-cf2d-db0d-a6af-2557b9bfa6b6@dd-wrt.com> (sfid-20170212_115633_978834_010A953E)
+Date: Sun, 12 Feb 2017 11:56:03 +0100
+MIME-Version: 1.0
+In-Reply-To: <02b7f70a-7da2-f2e4-8904-bdffc3ca90a1@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: VHT 160Mhz and nss related config.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We use skb_desc->tx_rate_flags from entry as rate[].flags even if
-skb does not match status. Patch corrects flags and also fixes
-mcs for legacy rates.
+Am 11.02.2017 um 20:38 schrieb Ben Greear:
+> On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
+>> Am 11.02.2017 um 18:58 schrieb Ben Greear:
+>>> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
+>>>> On 10 February 2017 at 20:22, Sebastian Gottschall
+>>>> <s.gottschall@dd-wrt.com> wrote:
+>>>>> i really can't believe this. if this is true the  160 mhz mode 
+>>>>> would not
+>>>>> make any sense.
+>>>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is 
+>>>>> identical. so
+>>>>> vht160 would not increase performance in any way
+>>>>
+>>>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
+>>>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
+>>>> transmit 2x2 rates to different MU-MIMO peers.
+>>>>
+>>>> That's the outstanding question I have - is it like, 2x2 MU only, or
+>>>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
+>>>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
+>>>> group each) all going at the same time?
+>>>>
+>>>> I'm .. not even sure how you're supposed to cleanly negotiate that you
+>>>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
+>>>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
+>>>
+>>> I think using the max-rx-rate logic might could imply this, but I am 
+>>> not sure
+>>> many drivers fill this out properly.
+>>>
+>>> Looks like a mess waiting to happen to me.
+>>>
+>>> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not 
+>>> certain you
+>>> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
+>>>
+>>> So, from what I know currently, 80+80 is not that useful on the 9984 
+>>> NIC...
+>> never tried 80+80 since i need to enhance the channel logic alot in 
+>> my firmware code to handle it. would be great enough if vht160 would 
+>> work as expected and
+>> i'm not sure right now if it really works, even if the interface 
+>> initialized correctly it assocs only with vht80
+>
+> 160Mhz is really implemented as 80+80 internally it seems, so what I 
+> meant is that
+> 160Mhz or 80+80 both have the 2x2 restriction.
+since i have a older fw source. can you give me a hint where you found a 
+indication that its just 2x2?
+>
+> Stock ath10k driver doesn't set the rxnss_override, so the chip will 
+> always be forced
+> to send 1x1 at 160Mhz, so even if it associates and works at all, it 
+> will probably not put
+> many 160Mhz frames on air since the rate-ctrl should choose 3x3 or 4x4 
+> 80Mhz as faster speeds.
+sounds logic
+>
+> Thanks,
+> Ben
+>
+>
 
-rt2800_rate_from_status() is based on Felix's mt76
-mt76x2_mac_process_tx_rate() function.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800.h    |  2 ++
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 35 +++++++++++++++++++++++++-
- 2 files changed, 36 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 0e7051d..480b086 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -1760,6 +1760,8 @@
- #define TX_STA_FIFO_WCID		FIELD32(0x0000ff00)
- #define TX_STA_FIFO_SUCCESS_RATE	FIELD32(0xffff0000)
- #define TX_STA_FIFO_MCS			FIELD32(0x007f0000)
-+#define TX_STA_FIFO_BW			FIELD32(0x00800000)
-+#define TX_STA_FIFO_SGI			FIELD32(0x01000000)
- #define TX_STA_FIFO_PHYMODE		FIELD32(0xc0000000)
- 
- /*
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 8a76b27..b806ff1 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -852,6 +852,39 @@ void rt2800_process_rxwi(struct queue_entry *entry,
- }
- EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
- 
-+static void rt2800_rate_from_status(struct skb_frame_desc *skbdesc,
-+				    u32 status, enum nl80211_band band)
-+{
-+	u8 flags = 0;
-+	u8 idx = rt2x00_get_field32(status, TX_STA_FIFO_MCS);
-+
-+	switch (rt2x00_get_field32(status, TX_STA_FIFO_PHYMODE)) {
-+	case RATE_MODE_HT_GREENFIELD:
-+		flags |= IEEE80211_TX_RC_GREEN_FIELD;
-+		/* fall through */
-+	case RATE_MODE_HT_MIX:
-+		flags |= IEEE80211_TX_RC_MCS;
-+		break;
-+	case RATE_MODE_OFDM:
-+		if (band == NL80211_BAND_2GHZ)
-+			idx += 4;
-+		break;
-+	case RATE_MODE_CCK:
-+		if (idx >= 8)
-+			idx -= 8;
-+		break;
-+	}
-+
-+	if (rt2x00_get_field32(status, TX_STA_FIFO_BW))
-+		flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+
-+	if (rt2x00_get_field32(status, TX_STA_FIFO_SGI))
-+		flags |= IEEE80211_TX_RC_SHORT_GI;
-+
-+	skbdesc->tx_rate_idx = idx;
-+	skbdesc->tx_rate_flags = flags;
-+}
-+
- void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
- 			 bool match)
- {
-@@ -898,7 +931,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
- 	 * and provide retry count.
- 	 */
- 	if (unlikely((aggr == 1 && ampdu == 0 && real_mcs != mcs)) || !match) {
--		skbdesc->tx_rate_idx = real_mcs;
-+		rt2800_rate_from_status(skbdesc, status, rt2x00dev->curr_band);
- 		mcs = real_mcs;
- 	}
- 
 -- 
-1.8.3.1
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
