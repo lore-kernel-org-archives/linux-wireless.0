@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f50.google.com ([209.85.213.50]:34776 "EHLO
-        mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750837AbdBUGzm (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:34430 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750968AbdBLAqP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 01:55:42 -0500
-Received: by mail-vk0-f50.google.com with SMTP id r136so74215180vke.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 22:55:41 -0800 (PST)
-To: linux-wireless@vger.kernel.org,
-        OpenWrt Development List <openwrt-devel@lists.openwrt.org>
-From: Xuebing Wang <xbing6@gmail.com>
-Subject: [openwrt-devel] [linux-wireless] 802.11s mesh network can not recover
- after connectivity goes low and back up
-Message-ID: <5272d739-1ac2-a892-9b52-889fde2861c4@gmail.com> (sfid-20170221_075738_668354_CD21CB46)
-Date: Tue, 21 Feb 2017 14:55:37 +0800
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sat, 11 Feb 2017 19:46:15 -0500
+Received: by mail-ot0-f194.google.com with SMTP id 73so7463528otj.1
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Feb 2017 16:46:15 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH 0/3] rtlwifi: btcoexist: Fix if == else warnings
+Date: Sat, 11 Feb 2017 18:46:02 -0600
+Message-Id: <20170212004605.1308-1-Larry.Finger@lwfinger.net> (sfid-20170212_014627_744930_CA0EE6D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Community,
+The 0-DAY kernel test infrastructure reports several warnings where the
+code in an if block is exactly the same as that of the else block.
+These instances are simplified.
 
-I am using several routers (Atheros AR9331 + OpenWRT) to build a 802.11s 
-mesh network. I am having an issue.
--  Linux kernel: 3.18.29
--  OpenWRT version / branch: chaos_calmer
--  Hardware platform: AR9331 with ath9k driver.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Julia Lawall <julia.lawall@lip6.fr>
 
-Description of the issue:
--  When connectivity of a mesh node is low and connection to other nodes 
-is lost. After connectivity is back up again, ping other nodes won't get 
-this node to recover to connect to its peers.
--  Test setup: most routers are in one room, with one specific router in 
-another room to simulate low connectivity.
--  I use 'iw wlan0 set txpower limit 0' to simulate low connectivity.
--  It's not easy to reproduce, occurrence rate is low.
--  I sometimes put a laptop to the isolated router and "ssh into this 
-laptop" to generate some WiFi traffic (possible collisions).
+Larry Finger (3):
+  rtlwifi: btcoexist: Fix if == else warnings in halbtc8821a2ant.c
+  rtlwifi: btcoexist: Fix if == else warnings in halbtc8821a1ant.c
+  rtlwifi: btcoexist: Fix if == else warnings in halbtc8723b1ant.c
 
-Does anyone see the similar issue? Thanks.
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  24 +--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  18 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 185 +++------------------
+ 3 files changed, 31 insertions(+), 196 deletions(-)
 
-xuebing wang
+-- 
+2.10.2
