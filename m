@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37604 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:42220 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752540AbdBUOra (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:47:30 -0500
-Message-ID: <1487688447.15350.4.camel@sipsolutions.net> (sfid-20170221_154733_396618_1C023A7D)
-Subject: Re: [RFC v2 1/2] cfg80211: support 4-way handshake offloading for
- WPA/WPA2-PSK
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-Date: Tue, 21 Feb 2017 15:47:27 +0100
-In-Reply-To: <1487688369.15350.3.camel@sipsolutions.net> (sfid-20170221_154616_216812_DC7B7832)
-References: <20170221123758.5339-1-johannes@sipsolutions.net>
-         <20170221144335.GA17601@w1.fi> <1487688369.15350.3.camel@sipsolutions.net>
-         (sfid-20170221_154616_216812_DC7B7832)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751261AbdBLQka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Feb 2017 11:40:30 -0500
+Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
+References: <20170212132931.43510-1-nbd@nbd.name>
+ <87lgtb5t9h.fsf@alrua-karlstad>
+ <fbda67b4-7db6-984a-af50-610ec25d2fe0@nbd.name>
+ <87d1entltw.fsf@kamboji.qca.qualcomm.com>
+ <61049ab3-a15e-b1cf-ca1d-4840a8aa35d9@nbd.name>
+ <87efz35pt4.fsf@alrua-karlstad>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <e8a1dd5f-79a2-28b4-6cc7-fc1b28a6f327@nbd.name> (sfid-20170212_174033_148136_53E102D8)
+Date: Sun, 12 Feb 2017 17:40:27 +0100
+MIME-Version: 1.0
+In-Reply-To: <87efz35pt4.fsf@alrua-karlstad>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> The .len verifies that it's at least that long. We're thus ignoring
-> additional bytes in the PSK case if they're present, which I suppose
-> we should fix by checking the exact length in the code separately.
+On 2017-02-12 17:36, Toke Høiland-Jørgensen wrote:
+> Felix Fietkau <nbd@nbd.name> writes:
 > 
-IOW, I'll add this:
+>> On 2017-02-12 17:28, Kalle Valo wrote:
+>>> Felix Fietkau <nbd@nbd.name> writes:
+>>> 
+>>>> On 2017-02-12 16:22, Toke Høiland-Jørgensen wrote:
+>>>>> Felix Fietkau <nbd@nbd.name> writes:
+>>>>> 
+>>>>>> ath_tx_count_airtime is doing a lot of unnecessary work:
+>>>>>>
+>>>>>> - Redundant station lookup
+>>>>>> - Redundant rcu_read_lock/unlock
+>>>>>> - Useless memcpy of bf->rates
+>>>>>> - Useless NULL check of bf->bf_mpdu
+>>>>>> - Redundant lookup of the skb tid
+>>>>>>
+>>>>>> Additionally, it tries to look up the mac80211 queue index from the txq,
+>>>>>> which fails if the frame was delivered via the power save queue.
+>>> 
+>>> What does this mean in practise, what's the user level impact?
+>>> 
+>>>>>> This patch fixes all of these issues by passing down the right set of
+>>>>>> pointers instead of doing extra work
+>>>>>>
+>>>>>> Cc: stable@vger.kernel.org
+>>>>>> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling
+>>>>>> between stations")
+>>>>>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>>>>> 
+>>>>> Not sure if there's anything for stable to do with this; don't think the
+>>>>> airtime fairness code has gone into a release yet? Otherwise:
+>>>>> 
+>>>>> Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>>>>
+>>>> I added this, because I'm not sure this patch will make it to 4.10 in
+>>>> time, since we're really close to a release. I assume this patch will
+>>>> probably go into 4.11.
+>>> 
+>>> Yeah, to try to get a patch to 4.10 at this point needs to be a really
+>>> high profile regression. That is if Linus doesn't release 4.10 today, of
+>>> course.
+>> The symptoms are kernel crashes at least when operating in AP mode.
+>> It's pretty severe, so getting it into 4.10 would be preferable.
+> 
+> I'm confused now. Wasn't the airtime fairness patch queued for 4.11?
+I'll check again, maybe I got the git-describe output wrong.
 
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8044,6 +8044,8 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 		if (!wiphy_ext_feature_isset(&rdev->wiphy,
- 					     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK))
- 			return -EINVAL;
-+		if (nla_len(info->attrs[NL80211_ATTR_PMK]) != WLAN_PMK_LEN)
-+			return -EINVAL;
- 		settings->psk = nla_data(info->attrs[NL80211_ATTR_PMK]);
- 	}
- 
-
-johannes
+- Felix
