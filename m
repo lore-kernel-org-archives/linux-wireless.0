@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:62610 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933462AbdBQMti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Feb 2017 07:49:38 -0500
-Date: Fri, 17 Feb 2017 20:49:33 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Sasha Levin <alexander.levin@verizon.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [linux-stable] 4fc2942b6e kernel BUG at
- kernel/time/hrtimer.c:109!
-Message-ID: <20170217124933.bfvyhc4tkzkbwhz5@wfg-t540p.sh.intel.com> (sfid-20170217_134941_399704_703F8777)
-References: <20170217052607.glbumukvoz4pilvt@wfg-t540p.sh.intel.com>
- <alpine.DEB.2.20.1702171014430.3536@nanos>
- <0f58a1d0-a2e6-9430-7883-68e986ccb4c0@arm.com>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:38574 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751313AbdBMT1M (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Feb 2017 14:27:12 -0500
+Received: by mail-wm0-f50.google.com with SMTP id r141so102337452wmg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2017 11:27:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <0f58a1d0-a2e6-9430-7883-68e986ccb4c0@arm.com>
+In-Reply-To: <d53a8fac-b4e0-2fb2-c1e1-c537a2c5e8aa@candelatech.com>
+References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
+ <1486969571.5142.3.camel@sipsolutions.net> <d53a8fac-b4e0-2fb2-c1e1-c537a2c5e8aa@candelatech.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Mon, 13 Feb 2017 11:27:10 -0800
+Message-ID: <CAJ-Vmo=F22na+nGpbsBjnHfWKG5EGJXM+BQoee_jsZL7y4xLTw@mail.gmail.com> (sfid-20170213_202716_503475_B97FE56B)
+Subject: Re: VHT 160Mhz and nss related config.
+To: Ben Greear <greearb@candelatech.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 17, 2017 at 10:09:06AM +0000, Marc Zyngier wrote:
->On 17/02/17 09:28, Thomas Gleixner wrote:
->> On Fri, 17 Feb 2017, kernel test robot wrote:
+.. or give us a legit way to acquire the 2016 spec? :)
+
+Curious implementers want to know!
+
+
+
+-a
+
+On 13 February 2017 at 11:21, Ben Greear <greearb@candelatech.com> wrote:
+> On 02/12/2017 11:06 PM, Johannes Berg wrote:
 >>
->>> Hi Marc,
+>> On Fri, 2017-02-10 at 14:58 -0800, Ben Greear wrote:
 >>>
->>> We find this oops in linux-4.4.y. The gcc-6 compiled mainline kernel is fine.
+>>> So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4
+>>> MIMO at VHT80, but
+>>> it can do only 2x2 MIMO at VHT160/80+80.
+>>>
+>>> When configuring a peer, we need to tell the firmware the number of
+>>> spatial streams
+>>> of the peer at VHT160 and at VHT80 and lower.  They are not the same
+>>> value.
+>>>
+>>> I cannot think of any standard way to get this information based on
+>>> VHT capabilities and such.  Currently, one could just assume VHT160
+>>> NSS is 1/2 of the VHT80 NSS, but that is unlikely to be true for all
+>>> vendors.
+>>
+>>
+>> This was recently added to the VHT capabilities in the spec, see Table
+>> 9-250 in 802.11-2016.
+>>
+>> johannes
+>>
 >
->The last bit is worrying, as mainline has the exact same bug. Has it
->been tested the same way?
-
-Nope, mainline is not tested the same way because gcc-4.6 cannot build
-a mainline kernel due to gcc-plugin related build errors.
-
-Thanks,
-Fengguang
+> I don't have that spec...maybe you could post a patch that adds that flag
+> and/or other fields to the appropriate header files?  I can attempt to
+> add support to ath10k after that...
+>
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
