@@ -1,85 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:45149 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751217AbdBLSNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Feb 2017 13:13:47 -0500
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
-References: <20170212132931.43510-1-nbd@nbd.name>
-        <87lgtb5t9h.fsf@alrua-karlstad>
-        <fbda67b4-7db6-984a-af50-610ec25d2fe0@nbd.name>
-        <87d1entltw.fsf@kamboji.qca.qualcomm.com>
-        <61049ab3-a15e-b1cf-ca1d-4840a8aa35d9@nbd.name>
-        <87efz35pt4.fsf@alrua-karlstad>
-        <e8a1dd5f-79a2-28b4-6cc7-fc1b28a6f327@nbd.name>
-Date: Sun, 12 Feb 2017 19:13:41 +0100
-In-Reply-To: <e8a1dd5f-79a2-28b4-6cc7-fc1b28a6f327@nbd.name> (Felix Fietkau's
-        message of "Sun, 12 Feb 2017 17:40:27 +0100")
-Message-ID: <87a89r5lbe.fsf@alrua-karlstad> (sfid-20170212_191357_297200_0DEBC290)
+Received: from nm.newmedia-net.de ([217.113.179.122]:46403 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752199AbdBMVTf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Feb 2017 16:19:35 -0500
+To: Ben Greear <greearb@candelatech.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
+ <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
+ <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
+ <589F50B8.4020609@candelatech.com>
+ <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
+ <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <e9458be2-e3bd-1b40-b690-7c96702b25d7@dd-wrt.com> (sfid-20170213_221940_717225_40002E89)
+Date: Mon, 13 Feb 2017 22:19:27 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: VHT 160Mhz and nss related config.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+Am 13.02.2017 um 20:56 schrieb Ben Greear:
+> On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
+>> Am 11.02.2017 um 18:58 schrieb Ben Greear:
+>>> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
+>>>> On 10 February 2017 at 20:22, Sebastian Gottschall
+>>>> <s.gottschall@dd-wrt.com> wrote:
+>>>>> i really can't believe this. if this is true the  160 mhz mode 
+>>>>> would not
+>>>>> make any sense.
+>>>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is 
+>>>>> identical. so
+>>>>> vht160 would not increase performance in any way
+>>>>
+>>>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
+>>>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
+>>>> transmit 2x2 rates to different MU-MIMO peers.
+>>>>
+>>>> That's the outstanding question I have - is it like, 2x2 MU only, or
+>>>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
+>>>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
+>>>> group each) all going at the same time?
+>>>>
+>>>> I'm .. not even sure how you're supposed to cleanly negotiate that you
+>>>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
+>>>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
+>>>
+>>> I think using the max-rx-rate logic might could imply this, but I am 
+>>> not sure
+>>> many drivers fill this out properly.
+>>>
+>>> Looks like a mess waiting to happen to me.
+>>>
+>>> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not 
+>>> certain you
+>>> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
+>>>
+>>> So, from what I know currently, 80+80 is not that useful on the 9984 
+>>> NIC...
+>> never tried 80+80 since i need to enhance the channel logic alot in 
+>> my firmware code to handle it. would be great enough if vht160 would 
+>> work as expected and
+>> i'm not sure right now if it really works, even if the interface 
+>> initialized correctly it assocs only with vht80
+>
+> Looks like it is working with the hack I posted:
+>
+> Station 04:f0:21:2e:49:65 (on wlan2)
+>     inactive time:    0 ms
+>     rx bytes:    64902998
+>     rx packets:    37918
+>     tx bytes:    64760298
+>     tx packets:    42239
+>     tx retries:    0
+>     tx failed:    0
+>     signal:      -43 dBm
+>     signal avg:    -42 dBm
+>     tx bitrate:    1053.0 MBit/s VHT-MCS 6 160MHz VHT-NSS 2
+>     rx bitrate:    1560.0 MBit/s VHT-MCS 8 160MHz short GI VHT-NSS 2
+>     authorized:    yes
+>     authenticated:    yes
+>     preamble:    long
+>     WMM/WME:    yes
+>     MFP:        no
+>     TDLS peer:    no
+>     connected time:    156 seconds
+>
+> Thanks,
+> Ben
+cool. let me check it on my devices
+>
+>
 
-> On 2017-02-12 17:36, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Felix Fietkau <nbd@nbd.name> writes:
->>=20
->>> On 2017-02-12 17:28, Kalle Valo wrote:
->>>> Felix Fietkau <nbd@nbd.name> writes:
->>>>=20
->>>>> On 2017-02-12 16:22, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>>>>> Felix Fietkau <nbd@nbd.name> writes:
->>>>>>=20
->>>>>>> ath_tx_count_airtime is doing a lot of unnecessary work:
->>>>>>>
->>>>>>> - Redundant station lookup
->>>>>>> - Redundant rcu_read_lock/unlock
->>>>>>> - Useless memcpy of bf->rates
->>>>>>> - Useless NULL check of bf->bf_mpdu
->>>>>>> - Redundant lookup of the skb tid
->>>>>>>
->>>>>>> Additionally, it tries to look up the mac80211 queue index from the=
- txq,
->>>>>>> which fails if the frame was delivered via the power save queue.
->>>>=20
->>>> What does this mean in practise, what's the user level impact?
->>>>=20
->>>>>>> This patch fixes all of these issues by passing down the right set =
-of
->>>>>>> pointers instead of doing extra work
->>>>>>>
->>>>>>> Cc: stable@vger.kernel.org
->>>>>>> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling
->>>>>>> between stations")
->>>>>>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->>>>>>=20
->>>>>> Not sure if there's anything for stable to do with this; don't think=
- the
->>>>>> airtime fairness code has gone into a release yet? Otherwise:
->>>>>>=20
->>>>>> Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
->>>>>
->>>>> I added this, because I'm not sure this patch will make it to 4.10 in
->>>>> time, since we're really close to a release. I assume this patch will
->>>>> probably go into 4.11.
->>>>=20
->>>> Yeah, to try to get a patch to 4.10 at this point needs to be a really
->>>> high profile regression. That is if Linus doesn't release 4.10 today, =
-of
->>>> course.
->>> The symptoms are kernel crashes at least when operating in AP mode.
->>> It's pretty severe, so getting it into 4.10 would be preferable.
->>=20
->> I'm confused now. Wasn't the airtime fairness patch queued for 4.11?
-> I'll check again, maybe I got the git-describe output wrong.
 
-$ git describe --contains 63fefa050477
-wireless-drivers-next-for-davem-2017-01-02~2^2~14
+-- 
+Mit freundlichen Grüssen / Regards
 
-So I think we're good as long as this gets into the 4.11 cycle :)
+Sebastian Gottschall / CTO
 
--Toke
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
