@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:36346 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751440AbdB0PK0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 10:10:26 -0500
-Received: by mail-io0-f174.google.com with SMTP id l7so20006294ioe.3
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 07:10:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1488207986.28431.17.camel@sipsolutions.net>
-References: <1488207986.28431.17.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 27 Feb 2017 15:10:19 +0000
-Message-ID: <CAKv+Gu8zSARqLY6-_XRQAC2tY0DWuYpARG0deUGLsu3qoa2AVw@mail.gmail.com> (sfid-20170227_161044_347410_BDDF250E)
-Subject: Re: BUG_ON in sg code
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:34756 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752088AbdBMThp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Feb 2017 14:37:45 -0500
+Message-ID: <1487014657.19813.3.camel@sipsolutions.net> (sfid-20170213_203748_131141_FD8647BF)
+Subject: Re: VHT 160Mhz and nss related config.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+Date: Mon, 13 Feb 2017 20:37:37 +0100
+In-Reply-To: <d53a8fac-b4e0-2fb2-c1e1-c537a2c5e8aa@candelatech.com>
+References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
+         <1486969571.5142.3.camel@sipsolutions.net>
+         <d53a8fac-b4e0-2fb2-c1e1-c537a2c5e8aa@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 February 2017 at 15:06, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi Ard,
->
-> Apologies for the non-follow-up - couldn't find the original patch.
->
-> Your patch "crypto: ccm - switch to separate cbcmac driver" causes a
-> BUG_ON when virtual stacks are used, in crypto_ccm_auth() is called,
-> because you put odata/idata on the stack. What's going on there? I
-> thought we knew we can't do that? Did I miss something?
->
 
-It was I who missed something, obviously.
+> > This was recently added to the VHT capabilities in the spec, see
+> > Table 9-250 in 802.11-2016.
 
-I will send out a fix asap
+> I don't have that spec...maybe you could post a patch that adds that
+> flag and/or other fields to the appropriate header files?  I can
+> attempt to add support to ath10k after that...
+
+We're planning to, but it's not the most important thing on my list
+right now ... I'll check where that's at now.
+
+I can't even easily explain it, since it's really complicated.
+
+johannes
