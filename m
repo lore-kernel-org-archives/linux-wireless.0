@@ -1,47 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10974 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752271AbdBNR5U (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47938 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752232AbdBMT4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 12:57:20 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 13 Feb 2017 14:56:33 -0500
+Subject: Re: VHT 160Mhz and nss related config.
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
+ <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
+ <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
+ <589F50B8.4020609@candelatech.com>
+ <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com> (sfid-20170213_205636_736508_C31625B0)
+Date: Mon, 13 Feb 2017 11:56:32 -0800
 MIME-Version: 1.0
-Subject: Re: ath10k: fix the garage chars in board file name creation
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1486758429-18665-1-git-send-email-ryanhsu@qca.qualcomm.com>
-References: <1486758429-18665-1-git-send-email-ryanhsu@qca.qualcomm.com>
-To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <ryanhsu@qca.qualcomm.com>
-Message-ID: <f72df9cd8ee6421c815bb7ed5a714908@eusanexr01a.eu.qualcomm.com> (sfid-20170214_185759_621301_0CE67758)
-Date: Tue, 14 Feb 2017 09:57:10 -0800
+In-Reply-To: <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ryan Hsu <ryanhsu@qca.qualcomm.com> wrote:
-> From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-> 
-> The variant[] string will be valid only if the bdf_ext is set.
-> 
-> The string memory needs to be null-terminated to avoid the undefined garbage
-> appended by the subsequent board file name creation.
-> 
-> ath10k_pci 0000:04:00.0: failed to fetch board data for
-> "bus=pci,vendor=168c,device=003e,subsystem-vendor=168c,subsystem-device=3363��P�����"
-> from ath10k/QCA6174/hw3.0/board-2.bin
-> 
-> Fixes: f2593cb1b291 ("ath10k: Search SMBIOS for OEM board file extension")
-> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
+> Am 11.02.2017 um 18:58 schrieb Ben Greear:
+>> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
+>>> On 10 February 2017 at 20:22, Sebastian Gottschall
+>>> <s.gottschall@dd-wrt.com> wrote:
+>>>> i really can't believe this. if this is true the  160 mhz mode would not
+>>>> make any sense.
+>>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is identical. so
+>>>> vht160 would not increase performance in any way
+>>>
+>>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
+>>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
+>>> transmit 2x2 rates to different MU-MIMO peers.
+>>>
+>>> That's the outstanding question I have - is it like, 2x2 MU only, or
+>>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
+>>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
+>>> group each) all going at the same time?
+>>>
+>>> I'm .. not even sure how you're supposed to cleanly negotiate that you
+>>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
+>>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
+>>
+>> I think using the max-rx-rate logic might could imply this, but I am not sure
+>> many drivers fill this out properly.
+>>
+>> Looks like a mess waiting to happen to me.
+>>
+>> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not certain you
+>> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
+>>
+>> So, from what I know currently, 80+80 is not that useful on the 9984 NIC...
+> never tried 80+80 since i need to enhance the channel logic alot in my firmware code to handle it. would be great enough if vht160 would work as expected and
+> i'm not sure right now if it really works, even if the interface initialized correctly it assocs only with vht80
 
-Patch applied to ath-next branch of ath.git, thanks.
+Looks like it is working with the hack I posted:
 
-a532293fcba4 ath10k: fix the garage chars in board file name creation
+Station 04:f0:21:2e:49:65 (on wlan2)
+	inactive time:	0 ms
+	rx bytes:	64902998
+	rx packets:	37918
+	tx bytes:	64760298
+	tx packets:	42239
+	tx retries:	0
+	tx failed:	0
+	signal:  	-43 dBm
+	signal avg:	-42 dBm
+	tx bitrate:	1053.0 MBit/s VHT-MCS 6 160MHz VHT-NSS 2
+	rx bitrate:	1560.0 MBit/s VHT-MCS 8 160MHz short GI VHT-NSS 2
+	authorized:	yes
+	authenticated:	yes
+	preamble:	long
+	WMM/WME:	yes
+	MFP:		no
+	TDLS peer:	no
+	connected time:	156 seconds
+
+Thanks,
+Ben
+
 
 -- 
-https://patchwork.kernel.org/patch/9567469/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
