@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37904 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753429AbdBCOil (ORCPT
+Received: from mail-yb0-f195.google.com ([209.85.213.195]:34663 "EHLO
+        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751850AbdBMRrV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:38:41 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:37:56 +0200
-Message-Id: <20170203143812.7525-10-luca@coelho.fi> (sfid-20170203_153850_208827_68331465)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 09/25] iwlwifi: mvm: reduce usage of IEEE80211_SKB_CB()
+        Mon, 13 Feb 2017 12:47:21 -0500
+Received: by mail-yb0-f195.google.com with SMTP id w194so4332148ybe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2017 09:47:21 -0800 (PST)
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] rtl8xxxu: Add (0x2357 0x0107) to the tested devices list.
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Aaryn Coutanche <aaryncoutanche@gmail.com>
+References: <1486814067-9874-1-git-send-email-aaryncoutanche@gmail.com>
+ <87o9y6bg9y.fsf@purkki.adurom.net>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <9c57441d-4c97-febc-d2bc-fe1dc1b06b1b@gmail.com> (sfid-20170213_184725_348299_674F7AC4)
+Date: Mon, 13 Feb 2017 12:47:18 -0500
+MIME-Version: 1.0
+In-Reply-To: <87o9y6bg9y.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/13/2017 04:18 AM, Kalle Valo wrote:
+> Aaryn Coutanche <aaryncoutanche@gmail.com> writes:
+>
+>> From: Aaryn Coutanche <aaryncoutanche@gmail.com>
+>>
+>> ---
+>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>
+> Signed-off-by is missing, please read Documentation/SubmittingPatches.
+> Also write a short commit log and document the device you used to test
+> this etc.
+>
 
-There's already a variable with the result in scope, use that.
+Aaryn,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I already mentioned the Signed-off-by part to you - please make sure to 
+always include that.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index ea5d5b0d85b3..e2f82c10b019 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -543,9 +543,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 	 * queue. STATION (HS2.0) uses the auxiliary context of the FW,
- 	 * and hence needs to be sent on the aux queue
- 	 */
--	if (IEEE80211_SKB_CB(skb)->hw_queue == IWL_MVM_OFFCHANNEL_QUEUE &&
-+	if (skb_info->hw_queue == IWL_MVM_OFFCHANNEL_QUEUE &&
- 	    skb_info->control.vif->type == NL80211_IFTYPE_STATION)
--		IEEE80211_SKB_CB(skb)->hw_queue = mvm->aux_queue;
-+		skb_info->hw_queue = mvm->aux_queue;
- 
- 	memcpy(&info, skb->cb, sizeof(info));
- 
--- 
-2.11.0
+In general a commit message should have a headline and then a body 
+message with a little more detail.
+
+Cheers,
+Jes
