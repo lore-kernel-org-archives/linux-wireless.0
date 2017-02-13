@@ -1,153 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge01.uni-rostock.de ([139.30.8.12]:32445 "EHLO
-        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751220AbdBWTGd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 14:06:33 -0500
-Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in
- NEW_RADIO/GET_RADIO
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        <linux-wireless@vger.kernel.org>
-References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
- <20170223120211.22358-2-andrew.zaborowski@intel.com>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <484d045e-d4ca-2073-9a16-8d3556027d75@uni-rostock.de> (sfid-20170223_200641_071694_D1B0C423)
-Date: Thu, 23 Feb 2017 20:01:12 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170223120211.22358-2-andrew.zaborowski@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature";
-        boundary="i83acKnhFhVrq0W6s25Oj8rLSRuMDlgM6"
+Received: from narfation.org ([79.140.41.39]:43122 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751023AbdBMP5K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:57:10 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+        netdev@vger.kernel.org, sw@simonwunderlich.de,
+        Sven Eckelmann <sven@narfation.org>,
+        Akash Goel <akash.goel@intel.com>,
+        Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH] ath9k: Access rchan::buf only with per_cpu helper
+Date: Mon, 13 Feb 2017 16:56:48 +0100
+Message-Id: <20170213155648.4821-1-sven@narfation.org> (sfid-20170213_165757_133654_7CB62647)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---i83acKnhFhVrq0W6s25Oj8rLSRuMDlgM6
-Content-Type: multipart/mixed; boundary="FS0Wfl8FsAc0qPGew8qKjwSfG4HhAnUEr";
- protected-headers="v1"
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
- linux-wireless@vger.kernel.org
-Message-ID: <484d045e-d4ca-2073-9a16-8d3556027d75@uni-rostock.de>
-Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in
- NEW_RADIO/GET_RADIO
-References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
- <20170223120211.22358-2-andrew.zaborowski@intel.com>
-In-Reply-To: <20170223120211.22358-2-andrew.zaborowski@intel.com>
+The relayfs was changed to use per CPU constructs to handle the rchan
+buffers. But the users of the rchan buffers in other parts of the kernel
+were not modified. This caused crashes like
 
---FS0Wfl8FsAc0qPGew8qKjwSfG4HhAnUEr
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: quoted-printable
+  BUG: unable to handle kernel paging request at 00003a5198a0b910
+  IP: [<ffffffffa973cb3a>] ath_cmn_process_fft+0xea/0x610
+  PGD 0 [  179.522449]
+  Oops: 0000 [#1] SMP
+  Modules linked in:
+  CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.9.0-rc5 #1
+  [...]
+  Call Trace:
+   <IRQ> [  179.656426]  [<ffffffffa9704373>] ? ath_rx_tasklet+0x2f3/0xd10
+   [<ffffffffa9702106>] ? ath9k_tasklet+0x1b6/0x230
+   [<ffffffffa90dcbd1>] ? tasklet_action+0xf1/0x100
+   [<ffffffffa9a3cb3f>] ? __do_softirq+0xef/0x284
+   [<ffffffffa90dd22e>] ? irq_exit+0xae/0xb0
+   [<ffffffffa9a3c89f>] ? do_IRQ+0x4f/0xd0
+   [<ffffffffa9a3aa42>] ? common_interrupt+0x82/0x82
+   <EOI> [  179.703152]  [<ffffffffa9a39c1d>] ? poll_idle+0x2d/0x57
+   [<ffffffffa908c845>] ? sched_clock+0x5/0x10
+   [<ffffffffa97bc8d6>] ? cpuidle_enter_state+0xf6/0x2d0
+   [<ffffffffa911988e>] ? cpu_startup_entry+0x14e/0x230
+   [<ffffffffaa3cdf70>] ? start_kernel+0x461/0x481
+   [<ffffffffaa3cd120>] ? early_idt_handler_array+0x120/0x120
+   [<ffffffffaa3cd413>] ? x86_64_start_kernel+0x14c/0x170
+  Code: 31 db 41 be ff ff ff ff 4c 8b 26 48 8b 6e 08 49 8b 84 24 60 05 00
+        00 48 8b 00 0f b7 40 04 66 89 44 24 48 eb 11 48 8b 55 40 48 98 <48>
+        8b 3c c2 e8 ad a0 a4 ff 01 c3 41 8d 56 01 be 00 02 00 00 48
+  RIP  [<ffffffffa973cb3a>] ath_cmn_process_fft+0xea/0x610
+   RSP <ffff9b43e7003d20>
+  CR2: 00003a5198a0b910
 
-> Add a HWSIM_ATTR_RADIO_ADDR attribute to those to events/response so
-> that a userspace medium can query the list of addresses in the
-> simulator.
->
-> When a userspace medium needs to handle a broadcast frame it can't
-> easily implement the equivalent of what the default kernel medium does
-> because it doesn't know who to forward the frame to.  The
-> HWSIM_CMD_GET_RADIO command is a little useless in this respect.
-> Userspace needs to use HWSIM_CMD_GET_RADIO, then cross-reference the
-> radio names with wiphy names using NL80211_CMD_GET_WIPHY dump, map the
-> wiphy names to wiphy indexes (those are more useful than wiphy names
-> because they don't change -- a wiphy name change doesn't generate an
-> event so this can't be easily tracked), and use the
-> NL80211_CMD_GET_INTERFACES dump to obtain the wiphy_idx to mac address
-> mapping.
-I'm a bit confused, I think the medium should always know by its
-internal knowledge base, which node would be reachable by a broadcast.
+Fixes: 017c59c042d0 ("relay: Use per CPU constructs for the relay channel buffer pointers")
+Cc: Akash Goel <akash.goel@intel.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Reported-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-We are also working on the MAC-Management of hwsim, which especially got
-weird, if you try to manage many nodes within one kernel. But I don't
-understand how this array with addresses could help to improve. When
-these addresses do not exactly match to the preconfigured MACs of hwsim,
-the frames would not be delivered, since they are only checked against
-the internal ones (or you may add a check against your list).
-
-I test to use a internal hashmap, which maps a receiver MAC-Address of a
-Frame to a corresponding wiphy node to efficiently deliver frames.
-Additionally it would allow to add VIF with different MAC-Addresses (see
-corresponding Callback for this) and update the hashmap according to
-this. I believe you want to do something similar, but in the userspace.
-
-I also would propose a parameter (like you propose here) as internal
-permanent MAC-Address, instead of the automatic increasing
-MAC-Addresses, since it become complicated, if you want to use multiple
-userspace medium in different network namespaces, as the hwsim MACs are
-globally assigned. You may need to handle collisions (I don't know
-whether different wiphy could use the same permanent MAC), but this
-would be more logical for a simulation, than discover every address
-after creation.
-
-
->
-> Additionally there are two addresses used by hwsim radios
-> (data->addresses[0] and [1]), first used at the network level and the
-> second used at hwsim radio level and in HWSIM_ATTR_ADDR_TRANSMITTER /
-> _RECEIVER.  By default they differ by 0x40 in the first byte but I'm no=
-t
-> sure userspace can make this assumption to do the mapping from the
-> address inside the frame headers to the address of the hwsim receiving
-> radio.  I suspect the network layers can change address 0 and they will=
-
-> be out of sync.
->
-> Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
-> ---
-> Additionally I tried to add a HWSIM_ATTR_WIPHY to report the wiphy inde=
-x
-> directly without users going through wiphy name to index mapping, but
-> get_wiphy_idx() is internal to cfg80211.  The index is exposed to
-> userspace and is more useful than the name so I wonder if this function=
-
-> should be exported from cfg80211.
-I also think that would be nice to have ;-)
-
-kind regards
-
-Benjamin
-
---=20
-M.Sc. Benjamin Beichler
-
-Universit=E4t Rostock, Fakult=E4t f=FCr Informatik und Elektrotechnik
-Institut f=FCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=DFe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
-
-
-
---FS0Wfl8FsAc0qPGew8qKjwSfG4HhAnUEr--
-
---i83acKnhFhVrq0W6s25Oj8rLSRuMDlgM6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJYrzGCAAoJEBWbfeAC1ejUoRYP/ius6sV5dY35BI3B7zH7lxnt
-XgHKY2zVhWuOinIXc7RUDvt4rae4v/mc4hZrzr0Yn1oNQdMjbUTQhJSjbuyWoKbg
-uWU7ny74CALpcYiJ86xR+KLMr3pcwS03tF0rlz+lP67KLIDSEZ5lC4W/pVmS0ODv
-MQflJAUpb2cYvolOZHKFpmMvd2KxHUq7jWRGzYn4hoNqSm7lxxaGMB5gZOwcmxgk
-P9rRqzsK8H7B1E+oGdmpOnWWPDdZebNvCZMNiY2SzXqFCYtvnldH/JBEt2jHt5RC
-MT7X2F15tRoUks2g++0vdA290U3OxYVORZBstlecNrWvdwScOsBDDkxwMn3enKTE
-w8JwLSre5Y/Qjn+gJBXN8rGfHUNhBV+8m6j9YQr/QwWBTZZ7P2ln7+eV1e0qrdne
-iHY8rpVSg0efPDTUdLJROLq+k5uljMUUREXW0zKeIsu3wjrqWyiX3C14A+D5TQAU
-zbKJP4v/JSzh2PDSKEliPZvSktoOjRhJ5cL1+iq4VFqJev2Lhc2mGDZ8ScozftoK
-fb8YhRiELsOjHFQTd5aMQgovY3IXzaOXvRX0JYdO3BzmmkIAjA0ru7SavCq4zI7B
-RbQsqgPgfgmd75d23NKRWtXp3cSaXxn9aLzUk1nOgJbAcYRaNX8JSLT+3EZpztw2
-b3Oe9Q2Mo1Aqos0v1ZQC
-=8ec/
------END PGP SIGNATURE-----
-
---i83acKnhFhVrq0W6s25Oj8rLSRuMDlgM6--
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index 789a3dbe8341..0ffa23a61568 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -482,7 +482,7 @@ ath_cmn_is_fft_buf_full(struct ath_spec_scan_priv *spec_priv)
+ 	struct rchan *rc = spec_priv->rfs_chan_spec_scan;
+ 
+ 	for_each_online_cpu(i)
+-		ret += relay_buf_full(rc->buf[i]);
++		ret += relay_buf_full(*per_cpu_ptr(rc->buf, i));
+ 
+ 	i = num_online_cpus();
+ 
