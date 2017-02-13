@@ -1,193 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:35777 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751452AbdBNMfo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 07:35:44 -0500
-Received: by mail-wr0-f176.google.com with SMTP id c4so11151064wrd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 04:35:44 -0800 (PST)
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [RFC V2 1/5] nl80211: allow multiple active scheduled scan
- requests
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
- <1484566941-27000-2-git-send-email-arend.vanspriel@broadcom.com>
- <1485250815.7244.8.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <fd4c2573-caea-1cdc-ee33-f010bb0aad58@broadcom.com> (sfid-20170214_133813_474674_976844E6)
-Date: Tue, 14 Feb 2017 13:35:40 +0100
+Received: from mail.kernel.org ([198.145.29.136]:55390 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752730AbdBMVcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Feb 2017 16:32:24 -0500
 MIME-Version: 1.0
-In-Reply-To: <1485250815.7244.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <58A15454.4030602@denx.de>
+References: <1486444924-18444-1-git-send-email-hs@denx.de> <20170210155114.pvjahqqjqurw5jdc@rob-hp-laptop>
+ <58A15454.4030602@denx.de>
+From: Rob Herring <robh@kernel.org>
+Date: Mon, 13 Feb 2017 15:31:57 -0600
+Message-ID: <CAL_JsqKM4fEcfPekYkt-+TVNXE3nMF1AEfSHWW+3wAgdYDMXEg@mail.gmail.com> (sfid-20170213_223452_652420_BC4B1B8B)
+Subject: Re: [PATCH] Make EN2 pin optional in the TRF7970A driver
+To: Heiko Schocher <hs@denx.de>
+Cc: netdev <netdev@vger.kernel.org>, Guan Ben <ben.guan@cn.bosch.com>,
+        Mark Jonas <mark.jonas@de.bosch.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24-1-2017 10:40, Johannes Berg wrote:
-> 
->> + * @max_sched_scan_reqs: maximum number of scheduled scan requests
->> that
->> + *	the device can run concurrently.
-> 
-> Perhaps we should get rid of WIPHY_FLAG_SUPPORTS_SCHED_SCAN and just
-> set this to 1 for such devices? Otherwise we have two different
-> requirements, and we need to track that 0 is an invalid value here if
-> WIPHY_FLAG_SUPPORTS_SCHED_SCAN is set, or something like that?
+On Mon, Feb 13, 2017 at 12:38 AM, Heiko Schocher <hs@denx.de> wrote:
+> Hello Rob,
+>
+>
+> Am 10.02.2017 um 16:51 schrieb Rob Herring:
+>>
+>> On Tue, Feb 07, 2017 at 06:22:04AM +0100, Heiko Schocher wrote:
+>>>
+>>> From: Guan Ben <ben.guan@cn.bosch.com>
+>>>
+>>> Make the EN2 pin optional. This is useful for boards,
+>>> which have this pin fix wired, for example to ground.
+>>>
+>>> Signed-off-by: Guan Ben <ben.guan@cn.bosch.com>
+>>> Signed-off-by: Mark Jonas <mark.jonas@de.bosch.com>
+>>> Signed-off-by: Heiko Schocher <hs@denx.de>
+>>>
+>>> ---
+>>>
+>>>   .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
+>>>   drivers/nfc/trf7970a.c                             | 26
+>>> ++++++++++++----------
+>>>   2 files changed, 16 insertions(+), 14 deletions(-)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+>>> b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+>>> index 32b35a0..5889a3d 100644
+>>> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+>>> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+>>> @@ -5,8 +5,8 @@ Required properties:
+>>>   - spi-max-frequency: Maximum SPI frequency (<= 2000000).
+>>>   - interrupt-parent: phandle of parent interrupt handler.
+>>>   - interrupts: A single interrupt specifier.
+>>> -- ti,enable-gpios: Two GPIO entries used for 'EN' and 'EN2' pins on the
+>>> -  TRF7970A.
+>>> +- ti,enable-gpios: One or two GPIO entries used for 'EN' and 'EN2' pins
+>>> on the
+>>> +  TRF7970A. EN2 is optional.
+>>
+>>
+>> Could EN ever be optional/fixed? If so, perhaps deprecate this property
+>> and do 2 properties, one for each pin.
+>
+>
+> The hardware I have has the EN2 pin fix connected to ground. Looking
+> into http://www.ti.com/lit/ds/slos743k/slos743k.pdf page 19 table 6-3
+> and 6-4 the EN2 pin is a don;t core if EN = 1. If EN = 0 EN2 pin
+> selects between Power Down and Sleep Mode ... I see no reason why
+> this is not possible/allowed ...
+>
+> Hmm.. I do not like the idea of deprecating the "ti,enable-gpios"
+> property into 2 seperate properties ... but if this would be a reason
+> for not accepting this patch, I can do this ... How should I name
+> the 2 new properties?
 
-Ok. Doesn't that cause issues in user-space. Or do you only want to get
-rid of it in cfg80211 api and report the flag to user-space when
-max_sched_scan_reqs equals 1?
+I guess if this ever happens, then we just add "ti,enable2-gpios" and
+ti,enable-gpios continues to point to EN. We don't need to deprecate
+anything (or maybe just deprecate having both GPIOs on single
+property).
 
->> + * @NL80211_ATTR_SCHED_SCAN_MAX_REQS: indicates maximum number of
->> scheduled
->> + *	scan request that may be active for the device (u8).
-> 
-> I'd make that a u32 - not that I believe we'll ever want to change this
-> in the future, but there's simply no value in making it a u8 since it
-> uses the same amount of space in a netlink message.
+In that case,
 
-Ok.
+Acked-by: Rob Herring <robh@kernel.org>
 
->> +	list_for_each_entry_safe(pos, tmp, &rdev-
->>> sched_scan_req_list, list) {
->> +		cfg80211_stop_sched_scan_req(rdev, pos, false);
->> +	}
-> 
-> nit: don't really need braces here.
-
-True.
-
->> +	if ((wiphy->flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN) &&
->> +	    !wiphy->max_sched_scan_reqs)
->> +		wiphy->max_sched_scan_reqs = 1;
-> 
-> Yeah, this. Why bother?
-> 
-> (should even be simple to come up with an spatch to change all the
-> drivers, but there are only five anyway)
-
-Done.
-
->> +		    nla_put_u8(msg,
->> NL80211_ATTR_SCHED_SCAN_MAX_REQS,
->> +			       rdev->wiphy.max_sched_scan_reqs) ||
->>  		    nla_put_u8(msg,
->> NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS,
->>  			       rdev->wiphy.max_sched_scan_ssids) ||
-> 
-> This might break older userspace - you'll have to put it in a later
-> portion of the code.
-> 
-> I'm also a bit surprised the attributes aren't actually optional for
-> when sched scan isn't supported, I'd make the new one optional and I
-> guess we can fix the others later too, if desired.
-
-Why would it break user-space. Is the order in which attributes are
-added into the stream something user-space relies on.
-
->> +	bool want_multi;
-> 
-> That's bool
-> 
->> +	want_multi = !!info->attrs[NL80211_ATTR_SCHED_SCAN_MULTI];
-> 
-> so you don't really need the !! as it's implied by the rules for bool
-> :)
-
-I see.
-
->> +	/* leave request id zero for legacy request
->> +	 * or if driver does not support multi-scheduled scan
->> +	 */
->> +	if (want_multi && rdev->wiphy.max_sched_scan_reqs > 1) {
-> 
-> Why do the >1 check here? It probably doesn't really make a difference
-> since only one can be running at a time, but it might be nicer - at
-> least for debug in userspace - to have a real value for all multi
-> scans?
-> 
->> +		while (!sched_scan_req->reqid)
-> 
-> Pretty sure we won't run over the u64 ... but I guess it doesn't matter
-> much :)
-> 
-> 
-> I don't see you sending the reqid/cookie back to userspace here though,
-> that's missing?
-
-Indeed that is in the second patch. Maybe I should put that commit first
-in the series.
-
->>  static int nl80211_stop_sched_scan(struct sk_buff *skb,
->>  				   struct genl_info *info)
->>  {
->> +	struct cfg80211_sched_scan_request *req;
->>  	struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> +	u64 cookie;
->>  
->>  	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN) ||
->>  	    !rdev->ops->sched_scan_stop)
->>  		return -EOPNOTSUPP;
->>  
->> -	return __cfg80211_stop_sched_scan(rdev, false);
->> +	if (info->attrs[NL80211_ATTR_COOKIE]) {
->> +		cookie = nla_get_u64(info-
->>> attrs[NL80211_ATTR_COOKIE]);
->> +		return __cfg80211_stop_sched_scan(rdev, cookie,
->> false);
->> +	} else {
->> +		req = list_first_or_null_rcu(&rdev-
->>> sched_scan_req_list,
->> +					     struct
->> cfg80211_sched_scan_request,
->> +					     list);
->> +		if (!req || req->reqid ||
->> +		    (req->owner_nlportid &&
->> +		     req->owner_nlportid != info->snd_portid))
->> +			return -ENOENT;
-> 
-> Shouldn't this also check that it's non-multi?
-
-non-multi == (req->reqid == 0). non-multi/legacy and multi can not be
-active at the same time so we can use list_first_or_null_rcu here. If
-req->reqid of first entry is non-zero there is no non-multi to stop here.
-
->> +void cfg80211_add_sched_scan_req(struct cfg80211_registered_device
->> *rdev,
->> +				 struct cfg80211_sched_scan_request
->> *req)
->> +{
->> +	list_add_rcu(&req->list, &rdev->sched_scan_req_list);
->> +}
->> +
->> +static void cfg80211_del_sched_scan_req(struct
->> cfg80211_registered_device *rdev,
->> +					struct
->> cfg80211_sched_scan_request *req)
->> +{
->> +	list_del_rcu(&req->list);
->> +	kfree_rcu(req, rcu_head);
->> +}
-> 
-> Some locking assertions in these would be good, I think.
-
-Will do.
-
->> +static struct cfg80211_sched_scan_request *
->> +cfg80211_find_sched_scan_req(struct cfg80211_registered_device
->> *rdev, u64 reqid)
->> +{
->> +	struct cfg80211_sched_scan_request *pos;
->> +
->> +	list_for_each_entry(pos, &rdev->sched_scan_req_list, list) {
->> +		if (pos->reqid == reqid)
->> +			return pos;
->> +	}
->> +	return ERR_PTR(-ENOENT);
->> +}
-> 
-> Here too, I guess, since you don't actually use RCU.
-
-So should I use RCU here? Not sure what is the better choice here.
-
-Regards,
-Arend
+>
+> "ti,pin-enable"  and "ti,pin-enable2" ?
+>
+> bye,
+> Heiko
+> --
+> DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
