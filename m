@@ -1,76 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:35034 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753798AbdBGXKv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 18:10:51 -0500
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Madalin Bucur <madalin.bucur@nxp.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Timur Tabi <timur@codeaurora.org>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
-        Woojung Huh <woojung.huh@microchip.com>
-Subject: [PATCH net-next v2 01/12] net: sunrpc: fix build errors when linux/phy*.h is removed from net/dsa.h
-Date: Tue,  7 Feb 2017 15:02:54 -0800
-Message-Id: <20170207230305.18222-2-f.fainelli@gmail.com> (sfid-20170208_001106_732903_27ED3259)
-In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
+Received: from mail.zhinst.com ([212.126.164.98]:59020 "EHLO mail.zhinst.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751007AbdBMKOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Feb 2017 05:14:15 -0500
+From: Tobias Klauser <tklauser@distanz.ch>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+Subject: [PATCH] brcmfmac: Use net_device_stats from struct net_device
+Date: Mon, 13 Feb 2017 11:14:09 +0100
+Message-Id: <20170213101409.8205-1-tklauser@distanz.ch> (sfid-20170213_111424_933592_E2DAB5FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+Instead of using a private copy of struct net_device_stats in struct
+brcm_if, use stats from struct net_device.  Also remove the now
+unnecessary .ndo_get_stats function.
 
-Removing linux/phy.h from net/dsa.h reveals a build error in the sunrpc
-code:
-
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_rdma_bc_put':
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c:277:2: error: implicit declaration of function 'module_put' [-Werror=implicit-function-declaration]
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_setup_rdma_bc':
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c:348:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
-
-Fix this by adding linux/module.h to svc_rdma_backchannel.c
-
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
-Acked-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
+Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
 ---
- net/sunrpc/xprtrdma/svc_rdma_backchannel.c | 1 +
- 1 file changed, 1 insertion(+)
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 26 +++++++---------------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 --
+ 2 files changed, 8 insertions(+), 20 deletions(-)
 
-diff --git a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-index 288e35c2d8f4..cb1e48e54eb1 100644
---- a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-+++ b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-@@ -4,6 +4,7 @@
-  * Support for backward direction RPCs on RPC/RDMA (server-side).
-  */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index b73a55b00fa7..60da86a8d95b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -249,10 +249,10 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
  
-+#include <linux/module.h>
- #include <linux/sunrpc/svc_rdma.h>
- #include "xprt_rdma.h"
+ done:
+ 	if (ret) {
+-		ifp->stats.tx_dropped++;
++		ndev->stats.tx_dropped++;
+ 	} else {
+-		ifp->stats.tx_packets++;
+-		ifp->stats.tx_bytes += skb->len;
++		ndev->stats.tx_packets++;
++		ndev->stats.tx_bytes += skb->len;
+ 	}
  
+ 	/* Return ok: we always eat the packet */
+@@ -296,15 +296,15 @@ void brcmf_txflowblock(struct device *dev, bool state)
+ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+ {
+ 	if (skb->pkt_type == PACKET_MULTICAST)
+-		ifp->stats.multicast++;
++		ifp->ndev->stats.multicast++;
+ 
+ 	if (!(ifp->ndev->flags & IFF_UP)) {
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return;
+ 	}
+ 
+-	ifp->stats.rx_bytes += skb->len;
+-	ifp->stats.rx_packets++;
++	ifp->ndev->stats.rx_bytes += skb->len;
++	ifp->ndev->stats.rx_packets++;
+ 
+ 	brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
+ 	if (in_interrupt())
+@@ -327,7 +327,7 @@ static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
+ 
+ 	if (ret || !(*ifp) || !(*ifp)->ndev) {
+ 		if (ret != -ENODATA && *ifp)
+-			(*ifp)->stats.rx_errors++;
++			(*ifp)->ndev->stats.rx_errors++;
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return -ENODATA;
+ 	}
+@@ -388,7 +388,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+ 	}
+ 
+ 	if (!success)
+-		ifp->stats.tx_errors++;
++		ifp->ndev->stats.tx_errors++;
+ 
+ 	brcmu_pkt_buf_free_skb(txp);
+ }
+@@ -411,15 +411,6 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
+ 	}
+ }
+ 
+-static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
+-{
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+-
+-	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
+-
+-	return &ifp->stats;
+-}
+-
+ static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
+ 				    struct ethtool_drvinfo *info)
+ {
+@@ -492,7 +483,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ static const struct net_device_ops brcmf_netdev_ops_pri = {
+ 	.ndo_open = brcmf_netdev_open,
+ 	.ndo_stop = brcmf_netdev_stop,
+-	.ndo_get_stats = brcmf_netdev_get_stats,
+ 	.ndo_start_xmit = brcmf_netdev_start_xmit,
+ 	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
+ 	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index de3197be5491..6aecd8dfd824 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -171,7 +171,6 @@ enum brcmf_netif_stop_reason {
+  * @drvr: points to device related information.
+  * @vif: points to cfg80211 specific interface information.
+  * @ndev: associated network device.
+- * @stats: interface specific network statistics.
+  * @multicast_work: worker object for multicast provisioning.
+  * @ndoffload_work: worker object for neighbor discovery offload configuration.
+  * @fws_desc: interface specific firmware-signalling descriptor.
+@@ -187,7 +186,6 @@ struct brcmf_if {
+ 	struct brcmf_pub *drvr;
+ 	struct brcmf_cfg80211_vif *vif;
+ 	struct net_device *ndev;
+-	struct net_device_stats stats;
+ 	struct work_struct multicast_work;
+ 	struct work_struct ndoffload_work;
+ 	struct brcmf_fws_mac_descriptor *fws_desc;
 -- 
-2.9.3
+2.11.0
