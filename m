@@ -1,113 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:37246 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751422AbdBWKmm (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:34497 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751983AbdBNIz7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 05:42:42 -0500
-Received: by mail-wm0-f54.google.com with SMTP id v77so7592338wmv.0
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 02:42:41 -0800 (PST)
-Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
- WPA/WPA2-PSK
-To: Jithu Jance <jithu.jance@broadcom.com>
-References: <20170221100957.30965-1-johannes@sipsolutions.net>
- <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
- <1487673603.2215.3.camel@sipsolutions.net>
- <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
- <1487680651.2215.5.camel@sipsolutions.net>
- <3fa1e3ac-5722-c46d-acc1-62407f4eef07@broadcom.com>
- <CA+gyVQ11yZjkJXjiVoMVijs=_K8itZMQrces9XQha_bT4=H-DA@mail.gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-        Jouni Malinen <j@w1.fi>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <9b6de09f-d872-fd67-971a-6da369fefe1a@broadcom.com> (sfid-20170223_114306_832288_B79D82AF)
-Date: Thu, 23 Feb 2017 11:36:30 +0100
+        Tue, 14 Feb 2017 03:55:59 -0500
+Received: by mail-it0-f65.google.com with SMTP id r141so4076700ita.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 00:55:59 -0800 (PST)
+Subject: Re: [PATCH] iw: Fix bitrate output when no rate info found
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1487049663-2942-1-git-send-email-masashi.honma@gmail.com>
+ <1487061321.4705.1.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <a2ffeab5-dd9c-1c9d-3fd1-c098a6d1e748@gmail.com> (sfid-20170214_095603_424551_B338AEF7)
+Date: Tue, 14 Feb 2017 17:55:50 +0900
 MIME-Version: 1.0
-In-Reply-To: <CA+gyVQ11yZjkJXjiVoMVijs=_K8itZMQrces9XQha_bT4=H-DA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1487061321.4705.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-2-2017 13:24, Jithu Jance wrote:
-> Hi Jouni, Johannes et al.,
-> 
-> On Wed, Feb 22, 2017 at 1:27 AM, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 21-2-2017 13:37, Johannes Berg wrote:
->>>
->>>> What I am also missing is how to deal with NL80211_CMD_CONNECTED
->>>> event signalling. Should that be given after (un)successful
->>>> completion of the 4-way handshake or should we have a separate event
->>>> for that?
->>>
->>> That's a good point. I don't think a new event really works well, but
->>> perhaps we should extend the NL80211_TIMEOUT_* values with this? It's
->>> not strictly a timeout, I guess, but it's not a direct rejection of the
->>> association either.
->>>
->>> Any thoughts?
->>
->> I discussed about the event mechanism with Jithu which is who asked me
->> to look at their patches for this feature. His suggestion was to have a
->> "port authorized" event after successful handshake as it will help in
->> key mgmt offload cases. He gave the following example: Suppose you are
->> doing a fresh 8021x followed by 4way handshake offload. Right now there
->> is no event to indicate to the upper layer that the 4way handshake have
->> been completed successfully. So the only thing to do in wpa_supplicant
->> is to consider it completed and if not be hit with deauth.
-> 
-> In wpa_supplicant terms, I was looking for an event notification to move the
-> wpa_state from WPA_ASSOCIATED to WPA_COMPLETED.  :)
+On 2017-02-14 17:35, Johannes Berg wrote:
+> On Tue, 2017-02-14 at 14:21 +0900, Masashi Honma wrote:
+>> Previously, bitrate showed uninitialized buffer when no rate info
+>> found.
+>
+> When would this happen?
 
-Currently in wpa_supplicant_event_assoc() the 4-way handshake offload is
-handled as below:
+I could see in mesh STA connection with 11n and legacy mixed.
+STA A has disable_ht=1.
+STA B has disable_ht=0.
 
-        if ((wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE) &&
-            wpa_key_mgmt_wpa_psk(wpa_s->key_mgmt)) {
-                /*
-                 * We are done; the driver will take care of RSN 4-way
-                 * handshake.
-                 */
-                wpa_supplicant_cancel_auth_timeout(wpa_s);
-                wpa_supplicant_set_state(wpa_s, WPA_COMPLETED);
-                eapol_sm_notify_portValid(wpa_s->eapol, TRUE);
-                eapol_sm_notify_eap_success(wpa_s->eapol, TRUE);
-        } else if ((wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE) &&
-                   wpa_key_mgmt_wpa_ieee8021x(wpa_s->key_mgmt)) {
-                /*
-                 * The driver will take care of RSN 4-way handshake, so
-we need
-                 * to allow EAPOL supplicant to complete its work without
-                 * waiting for WPA supplicant.
-                 */
-                eapol_sm_notify_portValid(wpa_s->eapol, TRUE);
-        } else if (ft_completed) {
+ > I'm not really sure this is right - perhaps we don't have
+ > RATE_INFO_BITRATE(32), but still have the MCS data?
 
-So for 4-way hs offload for wpa/wpa2-psk it already calls
-eapol_sm_notify_eap_success() and reading the documentation of that
-function:
+I recognized there was a issue on such a case. I will send a patch to 
+wpa_supplicant. Anyway, showing string message is better than showing 
+raw binary data.
 
-/**
- * eapol_sm_notify_eap_success - Notification of external EAP success
-trigger
- * @sm: Pointer to EAPOL state machine allocated with eapol_sm_init()
- * @success: %TRUE = set success, %FALSE = clear success
- *
- * Notify the EAPOL state machine that external event has forced EAP
-state to
- * success (success = %TRUE). This can be cleared by setting success =
-%FALSE.
- *
- * This function is called to update EAP state when WPA-PSK key
-handshake has
- * been completed successfully since WPA-PSK does not use EAP state machine.
- */
-void eapol_sm_notify_eap_success(struct eapol_sm *sm, Boolean success)
+> How about we just add "(unknown)" or so and not return here?
 
-So the code in wpa_supplicant_event_assoc() is either lying or the assoc
-event should come after driver has completed successfully. To me it
-seems worth it to have NL80211_CMD_EAP_COMPLETED event carrying the
-result or indeed give the CONNECTED event later in the driver.
+Yes. First time, I supposed to use "unknown". But in the function 
+parse_bitrate(), nla_parse_nested() returns message "failed to parse 
+nested rate attributes!". This explains why the bitrate is unknown. So I 
+used explaining message. We could see the message like this.
 
-Regards,
-Arend
+tx bitrate: No rate info found!
+rx bitrate: 48.0 MBit/s
+
+Masashi Honma.
