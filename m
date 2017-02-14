@@ -1,91 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51974 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933361AbdBQKJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Feb 2017 05:09:10 -0500
-Subject: Re: [linux-stable] 4fc2942b6e kernel BUG at
- kernel/time/hrtimer.c:109!
-To: Thomas Gleixner <tglx@linutronix.de>,
-        kernel test robot <fengguang.wu@intel.com>
-References: <20170217052607.glbumukvoz4pilvt@wfg-t540p.sh.intel.com>
- <alpine.DEB.2.20.1702171014430.3536@nanos>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Sasha Levin <alexander.levin@verizon.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <0f58a1d0-a2e6-9430-7883-68e986ccb4c0@arm.com> (sfid-20170217_110958_816816_1EF27E2D)
-Date: Fri, 17 Feb 2017 10:09:06 +0000
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36520 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753646AbdBNNVg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 08:21:36 -0500
+Received: by mail-oi0-f68.google.com with SMTP id u143so559052oif.3
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 05:21:35 -0800 (PST)
+Subject: Re: ANNOUNCE: Netdev 2.1 update Feb 14
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+References: <42736b6d-b23b-bcae-e53d-a943516ce100@mojatatu.com>
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        Rob Echlin <rob@echlin.ca>, lwn@lwn.net, people@netdevconf.org
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Message-ID: <d3237bc3-4c1e-9f60-4c70-2fa0d799f883@mojatatu.com> (sfid-20170214_142427_902848_E730EDB0)
+Date: Tue, 14 Feb 2017 08:21:33 -0500
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1702171014430.3536@nanos>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <42736b6d-b23b-bcae-e53d-a943516ce100@mojatatu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17/02/17 09:28, Thomas Gleixner wrote:
-> On Fri, 17 Feb 2017, kernel test robot wrote:
-> 
->> Hi Marc,
->>
->> We find this oops in linux-4.4.y. The gcc-6 compiled mainline kernel is fine.
+On 17-02-14 08:16 AM, Jamal Hadi Salim wrote:
+>
+> A few announcements:
+> -Registration is open. Register early so we can plan better.
+> https://onlineregistrations.ca/netdev21/
+>
+> hotel (If you can get the hotel cheaper online than conference
+> rates please send us email, dont book ):
+> http://www.netdevconf.org/2.1/hotel.html
+>
+> News:
+> - We are pleased to announce our first silver sponsor! We thank
+> ZEVENET for their commitment to the netdev community!
+>
 
-The last bit is worrying, as mainline has the exact same bug. Has it
-been tested the same way?
+Apologies - small correction. ZEVENET is the _first_ bronze
+sponsor.
+https://www.netdevconf.org/2.1/news.html?sponsor-ZEVENET
 
->>
->> commit 4fc2942b6e2de2efc8a9d3784d4b0d3543149613
->>      hrtimer: Catch illegal clockids
-> 
-> And that commit is doing what the subject line says. Catch illegal usage.
-> 
->> [   38.101342] Call Trace:
->> [   38.101342] Call Trace:
->> [   38.102045]  [<ffffffff8109aee1>] tasklet_hrtimer_init+0x16/0x52
->> [   38.102045]  [<ffffffff8109aee1>] tasklet_hrtimer_init+0x16/0x52
->> [   38.103698]  [<ffffffff81c767c7>] mac80211_hwsim_new_radio+0x766/0x84d
-> 
-> The real bug is in this code:
-> 
-> drivers/net/wireless/mac80211_hwsim.c
-> 
-> mac80211_hwsim_new_radio()
-> 
->         tasklet_hrtimer_init(&data->beacon_timer,
->                              mac80211_hwsim_beacon,
->                              CLOCK_MONOTONIC_RAW, HRTIMER_MODE_ABS);
-> 
-> CLOCK_MONOTONIC_RAW is not a supported clockid for hrtimers. Sigh.
-> 
-> Fix below.
-> 
-> Thanks,
-> 
-> 	tglx
-> 
-> 8<------------------
-> 
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> index 0cd95120bc78..da363ec91a1c 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -2535,9 +2535,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
->  				    data->debugfs,
->  				    data, &hwsim_simulate_radar);
->  
-> -	tasklet_hrtimer_init(&data->beacon_timer,
-> -			     mac80211_hwsim_beacon,
-> -			     CLOCK_MONOTONIC_RAW, HRTIMER_MODE_ABS);
-> +	tasklet_hrtimer_init(&data->beacon_timer, mac80211_hwsim_beacon,
-> +			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
->  
->  	spin_lock_bh(&hwsim_radio_lock);
->  	list_add_tail(&data->list, &hwsim_radios);
-> 
-
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+cheers,
+jamal
