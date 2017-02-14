@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35630 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753894AbdBHIwP (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36042 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752312AbdBNTgp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 03:52:15 -0500
-Received: by mail-oi0-f65.google.com with SMTP id x84so10536503oix.2
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 00:52:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1486543119.2533.3.camel@redhat.com>
-References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
- <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com> <1486543119.2533.3.camel@redhat.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 8 Feb 2017 09:52:14 +0100
-Message-ID: <CACna6rxc6kAtAbknMGVoW5jWoxnUibD83jcVsHmU6gWhSVTWzQ@mail.gmail.com> (sfid-20170208_095525_140782_B1671BCE)
-Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
-To: Paolo Abeni <pabeni@redhat.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        hante Meuleman <hante.meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+        Tue, 14 Feb 2017 14:36:45 -0500
+Received: by mail-wr0-f193.google.com with SMTP id k90so28690648wrc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 11:36:44 -0800 (PST)
+From: Doru <gucea.doru@gmail.com>
+To: linux-wireless@vger.kernel.org, ath9k_htc_fw@lists.infradead.org,
+        andra.paraschiv7@gmail.com, costin.raiciu@cs.pub.ro,
+        dragos.niculescu@cs.pub.ro
+Cc: Doru Gucea <gucea.doru@gmail.com>
+Subject: [RFC-PATCH] ath9k_htc: Adjust beacon timers for Power Save
+Date: Tue, 14 Feb 2017 21:36:25 +0200
+Message-Id: <1487100985-4194-1-git-send-email-gucea.doru@gmail.com> (sfid-20170214_203842_791563_CDB1D16C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 February 2017 at 09:38, Paolo Abeni <pabeni@redhat.com> wrote:
-> On Tue, 2017-02-07 at 20:23 +0100, Arend Van Spriel wrote:
->> On 7-2-2017 17:50, Paolo Abeni wrote:
->> > the skbs can be held by the driver for a long time, so we need
->> > to clear any state on xmit to avoid hanging other subsystems.
->> > The skbs are already orphaned later in cmsg code, so we just
->> > need to clear the nf/dst/secpath.
->> > Do it early, while the relevant entries are hopefully still
->> > hot in the cache.
->>
->> What is this about really? A bit more background about the issue
->> might
->> help understanding the need for this patch. Is this really specific
->> to
->> brcmfmac. For instance is something similar already done in mac80211?
->
-> The issue is apparently driver specific, as reported in:
->
-> https://bugzilla.redhat.com/show_bug.cgi?id=3D1294415
->
-> This is caused by xmit skbs carrying a notrack ct entry not being freed
-> by the device driver in a timely manner. Removing the ct module waits
-> for such entries refcount going to zero and hangs the kernel in busy
-> loop (for several minutes).
->
-> The relevant skbs are icmp6 packets (ND if I recall correctly, they
-> bcast packets at the mac level).
->
-> The only other known device driver suffering for the issue is the
-> infiniband ipoib driver, I send a separate patch for it.
->
-> I lack the broadcom h/w, but with infiniband the bug can be reproduced
-> with the following steps:
->
-> - ensure ipv6 is enabled on the target device, and firewalld is running
-> (e.g. the module nf_conntrack_ipv6 is loaded)
-> - assign a static ip to the device
-> - shut down the firewall (e.g. try to remove the module nf_conntrack)
->
-> For the brcmfmac driver most probably it is necessary being
-> disassociated from the AP before shutting down the firewall (but I
-> can't double check). This is probably why mac80211 does not suffer this
-> issue.
->
-> The root cause for the issue could be actually a firmware issue, any
-> better clues are more than welcome!
+From: Doru Gucea <gucea.doru@gmail.com>
 
-Do I get this correctly brcmfmac gets some skb for transmitting it and
-doesn't free it for few minutes? It sounds like some bug that should
-be fixed instead of hiding it.
+Each time we receive a beacon we need to adjust the hardware
+timers for next DTIM and next TBTT.
 
---=20
-Rafa=C5=82
+Before this commit, the Power Save behaviour was incorrect.
+The scenario was:
+- STA receives a beacon from AP with TIM unset;
+- mac80211 layers puts the chip to sleep;
+- chip is woken up by mac80211's software timer reponsible for
+beacon miss after 7 * beacon_interval period.
+
+Normally the chip should sleep at most DTIM period. This commit
+configures hardware timers for waking up the chip correctly.
+
+More details on the wiki:
+https://github.com/doru91/linux-stable/wiki/Single-Interface-Power-Save
+
+Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
+ net/mac80211/mlme.c                           | 6 ++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 172a9ff..59a76e0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1521,6 +1521,10 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	mutex_lock(&priv->mutex);
+ 	ath9k_htc_ps_wakeup(priv);
+ 
++	/* adjust beacon timers */
++	if (changed && BSS_CHANGED_BEACON_INFO)
++		ath9k_htc_beacon_config(priv, vif);
++
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		ath_dbg(common, CONFIG, "BSS Changed ASSOC %d\n",
+ 			bss_conf->assoc);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cd7e55e..ce92a39 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3536,6 +3536,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 			sdata->vif.bss_conf.sync_dtim_count = 0;
+ 	}
+ 
++	/* trigger hardware timers adjustment
++	 * this needs to be done before beacon filtering
++	 */
++	changed |= BSS_CHANGED_BEACON_INFO;
++	ieee80211_bss_info_change_notify(sdata, changed);
++
+ 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
+ 		return;
+ 	ifmgd->beacon_crc = ncrc;
+-- 
+1.9.1
