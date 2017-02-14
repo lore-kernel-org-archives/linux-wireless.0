@@ -1,61 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34686 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932098AbdBHGgn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 01:36:43 -0500
-From: David Lin <dlin@marvell.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Steve deRosier <derosier@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Chor Teck Law <ctlaw@marvell.com>,
-        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: Re: [PATCH v9] Add new mac80211 driver mwlwifi.
-Date: Wed, 8 Feb 2017 06:15:15 +0000
-Message-ID: <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com> (sfid-20170208_073659_107144_516BC367)
-References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
- <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
- <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
-In-Reply-To: <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:42320 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753700AbdBNL2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 06:28:33 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, greearb@candelatech.com,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/4] ieee80211: add new VHT capability fields/parsing
+Date: Tue, 14 Feb 2017 12:28:26 +0100
+Message-Id: <20170214112827.28216-3-johannes@sipsolutions.net> (sfid-20170214_123003_071861_B32E46B9)
+In-Reply-To: <20170214112827.28216-1-johannes@sipsolutions.net>
+References: <20170214112827.28216-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBSYWZhxYIgTWnFgmVja2kgW21haWx0bzp6YWplYzVAZ21haWwuY29tXSB3cm90ZToNCj4gT24g
-NyBGZWJydWFyeSAyMDE3IGF0IDIwOjEyLCBTdGV2ZSBkZVJvc2llciA8ZGVyb3NpZXJAZ21haWwu
-Y29tPiB3cm90ZToNCj4gPj4gKyAvKiBsb29rIGZvciBhbGwgbWF0Y2hpbmcgcHJvcGVydHkgbmFt
-ZXMgKi8NCj4gPj4gKyBmb3JfZWFjaF9wcm9wZXJ0eV9vZl9ub2RlKHByaXYtPmR0X25vZGUsIHBy
-b3ApIHsgaWYNCj4gPj4gKyAoc3RyY21wKHByb3AtPm5hbWUsICJtYXJ2ZWxsLDJnaHoiKSA9PSAw
-KQ0KPiA+PiArIHByaXYtPmRpc2FibGVfMmcgPSB0cnVlOw0KPiA+PiArIGlmIChzdHJjbXAocHJv
-cC0+bmFtZSwgIm1hcnZlbGwsNWdoeiIpID09IDApDQo+ID4+ICsgcHJpdi0+ZGlzYWJsZV81ZyA9
-IHRydWU7DQo+ID4+ICsgaWYgKHN0cmNtcChwcm9wLT5uYW1lLCAibWFydmVsbCxjaGFpbm1hc2si
-KSA9PSAwKSB7IHByb3BfdmFsdWUgPQ0KPiA+PiArIGJlMzJfdG9fY3B1KCooKF9fYmUzMiAqKXBy
-b3AtPnZhbHVlKSk7IGlmIChwcm9wX3ZhbHVlID09IDIpDQo+ID4+ICsgcHJpdi0+YW50ZW5uYV90
-eCA9IEFOVEVOTkFfVFhfMjsNCj4gPj4gKw0KPiA+PiArIHByb3BfdmFsdWUgPSBiZTMyX3RvX2Nw
-dSgqKChfX2JlMzIgKikgKHByb3AtPnZhbHVlICsgNCkpKTsgaWYNCj4gPj4gKyAocHJvcF92YWx1
-ZSA9PSAyKQ0KPiA+PiArIHByaXYtPmFudGVubmFfcnggPSBBTlRFTk5BX1JYXzI7DQo+ID4+ICsg
-fQ0KPiA+PiArIH0NCj4gPj4gKw0KPiA+PiArIHByaXYtPnB3cl9ub2RlID0gb2ZfZmluZF9ub2Rl
-X2J5X25hbWUocHJpdi0+ZHRfbm9kZSwNCj4gPj4gKyAgICAgICJtYXJ2ZWxsLHBvd2VydGFibGUi
-KTsNCj4gPj4gKyNlbmRpZg0KPiA+PiArfQ0KPiA+DQo+ID4gQUZBSUNULCB0aGVyZSdzIG5vIGRv
-Y3VtZW50YXRpb24gZm9yIHRoZXNlIERUIGJpbmRpbmdzLiBUaGUgbXdsd2lmaQ0KPiA+IG5vZGUg
-YW5kIHRoZSBtYXJ2ZWxsLHBvd2VydGFibGUgYm90aCBuZWVkIGZ1bGwgZG9jdW1lbnRhdGlvbiBp
-bg0KPiA+IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy8uLi4gLg0KPiA+DQo+ID4g
-RnJhbmtseSBJIGhhdmUgYSBmZWVsaW5nIEknbSBnb2luZyB0byBuZWVkIHRoZXNlIERUIG5vZGVz
-IGFuZCBJJ2QgbGlrZQ0KPiA+IHRvIG5vdCBoYXZlIHRvIGd1ZXNzLWFuZC1jaGVjayBiYXNlZCBv
-biB0aGUgY29kZS4NCj4gDQo+IFBsZWFzZSB1c2UgaWVlZTgwMjExLWZyZXEtbGltaXQ6DQo+IGh0
-dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2RhdmVtL25ldC1uZXh0
-LmdpdC9jb21taXQvP2lkPWIzDQo+IDMwYjI1ZWFhYmRhMDBkNzRlNDc1NjZkOTIwMDkwN2RhMzgx
-ODk2DQo+IA0KPiBNb3N0IGxpa2VseSB3aXRoIHdpcGh5X3JlYWRfb2ZfZnJlcV9saW1pdHMgaGVs
-cGVyOg0KPiBodHRwczovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgva2VybmVsL2dpdC9kYXZl
-bS9uZXQtbmV4dC5naXQvY29tbWl0Lz9pZD1lNg0KPiA5MWFjMmY3NWI2OWJlZTc0M2YwMzcwZDc5
-NDU0YmE0NDI5YjE3NQ0KDQpJIGFscmVhZHkgcmVwbGllZCBtZWFuaW5nIG9mIHRoZXNlIHBhcmFt
-ZXRlcnM6DQo8bWFydmVsbCwyZ2h6PiBpcyB1c2VkIHRvIGRpc2FibGUgMmcgYmFuZC4NCjxtYXJ2
-ZWxsLDVnaHo+IGlzIHVzZWQgdG8gZGlzYWJsZSA1ZyBiYW5kLg0KPG1hcnZlbGwsIGNoYWlubWFz
-az4gaXMgdXNlZCB0byBzcGVjaWZ5IGFudGVubmEgbnVtYmVyIChpZiBkZWZhdWx0IG51bWJlciBp
-cyBzdWl0YWJsZSBmb3IgeW91LCB0aGVyZSBpcyBubyBuZWVkIHRvIHVzZSB0aGlzIHBhcmFtZXRl
-cikuDQo8bWFydmVsbCxwb3dlcnRhYmxlPiBzaG91bGQgbm90IGJlIHVzZWQgZm9yIGNoaXAgd2l0
-aCBkZXZpY2UgcG93ZXIgdGFibGUuIEluIGZhY3QsIHRoaXMgcGFyYW1ldGVyIHNob3VsZCBub3Qg
-YmUgdXNlZCBhbnkgbW9yZS4NCg0KVGhhbmtzLA0KRGF2aWQNCg==
+From: Johannes Berg <johannes.berg@intel.com>
+
+IEEE 802.11-2016 extended the VHT capability fields to allow
+indicating the number of spatial streams depending on the
+actually used bandwidth, add support for decoding this.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h | 81 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 79 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 4a7200c6c9ea..eecae214c47a 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1457,13 +1457,16 @@ struct ieee80211_ht_operation {
+  *	STA can receive. Rate expressed in units of 1 Mbps.
+  *	If this field is 0 this value should not be used to
+  *	consider the highest RX data rate supported.
+- *	The top 3 bits of this field are reserved.
++ *	The top 3 bits of this field indicate the Maximum NSTS,total
++ *	(a beamformee capability.)
+  * @tx_mcs_map: TX MCS map 2 bits for each stream, total 8 streams
+  * @tx_highest: Indicates highest long GI VHT PPDU data rate
+  *	STA can transmit. Rate expressed in units of 1 Mbps.
+  *	If this field is 0 this value should not be used to
+  *	consider the highest TX data rate supported.
+- *	The top 3 bits of this field are reserved.
++ *	The top 2 bits of this field are reserved, the
++ *	3rd bit from the top indiciates VHT Extended NSS BW
++ *	Capability.
+  */
+ struct ieee80211_vht_mcs_info {
+ 	__le16 rx_mcs_map;
+@@ -1472,6 +1475,11 @@ struct ieee80211_vht_mcs_info {
+ 	__le16 tx_highest;
+ } __packed;
+ 
++#define IEEE80211_VHT_MAX_NSTS_TOTAL_SHIFT	13
++#define IEEE80211_VHT_MAX_NSTS_TOTAL_MASK	(7 << IEEE80211_VHT_MAX_NSTS_TOTAL_SHIFT)
++
++#define IEEE80211_VHT_EXT_NSS_BW_CAPABLE	(1 << 13)
++
+ /**
+  * enum ieee80211_vht_mcs_support - VHT MCS support definitions
+  * @IEEE80211_VHT_MCS_SUPPORT_0_7: MCSes 0-7 are supported for the
+@@ -1547,6 +1555,7 @@ struct ieee80211_vht_operation {
+ #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ		0x00000004
+ #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ	0x00000008
+ #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK			0x0000000C
++#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT			2
+ #define IEEE80211_VHT_CAP_RXLDPC				0x00000010
+ #define IEEE80211_VHT_CAP_SHORT_GI_80				0x00000020
+ #define IEEE80211_VHT_CAP_SHORT_GI_160				0x00000040
+@@ -1575,6 +1584,74 @@ struct ieee80211_vht_operation {
+ #define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB	0x0c000000
+ #define IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN			0x10000000
+ #define IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN			0x20000000
++#define IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT			30
++#define IEEE80211_VHT_CAP_EXT_NSS_BW_MASK			0xc0000000
++
++static inline int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
++					    enum ieee80211_vht_chanwidth bw)
++{
++	unsigned long w;
++	int max_vht_nss;
++	int ext_nss_bw;
++	int supp_width;
++
++	if (cap->supp_mcs.rx_mcs_map == 0xffff)
++		return 0;
++
++	w = cap->supp_mcs.rx_mcs_map ^ 0xffff;
++	max_vht_nss = DIV_ROUND_UP(fls(w) + 1, 2);
++
++	if (!(cap->supp_mcs.tx_mcs_map & IEEE80211_VHT_EXT_NSS_BW_CAPABLE))
++		return max_vht_nss;
++
++	ext_nss_bw = (le32_to_cpu(cap->vht_cap_info) &
++					IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
++			>> IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT;
++	supp_width = (le32_to_cpu(cap->vht_cap_info) &
++					IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)
++			>> IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
++
++	/*
++	 * Cover all the special cases according to IEEE 802.11-2016 Table 9-250.
++	 * All other cases are either factor of 1 or not valid/supported.
++	 */
++	switch (bw) {
++	case IEEE80211_VHT_CHANWIDTH_USE_HT:
++	case IEEE80211_VHT_CHANWIDTH_80MHZ:
++		if ((supp_width == 1 || supp_width == 2) &&
++		    ext_nss_bw == 3)
++			return 2 * max_vht_nss;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_160MHZ:
++		if (supp_width == 0 &&
++		    (ext_nss_bw == 1 || ext_nss_bw == 2))
++			return DIV_ROUND_UP(max_vht_nss, 2);
++		if (supp_width == 0 &&
++		    ext_nss_bw == 3)
++			return DIV_ROUND_UP(3 * max_vht_nss, 4);
++		if (supp_width == 1 &&
++		    ext_nss_bw == 3)
++			return 2 * max_vht_nss;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
++		if (supp_width == 0 &&
++		    ext_nss_bw == 2)
++			return DIV_ROUND_UP(max_vht_nss, 2);
++		if (supp_width == 0 &&
++		    ext_nss_bw == 3)
++			return DIV_ROUND_UP(3 * max_vht_nss, 4);
++		if (supp_width == 1 &&
++		    ext_nss_bw == 1)
++			return DIV_ROUND_UP(max_vht_nss, 2);
++		if (supp_width == 1 &&
++		    ext_nss_bw == 2)
++			return DIV_ROUND_UP(3 * max_vht_nss, 4);
++		break;
++	}
++
++	/* not covered or invalid combination received */
++	return max_vht_nss;
++}
+ 
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+-- 
+2.9.3
