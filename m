@@ -1,122 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48396 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:57748 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932283AbdBQCJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2017 21:09:44 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: johannes.berg@intel.com, luciano.coelho@intel.com,
-        emmanuel.grumbach@intel.com, tj@kernel.org, arjan@linux.intel.com,
-        ming.lei@canonical.com, zajec5@gmail.com
-Cc: jeyu@redhat.com, rusty@rustcorp.com.au, pmladek@suse.com,
-        gregkh@linuxfoundation.org, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC 4/5] iwlwifi: move opmode loading to shared routine
-Date: Thu, 16 Feb 2017 18:09:02 -0800
-Message-Id: <20170217020903.6370-5-mcgrof@kernel.org> (sfid-20170217_031021_154991_54ACCD9A)
-In-Reply-To: <20170217020903.6370-1-mcgrof@kernel.org>
-References: <20170217020903.6370-1-mcgrof@kernel.org>
+        id S1752919AbdBNMvG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 07:51:06 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH 02/10] rt2800: identify station based on status WCID
+Date: Tue, 14 Feb 2017 13:46:00 +0100
+Message-Id: <1487076368-7020-3-git-send-email-sgruszka@redhat.com> (sfid-20170214_135243_648316_AAD3144B)
+In-Reply-To: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helps us compartmentalize all last required opmode work
-and declutter the async firmware callback.
+Add station field to skb_frame_desc and assign it according to status
+WCID. This field will be used in the future.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 33 +++++++++++++++-------------
- 1 file changed, 18 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c   | 8 ++++++++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h   | 1 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.h | 3 ++-
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 4a1937c77f90..6cfbc3c6e0d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -139,6 +139,8 @@ static struct iwlwifi_opmode_table {
- 	const char *name;			/* name: iwldvm, iwlmvm, etc */
- 	const struct iwl_op_mode_ops *ops;	/* pointer to op_mode ops */
- 	struct list_head drv;		/* list of devices using this op_mode */
-+	bool load_requested;		/* Do we need to load a driver ? */
-+	struct iwl_drv *drv_req;	/* Device that set load_requested */
- } iwlwifi_opmode_table[] = {		/* ops set when driver is initialized */
- 	[DVM_OP_MODE] = { .name = "iwldvm", .ops = NULL },
- 	[MVM_OP_MODE] = { .name = "iwlmvm", .ops = NULL },
-@@ -1233,27 +1235,32 @@ static void _iwl_op_mode_stop(struct iwl_drv *drv)
- 	}
- }
- 
--static void iwlwifi_try_load_op(struct iwlwifi_opmode_table *op,
--				struct iwl_drv *drv)
-+/* We have to unlock and then lock for the caller */
-+static void iwlwifi_try_load_op(struct iwlwifi_opmode_table *op)
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 8223a15..5de21d2 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -855,11 +855,13 @@ void rt2800_process_rxwi(struct queue_entry *entry,
+ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
  {
- 	int ret = 0;
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	struct txdone_entry_desc txdesc;
+ 	u32 word;
+ 	u16 mcs, real_mcs;
+ 	int aggr, ampdu;
++	int wcid;
  
-+	mutex_unlock(&iwlwifi_opmode_table_mtx);
-+
- 	ret = request_module("%s", op->name);
--	if (ret)
-+	if (ret) {
-+		mutex_lock(&iwlwifi_opmode_table_mtx);
- 		goto out;
-+	}
+ 	/*
+ 	 * Obtain the status about this packet.
+@@ -872,6 +874,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
  
- 	mutex_lock(&iwlwifi_opmode_table_mtx);
- 	if (!op->ops)
- 		ret = -ENOENT;
--	mutex_unlock(&iwlwifi_opmode_table_mtx);
+ 	real_mcs = rt2x00_get_field32(status, TX_STA_FIFO_MCS);
+ 	aggr = rt2x00_get_field32(status, TX_STA_FIFO_TX_AGGRE);
++	wcid = rt2x00_get_field32(status, TX_STA_FIFO_WCID);
  
- out:
- #ifdef CONFIG_IWLWIFI_OPMODE_MODULAR
- 	if (ret)
--		IWL_ERR(drv,
-+		IWL_ERR(op->drv_req,
- 			"failed to load module %s (error %d), is dynamic loading enabled?\n",
- 			op->name, ret);
- #endif
-+	op->load_requested = false;
-+	op->drv_req = NULL;
- }
- 
- static void iwlwifi_opmode_start_drv(struct iwlwifi_opmode_table *op,
-@@ -1294,6 +1301,8 @@ static void iwlwifi_opmode_dowork(void)
- 		op = &iwlwifi_opmode_table[i];
- 		if (op->ops)
- 			iwlwifi_opmode_start(op);
-+		else if (op->load_requested)
-+			iwlwifi_try_load_op(op);
+ 	/*
+ 	 * If a frame was meant to be sent as a single non-aggregated MPDU
+@@ -894,6 +897,9 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+ 		mcs = real_mcs;
  	}
- 	mutex_unlock(&iwlwifi_opmode_table_mtx);
- }
-@@ -1317,7 +1326,6 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	size_t trigger_tlv_sz[FW_DBG_TRIGGER_MAX];
- 	u32 api_ver;
- 	int i;
--	bool load_module = false;
- 	bool usniffer_images = false;
  
- 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
-@@ -1515,18 +1523,13 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	/* add this device to the list of devices using this op_mode */
- 	list_add_tail(&drv->list, &op->drv);
++	if (likely(wcid >= WCID_START && wcid <= WCID_END))
++		skbdesc->sta = drv_data->wcid_to_sta[wcid - WCID_START];
++
+ 	if (aggr == 1 || ampdu == 1)
+ 		__set_bit(TXDONE_AMPDU, &txdesc.flags);
  
--	if (!op->ops)
--		load_module = true;
-+	if (!op->ops) {
-+		op->load_requested = true;
-+		op->drv_req = drv;
-+	}
+@@ -1468,6 +1474,7 @@ int rt2800_sta_add(struct rt2x00_dev *rt2x00dev, struct ieee80211_vif *vif,
+ 		return 0;
  
- 	mutex_unlock(&iwlwifi_opmode_table_mtx);
+ 	__set_bit(wcid - WCID_START, drv_data->sta_ids);
++	drv_data->wcid_to_sta[wcid - WCID_START] = sta;
  
--	/*
--	 * Load the module last so we don't block anything
--	 * else from proceeding if the module fails to load
--	 * or hangs loading.
--	 */
--	if (load_module)
--		iwlwifi_try_load_op(op, drv);
- 	iwlwifi_opmode_dowork();
- 	goto free;
+ 	/*
+ 	 * Clean up WCID attributes and write STA address to the device.
+@@ -1498,6 +1505,7 @@ int rt2800_sta_remove(struct rt2x00_dev *rt2x00dev, struct ieee80211_sta *sta)
+ 	 * get renewed when the WCID is reused.
+ 	 */
+ 	rt2800_config_wcid(rt2x00dev, NULL, wcid);
++	drv_data->wcid_to_sta[wcid - WCID_START] = NULL;
+ 	__clear_bit(wcid - WCID_START, drv_data->sta_ids);
  
+ 	return 0;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+index 8e1ae13..6811d67 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+@@ -41,6 +41,7 @@ struct rt2800_drv_data {
+ 	unsigned int tbtt_tick;
+ 	unsigned int ampdu_factor_cnt[4];
+ 	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
++	struct ieee80211_sta *wcid_to_sta[STA_IDS_SIZE];
+ };
+ 
+ struct rt2800_ops {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
+index 22d1881..9b297fc 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.h
+@@ -102,7 +102,7 @@ enum skb_frame_desc_flags {
+  *	of the scope of the skb->data pointer.
+  * @iv: IV/EIV data used during encryption/decryption.
+  * @skb_dma: (PCI-only) the DMA address associated with the sk buffer.
+- * @entry: The entry to which this sk buffer belongs.
++ * @sta: The station where sk buffer was sent.
+  */
+ struct skb_frame_desc {
+ 	u8 flags;
+@@ -116,6 +116,7 @@ struct skb_frame_desc {
+ 	__le32 iv[2];
+ 
+ 	dma_addr_t skb_dma;
++	struct ieee80211_sta *sta;
+ };
+ 
+ /**
 -- 
-2.11.0
+1.8.3.1
