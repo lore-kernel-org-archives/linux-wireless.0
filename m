@@ -1,70 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752806AbdBUOcQ (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36587 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752155AbdBNWGN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:16 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
+        Tue, 14 Feb 2017 17:06:13 -0500
+Received: by mail-oi0-f65.google.com with SMTP id u143so2459688oif.3
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 14:06:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20170214220346.10479-1-zajec5@gmail.com>
+References: <20170214220346.10479-1-zajec5@gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 14 Feb 2017 23:06:07 +0100
+Message-ID: <CACna6rxv1AngN2Y5J6WFgE+svRcMXVWQ_r-JpGFh2no9a6zpMA@mail.gmail.com> (sfid-20170214_230651_866719_ADBA8A5D)
+Subject: Re: [PATCH] bcma: gpio: set of_node regardless of the host type
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 02/10] wil6210: do not start regular scan on stopped p2p device
-Date: Tue, 21 Feb 2017 16:32:00 +0200
-Message-Id: <1487687528-12832-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153220_793165_1114D422)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+On 14 February 2017 at 23:03, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> DT allows describing many device types, not only platform ones. If e.g.
+> bcma is hosted on PCI(e) and it has its of_node, let's pass it to the
+> GPIO subsystem. This allows GPIO code to handle more hardware details
+> not only for bcma on a SoC.
+>
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 
-The driver should not allow starting any type of scan on a stopped
-P2P device. Current implementation only checked social scan.
-
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 83155b5..14aa6d3 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -390,22 +390,23 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 	}
- 	mutex_unlock(&wil->p2p_wdev_mutex);
- 
--	/* social scan on P2P_DEVICE is handled as p2p search */
--	if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
--	    wil_p2p_is_social_scan(request)) {
-+	if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE) {
- 		if (!wil->p2p.p2p_dev_started) {
- 			wil_err(wil, "P2P search requested on stopped P2P device\n");
- 			rc = -EIO;
- 			goto out;
- 		}
--		wil->scan_request = request;
--		wil->radio_wdev = wdev;
--		rc = wil_p2p_search(wil, request);
--		if (rc) {
--			wil->radio_wdev = wil_to_wdev(wil);
--			wil->scan_request = NULL;
-+		/* social scan on P2P_DEVICE is handled as p2p search */
-+		if (wil_p2p_is_social_scan(request)) {
-+			wil->scan_request = request;
-+			wil->radio_wdev = wdev;
-+			rc = wil_p2p_search(wil, request);
-+			if (rc) {
-+				wil->radio_wdev = wil_to_wdev(wil);
-+				wil->scan_request = NULL;
-+			}
-+			goto out;
- 		}
--		goto out;
- 	}
- 
- 	(void)wil_p2p_stop_discovery(wil);
--- 
-1.9.1
+This obviously can wait for 4.12 merge window, no rush.
