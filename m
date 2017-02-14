@@ -1,140 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.zhinst.com ([212.126.164.98]:52322 "EHLO mail.zhinst.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58746 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752045AbdBILr3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Feb 2017 06:47:29 -0500
-From: Tobias Klauser <tklauser@distanz.ch>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] ath6kl: Use net_device_stats from struct net_device
-Date: Thu,  9 Feb 2017 12:21:17 +0100
-Message-Id: <20170209112117.23994-1-tklauser@distanz.ch> (sfid-20170209_124815_702520_699771F4)
+        id S1752933AbdBNMvI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 07:51:08 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH 03/10] rt2x00: separte filling tx status from rt2x00lib_txdone
+Date: Tue, 14 Feb 2017 13:46:01 +0100
+Message-Id: <1487076368-7020-4-git-send-email-sgruszka@redhat.com> (sfid-20170214_135244_048023_DB90C22F)
+In-Reply-To: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using a private copy of struct net_device_stats in struct
-ath6kl_vif, use stats from struct net_device. Also remove the now
-unnecessary .ndo_get_stats function.
+This makes rt2x00lib_txdone a bit simpler and will allow to reuse code
+in different variant of txdone which I'm preparing.
 
-Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |  1 -
- drivers/net/wireless/ath/ath6kl/main.c |  8 --------
- drivers/net/wireless/ath/ath6kl/txrx.c | 22 +++++++++++-----------
- 3 files changed, 11 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 141 +++++++++++++------------
+ 1 file changed, 76 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index ac25f1781b42..87e99c12d4ba 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -641,7 +641,6 @@ struct ath6kl_vif {
- 	u32 txe_intvl;
- 	u16 bg_scan_period;
- 	u8 assoc_bss_dtim_period;
--	struct net_device_stats net_stats;
- 	struct target_stats target_stats;
- 	struct wmi_connect_cmd profile;
- 	u16 rsn_capab;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 1af3fed5a72c..91ee542de3d7 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1113,13 +1113,6 @@ static int ath6kl_close(struct net_device *dev)
- 	return 0;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index dd66781..b5d90fe 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -313,73 +313,14 @@ static inline int rt2x00lib_txdone_bar_status(struct queue_entry *entry)
+ 	return ret;
  }
  
--static struct net_device_stats *ath6kl_get_stats(struct net_device *dev)
--{
--	struct ath6kl_vif *vif = netdev_priv(dev);
--
--	return &vif->net_stats;
--}
--
- static int ath6kl_set_features(struct net_device *dev,
- 			       netdev_features_t features)
+-void rt2x00lib_txdone(struct queue_entry *entry,
+-		      struct txdone_entry_desc *txdesc)
++static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
++				     struct ieee80211_tx_info *tx_info,
++				     struct skb_frame_desc *skbdesc,
++				     struct txdone_entry_desc *txdesc,
++				     bool success)
  {
-@@ -1285,7 +1278,6 @@ static const struct net_device_ops ath6kl_netdev_ops = {
- 	.ndo_open               = ath6kl_open,
- 	.ndo_stop               = ath6kl_close,
- 	.ndo_start_xmit         = ath6kl_data_tx,
--	.ndo_get_stats          = ath6kl_get_stats,
- 	.ndo_set_features       = ath6kl_set_features,
- 	.ndo_set_rx_mode	= ath6kl_set_multicast_list,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 9df41d5e3249..a531e0c5c1e2 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -405,7 +405,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 			skb = skb_realloc_headroom(skb, dev->needed_headroom);
- 			kfree_skb(tmp_skb);
- 			if (skb == NULL) {
--				vif->net_stats.tx_dropped++;
-+				dev->stats.tx_dropped++;
- 				return 0;
- 			}
- 		}
-@@ -520,8 +520,8 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- fail_tx:
- 	dev_kfree_skb(skb);
+-	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
+-	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+-	unsigned int header_length, i;
+ 	u8 rate_idx, rate_flags, retry_rates;
+-	u8 skbdesc_flags = skbdesc->flags;
+-	bool success;
+-
+-	/*
+-	 * Unmap the skb.
+-	 */
+-	rt2x00queue_unmap_skb(entry);
+-
+-	/*
+-	 * Remove the extra tx headroom from the skb.
+-	 */
+-	skb_pull(entry->skb, rt2x00dev->extra_tx_headroom);
+-
+-	/*
+-	 * Signal that the TX descriptor is no longer in the skb.
+-	 */
+-	skbdesc->flags &= ~SKBDESC_DESC_IN_SKB;
+-
+-	/*
+-	 * Determine the length of 802.11 header.
+-	 */
+-	header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+-
+-	/*
+-	 * Remove L2 padding which was added during
+-	 */
+-	if (rt2x00_has_cap_flag(rt2x00dev, REQUIRE_L2PAD))
+-		rt2x00queue_remove_l2pad(entry->skb, header_length);
+-
+-	/*
+-	 * If the IV/EIV data was stripped from the frame before it was
+-	 * passed to the hardware, we should now reinsert it again because
+-	 * mac80211 will expect the same data to be present it the
+-	 * frame as it was passed to us.
+-	 */
+-	if (rt2x00_has_cap_hw_crypto(rt2x00dev))
+-		rt2x00crypto_tx_insert_iv(entry->skb, header_length);
+-
+-	/*
+-	 * Send frame to debugfs immediately, after this call is completed
+-	 * we are going to overwrite the skb->cb array.
+-	 */
+-	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TXDONE, entry);
+-
+-	/*
+-	 * Determine if the frame has been successfully transmitted and
+-	 * remove BARs from our check list while checking for their
+-	 * TX status.
+-	 */
+-	success =
+-	    rt2x00lib_txdone_bar_status(entry) ||
+-	    test_bit(TXDONE_SUCCESS, &txdesc->flags) ||
+-	    test_bit(TXDONE_UNKNOWN, &txdesc->flags);
+-
+-	/*
+-	 * Update TX statistics.
+-	 */
+-	rt2x00dev->link.qual.tx_success += success;
+-	rt2x00dev->link.qual.tx_failed += !success;
++	int i;
  
--	vif->net_stats.tx_dropped++;
--	vif->net_stats.tx_aborted_errors++;
-+	dev->stats.tx_dropped++;
-+	dev->stats.tx_aborted_errors++;
- 
- 	return 0;
- }
-@@ -767,7 +767,7 @@ void ath6kl_tx_complete(struct htc_target *target,
- 				/* a packet was flushed  */
- 				flushing[if_idx] = true;
- 
--			vif->net_stats.tx_errors++;
-+			vif->ndev->stats.tx_errors++;
- 
- 			if (status != -ENOSPC && status != -ECANCELED)
- 				ath6kl_warn("tx complete error: %d\n", status);
-@@ -783,8 +783,8 @@ void ath6kl_tx_complete(struct htc_target *target,
- 				   eid, "OK");
- 
- 			flushing[if_idx] = false;
--			vif->net_stats.tx_packets++;
--			vif->net_stats.tx_bytes += skb->len;
-+			vif->ndev->stats.tx_packets++;
-+			vif->ndev->stats.tx_bytes += skb->len;
- 		}
- 
- 		ath6kl_tx_clear_node_map(vif, eid, map_no);
-@@ -1365,8 +1365,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	 */
- 	spin_lock_bh(&vif->if_lock);
- 
--	vif->net_stats.rx_packets++;
--	vif->net_stats.rx_bytes += packet->act_len;
-+	vif->ndev->stats.rx_packets++;
-+	vif->ndev->stats.rx_bytes += packet->act_len;
- 
- 	spin_unlock_bh(&vif->if_lock);
- 
-@@ -1395,8 +1395,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	    ((packet->act_len < min_hdr_len) ||
- 	     (packet->act_len > WMI_MAX_AMSDU_RX_DATA_FRAME_LENGTH))) {
- 		ath6kl_info("frame len is too short or too long\n");
--		vif->net_stats.rx_errors++;
--		vif->net_stats.rx_length_errors++;
-+		vif->ndev->stats.rx_errors++;
-+		vif->ndev->stats.rx_length_errors++;
- 		dev_kfree_skb(skb);
- 		return;
+ 	rate_idx = skbdesc->tx_rate_idx;
+ 	rate_flags = skbdesc->tx_rate_flags;
+@@ -448,6 +389,76 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		else
+ 			rt2x00dev->low_level_stats.dot11RTSFailureCount++;
  	}
-@@ -1619,7 +1619,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 			return;
- 		}
- 	} else if (!is_broadcast_ether_addr(datap->h_dest)) {
--		vif->net_stats.multicast++;
-+		vif->ndev->stats.multicast++;
- 	}
++}
++
++void rt2x00lib_txdone(struct queue_entry *entry,
++		      struct txdone_entry_desc *txdesc)
++{
++	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
++	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
++	u8 skbdesc_flags = skbdesc->flags;
++	unsigned int header_length;
++	bool success;
++
++	/*
++	 * Unmap the skb.
++	 */
++	rt2x00queue_unmap_skb(entry);
++
++	/*
++	 * Remove the extra tx headroom from the skb.
++	 */
++	skb_pull(entry->skb, rt2x00dev->extra_tx_headroom);
++
++	/*
++	 * Signal that the TX descriptor is no longer in the skb.
++	 */
++	skbdesc->flags &= ~SKBDESC_DESC_IN_SKB;
++
++	/*
++	 * Determine the length of 802.11 header.
++	 */
++	header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
++
++	/*
++	 * Remove L2 padding which was added during
++	 */
++	if (rt2x00_has_cap_flag(rt2x00dev, REQUIRE_L2PAD))
++		rt2x00queue_remove_l2pad(entry->skb, header_length);
++
++	/*
++	 * If the IV/EIV data was stripped from the frame before it was
++	 * passed to the hardware, we should now reinsert it again because
++	 * mac80211 will expect the same data to be present it the
++	 * frame as it was passed to us.
++	 */
++	if (rt2x00_has_cap_hw_crypto(rt2x00dev))
++		rt2x00crypto_tx_insert_iv(entry->skb, header_length);
++
++	/*
++	 * Send frame to debugfs immediately, after this call is completed
++	 * we are going to overwrite the skb->cb array.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TXDONE, entry);
++
++	/*
++	 * Determine if the frame has been successfully transmitted and
++	 * remove BARs from our check list while checking for their
++	 * TX status.
++	 */
++	success =
++	    rt2x00lib_txdone_bar_status(entry) ||
++	    test_bit(TXDONE_SUCCESS, &txdesc->flags) ||
++	    test_bit(TXDONE_UNKNOWN, &txdesc->flags);
++
++	/*
++	 * Update TX statistics.
++	 */
++	rt2x00dev->link.qual.tx_success += success;
++	rt2x00dev->link.qual.tx_failed += !success;
++
++	rt2x00lib_fill_tx_status(rt2x00dev, tx_info, skbdesc, txdesc, success);
  
- 	ath6kl_deliver_frames_to_nw_stack(vif->ndev, skb);
+ 	/*
+ 	 * Only send the status report to mac80211 when it's a frame
 -- 
-2.11.0
+1.8.3.1
