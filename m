@@ -1,114 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from celine.tisys.org ([85.25.117.166]:37956 "EHLO celine.tisys.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750844AbdBSQ0G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 11:26:06 -0500
-Date: Sun, 19 Feb 2017 17:25:21 +0100
-From: Nils Holland <nholland@tisys.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Fix rtl8187 multicast reception
-Message-ID: <20170219162521.GA15426@tisys.org> (sfid-20170219_172610_380849_0A45EBCD)
-References: <20170219013520.GA3190@tisys.org>
- <2eb1dd33-4d71-86b7-c579-412419e2a2e5@lwfinger.net>
- <87lgt28vxz.fsf@purkki.adurom.net>
- <20170219094138.GA3228@tisys.org>
- <87y3x22tsn.fsf@codeaurora.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10974 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752271AbdBNR5U (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 12:57:20 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87y3x22tsn.fsf@codeaurora.org>
+Subject: Re: ath10k: fix the garage chars in board file name creation
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1486758429-18665-1-git-send-email-ryanhsu@qca.qualcomm.com>
+References: <1486758429-18665-1-git-send-email-ryanhsu@qca.qualcomm.com>
+To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <ryanhsu@qca.qualcomm.com>
+Message-ID: <f72df9cd8ee6421c815bb7ed5a714908@eusanexr01a.eu.qualcomm.com> (sfid-20170214_185759_621301_0CE67758)
+Date: Tue, 14 Feb 2017 09:57:10 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 19, 2017 at 03:29:12PM +0200, Kalle Valo wrote:
-> Nils Holland <nholland@tisys.org> writes:
+Ryan Hsu <ryanhsu@qca.qualcomm.com> wrote:
+> From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 > 
-> > On Sun, Feb 19, 2017 at 09:46:16AM +0200, Kalle Valo wrote:
-> >> Larry Finger <Larry.Finger@lwfinger.net> writes:
-> >> 
-> >> > On 02/18/2017 07:35 PM, Nils Holland wrote:
-> >> >
-> >> > I would prefer a module parameter that would allow this change to be
-> >> > implemented only if the user takes special action. I suspect that you
-> >> > will have no difficulty preparing such a change. If that is not true,
-> >> > I would be happy to help.
-> >> 
-> >> I understand why you prefer having a module parameter but the thing is
-> >> that being able to receive multicast frames is really basic
-> >> functionality. We should not hide it under a module parameter.
-> >
-> > Well, this is a tough question, I have to admit that I have a somewhat
-> > weird feeling making a change that also applies to other hardware that
-> > I cannot test on, so I don't know about any negative consequences that
-> > might arise there, especially when the change isn't based on some
-> > official information from some documentation, but rather a result of
-> > trial & error. So I can fully understand Larry's concerns and do in
-> > fact think that a module parameter could be a nice solution, so that
-> > by default the behavior if the driver does not change.
+> The variant[] string will be valid only if the bdf_ext is set.
 > 
-> There are lots of hardware variations that cannot be tested when a patch
-> is commited. If we followed the same methdology with all patches we
-> would have thousands of module parameters in kernel in no time :)
-
-Right, that's certainly true as well, and would be a problem, so too
-much should be avoided.
-
-> > On the other hand, use of this particular USB wifi card is probably
-> > not so common these days so relatively few people would notice at all.
-> > Tough! I guess I'll submit a module parameter based v2 of the patch
-> > later today, just as Larry suggested!
+> The string memory needs to be null-terminated to avoid the undefined garbage
+> appended by the subsequent board file name creation.
 > 
-> Also remember to add a prefix to the title:
+> ath10k_pci 0000:04:00.0: failed to fetch board data for
+> "bus=pci,vendor=168c,device=003e,subsystem-vendor=168c,subsystem-device=3363��P�����"
+> from ath10k/QCA6174/hw3.0/board-2.bin
 > 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject
+> Fixes: f2593cb1b291 ("ath10k: Search SMBIOS for OEM board file extension")
+> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 
-Another helpful hint! Thanks, will keep that in mind for the next
-submission! :-)
+Patch applied to ath-next branch of ath.git, thanks.
 
-> >> Isn't there any other option, for example does anyone have hw to test
-> >> this with other hw? (what exactly?) Or maybe we just take the risk and
-> >> take it as is and revert if problems arise?
-> >
-> > Of course, if someone has other hw, more testing would be nice! Any
-> > situation where the card is supposed to receive multicast frames
-> > should be suitable as a test case - in my case, just connecting to my
-> > local network and expecting to see the card pick up RAs and acquire an
-> > IPv6 address is the easiest test case. This works nicely on several
-> > other machines with completely different wifi hardware as well as
-> > wired machines, but fails without the fix on the rtl8187b. It would,
-> > for example, be interesting to see if a non-b 8187 behaves the same or
-> > if things work there out of the box.
-> 
-> I'm not familiar with the driver so when you say "non-b 8187" what do
-> you mean exactly? What kind of hardware are we talking about? How many
-> different hardware versions are there that this patch affects? Is the
-> firmware/hardware really so different that the chances are high that
-> this breaks something?
+a532293fcba4 ath10k: fix the garage chars in board file name creation
 
-The driver in question seems to apply to, all in all, 21 different usb
-ids, so 21 different USB wifi cards. The existing code classifies
-these into two different categories: rtl8187 and rtl8187b, which seem
-to be different versions / revisions of a realtek usb wifi chip.
-Depending on this classification - if a card is a rtl8187 or rtl8187b
-- the existing code does things a bit different in several cases, for
-example during initialization of the card (however, not during the
-routine that sets the filters and where I've made my changes).
+-- 
+https://patchwork.kernel.org/patch/9567469/
 
-The card I have here and on which I noticed the problem and verified
-the fix is one that the driver classifies as rtl8187b. All such
-classified cards should use the same chip and thus likely behave the
-same regarding the problem and fix. But as far as those cards
-classified as rtl8187 are concerned, I don't have an idea how they
-behave in practice. All I know is that my current patch would change
-behavior on them as well.
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-If this sounds good to Larry, too, I might in fact - instead of using
-a module parameter - change the patch in such a way that it only
-changes behavior on cards classified as rtl8187b, which should behave
-like mine and thus benefit from the change, and leave the code
-affecting rtl8187 cards, which I honestly cannot say anything about,
-alone. Probably sounds like a safer thing to do.
-
-Greetings
-Nils
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
