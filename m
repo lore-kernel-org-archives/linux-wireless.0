@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vmicros1.altlinux.org ([194.107.17.57]:46768 "EHLO
-        vmicros1.altlinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752118AbdBTSWA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 13:22:00 -0500
-Date: Mon, 20 Feb 2017 21:15:33 +0300
-From: "Dmitry V. Levin" <ldv@altlinux.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>
-Cc: linux-wireless@vger.kernel.org, x86@kernel.org,
-        linux-mips@linux-mips.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] uapi: fix definition of struct sockaddr_nfc_llcp on x32 and mips n32
-Message-ID: <20170220181533.GA11185@altlinux.org> (sfid-20170220_192208_462723_9DE2C94C)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:53016 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753665AbdBNNhk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 08:37:40 -0500
+Date: Tue, 14 Feb 2017 14:32:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH 02/10] rt2800: identify station based on status WCID
+Message-ID: <20170214133244.GA6437@redhat.com> (sfid-20170214_143810_670470_F9DA359A)
+References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+ <1487076368-7020-3-git-send-email-sgruszka@redhat.com>
+ <bf62370e-fe78-470b-4902-92fbb1d093f8@nbd.name>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bf62370e-fe78-470b-4902-92fbb1d093f8@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace size_t with __kernel_size_t to fix definition of struct
-sockaddr_nfc_llcp on architectures like x32 and mips n32 where
-sizeof(size_t) < sizeof(__kernel_size_t).
+On Tue, Feb 14, 2017 at 02:10:01PM +0100, Felix Fietkau wrote:
+> On 2017-02-14 13:46, Stanislaw Gruszka wrote:
+> > Add station field to skb_frame_desc and assign it according to status
+> > WCID. This field will be used in the future.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> I see some potential for race conditions in this approach. You store the
+> sta pointer in struct skb_frame_desc, but I don't see anything that
+> guarantees that the sta will be around for as long as the tx frame is held.
+> I think a better approach would be to not store the sta pointer in
+> skb_frame_desc at all.
+> Instead, add a driver callback to look up the sta by wcid, and use rcu
+> properly there. Make sure you only hold the sta pointer obtained from
+> that call within a RCU read locked section.
 
-This also fixes the following linux/nfc.h userspace compilation error:
+On patch 7, where ->sta start to be used, I added RCU protection.
 
-/usr/include/linux/nfc.h:279:2: error: unknown type name 'size_t'
-  size_t service_name_len;
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Dmitry V. Levin <ldv@altlinux.org>
----
- include/uapi/linux/nfc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/include/uapi/linux/nfc.h b/include/uapi/linux/nfc.h
-index 399f39f..f8ccc12 100644
---- a/include/uapi/linux/nfc.h
-+++ b/include/uapi/linux/nfc.h
-@@ -276,7 +276,7 @@ struct sockaddr_nfc_llcp {
- 	__u8 dsap; /* Destination SAP, if known */
- 	__u8 ssap; /* Source SAP to be bound to */
- 	char service_name[NFC_LLCP_MAX_SERVICE_NAME]; /* Service name URI */;
--	size_t service_name_len;
-+	__kernel_size_t service_name_len;
- };
- 
- /* NFC socket protocols */
--- 
-ldv
+Stanislaw
