@@ -1,75 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33273 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751540AbdBBMRa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 07:17:30 -0500
-Received: by mail-lf0-f68.google.com with SMTP id x1so1239126lff.0
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 04:17:24 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2 3/7] brcmfmac: pcie: store private pointer to struct brcmf_pub
-Date: Thu,  2 Feb 2017 13:16:55 +0100
-Message-Id: <20170202121659.21130-3-zajec5@gmail.com> (sfid-20170202_131734_711779_1FA775D0)
-In-Reply-To: <20170202121659.21130-1-zajec5@gmail.com>
-References: <20170202121659.21130-1-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:45102 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752921AbdBNP5q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 10:57:46 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 2/2] cfg80211: add support for HE MCSs
+Date: Tue, 14 Feb 2017 16:57:40 +0100
+Message-Id: <20170214155740.6465-2-johannes@sipsolutions.net> (sfid-20170214_165830_823840_1A2F865C)
+In-Reply-To: <20170214155740.6465-1-johannes@sipsolutions.net>
+References: <20170214155740.6465-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Getting this pointer in PCIe code is not trivial and requires using
-dev_get_drvdata helper which adds extra line of code. Having access to
-this struct is useful for using generic stuff and e.g. improving logging
-messages.
+Add support for the HE MCSs in cfg80211 and also add userspace
+API to nl80211 to send rate information out.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+The bandwidth calculation is somewhat approximate to avoid all
+the big tables that are otherwise necessary.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h       | 15 +++++++--
+ include/uapi/linux/nl80211.h | 42 +++++++++++++++++++++++
+ net/wireless/nl80211.c       | 16 +++++++++
+ net/wireless/util.c          | 80 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 151 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 6fae4cf3f6ab..8a3c6e2e4b38 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -265,6 +265,7 @@ struct brcmf_pciedev_info {
- 	void (*write_ptr)(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
- 			  u16 value);
- 	struct brcmf_mp_device *settings;
-+	struct brcmf_pub *pub;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c92dc03c8528..09d64d486679 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -986,12 +986,14 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+  * @RATE_INFO_FLAGS_VHT_MCS: mcs field filled with VHT MCS
+  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
+  * @RATE_INFO_FLAGS_60G: 60GHz MCS
++ * @RATE_INFO_FLAGS_HE: HE MCS information
+  */
+ enum rate_info_flags {
+ 	RATE_INFO_FLAGS_MCS			= BIT(0),
+ 	RATE_INFO_FLAGS_VHT_MCS			= BIT(1),
+ 	RATE_INFO_FLAGS_SHORT_GI		= BIT(2),
+ 	RATE_INFO_FLAGS_60G			= BIT(3),
++	RATE_INFO_FLAGS_HE_MCS			= BIT(4),
  };
  
- struct brcmf_pcie_ringbuf {
-@@ -1564,14 +1565,18 @@ static void brcmf_pcie_release_resource(struct brcmf_pciedev_info *devinfo)
+ /**
+@@ -1005,6 +1007,7 @@ enum rate_info_flags {
+  * @RATE_INFO_BW_40: 40 MHz bandwidth
+  * @RATE_INFO_BW_80: 80 MHz bandwidth
+  * @RATE_INFO_BW_160: 160 MHz bandwidth
++ * @RATE_INFO_BW_HE_RU: bandwidth determined by HE RU allocation
+  */
+ enum rate_info_bw {
+ 	RATE_INFO_BW_5,
+@@ -1013,6 +1016,7 @@ enum rate_info_bw {
+ 	RATE_INFO_BW_40,
+ 	RATE_INFO_BW_80,
+ 	RATE_INFO_BW_160,
++	RATE_INFO_BW_HE_RU,
+ };
  
- static int brcmf_pcie_attach_bus(struct brcmf_pciedev_info *devinfo)
- {
-+	struct device *dev = &devinfo->pdev->dev;
-+	struct brcmf_bus *bus = dev_get_drvdata(dev);
- 	int ret;
+ /**
+@@ -1021,10 +1025,14 @@ enum rate_info_bw {
+  * Information about a receiving or transmitting bitrate
+  *
+  * @flags: bitflag of flags from &enum rate_info_flags
+- * @mcs: mcs index if struct describes a 802.11n bitrate
++ * @mcs: mcs index if struct describes an HT/VHT/HE rate
+  * @legacy: bitrate in 100kbit/s for 802.11abg
+- * @nss: number of streams (VHT only)
++ * @nss: number of streams (VHT & HE only)
+  * @bw: bandwidth (from &enum rate_info_bw)
++ * @he_gi: HE guard interval (from &enum nl80211_he_gi)
++ * @he_dcm: HE DCM value
++ * @he_ru_alloc: HE RU allocation (from &enum nl80211_he_ru_alloc,
++ *	only valid if bw is %RATE_INFO_BW_HE_RU)
+  */
+ struct rate_info {
+ 	u8 flags;
+@@ -1032,6 +1040,9 @@ struct rate_info {
+ 	u16 legacy;
+ 	u8 nss;
+ 	u8 bw;
++	u8 he_gi;
++	u8 he_dcm;
++	u8 he_ru_alloc;
+ };
  
- 	/* Attach to the common driver interface */
--	ret = brcmf_attach(&devinfo->pdev->dev, devinfo->settings);
-+	ret = brcmf_attach(dev, devinfo->settings);
- 	if (ret) {
- 		brcmf_err("brcmf_attach failed\n");
- 	} else {
--		ret = brcmf_bus_started(&devinfo->pdev->dev);
-+		devinfo->pub = bus->drvr;
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5ed257c4cd4e..e54b35bbfbc6 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2598,6 +2598,36 @@ struct nl80211_sta_flag_update {
+ } __attribute__((packed));
+ 
+ /**
++ * enum nl80211_he_gi - HE guard interval
++ * @NL80211_RATE_INFO_HE_GI_0_8: 0.8 usec
++ * @NL80211_RATE_INFO_HE_GI_1_6: 1.6 usec
++ * @NL80211_RATE_INFO_HE_GI_3_2: 3.2 usec
++ */
++enum nl80211_he_gi {
++	NL80211_RATE_INFO_HE_GI_0_8,
++	NL80211_RATE_INFO_HE_GI_1_6,
++	NL80211_RATE_INFO_HE_GI_3_2,
++};
 +
-+		ret = brcmf_bus_started(dev);
- 		if (ret)
- 			brcmf_err("dongle is not responding\n");
++/**
++ * @enum nl80211_he_ru_alloc - HE RU allocation values
++ * @NL80211_RATE_INFO_HE_RU_ALLOC_26: 26-tone RU allocation
++ * @NL80211_RATE_INFO_HE_RU_ALLOC_52: 52-tone RU allocation
++ * @NL80211_RATE_INFO_HE_RU_ALLOC_106: 106-tone RU allocation
++ * @NL80211_RATE_INFO_HE_RU_ALLOC_242: 242-tone RU allocation
++ * @NL80211_RATE_INFO_HE_RU_ALLOC_484: 484-tone RU allocation
++ * @NL80211_RATE_INFO_HE_RU_ALLOC_969: 969-tone RU allocation
++ */
++enum nl80211_he_ru_alloc {
++	NL80211_RATE_INFO_HE_RU_ALLOC_26,
++	NL80211_RATE_INFO_HE_RU_ALLOC_52,
++	NL80211_RATE_INFO_HE_RU_ALLOC_106,
++	NL80211_RATE_INFO_HE_RU_ALLOC_242,
++	NL80211_RATE_INFO_HE_RU_ALLOC_484,
++	NL80211_RATE_INFO_HE_RU_ALLOC_969,
++};
++
++/**
+  * enum nl80211_rate_info - bitrate information
+  *
+  * These attribute types are used with %NL80211_STA_INFO_TXRATE
+@@ -2629,6 +2659,13 @@ struct nl80211_sta_flag_update {
+  * @NL80211_RATE_INFO_5_MHZ_WIDTH: 5 MHz width - note that this is
+  *	a legacy rate and will be reported as the actual bitrate, i.e.
+  *	a quarter of the base (20 MHz) rate
++ * @NL80211_RATE_INFO_HE_MCS: HE MCS index (u8, 0-11)
++ * @NL80211_RATE_INFO_HE_NSS: HE NSS value (u8, 1-8)
++ * @NL80211_RATE_INFO_HE_GI: HE guard interval identifier
++ *	(u8, see &enum nl80211_he_gi)
++ * @NL80211_RATE_INFO_HE_DCM: HE DCM value (u8, 0/1)
++ * @NL80211_RATE_INFO_RU_ALLOC: HE RU allocation, if not present then
++ *	non-OFDMA was used (u8, see &enum nl80211_he_ru_alloc)
+  * @__NL80211_RATE_INFO_AFTER_LAST: internal use
+  */
+ enum nl80211_rate_info {
+@@ -2645,6 +2682,11 @@ enum nl80211_rate_info {
+ 	NL80211_RATE_INFO_160_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_10_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_5_MHZ_WIDTH,
++	NL80211_RATE_INFO_HE_MCS,
++	NL80211_RATE_INFO_HE_NSS,
++	NL80211_RATE_INFO_HE_GI,
++	NL80211_RATE_INFO_HE_DCM,
++	NL80211_RATE_INFO_HE_RU_ALLOC,
+ 
+ 	/* keep last */
+ 	__NL80211_RATE_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d7f8be4e321a..6b9b79b0699c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4204,6 +4204,9 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 	case RATE_INFO_BW_160:
+ 		rate_flg = NL80211_RATE_INFO_160_MHZ_WIDTH;
+ 		break;
++	case RATE_INFO_BW_HE_RU:
++		rate_flg = 0;
++		WARN_ON(!(info->flags & RATE_INFO_FLAGS_HE_MCS));
  	}
+ 
+ 	if (rate_flg && nla_put_flag(msg, rate_flg))
+@@ -4223,6 +4226,19 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 		if (info->flags & RATE_INFO_FLAGS_SHORT_GI &&
+ 		    nla_put_flag(msg, NL80211_RATE_INFO_SHORT_GI))
+ 			return false;
++	} else if (info->flags & RATE_INFO_FLAGS_HE_MCS) {
++		if (nla_put_u8(msg, NL80211_RATE_INFO_HE_MCS, info->mcs))
++			return false;
++		if (nla_put_u8(msg, NL80211_RATE_INFO_HE_NSS, info->nss))
++			return false;
++		if (nla_put_u8(msg, NL80211_RATE_INFO_HE_GI, info->he_gi))
++			return false;
++		if (nla_put_u8(msg, NL80211_RATE_INFO_HE_DCM, info->he_dcm))
++			return false;
++		if (info->bw == RATE_INFO_BW_HE_RU &&
++		    nla_put_u8(msg, NL80211_RATE_INFO_HE_RU_ALLOC,
++			       info->he_ru_alloc))
++			return false;
+ 	}
+ 
+ 	nla_nest_end(msg, rate);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 23ee3d66dfe0..3061fce1b6e0 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1257,6 +1257,84 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
+ 	return (bitrate + 50000) / 100000;
+ }
+ 
++static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
++{
++#define SCALE 2048
++	u16 mcs_divisors[12] = {
++		34133, /* 16.666666... */
++		17067, /*  8.333333... */
++		11378, /*  5.555555... */
++		 8533, /*  4.166666... */
++		 5689, /*  2.777777... */
++		 4267, /*  2.083333... */
++		 3923, /*  1.851851... */
++		 3413, /*  1.666666... */
++		 2844, /*  1.388888... */
++		 2560, /*  1.250000... */
++		 2276, /*  1.111111... */
++		 2048, /*  1.000000... */
++	};
++	u32 rates_160M[3] = { 960777777, 907400000, 816666666 };
++	u32 rates_969[3] =  { 480388888, 453700000, 408333333 };
++	u32 rates_484[3] =  { 229411111, 216666666, 195000000 };
++	u32 rates_242[3] =  { 114711111, 108333333,  97500000 };
++	u32 rates_106[3] =  {  40000000,  37777777,  34000000 };
++	u32 rates_52[3]  =  {  18820000,  17777777,  16000000 };
++	u32 rates_26[3]  =  {   9411111,   8888888,   8000000 };
++	u64 tmp;
++	u32 result;
++
++	if (WARN_ON_ONCE(rate->mcs > 11))
++		return 0;
++
++	if (WARN_ON_ONCE(rate->he_gi > NL80211_RATE_INFO_HE_GI_3_2))
++		return 0;
++	if (WARN_ON_ONCE(rate->he_ru_alloc > NL80211_RATE_INFO_HE_RU_ALLOC_969))
++		return 0;
++	if (WARN_ON_ONCE(rate->nss < 1 || rate->nss > 8))
++		return 0;
++
++	if (rate->bw == RATE_INFO_BW_160)
++		result = rates_160M[rate->he_gi];
++	else if (rate->bw == RATE_INFO_BW_80 ||
++		 (rate->bw == RATE_INFO_BW_HE_RU &&
++		  rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_969))
++		result = rates_969[rate->he_gi];
++	else if (rate->bw == RATE_INFO_BW_40 ||
++		 (rate->bw == RATE_INFO_BW_HE_RU &&
++		  rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_484))
++		result = rates_484[rate->he_gi];
++	else if (rate->bw == RATE_INFO_BW_20 ||
++		 (rate->bw == RATE_INFO_BW_HE_RU &&
++		  rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_242))
++		result = rates_242[rate->he_gi];
++	else if (rate->bw == RATE_INFO_BW_HE_RU &&
++		 rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_106)
++		result = rates_106[rate->he_gi];
++	else if (rate->bw == RATE_INFO_BW_HE_RU &&
++		 rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_52)
++		result = rates_52[rate->he_gi];
++	else if (rate->bw == RATE_INFO_BW_HE_RU &&
++		 rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_26)
++		result = rates_26[rate->he_gi];
++	else if (WARN(1, "invalid HE MCS: bw:%d, ru:%d\n",
++		      rate->bw, rate->he_ru_alloc))
++		result = 0;
++
++	/* now scale to the appropriate MCS */
++	tmp = result;
++	tmp *= SCALE;
++	do_div(tmp, mcs_divisors[rate->mcs]);
++	result = tmp;
++
++	/* and take MCS, DCM into account */
++	result = (result / 8) * rate->nss;
++	if (rate->he_dcm)
++		result /= 2;
++
++	return result;
++}
++
+ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ {
+ 	if (rate->flags & RATE_INFO_FLAGS_MCS)
+@@ -1265,6 +1343,8 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ 		return cfg80211_calculate_bitrate_60g(rate);
+ 	if (rate->flags & RATE_INFO_FLAGS_VHT_MCS)
+ 		return cfg80211_calculate_bitrate_vht(rate);
++	if (rate->flags & RATE_INFO_FLAGS_HE_MCS)
++		return cfg80211_calculate_bitrate_he(rate);
+ 
+ 	return rate->legacy;
+ }
 -- 
-2.11.0
+2.9.3
