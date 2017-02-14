@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernelconcepts.de ([188.40.83.200]:45603 "EHLO
-        mail.kernelconcepts.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753148AbdBTOcU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 09:32:20 -0500
-Received: from [87.182.109.56] (helo=vbox.localnet)
-        by mail.kernelconcepts.de with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.84_2)
-        (envelope-from <hilberg@kernelconcepts.de>)
-        id 1cfoNv-0002C7-VF
-        for linux-wireless@vger.kernel.org; Mon, 20 Feb 2017 14:52:12 +0100
-From: Christian Hilberg <hilberg@kernelconcepts.de>
+Received: from s3.sipsolutions.net ([5.9.151.49]:43586 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753703AbdBNNWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 08:22:13 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: [rtl8xxxu] rtl8192cu (0bda:8176) on linux-4.9.11 (arm) high sirq rate
-Date: Mon, 20 Feb 2017 14:51:54 +0100
-Message-ID: <1581189.s4o7FEpKoz@vbox> (sfid-20170220_153223_694913_3155B305)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Cc: j@w1.fi, greearb@candelatech.com,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 2/7] ieee80211: define HT operation CCFS2 field
+Date: Tue, 14 Feb 2017 14:22:03 +0100
+Message-Id: <20170214132208.8715-3-johannes@sipsolutions.net> (sfid-20170214_142242_062130_6A34A3C2)
+In-Reply-To: <20170214132208.8715-1-johannes@sipsolutions.net>
+References: <20170214132208.8715-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Johannes Berg <johannes.berg@intel.com>
 
-currently I'm testing rtl8xxxu on an ARM device (i.mx28, armv5te) under
-linux-4.9.11 with a RealTek 8192cu (0bda:8176) wifi dongle. Since
-I had to set CONFIG_RTL8XXXU_UNTESTED, I'm prepared to see some
-rough edges here and there. :-)
+The Channel Center Frequency Segment 2 field is used in
+802.11-2016 for encoding the actual channel position of
+the 80+80/160 MHz channel, if the max NSS is restricted.
+This is used for backwards compatibility.
 
-The driver actually works and I'm getting a stable connection on
-a WPA2 secured wifi network. As a firmware blob, the driver loads
-the "rtl8192cufw_TMSC.bin", which I extracted from [0].
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-However, the sirg rate is rather high (between 20% to 50% in top),
-as soon as the device is getting upped, that is, as soon as IFF_UP
-gets written to the device via ioctl().
-
-In the same setup, but with the rtlwifi driver, I'm not seeing a high
-sirq rate, but that driver drops connection every now and then for me,
-so I'd rather resort to rtl8xxxu.
-
-I've prepped a kernel with ftrace functionality and got some logs,
-which seem to point to the USB subsystem (many entries about URB
-giveback, but I'm not clear whether this is an issue here).
-
-In a private mail, Jes hinted that there might be something going on
-with enabling interrupts on the chip or some debugging related
-stuff (just I'm not seeing any on the console).
-
-I'm a little lost here, any pointers on the matter are much welcome.
-If needed, I can provide ftrace logs, just slip me a note.
-
-Regards,
-
-	Christian
-
-PS.:	I've seen the same sirq rate back to rc-Versions of 4.9 on
-	that arm device.
-
-
-[0] http://ftp.de.debian.org/debian/pool/non-free/f/firmware-nonfree/firmware-realtek_20161130-2_all.deb
-
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 4a15e77d9d66..4a7200c6c9ea 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1411,6 +1411,8 @@ struct ieee80211_ht_operation {
+ #define		IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED	3
+ #define IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT		0x0004
+ #define IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT		0x0010
++#define IEEE80211_HT_OP_MODE_CCFS2_SHIFT		5
++#define IEEE80211_HT_OP_MODE_CCFS2_MASK			0x1fe0
+ 
+ /* for stbc_param */
+ #define IEEE80211_HT_STBC_PARAM_DUAL_BEACON		0x0040
 -- 
+2.9.3
