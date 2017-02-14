@@ -1,171 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:36451 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751550AbdB0MOI (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:56978 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752330AbdBNKTg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 07:14:08 -0500
-Received: by mail-lf0-f66.google.com with SMTP id l6so1076072lfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 04:13:08 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 4.12] brcmfmac: get rid of brcmf_txflowblock helper function
-Date: Mon, 27 Feb 2017 13:06:06 +0100
-Message-Id: <20170227120606.15506-1-zajec5@gmail.com> (sfid-20170227_131452_521367_D53817E6)
+        Tue, 14 Feb 2017 05:19:36 -0500
+To: Ben Greear <greearb@candelatech.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
+ <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
+ <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
+ <589F50B8.4020609@candelatech.com>
+ <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
+ <36c7dfa2-b39c-ad7a-5e39-3daf8983ed2f@candelatech.com>
+ <f6d4b239-03af-976b-0c97-e7a5858f00da@dd-wrt.com>
+ <58A23D68.5070507@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <1ba6afb2-13a6-2eea-c5aa-bcc084b0b8bc@dd-wrt.com> (sfid-20170214_112235_539403_D4A68DAD)
+Date: Tue, 14 Feb 2017 11:19:30 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <58A23D68.5070507@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: VHT 160Mhz and nss related config.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+now the test result. yes. it assocs with VHT160 SGI in my case. but 
+performance is as expected identical to VHT80
 
-This helper function is pretty trivial and we can easily do without it.
-What's important though it's one of FWS (Firmware Signalling)
-dependencies in core.c. The plan is to make FWS required by BCDC only so
-we don't have to use/compile it when using msgbuf.
+Am 14.02.2017 um 00:12 schrieb Ben Greear:
+> On 02/13/2017 02:48 PM, Sebastian Gottschall wrote:
+>> Am 13.02.2017 um 20:56 schrieb Ben Greear:
+>>> On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
+>>>> Am 11.02.2017 um 18:58 schrieb Ben Greear:
+>>>>> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
+>>>>>> On 10 February 2017 at 20:22, Sebastian Gottschall
+>>>>>> <s.gottschall@dd-wrt.com> wrote:
+>>>>>>> i really can't believe this. if this is true the  160 mhz mode 
+>>>>>>> would not
+>>>>>>> make any sense.
+>>>>>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is 
+>>>>>>> identical. so
+>>>>>>> vht160 would not increase performance in any way
+>>>>>>
+>>>>>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
+>>>>>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
+>>>>>> transmit 2x2 rates to different MU-MIMO peers.
+>>>>>>
+>>>>>> That's the outstanding question I have - is it like, 2x2 MU only, or
+>>>>>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, 
+>>>>>> can you
+>>>>>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
+>>>>>> group each) all going at the same time?
+>>>>>>
+>>>>>> I'm .. not even sure how you're supposed to cleanly negotiate 
+>>>>>> that you
+>>>>>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
+>>>>>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
+>>>>>
+>>>>> I think using the max-rx-rate logic might could imply this, but I 
+>>>>> am not sure
+>>>>> many drivers fill this out properly.
+>>>>>
+>>>>> Looks like a mess waiting to happen to me.
+>>>>>
+>>>>> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am 
+>>>>> not certain you
+>>>>> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
+>>>>>
+>>>>> So, from what I know currently, 80+80 is not that useful on the 
+>>>>> 9984 NIC...
+>>>> never tried 80+80 since i need to enhance the channel logic alot in 
+>>>> my firmware code to handle it. would be great enough if vht160 
+>>>> would work as expected and
+>>>> i'm not sure right now if it really works, even if the interface 
+>>>> initialized correctly it assocs only with vht80
+>>>
+>>> Looks like it is working with the hack I posted:
+>>>
+>>> Station 04:f0:21:2e:49:65 (on wlan2)
+>>>     inactive time:    0 ms
+>>>     rx bytes:    64902998
+>>>     rx packets:    37918
+>>>     tx bytes:    64760298
+>>>     tx packets:    42239
+>>>     tx retries:    0
+>>>     tx failed:    0
+>>>     signal:      -43 dBm
+>>>     signal avg:    -42 dBm
+>>>     tx bitrate:    1053.0 MBit/s VHT-MCS 6 160MHz VHT-NSS 2
+>>>     rx bitrate:    1560.0 MBit/s VHT-MCS 8 160MHz short GI VHT-NSS 2
+>>>     authorized:    yes
+>>>     authenticated:    yes
+>>>     preamble:    long
+>>>     WMM/WME:    yes
+>>>     MFP:        no
+>>>     TDLS peer:    no
+>>>     connected time:    156 seconds
+>>>
+>>> Thanks,
+>>> Ben
+>>>
+>>>
+>> the hack you posted crashes the driver for me. i also see that this 
+>> patch is based on the CT ath10k source. it doesnt apply clean to 
+>> ath10k. needed to merge it
+>> manually
+>
+> Ok, I'm in the middle of a bunch of changes to support VHT overrides 
+> to allow
+> disabling VHT160/80+80 in station mode, and I'll push all my changes 
+> to my
+> tree when I get that implemented and testing.
+>
+> I've about given up on getting ath10k patches upstream, but I'll get 
+> these changes into
+> ath10k-ct in LEDE sometime...
+>
+> If you want to post the splat, just possibly I'll have a quick idea of 
+> why it
+> is crashing.
+>
+> Thanks,
+> Ben
+>
+>
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 10 ----------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h |  4 ++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     |  7 +++++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c      |  7 +++++--
- 4 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 2f2f3a5ad86a..59831dc446d6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -283,16 +283,6 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 	spin_unlock_irqrestore(&ifp->netif_stop_lock, flags);
- }
- 
--void brcmf_txflowblock(struct device *dev, bool state)
--{
--	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
--	struct brcmf_pub *drvr = bus_if->drvr;
--
--	brcmf_dbg(TRACE, "Enter\n");
--
--	brcmf_fws_bus_blocked(drvr, state);
--}
--
- void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
- {
- 	if (skb->pkt_type == PACKET_MULTICAST)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-index 96df66073b2a..bb4591c4a14a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-@@ -18,6 +18,10 @@
- #ifndef FWSIGNAL_H_
- #define FWSIGNAL_H_
- 
-+struct brcmf_fws_info;
-+struct brcmf_if;
-+struct brcmf_pub;
-+
- int brcmf_fws_init(struct brcmf_pub *drvr);
- void brcmf_fws_deinit(struct brcmf_pub *drvr);
- bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index c5744b45ec8f..10522edc9750 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -44,6 +44,7 @@
- #include "firmware.h"
- #include "core.h"
- #include "common.h"
-+#include "fwsignal.h"
- 
- #define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
- #define CTL_DONE_TIMEOUT	msecs_to_jiffies(2500)
-@@ -2272,6 +2273,7 @@ static int brcmf_sdio_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 
- static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- {
-+	struct brcmf_pub *pub = bus->sdiodev->bus_if->drvr;
- 	struct sk_buff *pkt;
- 	struct sk_buff_head pktq;
- 	u32 intstatus = 0;
-@@ -2328,7 +2330,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	if ((bus->sdiodev->state == BRCMF_SDIOD_DATA) &&
- 	    bus->txoff && (pktq_len(&bus->txq) < TXLOW)) {
- 		bus->txoff = false;
--		brcmf_txflowblock(bus->sdiodev->dev, false);
-+		brcmf_fws_bus_blocked(pub, false);
- 	}
- 
- 	return cnt;
-@@ -2723,6 +2725,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct brcmf_sdio *bus = sdiodev->bus;
-+	struct brcmf_pub *pub = bus->sdiodev->bus_if->drvr;
- 
- 	brcmf_dbg(TRACE, "Enter: pkt: data %p len %d\n", pkt->data, pkt->len);
- 	if (sdiodev->state != BRCMF_SDIOD_DATA)
-@@ -2753,7 +2756,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 
- 	if (pktq_len(&bus->txq) >= TXHI) {
- 		bus->txoff = true;
--		brcmf_txflowblock(dev, true);
-+		brcmf_fws_bus_blocked(pub, true);
- 	}
- 	spin_unlock_bh(&bus->txq_lock);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index d93ebbdc7737..c527aa8a5f8f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -26,6 +26,7 @@
- #include "bus.h"
- #include "debug.h"
- #include "firmware.h"
-+#include "fwsignal.h"
- #include "usb.h"
- #include "core.h"
- #include "common.h"
-@@ -476,6 +477,7 @@ static void brcmf_usb_tx_complete(struct urb *urb)
- {
- 	struct brcmf_usbreq *req = (struct brcmf_usbreq *)urb->context;
- 	struct brcmf_usbdev_info *devinfo = req->devinfo;
-+	struct brcmf_pub *pub = devinfo->bus_pub.bus->drvr;
- 	unsigned long flags;
- 
- 	brcmf_dbg(USB, "Enter, urb->status=%d, skb=%p\n", urb->status,
-@@ -488,7 +490,7 @@ static void brcmf_usb_tx_complete(struct urb *urb)
- 	spin_lock_irqsave(&devinfo->tx_flowblock_lock, flags);
- 	if (devinfo->tx_freecount > devinfo->tx_high_watermark &&
- 		devinfo->tx_flowblock) {
--		brcmf_txflowblock(devinfo->dev, false);
-+		brcmf_fws_bus_blocked(pub, false);
- 		devinfo->tx_flowblock = false;
- 	}
- 	spin_unlock_irqrestore(&devinfo->tx_flowblock_lock, flags);
-@@ -598,6 +600,7 @@ brcmf_usb_state_change(struct brcmf_usbdev_info *devinfo, int state)
- static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
- {
- 	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(dev);
-+	struct brcmf_pub *pub = devinfo->bus_pub.bus->drvr;
- 	struct brcmf_usbreq  *req;
- 	int ret;
- 	unsigned long flags;
-@@ -635,7 +638,7 @@ static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
- 	spin_lock_irqsave(&devinfo->tx_flowblock_lock, flags);
- 	if (devinfo->tx_freecount < devinfo->tx_low_watermark &&
- 	    !devinfo->tx_flowblock) {
--		brcmf_txflowblock(dev, true);
-+		brcmf_fws_bus_blocked(pub, true);
- 		devinfo->tx_flowblock = true;
- 	}
- 	spin_unlock_irqrestore(&devinfo->tx_flowblock_lock, flags);
 -- 
-2.11.0
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
