@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:31868 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751017AbdBWHJH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17984 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932121AbdBNRkN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 02:09:07 -0500
-Date: Thu, 23 Feb 2017 08:08:14 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Tahia Khan <tahia.khan@gmail.com>
-cc: arend.vanspriel@broadcom.com, outreachy-kernel@googlegroups.com,
-        aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-        devel@driverdev.osusl.org, linux-kernel@vger.kernel.org
-Subject: Re: [Outreachy kernel] Re: [PATCH v2] staging: wilc1000: renames
- struct tstrRSSI and its members u8Index, u8Full
-In-Reply-To: <20170223035400.GA9378@coolbox>
-Message-ID: <alpine.DEB.2.20.1702230804410.2203@hadrien> (sfid-20170223_080950_034301_6141DC95)
-References: <20170222171403.GA20626@coolbox> <838d3e67-646d-b2d3-ef7d-5812675db6db@broadcom.com> <20170223035400.GA9378@coolbox>
+        Tue, 14 Feb 2017 12:40:13 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [1/3] ath10k: remove ath10k_vif_to_arvif()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
+References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
+To: =?utf-8?q?Amadeusz_S=C5=82awi=C5=84ski?=
+        <amadeusz.slawinski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?=
+        <amadeusz.slawinski@tieto.com>
+Message-ID: <dffab7ef3a364a49a28d876f577561db@eusanexr01a.eu.qualcomm.com> (sfid-20170214_184054_163866_8949A941)
+Date: Tue, 14 Feb 2017 09:40:01 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Thanks for the feedback Arend, I really appreciate it. I've decided to go with
-> these changes in my follow-up patch request:
->
-> - rename tstrRSSI to 'rssi_history_buffer' as Aren suggested since it makes the
-> purpose of the struct clear
-> - remove Hungarian notation from all tstrRSSI members' names
-> - change type of u8Full to bool since it's only ever 1 or 0
-> - change name of as8RSSI to 'samples' since this buffer is only ever used to
-> compute an average, and the "rssi" prefix is implied by the struct's name
-> - rename str_rssi to rssi_history in the network_info struct for clarity
->
-> Since my reasoning for these changes deviates from just "renaming to
-> avoid camel casing" (as in the original checkpatch.pl warning), would it still
-> make sense to submit all this in a single patch? I know my commit message
-> needs to change but I wonder if this is too much detail.
+Amadeusz Sławiński wrote:
+> it adds unnecessary level of indirection, while we just access structure
+> field
+> 
+> Signed-off-by: Amadeusz Sławiński <amadeusz.slawinski@tieto.com>
 
-I would strongly suggest not to do it all in a single patch.  Even if these
-changes are not very complicated conceptually, there is always a chance of
-doing things wrong.  Taking the problems one by one will improve the chance
-that the result is correct.  Also, the results will be easier for you and
-others to review if each patch only does one thing.  And easier to revert
-if needed later if something goes wrong.
+3 patches applied to ath-next branch of ath.git, thanks.
 
-julia
+56ac13bfc703 ath10k: remove ath10k_vif_to_arvif()
+182f1e5a626e ath10k: use size_t for len variables
+6d2191135637 ath10k: fix comment
+
+-- 
+https://patchwork.kernel.org/patch/9551559/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
