@@ -1,59 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39334 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754754AbdBHPxM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 10:53:12 -0500
-From: Luca Coelho <luca@coelho.fi>
+Received: from mx1.redhat.com ([209.132.183.28]:8285 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752959AbdBNMvJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 07:51:09 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 17:51:44 +0200
-Message-Id: <20170208155149.1704-4-luca@coelho.fi> (sfid-20170208_165317_535287_15D5E085)
-In-Reply-To: <20170208155149.1704-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
- <20170208155149.1704-1-luca@coelho.fi>
-Subject: [PATCH 12/17] iwlwifi: mvm: don't call << operator with a negative value
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH 04/10] rt2x00: separte clearing entry from rt2x00lib_txdone
+Date: Tue, 14 Feb 2017 13:46:02 +0100
+Message-Id: <1487076368-7020-5-git-send-email-sgruszka@redhat.com> (sfid-20170214_135227_693184_893567CD)
+In-Reply-To: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This makes rt2x00lib_txdone a bit simpler and will allow to reuse
+code in different variant of txdone which I'm preparing.
 
-In https://bugzilla.kernel.org/show_bug.cgi?id=177341 Bob
-reported a UBSAN WARNING on rs.c in iwldvm.
-Fix the same bug in iwlmvm.
-
-This because
-	i = index - 1;
-	for (mask = (1 << i); i >= 0; i--, mask >>= 1)
-
-is unsafe: i could be negative and hence we can call <<
-on a negative value.
-This bug doesn't have any real impact since the condition
-of the for loop will prevent any usage of mask.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=177341
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 51 +++++++++++++++-----------
+ 1 file changed, 29 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 13be9a5b83ee..ce907c58ebf6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -972,7 +972,9 @@ static u16 rs_get_adjacent_rate(struct iwl_mvm *mvm, u8 index, u16 rate_mask,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index b5d90fe..03b368a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -391,6 +391,32 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
+ 	}
+ }
  
- 		/* Find the previous rate that is in the rate mask */
- 		i = index - 1;
--		for (mask = (1 << i); i >= 0; i--, mask >>= 1) {
-+		if (i >= 0)
-+			mask = BIT(i);
-+		for (; i >= 0; i--, mask >>= 1) {
- 			if (rate_mask & mask) {
- 				low = i;
- 				break;
++static void rt2x00lib_clear_entry(struct rt2x00_dev *rt2x00dev,
++				  struct queue_entry *entry)
++{
++	/*
++	 * Make this entry available for reuse.
++	 */
++	entry->skb = NULL;
++	entry->flags = 0;
++
++	rt2x00dev->ops->lib->clear_entry(entry);
++
++	rt2x00queue_index_inc(entry, Q_INDEX_DONE);
++
++	/*
++	 * If the data queue was below the threshold before the txdone
++	 * handler we must make sure the packet queue in the mac80211 stack
++	 * is reenabled when the txdone handler has finished. This has to be
++	 * serialized with rt2x00mac_tx(), otherwise we can wake up queue
++	 * before it was stopped.
++	 */
++	spin_lock_bh(&entry->queue->tx_lock);
++	if (!rt2x00queue_threshold(entry->queue))
++		rt2x00queue_unpause_queue(entry->queue);
++	spin_unlock_bh(&entry->queue->tx_lock);
++}
++
+ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		      struct txdone_entry_desc *txdesc)
+ {
+@@ -471,30 +497,11 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 			ieee80211_tx_status(rt2x00dev->hw, entry->skb);
+ 		else
+ 			ieee80211_tx_status_ni(rt2x00dev->hw, entry->skb);
+-	} else
++	} else {
+ 		dev_kfree_skb_any(entry->skb);
++	}
+ 
+-	/*
+-	 * Make this entry available for reuse.
+-	 */
+-	entry->skb = NULL;
+-	entry->flags = 0;
+-
+-	rt2x00dev->ops->lib->clear_entry(entry);
+-
+-	rt2x00queue_index_inc(entry, Q_INDEX_DONE);
+-
+-	/*
+-	 * If the data queue was below the threshold before the txdone
+-	 * handler we must make sure the packet queue in the mac80211 stack
+-	 * is reenabled when the txdone handler has finished. This has to be
+-	 * serialized with rt2x00mac_tx(), otherwise we can wake up queue
+-	 * before it was stopped.
+-	 */
+-	spin_lock_bh(&entry->queue->tx_lock);
+-	if (!rt2x00queue_threshold(entry->queue))
+-		rt2x00queue_unpause_queue(entry->queue);
+-	spin_unlock_bh(&entry->queue->tx_lock);
++	rt2x00lib_clear_entry(rt2x00dev, entry);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
+ 
 -- 
-2.11.0
+1.8.3.1
