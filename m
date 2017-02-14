@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18954 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdBNRzn (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33129 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753189AbdBNNQr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 12:55:43 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 14 Feb 2017 08:16:47 -0500
+Received: by mail-oi0-f46.google.com with SMTP id w204so67750489oiw.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 05:16:47 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev 2.1 update Feb 14
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        Rob Echlin <rob@echlin.ca>, lwn@lwn.net, people@netdevconf.org
+Message-ID: <42736b6d-b23b-bcae-e53d-a943516ce100@mojatatu.com> (sfid-20170214_141737_258842_3A2082DE)
+Date: Tue, 14 Feb 2017 08:16:44 -0500
 MIME-Version: 1.0
-Subject: Re: [v2,1/4] ath10k: fetch firmware images in a loop
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <148672959257.8556.14481306395015426550.stgit@potku.adurom.net>
-References: <148672959257.8556.14481306395015426550.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <6706de25e5b646fda1c44984addb3318@eusanexr01a.eu.qualcomm.com> (sfid-20170214_185547_029960_FA6DF509)
-Date: Tue, 14 Feb 2017 09:55:38 -0800
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Erik Stromdahl <erik.stromdahl@gmail.com>
-> 
-> To make it easier to handle minimum and maximum firmware API numbers convert
-> the firmware fetch functionality to a loop. If no firmware image is found print
-> an error with minimum and maximum API numbers and the name of firmware
-> directory. This is needed when we switch to using request_firmware_direct()
-> which doesn't print any errors anymore.
-> 
-> Also add a new function for creating the fw file name dynamically which makes it
-> easier to add new bus support, for example SDIO and USB, later.
-> 
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-> [kvalo@qca.qualcomm.com: remove sdio/usb part, new error message, clarify commit log]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-4 patches applied to ath-next branch of ath.git, thanks.
+A few announcements:
+-Registration is open. Register early so we can plan better.
+https://onlineregistrations.ca/netdev21/
 
-1c61bedc0a72 ath10k: fetch firmware images in a loop
-310c01afae01 ath10k: add directory to board data error message
-9f5bcfe93315 ath10k: silence firmware file probing warnings
-7be52c03bbf7 ath10k: convert warning about non-existent OTP board id to debug message
+hotel (If you can get the hotel cheaper online than conference
+rates please send us email, dont book ):
+http://www.netdevconf.org/2.1/hotel.html
 
--- 
-https://patchwork.kernel.org/patch/9566667/
+News:
+- We are pleased to announce our first silver sponsor! We thank
+ZEVENET for their commitment to the netdev community!
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+- The tech committee has accepted another proposal! This time
+it is on the topic of DSA from our prolific DSA contributors
+Andrew Lunn, Vivien Didelot and Florian Fainelli. This is how
+they describe their talk:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+----
+The Distributed Switch Architecture was first introduced to Linux
+nearly 10 years ago and after being mostly quiet for 6 years, it
+recently got actively worked on again by a group of tenacious contributors.
+
+In this presentation, we will cover its design goals and paradigms and
+why they make it a good fit for supporting small home/office routers and
+switches. We will also cover the work that was done over the past 4
+years, the relationship with switchdev and the networking stack, and
+finally give a heads-up on the upcoming developments to be expected.
+-----
+
+Please note that The Call for Proposals is still open, submit early
+to avoid the hazards of last minute traffic. Refer to:
+http://netdevconf.org/2.1/submit-proposal.html
+
+cheers,
+jamal
