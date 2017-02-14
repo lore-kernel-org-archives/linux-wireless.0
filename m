@@ -1,68 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64565 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754882AbdBQLSC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Feb 2017 06:18:02 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix a warning during channel switch with multiple vaps
-Date: Fri, 17 Feb 2017 16:48:38 +0530
-Message-ID: <1487330318-11841-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170217_121806_756977_80025A05)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:56426 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753037AbdBNMvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 07:51:14 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH 07/10] rt2x00: use txdone_nomatch on rt2800usb
+Date: Tue, 14 Feb 2017 13:46:05 +0100
+Message-Id: <1487076368-7020-8-git-send-email-sgruszka@redhat.com> (sfid-20170214_135218_246367_3540A940)
+In-Reply-To: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+If we do not match skb entry, provide tx status via nomatch procedure.
 
-Doing a channel switch via hostapd_cli seems to update
-the new channel context for each VAP's appropriately as below
-in 'ath10k_mac_update_vif_chan', hence we can safely suppress the
-warning that shows up during this operation and dump the warning only
-if no vaps are available for channel switch
+Currently in that case we do rt2x00lib_txdone_noinfo(TXDONE_NOINFO),
+which actually assume that entry->skb was posted without retries and
+provide rate saved in skb desc as successful. Patch changed that to
+rate read from TX_STAT_FIFO, however still do not provide correct
+number of retries.
 
-hostapd_cli -i wlan0 chan_switch 5 5200
-OK
+On SoC/PCI devices we keep providing status via standard txdone
+procedure, no change in those devices, though we should thing about it.
 
-ath10k_pci : mac chanctx switch n_vifs 3 mode 1
-ath10k_pci : mac chanctx switch vdev_id 2 freq 5180->5200 width 0->0
-ath10k_pci : mac chanctx switch vdev_id 1 freq 5180->5200 width 0->0
-ath10k_pci : mac chanctx switch vdev_id 0 freq 5180->5200 width 0->0
-
-Call Trace:
-
-WARNING: backports-20161201-3.14.77-9ab3068/drivers/net/wireless/ath/ath10k/mac.c:7126
-[<c022f2d4>] (warn_slowpath_null) from [<bf7f150c>]
-(ath10k_reconfig_complete+0xe4/0x25c [ath10k_core])
-[<bf7f150c>] (ath10k_reconfig_complete [ath10k_core])
-[<bf7f35f0>] (ath10k_mac_vif_ap_csa_work+0x214/0x370 [ath10k_core])
-[<bf7f38b8>] (ath10k_mac_op_change_chanctx+0x108/0x128 [ath10k_core])
-[<bf782ac0>] (ieee80211_recalc_chanctx_min_def+0x30c/0x430 [mac80211])
-[<bf7830a4>] (ieee80211_recalc_smps_chanctx+0x2ec/0x840 [mac80211])
-[<bf7843e8>] (ieee80211_vif_use_reserved_context+0x7c/0xf8 [mac80211])
-[<bf7843e8>] (ieee80211_vif_use_reserved_context [mac80211])
-[<bf76e5d4>] (ieee80211_csa_finalize_work+0x5c/0x88 [mac80211])
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c  | 32 ++++++++++++++++++-------
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h  |  3 ++-
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c |  2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c  | 18 ++++++--------
+ 4 files changed, 34 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d1b7edb..b416958 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7085,7 +7085,7 @@ static int ath10k_ampdu_action(struct ieee80211_hw *hw,
- 	lockdep_assert_held(&ar->data_lock);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 5de21d2..8a76b27 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -852,7 +852,8 @@ void rt2800_process_rxwi(struct queue_entry *entry,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
  
- 	WARN_ON(ctx && vifs);
--	WARN_ON(vifs && n_vifs != 1);
-+	WARN_ON(vifs && !n_vifs);
+-void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
++void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
++			 bool match)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
+@@ -860,8 +861,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+ 	struct txdone_entry_desc txdesc;
+ 	u32 word;
+ 	u16 mcs, real_mcs;
+-	int aggr, ampdu;
+-	int wcid;
++	int aggr, ampdu, wcid, ack_req;
  
- 	/* FIXME: Sort of an optimization and a workaround. Peers and vifs are
- 	 * on a linked list now. Doing a lookup peer -> vif -> chanctx for each
+ 	/*
+ 	 * Obtain the status about this packet.
+@@ -875,6 +875,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+ 	real_mcs = rt2x00_get_field32(status, TX_STA_FIFO_MCS);
+ 	aggr = rt2x00_get_field32(status, TX_STA_FIFO_TX_AGGRE);
+ 	wcid = rt2x00_get_field32(status, TX_STA_FIFO_WCID);
++	ack_req	= rt2x00_get_field32(status, TX_STA_FIFO_TX_ACK_REQUIRED);
+ 
+ 	/*
+ 	 * If a frame was meant to be sent as a single non-aggregated MPDU
+@@ -891,18 +892,22 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+ 	 * Hence, replace the requested rate with the real tx rate to not
+ 	 * confuse the rate control algortihm by providing clearly wrong
+ 	 * data.
++	 *
++	 * FIXME: if we do not find matching entry, we tell that frame was
++	 * posted without any retries. We need to find a way to fix that
++	 * and provide retry count.
+ 	 */
+-	if (unlikely(aggr == 1 && ampdu == 0 && real_mcs != mcs)) {
++	if (unlikely((aggr == 1 && ampdu == 0 && real_mcs != mcs)) || !match) {
+ 		skbdesc->tx_rate_idx = real_mcs;
+ 		mcs = real_mcs;
+ 	}
+ 
+-	if (likely(wcid >= WCID_START && wcid <= WCID_END))
+-		skbdesc->sta = drv_data->wcid_to_sta[wcid - WCID_START];
+-
+ 	if (aggr == 1 || ampdu == 1)
+ 		__set_bit(TXDONE_AMPDU, &txdesc.flags);
+ 
++	if (ack_req)
++		__set_bit(TXDONE_ACK_REQ, &txdesc.flags);
++
+ 	/*
+ 	 * Ralink has a retry mechanism using a global fallback
+ 	 * table. We setup this fallback table to try the immediate
+@@ -934,7 +939,18 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+ 	if (txdesc.retry)
+ 		__set_bit(TXDONE_FALLBACK, &txdesc.flags);
+ 
+-	rt2x00lib_txdone(entry, &txdesc);
++	if (!match) {
++		/* RCU assures non-null sta will not be freed by mac80211. */
++		rcu_read_lock();
++		if (likely(wcid >= WCID_START && wcid <= WCID_END))
++			skbdesc->sta = drv_data->wcid_to_sta[wcid - WCID_START];
++		else
++			skbdesc->sta = NULL;
++		rt2x00lib_txdone_nomatch(entry, &txdesc);
++		rcu_read_unlock();
++	} else {
++		rt2x00lib_txdone(entry, &txdesc);
++	}
+ }
+ EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
+ 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+index 6811d67..d9ef260 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+@@ -191,7 +191,8 @@ void rt2800_write_tx_data(struct queue_entry *entry,
+ 			  struct txentry_desc *txdesc);
+ void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
+ 
+-void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32* txwi);
++void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
++			 bool match);
+ 
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
+ void rt2800_clear_beacon(struct queue_entry *entry);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+index de4790b..3ab3b53 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+@@ -239,7 +239,7 @@ static bool rt2800mmio_txdone_release_entries(struct queue_entry *entry,
+ {
+ 	if (test_bit(ENTRY_DATA_STATUS_SET, &entry->flags)) {
+ 		rt2800_txdone_entry(entry, entry->status,
+-				    rt2800mmio_get_txwi(entry));
++				    rt2800mmio_get_txwi(entry), true);
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 205a7b8..f11e3f5 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -501,8 +501,7 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
+ /*
+  * TX control handlers
+  */
+-static enum txdone_entry_desc_flags
+-rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
++static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
+ {
+ 	__le32 *txwi;
+ 	u32 word;
+@@ -515,7 +514,7 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
+ 	 * frame.
+ 	 */
+ 	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
+-		return TXDONE_FAILURE;
++		return false;
+ 
+ 	wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
+ 	ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
+@@ -537,10 +536,10 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
+ 		rt2x00_dbg(entry->queue->rt2x00dev,
+ 			   "TX status report missed for queue %d entry %d\n",
+ 			   entry->queue->qid, entry->entry_idx);
+-		return TXDONE_UNKNOWN;
++		return false;
+ 	}
+ 
+-	return TXDONE_SUCCESS;
++	return true;
+ }
+ 
+ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+@@ -549,7 +548,7 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+ 	struct queue_entry *entry;
+ 	u32 reg;
+ 	u8 qid;
+-	enum txdone_entry_desc_flags done_status;
++	bool match;
+ 
+ 	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
+ 		/*
+@@ -574,11 +573,8 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+ 			break;
+ 		}
+ 
+-		done_status = rt2800usb_txdone_entry_check(entry, reg);
+-		if (likely(done_status == TXDONE_SUCCESS))
+-			rt2800_txdone_entry(entry, reg, rt2800usb_get_txwi(entry));
+-		else
+-			rt2x00lib_txdone_noinfo(entry, done_status);
++		match = rt2800usb_txdone_entry_check(entry, reg);
++		rt2800_txdone_entry(entry, reg, rt2800usb_get_txwi(entry), match);
+ 	}
+ }
+ 
 -- 
-1.9.1
+1.8.3.1
