@@ -1,39 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50112 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43578 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753292AbdBTNYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 08:24:44 -0500
+        id S1753652AbdBNNWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 08:22:13 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>
-Subject: [PATCH 5/6] mac80211: fix typo in debug print
-Date: Mon, 20 Feb 2017 14:24:38 +0100
-Message-Id: <20170220132439.16064-5-johannes@sipsolutions.net> (sfid-20170220_142500_971786_F764DE95)
-In-Reply-To: <20170220132439.16064-1-johannes@sipsolutions.net>
-References: <20170220132439.16064-1-johannes@sipsolutions.net>
+Cc: j@w1.fi, greearb@candelatech.com
+Subject: VHT extended NSS BW support framework
+Date: Tue, 14 Feb 2017 14:22:01 +0100
+Message-Id: <20170214132208.8715-1-johannes@sipsolutions.net> (sfid-20170214_142611_535083_0DB7E258)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi,
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+New version - now with more parsing, and a new function to get
+the NSS value for a given bandwidth/MCS combination.
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 3b5fd4188f2a..4463c61d068e 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -85,7 +85,7 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 	ht_dbg(sta->sdata,
- 	       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
- 	       sta->sta.addr, tid,
--	       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "inititator",
-+	       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
- 	       (int)reason);
- 
- 	if (drv_ampdu_action(local, sta->sdata, &params))
--- 
-2.9.3
+It'd be good if somebody were to review this carefully, this is
+a rather complex thing...
+
+johannes
