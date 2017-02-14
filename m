@@ -1,132 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:33578 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752993AbdBUQQS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:18 -0500
-Received: by mail-lf0-f66.google.com with SMTP id 86so5299997lfv.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:17 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 04/21] ath10k: htc: refactorization
-Date: Tue, 21 Feb 2017 17:15:24 +0100
-Message-Id: <1487693741-10042-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171649_510204_9CB99D9A)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:43342 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753096AbdBNMv6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 07:51:58 -0500
+Message-ID: <1487076714.4705.11.camel@sipsolutions.net> (sfid-20170214_135217_859494_00B5B792)
+Subject: Re: [RFC V2 1/5] nl80211: allow multiple active scheduled scan
+ requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 14 Feb 2017 13:51:54 +0100
+In-Reply-To: <fd4c2573-caea-1cdc-ee33-f010bb0aad58@broadcom.com> (sfid-20170214_133543_692623_F8DC7C86)
+References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1484566941-27000-2-git-send-email-arend.vanspriel@broadcom.com>
+         <1485250815.7244.8.camel@sipsolutions.net>
+         <fd4c2573-caea-1cdc-ee33-f010bb0aad58@broadcom.com>
+         (sfid-20170214_133543_692623_F8DC7C86)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code refactorization:
+On Tue, 2017-02-14 at 13:35 +0100, Arend Van Spriel wrote:
+> On 24-1-2017 10:40, Johannes Berg wrote:
+> > 
+> > > + * @max_sched_scan_reqs: maximum number of scheduled scan
+> > > requests
+> > > that
+> > > + *	the device can run concurrently.
+> > 
+> > Perhaps we should get rid of WIPHY_FLAG_SUPPORTS_SCHED_SCAN and
+> > just
+> > set this to 1 for such devices? Otherwise we have two different
+> > requirements, and we need to track that 0 is an invalid value here
+> > if
+> > WIPHY_FLAG_SUPPORTS_SCHED_SCAN is set, or something like that?
+> 
+> Ok. Doesn't that cause issues in user-space. Or do you only want to
+> get rid of it in cfg80211 api and report the flag to user-space when
+> max_sched_scan_reqs equals 1?
 
-Moved the code for ep 0 in ath10k_htc_rx_completion_handler
-to ath10k_htc_control_rx_complete.
+WIPHY_FLAG_* aren't directly reported to userspace at all.
 
-This eases the implementation of SDIO/mbox significantly since
-the ep_rx_complete cb is invoked directly from the SDIO/mbox
-hif layer.
+> > This might break older userspace - you'll have to put it in a later
+> > portion of the code.
+> > 
+> > I'm also a bit surprised the attributes aren't actually optional
+> > for when sched scan isn't supported, I'd make the new one optional
+> > and I guess we can fix the others later too, if desired.
+> 
+> Why would it break user-space. Is the order in which attributes are
+> added into the stream something user-space relies on.
 
-Since the ath10k_htc_control_rx_complete already is present
-(only containing a warning message) there is no reason for not
-using it (instead of having a special case for ep 0 in
-ath10k_htc_rx_completion_handler).
+No. But there was a size limit on how much older userspace could
+process before we did the splitting.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c | 73 ++++++++++++++++-------------------
- 1 file changed, 34 insertions(+), 39 deletions(-)
+> > > +static struct cfg80211_sched_scan_request *
+> > > +cfg80211_find_sched_scan_req(struct cfg80211_registered_device
+> > > *rdev, u64 reqid)
+> > > +{
+> > > +	struct cfg80211_sched_scan_request *pos;
+> > > +
+> > > +	list_for_each_entry(pos, &rdev->sched_scan_req_list,
+> > > list) {
+> > > +		if (pos->reqid == reqid)
+> > > +			return pos;
+> > > +	}
+> > > +	return ERR_PTR(-ENOENT);
+> > > +}
+> > 
+> > Here too, I guess, since you don't actually use RCU.
+> 
+> So should I use RCU here? Not sure what is the better choice here.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index f39eef6..eb036b3 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -459,42 +459,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- 		/* zero length packet with trailer data, just drop these */
- 		goto out;
- 
--	if (eid == ATH10K_HTC_EP_0) {
--		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
--
--		switch (__le16_to_cpu(msg->hdr.message_id)) {
--		case ATH10K_HTC_MSG_READY_ID:
--		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
--			/* handle HTC control message */
--			if (completion_done(&htc->ctl_resp)) {
--				/*
--				 * this is a fatal error, target should not be
--				 * sending unsolicited messages on the ep 0
--				 */
--				ath10k_warn(ar, "HTC rx ctrl still processing\n");
--				complete(&htc->ctl_resp);
--				goto out;
--			}
--
--			htc->control_resp_len =
--				min_t(int, skb->len,
--				      ATH10K_HTC_MAX_CTRL_MSG_LEN);
--
--			memcpy(htc->control_resp_buffer, skb->data,
--			       htc->control_resp_len);
--
--			complete(&htc->ctl_resp);
--			break;
--		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
--			htc->htc_ops.target_send_suspend_complete(ar);
--			break;
--		default:
--			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
--			break;
--		}
--		goto out;
--	}
--
- 	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
- 		   eid, skb);
- 	ep->ep_ops.ep_rx_complete(ar, skb);
-@@ -509,9 +473,40 @@ EXPORT_SYMBOL(ath10k_htc_rx_completion_handler);
- static void ath10k_htc_control_rx_complete(struct ath10k *ar,
- 					   struct sk_buff *skb)
- {
--	/* This is unexpected. FW is not supposed to send regular rx on this
--	 * endpoint. */
--	ath10k_warn(ar, "unexpected htc rx\n");
-+	struct ath10k_htc *htc = &ar->htc;
-+	struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
-+
-+	switch (__le16_to_cpu(msg->hdr.message_id)) {
-+	case ATH10K_HTC_MSG_READY_ID:
-+	case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
-+		/* handle HTC control message */
-+		if (completion_done(&htc->ctl_resp)) {
-+			/* this is a fatal error, target should not be
-+			 * sending unsolicited messages on the ep 0
-+			 */
-+			ath10k_warn(ar, "HTC rx ctrl still processing\n");
-+			complete(&htc->ctl_resp);
-+			goto out;
-+		}
-+
-+		htc->control_resp_len =
-+			min_t(int, skb->len,
-+			      ATH10K_HTC_MAX_CTRL_MSG_LEN);
-+
-+		memcpy(htc->control_resp_buffer, skb->data,
-+		       htc->control_resp_len);
-+
-+		complete(&htc->ctl_resp);
-+		break;
-+	case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
-+		htc->htc_ops.target_send_suspend_complete(ar);
-+		break;
-+	default:
-+		ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
-+		break;
-+	}
-+
-+out:
- 	kfree_skb(skb);
- }
- 
--- 
-2.7.4
+No no, I just meant to add locking assertions :)
+
+johannes
