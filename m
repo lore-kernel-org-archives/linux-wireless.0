@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:34019 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750974AbdBCRfc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 12:35:32 -0500
-Received: by mail-ot0-f193.google.com with SMTP id 73so2945194otj.1
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2017 09:35:32 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 0/7 v2] Make changes in debugging in btcoexist
-Date: Fri,  3 Feb 2017 11:35:14 -0600
-Message-Id: <20170203173521.6635-1-Larry.Finger@lwfinger.net> (sfid-20170203_183535_637039_6ED524AC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:41282 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751932AbdBNJOX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 04:14:23 -0500
+Message-ID: <1487063659.4705.5.camel@sipsolutions.net> (sfid-20170214_101428_309075_BE63B59E)
+Subject: Re: [PATCH] iw: Fix bitrate output when no rate info found
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 14 Feb 2017 10:14:19 +0100
+In-Reply-To: <a2ffeab5-dd9c-1c9d-3fd1-c098a6d1e748@gmail.com> (sfid-20170214_095559_603492_D396288B)
+References: <1487049663-2942-1-git-send-email-masashi.honma@gmail.com>
+         <1487061321.4705.1.camel@sipsolutions.net>
+         <a2ffeab5-dd9c-1c9d-3fd1-c098a6d1e748@gmail.com>
+         (sfid-20170214_095559_603492_D396288B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes convert the various files in btcoexist to use the same
-debugging macros as the rest of the parts of the drivers. In addition,
-one typo is fixed in rtl8821ae.
+On Tue, 2017-02-14 at 17:55 +0900, Masashi Honma wrote:
+> On 2017-02-14 17:35, Johannes Berg wrote:
+> > On Tue, 2017-02-14 at 14:21 +0900, Masashi Honma wrote:
+> > > Previously, bitrate showed uninitialized buffer when no rate info
+> > > found.
+> > 
+> > When would this happen?
+> 
+> I could see in mesh STA connection with 11n and legacy mixed.
+> STA A has disable_ht=1.
+> STA B has disable_ht=0.
 
-This is all material for 4.11.
+Interesting, ok.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
-v2 - Fix some "WARNING: possible condition with no effect (if == else)".
----
+>  > I'm not really sure this is right - perhaps we don't have
+>  > RATE_INFO_BITRATE(32), but still have the MCS data?
+> 
+> I recognized there was a issue on such a case. I will send a patch
+> to wpa_supplicant. Anyway, showing string message is better than
+> showing raw binary data.
+> 
+> > How about we just add "(unknown)" or so and not return here?
+> 
+> Yes. First time, I supposed to use "unknown". 
 
-Larry Finger (7):
-  rtlwifi: rtl8821ae: Fix typo in symbol for bandwidth numbers
-  rtlwifi: btcoexist: Convert halbtc8192e2ant.c to use standard
-    debugging
-  rtlwifi: btcoexist: Convert halbtc8723b1ant.c to use standard
-    debugging
-  rtlwifi: btcoexist: Convert halbtc8723b2ant.c to use standard
-    debugging
-  rtlwifi: btcoexist: Convert halbtc8821a1ant.c to use standard
-    debugging
-  rtlwifi: btcoexist: Convert halbtc8821a2ant.c to use standard
-    debugging
-  rtlwifi: btcoexist: Convert halbtcoutsrc.c to use standard debugging
+Ok.
 
- .../wireless/realtek/rtlwifi/btcoexist/Makefile    |    7 +-
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  237 +++--
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  827 ++++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  973 +++++++++---------
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  898 +++++++++--------
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 1055 +++++++++++---------
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |    4 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   12 -
- .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   |   10 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |    8 +-
- 10 files changed, 2163 insertions(+), 1868 deletions(-)
+> But in the function 
+> parse_bitrate(), nla_parse_nested() returns message "failed to parse 
+> nested rate attributes!". This explains why the bitrate is unknown. 
 
--- 
-2.10.2
+Yes, this is bad! But if you saw that, why did you ever get to the
+below code that checked for the BITRATE(32) attributes?
+
+> So I used explaining message. We could see the message like this.
+> 
+> tx bitrate: No rate info found!
+> rx bitrate: 48.0 MBit/s
+
+Yeah I was just thinking we could also see
+
+tx bitrate: (unknown)
+
+and then if there was MCS anyway you'd see
+
+tx bitrate: (unknown) MCS 7
+
+or something like that?
+
+johannes
