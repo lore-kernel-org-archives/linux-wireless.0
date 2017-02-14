@@ -1,97 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55428 "EHLO mail.kernel.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43608 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754019AbdBVCJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 21:09:51 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: johannes.berg@intel.com, luciano.coelho@intel.com,
-        emmanuel.grumbach@intel.com
-Cc: ming.lei@canonical.com, zajec5@gmail.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v2 2/2] iwlwifi: simplify requesting ops module
-Date: Tue, 21 Feb 2017 18:09:39 -0800
-Message-Id: <20170222020939.28140-3-mcgrof@kernel.org> (sfid-20170222_031113_199630_8447E631)
-In-Reply-To: <20170222020939.28140-1-mcgrof@kernel.org>
-References: <20170222001822.GE31264@wotan.suse.de>
- <20170222020939.28140-1-mcgrof@kernel.org>
+        id S1753836AbdBNNWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 08:22:14 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, greearb@candelatech.com,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 5/7] mac80211: introduce capability flags for VHT EXT NSS support
+Date: Tue, 14 Feb 2017 14:22:06 +0100
+Message-Id: <20170214132208.8715-6-johannes@sipsolutions.net> (sfid-20170214_142239_372422_DBAD4523)
+In-Reply-To: <20170214132208.8715-1-johannes@sipsolutions.net>
+References: <20170214132208.8715-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of request_module() being 0 does not mean that the
-driver which was requested has loaded. To properly check that the driver
-was loaded each driver can use internal mechanisms to vet the driver is
-now present. The helper try_then_request_module() was added to help with
-this, allowing drivers to specify their own validation as the first
-argument for synchronous requests.
+From: Johannes Berg <johannes.berg@intel.com>
 
-On iwlwifi the use case is a bit more complicated given that the value
-we need to check for is protected with a mutex later used on the
-module_init() of the module we are asking for. If we were to lock and
-request_module() we'd deadlock. iwlwifi could use its own wrapper for
-requesting its ops module synchronously so it can handle its special
-locking requirements on its own but the given code has been in the
-kernel for a long time and the preference is to keep its simplicity.
+Depending on whether or not rate control supports selecting
+rates depending on the bandwidth, we can use VHT extended
+NSS support. In essence, this is dot11VHTExtendedNSSBWCapable
+from the spec, since depending on that we'll need to parse
+the bandwidth.
 
-We can do two more things to simplify this even further:
-
-a) just use the async request, request_module_nowait(), to acknowledge
-   we are using best effort -- we are not verifying the module is loaded
-
-b) we can unconditionally call request_module_nowait() whether or not
-   we were built-in or not, if built-in this will return immediately
-   without failure.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 21 ++++-----------------
- 1 file changed, 4 insertions(+), 17 deletions(-)
+ include/net/mac80211.h | 18 ++++++++++++++++++
+ net/mac80211/debugfs.c |  1 +
+ net/mac80211/main.c    |  6 ++++++
+ 3 files changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index e198d6f5fcea..e96095c1824a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1250,7 +1250,6 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	size_t trigger_tlv_sz[FW_DBG_TRIGGER_MAX];
- 	u32 api_ver;
- 	int i;
--	bool load_module = false;
- 	bool usniffer_images = false;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b9a08cd1d97d..68f90180a470 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2043,6 +2043,11 @@ struct ieee80211_txq {
+  *	The stack will not do fragmentation.
+  *	The callback for @set_frag_threshold should be set as well.
+  *
++ * @IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW: (Hardware) rate control supports VHT
++ *	extended NSS BW (dot11VHTExtendedNSSBWCapable). This flag will be set if
++ *	the selected rate control algorithm sets %RATE_CTRL_CAPA_VHT_EXT_NSS_BW
++ *	but if the rate control is built-in then it must be set by the driver.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2085,6 +2090,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TX_FRAG_LIST,
+ 	IEEE80211_HW_REPORTS_LOW_ACK,
+ 	IEEE80211_HW_SUPPORTS_TX_FRAG,
++	IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW,
  
- 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
-@@ -1454,8 +1453,6 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 			mutex_unlock(&iwlwifi_opmode_table_mtx);
- 			goto out_unbind;
- 		}
--	} else {
--		load_module = true;
- 	}
- 	mutex_unlock(&iwlwifi_opmode_table_mtx);
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+@@ -5458,7 +5464,19 @@ struct ieee80211_tx_rate_control {
+ 	bool bss;
+ };
  
-@@ -1466,20 +1463,10 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	 */
- 	complete(&drv->request_firmware_complete);
- 
--	/*
--	 * Load the module last so we don't block anything
--	 * else from proceeding if the module fails to load
--	 * or hangs loading.
--	 */
--	if (load_module) {
--		err = request_module("%s", op->name);
--#ifdef CONFIG_IWLWIFI_OPMODE_MODULAR
--		if (err)
--			IWL_ERR(drv,
--				"failed to load module %s (error %d), is dynamic loading enabled?\n",
--				op->name, err);
--#endif
--	}
-+	err = request_module_nowait("%s", op->name);
-+	if (err)
-+		goto out_unbind;
++/**
++ * enum rate_control_capabilities - rate control capabilities
++ */
++enum rate_control_capabilities {
++	/**
++	 * @RATE_CTRL_CAPA_VHT_EXT_NSS_BW:
++	 *	support for extended NSS BW support (dot11VHTExtendedNSSCapable)
++	 */
++	RATE_CTRL_CAPA_VHT_EXT_NSS_BW = BIT(0),
++};
 +
- 	goto free;
+ struct rate_control_ops {
++	unsigned long capa;
+ 	const char *name;
+ 	void *(*alloc)(struct ieee80211_hw *hw, struct dentry *debugfsdir);
+ 	void (*free)(void *priv);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 5fae001f286c..a431514ea01c 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -211,6 +211,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(TX_FRAG_LIST),
+ 	FLAG(REPORTS_LOW_ACK),
+ 	FLAG(SUPPORTS_TX_FRAG),
++	FLAG(SUPPORTS_VHT_EXT_NSS_BW),
+ #undef FLAG
+ };
  
-  try_again:
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 56fb47953b72..91e2faf174dd 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1095,6 +1095,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		goto fail_rate;
+ 	}
+ 
++	if (local->rate_ctrl) {
++		clear_bit(IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW, hw->flags);
++		if (local->rate_ctrl->ops->capa & RATE_CTRL_CAPA_VHT_EXT_NSS_BW)
++			ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
++	}
++
+ 	/* add one default STA interface if supported */
+ 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
+ 	    !ieee80211_hw_check(hw, NO_AUTO_VIF)) {
 -- 
-2.11.0
+2.9.3
