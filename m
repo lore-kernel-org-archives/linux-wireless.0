@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22185 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751959AbdBGI6b (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 03:58:31 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: fix reading sram contents for QCA4019
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1485887811-23313-1-git-send-email-arnagara@qti.qualcomm.com>
-References: <1485887811-23313-1-git-send-email-arnagara@qti.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        <arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <263756ea946749a08c85691739345bee@eusanexr01a.eu.qualcomm.com> (sfid-20170207_095834_873586_DDB40969)
-Date: Tue, 7 Feb 2017 00:58:27 -0800
+Received: from mx1.redhat.com ([209.132.183.28]:56444 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753082AbdBNMvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Feb 2017 07:51:16 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH 09/10] rt2800: use TXOP_BACKOFF for probe frames
+Date: Tue, 14 Feb 2017 13:46:07 +0100
+Message-Id: <1487076368-7020-10-git-send-email-sgruszka@redhat.com> (sfid-20170214_135217_025439_E30C7971)
+In-Reply-To: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
+References: <1487076368-7020-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
-> With QCA4019 platform, SRAM address can be accessed directly from host but
-> currently, we are assuming sram addresses cannot be accessed directly and
-> hence we convert the addresses.
-> 
-> While there, clean up growing hw checks during conversion of target CPU
-> address to CE address. Now we have function pointer pertaining to different
-> chips.
-> 
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Even if we do not set AMPDU bit in TXWI, device still can aggregate
+frame and send it with rate not corresponding to requested. That mean
+we can do not sent probe frames with requested rate. To prevent that
+use TXOP_BACKOFF for probe frames.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-7f622593cc5a ath10k: fix reading sram contents for QCA4019
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index e1660b9..a2c1ca5 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -372,15 +372,16 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 
+ 	/*
+ 	 * Determine IFS values
+-	 * - Use TXOP_BACKOFF for management frames except beacons
++	 * - Use TXOP_BACKOFF for probe and management frames except beacons
+ 	 * - Use TXOP_SIFS for fragment bursts
+ 	 * - Use TXOP_HTTXOP for everything else
+ 	 *
+ 	 * Note: rt2800 devices won't use CTS protection (if used)
+ 	 * for frames not transmitted with TXOP_HTTXOP
+ 	 */
+-	if (ieee80211_is_mgmt(hdr->frame_control) &&
+-	    !ieee80211_is_beacon(hdr->frame_control))
++	if ((ieee80211_is_mgmt(hdr->frame_control) &&
++	     !ieee80211_is_beacon(hdr->frame_control)) ||
++	    (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
+ 		txdesc->u.ht.txop = TXOP_BACKOFF;
+ 	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
+ 		txdesc->u.ht.txop = TXOP_SIFS;
 -- 
-https://patchwork.kernel.org/patch/9548043/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.8.3.1
