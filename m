@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:35092 "EHLO
-        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753888AbdBGM6y (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:33622 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752370AbdBNNdn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 07:58:54 -0500
-Received: by mail-io0-f172.google.com with SMTP id j18so88964214ioe.2
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2017 04:58:54 -0800 (PST)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: Netdev 2.1 Location and Hotel
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-        info@netdevconf.org, linux-wireless@vger.kernel.org,
-        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        Rob Echlin <rob@echlin.ca>, lwn@lwn.net
-Message-ID: <e0a0bc78-0333-6715-5d2e-61e89482eab5@mojatatu.com> (sfid-20170207_135902_965084_04C59998)
-Date: Tue, 7 Feb 2017 07:58:52 -0500
+        Tue, 14 Feb 2017 08:33:43 -0500
+Received: by mail-wr0-f181.google.com with SMTP id i10so170316540wrb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 05:33:42 -0800 (PST)
+Subject: Re: [RFC V2 1/5] nl80211: allow multiple active scheduled scan
+ requests
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1484566941-27000-2-git-send-email-arend.vanspriel@broadcom.com>
+ <1485250815.7244.8.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <fbaa960e-b14a-e50c-c49e-913e823b1e74@broadcom.com> (sfid-20170214_143409_649609_25A2DC48)
+Date: Tue, 14 Feb 2017 14:33:39 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1485250815.7244.8.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 24-1-2017 10:40, Johannes Berg wrote:
+>> +	/* leave request id zero for legacy request
+>> +	 * or if driver does not support multi-scheduled scan
+>> +	 */
+>> +	if (want_multi && rdev->wiphy.max_sched_scan_reqs > 1) {
+> 
+> Why do the >1 check here? It probably doesn't really make a difference
+> since only one can be running at a time, but it might be nicer - at
+> least for debug in userspace - to have a real value for all multi
+> scans?
 
-Two important announcements
+I added the check, because drivers not supporting multi-scheduled scan
+might not bother using the request id in event reporting.
 
-1) We are pleased to announce a location for netdev 2.1:
-
-Le Westin Montréal
-270 Rue St. Antoine Ouest, Montreal, QC H2Y 0A3, Canada
-
-Le Westin will also be the conference hotel. We have a speacial
-arrangement for all attendees to get speacial rates at the hotel.
-We would like to encourage attendees to book at this hotel.
-If you can find a better deal for this hotel anywhere else
-on the net for the conference days, please notify us immediately
-at info@netdevconf.org and we'll contact the hotel.
-
-The hotel registration is at:
-https://www.starwoodmeeting.com/Book/netdev2017
-
-The room rates are:
-Traditional King: $189
-Traditional 2 Queuen: $209
-Premium Junior Suite: $269
-
-Extra 3rd and 4th person sharing a room is
-$30 CAD per person, per night.
-
-All above rates are in Canadian $ excluding taxes.
-Rates are available 3 days before and 3 days after events.
-Rates will no longer be available after March 22, 2017.
-
-The Call for Proposals is still open, submit early
-to avoid the hazards of last minute traffic. Refer to:
-http://netdevconf.org/2.1/submit-proposal.html
-
-2) We would like to announce the registration is now open.
-
-Please go ahead and register sooner than later. It helps us
-plan better:
-https://onlineregistrations.ca/netdev21/
-
-cheers,
-jamal
+Regards,
+Arend
