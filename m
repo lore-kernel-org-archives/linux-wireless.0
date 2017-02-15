@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:33346 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750954AbdBUJU1 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52366 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752505AbdBOXwA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 04:20:27 -0500
-Received: by mail-qk0-f180.google.com with SMTP id p22so116658623qka.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 01:20:27 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Avery Pennarun <apenwarr@gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: wpa psk offloading
-Message-ID: <11aeb0b3-5c44-32d5-c73a-c809f3d53c9f@broadcom.com> (sfid-20170221_102031_441573_6B97A86B)
-Date: Tue, 21 Feb 2017 10:20:24 +0100
+        Wed, 15 Feb 2017 18:52:00 -0500
+From: <ryanhsu@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC: <lenb@kernel.org>, <ryanhsu@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: improve the firmware download time for QCA9377
+Date: Wed, 15 Feb 2017 15:50:38 -0800
+Message-ID: <1487202638-13244-2-git-send-email-ryanhsu@qca.qualcomm.com> (sfid-20170216_005207_167508_D90A58CB)
+In-Reply-To: <1487202638-13244-1-git-send-email-ryanhsu@qca.qualcomm.com>
+References: <1487202638-13244-1-git-send-email-ryanhsu@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 
-Internally I am asked to look at "pmk plumbing" patches allowing
-firmware to deal with 4-way handshake. Now I noticed this topic being
-discussed during last wireless workshop in Santa Fe [1].
+QCA9377 is the family of QCA61x4 which shared the same procedure
+to enable the hardware clock that could improve the firmware download time.
 
-I do not recall any follow-up after that. At least no concrete patches,
-right? Also in wpa_supplicant there is already a solution using QCA
-vendor command. Should we aim to adopt just that or are there
-issues/requirements not covered by that.
+Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Regards,
-Arend
-
-[1]
-https://docs.google.com/document/u/1/d/e/2PACX-1vQXbVQ-3zQt3Bcr3OWfwzbw_C49tTvf0ed8Hmf7b20E6tXc3a40tWZmPku49iGDE-OhgxNmO_lkkHEn/pub#h.kj1rq2w7lxdv
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c6de267..91e2731 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -282,7 +282,9 @@
+ 			.board_size = QCA9377_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
+ 		},
+-		.hw_ops = &qca988x_ops,
++		.hw_ops = &qca6174_ops,
++		.hw_clk = qca6174_clk,
++		.target_cpu_freq = 176000000,
+ 		.decap_align_bytes = 4,
+ 	},
+ 	{
+-- 
+1.9.1
