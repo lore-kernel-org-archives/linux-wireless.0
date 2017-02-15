@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56162 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750716AbdBOHr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 02:47:27 -0500
-Message-ID: <1487144841.4026.1.camel@sipsolutions.net> (sfid-20170215_084731_709278_5C4B0730)
-Subject: Re: [PATCH] mac80211:  allow overriding station bandwidth.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Wed, 15 Feb 2017 08:47:21 +0100
-In-Reply-To: <1487106095-23287-1-git-send-email-greearb@candelatech.com> (sfid-20170214_220143_477541_65E9EEB9)
-References: <1487106095-23287-1-git-send-email-greearb@candelatech.com>
-         (sfid-20170214_220143_477541_65E9EEB9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:46140 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751614AbdBOJOw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 04:14:52 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [-,
+ REGRESSION] mwifiex: don't enable/disable IRQ 0 during suspend/resume
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170210215525.139701-1-briannorris@chromium.org>
+References: <20170210215525.139701-1-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Rajat Jain <rajatja@google.com>,
+        Brian Norris <briannorris@chromium.org>
+Message-Id: <20170215091436.24D3560C51@smtp.codeaurora.org> (sfid-20170215_101533_788417_25E6B2D7)
+Date: Wed, 15 Feb 2017 09:14:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-02-14 at 13:01 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+Brian Norris <briannorris@chromium.org> wrote:
+> If we don't have an out-of-band wakeup IRQ configured through DT (as
+> most platforms don't), then we fall out of this function with
+> 'irq_wakeup == 0'. Other code (e.g., mwifiex_disable_wake() and
+> mwifiex_enable_wake()) treats 'irq_wakeup >= 0' as a valid IRQ, and so
+> we end up calling {enable,disable}_irq() on IRQ 0.
 > 
-> This allows one to disable VHT160 (or 80+80) on hardware
-> that might otherwise try to use it.  One potential reason
-> to do this is that at least some 160Mhz/80+80 hardware can
-> only do 2x2 at 160Mhz, but can do 4x4 at 80Mhz.  And, due to
-> driver and firmware issues, it may effectively be limitted
-> to 1x1 at 160Mhz for some NICs.
+> That seems bad, so let's not do that.
+> 
+> Same problem as fixed in this patch:
+> 
+> https://patchwork.kernel.org/patch/9531693/
+> [PATCH v2 2/3] btmrvl: set irq_bt to -1 when failed to parse it
+> 
+> with the difference that:
+> (a) this one is actually a regression and
+> (b) this affects both device tree and non-device-tree systems
+> 
+> While fixing the regression, also drop the verbosity on the parse
+> failure, so we don't see this when a DT node is present but doesn't have
+> an interrupt property (this is perfectly legal):
+> 
+> [   21.999000] mwifiex_pcie 0000:01:00.0: fail to parse irq_wakeup from device tree
+> 
+> Fixes: 853402a00823 ("mwifiex: Enable WoWLAN for both sdio and pcie")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Acked-by: Rajat Jain <rajatja@google.com>
 
-I think the feature is acceptable and don't mind adding that (though
-perhaps we should start thinking about making some of these things
-debug-only features), but I think the description of why you might want
-to do this is misleading - those issues you're describing really should
-be solved differently, and I posted the basis for that yesterday.
+Patch applied to wireless-drivers-next.git, thanks.
 
-johannes
+2447e2cad752 mwifiex: don't enable/disable IRQ 0 during suspend/resume
+
+-- 
+https://patchwork.kernel.org/patch/9567543/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
