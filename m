@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:33751 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbdBWVla (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34328 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752701AbdBOWaJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 16:41:30 -0500
-Received: by mail-ot0-f193.google.com with SMTP id k4so410791otc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 13:41:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <2812805e-9108-284f-2165-34624d603364@broadcom.com>
-References: <20170202213321.11591-1-zajec5@gmail.com> <20170202213321.11591-4-zajec5@gmail.com>
- <2812805e-9108-284f-2165-34624d603364@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 23 Feb 2017 22:41:28 +0100
-Message-ID: <CACna6rzxbgkuvHWEk=7CgCzSeDfyR-RT_gHY=rwoZW_yC=LdOQ@mail.gmail.com> (sfid-20170223_224133_341323_B5CCF9F4)
-Subject: Re: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+        Wed, 15 Feb 2017 17:30:09 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 2/2] brcmfmac: don't warn user if loading firmware file with NVRAM fails
+Date: Wed, 15 Feb 2017 23:29:48 +0100
+Message-Id: <20170215222948.21030-2-zajec5@gmail.com> (sfid-20170215_233058_595410_F0925DAA)
+In-Reply-To: <20170215222948.21030-1-zajec5@gmail.com>
+References: <20170215222948.21030-1-zajec5@gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Arend,
+From: Rafał Miłecki <rafal@milecki.pl>
 
-On 8 February 2017 at 10:54, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 2-2-2017 22:33, Rafa=C5=82 Mi=C5=82ecki wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> This will allow getting struct device reference from the passed
->> brcmf_pub for the needs of dev_err. More detailed messages are really
->> important for home routers which frequently have 2 (or even 3) wireless
->> cards supported by brcmfmac.
->>
->> Note that all calls are yet to be updated as for now brcmf_err macro
->> always passes NULL. This will be handled in following patch to make this
->> change easier to review.
->
-> I prefer brcmf_err() to have struct device reference directly instead of
-> using brcmf_pub. That would remove the need for patches 5 till 7 as bus
-> specific code already has struct device. So I have acked the first three
-> patches, but would like to revise 8 and 9.
+This isn't critical as we use platform NVRAM as fallback and it's very
+common case of all Broadcom home routers. Thanks for the new firmware
+loading function we can achieve this by simply passing FW_OPT_NO_WARN.
 
-I wanted to have some better perspective so I analyzed few upstream
-Linux wireless drivers. It seems to be a pretty common pattern to have
-one struct describing hardware that gets passed across the whole
-driver. This way you can access any important info from any place of
-the driver & some will probably say it also simplifies a driver.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+Kalle, Arend: this patch is strictly related to the bigger 1/2. Could you ack
+this change as I expect this patchset to be picked by Ming, Luis or Greg.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-For example following drivers use following struct in almost every
-part of their code (across multiple files):
-ath9k: struct ath_hw
-ath10k: struct ath10k
-iwlmvm: struct iwl_mvm
-mt7601u: struct mt7601u_dev
-mwifiex: struct mwifiex_private
-rt2x00: struct rt2x00_dev
-
-The most common / generic struct I found in brcmfmac was struct
-brcmf_pub. That's why I tried to use it for the commonly used
-brcmf_err.
-
-What's the reason for hiding this struct from few random parts of the
-code? Is there any real gain from this?
-
---=20
-Rafa=C5=82
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index c7c1e9906500..26ec445a8d2d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -504,9 +504,9 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
+ 		return;
+ 	}
+ 	fwctx->code = fw;
+-	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+-				      fwctx->dev, GFP_KERNEL, fwctx,
+-				      brcmf_fw_request_nvram_done);
++	ret = request_firmware_async(THIS_MODULE, FW_OPT_NO_WARN,
++				     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
++				     fwctx, brcmf_fw_request_nvram_done);
+ 
+ 	if (!ret)
+ 		return;
+-- 
+2.11.0
