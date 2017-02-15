@@ -1,123 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46960 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750973AbdBFGDA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 01:03:00 -0500
-Date: Mon, 6 Feb 2017 11:32:32 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: Fix crash during rmmod when probe firmware
- fails
-Message-ID: <20170206060232.GA31102@atheros-ThinkPad-T61> (sfid-20170206_070305_939368_689C0BCA)
-References: <1482221351-24029-1-git-send-email-mohammed@qca.qualcomm.com>
- <8760l38dz0.fsf@kamboji.qca.qualcomm.com>
- <871svr8d83.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871svr8d83.fsf@kamboji.qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49736 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751077AbdBOJaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 04:30:09 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH v2 00/10] rt2x00 patches 14.02.2017
+Date: Wed, 15 Feb 2017 10:25:03 +0100
+Message-Id: <1487150713-3510-1-git-send-email-sgruszka@redhat.com> (sfid-20170215_103011_369600_0914E420)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Patches for rt2x00. Most important is txdone functions rework to use
+ieee80211_tx_status_noskb() if can not match sent skb with status
+from TX_STAT_FIFO. Currently used only for rt2800usb.
 
-sorry for the delay
+v1 -> v2:
+Fix skbdesc->sta and TXDONE_ACK_REQ issues pointed by Felix.
+Add changelog to patch 6, pointed by Kalle.
 
-On Wed, Jan 25, 2017 at 01:46:28PM +0000, Valo, Kalle wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> 
-> > Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-> >
-> >> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >>
-> >> This fixes the below crash when ath10k probe firmware fails,
-> >> NAPI polling tries to access a rx ring resource which was never
-> >> allocated, fix this by disabling NAPI right away once the probe
-> >> firmware fails by calling 'ath10k_hif_stop'. Its good to note
-> >> that the error is never propogated to 'ath10k_pci_probe' when
-> >> ath10k_core_register fails, so calling 'ath10k_hif_stop' to cleanup
-> >> PCI related things seems to be ok
-> >>
-> >> BUG: unable to handle kernel NULL pointer dereference at (null)
-> >> IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-> >> __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-> >>
-> >> Call Trace:
-> >>
-> >> [<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90
-> >> [ath10k_core]
-> >> [<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0
-> >> [ath10k_core]
-> >> [<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80
-> >> [<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150
-> >> [<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]
-> >> [<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]
-> >> [<ffffffff817863af>] net_rx_action+0x20f/0x370
-> >>
-> >> Reported-by: Ben Greear <greearb@candelatech.com>
-> >> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-> >> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >
-> > Is there an easy way to reproduce this bug? I don't see it on my x86
-> > laptop with qca988x and I call rmmod all the time. I would like to test
-> > this myself.
-> >
-> >> --- a/drivers/net/wireless/ath/ath10k/core.c
-> >> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> >> @@ -2164,6 +2164,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
-> >>  	ath10k_core_free_firmware_files(ar);
-> >>  
-> >>  err_power_down:
-> >> +	ath10k_hif_stop(ar);
-> >>  	ath10k_hif_power_down(ar);
-> >>  
-> >>  	return ret;
-> >
-> > This breaks the symmetry, we should not be calling ath10k_hif_stop() if
-> > we haven't called ath10k_hif_start() from the same function. This can
-> > just create a bigger mess later, for example with other bus support like
-> > sdio or usb. In theory it should enough that we call
-> > ath10k_hif_power_down() and pci.c does the rest correctly "behind the
-> > scenes".
-> >
-> > I investigated this a bit and I think the real cause is that we call
-> > napi_enable() from ath10k_pci_hif_power_up() and napi_disable() from
-> > ath10k_pci_hif_stop(). Does anyone remember why?
-> >
-> > I was expecting that we would call napi_enable()/napi_disable() either
-> > in ath10k_hif_power_up/down() or ath10k_hif_start()/stop(), but not
-> > mixed like it's currently.
-> 
-> So below is something I was thinking of, now napi_enable() is called
-> from ath10k_hif_start() and napi_disable() from ath10k_hif_stop(). Would
-> that work?
-> 
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -1648,6 +1648,8 @@ static int ath10k_pci_hif_start(struct ath10k *ar)
->  
->  	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");
->  
-> +	napi_enable(&ar->napi);
-> +
->  	ath10k_pci_irq_enable(ar);
->  	ath10k_pci_rx_post(ar);
->  
-> @@ -2532,7 +2534,6 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
->  		ath10k_err(ar, "could not wake up target CPU: %d\n", ret);
->  		goto err_ce;
->  	}
-> -	napi_enable(&ar->napi);
->  
->  	return 0;
->
+Gabor Juhos (1):
+  rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
 
-[shafi] I think I tried this change some time back, but it had some regression
-during device start up, let me check this once and get back to you.
+Stanislaw Gruszka (9):
+  rt2800: identify station based on status WCID
+  rt2x00: separte filling tx status from rt2x00lib_txdone
+  rt2x00: separte clearing entry from rt2x00lib_txdone
+  rt2x00: add txdone nomatch function
+  rt2x00: fixup fill_tx_status for nomatch case
+  rt2x00: use txdone_nomatch on rt2800usb
+  rt2800: status based rate flags for nomatch case
+  rt2800: use TXOP_BACKOFF for probe frames
+  rt2x00: fix rt2x00debug_dump_frame comment
 
-regards,
-shafi
+ drivers/net/wireless/ralink/rt2x00/rt2800.h      |  27 +--
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c   |  67 ++++++-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h   |  27 ++-
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c  |   2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c   |  18 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h      |   4 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c   | 232 +++++++++++++++--------
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |   7 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.h |   4 +-
+ 9 files changed, 260 insertions(+), 128 deletions(-)
+
+-- 
+1.8.3.1
