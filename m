@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0022.hostedemail.com ([216.40.44.22]:58047 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750979AbdBJHhM (ORCPT
+Received: from mail-ua0-f176.google.com ([209.85.217.176]:33463 "EHLO
+        mail-ua0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751616AbdBOKzb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 02:37:12 -0500
-Message-ID: <1486712222.2192.3.camel@perches.com> (sfid-20170210_083753_171786_0B272397)
-Subject: Re: [PATCH 1/3] ath10k: remove ath10k_vif_to_arvif()
-From: Joe Perches <joe@perches.com>
-To: Adrian Chadd <adrian@freebsd.org>,
-        "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Amadeusz =?UTF-8?Q?S=C5=82awi=C5=84ski?=
-        <amadeusz.slawinski@tieto.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Thu, 09 Feb 2017 23:37:02 -0800
-In-Reply-To: <CAJ-Vmom7k3Tsgs8tRHQppmL7XxADS3V24AGOQY5QgkrSgr5Qzg@mail.gmail.com>
-References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com>
-         <CAJ-VmonrHpS3MArM9ohHgLvb6xspP_gnVVeJWA9F-pjUpJ+LZA@mail.gmail.com>
-         <87y3xi4b28.fsf@qca.qualcomm.com> <5899DDD7.7000605@candelatech.com>
-         <87tw82il32.fsf@kamboji.qca.qualcomm.com>
-         <CAJ-Vmom7k3Tsgs8tRHQppmL7XxADS3V24AGOQY5QgkrSgr5Qzg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Wed, 15 Feb 2017 05:55:31 -0500
+Received: by mail-ua0-f176.google.com with SMTP id i68so103386324uad.0
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 02:55:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <586c8cf6-75fb-64cb-adaa-4c5de7ec7008@broadcom.com>
+References: <CANU0Mn00ju_SZ3L+ipdnZ5R-Y1m+T=MhjHmBjMpKN_i8NPWsrg@mail.gmail.com>
+ <dea21c18-30a4-f236-6f8b-1bf8d4391e0b@broadcom.com> <CANU0Mn2Fp=3tYb70qD7J_duA0f1wbRNr_Q3e5iv3pBTHtWM4zg@mail.gmail.com>
+ <586c8cf6-75fb-64cb-adaa-4c5de7ec7008@broadcom.com>
+From: ravin goyal <ravirocks1021@gmail.com>
+Date: Wed, 15 Feb 2017 16:25:09 +0530
+Message-ID: <CANU0Mn01mQoWfxvWK_jLRyM9MZwDR7Baeah6ZkJ6pNhxB=YeKQ@mail.gmail.com> (sfid-20170215_115533_455467_E4CAD54F)
+Subject: Re: wireless driver crashing frequently
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-02-09 at 23:14 -0800, Adrian Chadd wrote:
+okay thanks for the help.
 
-> If there
-> were accessors for the skb data / len fields (like we do for mbufs)
-> then porting the code would've involved about 5,000 less changed
-> lines.
+regards
+ravin
 
-What generic mechanisms would you suggest to make
-porting easier between bsd and linux and what in
-your opinion are the best naming schemes to make
-these functions easiest to read and implement
-without resorting to excessive identifier lengths?
-
-If you have some, please provide examples.
+On 15 February 2017 at 16:20, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+>
+>
+> On 15-2-2017 11:38, ravin goyal wrote:
+>> that is what I have found on my banana pi board running raspbian lite
+>> 3.4.112-sun8i.
+>> removing bcmdhd results in removing my wlan0 interface from the
+>> list(iwconfig/ifconfig/ip).
+>
+> Ok. If it is raspbian that choose to include bcmdhd in their distro I
+> would suggest to file the bug there [1].
+>
+> Regards,
+> Arend
+>
+> [1] https://www.raspbian.org/RaspbianBugs
