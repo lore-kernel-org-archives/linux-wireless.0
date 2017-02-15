@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58744 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751448AbdBXA3K (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45260 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750791AbdBOJMC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 19:29:10 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 100/306] mac80211-hwsim: remove dmesg spam about get-survey.
-Date: Thu, 23 Feb 2017 16:28:24 -0800
-Message-Id: <1487896109-23851-2-git-send-email-greearb@candelatech.com> (sfid-20170224_012922_949353_E2FF91A1)
-In-Reply-To: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
-References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
+        Wed, 15 Feb 2017 04:12:02 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v5] wlcore: disable multicast filter in AP mode
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170209143728.22831-1-i-hunter1@ti.com>
+References: <20170209143728.22831-1-i-hunter1@ti.com>
+To: Iain Hunter <drhunter95@gmail.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@aurora.org,
+        Iain Hunter <i-hunter1@ti.com>
+Message-Id: <20170215091201.AD57B6087A@smtp.codeaurora.org> (sfid-20170215_101224_015321_91EE912F)
+Date: Wed, 15 Feb 2017 09:12:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Iain Hunter <drhunter95@gmail.com> wrote:
+> Enable AP support for allmulticast for MDNS. It can be enabled by bringing
+> up the interface with ip command with argument allmulticast on
+> 
+> Signed-off-by: Iain Hunter <i-hunter1@ti.com>
 
-This message just fills up dmesg and/or kernel logs and does
-not provide any useful information.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+1f8665320fa1 wlcore: disable multicast filter in AP mode
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index af53317..b8189b9 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1848,7 +1848,7 @@ static int mac80211_hwsim_get_survey(
- {
- 	struct ieee80211_conf *conf = &hw->conf;
- 
--	wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx);
-+	/* wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx); */
- 
- 	if (idx != 0)
- 		return -ENOENT;
 -- 
-2.4.11
+https://patchwork.kernel.org/patch/9564711/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
