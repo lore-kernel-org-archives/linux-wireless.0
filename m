@@ -1,75 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34445 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754217AbdBGTSM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 14:18:12 -0500
-Received: by mail-oi0-f68.google.com with SMTP id w144so9565334oiw.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2017 11:18:12 -0800 (PST)
-Date: Tue, 7 Feb 2017 12:43:56 -0600
-From: Rob Herring <robh@kernel.org>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add mt76 wireless device
- binding
-Message-ID: <20170207184356.hujknabzd7plrj6w@rob-hp-laptop> (sfid-20170207_201815_774778_08F0D86A)
-References: <20170202115208.8614-1-nbd@nbd.name>
- <20170202115208.8614-2-nbd@nbd.name>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170202115208.8614-2-nbd@nbd.name>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56162 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750716AbdBOHr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 02:47:27 -0500
+Message-ID: <1487144841.4026.1.camel@sipsolutions.net> (sfid-20170215_084731_709278_5C4B0730)
+Subject: Re: [PATCH] mac80211:  allow overriding station bandwidth.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date: Wed, 15 Feb 2017 08:47:21 +0100
+In-Reply-To: <1487106095-23287-1-git-send-email-greearb@candelatech.com> (sfid-20170214_220143_477541_65E9EEB9)
+References: <1487106095-23287-1-git-send-email-greearb@candelatech.com>
+         (sfid-20170214_220143_477541_65E9EEB9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 02, 2017 at 12:52:06PM +0100, Felix Fietkau wrote:
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  .../bindings/net/wireless/mediatek,mt76.txt        | 25 ++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+On Tue, 2017-02-14 at 13:01 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> new file mode 100644
-> index 000000000000..2be480c0eab8
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> @@ -0,0 +1,25 @@
-> +* MediaTek mt76xx devices
-> +
-> +This node provides properties for configuring the MediaTek mt76xx wireless
-> +device. The node is expected to be specified as a child node of the PCI
-> +controller to which the wireless chip is connected.
-> +
-> +Optional properties:
-> +
-> +- mac-address: See ethernet.txt in the parent directory
-> +- local-mac-address: See ethernet.txt in the parent directory
-> +- ieee80211-freq-limit: See ieee80211.txt
-> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
-> +
-> +&pcie {
-> +	status = "okay";
-> +
-> +	pcie0 {
-> +		mt76@0,0 {
+> This allows one to disable VHT160 (or 80+80) on hardware
+> that might otherwise try to use it.  One potential reason
+> to do this is that at least some 160Mhz/80+80 hardware can
+> only do 2x2 at 160Mhz, but can do 4x4 at 80Mhz.  And, due to
+> driver and firmware issues, it may effectively be limitted
+> to 1x1 at 160Mhz for some NICs.
 
-wifi@0,0
+I think the feature is acceptable and don't mind adding that (though
+perhaps we should start thinking about making some of these things
+debug-only features), but I think the description of why you might want
+to do this is misleading - those issues you're describing really should
+be solved differently, and I posted the basis for that yesterday.
 
-> +			reg = <0x0000 0 0 0 0>;
-> +			device_type = "pci";
-
-This only applies to PCI bridge nodes, so drop.
-
-> +			ieee80211-freq-limit = <5000000 6000000>;
-> +			mediatek,mtd-eeprom = <&factory 0x8000>;
-> +		};
-> +	};
-> +};
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
