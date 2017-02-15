@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60338 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbdBUVBE (ORCPT
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:36610 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751504AbdBOKue (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 16:01:04 -0500
-Date: Tue, 21 Feb 2017 16:01:03 -0500 (EST)
-Message-Id: <20170221.160103.272609294929297575.davem@davemloft.net> (sfid-20170221_220108_226237_2A71AB03)
-To: torvalds@linux-foundation.org
-Cc: kvalo@codeaurora.org, jikos@kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: ath10k regression on XPS13
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CA+55aFyqH3WAKsD_AaCe905zJbPzTXGygu2eiD1L0d6c2sAkGA@mail.gmail.com>
-References: <87d1eb99dq.fsf_-_@purkki.adurom.net>
-        <20170221.131858.949421414784612398.davem@davemloft.net>
-        <CA+55aFyqH3WAKsD_AaCe905zJbPzTXGygu2eiD1L0d6c2sAkGA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 15 Feb 2017 05:50:34 -0500
+Received: by mail-pg0-f45.google.com with SMTP id v184so36156089pgv.3
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 02:50:34 -0800 (PST)
+Subject: Re: wireless driver crashing frequently
+To: ravin goyal <ravirocks1021@gmail.com>
+References: <CANU0Mn00ju_SZ3L+ipdnZ5R-Y1m+T=MhjHmBjMpKN_i8NPWsrg@mail.gmail.com>
+ <dea21c18-30a4-f236-6f8b-1bf8d4391e0b@broadcom.com>
+ <CANU0Mn2Fp=3tYb70qD7J_duA0f1wbRNr_Q3e5iv3pBTHtWM4zg@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <586c8cf6-75fb-64cb-adaa-4c5de7ec7008@broadcom.com> (sfid-20170215_115037_987630_C2778B71)
+Date: Wed, 15 Feb 2017 11:50:29 +0100
+MIME-Version: 1.0
+In-Reply-To: <CANU0Mn2Fp=3tYb70qD7J_duA0f1wbRNr_Q3e5iv3pBTHtWM4zg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 21 Feb 2017 10:52:33 -0800
 
-> On Tue, Feb 21, 2017 at 10:18 AM, David Miller <davem@davemloft.net> wrote:
->>
->> Kalle I really wanted to send my net-next pull request to Linus later
->> today.  But I guess I have to wait for this ath10k first.
-> 
-> Feel free to send it to me - it sounds like the regression is
->  (a) easy to work around
-> and
->  (b) has a fix coming up.
-> 
-> And it won't even be something that I personally notice, since I have
-> the prev-gen XPS13 that has intel wireless.
 
-I have the revert in my tree, it's all good.
+On 15-2-2017 11:38, ravin goyal wrote:
+> that is what I have found on my banana pi board running raspbian lite
+> 3.4.112-sun8i.
+> removing bcmdhd results in removing my wlan0 interface from the
+> list(iwconfig/ifconfig/ip).
 
-I'll let my tree sit quietly for a few hours then send a pull
-request out later tonight.
+Ok. If it is raspbian that choose to include bcmdhd in their distro I
+would suggest to file the bug there [1].
+
+Regards,
+Arend
+
+[1] https://www.raspbian.org/RaspbianBugs
