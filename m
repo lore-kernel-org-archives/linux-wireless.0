@@ -1,79 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752885AbdBUOc3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:29 -0500
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 08/10] wil6210: use WMI_DISCONNECT_CMDID upon connect timeout
-Date: Tue, 21 Feb 2017 16:32:06 +0200
-Message-Id: <1487687528-12832-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153235_038388_41EB73EF)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56886 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751197AbdBOIte (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 03:49:34 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, "Michael S . Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        virtualization@lists.linux-foundation.org,
+        Marek Lindner <mareklindner@neomailbox.ch>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        Antonio Quartulli <a@unstable.cc>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] average: change to declare precision, not factor
+Date: Wed, 15 Feb 2017 09:49:26 +0100
+Message-Id: <20170215084926.29482-1-johannes@sipsolutions.net> (sfid-20170215_094949_005229_FB35E00C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Upon connect timeout driver invokes _wil6210_disconnect() which iterates
-over sta array and disconnects each connected sta. In practice, because
-the connection is still ongoing and because cid is not yet allocated,
-disconnect is not actually happening. This leaves FW in connecting
-state while driver is in disconnected state.
-To fix this, upon connect timeout, explicitly send WMI_DISCONNECT_CMDID
-to FW to make sure it gets disconnected.
+Declaring the factor is counter-intuitive, and people are prone
+to using small(-ish) values even when that makes no sense.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Change the DECLARE_EWMA() macro to take the fractional precision,
+in bits, rather than a factor, and update all users.
+
+While at it, add some more documentation.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 30 +++++++++++++++++++++++++++---
- 1 file changed, 27 insertions(+), 3 deletions(-)
+Unless I hear any objections, I will take this through my tree.
+---
+ drivers/net/virtio_net.c                    |  2 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h      |  2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h |  2 +-
+ include/linux/average.h                     | 61 +++++++++++++++++++----------
+ net/batman-adv/types.h                      |  2 +-
+ net/mac80211/ieee80211_i.h                  |  2 +-
+ net/mac80211/sta_info.h                     |  6 +--
+ 7 files changed, 49 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 5d45fac..79aeb2b8 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -306,10 +306,34 @@ static void wil_disconnect_worker(struct work_struct *work)
- {
- 	struct wil6210_priv *wil = container_of(work,
- 			struct wil6210_priv, disconnect_worker);
-+	struct net_device *ndev = wil_to_ndev(wil);
-+	int rc;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_disconnect_event evt;
-+	} __packed reply;
+diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
+index 11e28530c83c..5e0cc9ec0f81 100644
+--- a/drivers/net/virtio_net.c
++++ b/drivers/net/virtio_net.c
+@@ -49,7 +49,7 @@ module_param(gso, bool, 0444);
+  * at once, the weight is chosen so that the EWMA will be insensitive to short-
+  * term, transient changes in packet size.
+  */
+-DECLARE_EWMA(pkt_len, 1, 64)
++DECLARE_EWMA(pkt_len, 0, 64)
  
--	mutex_lock(&wil->mutex);
--	_wil6210_disconnect(wil, NULL, WLAN_REASON_UNSPECIFIED, false);
--	mutex_unlock(&wil->mutex);
-+	if (test_bit(wil_status_fwconnected, wil->status))
-+		/* connect succeeded after all */
-+		return;
-+
-+	if (!test_bit(wil_status_fwconnecting, wil->status))
-+		/* already disconnected */
-+		return;
-+
-+	rc = wmi_call(wil, WMI_DISCONNECT_CMDID, NULL, 0,
-+		      WMI_DISCONNECT_EVENTID, &reply, sizeof(reply),
-+		      WIL6210_DISCONNECT_TO_MS);
-+	if (rc) {
-+		wil_err(wil, "disconnect error %d\n", rc);
-+		return;
-+	}
-+
-+	wil_update_net_queues_bh(wil, NULL, true);
-+	netif_carrier_off(ndev);
-+	cfg80211_connect_result(ndev, NULL, NULL, 0, NULL, 0,
-+				WLAN_STATUS_UNSPECIFIED_FAILURE, GFP_KERNEL);
-+	clear_bit(wil_status_fwconnecting, wil->status);
- }
+ /* With mergeable buffers we align buffer address and use the low bits to
+  * encode its true size. Buffer size is up to 1 page so we need to align to
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 67fedb61fcc0..979800c6f57f 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1252,7 +1252,7 @@ struct ath5k_statistics {
+ #define ATH5K_TXQ_LEN_MAX	(ATH_TXBUF / 4)		/* bufs per queue */
+ #define ATH5K_TXQ_LEN_LOW	(ATH5K_TXQ_LEN_MAX / 2)	/* low mark */
  
- static void wil_connect_timer_fn(ulong x)
+-DECLARE_EWMA(beacon_rssi, 1024, 8)
++DECLARE_EWMA(beacon_rssi, 10, 8)
+ 
+ /* Driver state associated with an instance of a device */
+ struct ath5k_hw {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 26869b3bef45..340787894c69 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -257,7 +257,7 @@ struct link_qual {
+ 	int tx_failed;
+ };
+ 
+-DECLARE_EWMA(rssi, 1024, 8)
++DECLARE_EWMA(rssi, 10, 8)
+ 
+ /*
+  * Antenna settings about the currently active link.
+diff --git a/include/linux/average.h b/include/linux/average.h
+index d04aa58280de..7ddaf340d2ac 100644
+--- a/include/linux/average.h
++++ b/include/linux/average.h
+@@ -1,45 +1,66 @@
+ #ifndef _LINUX_AVERAGE_H
+ #define _LINUX_AVERAGE_H
+ 
+-/* Exponentially weighted moving average (EWMA) */
++/*
++ * Exponentially weighted moving average (EWMA)
++ *
++ * This implements a fixed-precision EWMA algorithm, with both the
++ * precision and fall-off coefficient determined at compile-time
++ * and built into the generated helper funtions.
++ *
++ * The first argument to the macro is the name that will be used
++ * for the struct and helper functions.
++ *
++ * The second argument, the precision, expresses how many bits are
++ * used for the fractional part of the fixed-precision values.
++ *
++ * The third argument, the weight reciprocal, determines how the
++ * new values will be weighed vs. the old state, new values will
++ * get weight 1/weight_rcp and old values 1-1/weight_rcp. Note
++ * that this parameter must be a power of two for efficiency.
++ */
+ 
+-#define DECLARE_EWMA(name, _factor, _weight)				\
++#define DECLARE_EWMA(name, _precision, _weight_rcp)			\
+ 	struct ewma_##name {						\
+ 		unsigned long internal;					\
+ 	};								\
+ 	static inline void ewma_##name##_init(struct ewma_##name *e)	\
+ 	{								\
+-		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
+-		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_factor);			\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_weight);			\
++		BUILD_BUG_ON(!__builtin_constant_p(_precision));	\
++		BUILD_BUG_ON(!__builtin_constant_p(_weight_rcp));	\
++		/*							\
++		 * Even if you want to feed it just 0/1 you should have	\
++		 * some bits for the non-fractional part...		\
++		 */							\
++		BUILD_BUG_ON((_precision) > 30);			\
++		BUILD_BUG_ON_NOT_POWER_OF_2(_weight_rcp);		\
+ 		e->internal = 0;					\
+ 	}								\
+ 	static inline unsigned long					\
+ 	ewma_##name##_read(struct ewma_##name *e)			\
+ 	{								\
+-		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
+-		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_factor);			\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_weight);			\
+-		return e->internal >> ilog2(_factor);			\
++		BUILD_BUG_ON(!__builtin_constant_p(_precision));	\
++		BUILD_BUG_ON(!__builtin_constant_p(_weight_rcp));	\
++		BUILD_BUG_ON((_precision) > 30);			\
++		BUILD_BUG_ON_NOT_POWER_OF_2(_weight_rcp);		\
++		return e->internal >> (_precision);			\
+ 	}								\
+ 	static inline void ewma_##name##_add(struct ewma_##name *e,	\
+ 					     unsigned long val)		\
+ 	{								\
+ 		unsigned long internal = ACCESS_ONCE(e->internal);	\
+-		unsigned long weight = ilog2(_weight);			\
+-		unsigned long factor = ilog2(_factor);			\
++		unsigned long weight_rcp = ilog2(_weight_rcp);		\
++		unsigned long precision = _precision;			\
+ 									\
+-		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
+-		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_factor);			\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_weight);			\
++		BUILD_BUG_ON(!__builtin_constant_p(_precision));	\
++		BUILD_BUG_ON(!__builtin_constant_p(_weight_rcp));	\
++		BUILD_BUG_ON((_precision) > 30);			\
++		BUILD_BUG_ON_NOT_POWER_OF_2(_weight_rcp);		\
+ 									\
+ 		ACCESS_ONCE(e->internal) = internal ?			\
+-			(((internal << weight) - internal) +		\
+-				(val << factor)) >> weight :		\
+-			(val << factor);				\
++			(((internal << weight_rcp) - internal) +	\
++				(val << precision)) >> weight_rcp :	\
++			(val << precision);				\
+ 	}
+ 
+ #endif /* _LINUX_AVERAGE_H */
+diff --git a/net/batman-adv/types.h b/net/batman-adv/types.h
+index 8f64a5c01345..66b25e410a41 100644
+--- a/net/batman-adv/types.h
++++ b/net/batman-adv/types.h
+@@ -402,7 +402,7 @@ struct batadv_gw_node {
+ 	struct rcu_head rcu;
+ };
+ 
+-DECLARE_EWMA(throughput, 1024, 8)
++DECLARE_EWMA(throughput, 10, 8)
+ 
+ /**
+  * struct batadv_hardif_neigh_node_bat_v - B.A.T.M.A.N. V private neighbor
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 159a1a733725..0e718437d080 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -428,7 +428,7 @@ struct ieee80211_sta_tx_tspec {
+ 	bool downgraded;
+ };
+ 
+-DECLARE_EWMA(beacon_signal, 16, 4)
++DECLARE_EWMA(beacon_signal, 4, 4)
+ 
+ struct ieee80211_if_managed {
+ 	struct timer_list timer;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 71fa41a1368a..90a2c4deb00c 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -322,8 +322,8 @@ struct ieee80211_fast_rx {
+ 	struct rcu_head rcu_head;
+ };
+ 
+-/* we use only values in the range 0-100, so pick a large factor */
+-DECLARE_EWMA(mesh_fail_avg, 1048576, 8)
++/* we use only values in the range 0-100, so pick a large precision */
++DECLARE_EWMA(mesh_fail_avg, 20, 8)
+ 
+ /**
+  * struct mesh_sta - mesh STA information
+@@ -373,7 +373,7 @@ struct mesh_sta {
+ 	struct ewma_mesh_fail_avg fail_avg;
+ };
+ 
+-DECLARE_EWMA(signal, 1024, 8)
++DECLARE_EWMA(signal, 10, 8)
+ 
+ struct ieee80211_sta_rx_stats {
+ 	unsigned long packets;
 -- 
-1.9.1
+2.9.3
