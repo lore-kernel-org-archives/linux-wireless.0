@@ -1,54 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34916 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49728 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752490AbdBMTvc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 14:51:32 -0500
-Message-ID: <1487015489.19813.9.camel@sipsolutions.net> (sfid-20170213_205135_491915_2F1FDECE)
-Subject: Re: VHT 160Mhz and nss related config.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-Date: Mon, 13 Feb 2017 20:51:29 +0100
-In-Reply-To: <0f30d7bf-b710-10a8-91e6-bfd75457cf75@candelatech.com>
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
-         <1486969571.5142.3.camel@sipsolutions.net>
-         <d53a8fac-b4e0-2fb2-c1e1-c537a2c5e8aa@candelatech.com>
-         <1487014657.19813.3.camel@sipsolutions.net>
-         <0f30d7bf-b710-10a8-91e6-bfd75457cf75@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751077AbdBOJaQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 04:30:16 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH v2 05/10] rt2x00: add txdone nomatch function
+Date: Wed, 15 Feb 2017 10:25:08 +0100
+Message-Id: <1487150713-3510-6-git-send-email-sgruszka@redhat.com> (sfid-20170215_103023_034353_4BE07393)
+In-Reply-To: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
+References: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-02-13 at 11:42 -0800, Ben Greear wrote:
-> On 02/13/2017 11:37 AM, Johannes Berg wrote:
-> > 
-> > > > This was recently added to the VHT capabilities in the spec,
-> > > > see
-> > > > Table 9-250 in 802.11-2016.
-> > > I don't have that spec...maybe you could post a patch that adds
-> > > that
-> > > flag and/or other fields to the appropriate header files?  I can
-> > > attempt to add support to ath10k after that...
-> > 
-> > We're planning to, but it's not the most important thing on my list
-> > right now ... I'll check where that's at now.
-> > 
-> > I can't even easily explain it, since it's really complicated.
-> 
-> So, think it is worthwhile to use the max-rx-rate as a proxy
-> until the 'real' spec is implemented?  If 2x2 160Mhz is super
-> complicated, and yields no useful throughput improvement, then likely
-> it will be a long time before someone implements it properly I'd
-> guess.
+This txdone nomatch function will be used when we get status from the HW,
+but we could not match it with any sent skb.
 
-I don't know, I haven't really followed that discussion.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  2 ++
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 50 ++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+)
 
-I don't think implementing the spec here will be really complicated,
-there are just a bunch of cases to consider when parsing the VHT
-capabilities. I won't do anything with max rate in mac80211, and I
-doubt you really should implement any workarounds for not having the
-spec here in the driver itself.
-
-johannes
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 26869b3..efd6914 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -1425,6 +1425,8 @@ u32 rt2x00lib_get_bssidx(struct rt2x00_dev *rt2x00dev,
+ void rt2x00lib_dmadone(struct queue_entry *entry);
+ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		      struct txdone_entry_desc *txdesc);
++void rt2x00lib_txdone_nomatch(struct queue_entry *entry,
++			      struct txdone_entry_desc *txdesc);
+ void rt2x00lib_txdone_noinfo(struct queue_entry *entry, u32 status);
+ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp);
+ 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 03b368a..90fc259 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -417,6 +417,56 @@ static void rt2x00lib_clear_entry(struct rt2x00_dev *rt2x00dev,
+ 	spin_unlock_bh(&entry->queue->tx_lock);
+ }
+ 
++void rt2x00lib_txdone_nomatch(struct queue_entry *entry,
++			      struct txdone_entry_desc *txdesc)
++{
++	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
++	struct ieee80211_tx_info txinfo = {};
++	bool success;
++
++	/*
++	 * Unmap the skb.
++	 */
++	rt2x00queue_unmap_skb(entry);
++
++	/*
++	 * Signal that the TX descriptor is no longer in the skb.
++	 */
++	skbdesc->flags &= ~SKBDESC_DESC_IN_SKB;
++
++	/*
++	 * Send frame to debugfs immediately, after this call is completed
++	 * we are going to overwrite the skb->cb array.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TXDONE, entry);
++
++	/*
++	 * Determine if the frame has been successfully transmitted and
++	 * remove BARs from our check list while checking for their
++	 * TX status.
++	 */
++	success =
++	    rt2x00lib_txdone_bar_status(entry) ||
++	    test_bit(TXDONE_SUCCESS, &txdesc->flags);
++
++	if (!test_bit(TXDONE_UNKNOWN, &txdesc->flags)) {
++		/*
++		 * Update TX statistics.
++		 */
++		rt2x00dev->link.qual.tx_success += success;
++		rt2x00dev->link.qual.tx_failed += !success;
++
++		rt2x00lib_fill_tx_status(rt2x00dev, &txinfo, skbdesc, txdesc,
++					 success);
++		ieee80211_tx_status_noskb(rt2x00dev->hw, skbdesc->sta, &txinfo);
++	}
++
++	dev_kfree_skb_any(entry->skb);
++	rt2x00lib_clear_entry(rt2x00dev, entry);
++}
++EXPORT_SYMBOL_GPL(rt2x00lib_txdone_nomatch);
++
+ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		      struct txdone_entry_desc *txdesc)
+ {
+-- 
+1.8.3.1
