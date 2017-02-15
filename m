@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:37060 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750925AbdBUBrl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39820 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbdBOFt6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 20:47:41 -0500
-Received: by mail-it0-f54.google.com with SMTP id 203so29059966ith.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 17:47:41 -0800 (PST)
+        Wed, 15 Feb 2017 00:49:58 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rt2500usb: don't mark register accesses as inline
+References: <20170214212846.2809141-1-arnd@arndb.de>
+Date: Wed, 15 Feb 2017 07:49:38 +0200
+In-Reply-To: <20170214212846.2809141-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Tue, 14 Feb 2017 22:28:33 +0100")
+Message-ID: <8760kcovf1.fsf@kamboji.qca.qualcomm.com> (sfid-20170215_065053_483336_0C3F6785)
 MIME-Version: 1.0
-In-Reply-To: <1487633211.484.1.camel@sipsolutions.net>
-References: <CALs6+XLDZLmc6JWMPun4sT+W_M4Cqh47LcK+HjiuZ8gKFLkbTA@mail.gmail.com>
- <1487633211.484.1.camel@sipsolutions.net>
-From: "Thomas d'Otreppe" <tdotreppe@gmail.com>
-Date: Mon, 20 Feb 2017 18:46:59 -0700
-Message-ID: <CALs6+X+p_bANrbXjuQpbRWj_qpK7ssERMMKRdVDzH1yEOvT5fA@mail.gmail.com> (sfid-20170221_024745_193285_C725BD7D)
-Subject: Re: Monitor mode 'cook' flag meaning
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do you have any example of devices where control or otherbss would be
-useful? Would both be for FullMAC devices?
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Thanks,
+> When CONFIG_KASAN is set, we get a rather large stack here:
+>
+> drivers/net/wireless/ralink/rt2x00/rt2500usb.c: In function 'rt2500usb_set_device_state':
+> drivers/net/wireless/ralink/rt2x00/rt2500usb.c:1074:1: error: the frame size of 3032 bytes is larger than 100 bytes [-Werror=frame-larger-than=]
+>
+> If we don't force those functions to be inline, the compiler can figure this
+> out better itself and not inline the functions when doing so would be harmful,
+> reducing the stack size to a merge 256 bytes.
+>
+> Note that there is another problem that manifests in this driver, as a result
+> of the typecheck() macro causing even larger stack frames.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Thomas
+[...]
 
+> -static inline void rt2500usb_register_multiread(struct rt2x00_dev *rt2x00dev,
+> -						const unsigned int offset,
+> -						void *value, const u16 length)
+> -{
+> -	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
+> -				      USB_VENDOR_REQUEST_IN, offset,
+> -				      value, length);
+> -}
+> -
 
-On Mon, Feb 20, 2017 at 4:26 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2017-02-20 at 16:22 -0700, Thomas d'Otreppe wrote:
->> I've been looking through the different flags for monitor mode in iw.
->> Most of them are rather obvious (and well explained) but what is
->> exactly 'cooked mode'?
->>
->> I looked up in Google and in the linux-wireless wiki (nothing in
->> there) and I only found explanations in 2 patches (most likely still
->> in the source code) which are still vague:
->> - A monitor interface in "cooked" mode will see all frames that
->> mac80211 has not used internally
->> - report frames after processing. Overrides all other flags.
->>
->> Thinking about what the first one says, it doesn't seem any different
->> than just fcsfail.
->
-> No, that's the wrong idea. "cook" means that e.g. auth frames that
-> mac80211 didn't actually look at will be sent there.
->
-> Anyway, ignore cooked mode. It's only for ancient hostapd versions.
->
->> I don't even see when control or otherbss should be needed since
->> 'none' is already providing them.
->
-> Those are hw-dependent.
->
-> johannes
+I guess you removed this because it was not actually used anywhere? Just
+checking.
+
+-- 
+Kalle Valo
