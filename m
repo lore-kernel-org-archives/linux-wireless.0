@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33287 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753185AbdBJP5m (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:35917 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751304AbdBOK2g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 10:57:42 -0500
-Date: Fri, 10 Feb 2017 09:51:14 -0600
-From: Rob Herring <robh@kernel.org>
-To: Heiko Schocher <hs@denx.de>
-Cc: netdev@vger.kernel.org, Guan Ben <ben.guan@cn.bosch.com>,
-        Mark Jonas <mark.jonas@de.bosch.com>,
-        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH] Make EN2 pin optional in the TRF7970A driver
-Message-ID: <20170210155114.pvjahqqjqurw5jdc@rob-hp-laptop> (sfid-20170210_165909_618137_BFC1D44B)
-References: <1486444924-18444-1-git-send-email-hs@denx.de>
+        Wed, 15 Feb 2017 05:28:36 -0500
+Received: by mail-pg0-f43.google.com with SMTP id v184so36008935pgv.3
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 02:28:36 -0800 (PST)
+Subject: Re: wireless driver crashing frequently
+To: ravin goyal <ravirocks1021@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <CANU0Mn00ju_SZ3L+ipdnZ5R-Y1m+T=MhjHmBjMpKN_i8NPWsrg@mail.gmail.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <dea21c18-30a4-f236-6f8b-1bf8d4391e0b@broadcom.com> (sfid-20170215_112840_470923_9C2233B1)
+Date: Wed, 15 Feb 2017 11:28:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1486444924-18444-1-git-send-email-hs@denx.de>
+In-Reply-To: <CANU0Mn00ju_SZ3L+ipdnZ5R-Y1m+T=MhjHmBjMpKN_i8NPWsrg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 06:22:04AM +0100, Heiko Schocher wrote:
-> From: Guan Ben <ben.guan@cn.bosch.com>
+On 15-2-2017 10:54, ravin goyal wrote:
+> Hello, I have a banana pi m2+ running raspbian lite 3.4.112-sun8i
+> I am running hostapd on it
 > 
-> Make the EN2 pin optional. This is useful for boards,
-> which have this pin fix wired, for example to ground.
+> My wireless chip is AP6212 ,when I start hostapd sometime it runs
+> sometime it leads to kernel crash
 > 
-> Signed-off-by: Guan Ben <ben.guan@cn.bosch.com>
-> Signed-off-by: Mark Jonas <mark.jonas@de.bosch.com>
-> Signed-off-by: Heiko Schocher <hs@denx.de>
+> please follow this link to see the kernel messages: https://clbin.com/PXBSB?hl
 > 
-> ---
+> I have been told to ask my doubt here since it is the problem of the
+> driver in the kernel
 > 
->  .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
->  drivers/nfc/trf7970a.c                             | 26 ++++++++++++----------
->  2 files changed, 16 insertions(+), 14 deletions(-)
+> To make hostapd work properly I have to manuallly run this command
 > 
-> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-> index 32b35a0..5889a3d 100644
-> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-> @@ -5,8 +5,8 @@ Required properties:
->  - spi-max-frequency: Maximum SPI frequency (<= 2000000).
->  - interrupt-parent: phandle of parent interrupt handler.
->  - interrupts: A single interrupt specifier.
-> -- ti,enable-gpios: Two GPIO entries used for 'EN' and 'EN2' pins on the
-> -  TRF7970A.
-> +- ti,enable-gpios: One or two GPIO entries used for 'EN' and 'EN2' pins on the
-> +  TRF7970A. EN2 is optional.
+> modprobe -v bcmdhd op_mode=2
+> 
+> bcmdhd is my wireless driver
+> 
+> after this hostapd is able to broadcast the ssid, if i don't provide
+> the op_mode=2 while loading the module, hostapd will not broadcast the
+> ssid.
+> 
+> any help on this ?
 
-Could EN ever be optional/fixed? If so, perhaps deprecate this property 
-and do 2 properties, one for each pin.
+You are asking the wrong crowd. bcmdhd is an android driver. In upstream
+linux we have brcmfmac. Are you running android or upstream linux. At
+least you are on a pretty old kernel so I suspect android.
 
-Rob
+Regards,
+Arend
