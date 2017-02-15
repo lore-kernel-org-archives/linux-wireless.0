@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36733 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750913AbdBSNUv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 08:20:51 -0500
-Received: by mail-lf0-f67.google.com with SMTP id o140so552176lff.3
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 05:19:51 -0800 (PST)
-Subject: Re: [RFC v3 0/8] ath10k sdio support
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
- <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
- <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com>
- <877f4ngii5.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org <ath10k@lists.infradead.org>;"
-        <ryanhsu@qca.qualcomm.com>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <7b204d34-b791-ea78-cf4e-90e8fe1b79fb@gmail.com> (sfid-20170219_142056_399168_05BAD1F6)
-Date: Sun, 19 Feb 2017 14:19:48 +0100
-MIME-Version: 1.0
-In-Reply-To: <877f4ngii5.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:50136 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751077AbdBOJaW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 04:30:22 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH v2 09/10] rt2800: use TXOP_BACKOFF for probe frames
+Date: Wed, 15 Feb 2017 10:25:12 +0100
+Message-Id: <1487150713-3510-10-git-send-email-sgruszka@redhat.com> (sfid-20170215_103025_780567_62123870)
+In-Reply-To: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
+References: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hej,
+Even if we do not set AMPDU bit in TXWI, device still can aggregate
+frame and send it with rate not corresponding to requested. That mean
+we can do not sent probe frames with requested rate. To prevent that
+use TXOP_BACKOFF for probe frames.
 
-I just noticed that Ryan Hsu submitted two patches containing similar
-functionality to what I have in my tree on github. They have not been
-integrated in the ath master yet, but they have been added to master-pending.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Below are the commits I am talking about
-
-bc1054a15be3c962c83aa22476a3e9c1266da792 ath10k: improve the firmware download time for QCA9377
-db5af2a25bd8c1410ec4456d1d4f4e6ded2649ca ath10k: improve the firmware download time for QCA6174
-
-Since some of my patches overlap with these I think it would be best if
-I add these to my tree and rewrite my patches.
-
-If they haven't made it into master before I submit my updated patch series
-I will include them in my set.
-
-Is this OK?
-
-If they will be added to master soon there is no issue since I will of course
-rebase to the latest ath-YYYYMMDDHHmm before I submit anything.
-
-/Erik
-
-On 2017-02-19 00:57, Valo, Kalle wrote:
-> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
->
->> I was actually about to email you about this.
->>
->> I have made a few more updates to the sdio code so I think it would be
->> best if I could submit a new series of patches based on this code (v4).
->>
->> Then you can tweak it (v5).
->>
->> It is only minor updates to the HIF layer (added QCA9377 support) and
->> a setup of some pll registers.
->
-> Ok, that sounds good. I'll wait for v4.
->
->> btw, should I still mark them as RFC or should it be PATCH this time?
->>
->> If I go for PATCH, should the version be v4 or should I start from v1?
->
-> v4 would be fine. Thanks.
->
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index e1660b9..a2c1ca5 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -372,15 +372,16 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 
+ 	/*
+ 	 * Determine IFS values
+-	 * - Use TXOP_BACKOFF for management frames except beacons
++	 * - Use TXOP_BACKOFF for probe and management frames except beacons
+ 	 * - Use TXOP_SIFS for fragment bursts
+ 	 * - Use TXOP_HTTXOP for everything else
+ 	 *
+ 	 * Note: rt2800 devices won't use CTS protection (if used)
+ 	 * for frames not transmitted with TXOP_HTTXOP
+ 	 */
+-	if (ieee80211_is_mgmt(hdr->frame_control) &&
+-	    !ieee80211_is_beacon(hdr->frame_control))
++	if ((ieee80211_is_mgmt(hdr->frame_control) &&
++	     !ieee80211_is_beacon(hdr->frame_control)) ||
++	    (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
+ 		txdesc->u.ht.txop = TXOP_BACKOFF;
+ 	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
+ 		txdesc->u.ht.txop = TXOP_SIFS;
+-- 
+1.8.3.1
