@@ -1,66 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:34672 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751605AbdB0VOP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 16:14:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <1488227292-18906-4-git-send-email-albeu@free.fr>
-References: <1488227292-18906-1-git-send-email-albeu@free.fr> <1488227292-18906-4-git-send-email-albeu@free.fr>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 27 Feb 2017 22:13:21 +0100
-Message-ID: <CACna6rzZ-UiJR8oBJ9oHE+ZNT=nm6oLiKyW4bsiZ34TMRDh5Xw@mail.gmail.com> (sfid-20170227_221434_918688_595423A5)
-Subject: Re: [PATCH 3/3] ath9k: ahb: Add OF support
-To: Alban <albeu@free.fr>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Boris Brezillon <boris.brezillon@free-electrons.com>,
-        Richard Weinberger <richard@nod.at>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Cyrille Pitchen <cyrille.pitchen@atmel.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56408 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750800AbdBOIOB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 03:14:01 -0500
+Message-ID: <1487146439.4026.10.camel@sipsolutions.net> (sfid-20170215_091404_540837_BCEB45CC)
+Subject: Re: [PATCH 1/2] mac80211: use DECLARE_EWMA for mesh_fail_avg
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
+Date: Wed, 15 Feb 2017 09:13:59 +0100
+In-Reply-To: <1487104037-24941-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1487104037-24941-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Why you didn't cc linux-wireless?!?!
+On Tue, 2017-02-14 at 12:27 -0800, Rajkumar Manoharan wrote:
+> As moving average is not considering fractional part, it
+> will stuck at the same level after certain state. For example
+> with current values, moving average stuck at 96 and it will
+> not move forward. Fortunately current threshold is matching
+> against 95%. If thresold is increased more than 96, mesh path
+> never be deactivated under worst case. Fix failure average
+> movement by using EWMA helpers.
 
-On 27 February 2017 at 21:28, Alban <albeu@free.fr> wrote:
-> @@ -513,6 +515,43 @@ static void ath9k_eeprom_release(struct ath_softc *sc)
->         release_firmware(sc->sc_ah->eeprom_blob);
->  }
->
-> +#ifdef CONFIG_OF
-> +static int ath9k_init_of(struct ath_softc *sc)
-> +{
-> +       struct device_node *np = sc->dev->of_node;
-> +       struct ath_hw *ah = sc->sc_ah;
-> +       const void *macaddr;
-> +       struct clk *clk;
-> +       int ret = 0;
-> +
-> +       if (!np) {
-> +               dev_err(sc->dev, "no platform data or OF node\n");
-> +               return -EINVAL;
-> +       }
-> +
-> +       clk = clk_get(sc->dev, "ref");
-> +       if (!IS_ERR(clk)) {
-> +               ah->is_clk_25mhz = (clk_get_rate(clk) == 25000000);
-> +               clk_put(clk);
-> +       }
-> +
-> +       ah->disable_2ghz = of_property_read_bool(np, "qca,disable-2ghz");
-> +       ah->disable_5ghz = of_property_read_bool(np, "qca,disable-5ghz");
+Thanks, applied.
 
-Please use ieee80211-freq-limit:
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=b330b25eaabda00d74e47566d9200907da381896
+> +DECLARE_EWMA(mesh_fail_avg, 64, 8)
 
-Most likely with the wiphy_read_of_freq_limits helper:
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e691ac2f75b69bee743f0370d79454ba4429b17
+Since we only feed in small values (0-100), I picked a much larger
+factor (1<<20) to give more precision here.
 
-Example:
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=0f83ff69735651cc7a3d150466a5257ff829b62b
+johannes
