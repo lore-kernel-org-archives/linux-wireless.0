@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38016 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753168AbdBCOka (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:40:30 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:38:04 +0200
-Message-Id: <20170203143812.7525-18-luca@coelho.fi> (sfid-20170203_154034_049543_7814D627)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 17/25] iwlwifi: pcie: fix the set of DMA memory mask
+Received: from s3.sipsolutions.net ([5.9.151.49]:58048 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751474AbdBOK7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 05:59:48 -0500
+Message-ID: <1487156384.4026.22.camel@sipsolutions.net> (sfid-20170215_115952_185991_C66739BF)
+Subject: Re: [RFC V2 1/5] nl80211: allow multiple active scheduled scan
+ requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Feb 2017 11:59:44 +0100
+In-Reply-To: <83361d12-d793-380d-6eec-7191f3d10d9f@broadcom.com> (sfid-20170215_115514_772277_DA8A1ABA)
+References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1484566941-27000-2-git-send-email-arend.vanspriel@broadcom.com>
+         <1485250815.7244.8.camel@sipsolutions.net>
+         <fd4c2573-caea-1cdc-ee33-f010bb0aad58@broadcom.com>
+         <1487076714.4705.11.camel@sipsolutions.net>
+         <deef3e83-b6d8-f99d-516d-dc6e99013560@broadcom.com>
+         <1487077927.4705.14.camel@sipsolutions.net>
+         <e2ec8547-4e0d-881b-5f4e-1e61d4b8b047@broadcom.com>
+         <1487103101.6517.1.camel@sipsolutions.net>
+         <83361d12-d793-380d-6eec-7191f3d10d9f@broadcom.com>
+         (sfid-20170215_115514_772277_DA8A1ABA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
 
-Our 9000 device supports 64 bit DMA address for RX only, and
-not for TX.
-Setting DMA mask to 64 for the whole device is erroneous - we
-can do it only for a000 devices where device is capable of
-both RX & TX DMA with 64 bit address space.
+> Ok. Now I bumped into a nice comment which I should have seen earlier
+> ;-)
 
-Fixes: 96a6497bc3ed ("iwlwifi: pcie: add 9000 series multi queue rx DMA support")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+:-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index c1d99d15796d..b28d99f61a35 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2953,16 +2953,12 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 				       PCIE_LINK_STATE_CLKPM);
- 	}
- 
--	if (cfg->mq_rx_supported)
--		addr_size = 64;
--	else
--		addr_size = 36;
--
- 	if (cfg->use_tfh) {
-+		addr_size = 64;
- 		trans_pcie->max_tbs = IWL_TFH_NUM_TBS;
- 		trans_pcie->tfd_size = sizeof(struct iwl_tfh_tfd);
--
- 	} else {
-+		addr_size = 36;
- 		trans_pcie->max_tbs = IWL_NUM_OF_TBS;
- 		trans_pcie->tfd_size = sizeof(struct iwl_tfd);
- 	}
--- 
-2.11.0
+> Oh, well. So actually the sched_scan_plan attributes in case 0
+> slipped through the cracks.
+
+Oh. I guess we can still fix some things, but then again the iw version
+that added support for split dumps was 4 years ago ...
+
+johannes
