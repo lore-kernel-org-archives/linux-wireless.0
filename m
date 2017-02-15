@@ -1,86 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34970 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56416 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753769AbdBHKmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 05:42:16 -0500
-Message-ID: <1486550070.2533.12.camel@redhat.com> (sfid-20170208_114530_378624_9881A846)
-Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
-From: Paolo Abeni <pabeni@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        hante Meuleman <hante.meuleman@broadcom.com>
-Date: Wed, 08 Feb 2017 11:34:30 +0100
-In-Reply-To: <87zihxm0yp.fsf@kamboji.qca.qualcomm.com>
-References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
-         <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com>
-         <1486543119.2533.3.camel@redhat.com>
-         <87zihxm0yp.fsf@kamboji.qca.qualcomm.com>
+        id S1750979AbdBOIOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 03:14:42 -0500
+Message-ID: <1487146475.4026.11.camel@sipsolutions.net> (sfid-20170215_091500_912254_0FBD505A)
+Subject: Re: [PATCH 2/2] mac80211: fix mesh fail_avg check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
+Date: Wed, 15 Feb 2017 09:14:35 +0100
+In-Reply-To: <1487104037-24941-2-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1487104037-24941-1-git-send-email-rmanohar@qca.qualcomm.com>
+         <1487104037-24941-2-git-send-email-rmanohar@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-02-08 at 12:27 +0200, Kalle Valo wrote:
-> Paolo Abeni <pabeni@redhat.com> writes:
+On Tue, 2017-02-14 at 12:27 -0800, Rajkumar Manoharan wrote:
+> Mesh failure average never be more than 100. Only in case of
+> fixed path, average will be more than threshold limit (95%).
+> With recent EWMA changes it may go upto 99 as it is scaled to
+> 100. It make sense to return maximum metric when average is
+> greater than threshold limit.
 > 
-> > On Tue, 2017-02-07 at 20:23 +0100, Arend Van Spriel wrote:
-> > > On 7-2-2017 17:50, Paolo Abeni wrote:
-> > > > the skbs can be held by the driver for a long time, so we need
-> > > > to clear any state on xmit to avoid hanging other subsystems.
-> > > > The skbs are already orphaned later in cmsg code, so we just
-> > > > need to clear the nf/dst/secpath.
-> > > > Do it early, while the relevant entries are hopefully still
-> > > > hot in the cache.
-> > > 
-> > > What is this about really? A bit more background about the issue
-> > > might
-> > > help understanding the need for this patch. Is this really specific
-> > > to
-> > > brcmfmac. For instance is something similar already done in mac80211?
-> > 
-> > The issue is apparently driver specific, as reported in:
-> > 
-> > https://bugzilla.redhat.com/show_bug.cgi?id=1294415
-> > 
-> > This is caused by xmit skbs carrying a notrack ct entry not being freed
-> > by the device driver in a timely manner. Removing the ct module waits
-> > for such entries refcount going to zero and hangs the kernel in busy
-> > loop (for several minutes).
-> > 
-> > The relevant skbs are icmp6 packets (ND if I recall correctly, they
-> > bcast packets at the mac level).
-> > 
-> > The only other known device driver suffering for the issue is the
-> > infiniband ipoib driver, I send a separate patch for it.
-> > 
-> > I lack the broadcom h/w, but with infiniband the bug can be reproduced
-> > with the following steps:
-> > 
-> > - ensure ipv6 is enabled on the target device, and firewalld is running
-> > (e.g. the module nf_conntrack_ipv6 is loaded)
-> > - assign a static ip to the device
-> > - shut down the firewall (e.g. try to remove the module nf_conntrack)
-> > 
-> > For the brcmfmac driver most probably it is necessary being
-> > disassociated from the AP before shutting down the firewall (but I
-> > can't double check). This is probably why mac80211 does not suffer this
-> > issue.
-> > 
-> > The root cause for the issue could be actually a firmware issue, any
-> > better clues are more than welcome!
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  net/mac80211/mesh_hwmp.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> BTW, you should have added all this to the commit log. After reading the
-> original description it left more questions open than answered them.
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index d07ee3ca07ee..02c30a21eb66 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -339,7 +339,7 @@ static u32 airtime_link_metric_get(struct
+> ieee80211_local *local,
+>  	if (rate) {
+>  		err = 0;
+>  	} else {
+> -		if (fail_avg >= 100)
+> +		if (fail_avg >= 95)
+>  			return MAX_METRIC;
 
-I'm sorry for the lack of clarity, thank you for the advice, will do
-next time. 
+Why is this >= and the other place is >?
 
-I tried to keep the commit message short since others reviewer in other
-area of the kernel really prefer shorter ones.
+Also, I think it'd be good to introduce a #define for this value now,
+perhaps something like "LINK_FAIL_THRESH".
 
-Cheers,
-
-Paolo
+johannes
