@@ -1,189 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37245 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750776AbdBTFHY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36443 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbdBOJW3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 00:07:24 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv2] ath10k: Update available channel list for 5G radio
-Date: Mon, 20 Feb 2017 10:36:30 +0530
-Message-ID: <1487567190-18243-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170220_060757_517465_09D6E505)
+        Wed, 15 Feb 2017 04:22:29 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: ath9k: use correct OTP register offsets for the AR9340 and AR9550
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170214191030.31070-1-chunkeey@googlemail.com>
+References: <20170214191030.31070-1-chunkeey@googlemail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "QCA ath9k Development" <ath9k-devel@qca.qualcomm.com>,
+        Chris Blake <chrisrblake93@gmail.com>,
+        Gabor Juhos <juhosg@openwrt.org>, <stable@vger.kernel.org>
+Message-ID: <3266b4742b924a8dab9769be36a1a758@eusanexr01a.eu.qualcomm.com> (sfid-20170215_102233_489075_3305A5C8)
+Date: Wed, 15 Feb 2017 01:22:22 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Christian Lamparter <chunkeey@googlemail.com> wrote:
+> This patch fixes the OTP register definitions for the AR934x and AR9550
+> WMAC SoC.
+> 
+> Previously, the ath9k driver was unable to initialize the integrated
+> WMAC on an Aerohive AP121:
+> 
+> | ath: phy0: timeout (1000 us) on reg 0x30018: 0xbadc0ffe & 0x00000007 != 0x00000004
+> | ath: phy0: timeout (1000 us) on reg 0x30018: 0xbadc0ffe & 0x00000007 != 0x00000004
+> | ath: phy0: Unable to initialize hardware; initialization status: -5
+> | ath9k ar934x_wmac: failed to initialize device
+> | ath9k: probe of ar934x_wmac failed with error -5
+> 
+> It turns out that the AR9300_OTP_STATUS and AR9300_OTP_DATA
+> definitions contain a typo.
+> 
+> Cc: Gabor Juhos <juhosg@openwrt.org>
+> Cc: stable@vger.kernel.org
+> Fixes: add295a4afbdf5852d0 "ath9k: use correct OTP register offsets for AR9550"
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> Signed-off-by: Chris Blake <chrisrblake93@gmail.com>
 
-If a 5 GHz radio is calibrated for operation in both
-the low band (channels 36 to 64) and
-high band(channels 100 to 169), hardware allows operations
-in all the listed channels. However, if the chip has been
-calibrated only for the low/high band and a high/low band
-channel is configured, due to lack of calibration there will
-be potentially invalid signal on those non calibrated channels.
-To avoid this problem this patch introduces ath10k_low_5ghz_channel
-and ath10k_high_5ghz_channel lists as separate arrays.
-The channel list will be initialized depending on the low_5ghz_chan
-and high_5ghz_chan values which we get from target through
-wmi service ready event.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
-v2:
-  * Addressed Jouni and Kalle's comments
+c9f1e3260081 ath9k: use correct OTP register offsets for the AR9340 and AR9550
 
- drivers/net/wireless/ath/ath10k/core.h |    2 ++
- drivers/net/wireless/ath/ath10k/mac.c  |   55 +++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/wmi.c  |    6 ++++
- drivers/net/wireless/ath/ath10k/wmi.h  |    2 ++
- 4 files changed, 61 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 88d14be..d07d567 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -774,6 +774,8 @@ struct ath10k {
- 	u32 vht_cap_info;
- 	u32 num_rf_chains;
- 	u32 max_spatial_stream;
-+	u32 low_5ghz_chan;
-+	u32 high_5ghz_chan;
- 	/* protected by conf_mutex */
- 	bool ani_enabled;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3029f25..0840efb 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7623,6 +7623,38 @@ static void ath10k_mac_op_sta_pre_rcu_remove(struct ieee80211_hw *hw,
- 	CHAN2G(14, 2484, 0),
- };
- 
-+static const struct ieee80211_channel ath10k_low_5ghz_channels[] = {
-+	CHAN5G(36, 5180, 0),
-+	CHAN5G(40, 5200, 0),
-+	CHAN5G(44, 5220, 0),
-+	CHAN5G(48, 5240, 0),
-+	CHAN5G(52, 5260, 0),
-+	CHAN5G(56, 5280, 0),
-+	CHAN5G(60, 5300, 0),
-+	CHAN5G(64, 5320, 0),
-+};
-+
-+static const struct ieee80211_channel ath10k_high_5ghz_channels[] = {
-+	CHAN5G(100, 5500, 0),
-+	CHAN5G(104, 5520, 0),
-+	CHAN5G(108, 5540, 0),
-+	CHAN5G(112, 5560, 0),
-+	CHAN5G(116, 5580, 0),
-+	CHAN5G(120, 5600, 0),
-+	CHAN5G(124, 5620, 0),
-+	CHAN5G(128, 5640, 0),
-+	CHAN5G(132, 5660, 0),
-+	CHAN5G(136, 5680, 0),
-+	CHAN5G(140, 5700, 0),
-+	CHAN5G(144, 5720, 0),
-+	CHAN5G(149, 5745, 0),
-+	CHAN5G(153, 5765, 0),
-+	CHAN5G(157, 5785, 0),
-+	CHAN5G(161, 5805, 0),
-+	CHAN5G(165, 5825, 0),
-+	CHAN5G(169, 5845, 0),
-+};
-+
- static const struct ieee80211_channel ath10k_5ghz_channels[] = {
- 	CHAN5G(36, 5180, 0),
- 	CHAN5G(40, 5200, 0),
-@@ -8014,6 +8046,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 	};
- 	struct ieee80211_supported_band *band;
- 	void *channels;
-+	int n_channels;
- 	int ret;
- 
- 	SET_IEEE80211_PERM_ADDR(ar->hw, ar->mac_addr);
-@@ -8049,16 +8082,30 @@ int ath10k_mac_register(struct ath10k *ar)
- 	}
- 
- 	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY) {
--		channels = kmemdup(ath10k_5ghz_channels,
--				   sizeof(ath10k_5ghz_channels),
--				   GFP_KERNEL);
-+		if (ar->high_5ghz_chan <= 5350) {
-+			channels = kmemdup(ath10k_low_5ghz_channels,
-+					   sizeof(ath10k_low_5ghz_channels),
-+					   GFP_KERNEL);
-+			n_channels = ARRAY_SIZE(ath10k_low_5ghz_channels);
-+		} else if (ar->low_5ghz_chan >= 5490 &&
-+			   ar->high_5ghz_chan <= 5885) {
-+			channels = kmemdup(ath10k_high_5ghz_channels,
-+					   sizeof(ath10k_high_5ghz_channels),
-+					   GFP_KERNEL);
-+			n_channels = ARRAY_SIZE(ath10k_high_5ghz_channels);
-+		} else {
-+			channels = kmemdup(ath10k_5ghz_channels,
-+					   sizeof(ath10k_5ghz_channels),
-+					   GFP_KERNEL);
-+			n_channels = ARRAY_SIZE(ath10k_5ghz_channels);
-+		}
- 		if (!channels) {
- 			ret = -ENOMEM;
- 			goto err_free;
- 		}
- 
- 		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
--		band->n_channels = ARRAY_SIZE(ath10k_5ghz_channels);
-+		band->n_channels = n_channels;
- 		band->channels = channels;
- 		band->n_bitrates = ath10k_a_rates_size;
- 		band->bitrates = ath10k_a_rates;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2f1743e..b31c4f7 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4593,6 +4593,8 @@ static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
- 	arg->phy_capab = ev->phy_capability;
- 	arg->num_rf_chains = ev->num_rf_chains;
- 	arg->eeprom_rd = ev->hal_reg_capabilities.eeprom_rd;
-+	arg->low_5ghz_chan = ev->hal_reg_capabilities.low_5ghz_chan;
-+	arg->high_5ghz_chan = ev->hal_reg_capabilities.high_5ghz_chan;
- 	arg->num_mem_reqs = ev->num_mem_reqs;
- 	arg->service_map = ev->wmi_service_bitmap;
- 	arg->service_map_len = sizeof(ev->wmi_service_bitmap);
-@@ -4629,6 +4631,8 @@ static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
- 	arg->phy_capab = ev->phy_capability;
- 	arg->num_rf_chains = ev->num_rf_chains;
- 	arg->eeprom_rd = ev->hal_reg_capabilities.eeprom_rd;
-+	arg->low_5ghz_chan = ev->hal_reg_capabilities.low_5ghz_chan;
-+	arg->high_5ghz_chan = ev->hal_reg_capabilities.high_5ghz_chan;
- 	arg->num_mem_reqs = ev->num_mem_reqs;
- 	arg->service_map = ev->wmi_service_bitmap;
- 	arg->service_map_len = sizeof(ev->wmi_service_bitmap);
-@@ -4682,6 +4686,8 @@ static void ath10k_wmi_event_service_ready_work(struct work_struct *work)
- 	ar->phy_capability = __le32_to_cpu(arg.phy_capab);
- 	ar->num_rf_chains = __le32_to_cpu(arg.num_rf_chains);
- 	ar->hw_eeprom_rd = __le32_to_cpu(arg.eeprom_rd);
-+	ar->low_5ghz_chan = __le32_to_cpu(arg.low_5ghz_chan);
-+	ar->high_5ghz_chan = __le32_to_cpu(arg.high_5ghz_chan);
- 
- 	ath10k_dbg_dump(ar, ATH10K_DBG_WMI, NULL, "wmi svc: ",
- 			arg.service_map, arg.service_map_len);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 386aa51..78350d4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6335,6 +6335,8 @@ struct wmi_svc_rdy_ev_arg {
- 	__le32 num_rf_chains;
- 	__le32 eeprom_rd;
- 	__le32 num_mem_reqs;
-+	__le32 low_5ghz_chan;
-+	__le32 high_5ghz_chan;
- 	const __le32 *service_map;
- 	size_t service_map_len;
- 	const struct wlan_host_mem_req *mem_reqs[WMI_MAX_MEM_REQS];
 -- 
-1.7.9.5
+https://patchwork.kernel.org/patch/9572541/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
