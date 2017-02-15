@@ -1,71 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:33167 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754935AbdBGTX6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 14:23:58 -0500
-Received: by mail-qk0-f173.google.com with SMTP id s140so99073121qke.0
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2017 11:23:52 -0800 (PST)
-Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
-To: Paolo Abeni <pabeni@redhat.com>, Kalle Valo <kvalo@codeaurora.org>
-References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        hante Meuleman <hante.meuleman@broadcom.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com> (sfid-20170207_202407_272775_E6909E42)
-Date: Tue, 7 Feb 2017 20:23:47 +0100
-MIME-Version: 1.0
-In-Reply-To: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:59814 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751306AbdBOOCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 09:02:15 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/5] mac80211: remove local pointer from rate_ctrl_ref
+Date: Wed, 15 Feb 2017 15:02:07 +0100
+Message-Id: <20170215140210.19393-2-johannes@sipsolutions.net> (sfid-20170215_150223_128329_BA1928A3)
+In-Reply-To: <20170215140210.19393-1-johannes@sipsolutions.net>
+References: <20170215140210.19393-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7-2-2017 17:50, Paolo Abeni wrote:
-> the skbs can be held by the driver for a long time, so we need
-> to clear any state on xmit to avoid hanging other subsystems.
-> The skbs are already orphaned later in cmsg code, so we just
-> need to clear the nf/dst/secpath.
-> Do it early, while the relevant entries are hopefully still
-> hot in the cache.
+From: Johannes Berg <johannes.berg@intel.com>
 
-What is this about really? A bit more background about the issue might
-help understanding the need for this patch. Is this really specific to
-brcmfmac. For instance is something similar already done in mac80211?
+This pointer really isn't needed, so remove it.
 
-Regards,
-Arend
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rate.c | 10 +++++-----
+ net/mac80211/rate.h |  1 -
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-> Signed-off-by: Paolo Abeni <pabeni@redhat.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> index 9e6f60a..5a8d57b 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -22,6 +22,7 @@
->  #include <net/rtnetlink.h>
->  #include <net/addrconf.h>
->  #include <net/ipv6.h>
-> +#include <net/xfrm.h>
->  #include <brcmu_utils.h>
->  #include <brcmu_wifi.h>
->  
-> @@ -243,6 +244,13 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
->  	if ((skb->priority == 0) || (skb->priority > 7))
->  		skb->priority = cfg80211_classify8021d(skb, NULL);
->  
-> +	/* we can keep the skb for a long time; avoid starving other
-> +	 * subsystems
-> +	 */
-> +	nf_reset(skb);
-> +	skb_dst_drop(skb);
-> +	secpath_reset(skb);
-> +
->  	ret = brcmf_proto_tx_queue_data(drvr, ifp->ifidx, skb);
->  	if (ret < 0)
->  		brcmf_txfinalize(ifp, skb, false);
-> 
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 206698bc93f4..094c15645228 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -208,7 +208,6 @@ static struct rate_control_ref *rate_control_alloc(const char *name,
+ 	ref = kmalloc(sizeof(struct rate_control_ref), GFP_KERNEL);
+ 	if (!ref)
+ 		return NULL;
+-	ref->local = local;
+ 	ref->ops = ieee80211_rate_control_ops_get(name);
+ 	if (!ref->ops)
+ 		goto free;
+@@ -229,13 +228,14 @@ static struct rate_control_ref *rate_control_alloc(const char *name,
+ 	return NULL;
+ }
+ 
+-static void rate_control_free(struct rate_control_ref *ctrl_ref)
++static void rate_control_free(struct ieee80211_local *local,
++			      struct rate_control_ref *ctrl_ref)
+ {
+ 	ctrl_ref->ops->free(ctrl_ref->priv);
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-	debugfs_remove_recursive(ctrl_ref->local->debugfs.rcdir);
+-	ctrl_ref->local->debugfs.rcdir = NULL;
++	debugfs_remove_recursive(local->debugfs.rcdir);
++	local->debugfs.rcdir = NULL;
+ #endif
+ 
+ 	kfree(ctrl_ref);
+@@ -936,6 +936,6 @@ void rate_control_deinitialize(struct ieee80211_local *local)
+ 		return;
+ 
+ 	local->rate_ctrl = NULL;
+-	rate_control_free(ref);
++	rate_control_free(local, ref);
+ }
+ 
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 8d3260785b94..d51a1cce4d4a 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -20,7 +20,6 @@
+ #include "driver-ops.h"
+ 
+ struct rate_control_ref {
+-	struct ieee80211_local *local;
+ 	const struct rate_control_ops *ops;
+ 	void *priv;
+ };
+-- 
+2.9.3
