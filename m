@@ -1,64 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33600 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753722AbdBUQQX (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:35891 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751429AbdBOTDk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:23 -0500
-Received: by mail-lf0-f68.google.com with SMTP id 86so5300220lfv.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:22 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 10/21] ath10k: various usb related definitions
-Date: Tue, 21 Feb 2017 17:15:30 +0100
-Message-Id: <1487693741-10042-11-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171650_720855_09813ABE)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        Wed, 15 Feb 2017 14:03:40 -0500
+Received: by mail-it0-f65.google.com with SMTP id f200so11124743itf.3
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 11:03:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87r32z968n.fsf@purkki.adurom.net>
+References: <1487100985-4194-1-git-send-email-gucea.doru@gmail.com> <87r32z968n.fsf@purkki.adurom.net>
+From: Gucea Doru <gucea.doru@gmail.com>
+Date: Wed, 15 Feb 2017 21:03:39 +0200
+Message-ID: <CANfLQrawJ=zmHz=rSwVED8AgJvyEHGR7r_5xXRR0FnfmkhaBtA@mail.gmail.com> (sfid-20170215_200343_090964_47F7D8F4)
+Subject: Re: [RFC-PATCH] ath9k_htc: Adjust beacon timers for Power Save
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath9k_htc_fw@lists.infradead.org,
+        Andra Paraschiv <andra.paraschiv7@gmail.com>,
+        Costin Raiciu <costin.raiciu@cs.pub.ro>,
+        Dragos N <dragos.niculescu@cs.pub.ro>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Definitions for USB based chipsets
+On Wed, Feb 15, 2017 at 11:02 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Doru <gucea.doru@gmail.com> writes:
+>
+>> From: Doru Gucea <gucea.doru@gmail.com>
+>>
+>> Each time we receive a beacon we need to adjust the hardware
+>> timers for next DTIM and next TBTT.
+>>
+>> Before this commit, the Power Save behaviour was incorrect.
+>> The scenario was:
+>> - STA receives a beacon from AP with TIM unset;
+>> - mac80211 layers puts the chip to sleep;
+>> - chip is woken up by mac80211's software timer reponsible for
+>> beacon miss after 7 * beacon_interval period.
+>>
+>> Normally the chip should sleep at most DTIM period. This commit
+>> configures hardware timers for waking up the chip correctly.
+>>
+>> More details on the wiki:
+>> https://github.com/doru91/linux-stable/wiki/Single-Interface-Power-Save
+>>
+>> Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
+>>  net/mac80211/mlme.c                           | 6 ++++++
+>>  2 files changed, 10 insertions(+)
+>
+> [...]
+>
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -3536,6 +3536,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+>>                       sdata->vif.bss_conf.sync_dtim_count = 0;
+>>       }
+>>
+>> +     /* trigger hardware timers adjustment
+>> +      * this needs to be done before beacon filtering
+>> +      */
+>> +     changed |= BSS_CHANGED_BEACON_INFO;
+>> +     ieee80211_bss_info_change_notify(sdata, changed);
+>
+> You shouldn't mix driver and mac80211 changes in the same patch, I
+> suspect Johannes didn't even notice this change because of that. Create
+> a new patchset with two patches, one for ath9k and another for mac80211.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.h  | 3 +++
- drivers/net/wireless/ath/ath10k/debug.h | 2 ++
- 2 files changed, 5 insertions(+)
+Thanks, I've just sent two patches as you suggested.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 5965d18..2768b07 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -92,6 +92,7 @@ enum ath10k_bus {
- 	ATH10K_BUS_PCI,
- 	ATH10K_BUS_AHB,
- 	ATH10K_BUS_SDIO,
-+	ATH10K_BUS_USB,
- };
- 
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
-@@ -103,6 +104,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- 		return "ahb";
- 	case ATH10K_BUS_SDIO:
- 		return "sdio";
-+	case ATH10K_BUS_USB:
-+		return "usb";
- 	}
- 
- 	return "unknown";
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 257d109..548ad54 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -40,6 +40,8 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_AHB		= 0x00008000,
- 	ATH10K_DBG_SDIO		= 0x00010000,
- 	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
-+	ATH10K_DBG_USB		= 0x00040000,
-+	ATH10K_DBG_USB_BULK	= 0x00080000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
- 
--- 
-2.7.4
+>
+> --
+> Kalle Valo
