@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46744 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46708 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750760AbdBSHzP (ORCPT
+        with ESMTP id S1751523AbdBOJQZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 02:55:15 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Nils Holland <nholland@tisys.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Fix rtl8187 multicast reception
-References: <20170219013520.GA3190@tisys.org>
-        <2eb1dd33-4d71-86b7-c579-412419e2a2e5@lwfinger.net>
-Date: Sun, 19 Feb 2017 09:46:16 +0200
-In-Reply-To: <2eb1dd33-4d71-86b7-c579-412419e2a2e5@lwfinger.net> (Larry
-        Finger's message of "Sat, 18 Feb 2017 21:26:59 -0600")
-Message-ID: <87lgt28vxz.fsf@purkki.adurom.net> (sfid-20170219_085527_909679_6A441C31)
+        Wed, 15 Feb 2017 04:16:25 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: rt2500usb: don't mark register accesses as inline
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170214212846.2809141-1-arnd@arndb.de>
+References: <20170214212846.2809141-1-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Arnd Bergmann <arnd@arndb.de>, Mathias Kresin <dev@kresin.me>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20170215091624.6F1AB608EA@smtp.codeaurora.org> (sfid-20170215_101710_787190_A922E2D5)
+Date: Wed, 15 Feb 2017 09:16:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Arnd Bergmann <arnd@arndb.de> wrote:
+> When CONFIG_KASAN is set, we get a rather large stack here:
+> 
+> drivers/net/wireless/ralink/rt2x00/rt2500usb.c: In function 'rt2500usb_set_device_state':
+> drivers/net/wireless/ralink/rt2x00/rt2500usb.c:1074:1: error: the frame size of 3032 bytes is larger than 100 bytes [-Werror=frame-larger-than=]
+> 
+> If we don't force those functions to be inline, the compiler can figure this
+> out better itself and not inline the functions when doing so would be harmful,
+> reducing the stack size to a merge 256 bytes.
+> 
+> Note that there is another problem that manifests in this driver, as a result
+> of the typecheck() macro causing even larger stack frames.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-> On 02/18/2017 07:35 PM, Nils Holland wrote:
->> The rtl8187 doesn't seem to receive multicast data, which, among other
->> thinks, make it fail to receive RAs in IPv6 networks.
->>
->> The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
->> have any effect at all. Fix this issue by setting
->> RTL818X_RX_CONF_MONITOR instead, which puts the card into monitor mode,
->> and fixes the problem.
->>
->> Signed-off-by: Nils Holland <nholland@tisys.org>
->> ---
->> The problem and solution have been tested on an rtl8187b (0bda:8197), but
->> the fix changes behavior on other cards supported by the driver as well
->> (like non-b 8187's). Due to lack of hardware, I unfortunately cannot say
->> if the issue exists on these cards in the first place, or if the fix has
->> any unwanted consequences there.
+Patch applied to wireless-drivers-next.git, thanks.
 
-BTW, this is good info to have in the actual commit log. No need put it
-under "---" line.
-
->> If people consider it a bad idea to just always put the card into monitor
->> mode (for example, for performance reasons), I could imagine rewriting this
->> patch so that a module parameter controls this behavior instead.
->
-> I would hate to make such a change in the behavior of the driver, and
-> have it be applied without the user having any say. The fact that
-> setting RTL818X_RX_CONF_MULTICAST does not have the desired effect may
-> be due to a firmware error; however, there is no chance of making a
-> change there as these devices have embedded/fixed fw.
-
-Or it could be also a problem how we configure the firmware.
-
-> I would prefer a module parameter that would allow this change to be
-> implemented only if the user takes special action. I suspect that you
-> will have no difficulty preparing such a change. If that is not true,
-> I would be happy to help.
-
-I understand why you prefer having a module parameter but the thing is
-that being able to receive multicast frames is really basic
-functionality. We should not hide it under a module parameter.
-
-Isn't there any other option, for example does anyone have hw to test
-this with other hw? (what exactly?) Or maybe we just take the risk and
-take it as is and revert if problems arise?
+727241660912 rt2500usb: don't mark register accesses as inline
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9572947/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
