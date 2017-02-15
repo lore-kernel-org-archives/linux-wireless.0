@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35580 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752311AbdBJPH2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46338 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751670AbdBOJPK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 10:07:28 -0500
-Received: by mail-wm0-f68.google.com with SMTP id u63so7770856wmu.2
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2017 07:06:37 -0800 (PST)
-From: Franck Demathieu <fdemathieu@gmail.com>
-To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: aditya.shankar@microchip.com, ganesh.krishna@microchip.com
-Subject: [PATCH] staging: wilc1000: remove unnecessary local array
-Date: Fri, 10 Feb 2017 16:06:25 +0100
-Message-Id: <20170210150625.23343-1-fdemathieu@gmail.com> (sfid-20170210_160837_454878_AF9B0E22)
+        Wed, 15 Feb 2017 04:15:10 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] rtlwifi: btcoexist: Fix if == else warnings in
+ halbtc8821a2ant.c
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170212004605.1308-2-Larry.Finger@lwfinger.net>
+References: <20170212004605.1308-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Julia Lawall <julia.lawall@lip6.fr>
+Message-Id: <20170215091510.2BE30608EA@smtp.codeaurora.org> (sfid-20170215_101534_217357_F6272652)
+Date: Wed, 15 Feb 2017 09:15:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It fixes the following warning reported by sparse:
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> The 0-DAY kernel test infrastructure reports the following:
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3023:1-3: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3035:2-4: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3037:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3047:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3075:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3085:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3129:1-3: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3141:2-4: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3143:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3153:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3179:2-4: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3181:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:3192:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2677:1-3: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2833:1-3: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2847:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2857:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2885:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2895:3-5: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2940:1-3: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2788:2-4: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2391:2-4: WARNING: possible condition with no effect (if == else)
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c:2417:2-4: WARNING: possible condition with no effect (if == else)
+> 
+> Reported-by: kbuild-all@01.org
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Julia Lawall <julia.lawall@lip6.fr>
 
-  drivers/staging/wilc1000/linux_wlan.c:67:33: warning: too long initializer-string for array of char(no space for nul char)
+3 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Franck Demathieu <fdemathieu@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ac0ca72c6f53 rtlwifi: btcoexist: Fix if == else warnings in halbtc8821a2ant.c
+42e74946f016 rtlwifi: btcoexist: Fix if == else warnings in halbtc8821a1ant.c
+b686784d03e6 rtlwifi: btcoexist: Fix if == else warnings in halbtc8723b1ant.c
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 2eebc62..fc61f4e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -64,7 +64,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 	u8 *ip_addr_buf;
- 	struct wilc_vif *vif;
- 	u8 null_ip[4] = {0};
--	char wlan_dev_name[5] = "wlan0";
- 
- 	if (!dev_iface || !dev_iface->ifa_dev || !dev_iface->ifa_dev->dev)
- 		return NOTIFY_DONE;
-@@ -113,7 +112,7 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 			wilc_optaining_ip = false;
- 		}
- 
--		if (memcmp(dev_iface->ifa_label, wlan_dev_name, 5) == 0)
-+		if (memcmp(dev_iface->ifa_label, "wlan0", 5) == 0)
- 			wilc_set_power_mgmt(vif, 0, 0);
- 
- 		wilc_resolve_disconnect_aberration(vif);
 -- 
-2.10.1
+https://patchwork.kernel.org/patch/9568225/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
