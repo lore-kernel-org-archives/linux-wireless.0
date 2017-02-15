@@ -1,34 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38040 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59840 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751251AbdB0QZd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 11:25:33 -0500
-Message-ID: <1488211573.28431.21.camel@sipsolutions.net> (sfid-20170227_172537_003493_BD90DD22)
-Subject: Re: BUG_ON in sg code
+        id S1751306AbdBOODB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 09:03:01 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 27 Feb 2017 17:06:13 +0100
-In-Reply-To: <CAKv+Gu8zSARqLY6-_XRQAC2tY0DWuYpARG0deUGLsu3qoa2AVw@mail.gmail.com> (sfid-20170227_161021_926551_7998E731)
-References: <1488207986.28431.17.camel@sipsolutions.net>
-         <CAKv+Gu8zSARqLY6-_XRQAC2tY0DWuYpARG0deUGLsu3qoa2AVw@mail.gmail.com>
-         (sfid-20170227_161021_926551_7998E731)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 4/5] mac80211: copy VHT EXT NSS BW Support/Capable data to station
+Date: Wed, 15 Feb 2017 15:02:55 +0100
+Message-Id: <20170215140256.19455-4-johannes@sipsolutions.net> (sfid-20170215_150306_365042_0D5F079D)
+In-Reply-To: <20170215140256.19455-1-johannes@sipsolutions.net>
+References: <20170215140256.19455-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-02-27 at 15:10 +0000, Ard Biesheuvel wrote:
-> 
-> > because you put odata/idata on the stack. What's going on there? I
-> > thought we knew we can't do that? Did I miss something?
-> > 
-> 
-> It was I who missed something, obviously.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok. I thought maybe I missed a plan to actually make it allowed or
-something :)
+When taking VHT capabilities for a station, copy the new
+fields if we support them as a transmitter. Also adjust
+the maximum bandwidth the station supports appropriately.
 
-Thanks!
+Also, since it was missing, copy tx_highest and rx_highest.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/vht.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index 19ec2189d3ac..2d1e72747ab8 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -231,6 +231,13 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(&vht_cap->vht_mcs, &vht_cap_ie->supp_mcs,
+ 	       sizeof(struct ieee80211_vht_mcs_info));
+ 
++	/* copy EXT_NSS_BW Support value or remove the capability */
++	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_VHT_EXT_NSS_BW))
++		vht_cap->cap |= (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
++	else
++		vht_cap->vht_mcs.tx_highest &=
++			~cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
++
+ 	/* but also restrict MCSes */
+ 	for (i = 0; i < 8; i++) {
+ 		u16 own_rx, own_tx, peer_rx, peer_tx;
+@@ -294,6 +301,18 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	default:
+ 		sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_80;
++
++		if (!(vht_cap->vht_mcs.tx_highest &
++				cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE))
++			break;
++
++		/*
++		 * If this is non-zero, then it does support 160 MHz after all,
++		 * in one form or the other. We don't distinguish here (or even
++		 * above) between 160 and 80+80 yet.
++		 */
++		if (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
++			sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_160;
+ 	}
+ 
+ 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
+-- 
+2.9.3
