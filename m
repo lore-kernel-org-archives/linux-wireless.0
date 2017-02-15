@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:12244
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750949AbdBXGk7 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33784 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750931AbdBONVc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 01:40:59 -0500
-Date: Fri, 24 Feb 2017 07:40:56 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Tahia Khan <tahia.khan@gmail.com>
-cc: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
-        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [Outreachy kernel] [PATCH v3 1/3] staging: wilc1000: Rename
- struct tstrRSSI to rssi_history_buffer
-In-Reply-To: <da73d1aef379243ba94a5c1a4e1d6663160451fd.1487912400.git.tahia.khan@gmail.com>
-Message-ID: <alpine.DEB.2.20.1702240740240.2095@hadrien> (sfid-20170224_074211_025341_68BEBA9E)
-References: <cover.1487912400.git.tahia.khan@gmail.com> <da73d1aef379243ba94a5c1a4e1d6663160451fd.1487912400.git.tahia.khan@gmail.com>
+        Wed, 15 Feb 2017 08:21:32 -0500
+Received: by mail-lf0-f65.google.com with SMTP id x1so13479815lff.0
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 05:21:31 -0800 (PST)
+From: "=?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?=" <a.miskiewicz@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH] mac80211: Print text for disassociation reason
+Date: Wed, 15 Feb 2017 14:21:27 +0100
+Message-Id: <20170215132127.17177-1-arekm@maven.pl> (sfid-20170215_142204_744692_FF140286)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When disassociation happens only numeric reason is printed
+in ieee80211_rx_mgmt_disassoc(). Add text variant, too.
 
+Signed-off-by: Arkadiusz Miśkiewicz <arekm@maven.pl>
+---
+ net/mac80211/mlme.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-On Fri, 24 Feb 2017, Tahia Khan wrote:
-
-> Rename struct tstrRSSI to rssi_history_buffer for clarity and to remove camel casing.
-
-Here the commit log messge line is definitely too long.
-
-julia
-
->
-> Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-> index cff1698..1c77529 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.h
-> +++ b/drivers/staging/wilc1000/coreconfigurator.h
-> @@ -70,7 +70,7 @@ enum connect_status {
->  	CONNECT_STS_FORCE_16_BIT = 0xFFFF
->  };
->
-> -struct tstrRSSI {
-> +struct rssi_history_buffer {
->  	u8 u8Full;
->  	u8 u8Index;
->  	s8 as8RSSI[NUM_RSSI];
-> @@ -93,7 +93,7 @@ struct network_info {
->  	u8 *ies;
->  	u16 ies_len;
->  	void *join_params;
-> -	struct tstrRSSI str_rssi;
-> +	struct rssi_history_buffer str_rssi;
->  	u64 tsf_hi;
->  };
->
-> --
-> 2.7.4
->
-> --
-> You received this message because you are subscribed to the Google Groups "outreachy-kernel" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to outreachy-kernel+unsubscribe@googlegroups.com.
-> To post to this group, send email to outreachy-kernel@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/outreachy-kernel/da73d1aef379243ba94a5c1a4e1d6663160451fd.1487912400.git.tahia.khan%40gmail.com.
-> For more options, visit https://groups.google.com/d/optout.
->
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 098ce9b179ee..fcf8d0aa66ec 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2801,8 +2801,9 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
+ 
+-	sdata_info(sdata, "disassociated from %pM (Reason: %u)\n",
+-		   mgmt->sa, reason_code);
++	sdata_info(sdata, "disassociated from %pM (Reason: %u=%s)\n",
++		   mgmt->sa, reason_code,
++		   ieee80211_get_reason_code_string(reason_code));
+ 
+ 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
+ 
+-- 
+2.11.0
