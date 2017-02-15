@@ -1,164 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752823AbdBUOcT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:19 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 03/10] wil6210: bus_request platform operation refinement
-Date: Tue, 21 Feb 2017 16:32:01 +0200
-Message-Id: <1487687528-12832-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153223_725336_686821B5)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59828 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750741AbdBOODA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 09:03:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 1/5] ieee80211: add new VHT capability fields/parsing
+Date: Wed, 15 Feb 2017 15:02:52 +0100
+Message-Id: <20170215140256.19455-1-johannes@sipsolutions.net> (sfid-20170215_150303_680254_FE0E1ED5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The driver uses the bus_request platform operation to
-request resources from the platform for a specific bandwidth.
-Currently the driver requests resources for the maximum
-theoretical bandwidth, when interface is brought up.
-Refine this process a bit: now the driver will request a
-small amount of resources when interface is up, and will only
-issue the maximum request when connected.
-This mechanism will be improved further in the future to make
-more refined requests based on actual bandwidth.
+IEEE 802.11-2016 extended the VHT capability fields to allow
+indicating the number of spatial streams depending on the
+actually used bandwidth, add support for decoding this.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c |  4 ++++
- drivers/net/wireless/ath/wil6210/main.c     | 14 +++++++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h  |  5 +++--
- drivers/net/wireless/ath/wil6210/wmi.c      |  1 +
- 4 files changed, 17 insertions(+), 7 deletions(-)
+ include/linux/ieee80211.h |  35 ++++++++++++++-
+ net/wireless/util.c       | 107 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 140 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 14aa6d3..2dc594d 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -680,6 +680,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 	rc = wmi_send(wil, WMI_CONNECT_CMDID, &conn, sizeof(conn));
- 	if (rc == 0) {
- 		netif_carrier_on(ndev);
-+		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
- 		/* Connect can take lots of time */
- 		mod_timer(&wil->connect_timer,
- 			  jiffies + msecs_to_jiffies(2000));
-@@ -1199,6 +1200,7 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	wil->pbss = pbss;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 4a7200c6c9ea..aed8faaacc38 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1457,13 +1457,16 @@ struct ieee80211_ht_operation {
+  *	STA can receive. Rate expressed in units of 1 Mbps.
+  *	If this field is 0 this value should not be used to
+  *	consider the highest RX data rate supported.
+- *	The top 3 bits of this field are reserved.
++ *	The top 3 bits of this field indicate the Maximum NSTS,total
++ *	(a beamformee capability.)
+  * @tx_mcs_map: TX MCS map 2 bits for each stream, total 8 streams
+  * @tx_highest: Indicates highest long GI VHT PPDU data rate
+  *	STA can transmit. Rate expressed in units of 1 Mbps.
+  *	If this field is 0 this value should not be used to
+  *	consider the highest TX data rate supported.
+- *	The top 3 bits of this field are reserved.
++ *	The top 2 bits of this field are reserved, the
++ *	3rd bit from the top indiciates VHT Extended NSS BW
++ *	Capability.
+  */
+ struct ieee80211_vht_mcs_info {
+ 	__le16 rx_mcs_map;
+@@ -1472,6 +1475,13 @@ struct ieee80211_vht_mcs_info {
+ 	__le16 tx_highest;
+ } __packed;
  
- 	netif_carrier_on(ndev);
-+	wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
- 
- 	rc = wmi_pcp_start(wil, bi, wmi_nettype, chan, hidden_ssid, is_go);
- 	if (rc)
-@@ -1214,6 +1216,7 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	wmi_pcp_stop(wil);
- err_pcp_start:
- 	netif_carrier_off(ndev);
-+	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
- out:
- 	mutex_unlock(&wil->mutex);
- 	return rc;
-@@ -1320,6 +1323,7 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
- 	wil_dbg_misc(wil, "stop_ap\n");
- 
- 	netif_carrier_off(ndev);
-+	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
- 	wil_set_recovery_state(wil, fw_recovery_idle);
- 
- 	mutex_lock(&wil->mutex);
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index efb1f59..21b7fac 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -274,6 +274,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 		wil_bcast_fini(wil);
- 		wil_update_net_queues_bh(wil, NULL, true);
- 		netif_carrier_off(ndev);
-+		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
- 
- 		if (test_bit(wil_status_fwconnected, wil->status)) {
- 			clear_bit(wil_status_fwconnected, wil->status);
-@@ -555,6 +556,12 @@ int wil_priv_init(struct wil6210_priv *wil)
- 	return -EAGAIN;
- }
- 
-+void wil6210_bus_request(struct wil6210_priv *wil, u32 kbps)
-+{
-+	if (wil->platform_ops.bus_request)
-+		wil->platform_ops.bus_request(wil->platform_handle, kbps);
-+}
++/* for rx_highest */
++#define IEEE80211_VHT_MAX_NSTS_TOTAL_SHIFT	13
++#define IEEE80211_VHT_MAX_NSTS_TOTAL_MASK	(7 << IEEE80211_VHT_MAX_NSTS_TOTAL_SHIFT)
++
++/* for tx_highest */
++#define IEEE80211_VHT_EXT_NSS_BW_CAPABLE	(1 << 13)
 +
  /**
-  * wil6210_disconnect - disconnect one connection
-  * @wil: driver context
-@@ -1066,9 +1073,7 @@ int __wil_up(struct wil6210_priv *wil)
- 	napi_enable(&wil->napi_tx);
- 	set_bit(wil_status_napi_en, wil->status);
+  * enum ieee80211_vht_mcs_support - VHT MCS support definitions
+  * @IEEE80211_VHT_MCS_SUPPORT_0_7: MCSes 0-7 are supported for the
+@@ -1547,6 +1557,7 @@ struct ieee80211_vht_operation {
+ #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ		0x00000004
+ #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ	0x00000008
+ #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK			0x0000000C
++#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT			2
+ #define IEEE80211_VHT_CAP_RXLDPC				0x00000010
+ #define IEEE80211_VHT_CAP_SHORT_GI_80				0x00000020
+ #define IEEE80211_VHT_CAP_SHORT_GI_160				0x00000040
+@@ -1575,6 +1586,26 @@ struct ieee80211_vht_operation {
+ #define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB	0x0c000000
+ #define IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN			0x10000000
+ #define IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN			0x20000000
++#define IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT			30
++#define IEEE80211_VHT_CAP_EXT_NSS_BW_MASK			0xc0000000
++
++/**
++ * ieee80211_get_vht_max_nss - return max NSS for a given bandwidth/MCS
++ * @cap: VHT capabilities of the peer
++ * @bw: bandwidth to use
++ * @mcs: MCS index to use
++ * @ext_nss_bw_capable: indicates whether or not the local transmitter
++ *	(rate scaling algorithm) can deal with the new logic
++ *	(dot11VHTExtendedNSSBWCapable)
++ *
++ * Due to the VHT Extended NSS Bandwidth Support, the maximum NSS can
++ * vary for a given BW/MCS. This function parses the data.
++ *
++ * Note: This function is exported by cfg80211.
++ */
++int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
++			      enum ieee80211_vht_chanwidth bw,
++			      int mcs, bool ext_nss_bw_capable);
  
--	if (wil->platform_ops.bus_request)
--		wil->platform_ops.bus_request(wil->platform_handle,
--					      WIL_MAX_BUS_REQUEST_KBPS);
-+	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
- 
- 	return 0;
- }
-@@ -1092,8 +1097,7 @@ int __wil_down(struct wil6210_priv *wil)
- 
- 	set_bit(wil_status_resetting, wil->status);
- 
--	if (wil->platform_ops.bus_request)
--		wil->platform_ops.bus_request(wil->platform_handle, 0);
-+	wil6210_bus_request(wil, 0);
- 
- 	wil_disable_irq(wil);
- 	if (test_and_clear_bit(wil_status_napi_en, wil->status)) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ea1e5b34..12de74a 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2012-2016 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -40,6 +40,7 @@
- #define WIL_FW_NAME_SPARROW_PLUS "wil6210_sparrow_plus.fw" /* code Sparrow D0 */
- #define WIL_BOARD_FILE_NAME "wil6210.brd" /* board & radio parameters */
- 
-+#define WIL_DEFAULT_BUS_REQUEST_KBPS 128000 /* ~1Gbps */
- #define WIL_MAX_BUS_REQUEST_KBPS 800000 /* ~6.1Gbps */
- 
- /**
-@@ -900,7 +901,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
- int wmi_led_cfg(struct wil6210_priv *wil, bool enable);
- int wmi_abort_scan(struct wil6210_priv *wil);
- void wil_abort_scan(struct wil6210_priv *wil, bool sync);
--
-+void wil6210_bus_request(struct wil6210_priv *wil, u32 kbps);
- void wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 			u16 reason_code, bool from_event);
- void wil_probe_client_flush(struct wil6210_priv *wil);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 1f22c19..a7a4ac1 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -565,6 +565,7 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 	    (wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)) {
- 		if (rc) {
- 			netif_carrier_off(ndev);
-+			wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
- 			wil_err(wil, "cfg80211_connect_result with failure\n");
- 			cfg80211_connect_result(ndev, evt->bssid, NULL, 0,
- 						NULL, 0,
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 23ee3d66dfe0..bc676d9b7e80 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -8,6 +8,7 @@
+ #include <linux/bitops.h>
+ #include <linux/etherdevice.h>
+ #include <linux/slab.h>
++#include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
+ #include <net/ip.h>
+ #include <net/dsfield.h>
+@@ -1874,3 +1875,109 @@ EXPORT_SYMBOL(rfc1042_header);
+ const unsigned char bridge_tunnel_header[] __aligned(2) =
+ 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
+ EXPORT_SYMBOL(bridge_tunnel_header);
++
++int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
++			      enum ieee80211_vht_chanwidth bw,
++			      int mcs, bool ext_nss_bw_capable)
++{
++	u16 map = le16_to_cpu(cap->supp_mcs.rx_mcs_map);
++	int max_vht_nss = 0;
++	int ext_nss_bw;
++	int supp_width;
++	int i, mcs_encoding;
++
++	if (map == 0xffff)
++		return 0;
++
++	if (WARN_ON(mcs > 9))
++		return 0;
++	if (mcs <= 7)
++		mcs_encoding = 0;
++	else if (mcs == 8)
++		mcs_encoding = 1;
++	else
++		mcs_encoding = 2;
++
++	/* find max_vht_nss for the given MCS */
++	for (i = 7; i >= 0; i--) {
++		int supp = (map >> (2*i)) & 3;
++
++		if (supp == 3)
++			continue;
++
++		if (supp >= mcs_encoding) {
++			max_vht_nss = i;
++			break;
++		}
++	}
++
++	if (!(cap->supp_mcs.tx_mcs_map & cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE)))
++		return max_vht_nss;
++
++	ext_nss_bw = (le32_to_cpu(cap->vht_cap_info) &
++					IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
++			>> IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT;
++	supp_width = (le32_to_cpu(cap->vht_cap_info) &
++					IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)
++			>> IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
++
++	/* if not capable, treat ext_nss_bw as 0 */
++	if (!ext_nss_bw_capable)
++		ext_nss_bw = 0;
++
++	/* This is invalid */
++	if (supp_width == 3)
++		return 0;
++
++	/* This is an invalid combination so pretend nothing is supported */
++	if (supp_width == 2 && (ext_nss_bw == 1 || ext_nss_bw == 2))
++		return 0;
++
++	/*
++	 * Cover all the special cases according to IEEE 802.11-2016 Table 9-250.
++	 * All other cases are either factor of 1 or not valid/supported.
++	 */
++	switch (bw) {
++	case IEEE80211_VHT_CHANWIDTH_USE_HT:
++	case IEEE80211_VHT_CHANWIDTH_80MHZ:
++		if ((supp_width == 1 || supp_width == 2) &&
++		    ext_nss_bw == 3)
++			return 2 * max_vht_nss;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_160MHZ:
++		if (supp_width == 0 &&
++		    (ext_nss_bw == 1 || ext_nss_bw == 2))
++			return DIV_ROUND_UP(max_vht_nss, 2);
++		if (supp_width == 0 &&
++		    ext_nss_bw == 3)
++			return DIV_ROUND_UP(3 * max_vht_nss, 4);
++		if (supp_width == 1 &&
++		    ext_nss_bw == 3)
++			return 2 * max_vht_nss;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
++		if (supp_width == 0 &&
++		    (ext_nss_bw == 1 || ext_nss_bw == 2))
++			return 0; /* not possible */
++		if (supp_width == 0 &&
++		    ext_nss_bw == 2)
++			return DIV_ROUND_UP(max_vht_nss, 2);
++		if (supp_width == 0 &&
++		    ext_nss_bw == 3)
++			return DIV_ROUND_UP(3 * max_vht_nss, 4);
++		if (supp_width == 1 &&
++		    ext_nss_bw == 0)
++			return 0; /* not possible */
++		if (supp_width == 1 &&
++		    ext_nss_bw == 1)
++			return DIV_ROUND_UP(max_vht_nss, 2);
++		if (supp_width == 1 &&
++		    ext_nss_bw == 2)
++			return DIV_ROUND_UP(3 * max_vht_nss, 4);
++		break;
++	}
++
++	/* not covered or invalid combination received */
++	return max_vht_nss;
++}
++EXPORT_SYMBOL(ieee80211_get_vht_max_nss);
 -- 
-1.9.1
+2.9.3
