@@ -1,80 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53580 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750919AbdBASI6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 13:08:58 -0500
-Subject: Re: [PATCH v2 1/2] cfg80211: Add support to set tx power for a
- station associated
-To: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
- <12efc3d8-2274-a6e8-6d74-c06bf89762fb@candelatech.com>
- <14f6b3acb8b26d0eb806148c0ee47fb0@codeaurora.org>
- <2b68dc12-44bf-f510-339a-3d987a88e8b5@candelatech.com>
- <1f3a3dec67fbe4f580750eb06f9b628b@codeaurora.org>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <00887d68-80b7-cf80-e426-e3772d8122f1@candelatech.com> (sfid-20170201_190953_872105_838EC5B1)
-Date: Wed, 1 Feb 2017 10:08:57 -0800
-MIME-Version: 1.0
-In-Reply-To: <1f3a3dec67fbe4f580750eb06f9b628b@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:55146 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751077AbdBOJaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 04:30:21 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH v2 08/10] rt2800: status based rate flags for nomatch case
+Date: Wed, 15 Feb 2017 10:25:11 +0100
+Message-Id: <1487150713-3510-9-git-send-email-sgruszka@redhat.com> (sfid-20170215_103024_952079_95F50AEB)
+In-Reply-To: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
+References: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2017 09:57 AM, Ashok Raj Nagarajan wrote:
-> On 2017-02-01 23:06, Ben Greear wrote:
->> On 02/01/2017 09:27 AM, Ashok Raj Nagarajan wrote:
->>
->>>>> +static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
->>>>> +                         struct station_parameters *params)
->>>>> +{
->>>>> +    struct cfg80211_registered_device *rdev = info->user_ptr[0];
->>>>> +    enum nl80211_tx_power_setting type;
->>>>> +    int idx;
->>>>> +
->>>>> +    if (!rdev->ops->set_tx_power ||
->>>>> +        !wiphy_ext_feature_isset(&rdev->wiphy,
->>>>> +                     NL80211_EXT_FEATURE_STA_TX_PWR))
->>>>> +        return -EOPNOTSUPP;
->>>>
->>>> Maybe always let a user set to default value even if the driver does not
->>>> support setting specific values?
->>>>
->>>
->>> IMHO, having some default value in place of non-valid values may not be the right way.
->>
->> If a user or user-space script wants to always be able to initialize
->> things to default
->> values, it would be nice if it did not have to pay specific attention
->> to whether the
->> NIC supports STA_TX_PWR feature or not.  Since a NIC that does not
->> support this feature will always
->> have sta TX power set to default by definition, that is why I think
->> you should let
->> the call succeed in that case.
->>
->
-> I think it would be better/easier to handle the error cases in the user-space scripts than at the driver here, no? NIC that doesn't support this feature will
-> set the tx power to the station depending on the rate algorithm in place. So the same NIC and same station will have different txpower depending on the
-> environment? On the other hand, how do we decide what constant (?) default value to be sent to userspace?
+We use skb_desc->tx_rate_flags from entry as rate[].flags even if
+skb does not match status. Patch corrects flags and also fixes
+mcs for legacy rates.
 
-You use value '0' to mean set to default values, as far as I can tell.
+rt2800_rate_from_status() is based on Felix's mt76
+mt76x2_mac_process_tx_rate() function.
 
-So, always let a user set the value to 0, regardless of whether STA_RX_PWR feature exists or not.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800.h    |  2 ++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 35 +++++++++++++++++++++++++-
+ 2 files changed, 36 insertions(+), 1 deletion(-)
 
-If you are querying for a value to show user-space, return '0' in this case.
-
-If user tries to set the value to non-zero, then it should fail with EOPNOTSUPP in case STA_TX_PWR
-feature does not exist.
-
-Thanks,
-Ben
-
-
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index 0e7051d..480b086 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -1760,6 +1760,8 @@
+ #define TX_STA_FIFO_WCID		FIELD32(0x0000ff00)
+ #define TX_STA_FIFO_SUCCESS_RATE	FIELD32(0xffff0000)
+ #define TX_STA_FIFO_MCS			FIELD32(0x007f0000)
++#define TX_STA_FIFO_BW			FIELD32(0x00800000)
++#define TX_STA_FIFO_SGI			FIELD32(0x01000000)
+ #define TX_STA_FIFO_PHYMODE		FIELD32(0xc0000000)
+ 
+ /*
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 4a7bec7..8d00c59 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -852,6 +852,39 @@ void rt2800_process_rxwi(struct queue_entry *entry,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
+ 
++static void rt2800_rate_from_status(struct skb_frame_desc *skbdesc,
++				    u32 status, enum nl80211_band band)
++{
++	u8 flags = 0;
++	u8 idx = rt2x00_get_field32(status, TX_STA_FIFO_MCS);
++
++	switch (rt2x00_get_field32(status, TX_STA_FIFO_PHYMODE)) {
++	case RATE_MODE_HT_GREENFIELD:
++		flags |= IEEE80211_TX_RC_GREEN_FIELD;
++		/* fall through */
++	case RATE_MODE_HT_MIX:
++		flags |= IEEE80211_TX_RC_MCS;
++		break;
++	case RATE_MODE_OFDM:
++		if (band == NL80211_BAND_2GHZ)
++			idx += 4;
++		break;
++	case RATE_MODE_CCK:
++		if (idx >= 8)
++			idx -= 8;
++		break;
++	}
++
++	if (rt2x00_get_field32(status, TX_STA_FIFO_BW))
++		flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
++
++	if (rt2x00_get_field32(status, TX_STA_FIFO_SGI))
++		flags |= IEEE80211_TX_RC_SHORT_GI;
++
++	skbdesc->tx_rate_idx = idx;
++	skbdesc->tx_rate_flags = flags;
++}
++
+ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
+ 			 bool match)
+ {
+@@ -898,7 +931,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
+ 	 * and provide retry count.
+  	 */
+ 	if (unlikely((aggr == 1 && ampdu == 0 && real_mcs != mcs)) || !match) {
+-		skbdesc->tx_rate_idx = real_mcs;
++		rt2800_rate_from_status(skbdesc, status, rt2x00dev->curr_band);
+ 		mcs = real_mcs;
+ 	}
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.3.1
