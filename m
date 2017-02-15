@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52314 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932954AbdBQKbz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Feb 2017 05:31:55 -0500
-Subject: Re: [linux-stable] 4fc2942b6e kernel BUG at
- kernel/time/hrtimer.c:109!
-To: Thomas Gleixner <tglx@linutronix.de>
-References: <20170217052607.glbumukvoz4pilvt@wfg-t540p.sh.intel.com>
- <alpine.DEB.2.20.1702171014430.3536@nanos>
- <0f58a1d0-a2e6-9430-7883-68e986ccb4c0@arm.com>
- <alpine.DEB.2.20.1702171115050.3536@nanos>
-Cc: kernel test robot <fengguang.wu@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Sasha Levin <alexander.levin@verizon.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <baadec00-8842-3604-b096-c01aa2ebde6a@arm.com> (sfid-20170217_113202_710503_38C59395)
-Date: Fri, 17 Feb 2017 10:31:52 +0000
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:34516 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751654AbdBOWdg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 17:33:36 -0500
+Date: Wed, 15 Feb 2017 16:33:24 -0600
+From: Rob Herring <robh@kernel.org>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        sgruszka@redhat.com, devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 1/3] Documentation: dt: net: add mt76 wireless device
+ binding
+Message-ID: <20170215223324.r7cgljfqkulyuany@rob-hp-laptop> (sfid-20170215_233352_201110_43BF6B47)
+References: <20170207202035.64224-1-nbd@nbd.name>
+ <20170207202035.64224-2-nbd@nbd.name>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1702171115050.3536@nanos>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170207202035.64224-2-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17/02/17 10:16, Thomas Gleixner wrote:
-> On Fri, 17 Feb 2017, Marc Zyngier wrote:
+On Tue, Feb 07, 2017 at 09:20:33PM +0100, Felix Fietkau wrote:
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+Commit msg? Also, use "dt-bindings: net: " for the subject prefix.
+
+> ---
+>  .../bindings/net/wireless/mediatek,mt76.txt        | 24 ++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
 > 
->> On 17/02/17 09:28, Thomas Gleixner wrote:
->>> On Fri, 17 Feb 2017, kernel test robot wrote:
->>>
->>>> Hi Marc,
->>>>
->>>> We find this oops in linux-4.4.y. The gcc-6 compiled mainline kernel is fine.
->>
->> The last bit is worrying, as mainline has the exact same bug. Has it
->> been tested the same way?
+> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> new file mode 100644
+> index 000000000000..19522ab97d62
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> @@ -0,0 +1,24 @@
+> +* MediaTek mt76xx devices
+> +
+> +This node provides properties for configuring the MediaTek mt76xx wireless
+> +device. The node is expected to be specified as a child node of the PCI
+> +controller to which the wireless chip is connected.
+> +
+> +Optional properties:
+> +
+> +- mac-address: See ethernet.txt in the parent directory
+> +- local-mac-address: See ethernet.txt in the parent directory
+> +- ieee80211-freq-limit: See ieee80211.txt
+> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
+> +
+> +&pcie {
+> +	status = "okay";
+> +
+> +	pcie0 {
+> +		wifi@0,0 {
+> +			reg = <0x0000 0 0 0 0>;
+> +			ieee80211-freq-limit = <5000000 6000000>;
+> +			mediatek,mtd-eeprom = <&factory 0x8000>;
+> +		};
+> +	};
+> +};
+> -- 
+> 2.11.0
 > 
-> The thing is that we reverted that patch in mainline:
-> 
-> See: commit 82e88ff1ea948d83125a8aaa7c9809f03ccc500f
-
-Ah, right. It got nuked as part of the whole MONOTONIC_RAW blunder.
-
-> I don't know why I reverted that as well. I should have kept it. Darn. I
-> cherry pick it and send it linus wards next week.
-
-Yes, I still think this single patch is a valuable sanity check.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
