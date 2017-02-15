@@ -1,129 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37858 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752641AbdBCOi3 (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:33126 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbdBOJgz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:38:29 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:37:52 +0200
-Message-Id: <20170203143812.7525-6-luca@coelho.fi> (sfid-20170203_153835_133011_AA9EEB68)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 05/25] iwlwifi: mvm: cleanup incorrect and redundant define
+        Wed, 15 Feb 2017 04:36:55 -0500
+Received: by mail-pf0-f181.google.com with SMTP id c73so27040482pfb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 01:36:55 -0800 (PST)
+Subject: Re: [RFC v2 3/7] ieee80211: add new VHT capability fields/parsing
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170214132208.8715-1-johannes@sipsolutions.net>
+ <20170214132208.8715-4-johannes@sipsolutions.net>
+ <281180d5-2a7e-00b5-f12b-13bf568812da@broadcom.com>
+ <1487150216.4026.18.camel@sipsolutions.net>
+Cc: j@w1.fi, greearb@candelatech.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d050648f-df94-8138-b9af-1ec18ba4af28@broadcom.com> (sfid-20170215_105657_018945_7CAFD95A)
+Date: Wed, 15 Feb 2017 10:36:51 +0100
+MIME-Version: 1.0
+In-Reply-To: <1487150216.4026.18.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
 
-Currently we have up to 3 phy contexts - defined by NUM_PHY_CTX.
-However - some code paths validate the ID by using MAX_PHYS define
-which is set to 4.
-While there is no harm it is incorrect - since the maximum is 3.
-Remove the define and use the correct one.
-Cleanup the code a bit while at it.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h |  1 -
- drivers/net/wireless/intel/iwlwifi/mvm/power.c  | 26 +++++++++++--------------
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c   |  2 +-
- 3 files changed, 12 insertions(+), 17 deletions(-)
+On 15-2-2017 10:16, Johannes Berg wrote:
+> On Wed, 2017-02-15 at 10:08 +0100, Arend Van Spriel wrote:
+>> [snip]
+>>
+>> Looks good to me.
+> 
+> Thanks for checking :)
+> 
+>>> +	/* not covered or invalid combination received */
+>>
+>> Do you want to inform about the invalid/reserved combination.
+> 
+> I'm not really sure what to do - we don't really want to print a
+> message on something that might have been received from the peer, I
+> think? Though I suppose we should return 0 for the invalid
+> combinations, indicating that they're not supported.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 0b77073e719a..91f53596130b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -713,7 +713,6 @@ struct iwl_error_resp {
- #define MAX_MACS_IN_BINDING	(3)
- #define MAX_BINDINGS		(4)
- #define AUX_BINDING_INDEX	(3)
--#define MAX_PHYS		(4)
- 
- /* Used to extract ID and color from the context dword */
- #define FW_CTXT_ID_POS	  (0)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index 3a8e9379da2f..e684811f8e8b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -599,9 +599,8 @@ static void iwl_mvm_power_ps_disabled_iterator(void *_data, u8* mac,
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	bool *disable_ps = _data;
- 
--	if (mvmvif->phy_ctxt)
--		if (mvmvif->phy_ctxt->id < MAX_PHYS)
--			*disable_ps |= mvmvif->ps_disabled;
-+	if (mvmvif->phy_ctxt && mvmvif->phy_ctxt->id < NUM_PHY_CTX)
-+		*disable_ps |= mvmvif->ps_disabled;
- }
- 
- static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
-@@ -609,6 +608,7 @@ static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_power_vifs *power_iterator = _data;
-+	bool active = mvmvif->phy_ctxt && mvmvif->phy_ctxt->id < NUM_PHY_CTX;
- 
- 	switch (ieee80211_vif_type_p2p(vif)) {
- 	case NL80211_IFTYPE_P2P_DEVICE:
-@@ -619,34 +619,30 @@ static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
- 		/* only a single MAC of the same type */
- 		WARN_ON(power_iterator->ap_vif);
- 		power_iterator->ap_vif = vif;
--		if (mvmvif->phy_ctxt)
--			if (mvmvif->phy_ctxt->id < MAX_PHYS)
--				power_iterator->ap_active = true;
-+		if (active)
-+			power_iterator->ap_active = true;
- 		break;
- 
- 	case NL80211_IFTYPE_MONITOR:
- 		/* only a single MAC of the same type */
- 		WARN_ON(power_iterator->monitor_vif);
- 		power_iterator->monitor_vif = vif;
--		if (mvmvif->phy_ctxt)
--			if (mvmvif->phy_ctxt->id < MAX_PHYS)
--				power_iterator->monitor_active = true;
-+		if (active)
-+			power_iterator->monitor_active = true;
- 		break;
- 
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 		/* only a single MAC of the same type */
- 		WARN_ON(power_iterator->p2p_vif);
- 		power_iterator->p2p_vif = vif;
--		if (mvmvif->phy_ctxt)
--			if (mvmvif->phy_ctxt->id < MAX_PHYS)
--				power_iterator->p2p_active = true;
-+		if (active)
-+			power_iterator->p2p_active = true;
- 		break;
- 
- 	case NL80211_IFTYPE_STATION:
- 		power_iterator->bss_vif = vif;
--		if (mvmvif->phy_ctxt)
--			if (mvmvif->phy_ctxt->id < MAX_PHYS)
--				power_iterator->bss_active = true;
-+		if (active)
-+			power_iterator->bss_active = true;
- 		break;
- 
- 	default:
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index fa9743205491..2aaa5ecf97bc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -197,7 +197,7 @@ static void iwl_mvm_scan_condition_iterator(void *data, u8 *mac,
- 	int *global_cnt = data;
- 
- 	if (vif->type != NL80211_IFTYPE_P2P_DEVICE && mvmvif->phy_ctxt &&
--	    mvmvif->phy_ctxt->id < MAX_PHYS)
-+	    mvmvif->phy_ctxt->id < NUM_PHY_CTX)
- 		*global_cnt += 1;
- }
- 
--- 
-2.11.0
+Ah. This is all non-functional code yet, right? At least having a static
+non-inline function in ieee80211.h will give build issues I would think.
+Anyway, I would indeed return 0 and have caller deal with that.
+
+Regards,
+Arend
