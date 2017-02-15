@@ -1,82 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42624 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59818 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932096AbdBHJ65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 04:58:57 -0500
-Message-ID: <1486547933.24745.2.camel@sipsolutions.net> (sfid-20170208_110004_175667_76D33593)
-Subject: Re: [PATCH v4 3/5] cfg80211: Accept multiple RSSI thresholds for CQM
+        id S1751318AbdBOOCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 09:02:15 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 08 Feb 2017 10:58:53 +0100
-In-Reply-To: <20170125114344.8179-3-andrew.zaborowski@intel.com> (sfid-20170125_124407_436433_080482FC)
-References: <20170125114344.8179-1-andrew.zaborowski@intel.com>
-         <20170125114344.8179-3-andrew.zaborowski@intel.com>
-         (sfid-20170125_124407_436433_080482FC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/5] mac80211: encode rate type (legacy, HT, VHT) with fewer bits
+Date: Wed, 15 Feb 2017 15:02:09 +0100
+Message-Id: <20170215140210.19393-4-johannes@sipsolutions.net> (sfid-20170215_150225_803604_45606494)
+In-Reply-To: <20170215140210.19393-1-johannes@sipsolutions.net>
+References: <20170215140210.19393-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-> This method doesn't have a hysteresis parameter because there's no
-> benefit to the cfg80211 code from having the hysteresis be handled by
-> hardware/driver in terms of the number of wakeups.  At the same time
-> it would likely be less consistent between drivers if offloaded or
-> done in the drivers.
+We don't really need three different bits for each, since the
+types are mutually exclusive. Use just two bits for it.
 
-I'm not really sure I buy this.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c | 11 ++++++++---
+ net/mac80211/sta_info.h | 13 +++++++------
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-What if I configure a few ranges, and let's say one of the boundaries
-is -50dBm. Now if I sit just on that value of -50dBm and thus my signal
-fluctuates say -48..-52, I'd have to continuously wake up the host.
-
-You try to avoid that here, I think:
-
-+	if (low > (s32) (last - hyst))
-+		low = last - hyst;
-+	if (high < (s32) (last + hyst))
-+		high = last + hyst;
-
-but it's not clear to me that this is effective?
-
-Let's see. last is -52, so low will be -60 and high will be -50.
-
-Let's say hyst is 3 since I chose the ranges so closely. I'm guessing a
-higher hysteresis and larger ranges would actually be better, but let's
-stick to this for the sake of the example.
-
-last-hyst = -55, so low isn't > that, low = -60
-last+hyst = -49, so high = -49
-
-but now it still fluctuates around -50, so if I next hit -48 you do the
-same dance again with -50/-40, getting -51/-40 and never really
-applying a full hysteresis, no?
-
-I'll probably see an intermediate value of -50 at some point, but I'll
-never actually *report* it, so "last" can switch between -48 and -52
-constantly in this scenario, no?
-
-
-I think it would make sense to unconditionally apply the hysteresis to
-low/high, i.e. always set
- low = low - hyst
- high = high + hyst
-
-so that you get "sticky" ranges once you're in them?
-
-
-
-> +	if (!wiphy_ext_feature_isset(&rdev->wiphy,
-> +			
-> 	     NL80211_EXT_FEATURE_CQM_RSSI_LIST))
-> +		return
-> -EOPNOTSUPP;
-
-
-That check should be earlier in the function
-cfg80211_cqm_rssi_update(), no?
-
-
-
-johannes
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 4774e663a411..cd162be6024e 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1960,14 +1960,17 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
+ 	rinfo->bw = (rate & STA_STATS_RATE_BW_MASK) >>
+ 		STA_STATS_RATE_BW_SHIFT;
+ 
+-	if (rate & STA_STATS_RATE_VHT) {
++	switch (rate & STA_STATS_RATE_TYPE_MASK) {
++	case STA_STATS_RATE_TYPE_VHT:
+ 		rinfo->flags = RATE_INFO_FLAGS_VHT_MCS;
+ 		rinfo->mcs = rate & 0xf;
+ 		rinfo->nss = (rate & 0xf0) >> 4;
+-	} else if (rate & STA_STATS_RATE_HT) {
++		break;
++	case STA_STATS_RATE_TYPE_HT:
+ 		rinfo->flags = RATE_INFO_FLAGS_MCS;
+ 		rinfo->mcs = rate & 0xff;
+-	} else if (rate & STA_STATS_RATE_LEGACY) {
++		break;
++	case STA_STATS_RATE_TYPE_LEGACY: {
+ 		struct ieee80211_supported_band *sband;
+ 		u16 brate;
+ 		unsigned int shift;
+@@ -1982,6 +1985,8 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
+ 		else
+ 			shift = 0;
+ 		rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
++		break;
++		}
+ 	}
+ 
+ 	if (rate & STA_STATS_RATE_SGI)
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 71fa41a1368a..1a9968aa6990 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -726,9 +726,10 @@ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
+ unsigned long ieee80211_sta_last_active(struct sta_info *sta);
+ 
+ #define STA_STATS_RATE_INVALID		0
+-#define STA_STATS_RATE_VHT		0x8000
+-#define STA_STATS_RATE_HT		0x4000
+-#define STA_STATS_RATE_LEGACY		0x2000
++#define STA_STATS_RATE_TYPE_MASK	0xC000
++#define STA_STATS_RATE_TYPE_LEGACY	0x4000
++#define STA_STATS_RATE_TYPE_HT		0x8000
++#define STA_STATS_RATE_TYPE_VHT		0xC000
+ #define STA_STATS_RATE_SGI		0x1000
+ #define STA_STATS_RATE_BW_SHIFT		9
+ #define STA_STATS_RATE_BW_MASK		(0x7 << STA_STATS_RATE_BW_SHIFT)
+@@ -754,11 +755,11 @@ static inline u16 sta_stats_encode_rate(struct ieee80211_rx_status *s)
+ 		r |= STA_STATS_RATE_SGI;
+ 
+ 	if (s->flag & RX_FLAG_VHT)
+-		r |= STA_STATS_RATE_VHT | (s->vht_nss << 4);
++		r |= STA_STATS_RATE_TYPE_VHT | (s->vht_nss << 4);
+ 	else if (s->flag & RX_FLAG_HT)
+-		r |= STA_STATS_RATE_HT;
++		r |= STA_STATS_RATE_TYPE_HT;
+ 	else
+-		r |= STA_STATS_RATE_LEGACY | (s->band << 4);
++		r |= STA_STATS_RATE_TYPE_LEGACY | (s->band << 4);
+ 
+ 	return r;
+ }
+-- 
+2.9.3
