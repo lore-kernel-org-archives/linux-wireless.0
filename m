@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50064 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752622AbdBTNR5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 08:17:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix packet statistics for fast-RX
-Date: Mon, 20 Feb 2017 14:17:21 +0100
-Message-Id: <20170220131721.14585-1-johannes@sipsolutions.net> (sfid-20170220_141800_964814_A8F75D03)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33734 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751429AbdBOTBj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 14:01:39 -0500
+Received: by mail-wm0-f68.google.com with SMTP id v77so9644901wmv.0
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 11:01:38 -0800 (PST)
+From: Doru <gucea.doru@gmail.com>
+To: linux-wireless@vger.kernel.org, andra.paraschiv7@gmail.com,
+        costin.raiciu@cs.pub.ro, dragos.niculescu@cs.pub.ro
+Cc: Doru Gucea <gucea.doru@gmail.com>
+Subject: [PATCH 1/2] mac80211: Update the driver with beacon info constantly
+Date: Wed, 15 Feb 2017 21:01:18 +0200
+Message-Id: <1487185278-8643-1-git-send-email-gucea.doru@gmail.com> (sfid-20170215_200143_015997_298E3AD3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Doru Gucea <gucea.doru@gmail.com>
 
-When adding per-CPU statistics, which added statistics back
-to mac80211 for the fast-RX path, I evidently forgot to add
-the "stats->packets++" line. The reason for that is likely
-that I didn't see it since it's done in defragmentation for
-the regular RX path.
+Once the mac80211 layer receives a beacon, it should send a notification
+to the driver. This will allow finer timining control in case of drivers
+that need a correct estimation for the arrival time of a beacon.
 
-Add the missing line to properly count received packets in
-the fast-RX case.
-
-Fixes: c9c5962b56c1 ("mac80211: enable collecting station statistics per-CPU")
-Reported-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
 ---
- net/mac80211/rx.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/mlme.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 50ca3828b124..a8443d8bc233 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3880,6 +3880,7 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	stats->last_rate = sta_stats_encode_rate(status);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cd7e55e..0b8eed5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3536,6 +3536,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 			sdata->vif.bss_conf.sync_dtim_count = 0;
+ 	}
  
- 	stats->fragments++;
-+	stats->packets++;
- 
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		stats->last_signal = status->signal;
++	/* trigger hardware timers adjustment
++	 * this needs to be done before beacon filtering
++	*/
++	changed |= BSS_CHANGED_BEACON_INFO;
++	ieee80211_bss_info_change_notify(sata, changed);
++
+ 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
+ 		return;
+ 	ifmgd->beacon_crc = ncrc;
 -- 
-2.9.3
+1.9.1
