@@ -1,89 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39166 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752511AbdBHL20 (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33121 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752701AbdBOWaF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 06:28:26 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 13:23:05 +0200
-Message-Id: <20170208112322.29413-1-luca@coelho.fi> (sfid-20170208_122900_516443_A7263FFB)
-Subject: [PATCH 00/17] iwlwifi: updates intended for v4.11 2017-02-08
+        Wed, 15 Feb 2017 17:30:05 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 1/2] firmware: add more flexible request_firmware_async function
+Date: Wed, 15 Feb 2017 23:29:47 +0100
+Message-Id: <20170215222948.21030-1-zajec5@gmail.com> (sfid-20170215_233058_327061_893DA4D0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Hi,
+So far we got only one function for loading firmware asynchronously:
+request_firmware_nowait. It didn't allow much customization of firmware
+loading process - there is only one bool uevent argument. Moreover this
+bool also controls user helper in an unclear way.
 
-This is the third and final pull-request before 4.11's merge window.
-This time I concentrated in bugfixes:
+Resolve this problem by adding a one flexible function and making old
+request_firmware_nowait a simple inline using new solution. This
+implementation:
+1) Modifies only single bits on existing code
+2) Doesn't require adjusting / rewriting current drivers
+3) Adds new function for drivers that need more control over loading a
+   firmware. Thanks to using flags more features can be added later.
 
-* Fix 802.11w, which was failing to due an IGTK bug;
-* A few more bugzilla bug fixes;
-* A channel-switch race condition fix;
-* Some fixes related to suspend/resume with new HW;
-* The RF-kill saga continues;
-* And some other fixes here and there...
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+This patch is based on top of
+[PATCH V2 RESEND] firmware: simplify defining and handling FW_OPT_FALLBACK
+applied on top of Linux 4.10-rc8.
 
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
+Ming/Luis/Greg: assuming this gets a positive review, could someone of you pick
+this patchset? Second patch modifies brcmfmac, I'll try to get a proper Ack for
+that one.
+Unless you want this to go through wireless tree, then let me know please.
+---
+ drivers/base/firmware_class.c | 25 ++++++-------------------
+ include/linux/firmware.h      | 34 +++++++++++++++++++++++++++++-----
+ 2 files changed, 35 insertions(+), 24 deletions(-)
 
-Please review.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (1):
-  iwlwifi: mvm: Fix CSA received immediately after association
-
-Emmanuel Grumbach (5):
-  iwlwifi: mvm: use the PROBE_RESP_QUEUE to send deauth to unknown
-    station
-  iwlwifi: pcie: don't increment / decrement a bool
-  iwlwifi: make RTPM depend on EXPERT
-  iwlwifi: dvm: don't call << operator with a negative value
-  iwlwifi: mvm: don't call << operator with a negative value
-
-Golan Ben Ami (2):
-  iwlwifi: pcie: Re-configure IVAR table after stop device
-  iwlwifi: pcie: set STATUS_RFKILL immediately after interrupt
-
-Golan Ben-Ami (1):
-  iwlwifi: mvm: avoid exceeding the allowed print length
-
-Goodstein, Mordechay (1):
-  iwlwifi: mvm: avoid race condition in ADD_STA.
-
-Gregory Greenman (1):
-  iwlwifi: mvm: fix a print of NSS for HT rate
-
-Haim Dreyfuss (3):
-  iwlwifi: pcie: move msix conf functions above other functions
-  iwlwifi: pcie: separate between SW and HW MSIX configuration
-  iwlwifi: pcie: re-configure IVAR table after suspend-resume
-
-Ilan Peer (1):
-  iwlwifi: mvm: Fix removal of IGTK
-
-Sara Sharon (2):
-  iwlwifi: mvm: fix references to first_agg_queue in DQA mode
-  iwlwifi: mvm: fix reorder timer re-arming
-
- drivers/net/wireless/intel/iwlwifi/Kconfig         |   7 +-
- drivers/net/wireless/intel/iwlwifi/dvm/rs.c        |   5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  20 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  15 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   7 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  17 +-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   8 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 243 ++++++++++++---------
- 11 files changed, 188 insertions(+), 145 deletions(-)
-
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index d05be1732c8b..7b3f0a018dc3 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -182,18 +182,6 @@ static int __fw_state_check(struct fw_state *fw_st, enum fw_status status)
+ 
+ #endif /* CONFIG_FW_LOADER_USER_HELPER */
+ 
+-/* firmware behavior options */
+-#define FW_OPT_UEVENT	(1U << 0)
+-#define FW_OPT_NOWAIT	(1U << 1)
+-#ifdef CONFIG_FW_LOADER_USER_HELPER
+-#define FW_OPT_USERHELPER	(1U << 2)
+-#else
+-#define FW_OPT_USERHELPER	0
+-#endif
+-#define FW_OPT_NO_WARN	(1U << 3)
+-#define FW_OPT_NOCACHE	(1U << 4)
+-#define FW_OPT_FALLBACK	(1U << 5)
+-
+ struct firmware_cache {
+ 	/* firmware_buf instance will be added into the below list */
+ 	spinlock_t lock;
+@@ -1356,7 +1344,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ 	_request_firmware(&fw, fw_work->name, fw_work->device, NULL, 0,
+ 			  fw_work->opt_flags);
+ 	fw_work->cont(fw, fw_work->context);
+-	put_device(fw_work->device); /* taken in request_firmware_nowait() */
++	put_device(fw_work->device); /* taken in request_firmware_async() */
+ 
+ 	module_put(fw_work->module);
+ 	kfree_const(fw_work->name);
+@@ -1364,7 +1352,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ }
+ 
+ /**
+- * request_firmware_nowait - asynchronous version of request_firmware
++ * request_firmware_async - asynchronous version of request_firmware
+  * @module: module requesting the firmware
+  * @uevent: sends uevent to copy the firmware image if this flag
+  *	is non-zero else the firmware copy must be done manually.
+@@ -1387,8 +1375,8 @@ static void request_firmware_work_func(struct work_struct *work)
+  *		- can't sleep at all if @gfp is GFP_ATOMIC.
+  **/
+ int
+-request_firmware_nowait(
+-	struct module *module, bool uevent,
++request_firmware_async(
++	struct module *module, unsigned int opt_flags,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+@@ -1407,8 +1395,7 @@ request_firmware_nowait(
+ 	fw_work->device = device;
+ 	fw_work->context = context;
+ 	fw_work->cont = cont;
+-	fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
+-		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
++	fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
+ 
+ 	if (!try_module_get(module)) {
+ 		kfree_const(fw_work->name);
+@@ -1421,7 +1408,7 @@ request_firmware_nowait(
+ 	schedule_work(&fw_work->work);
+ 	return 0;
+ }
+-EXPORT_SYMBOL(request_firmware_nowait);
++EXPORT_SYMBOL(request_firmware_async);
+ 
+ #ifdef CONFIG_PM_SLEEP
+ static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index b1f9f0ccb8ac..1f2bf14aa441 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -8,6 +8,18 @@
+ #define FW_ACTION_NOHOTPLUG 0
+ #define FW_ACTION_HOTPLUG 1
+ 
++/* firmware behavior options */
++#define FW_OPT_UEVENT	(1U << 0)
++#define FW_OPT_NOWAIT	(1U << 1)
++#ifdef CONFIG_FW_LOADER_USER_HELPER
++#define FW_OPT_USERHELPER	(1U << 2)
++#else
++#define FW_OPT_USERHELPER	0
++#endif
++#define FW_OPT_NO_WARN	(1U << 3)
++#define FW_OPT_NOCACHE	(1U << 4)
++#define FW_OPT_FALLBACK	(1U << 5)
++
+ struct firmware {
+ 	size_t size;
+ 	const u8 *data;
+@@ -41,8 +53,8 @@ struct builtin_fw {
+ #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
+ int request_firmware(const struct firmware **fw, const char *name,
+ 		     struct device *device);
+-int request_firmware_nowait(
+-	struct module *module, bool uevent,
++int request_firmware_async(
++	struct module *module, unsigned int opt_flags,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context));
+ int request_firmware_direct(const struct firmware **fw, const char *name,
+@@ -58,8 +70,8 @@ static inline int request_firmware(const struct firmware **fw,
+ {
+ 	return -EINVAL;
+ }
+-static inline int request_firmware_nowait(
+-	struct module *module, bool uevent,
++static inline int request_firmware_async(
++	struct module *module, unsigned int opt_flags,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+@@ -82,6 +94,18 @@ static inline int request_firmware_into_buf(const struct firmware **firmware_p,
+ {
+ 	return -EINVAL;
+ }
+-
+ #endif
++
++static inline int request_firmware_nowait(
++	struct module *module, bool uevent,
++	const char *name, struct device *device, gfp_t gfp, void *context,
++	void (*cont)(const struct firmware *fw, void *context))
++{
++	unsigned int opt_flags = FW_OPT_FALLBACK |
++		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
++
++	return request_firmware_async(module, opt_flags, name, device, gfp,
++				      context, cont);
++}
++
+ #endif
 -- 
 2.11.0
