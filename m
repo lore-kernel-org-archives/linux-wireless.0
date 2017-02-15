@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52294 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753050AbdBARiE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 12:38:04 -0500
-Subject: Re: [PATCH v2 2/2] mac80211: store tx power value from user to
- station
-To: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
- <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
- <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
- <7584a5235b49b7799a2c15f91fb03794@codeaurora.org>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <35c617ff-c07a-b221-5742-b1487618bce7@candelatech.com> (sfid-20170201_183808_228767_2E05B1CD)
-Date: Wed, 1 Feb 2017 09:32:39 -0800
-MIME-Version: 1.0
-In-Reply-To: <7584a5235b49b7799a2c15f91fb03794@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:59144 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751077AbdBOJ31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 04:29:27 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH v2 00/10] rt2x00 patches 14.02.2017
+Date: Wed, 15 Feb 2017 10:24:31 +0100
+Message-Id: <1487150671-3447-1-git-send-email-sgruszka@redhat.com> (sfid-20170215_102930_674375_1C6521DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2017 09:29 AM, Ashok Raj Nagarajan wrote:
-> On 2017-02-01 00:30, Ben Greear wrote:
->> On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
->>> This patch introduce a new driver callback drv_sta_set_txpwr. This API will
->>> copy the transmit power value passed from user space and call the driver
->>> callback to set the tx power for the station.
->>>
->>> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
->>> ---
->>>  include/net/mac80211.h    |  6 ++++++
->>>  net/mac80211/cfg.c        |  7 +++++++
->>>  net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
->>>  net/mac80211/driver-ops.h |  5 +++++
->>>  net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
->>>  5 files changed, 66 insertions(+)
->>>
->>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->>> index 5345d35..e059d5a 100644
->>> --- a/include/net/mac80211.h
->>> +++ b/include/net/mac80211.h
->>> @@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
->>>   *    This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
->>>   * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
->>>   * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
->>> + * @txpwr: indicates the tx power, in dBm, to be used when sending data frames
->>> + *    to the STA. Value of 0 means, automatic (default) tx power.
->>
->> Atheros NICs use 1/2 dBm increments internally, so maybe pass down mBm
->> to the driver so you don't
->> loose the granularity?  (Other NICs may potentially have even finer control.)
->>
->
-> ath10k firmware expects values to be in dBm and the calculations regarding 1/2 dBm is taken care in firmware.
+Patches for rt2x00. Most important is txdone functions rework to use
+ieee80211_tx_status_noskb() if can not match sent skb with status
+from TX_STAT_FIFO. Currently used only for rt2800usb.
 
-Other drivers may want more precision, so I still think you should store this in mBm instead
-of throwing away precision in the API.
+v1 -> v2:
+Fix skbdesc->sta and TXDONE_ACK_REQ issues pointed by Felix.
+Add changelog to patch 6, pointed by Kalle.
 
-A new and improved ath10k firmware may support 1/2 dBm units directly, for instance.
+Gabor Juhos (1):
+  rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
 
-Thanks,
-Ben
+Stanislaw Gruszka (9):
+  rt2800: identify station based on status WCID
+  rt2x00: separte filling tx status from rt2x00lib_txdone
+  rt2x00: separte clearing entry from rt2x00lib_txdone
+  rt2x00: add txdone nomatch function
+  rt2x00: fixup fill_tx_status for nomatch case
+  rt2x00: use txdone_nomatch on rt2800usb
+  rt2800: status based rate flags for nomatch case
+  rt2800: use TXOP_BACKOFF for probe frames
+  rt2x00: fix rt2x00debug_dump_frame comment
 
->
-> Thanks,
-> Ashok
->> Thanks,
->> Ben
->
-
+ drivers/net/wireless/ralink/rt2x00/rt2800.h      |  27 +--
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c   |  67 ++++++-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h   |  27 ++-
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c  |   2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c   |  18 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h      |   4 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c   | 232 +++++++++++++++--------
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |   7 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.h |   4 +-
+ 9 files changed, 260 insertions(+), 128 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.3.1
