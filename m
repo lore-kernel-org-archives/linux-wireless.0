@@ -1,72 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9978 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932844AbdBHIil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 03:38:41 -0500
-Message-ID: <1486543119.2533.3.camel@redhat.com> (sfid-20170208_094413_789459_985FC5AB)
-Subject: Re: [PATCH net] brcmfmac: clear skb head state on xmit
-From: Paolo Abeni <pabeni@redhat.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        hante Meuleman <hante.meuleman@broadcom.com>
-Date: Wed, 08 Feb 2017 09:38:39 +0100
-In-Reply-To: <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com>
-References: <e5bb3c8e8be4417cc648cfb53add2c89d2c89aa9.1486486128.git.pabeni@redhat.com>
-         <f755ffe7-ea05-7481-af51-da2489bc8a43@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:36742 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751635AbdBOKfA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Feb 2017 05:35:00 -0500
+Received: by mail-pg0-f46.google.com with SMTP id v184so36053201pgv.3
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 02:35:00 -0800 (PST)
+Subject: Re: [RFC v2 3/7] ieee80211: add new VHT capability fields/parsing
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170214132208.8715-1-johannes@sipsolutions.net>
+ <20170214132208.8715-4-johannes@sipsolutions.net>
+ <281180d5-2a7e-00b5-f12b-13bf568812da@broadcom.com>
+ <1487150216.4026.18.camel@sipsolutions.net>
+ <d050648f-df94-8138-b9af-1ec18ba4af28@broadcom.com>
+ <1487152112.4026.19.camel@sipsolutions.net>
+ <1f3197b6-2860-632c-bbbb-3afac16f6edc@broadcom.com>
+Cc: j@w1.fi, greearb@candelatech.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <827a5262-4a4b-d550-d5fe-fd53f3bb53db@broadcom.com> (sfid-20170215_113504_759543_B6523101)
+Date: Wed, 15 Feb 2017 11:34:56 +0100
+MIME-Version: 1.0
+In-Reply-To: <1f3197b6-2860-632c-bbbb-3afac16f6edc@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-02-07 at 20:23 +0100, Arend Van Spriel wrote:
-> On 7-2-2017 17:50, Paolo Abeni wrote:
-> > the skbs can be held by the driver for a long time, so we need
-> > to clear any state on xmit to avoid hanging other subsystems.
-> > The skbs are already orphaned later in cmsg code, so we just
-> > need to clear the nf/dst/secpath.
-> > Do it early, while the relevant entries are hopefully still
-> > hot in the cache.
+On 15-2-2017 11:34, Arend Van Spriel wrote:
+> On 15-2-2017 10:48, Johannes Berg wrote:
+>> On Wed, 2017-02-15 at 10:36 +0100, Arend Van Spriel wrote:
+>>>
+>>>> I'm not really sure what to do - we don't really want to print a
+>>>> message on something that might have been received from the peer, I
+>>>> think? Though I suppose we should return 0 for the invalid
+>>>> combinations, indicating that they're not supported.
+>>>
+>>> Ah. This is all non-functional code yet, right? At least having a
+>>> static non-inline function in ieee80211.h will give build issues I
+>>> would think.
+>>
+>> No, I marked it __maybe_unused so it'll be fine. I didn't want to have
+>> it inlined if you use it multiple times in a single source file, but I
+>> didn't want to move it to somewhere else either ...
 > 
-> What is this about really? A bit more background about the issue
-> might
-> help understanding the need for this patch. Is this really specific
-> to
-> brcmfmac. For instance is something similar already done in mac80211?
+> Ah. Now I understand the trickery ;-) Was there really no "somewhere
+> else" to move it, because honestly it is confusing and a bit wasteful if
+> used multiple times in cfg80211 and/or drivers.
 
-The issue is apparently driver specific, as reported in:
+Although exporting it also comes at a cost.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=1294415
+Gr. AvS
 
-This is caused by xmit skbs carrying a notrack ct entry not being freed
-by the device driver in a timely manner. Removing the ct module waits
-for such entries refcount going to zero and hangs the kernel in busy
-loop (for several minutes).
-
-The relevant skbs are icmp6 packets (ND if I recall correctly, they
-bcast packets at the mac level).
-
-The only other known device driver suffering for the issue is the
-infiniband ipoib driver, I send a separate patch for it.
-
-I lack the broadcom h/w, but with infiniband the bug can be reproduced
-with the following steps:
-
-- ensure ipv6 is enabled on the target device, and firewalld is running
-(e.g. the module nf_conntrack_ipv6 is loaded)
-- assign a static ip to the device
-- shut down the firewall (e.g. try to remove the module nf_conntrack)
-
-For the brcmfmac driver most probably it is necessary being
-disassociated from the AP before shutting down the firewall (but I
-can't double check). This is probably why mac80211 does not suffer this
-issue.
-
-The root cause for the issue could be actually a firmware issue, any
-better clues are more than welcome!
-
-Thank you,
-
-Paolo
+> Gr. AvS
+> 
+>>> Anyway, I would indeed return 0 and have caller deal with that.
+>>
+>> Yeah, I'll do that.
+>>
+>> johannes
+>>
