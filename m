@@ -1,30 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:35809 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751617AbdBAOYf (ORCPT
+Received: from mail-wr0-f176.google.com ([209.85.128.176]:35809 "EHLO
+        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752997AbdBPJxG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 09:24:35 -0500
-Received: by mail-io0-f169.google.com with SMTP id j18so157268145ioe.2
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2017 06:24:35 -0800 (PST)
+        Thu, 16 Feb 2017 04:53:06 -0500
+Received: by mail-wr0-f176.google.com with SMTP id c4so7767688wrd.2
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2017 01:53:05 -0800 (PST)
+Subject: Re: drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6:
+ error: redefinition of 'brcmf_debugfs_init'
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+References: <201702071839.Ej9MjmlI%fengguang.wu@intel.com>
+ <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org>
+ <87inoamqh6.fsf@kamboji.qca.qualcomm.com>
+ <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
+Cc: kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <59013c13-af43-cf9f-8e3e-14d97e48f0dd@broadcom.com> (sfid-20170216_105332_502554_31C47FFB)
+Date: Thu, 16 Feb 2017 10:53:02 +0100
 MIME-Version: 1.0
-From: =?UTF-8?Q?J=C3=B6rg_Pommnitz?= <j.pommnitz@gmail.com>
-Date: Wed, 1 Feb 2017 15:24:33 +0100
-Message-ID: <CAEvAWuH-HkC1VNbtLZdjtNQehcE2CR+k0RP=24xMx3TTxzFdUg@mail.gmail.com> (sfid-20170201_152438_772895_B51E2A0E)
-Subject: Changing of WMM queue parameters forbidden for IBSS interfaces
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+On 16-2-2017 10:39, Rafał Miłecki wrote:
+> On 02/16/2017 10:31 AM, Kalle Valo wrote:
+>> (Adding linux-wireless)
+>>
+>> Randy Dunlap <rdunlap@infradead.org> writes:
+>>
+>>> On 02/07/17 02:02, kbuild test robot wrote:
+>>>> Hi Kalle,
+>>>>
+>>>> FYI, the error/warning still remains.
+>>>>
+>>>> tree:  
+>>>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+>>>> master
+>>>> head:   8b1b41ee74f9712c355d66dc105bbea663ae0afd
+>>>> commit: 05491d2ccf20b20a1375303441fbbfbd12b24a4f brcm80211: move
+>>>> under broadcom vendor directory
+>>>> date:   1 year, 3 months ago
+>>>> config: mips-allyesconfig (attached as .config)
+>>>> compiler: mips-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+>>>> reproduce:
+>>>>         wget
+>>>> https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross
+>>>>
+>>>> -O ~/bin/make.cross
+>>>>         chmod +x ~/bin/make.cross
+>>>>         git checkout 05491d2ccf20b20a1375303441fbbfbd12b24a4f
+>>>>         # save the attached .config to linux build tree
+>>>>         make.cross ARCH=mips
+>>>>
+>>>> All errors (new ones prefixed by >>):
+>>>
+>>> when both:
+>>>
+>>> CONFIG_BRCM_TRACING=y
+>>> CONFIG_BRCMDBG=y
+>>>
+>>> but DEBUG is not defined.
+>>>
+>>> I think it would help if CONFIG_BRCMDBG set DEBUG
+>>> or if some of the tests for DEBUG used CONFIG_BRCMDBG instead.
+>>
+>> Arend or Rafał, would you be able to look at this build problem? Kbuild
+>> found the build errors below, apparently a very old issue. It just
+>> blames me now because I moved the driver to a new directory :)
 
-I'm trying to change the WMM parameters for an IBSS network. I'm
-adding a command to set txq_params to iw. Sadly the current kernel
-code explicitly denies this for interfaces other than AP and P2P (see
-http://lxr.free-electrons.com/source/net/wireless/nl80211.c#L2279).
+It is a very old issue. The thing is that the issue can not really occur
+because we have this:
 
-Is there a reason why this should not be done for IBSS interfaces?
+# common flags
+subdir-ccflags-$(CONFIG_BRCMDBG)        += -DDEBUG
 
+in drivers/net/wireless/broadcom/brcm80211/Makefile. So no clue what
+happens in the "kbuild test robot" scenario.
 
-Thanks in advance
-  Joerg
+Regards,
+Arend
+
+> Something like this maybe? Note I didn't test it with above config.
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> index 6687812770cc..8c7695fde482 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> @@ -108,7 +108,7 @@ do {                                    \
+>  extern int brcmf_msg_level;
+> 
+>  struct brcmf_pub;
+> -#ifdef DEBUG
+> +#ifdef CONFIG_BRCMDBG
+>  void brcmf_debugfs_init(void);
+>  void brcmf_debugfs_exit(void);
+>  int brcmf_debug_attach(struct brcmf_pub *drvr);
+> 
