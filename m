@@ -1,227 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53181 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750903AbdBBJOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 04:14:54 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH v2 3/3] ath9k: fix race condition in enabling/disabling IRQs
-Date: Thu,  2 Feb 2017 10:14:52 +0100
-Message-Id: <20170202091452.11939-3-nbd@nbd.name> (sfid-20170202_101504_891740_6ED3CCF2)
-In-Reply-To: <20170202091452.11939-1-nbd@nbd.name>
-References: <20170202091452.11939-1-nbd@nbd.name>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:33162 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754410AbdBPKbL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Feb 2017 05:31:11 -0500
+Received: by mail-qk0-f175.google.com with SMTP id p22so11342790qka.0
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2017 02:31:05 -0800 (PST)
+Subject: Re: drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6:
+ error: redefinition of 'brcmf_debugfs_init'
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <201702071839.Ej9MjmlI%fengguang.wu@intel.com>
+ <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org>
+ <87inoamqh6.fsf@kamboji.qca.qualcomm.com>
+ <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
+ <59013c13-af43-cf9f-8e3e-14d97e48f0dd@broadcom.com>
+ <87efyymp2q.fsf@kamboji.qca.qualcomm.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        kbuild test robot <fengguang.wu@intel.com>,
+        kbuild-all@01.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <8ff44e41-97c7-4ae5-6850-65ad407fd788@broadcom.com> (sfid-20170216_113219_583125_2C9D465F)
+Date: Thu, 16 Feb 2017 11:30:56 +0100
+MIME-Version: 1.0
+In-Reply-To: <87efyymp2q.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code currently relies on refcounting to disable IRQs from within the
-IRQ handler and re-enabling them again after the tasklet has run.
+On 16-2-2017 11:01, Kalle Valo wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+> 
+>> On 16-2-2017 10:39, Rafał Miłecki wrote:
+>>> On 02/16/2017 10:31 AM, Kalle Valo wrote:
+>>>> (Adding linux-wireless)
+>>>>
+>>>> Randy Dunlap <rdunlap@infradead.org> writes:
+>>>>
+>>>>> On 02/07/17 02:02, kbuild test robot wrote:
+>>>>>> Hi Kalle,
+>>>>>>
+>>>>>> FYI, the error/warning still remains.
+>>>>>>
+>>>>>> tree:  
+>>>>>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+>>>>>> master
+>>>>>> head:   8b1b41ee74f9712c355d66dc105bbea663ae0afd
+>>>>>> commit: 05491d2ccf20b20a1375303441fbbfbd12b24a4f brcm80211: move
+>>>>>> under broadcom vendor directory
+>>>>>> date:   1 year, 3 months ago
+>>>>>> config: mips-allyesconfig (attached as .config)
+>>>>>> compiler: mips-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+>>>>>> reproduce:
+>>>>>>         wget
+>>>>>> https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross
+>>>>>>
+>>>>>> -O ~/bin/make.cross
+>>>>>>         chmod +x ~/bin/make.cross
+>>>>>>         git checkout 05491d2ccf20b20a1375303441fbbfbd12b24a4f
+>>>>>>         # save the attached .config to linux build tree
+>>>>>>         make.cross ARCH=mips
+>>>>>>
+>>>>>> All errors (new ones prefixed by >>):
+> n>>>>
+>>>>> when both:
+>>>>>
+>>>>> CONFIG_BRCM_TRACING=y
+>>>>> CONFIG_BRCMDBG=y
+>>>>>
+>>>>> but DEBUG is not defined.
+>>>>>
+>>>>> I think it would help if CONFIG_BRCMDBG set DEBUG
+>>>>> or if some of the tests for DEBUG used CONFIG_BRCMDBG instead.
+>>>>
+>>>> Arend or Rafał, would you be able to look at this build problem? Kbuild
+>>>> found the build errors below, apparently a very old issue. It just
+>>>> blames me now because I moved the driver to a new directory :)
+>>
+>> It is a very old issue. The thing is that the issue can not really occur
+>> because we have this:
+>>
+>> # common flags
+>> subdir-ccflags-$(CONFIG_BRCMDBG)        += -DDEBUG
+>>
+>> in drivers/net/wireless/broadcom/brcm80211/Makefile. So no clue what
+>> happens in the "kbuild test robot" scenario.
+> 
+> I actually tried to reproduce this with kbuild bot's instructions and
+> was surprised to see that the build worked ok for me. So the issue is
+> not that simple.
 
-However, due to race conditions sometimes the IRQ handler might be
-called twice, or the tasklet may not run at all (if interrupted in the
-middle of a reset).
+Hi Kalle,
 
-This can cause nasty imbalances in the irq-disable refcount which will
-get the driver permanently stuck until the entire radio has been stopped
-and started again (ath_reset will not recover from this).
+Here is the old email exchange we had about this [1]. In my opinion this
+is a Kbuild issue that needs to be looked into.
 
-Instead of using this fragile logic, change the code to ensure that
-running the irq handler during tasklet processing is safe, and leave the
-refcount untouched.
+Regards,
+Arend
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/init.c  |  1 +
- drivers/net/wireless/ath/ath9k/mac.c   | 44 ++++++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/mac.h   |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 27 +++++++++------------
- 5 files changed, 48 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b2fa44adc60e..cf076719c27e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -998,6 +998,7 @@ struct ath_softc {
- 	struct survey_info *cur_survey;
- 	struct survey_info survey[ATH9K_NUM_CHANNELS];
- 
-+	spinlock_t intr_lock;
- 	struct tasklet_struct intr_tq;
- 	struct tasklet_struct bcon_tasklet;
- 	struct ath_hw *sc_ah;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index a2f7f48bbb92..fa4b3cc1ba22 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -669,6 +669,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 		common->bt_ant_diversity = 1;
- 
- 	spin_lock_init(&common->cc_lock);
-+	spin_lock_init(&sc->intr_lock);
- 	spin_lock_init(&sc->sc_serial_rw);
- 	spin_lock_init(&sc->sc_pm_lock);
- 	spin_lock_init(&sc->chan_lock);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index bba85d1a6cd1..d937c39b3a0b 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -805,21 +805,12 @@ void ath9k_hw_disable_interrupts(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_disable_interrupts);
- 
--void ath9k_hw_enable_interrupts(struct ath_hw *ah)
-+static void __ath9k_hw_enable_interrupts(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 sync_default = AR_INTR_SYNC_DEFAULT;
- 	u32 async_mask;
- 
--	if (!(ah->imask & ATH9K_INT_GLOBAL))
--		return;
--
--	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
--		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
--			atomic_read(&ah->intr_ref_cnt));
--		return;
--	}
--
- 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
- 	    AR_SREV_9561(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
-@@ -841,6 +832,39 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 	ath_dbg(common, INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
- 		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
- }
-+
-+void ath9k_hw_resume_interrupts(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (!(ah->imask & ATH9K_INT_GLOBAL))
-+		return;
-+
-+	if (atomic_read(&ah->intr_ref_cnt) != 0) {
-+		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
-+			atomic_read(&ah->intr_ref_cnt));
-+		return;
-+	}
-+
-+	__ath9k_hw_enable_interrupts(ah);
-+}
-+EXPORT_SYMBOL(ath9k_hw_resume_interrupts);
-+
-+void ath9k_hw_enable_interrupts(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (!(ah->imask & ATH9K_INT_GLOBAL))
-+		return;
-+
-+	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
-+		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
-+			atomic_read(&ah->intr_ref_cnt));
-+		return;
-+	}
-+
-+	__ath9k_hw_enable_interrupts(ah);
-+}
- EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
- 
- void ath9k_hw_set_interrupts(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 3bab01435a86..770fc11b41d1 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -744,6 +744,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah);
- void ath9k_hw_enable_interrupts(struct ath_hw *ah);
- void ath9k_hw_disable_interrupts(struct ath_hw *ah);
- void ath9k_hw_kill_interrupts(struct ath_hw *ah);
-+void ath9k_hw_resume_interrupts(struct ath_hw *ah);
- 
- void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0345d6ec564f..9e65d14e7b1e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -374,21 +374,20 @@ void ath9k_tasklet(unsigned long data)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	enum ath_reset_type type;
- 	unsigned long flags;
--	u32 status = sc->intrstatus;
-+	u32 status;
- 	u32 rxmask;
- 
-+	spin_lock_irqsave(&sc->intr_lock, flags);
-+	status = sc->intrstatus;
-+	sc->intrstatus = 0;
-+	spin_unlock_irqrestore(&sc->intr_lock, flags);
-+
- 	ath9k_ps_wakeup(sc);
- 	spin_lock(&sc->sc_pcu_lock);
- 
- 	if (status & ATH9K_INT_FATAL) {
- 		type = RESET_TYPE_FATAL_INT;
- 		ath9k_queue_reset(sc, type);
--
--		/*
--		 * Increment the ref. counter here so that
--		 * interrupts are enabled in the reset routine.
--		 */
--		atomic_inc(&ah->intr_ref_cnt);
- 		ath_dbg(common, RESET, "FATAL: Skipping interrupts\n");
- 		goto out;
- 	}
-@@ -404,11 +403,6 @@ void ath9k_tasklet(unsigned long data)
- 			type = RESET_TYPE_BB_WATCHDOG;
- 			ath9k_queue_reset(sc, type);
- 
--			/*
--			 * Increment the ref. counter here so that
--			 * interrupts are enabled in the reset routine.
--			 */
--			atomic_inc(&ah->intr_ref_cnt);
- 			ath_dbg(common, RESET,
- 				"BB_WATCHDOG: Skipping interrupts\n");
- 			goto out;
-@@ -421,7 +415,6 @@ void ath9k_tasklet(unsigned long data)
- 		if ((sc->gtt_cnt >= MAX_GTT_CNT) && !ath9k_hw_check_alive(ah)) {
- 			type = RESET_TYPE_TX_GTT;
- 			ath9k_queue_reset(sc, type);
--			atomic_inc(&ah->intr_ref_cnt);
- 			ath_dbg(common, RESET,
- 				"GTT: Skipping interrupts\n");
- 			goto out;
-@@ -478,7 +471,7 @@ void ath9k_tasklet(unsigned long data)
- 	ath9k_btcoex_handle_interrupt(sc, status);
- 
- 	/* re-enable hardware interrupt */
--	ath9k_hw_enable_interrupts(ah);
-+	ath9k_hw_resume_interrupts(ah);
- out:
- 	spin_unlock(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
-@@ -542,7 +535,9 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		return IRQ_NONE;
- 
- 	/* Cache the status */
--	sc->intrstatus = status;
-+	spin_lock(&sc->intr_lock);
-+	sc->intrstatus |= status;
-+	spin_unlock(&sc->intr_lock);
- 
- 	if (status & SCHED_INTR)
- 		sched = true;
-@@ -588,7 +583,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 
- 	if (sched) {
- 		/* turn off every interrupt */
--		ath9k_hw_disable_interrupts(ah);
-+		ath9k_hw_kill_interrupts(ah);
- 		tasklet_schedule(&sc->intr_tq);
- 	}
- 
--- 
-2.11.0
+[1] http://www.spinics.net/lists/linux-wireless/msg142122.html
