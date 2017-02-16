@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38323 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751161AbdBUURT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 15:17:19 -0500
-Date: Tue, 21 Feb 2017 21:17:15 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "arjan@linux.intel.com" <arjan@linux.intel.com>,
-        "ming.lei@canonical.com" <ming.lei@canonical.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "jeyu@redhat.com" <jeyu@redhat.com>,
-        "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
-        "pmladek@suse.com" <pmladek@suse.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC 2/5] iwlwifi: fix request_module() use
-Message-ID: <20170221201715.GZ31264@wotan.suse.de> (sfid-20170221_211728_915941_54B7FF00)
-References: <20170217020903.6370-1-mcgrof@kernel.org>
- <20170217020903.6370-3-mcgrof@kernel.org>
- <0BA3FCBA62E2DC44AF3030971E174FB3A8F4AE27@hasmsx107.ger.corp.intel.com>
- <20170221022337.GG31264@wotan.suse.de>
- <0BA3FCBA62E2DC44AF3030971E174FB3A8F4DEAB@hasmsx107.ger.corp.intel.com>
- <20170221181541.GN31264@wotan.suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170221181541.GN31264@wotan.suse.de>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34681 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932343AbdBPQN4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Feb 2017 11:13:56 -0500
+From: Dmitry Tunin <hanipouspilot@gmail.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dmitry Tunin <hanipouspilot@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH] ath9k_htc: Add support of AirTies 1eda:2315 AR9271 device
+Date: Thu, 16 Feb 2017 19:13:42 +0300
+Message-Id: <1487261622-21338-1-git-send-email-hanipouspilot@gmail.com> (sfid-20170216_171559_164699_9F271D89)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 21, 2017 at 07:15:41PM +0100, Luis R. Rodriguez wrote:
-> On Tue, Feb 21, 2017 at 07:16:16AM +0000, Grumbach, Emmanuel wrote:
-> > > 
-> > > a) just remove the print and use instead request_module_nowait() (this is
-> > > more in alignment of what your code actually does today; or
-> > > 
-> > > b) fix the request_module() use so that the error print matches the
-> > > expected and proper recommended use of request_module() (what this patch
-> > > does)
-> > > 
-> > > I prefer a) actually but I had to show what b) looked like first :)
-> >
-> > Me too. Let's do the simple thing. After all, it's been working for 5 years
-> > now (maybe more?) and I don't see a huge need to verify that the opmode
-> > module has been loaded.  It is very unlikely to fail anyway, and in the case
-> > it did fail, it's not that we can do much from iwlwifi point of view. 
-> 
-> I tend to agree with you on this, retries would be the only sensible thing to
-> do, but why do that -- the error should be logged right and addressed by any
-> upper layers. Its one reason to consider in the future adding verifiers
-> as built-in optional part of module loading.
+T:  Bus=01 Lev=02 Prnt=02 Port=02 Cnt=01 Dev#=  7 Spd=480 MxCh= 0
+D:  Ver= 2.00 Cls=ff(vend.) Sub=ff Prot=ff MxPS=64 #Cfgs=  1
+P:  Vendor=1eda ProdID=2315 Rev=01.08
+S:  Manufacturer=ATHEROS
+S:  Product=USB2.0 WLAN
+S:  SerialNumber=12345
+C:  #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
+I:  If#= 0 Alt= 0 #EPs= 6 Cls=ff(vend.) Sub=00 Prot=00 Driver=(none)
 
-It would seem we still need to offload the opmode start as it is the one that
-really should be issuing the completion, otherwise we would end up sending a
-completion while the opmode module is being loaded asynchronously. The changes
-are for that are still very likely desirable as it should help with speeding
-boot up.
+Signed-off-by: Dmitry Tunin <hanipouspilot@gmail.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-So the sharing of the opcode start will go first.
-
-Will send v2.
-
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index de2d212..05dd056 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -37,6 +37,7 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	{ USB_DEVICE(0x0cf3, 0xb002) }, /* Ubiquiti WifiStation */
+ 	{ USB_DEVICE(0x057c, 0x8403) }, /* AVM FRITZ!WLAN 11N v2 USB */
+ 	{ USB_DEVICE(0x0471, 0x209e) }, /* Philips (or NXP) PTA01 */
++	{ USB_DEVICE(0x1eda, 0x2315) }, /* AirTies */
+ 
+ 	{ USB_DEVICE(0x0cf3, 0x7015),
+ 	  .driver_info = AR9287_USB },  /* Atheros */
+-- 
+2.7.4
