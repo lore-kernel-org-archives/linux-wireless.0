@@ -1,62 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34033 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751467AbdBBMRX (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:32784 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750902AbdBPBTE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 07:17:23 -0500
-Received: by mail-lf0-f66.google.com with SMTP id q89so1232781lfi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2017 04:17:22 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2 5/7] brcmfmac: sdio: store private pointer to struct brcmf_pub
-Date: Thu,  2 Feb 2017 13:16:57 +0100
-Message-Id: <20170202121659.21130-5-zajec5@gmail.com> (sfid-20170202_131726_500963_DE3C3721)
-In-Reply-To: <20170202121659.21130-1-zajec5@gmail.com>
-References: <20170202121659.21130-1-zajec5@gmail.com>
+        Wed, 15 Feb 2017 20:19:04 -0500
 MIME-Version: 1.0
+In-Reply-To: <20170215222948.21030-2-zajec5@gmail.com>
+References: <20170215222948.21030-1-zajec5@gmail.com> <20170215222948.21030-2-zajec5@gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 16 Feb 2017 03:19:02 +0200
+Message-ID: <CAHp75Vee+f5eH7DFWNcWFPcdoBf_63yQh7L71dLpNSmC5fXDww@mail.gmail.com> (sfid-20170216_021932_154606_237BF399)
+Subject: Re: [PATCH 2/2] brcmfmac: don't warn user if loading firmware file
+ with NVRAM fails
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On Thu, Feb 16, 2017 at 12:29 AM, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
+> wrote:
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> This isn't critical as we use platform NVRAM as fallback and it's very
+> common case of all Broadcom home routers. Thanks for the new firmware
+> loading function we can achieve this by simply passing FW_OPT_NO_WARN.
+>
 
-Having access to this struct is useful for using generic stuff and e.g.
-improving logging messages.
+What kind of warning you are talking about?
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V2: Add this (new) patch
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 ++
- 1 file changed, 2 insertions(+)
+On Intel Edison brcmfmac isn't backed up by NVRAM (there no such) and
+the platform is not ACPI-based. The warning might be crucial for
+debugging Wi-Fi issues on such platforms.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index c5744b45ec8f..81a1e24852e0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -434,6 +434,7 @@ struct brcmf_sdio_count {
- struct brcmf_sdio {
- 	struct brcmf_sdio_dev *sdiodev;	/* sdio device handler */
- 	struct brcmf_chip *ci;	/* Chip info struct */
-+	struct brcmf_pub *pub;	/* Bus generic struct */
- 
- 	u32 hostintmask;	/* Copy of Host Interrupt Mask */
- 	atomic_t intstatus;	/* Intstatus bits (events) pending */
-@@ -4155,6 +4156,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 		brcmf_err("brcmf_attach failed\n");
- 		goto fail;
- 	}
-+	bus->pub = sdiodev->bus_if->drvr;
- 
- 	/* allocate scatter-gather table. sg support
- 	 * will be disabled upon allocation failure.
--- 
-2.11.0
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> ---
+> Kalle, Arend: this patch is strictly related to the bigger 1/2. Could you=
+ ack
+> this change as I expect this patchset to be picked by Ming, Luis or Greg.
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c =
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> index c7c1e9906500..26ec445a8d2d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> @@ -504,9 +504,9 @@ static void brcmf_fw_request_code_done(const struct f=
+irmware *fw, void *ctx)
+>                 return;
+>         }
+>         fwctx->code =3D fw;
+> -       ret =3D request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_n=
+ame,
+> -                                     fwctx->dev, GFP_KERNEL, fwctx,
+> -                                     brcmf_fw_request_nvram_done);
+> +       ret =3D request_firmware_async(THIS_MODULE, FW_OPT_NO_WARN,
+> +                                    fwctx->nvram_name, fwctx->dev, GFP_K=
+ERNEL,
+> +                                    fwctx, brcmf_fw_request_nvram_done);
+>
+>         if (!ret)
+>                 return;
+> --
+> 2.11.0
+>
+
+
+
+--=20
+With Best Regards,
+Andy Shevchenko
