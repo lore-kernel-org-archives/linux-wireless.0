@@ -1,156 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59236 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751814AbdBFLaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 06:30:09 -0500
-Date: Mon, 6 Feb 2017 12:25:08 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: [PATCH v4 3/3] mt76: add driver code for MT76x2e
-Message-ID: <20170206112508.GA9255@redhat.com> (sfid-20170206_123040_416639_739B58DA)
-References: <20170202115208.8614-1-nbd@nbd.name>
- <20170202115208.8614-4-nbd@nbd.name>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35836 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752186AbdBPH0y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Feb 2017 02:26:54 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2 1/2] firmware: add more flexible request_firmware_async function
+Date: Thu, 16 Feb 2017 08:26:35 +0100
+Message-Id: <20170216072636.7128-1-zajec5@gmail.com> (sfid-20170216_082732_627582_F09112E6)
+In-Reply-To: <20170215222948.21030-1-zajec5@gmail.com>
+References: <20170215222948.21030-1-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170202115208.8614-4-nbd@nbd.name>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 02, 2017 at 12:52:08PM +0100, Felix Fietkau wrote:
-> This is a 2x2 PCIe 802.11ac chipset by MediaTek
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Driver looks great to me, though I think it could be better commented.
-I have some minor issues, but if they need to be fixed, it could be done
-by incremental patches after apply this one to the tree.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
+So far we got only one function for loading firmware asynchronously:
+request_firmware_nowait. It didn't allow much customization of firmware
+loading process - there is only one bool uevent argument. Moreover this
+bool also controls user helper in an unclear way.
 
-> +enum dma_msg_port {
-> +	WLAN_PORT,
-> +	CPU_RX_PORT,
-> +	CPU_TX_PORT,
-> +	HOST_PORT,
-> +	VIRTUAL_CPU_RX_PORT,
-> +	VIRTUAL_CPU_TX_PORT,
-> +	DISCARD,
-> +};
-Not used ?
+Resolve this problem by adding a one flexible function and making old
+request_firmware_nowait a simple inline using new solution. This
+implementation:
+1) Modifies only single bits on existing code
+2) Doesn't require adjusting / rewriting current drivers
+3) Adds new function for drivers that need more control over loading a
+   firmware. Thanks to using flags more features can be added later.
 
-> +void mt76x2_set_tx_ackto(struct mt76x2_dev *dev)
-> +{
-> +	u8 ackto, sifs, slottime = dev->slottime;
-> +
-> +	slottime += 3 * dev->coverage_class;
-> +
-> +	sifs = mt76_get_field(dev, MT_XIFS_TIME_CFG,
-> +			      MT_XIFS_TIME_CFG_OFDM_SIFS);
-> +
-> +	ackto = slottime + sifs;
-> +	mt76_rmw_field(dev, MT_TX_TIMEOUT_CFG,
-> +		       MT_TX_TIMEOUT_CFG_ACKTO, ackto);
-> +}
-Interesting, if this correct way to configure the TX_TIMEOUT_CFG_ACKTO
-we will also need this in rt2x00. Vendor drivers use 32 for this setting
-and do not change it.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+This patch is based on top of
+[PATCH V2 RESEND] firmware: simplify defining and handling FW_OPT_FALLBACK
+applied on top of Linux 4.10-rc8.
 
-Note we have also EXP_ACT_TIME and EXP_CTS_TIME registers, which stay
-with default settings, but perhaps should be changed depending on
-channel properties as well.
+Ming/Luis/Greg: assuming this gets a positive review, could someone of you pick
+this patchset? Second patch modifies brcmfmac, I'll try to get a proper Ack for
+that one.
+Unless you want this to go through wireless tree, then let me know please.
+---
+ drivers/base/firmware_class.c | 25 ++++++-------------------
+ include/linux/firmware.h      | 34 +++++++++++++++++++++++++++++-----
+ 2 files changed, 35 insertions(+), 24 deletions(-)
 
-> +static u32
-> +mt76x2_tx_power_mask(u8 v1, u8 v2, u8 v3, u8 v4)
-> +{
-> +	u32 val = 0;
-> +
-> +	val |= (v1 & (BIT(6) - 1)) << 0;
-> +	val |= (v2 & (BIT(6) - 1)) << 8;
-> +	val |= (v3 & (BIT(6) - 1)) << 16;
-> +	val |= (v4 & (BIT(6) - 1)) << 24;
-> +	return val;
-> +}
-TX_PWR_CFG registers consist of eight 4bit entries, masking 
-two entries with 0x3f does not seems to be correct.
-
-> +	mt76_wr(dev, MT_TX_PWR_CFG_3,
-> +		mt76x2_tx_power_mask(t.ht[12], t.ht[14], t.ht[0], t.ht[2]));
-> +	mt76_wr(dev, MT_TX_PWR_CFG_4,
-> +		mt76x2_tx_power_mask(t.ht[4], t.ht[6], 0, 0));
-> +	mt76_wr(dev, MT_TX_PWR_CFG_7,
-> +		mt76x2_tx_power_mask(t.ofdm[6], t.vht[8], t.ht[6], t.vht[8]));
-> +	mt76_wr(dev, MT_TX_PWR_CFG_8,
-> +		mt76x2_tx_power_mask(t.ht[14], t.vht[8], t.vht[8], 0));
-> +	mt76_wr(dev, MT_TX_PWR_CFG_9,
-> +		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
-Looks like some of arguments instead of t.vht[x] accidentally become t.ht[x],
-for example t.vht[6] is never used.
-
-> +static void
-> +mt76x2_configure_tx_delay(struct mt76x2_dev *dev, enum nl80211_band band, u8 bw)
-> +{
-> +	u32 cfg0, cfg1;
-> +
-> +	if (mt76x2_ext_pa_enabled(dev, band)) {
-> +		cfg0 = bw ? 0x000b0c01 : 0x00101101;
-> +		cfg1 = 0x00011414;
-> +	} else {
-> +		cfg0 = bw ? 0x000b0b01 : 0x00101001;
-> +		cfg1 = 0x00021414;
-> +	}
-> +	mt76_wr(dev, MT_TX_SW_CFG0, cfg0);
-> +	mt76_wr(dev, MT_TX_SW_CFG1, cfg1);
-> +
-> +	mt76_rmw_field(dev, MT_XIFS_TIME_CFG, MT_XIFS_TIME_CFG_CCK_SIFS,
-> +		       13 + (bw ? 1 : 0));
-> +}
-SIFS for 2GHz should be 10us and for 5GHz 16us. Setting SIFS to 13
-or 14 looks wrong for 2GHz band. Can be correct for 5GHz assuming
-we have some internal delays configured on TX_SW_CFG registers.
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index d05be1732c8b..7b3f0a018dc3 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -182,18 +182,6 @@ static int __fw_state_check(struct fw_state *fw_st, enum fw_status status)
  
-But again this is interesting for rt2x00, where we stay with
-defaults, but looks we should configure XIFS_TIME_CFG based on
-channel. 
-
-> +	if (chandef->width >= NL80211_CHAN_WIDTH_40)
-> +		sifs++;
-> +
-> +	mt76_rmw_field(dev, MT_XIFS_TIME_CFG, MT_XIFS_TIME_CFG_OFDM_SIFS, sifs);
-This probably should be set together with MT_XIFS_TIME_CFG_CCK_SIFS in 
-mt76x2_configure_tx_delay().
-
-> +static int mt76x2_insert_hdr_pad(struct sk_buff *skb)
-> +{
-> +	int len = ieee80211_get_hdrlen_from_skb(skb);
-> +	int ret;
-> +
-> +	if (len % 4 == 0)
-> +		return 0;
-> +
-> +	if (skb_headroom(skb) < 2) {
-> +		ret = pskb_expand_head(skb, 2, 0, GFP_ATOMIC);
-> +		if (ret != 0)
-> +			return ret;
-This should not be needed if hw->extra_tx_headroom is set properly.
-
-> +	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
-> +		qsel = 0;
-For better understating: qsel = MT_QSEL_MGMT;
-
-> +void mt76x2_pre_tbtt_tasklet(unsigned long arg)
-> +{
-> +	struct mt76x2_dev *dev = (struct mt76x2_dev *) arg;
-> +	struct mt76_queue *q = &dev->mt76.q_tx[MT_TXQ_PSD];
-> +	struct beacon_bc_data data = {};
-> +	struct sk_buff *skb;
-> +	int i, nframes;
-> +
-> +	data.dev = dev;
-> +	__skb_queue_head_init(&data.q);
-> +
-> +	ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
-This symbol, not like most of other mac80211 symbols, is exported via
-EXPORT_SYMBOL_GPL(), so I'm not sure if it can be used on dual licensed
-file, perhaps licence of this file should be changed to GPL only.
-
-Stanislaw
+ #endif /* CONFIG_FW_LOADER_USER_HELPER */
+ 
+-/* firmware behavior options */
+-#define FW_OPT_UEVENT	(1U << 0)
+-#define FW_OPT_NOWAIT	(1U << 1)
+-#ifdef CONFIG_FW_LOADER_USER_HELPER
+-#define FW_OPT_USERHELPER	(1U << 2)
+-#else
+-#define FW_OPT_USERHELPER	0
+-#endif
+-#define FW_OPT_NO_WARN	(1U << 3)
+-#define FW_OPT_NOCACHE	(1U << 4)
+-#define FW_OPT_FALLBACK	(1U << 5)
+-
+ struct firmware_cache {
+ 	/* firmware_buf instance will be added into the below list */
+ 	spinlock_t lock;
+@@ -1356,7 +1344,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ 	_request_firmware(&fw, fw_work->name, fw_work->device, NULL, 0,
+ 			  fw_work->opt_flags);
+ 	fw_work->cont(fw, fw_work->context);
+-	put_device(fw_work->device); /* taken in request_firmware_nowait() */
++	put_device(fw_work->device); /* taken in request_firmware_async() */
+ 
+ 	module_put(fw_work->module);
+ 	kfree_const(fw_work->name);
+@@ -1364,7 +1352,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ }
+ 
+ /**
+- * request_firmware_nowait - asynchronous version of request_firmware
++ * request_firmware_async - asynchronous version of request_firmware
+  * @module: module requesting the firmware
+  * @uevent: sends uevent to copy the firmware image if this flag
+  *	is non-zero else the firmware copy must be done manually.
+@@ -1387,8 +1375,8 @@ static void request_firmware_work_func(struct work_struct *work)
+  *		- can't sleep at all if @gfp is GFP_ATOMIC.
+  **/
+ int
+-request_firmware_nowait(
+-	struct module *module, bool uevent,
++request_firmware_async(
++	struct module *module, unsigned int opt_flags,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+@@ -1407,8 +1395,7 @@ request_firmware_nowait(
+ 	fw_work->device = device;
+ 	fw_work->context = context;
+ 	fw_work->cont = cont;
+-	fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
+-		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
++	fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
+ 
+ 	if (!try_module_get(module)) {
+ 		kfree_const(fw_work->name);
+@@ -1421,7 +1408,7 @@ request_firmware_nowait(
+ 	schedule_work(&fw_work->work);
+ 	return 0;
+ }
+-EXPORT_SYMBOL(request_firmware_nowait);
++EXPORT_SYMBOL(request_firmware_async);
+ 
+ #ifdef CONFIG_PM_SLEEP
+ static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index b1f9f0ccb8ac..1f2bf14aa441 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -8,6 +8,18 @@
+ #define FW_ACTION_NOHOTPLUG 0
+ #define FW_ACTION_HOTPLUG 1
+ 
++/* firmware behavior options */
++#define FW_OPT_UEVENT	(1U << 0)
++#define FW_OPT_NOWAIT	(1U << 1)
++#ifdef CONFIG_FW_LOADER_USER_HELPER
++#define FW_OPT_USERHELPER	(1U << 2)
++#else
++#define FW_OPT_USERHELPER	0
++#endif
++#define FW_OPT_NO_WARN	(1U << 3)
++#define FW_OPT_NOCACHE	(1U << 4)
++#define FW_OPT_FALLBACK	(1U << 5)
++
+ struct firmware {
+ 	size_t size;
+ 	const u8 *data;
+@@ -41,8 +53,8 @@ struct builtin_fw {
+ #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
+ int request_firmware(const struct firmware **fw, const char *name,
+ 		     struct device *device);
+-int request_firmware_nowait(
+-	struct module *module, bool uevent,
++int request_firmware_async(
++	struct module *module, unsigned int opt_flags,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context));
+ int request_firmware_direct(const struct firmware **fw, const char *name,
+@@ -58,8 +70,8 @@ static inline int request_firmware(const struct firmware **fw,
+ {
+ 	return -EINVAL;
+ }
+-static inline int request_firmware_nowait(
+-	struct module *module, bool uevent,
++static inline int request_firmware_async(
++	struct module *module, unsigned int opt_flags,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+@@ -82,6 +94,18 @@ static inline int request_firmware_into_buf(const struct firmware **firmware_p,
+ {
+ 	return -EINVAL;
+ }
+-
+ #endif
++
++static inline int request_firmware_nowait(
++	struct module *module, bool uevent,
++	const char *name, struct device *device, gfp_t gfp, void *context,
++	void (*cont)(const struct firmware *fw, void *context))
++{
++	unsigned int opt_flags = FW_OPT_FALLBACK |
++		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
++
++	return request_firmware_async(module, opt_flags, name, device, gfp,
++				      context, cont);
++}
++
+ #endif
+-- 
+2.11.0
