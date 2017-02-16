@@ -1,56 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45634 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751187AbdBXMxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 07:53:50 -0500
-Message-ID: <1487938277.2540.13.camel@sipsolutions.net> (sfid-20170224_135422_921176_693FB39C)
-Subject: Re: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to
- suspend async: error -16)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oliver Freyermuth <o.freyermuth@googlemail.com>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 24 Feb 2017 13:11:17 +0100
-In-Reply-To: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com> (sfid-20170221_224703_956817_094A0B1B)
-References: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com>
-         (sfid-20170221_224703_956817_094A0B1B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from 13.mo1.mail-out.ovh.net ([178.33.253.128]:40202 "EHLO
+        13.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752904AbdBPJlI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Feb 2017 04:41:08 -0500
+Received: from player758.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo1.mail-out.ovh.net (Postfix) with ESMTP id 1F5B9581D6
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2017 10:33:01 +0100 (CET)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 16 Feb 2017 10:32:52 +0100
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH V2 2/2] brcmfmac: don't warn user about NVRAM if fallback
+ to platform one succeeds
+In-Reply-To: <88182ec9-3344-7468-d3c3-33d9ffa532e2@broadcom.com>
+References: <20170215222948.21030-1-zajec5@gmail.com>
+ <20170216072636.7128-1-zajec5@gmail.com>
+ <20170216072636.7128-2-zajec5@gmail.com>
+ <d2b1cb64-a829-b433-2370-f2c47b9d0a5d@broadcom.com>
+ <894daa616fc3bbd875e075b3096dba8e@milecki.pl>
+ <88182ec9-3344-7468-d3c3-33d9ffa532e2@broadcom.com>
+Message-ID: <31df911dc857c59b0d36e586f9542113@milecki.pl> (sfid-20170216_104112_950426_B9BA2128)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> I have been trying to get basic WoWLAN to work with the following
-> configuration:
-> - Intel Corporation Wireless 7260 (rev 73) with in-tree iwlwifi
-> driver
-
-So I just tried on 4.9 with a 6205 NIC and it works there. The
-difference must be somewhere in mvm/d3.c then, I guess. I got a lot of
-warnings at resume time though, not sure why.
-
-> However, when trying to suspend to RAM ( echo mem > /sys/power/state
-> ), I get:
-> [46656.403767] dpm_run_callback(): wiphy_suspend+0x0/0x97 [cfg80211]
-> returns -16
-> [46656.403769] PM: Device phy0 failed to suspend async: error -16
+On 2017-02-16 10:18, Arend Van Spriel wrote:
+> On 16-2-2017 10:04, Rafał Miłecki wrote:
+>> On 2017-02-16 09:38, Arend Van Spriel wrote:
+>>> On 16-2-2017 8:26, Rafał Miłecki wrote:
+>>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>> 
+>>>> Failing to load NVRAM file isn't critical if we manage to get 
+>>>> platform
+>>>> one in the fallback path. It means warnings like:
+>>>> [   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for
+>>>> brcm/brcmfmac43602-pcie.txt failed with error -2
+>>>> are unnecessary & disturbing for people with platform NVRAM. This is
+>>>> very common case for Broadcom home routers.
+>>>> 
+>>>> So instead of printing warning immediately with the firmware 
+>>>> subsystem
+>>>> let's first try our fallback code. If that fails as well, then it's 
+>>>> a
+>>>> right moment to print an error.
+>>>> 
+>>>> This should reduce amount of false reports from users seeing this
+>>>> warning while having wireless working perfectly fine.
+>>> 
+>>> There are of course people with issues who take this warning as a 
+>>> straw
+>>> to clutch.
+>>> 
+>>>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>>>> ---
+>>>> V2: Update commit message as it wasn't clear enough (thanks Andy) &
+>>>> add extra
+>>>>     messages to the firmware.c.
+>>>> 
+>>>> Kalle, Arend: this patch is strictly related to the bigger 1/2. 
+>>>> Could
+>>>> you ack
+>>>> this change as I expect this patchset to be picked by Ming, Luis or
+>>>> Greg?
+>>>> ---
+>>>>  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c  | 16
+>>>> +++++++++++-----
+>>>>  1 file changed, 11 insertions(+), 5 deletions(-)
+>>>> 
+>>>> diff --git
+>>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>>>> index c7c1e9906500..510a76d99eee 100644
+>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>>>> @@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const
+>>>> struct firmware *fw, void *ctx)
+>>>>          raw_nvram = false;
+>>>>      } else {
+>>>>          data = bcm47xx_nvram_get_contents(&data_len);
+>>>> -        if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+>>>> -            goto fail;
+>>>> +        if (!data) {
+>>>> +            brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
+>>>> +            if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
+>>>> +                brcmf_err("Loading NVRAM from %s and using platform
+>>>> one both failed\n",
+>>>> +                      fwctx->nvram_name);
+>>>> +                goto fail;
+>>>> +            }
+>>>> +        }
+>>>>          raw_nvram = true;
+>>>>      }
+>>>> 
+>>>> @@ -504,9 +510,9 @@ static void brcmf_fw_request_code_done(const
+>>>> struct firmware *fw, void *ctx)
+>>>>          return;
+>>>>      }
+>>>>      fwctx->code = fw;
+>>>> -    ret = request_firmware_nowait(THIS_MODULE, true, 
+>>>> fwctx->nvram_name,
+>>>> -                      fwctx->dev, GFP_KERNEL, fwctx,
+>>>> -                      brcmf_fw_request_nvram_done);
+>>>> +    ret = request_firmware_async(THIS_MODULE, FW_OPT_NO_WARN,
+>>>> +                     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
+>>>> +                     fwctx, brcmf_fw_request_nvram_done);
+>>> 
+>>> You changed the behaviour, because of your change in patch 1/2:
+>>> 
+>>> -    fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
+>>> -        (uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+>>> +    fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
+>>> 
+>>> So: (FW_OPT_NOWAIT | FW_OPT_UEVENT) vs (FW_OPT_NOWAIT | 
+>>> FW_OPT_NO_WARN)
+>> 
+>> Sorry, I didn't realize brcmfmac needs FW_OPT_UEVENT. I'll re-add it 
+>> in
+>> V3, just
+>> let me wait to see if there will be more comments.
 > 
+> To be honest whether or not FW_OPT_UEVENT is needed should not be
+> something a driver needs to concern about. It is really a system
+> configuration issue if you ask me. So the only thing we could do is to
+> have it just in case.
 
-However, I don't see EBUSY anywhere there in the driver.
-
-Can you recompile the kernel and run a quick experiment?
-
-Open drivers/net/wireless/intel/iwlwifi/mvm/mvm.h and put something
-like this after the includes:
-
-#undef EBUSY
-#define EBUSY ({ WARN_ON(1); 16; })
-
-that should trigger a warning at the place where the EBUSY came from,
-assuming it did in fact come from the driver. You could repeat it for
-net/mac80211/ieee80211_i.h if that doesn't trigger.
-
-> https://bugzilla.kernel.org/show_bug.cgi?id=109591#c25
-
-That device is like mine, afaict, so this seems to be a different bug.
-
-johannes
+Drivers always got a choice (see bool uevent) so I didn't want to change 
+it.
