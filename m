@@ -1,120 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35156 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751414AbdBGDaf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41292 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752649AbdBPJbu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 22:30:35 -0500
-Received: by mail-oi0-f68.google.com with SMTP id x84so7947503oix.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 19:30:24 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 07/11 V4] rtlwifi: move btcoex's ant_num declaration
-Date: Mon,  6 Feb 2017 21:30:04 -0600
-Message-Id: <20170120212716.29887-8-Larry.Finger@lwfinger.net> (sfid-20170207_043049_796422_E81DA44F)
-In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+        Thu, 16 Feb 2017 04:31:50 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Randy Dunlap <rdunlap@infradead.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Cc: kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6: error: redefinition of 'brcmf_debugfs_init'
+References: <201702071839.Ej9MjmlI%fengguang.wu@intel.com>
+        <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org>
+Date: Thu, 16 Feb 2017 11:31:33 +0200
+In-Reply-To: <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org> (Randy
+        Dunlap's message of "Tue, 7 Feb 2017 08:31:39 -0800")
+Message-ID: <87inoamqh6.fsf@kamboji.qca.qualcomm.com> (sfid-20170216_103217_219510_1A988D33)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+(Adding linux-wireless)
 
-File halbtcoutsrc.c is a better place for routine rtl_get_hwpg_ant_num()
-than file rtl_btc.c.
+Randy Dunlap <rdunlap@infradead.org> writes:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-V2 - no changes
-V3 - no changes
-V4 - no changes
----
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c    | 12 ++++++++++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c     | 11 -----------
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h     |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c          |  2 ++
- 4 files changed, 15 insertions(+), 12 deletions(-)
+> On 02/07/17 02:02, kbuild test robot wrote:
+>> Hi Kalle,
+>>=20
+>> FYI, the error/warning still remains.
+>>=20
+>> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.g=
+it master
+>> head:   8b1b41ee74f9712c355d66dc105bbea663ae0afd
+>> commit: 05491d2ccf20b20a1375303441fbbfbd12b24a4f brcm80211: move
+>> under broadcom vendor directory
+>> date:   1 year, 3 months ago
+>> config: mips-allyesconfig (attached as .config)
+>> compiler: mips-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+>> reproduce:
+>>         wget
+>> https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbi=
+n/make.cross
+>> -O ~/bin/make.cross
+>>         chmod +x ~/bin/make.cross
+>>         git checkout 05491d2ccf20b20a1375303441fbbfbd12b24a4f
+>>         # save the attached .config to linux build tree
+>>         make.cross ARCH=3Dmips=20
+>>=20
+>> All errors (new ones prefixed by >>):
+>
+> when both:
+>
+> CONFIG_BRCM_TRACING=3Dy
+> CONFIG_BRCMDBG=3Dy
+>
+> but DEBUG is not defined.
+>
+> I think it would help if CONFIG_BRCMDBG set DEBUG
+> or if some of the tests for DEBUG used CONFIG_BRCMDBG instead.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 8e382a8..3958422 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -151,6 +151,18 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
- 	return rtlpriv->btcoexist.btc_info.single_ant_path;
- }
- 
-+u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
-+{
-+	u8 num;
-+
-+	if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2)
-+		num = 2;
-+	else
-+		num = 1;
-+
-+	return num;
-+}
-+
- static void halbtc_leave_lps(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index d3fd921..54e893c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -178,17 +178,6 @@ struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
- }
- EXPORT_SYMBOL(rtl_btc_get_ops_pointer);
- 
--u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
--{
--	u8 num;
--
--	if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2)
--		num = 2;
--	else
--		num = 1;
--
--	return num;
--}
- 
- enum rt_media_status mgnt_link_status_query(struct ieee80211_hw *hw)
- {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index 65c1c52..bba7e23e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-@@ -46,9 +46,9 @@ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
- 
- struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
- 
--u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv);
- u8 rtl_get_hwpg_bt_exist(struct rtl_priv *rtlpriv);
- u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv);
-+u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv);
- u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv);
- enum rt_media_status mgnt_link_status_query(struct ieee80211_hw *hw);
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 8e82c0c..b46874b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -2653,6 +2653,8 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
- 		value = hwinfo[EEPROM_RF_BT_SETTING_8723B];
- 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8723B;
- 		rtlpriv->btcoexist.btc_info.ant_num = (value & 0x1);
-+		rtlpriv->btcoexist.btc_info.single_ant_path =
-+			 (value & 0x40);	/*0xc3[6]*/
- 	} else {
- 		rtlpriv->btcoexist.btc_info.btcoexist = 0;
- 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8723B;
--- 
-2.10.2
+Arend or Rafa=C5=82, would you be able to look at this build problem? Kbuild
+found the build errors below, apparently a very old issue. It just
+blames me now because I moved the driver to a new directory :)
+
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6:
+>> error: redefinition of 'brcmf_debugfs_init'
+    void brcmf_debugfs_init(void)
+         ^~~~~~~~~~~~~~~~~~
+   In file included from drivers/net/wireless/broadcom/brcm80211/brcmfmac/b=
+us.h:20:0,
+                    from drivers/net/wireless/broadcom/brcm80211/brcmfmac/d=
+ebug.c:24:
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h:118:20: note: p=
+revious definition of 'brcmf_debugfs_init' was here
+    static inline void brcmf_debugfs_init(void)
+                       ^~~~~~~~~~~~~~~~~~
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:65:6:
+>> error: redefinition of 'brcmf_debugfs_exit'
+    void brcmf_debugfs_exit(void)
+         ^~~~~~~~~~~~~~~~~~
+   In file included from drivers/net/wireless/broadcom/brcm80211/brcmfmac/b=
+us.h:20:0,
+                    from drivers/net/wireless/broadcom/brcm80211/brcmfmac/d=
+ebug.c:24:
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h:121:20: note: p=
+revious definition of 'brcmf_debugfs_exit' was here
+    static inline void brcmf_debugfs_exit(void)
+                       ^~~~~~~~~~~~~~~~~~
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:74:5:
+>> error: redefinition of 'brcmf_debug_attach'
+    int brcmf_debug_attach(struct brcmf_pub *drvr)
+        ^~~~~~~~~~~~~~~~~~
+   In file included from drivers/net/wireless/broadcom/brcm80211/brcmfmac/b=
+us.h:20:0,
+                    from drivers/net/wireless/broadcom/brcm80211/brcmfmac/d=
+ebug.c:24:
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h:124:19: note: p=
+revious definition of 'brcmf_debug_attach' was here
+    static inline int brcmf_debug_attach(struct brcmf_pub *drvr)
+                      ^~~~~~~~~~~~~~~~~~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c: In function 'b=
+rcmf_debug_attach':
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:81:6:
+>> error: 'struct brcmf_pub' has no member named 'dbgfs_dir'
+     drvr->dbgfs_dir =3D debugfs_create_dir(dev_name(dev), root_folder);
+         ^~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:82:17: error: '=
+struct brcmf_pub' has no member named 'dbgfs_dir'
+     if (IS_ERR(drvr->dbgfs_dir))
+                    ^~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:83:22: error: '=
+struct brcmf_pub' has no member named 'dbgfs_dir'
+      return PTR_ERR(drvr->dbgfs_dir);
+                         ^~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c: At top level:
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:90:6:
+>> error: redefinition of 'brcmf_debug_detach'
+    void brcmf_debug_detach(struct brcmf_pub *drvr)
+         ^~~~~~~~~~~~~~~~~~
+   In file included from drivers/net/wireless/broadcom/brcm80211/brcmfmac/b=
+us.h:20:0,
+                    from drivers/net/wireless/broadcom/brcm80211/brcmfmac/d=
+ebug.c:24:
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h:128:20: note: p=
+revious definition of 'brcmf_debug_detach' was here
+    static inline void brcmf_debug_detach(struct brcmf_pub *drvr)
+                       ^~~~~~~~~~~~~~~~~~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c: In function 'b=
+rcmf_debug_detach':
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:94:26: error: '=
+struct brcmf_pub' has no member named 'dbgfs_dir'
+     if (!IS_ERR_OR_NULL(drvr->dbgfs_dir))
+                             ^~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:95:32: error: '=
+struct brcmf_pub' has no member named 'dbgfs_dir'
+      debugfs_remove_recursive(drvr->dbgfs_dir);
+                                   ^~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c: In function 'b=
+rcmf_debugfs_get_devdir':
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:100:13: error: =
+'struct brcmf_pub' has no member named 'dbgfs_dir'
+     return drvr->dbgfs_dir;
+                ^~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c: At top level:
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:103:5:
+>> error: redefinition of 'brcmf_debugfs_add_entry'
+    int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+        ^~~~~~~~~~~~~~~~~~~~~~~
+   In file included from drivers/net/wireless/broadcom/brcm80211/brcmfmac/b=
+us.h:20:0,
+                    from drivers/net/wireless/broadcom/brcm80211/brcmfmac/d=
+ebug.c:24:
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h:132:5: note: pr=
+evious definition of 'brcmf_debugfs_add_entry' was here
+    int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+        ^~~~~~~~~~~~~~~~~~~~~~~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c: In function 'b=
+rcmf_debugfs_add_entry':
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:109:10: error: =
+'struct brcmf_pub' has no member named 'dbgfs_dir'
+         drvr->dbgfs_dir, read_fn);
+             ^~
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c: In function 'b=
+rcmf_debugfs_get_devdir':
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:101:1: warning:=
+ control reaches end of non-void function [-Wreturn-type]
+    }
+    ^
+
+
+--=20
+Kalle Valo
