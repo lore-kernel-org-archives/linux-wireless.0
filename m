@@ -1,97 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48210 "EHLO mail.kernel.org"
+Received: from mga14.intel.com ([192.55.52.115]:17105 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754149AbdBQCJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2017 21:09:27 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: johannes.berg@intel.com, luciano.coelho@intel.com,
-        emmanuel.grumbach@intel.com, tj@kernel.org, arjan@linux.intel.com,
-        ming.lei@canonical.com, zajec5@gmail.com
-Cc: jeyu@redhat.com, rusty@rustcorp.com.au, pmladek@suse.com,
-        gregkh@linuxfoundation.org, linuxwifi@intel.com,
+        id S1754622AbdBPNIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Feb 2017 08:08:31 -0500
+Date: Thu, 16 Feb 2017 21:08:25 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
         linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC 0/5] iwlwifi: enhance final opmode work
-Date: Thu, 16 Feb 2017 18:08:58 -0800
-Message-Id: <20170217020903.6370-1-mcgrof@kernel.org> (sfid-20170217_031056_571505_F608D489)
+        kbuild-all@01.org,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Philip Li <philip.li@intel.com>
+Subject: Re: [kbuild-all]
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6: error:
+ redefinition of 'brcmf_debugfs_init'
+Message-ID: <20170216130825.zj3cx4v7o3n5m7jl@wfg-t540p.sh.intel.com> (sfid-20170216_140903_559061_2E359DA6)
+References: <201702071839.Ej9MjmlI%fengguang.wu@intel.com>
+ <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org>
+ <87inoamqh6.fsf@kamboji.qca.qualcomm.com>
+ <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
+ <59013c13-af43-cf9f-8e3e-14d97e48f0dd@broadcom.com>
+ <87efyymp2q.fsf@kamboji.qca.qualcomm.com>
+ <8ff44e41-97c7-4ae5-6850-65ad407fd788@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <8ff44e41-97c7-4ae5-6850-65ad407fd788@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although these are iwlwifi patches, there are some core module, async,
-firmware questions I'd appreciate a bit more review from folks on -- tx!
+Hi all,
 
-Firmware folks / async folks / module folks:
+Yes sorry, it's a false report related to how we do bisects.
 
-I started to look to generalize the way the iwlwifi driver uses the
-firmware API to request for firmware through a series of API versions,
-to chain firmware requests. I had to start examining its firmware
-callback carefully as it used request_module() and because the driver
-data API [0] (an evolution of the firmware API) I've been developing
-uses async_schedule() instead of workqueues. Although I had started
-using workqueues to match the old firmware API I went with
-async_schedule() since I noticed most drivers using an async callback
-also had to add a completion struct on their drivers and later waited
-for completion at some other point. Using async framework we can just
-give users a cookie, and they can use that to sync for completion.
+>>>>>> CONFIG_BRCM_TRACING=y
+>>>>>> CONFIG_BRCMDBG=y
+>>>>>>
+>>>>>> but DEBUG is not defined.
+>>>>>>
+>>>>>> I think it would help if CONFIG_BRCMDBG set DEBUG
+>>>>>> or if some of the tests for DEBUG used CONFIG_BRCMDBG instead.
+>>>>>
+>>>>> Arend or Rafał, would you be able to look at this build problem? Kbuild
+>>>>> found the build errors below, apparently a very old issue. It just
+>>>>> blames me now because I moved the driver to a new directory :)
+>>>
+>>> It is a very old issue. The thing is that the issue can not really occur
+>>> because we have this:
+>>>
+>>> # common flags
+>>> subdir-ccflags-$(CONFIG_BRCMDBG)        += -DDEBUG
+>>>
+>>> in drivers/net/wireless/broadcom/brcm80211/Makefile. So no clue what
+>>> happens in the "kbuild test robot" scenario.
 
-One of the limitations of using async_schedule() though is we cannot
-request_module() synchronously on async calls given that the module
-initialization code will call async_synchronize_full() if the module
-being initialized happened to have used async work on its initialization
-routine, otherwise we'd deadlock.
+As an optimization, the robot often does "partial builds" during bisects.
+For example, when the error is found in
 
-So, I either I change back to workqueus or we live happy with either:
+        drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
 
-   a) Use request_module_nowait() on async calls -- this works
-   b) If you need request_module() on your async call, consider a
-      workqueue
+It'll try
 
-Module folks:
+        make drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.o
 
-One of the issues with a) is that contrary to try_then_request_module()
-which helps validate module loading we have had no common generic
-lightweight form to validate a module loaded correctly if you use
-request_module_nowait(). You can surely use a module notifier with
-register_module_notifier() -- but again, that is not lightweight, quick
-and easy. From the look of it though, most current users simply call
-request_module_nowait() and hope for the best -- there are no verifiers.
-That's probably fine (?) -- other than failures can be silent. At least
-iwlwifi would want to make a beep about failures it seems, so I went
-with b).
+And verify the bisect result with
 
-In this series I went with b) but still note that iwlwifi cannot use
-bare try_then_request_module() cleanly -- so it has its own wrapper (see
-patch 02).
+        make drivers/net/wireless/broadcom/brcm80211/brcmfmac/
 
-iwlfifi folks:
+However in this case the whole dir is moved, so both logics failed to
+give correct results. We'll check how to improve this. Sorry for the
+confusions!
 
-This patch series does not depend on the driver data API, but its is an
-example of b). It also contains a series of other fixes and enhancements
-for iwlwifi's opmode final work worth revising -- regardless of what
-happens with the driver data API. With these patches average boot time
-seems to improve slightly, but I'd expect much more testing would be
-required before making any clear determination. I used 5 boots per patch.
-I started with next-20170213. Following data is average boot times as
-per systemd-analyze. The vanilla kernel (patch-00) got more testing as
-I'm also using this a base for other testing -- 100 boots.
+>> I actually tried to reproduce this with kbuild bot's instructions and
+>> was surprised to see that the build worked ok for me. So the issue is
+>> not that simple.
+>
+>Hi Kalle,
+>
+>Here is the old email exchange we had about this [1]. In my opinion this
+>is a Kbuild issue that needs to be looked into.
+>
+>Regards,
+>Arend
+>
+>[1] http://www.spinics.net/lists/linux-wireless/msg142122.html
 
-patch-00 Startup finished in  2.64057s (kernel) +  5.52668s (initrd) +  11.3024s (userspace) =  19.4707s
-patch-01 Startup finished in    2.574s (kernel) +   5.1505s (initrd) +  11.0698s (userspace) =  18.7952s
-patch-02 Startup finished in    2.618s (kernel) +   5.3102s (initrd) +  11.1736s (userspace) =  19.1026s
-patch-03 Startup finished in   2.5612s (kernel) +   5.3274s (initrd) +  11.0226s (userspace) =  18.9122s
-patch-04 Startup finished in   2.5475s (kernel) +   5.0895s (initrd) +  10.9272s (userspace) =  18.5652s
-
-[0] https://git.kernel.org/cgit/linux/kernel/git/mcgrof/linux-next.git/log/?h=20170206-driver-data-try2
-
-Luis R. Rodriguez (5):
-  iwlwifi: fix drv cleanup on opmode registration failure
-  iwlwifi: fix request_module() use
-  iwlwifi: share opmode start work code
-  iwlwifi: move opmode loading to shared routine
-  iwlwifi: convert final opmode work into a workqueue
-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 140 +++++++++++++++++++--------
- 1 file changed, 100 insertions(+), 40 deletions(-)
-
--- 
-2.11.0
+Thanks,
+Fengguang
