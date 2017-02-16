@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:34516 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751654AbdBOWdg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47297 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754780AbdBPQY6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 17:33:36 -0500
-Date: Wed, 15 Feb 2017 16:33:24 -0600
-From: Rob Herring <robh@kernel.org>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        sgruszka@redhat.com, devicetree@vger.kernel.org
-Subject: Re: [PATCH v5 1/3] Documentation: dt: net: add mt76 wireless device
- binding
-Message-ID: <20170215223324.r7cgljfqkulyuany@rob-hp-laptop> (sfid-20170215_233352_201110_43BF6B47)
-References: <20170207202035.64224-1-nbd@nbd.name>
- <20170207202035.64224-2-nbd@nbd.name>
+        Thu, 16 Feb 2017 11:24:58 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [RFC V2 0/3] Pre-CAC and sharing DFS state across multiple radios
+Date: Thu, 16 Feb 2017 21:54:32 +0530
+Message-ID: <1487262275-14654-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170216_172550_013400_36C7481C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170207202035.64224-2-nbd@nbd.name>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 09:20:33PM +0100, Felix Fietkau wrote:
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Currently irrespective of dfs domain and radar detection activity
+pre-CAC results for a wiphy are retained till the wiphy is detroyed.
+This may not be preferred in non-ETSI dfs domain where pre-CAC is not
+explicitly mentioned in the respective DFS requirement spec. This patch
+set modifies the current behaviour of pre-CAC for non-ETSI domain by
+giving 2 seconds grace period for dfs master interface to start operating
+on the CAC completed channel.
 
-Commit msg? Also, use "dt-bindings: net: " for the subject prefix.
+This patch set also adds support to share dfs channel state across
+multiple radios of the same regulatory configuration.
 
-> ---
->  .../bindings/net/wireless/mediatek,mt76.txt        | 24 ++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> new file mode 100644
-> index 000000000000..19522ab97d62
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> @@ -0,0 +1,24 @@
-> +* MediaTek mt76xx devices
-> +
-> +This node provides properties for configuring the MediaTek mt76xx wireless
-> +device. The node is expected to be specified as a child node of the PCI
-> +controller to which the wireless chip is connected.
-> +
-> +Optional properties:
-> +
-> +- mac-address: See ethernet.txt in the parent directory
-> +- local-mac-address: See ethernet.txt in the parent directory
-> +- ieee80211-freq-limit: See ieee80211.txt
-> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
-> +
-> +&pcie {
-> +	status = "okay";
-> +
-> +	pcie0 {
-> +		wifi@0,0 {
-> +			reg = <0x0000 0 0 0 0>;
-> +			ieee80211-freq-limit = <5000000 6000000>;
-> +			mediatek,mtd-eeprom = <&factory 0x8000>;
-> +		};
-> +	};
-> +};
-> -- 
-> 2.11.0
-> 
+Vasanthakumar Thiagarajan (3):
+  cfg80211: Make pre-CAC results valid only for ETSI domain
+  cfg80211: Disallow moving out of operating DFS channel in non-ETSI
+  cfg80211: Share Channel DFS state across wiphys of same DFS domain
+
+ include/uapi/linux/nl80211.h |   5 ++
+ net/wireless/ap.c            |   5 ++
+ net/wireless/chan.c          | 117 ++++++++++++++++++++++++++++++++++
+ net/wireless/core.c          |  37 +++++++++++
+ net/wireless/core.h          |  16 +++++
+ net/wireless/ibss.c          |   1 +
+ net/wireless/mesh.c          |   1 +
+ net/wireless/mlme.c          |  50 ++++++++++++---
+ net/wireless/nl80211.c       |  52 ++++++++++++++++
+ net/wireless/reg.c           | 145 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/reg.h           |  36 +++++++++++
+ 11 files changed, 456 insertions(+), 9 deletions(-)
+
+-- 
+1.9.1
