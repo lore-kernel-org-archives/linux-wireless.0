@@ -1,39 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13333 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752515AbdBHPIH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35112 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752983AbdBPNSy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 10:08:07 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 16 Feb 2017 08:18:54 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        kbuild test robot <fengguang.wu@intel.com>,
+        kbuild-all@01.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6: error: redefinition of 'brcmf_debugfs_init'
+References: <201702071839.Ej9MjmlI%fengguang.wu@intel.com>
+        <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org>
+        <87inoamqh6.fsf@kamboji.qca.qualcomm.com>
+        <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
+        <59013c13-af43-cf9f-8e3e-14d97e48f0dd@broadcom.com>
+        <87efyymp2q.fsf@kamboji.qca.qualcomm.com>
+        <8ff44e41-97c7-4ae5-6850-65ad407fd788@broadcom.com>
+Date: Thu, 16 Feb 2017 15:18:48 +0200
+In-Reply-To: <8ff44e41-97c7-4ae5-6850-65ad407fd788@broadcom.com> (Arend Van
+        Spriel's message of "Thu, 16 Feb 2017 11:30:56 +0100")
+Message-ID: <8737fe46kn.fsf@codeaurora.org> (sfid-20170216_141923_018893_DC1D3245)
 MIME-Version: 1.0
-Subject: Re: wil6210: include moduleparam.h
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170207143328.22529-1-johannes@sipsolutions.net>
-References: <20170207143328.22529-1-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Message-ID: <441c84ea195949cd95ed2c28bb43572c@eusanexr01a.eu.qualcomm.com> (sfid-20170208_160908_236879_D9C4EBF1)
-Date: Wed, 8 Feb 2017 07:01:52 -0800
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This now declares a module parameter, so include the necessary
-> header file for that.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Patch applied to ath-next branch of ath.git, thanks.
+> On 16-2-2017 11:01, Kalle Valo wrote:
+>> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+>>=20
+>>> On 16-2-2017 10:39, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>>> On 02/16/2017 10:31 AM, Kalle Valo wrote:
+>>>>> (Adding linux-wireless)
+>>>>>
+>>>>> Arend or Rafa=C5=82, would you be able to look at this build problem?=
+ Kbuild
+>>>>> found the build errors below, apparently a very old issue. It just
+>>>>> blames me now because I moved the driver to a new directory :)
+>>>
+>>> It is a very old issue. The thing is that the issue can not really occur
+>>> because we have this:
+>>>
+>>> # common flags
+>>> subdir-ccflags-$(CONFIG_BRCMDBG)        +=3D -DDEBUG
+>>>
+>>> in drivers/net/wireless/broadcom/brcm80211/Makefile. So no clue what
+>>> happens in the "kbuild test robot" scenario.
+>>=20
+>> I actually tried to reproduce this with kbuild bot's instructions and
+>> was surprised to see that the build worked ok for me. So the issue is
+>> not that simple.
+>
+> Hi Kalle,
+>
+> Here is the old email exchange we had about this [1]. In my opinion this
+> is a Kbuild issue that needs to be looked into.
+>
+> Regards,
+> Arend
+>
+> [1] http://www.spinics.net/lists/linux-wireless/msg142122.html
 
-949c2d009675 wil6210: include moduleparam.h
+Heh, I had completely forgotten that we had discussed this before :)
 
--- 
-https://patchwork.kernel.org/patch/9560281/
+Fengguang and the kbuild bot team, do you have any ideas why only the
+bot is seeing this?
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Kalle Valo
