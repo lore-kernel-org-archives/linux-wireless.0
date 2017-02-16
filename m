@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35036 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934780AbdBQUyO (ORCPT
+Received: from 2.mo69.mail-out.ovh.net ([178.33.251.80]:36377 "EHLO
+        2.mo69.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752363AbdBPIEn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Feb 2017 15:54:14 -0500
-Received: by mail-wm0-f66.google.com with SMTP id u63so4467348wmu.2
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2017 12:54:13 -0800 (PST)
-From: Doru <gucea.doru@gmail.com>
-To: linux-wireless@vger.kernel.org, andra.paraschiv7@gmail.com,
-        costin.raiciu@cs.pub.ro, dragos.niculescu@cs.pub.ro
-Cc: Doru Gucea <gucea.doru@gmail.com>
-Subject: [RFC PATCH 2/2 v2] ath9k_htc: Adjust beacon timers for power save
-Date: Fri, 17 Feb 2017 22:54:06 +0200
-Message-Id: <1487364846-4675-1-git-send-email-gucea.doru@gmail.com> (sfid-20170217_215417_235029_DC65E7CE)
+        Thu, 16 Feb 2017 03:04:43 -0500
+Received: from player696.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo69.mail-out.ovh.net (Postfix) with ESMTP id 54E0C1AC53
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2017 08:25:52 +0100 (CET)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 16 Feb 2017 08:25:42 +0100
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH 2/2] brcmfmac: don't warn user if loading firmware file
+ with NVRAM fails
+In-Reply-To: <CAHp75Vee+f5eH7DFWNcWFPcdoBf_63yQh7L71dLpNSmC5fXDww@mail.gmail.com>
+References: <20170215222948.21030-1-zajec5@gmail.com>
+ <20170215222948.21030-2-zajec5@gmail.com>
+ <CAHp75Vee+f5eH7DFWNcWFPcdoBf_63yQh7L71dLpNSmC5fXDww@mail.gmail.com>
+Message-ID: <de837236542d5b762d97e4d5a55cd589@milecki.pl> (sfid-20170216_090447_679785_7079056B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Doru Gucea <gucea.doru@gmail.com>
+On 2017-02-16 02:19, Andy Shevchenko wrote:
+> On Thu, Feb 16, 2017 at 12:29 AM, Rafał Miłecki <zajec5@gmail.com> 
+> wrote:
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>> 
+>> This isn't critical as we use platform NVRAM as fallback and it's very
+>> common case of all Broadcom home routers. Thanks for the new firmware
+>> loading function we can achieve this by simply passing FW_OPT_NO_WARN.
+>> 
+> 
+> What kind of warning you are talking about?
+> 
+> On Intel Edison brcmfmac isn't backed up by NVRAM (there no such) and
+> the platform is not ACPI-based. The warning might be crucial for
+> debugging Wi-Fi issues on such platforms.
 
-Each time we receive a beacon we need to adjust the hardware
-timers for next DTIM and next TBTT.
-
-Before this commit, the Power Save behaviour was incorrect.
-The scenario was:
-- STA receives a beacon from AP with TIM unset;
-- mac80211 layers puts the chip to sleep;
-- chip is woken up by mac80211's software timer reponsible for
-beacon miss after 7 * beacon_interval period.
-
-Normally the chip should sleep at most DTIM period. This commit
-configures hardware timers for waking up the chip correctly.
-
-More details on the wiki:
-https://github.com/doru91/linux-stable/wiki/Single-Interface-Power-Save
-
-Changelog
-
-v1:
-* moved beacon configuration call in the ath9k_htc driver
-
-Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index a553c91..5403399 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1518,6 +1518,10 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 	mutex_lock(&priv->mutex);
- 	ath9k_htc_ps_wakeup(priv);
- 
-+	/* adjust beacon timers */
-+	if (changed && BSS_CHANGED_BEACON_INFO)
-+		ath9k_htc_beacon_config(priv, vif);
-+
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		ath_dbg(common, CONFIG, "BSS Changed ASSOC %d\n",
- 			bss_conf->assoc);
--- 
-1.9.1
+Sorry, I should have tried better with that commit message. V2 in a 
+second.
