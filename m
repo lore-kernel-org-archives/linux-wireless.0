@@ -1,133 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35888 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932998AbdBHNLD (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35036 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934780AbdBQUyO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 08:11:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <1486556665.24745.6.camel@sipsolutions.net>
-References: <20170203163607.3488037-1-arnd@arndb.de> <20170206.120318.1268240226202516488.davem@davemloft.net>
- <4910112.l20yySyWnA@wuerfel> <1486556665.24745.6.camel@sipsolutions.net>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 8 Feb 2017 14:10:52 +0100
-Message-ID: <CAK8P3a2fHm9j7roYjTAXJ_zsdXF88p_6Y-hCF6aWjJzcAaQ3Uw@mail.gmail.com> (sfid-20170208_141230_165450_B30DCB67)
-Subject: Re: KASAN+netlink, was: [PATCH] [net-next?] hns: avoid stack overflow
- with CONFIG_KASAN
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>, stable@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Andrey Ryabinin <a.ryabinin@samsung.com>,
-        nikolay@cumulusnetworks.com, nicolas.dichtel@6wind.com,
-        adobriyan@gmail.com,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Fri, 17 Feb 2017 15:54:14 -0500
+Received: by mail-wm0-f66.google.com with SMTP id u63so4467348wmu.2
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2017 12:54:13 -0800 (PST)
+From: Doru <gucea.doru@gmail.com>
+To: linux-wireless@vger.kernel.org, andra.paraschiv7@gmail.com,
+        costin.raiciu@cs.pub.ro, dragos.niculescu@cs.pub.ro
+Cc: Doru Gucea <gucea.doru@gmail.com>
+Subject: [RFC PATCH 2/2 v2] ath9k_htc: Adjust beacon timers for power save
+Date: Fri, 17 Feb 2017 22:54:06 +0200
+Message-Id: <1487364846-4675-1-git-send-email-gucea.doru@gmail.com> (sfid-20170217_215417_235029_DC65E7CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 8, 2017 at 1:24 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2017-02-08 at 13:03 +0100, Arnd Bergmann wrote:
->>
->> - Moving nla_put_{u8,u16,u32} out of line is probably uncontroversial
->> and
->>   it helps enough with br_netlink.c, but nl820211 is worse and needs
->> some
->>   additional fiddling.
->
-> Why would that not be sufficient by itself for nl80211?
+From: Doru Gucea <gucea.doru@gmail.com>
 
-Oddly enough, it seems that it is now. I don't know what I was testing earlier,
-but now I don't see any difference between this simple change, and the
-modifications
-I did on nl820211.c. I started out trying to fix this in nl820211.c
-originally and then
-later tried the extern nla_put_*(), but didn't think it helped all
-that much then.
+Each time we receive a beacon we need to adjust the hardware
+timers for next DTIM and next TBTT.
 
-I'll just submit the simple patch then. ;-)
+Before this commit, the Power Save behaviour was incorrect.
+The scenario was:
+- STA receives a beacon from AP with TIM unset;
+- mac80211 layers puts the chip to sleep;
+- chip is woken up by mac80211's software timer reponsible for
+beacon miss after 7 * beacon_interval period.
 
-a) current mainline, arm64 allmodconfig+KASAN,
-    CONFIG_FRAME_WARN=1024
+Normally the chip should sleep at most DTIM period. This commit
+configures hardware timers for waking up the chip correctly.
 
-../net/wireless/nl80211.c: In function 'nl80211_get_mesh_config':
-../net/wireless/nl80211.c:5689:1: warning: the frame size of 2336
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_send_iface':
-../net/wireless/nl80211.c:2591:1: warning: the frame size of 1120
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_add_commands_unsplit.isra.2':
-../net/wireless/nl80211.c:1410:1: warning: the frame size of 2272
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_set_wiphy':
-../net/wireless/nl80211.c:2491:1: warning: the frame size of 1376
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_send_wiphy':
-../net/wireless/nl80211.c:1895:1: warning: the frame size of 4288
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_send_station.isra.44':
-../net/wireless/nl80211.c:4389:1: warning: the frame size of 2240
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_dump_station':
-../net/wireless/nl80211.c:4441:1: warning: the frame size of 1456
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_get_station':
-../net/wireless/nl80211.c:4478:1: warning: the frame size of 1232
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'cfg80211_del_sta_sinfo':
-../net/wireless/nl80211.c:13611:1: warning: the frame size of 1072
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_send_bss.isra.43.constprop':
-../net/wireless/nl80211.c:7588:1: warning: the frame size of 1296
-bytes is larger than 1024 bytes
+More details on the wiki:
+https://github.com/doru91/linux-stable/wiki/Single-Interface-Power-Save
 
-b) with patch to move nla_put_* functions out of line:
-../net/wireless/nl80211.c: In function 'nl80211_set_wiphy':
-../net/wireless/nl80211.c:2491:1: warning: the frame size of 1376
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_dump_station':
-../net/wireless/nl80211.c:4441:1: warning: the frame size of 1456
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_get_station':
-../net/wireless/nl80211.c:4478:1: warning: the frame size of 1232
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'cfg80211_del_sta_sinfo':
-../net/wireless/nl80211.c:13611:1: warning: the frame size of 1072
-bytes is larger than 1024 bytes
-../net/wireless/nl80211.c: In function 'nl80211_dump_survey':
-../net/wireless/nl80211.c:7753:1: warning: the frame size of 1136
-bytes is larger than 1024 bytes
+Changelog
 
-c) without --param asan-stack=1, checking just the functions above
-against 100 bytes
+v1:
+* moved beacon configuration call in the ath9k_htc driver
 
-../net/wireless/nl80211.c: In function 'nl80211_set_wiphy':
-../net/wireless/nl80211.c:2491:1: warning: the frame size of 144 bytes
-is larger than 100 bytes [-Wframe-larger-than=]
-../net/wireless/nl80211.c: In function 'nl80211_send_wiphy':
-../net/wireless/nl80211.c:1895:1: warning: the frame size of 224 bytes
-is larger than 100 bytes [-Wframe-larger-than=]
-../net/wireless/nl80211.c: In function 'nl80211_send_station.isra.44':
-../net/wireless/nl80211.c:4389:1: warning: the frame size of 144 bytes
-is larger than 100 bytes [-Wframe-larger-than=]
-../net/wireless/nl80211.c: In function 'nl80211_dump_station':
-../net/wireless/nl80211.c:4441:1: warning: the frame size of 912 bytes
-is larger than 100 bytes [-Wframe-larger-than=]
-../net/wireless/nl80211.c: In function 'nl80211_get_station':
-../net/wireless/nl80211.c:4478:1: warning: the frame size of 864 bytes
-is larger than 100 bytes [-Wframe-larger-than=]
-../net/wireless/nl80211.c: In function 'cfg80211_del_sta_sinfo':
-../net/wireless/nl80211.c:13611:1: warning: the frame size of 864
-bytes is larger than 100 bytes [-Wframe-larger-than=]
-../net/wireless/nl80211.c: In function 'nl80211_dump_survey':
-../net/wireless/nl80211.c:7753:1: warning: the frame size of 112 bytes
-is larger than 100 bytes [-Wframe-larger-than=]
+Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-
-> Btw, what's causing this to start with? Can't the compiler reuse the
-> stack places?
-
-I have no idea. It's trying to find out of bounds accesses for
-objects on the stack, so maybe it gives each variable a separate
-stack location in order to see which one caused problems?
-
-     Arnd
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index a553c91..5403399 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1518,6 +1518,10 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	mutex_lock(&priv->mutex);
+ 	ath9k_htc_ps_wakeup(priv);
+ 
++	/* adjust beacon timers */
++	if (changed && BSS_CHANGED_BEACON_INFO)
++		ath9k_htc_beacon_config(priv, vif);
++
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		ath_dbg(common, CONFIG, "BSS Changed ASSOC %d\n",
+ 			bss_conf->assoc);
+-- 
+1.9.1
