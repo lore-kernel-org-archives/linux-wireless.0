@@ -1,42 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4168 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751324AbdBJJsA (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:46348 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934144AbdBQSBT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 04:48:00 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: Fix crash during rmmod when probe firmware
- fails
-Date: Fri, 10 Feb 2017 09:47:28 +0000
-Message-ID: <87lgteidii.fsf@kamboji.qca.qualcomm.com> (sfid-20170210_104809_460087_3C0A2B1A)
-References: <1482221351-24029-1-git-send-email-mohammed@qca.qualcomm.com>
-        <8760l38dz0.fsf@kamboji.qca.qualcomm.com>
-        <871svr8d83.fsf@kamboji.qca.qualcomm.com>
-        <20170206100448.GA13894@atheros-ThinkPad-T61>
-In-Reply-To: <20170206100448.GA13894@atheros-ThinkPad-T61> (Mohammed Shafi
-        Shajakhan's message of "Mon, 6 Feb 2017 15:34:48 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 17 Feb 2017 13:01:19 -0500
+Date: Fri, 17 Feb 2017 13:01:16 -0500 (EST)
+Message-Id: <20170217.130116.449144797548397424.davem@davemloft.net> (sfid-20170217_190223_441589_D797F601)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2017-02-17
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87wpcql0cm.fsf@kamboji.qca.qualcomm.com>
+References: <87wpcql0cm.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 16 Feb 2017 15:41:13 +0200
 
-> the change suggested by you helps, and the device probe, scan
-> is successful as well. Still good to have this change part of your
-> basic sanity and regression testing !
+> few -next patches I'm still hoping to get to 4.11 to keep my backlog
+> short, nothing major here. Please let me know if there are any problems.
 
-Sure. I was sort of expecting that you would send v4 but I haven't seen
-one so I guess you assumed I send that? :) I'll then submit v4.
-
-BTW, just curious but why do you have "during rmmod" in the title? I
-think I was able to reproduce this crash by removing all firmware files
-and didn't use rmmod at all.
-
---=20
-Kalle Valo=
+Pulled, thanks Kalle.
