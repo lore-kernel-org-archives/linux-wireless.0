@@ -1,130 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59812 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751289AbdBOOCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 09:02:15 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] cfg80211: refactor cfg80211_calculate_bitrate()
-Date: Wed, 15 Feb 2017 15:02:08 +0100
-Message-Id: <20170215140210.19393-3-johannes@sipsolutions.net> (sfid-20170215_150218_505024_F9BD5B12)
-In-Reply-To: <20170215140210.19393-1-johannes@sipsolutions.net>
-References: <20170215140210.19393-1-johannes@sipsolutions.net>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18218 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933303AbdBQLo0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Feb 2017 06:44:26 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2] ath10k: Fix a warning during channel switch with multiple vaps
+Date: Fri, 17 Feb 2017 17:15:02 +0530
+Message-ID: <1487331902-12034-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170217_124446_058188_F4BA2DC4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-This function contains the HT calculations, which makes no
-sense - split that out into a separate function. As a side
-effect, this makes the 60G flag independent from HT_MCS so
-remove the MCS one from wil6210 (also deleting a duplicate
-assignment.)
+Doing a channel switch via hostapd_cli seems to update
+the new channel context for each VAP's appropriately as below
+in 'ath10k_mac_update_vif_chan', hence we can safely suppress the
+warning that shows up during this operation and dump the warning only
+if no vaps are available for channel switch
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+hostapd_cli -i wlan0 chan_switch 5 5200
+OK
+
+ath10k_pci : mac chanctx switch n_vifs 3 mode 1
+ath10k_pci : mac chanctx switch vdev_id 2 freq 5180->5200 width 0->0
+ath10k_pci : mac chanctx switch vdev_id 1 freq 5180->5200 width 0->0
+ath10k_pci : mac chanctx switch vdev_id 0 freq 5180->5200 width 0->0
+
+Call Trace:
+
+WARNING: backports-20161201-3.14.77-9ab3068/drivers/net/wireless/ath/ath10k/mac.c:7126
+[<c022f2d4>] (warn_slowpath_null) from [<bf7f150c>]
+(ath10k_reconfig_complete+0xe4/0x25c [ath10k_core])
+[<bf7f150c>] (ath10k_reconfig_complete [ath10k_core])
+[<bf7f35f0>] (ath10k_mac_vif_ap_csa_work+0x214/0x370 [ath10k_core])
+[<bf7f38b8>] (ath10k_mac_op_change_chanctx+0x108/0x128 [ath10k_core])
+[<bf782ac0>] (ieee80211_recalc_chanctx_min_def+0x30c/0x430 [mac80211])
+[<bf7830a4>] (ieee80211_recalc_smps_chanctx+0x2ec/0x840 [mac80211])
+[<bf7843e8>] (ieee80211_vif_use_reserved_context+0x7c/0xf8 [mac80211])
+[<bf7843e8>] (ieee80211_vif_use_reserved_context [mac80211])
+[<bf76e5d4>] (ieee80211_csa_finalize_work+0x5c/0x88 [mac80211])
+
+Fixes: d7bf4b4aba05 ("ath10k: fix ar->rx_channel updating logic")
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c |  3 +-
- net/wireless/util.c                         | 60 +++++++++++++++--------------
- 2 files changed, 33 insertions(+), 30 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 83155b5ddbfb..79d107018eac 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -178,9 +178,8 @@ int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
- 			BIT(NL80211_STA_INFO_RX_DROP_MISC) |
- 			BIT(NL80211_STA_INFO_TX_FAILED);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d1b7edb..b416958 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7085,7 +7085,7 @@ static int ath10k_ampdu_action(struct ieee80211_hw *hw,
+ 	lockdep_assert_held(&ar->data_lock);
  
--	sinfo->txrate.flags = RATE_INFO_FLAGS_MCS | RATE_INFO_FLAGS_60G;
-+	sinfo->txrate.flags = RATE_INFO_FLAGS_60G;
- 	sinfo->txrate.mcs = le16_to_cpu(reply.evt.bf_mcs);
--	sinfo->rxrate.flags = RATE_INFO_FLAGS_MCS | RATE_INFO_FLAGS_60G;
- 	sinfo->rxrate.mcs = stats->last_mcs_rx;
- 	sinfo->rx_bytes = stats->rx_bytes;
- 	sinfo->rx_packets = stats->rx_packets;
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 68e5f2ecee1a..23ee3d66dfe0 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1097,6 +1097,35 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
+ 	WARN_ON(ctx && vifs);
+-	WARN_ON(vifs && n_vifs != 1);
++	WARN_ON(vifs && !n_vifs);
  
-+static u32 cfg80211_calculate_bitrate_ht(struct rate_info *rate)
-+{
-+	int modulation, streams, bitrate;
-+
-+	/* the formula below does only work for MCS values smaller than 32 */
-+	if (WARN_ON_ONCE(rate->mcs >= 32))
-+		return 0;
-+
-+	modulation = rate->mcs & 7;
-+	streams = (rate->mcs >> 3) + 1;
-+
-+	bitrate = (rate->bw == RATE_INFO_BW_40) ? 13500000 : 6500000;
-+
-+	if (modulation < 4)
-+		bitrate *= (modulation + 1);
-+	else if (modulation == 4)
-+		bitrate *= (modulation + 2);
-+	else
-+		bitrate *= (modulation + 3);
-+
-+	bitrate *= streams;
-+
-+	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
-+		bitrate = (bitrate / 9) * 10;
-+
-+	/* do NOT round down here */
-+	return (bitrate + 50000) / 100000;
-+}
-+
- static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
- {
- 	static const u32 __mcs2bitrate[] = {
-@@ -1230,39 +1259,14 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 
- u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
--	int modulation, streams, bitrate;
--
--	if (!(rate->flags & RATE_INFO_FLAGS_MCS) &&
--	    !(rate->flags & RATE_INFO_FLAGS_VHT_MCS))
--		return rate->legacy;
-+	if (rate->flags & RATE_INFO_FLAGS_MCS)
-+		return cfg80211_calculate_bitrate_ht(rate);
- 	if (rate->flags & RATE_INFO_FLAGS_60G)
- 		return cfg80211_calculate_bitrate_60g(rate);
- 	if (rate->flags & RATE_INFO_FLAGS_VHT_MCS)
- 		return cfg80211_calculate_bitrate_vht(rate);
- 
--	/* the formula below does only work for MCS values smaller than 32 */
--	if (WARN_ON_ONCE(rate->mcs >= 32))
--		return 0;
--
--	modulation = rate->mcs & 7;
--	streams = (rate->mcs >> 3) + 1;
--
--	bitrate = (rate->bw == RATE_INFO_BW_40) ? 13500000 : 6500000;
--
--	if (modulation < 4)
--		bitrate *= (modulation + 1);
--	else if (modulation == 4)
--		bitrate *= (modulation + 2);
--	else
--		bitrate *= (modulation + 3);
--
--	bitrate *= streams;
--
--	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
--		bitrate = (bitrate / 9) * 10;
--
--	/* do NOT round down here */
--	return (bitrate + 50000) / 100000;
-+	return rate->legacy;
- }
- EXPORT_SYMBOL(cfg80211_calculate_bitrate);
- 
+ 	/* FIXME: Sort of an optimization and a workaround. Peers and vifs are
+ 	 * on a linked list now. Doing a lookup peer -> vif -> chanctx for each
 -- 
-2.9.3
+1.9.1
