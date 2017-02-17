@@ -1,44 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57462 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751504AbdBOJsg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 04:48:36 -0500
-Message-ID: <1487152112.4026.19.camel@sipsolutions.net> (sfid-20170215_105315_436036_780F8107)
-Subject: Re: [RFC v2 3/7] ieee80211: add new VHT capability fields/parsing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: j@w1.fi, greearb@candelatech.com
-Date: Wed, 15 Feb 2017 10:48:32 +0100
-In-Reply-To: <d050648f-df94-8138-b9af-1ec18ba4af28@broadcom.com> (sfid-20170215_103656_237359_A3F83E58)
-References: <20170214132208.8715-1-johannes@sipsolutions.net>
-         <20170214132208.8715-4-johannes@sipsolutions.net>
-         <281180d5-2a7e-00b5-f12b-13bf568812da@broadcom.com>
-         <1487150216.4026.18.camel@sipsolutions.net>
-         <d050648f-df94-8138-b9af-1ec18ba4af28@broadcom.com>
-         (sfid-20170215_103656_237359_A3F83E58)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from Galois.linutronix.de ([146.0.238.70]:55404 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755577AbdBQJ2K (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Feb 2017 04:28:10 -0500
+Date: Fri, 17 Feb 2017 10:28:03 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: kernel test robot <fengguang.wu@intel.com>
+cc: Marc Zyngier <marc.zyngier@arm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Christoffer Dall <christoffer.dall@linaro.org>,
+        Sasha Levin <alexander.levin@verizon.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [linux-stable] 4fc2942b6e kernel BUG at
+ kernel/time/hrtimer.c:109!
+In-Reply-To: <20170217052607.glbumukvoz4pilvt@wfg-t540p.sh.intel.com>
+Message-ID: <alpine.DEB.2.20.1702171014430.3536@nanos> (sfid-20170217_102815_541147_F978EC82)
+References: <20170217052607.glbumukvoz4pilvt@wfg-t540p.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-02-15 at 10:36 +0100, Arend Van Spriel wrote:
+On Fri, 17 Feb 2017, kernel test robot wrote:
+
+> Hi Marc,
 > 
-> > I'm not really sure what to do - we don't really want to print a
-> > message on something that might have been received from the peer, I
-> > think? Though I suppose we should return 0 for the invalid
-> > combinations, indicating that they're not supported.
+> We find this oops in linux-4.4.y. The gcc-6 compiled mainline kernel is fine.
 > 
-> Ah. This is all non-functional code yet, right? At least having a
-> static non-inline function in ieee80211.h will give build issues I
-> would think.
+> commit 4fc2942b6e2de2efc8a9d3784d4b0d3543149613
+>      hrtimer: Catch illegal clockids
 
-No, I marked it __maybe_unused so it'll be fine. I didn't want to have
-it inlined if you use it multiple times in a single source file, but I
-didn't want to move it to somewhere else either ...
+And that commit is doing what the subject line says. Catch illegal usage.
 
-> Anyway, I would indeed return 0 and have caller deal with that.
+> [   38.101342] Call Trace:
+> [   38.101342] Call Trace:
+> [   38.102045]  [<ffffffff8109aee1>] tasklet_hrtimer_init+0x16/0x52
+> [   38.102045]  [<ffffffff8109aee1>] tasklet_hrtimer_init+0x16/0x52
+> [   38.103698]  [<ffffffff81c767c7>] mac80211_hwsim_new_radio+0x766/0x84d
 
-Yeah, I'll do that.
+The real bug is in this code:
 
-johannes
+drivers/net/wireless/mac80211_hwsim.c
+
+mac80211_hwsim_new_radio()
+
+        tasklet_hrtimer_init(&data->beacon_timer,
+                             mac80211_hwsim_beacon,
+                             CLOCK_MONOTONIC_RAW, HRTIMER_MODE_ABS);
+
+CLOCK_MONOTONIC_RAW is not a supported clockid for hrtimers. Sigh.
+
+Fix below.
+
+Thanks,
+
+	tglx
+
+8<------------------
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 0cd95120bc78..da363ec91a1c 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2535,9 +2535,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 				    data->debugfs,
+ 				    data, &hwsim_simulate_radar);
+ 
+-	tasklet_hrtimer_init(&data->beacon_timer,
+-			     mac80211_hwsim_beacon,
+-			     CLOCK_MONOTONIC_RAW, HRTIMER_MODE_ABS);
++	tasklet_hrtimer_init(&data->beacon_timer, mac80211_hwsim_beacon,
++			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
+ 
+ 	spin_lock_bh(&hwsim_radio_lock);
+ 	list_add_tail(&data->list, &hwsim_radios);
