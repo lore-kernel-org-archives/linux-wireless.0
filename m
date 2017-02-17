@@ -1,251 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:35512 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752058AbdBCT0Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 14:26:25 -0500
-Received: by mail-wm0-f45.google.com with SMTP id b65so44495828wmf.0
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2017 11:26:24 -0800 (PST)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-        jouni@qca.qualcomm.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [RFC PATCH 2/2] mac80211: aes-cmac: switch to shash CMAC driver
-Date: Fri,  3 Feb 2017 19:25:55 +0000
-Message-Id: <1486149955-11825-3-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170203_202634_253518_F61B258A)
-In-Reply-To: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
-References: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
+Received: from mail.kernel.org ([198.145.29.136]:48252 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932145AbdBQCJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Feb 2017 21:09:29 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: johannes.berg@intel.com, luciano.coelho@intel.com,
+        emmanuel.grumbach@intel.com, tj@kernel.org, arjan@linux.intel.com,
+        ming.lei@canonical.com, zajec5@gmail.com
+Cc: jeyu@redhat.com, rusty@rustcorp.com.au, pmladek@suse.com,
+        gregkh@linuxfoundation.org, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [RFC 1/5] iwlwifi: fix drv cleanup on opmode registration failure
+Date: Thu, 16 Feb 2017 18:08:59 -0800
+Message-Id: <20170217020903.6370-2-mcgrof@kernel.org> (sfid-20170217_031020_070657_C6188BF3)
+In-Reply-To: <20170217020903.6370-1-mcgrof@kernel.org>
+References: <20170217020903.6370-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of open coding the CMAC algorithm in the mac80211 driver using
-byte wide xors and calls into the crypto layer for each block of data,
-instantiate a cmac(aes) synchronous hash and pass all the data into it
-directly. This does not only simplify the code, it also allows the use
-of more efficient and more secure implementations, especially on
-platforms where SIMD ciphers have considerable setup time.
+The firmware async callback handles the device's opmode start
+call, but optionally also allows opmode registration to take
+care of its opmode start. If the firmware callback handles it
+its error path in case of opmode start failure has a few pieces
+of code missing from the opmode registration. The opmode
+registration hanlder has no cleanup at all. Sync both error
+paths.
 
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+This should in theory fix a detangled drv from the drv list should
+either of the opmode modules loaded and handled registration for the
+drv.
+
+The path of having the opmode registration deal with the drv
+opmode start is actually the more common path. The other path,
+from the async callback is rathe rare (1/8 or so times for me) --
+it happens when the the opmode driver's init routine completed
+prior to the driver's async callback opmode start call.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- net/mac80211/Kconfig    |   1 +
- net/mac80211/aes_cmac.c | 137 +++++---------------
- net/mac80211/aes_cmac.h |  11 +-
- net/mac80211/key.h      |   2 +-
- 4 files changed, 42 insertions(+), 109 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 3891cbd2adea..76e30f4797fb 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -6,6 +6,7 @@ config MAC80211
- 	select CRYPTO_AES
- 	select CRYPTO_CCM
- 	select CRYPTO_GCM
-+	select CRYPTO_CMAC
- 	select CRC32
- 	---help---
- 	  This option enables the hardware independent IEEE 802.11
-diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
-index d0bd5fff5f0a..fc004720e77c 100644
---- a/net/mac80211/aes_cmac.c
-+++ b/net/mac80211/aes_cmac.c
-@@ -22,126 +22,57 @@
- #define CMAC_TLEN_256 16 /* CMAC TLen = 128 bits (16 octets) */
- #define AAD_LEN 20
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index be466a074c1d..e198d6f5fcea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1611,8 +1611,13 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
+ 			continue;
+ 		op->ops = ops;
+ 		/* TODO: need to handle exceptional case */
+-		list_for_each_entry(drv, &op->drv, list)
++		list_for_each_entry(drv, &op->drv, list) {
+ 			drv->op_mode = _iwl_op_mode_start(drv, op);
++			if (!drv->op_mode) {
++				complete(&drv->request_firmware_complete);
++				device_release_driver(drv->trans->dev);
++			}
++		}
  
-+static const u8 zero[CMAC_TLEN_256];
- 
--void gf_mulx(u8 *pad)
-+void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
-+			const u8 *data, size_t data_len, u8 *mic)
- {
--	int i, carry;
--
--	carry = pad[0] & 0x80;
--	for (i = 0; i < AES_BLOCK_SIZE - 1; i++)
--		pad[i] = (pad[i] << 1) | (pad[i + 1] >> 7);
--	pad[AES_BLOCK_SIZE - 1] <<= 1;
--	if (carry)
--		pad[AES_BLOCK_SIZE - 1] ^= 0x87;
--}
-+	struct shash_desc *desc;
-+	u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR;
-+	u8 out[crypto_shash_digestsize(tfm)];
- 
--void aes_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
--		     const u8 *addr[], const size_t *len, u8 *mac,
--		     size_t mac_len)
--{
--	u8 cbc[AES_BLOCK_SIZE], pad[AES_BLOCK_SIZE];
--	const u8 *pos, *end;
--	size_t i, e, left, total_len;
--
--	memset(cbc, 0, AES_BLOCK_SIZE);
--
--	total_len = 0;
--	for (e = 0; e < num_elem; e++)
--		total_len += len[e];
--	left = total_len;
--
--	e = 0;
--	pos = addr[0];
--	end = pos + len[0];
--
--	while (left >= AES_BLOCK_SIZE) {
--		for (i = 0; i < AES_BLOCK_SIZE; i++) {
--			cbc[i] ^= *pos++;
--			if (pos >= end) {
--				e++;
--				pos = addr[e];
--				end = pos + len[e];
--			}
--		}
--		if (left > AES_BLOCK_SIZE)
--			crypto_cipher_encrypt_one(tfm, cbc, cbc);
--		left -= AES_BLOCK_SIZE;
--	}
--
--	memset(pad, 0, AES_BLOCK_SIZE);
--	crypto_cipher_encrypt_one(tfm, pad, pad);
--	gf_mulx(pad);
--
--	if (left || total_len == 0) {
--		for (i = 0; i < left; i++) {
--			cbc[i] ^= *pos++;
--			if (pos >= end) {
--				e++;
--				pos = addr[e];
--				end = pos + len[e];
--			}
--		}
--		cbc[left] ^= 0x80;
--		gf_mulx(pad);
--	}
--
--	for (i = 0; i < AES_BLOCK_SIZE; i++)
--		pad[i] ^= cbc[i];
--	crypto_cipher_encrypt_one(tfm, pad, pad);
--	memcpy(mac, pad, mac_len);
--}
-+	desc = (struct shash_desc *)buf;
-+	desc->tfm = tfm;
- 
-+	crypto_shash_init(desc);
-+	crypto_shash_update(desc, aad, AAD_LEN);
-+	crypto_shash_update(desc, data, data_len - CMAC_TLEN);
-+	crypto_shash_finup(desc, zero, CMAC_TLEN, out);
- 
--void ieee80211_aes_cmac(struct crypto_cipher *tfm, const u8 *aad,
--			const u8 *data, size_t data_len, u8 *mic)
--{
--	const u8 *addr[3];
--	size_t len[3];
--	u8 zero[CMAC_TLEN];
--
--	memset(zero, 0, CMAC_TLEN);
--	addr[0] = aad;
--	len[0] = AAD_LEN;
--	addr[1] = data;
--	len[1] = data_len - CMAC_TLEN;
--	addr[2] = zero;
--	len[2] = CMAC_TLEN;
--
--	aes_cmac_vector(tfm, 3, addr, len, mic, CMAC_TLEN);
-+	memcpy(mic, out, CMAC_TLEN);
- }
- 
--void ieee80211_aes_cmac_256(struct crypto_cipher *tfm, const u8 *aad,
-+void ieee80211_aes_cmac_256(struct crypto_shash *tfm, const u8 *aad,
- 			    const u8 *data, size_t data_len, u8 *mic)
- {
--	const u8 *addr[3];
--	size_t len[3];
--	u8 zero[CMAC_TLEN_256];
--
--	memset(zero, 0, CMAC_TLEN_256);
--	addr[0] = aad;
--	len[0] = AAD_LEN;
--	addr[1] = data;
--	len[1] = data_len - CMAC_TLEN_256;
--	addr[2] = zero;
--	len[2] = CMAC_TLEN_256;
--
--	aes_cmac_vector(tfm, 3, addr, len, mic, CMAC_TLEN_256);
-+	struct shash_desc *desc;
-+	u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR;
-+	u8 out[crypto_shash_digestsize(tfm)];
-+
-+	desc = (struct shash_desc *)buf;
-+	desc->tfm = tfm;
-+
-+	crypto_shash_init(desc);
-+	crypto_shash_update(desc, aad, AAD_LEN);
-+	crypto_shash_update(desc, data, data_len - CMAC_TLEN_256);
-+	crypto_shash_finup(desc, zero, CMAC_TLEN_256, out);
-+
-+	memcpy(mic, out, CMAC_TLEN_256);
- }
- 
--struct crypto_cipher *ieee80211_aes_cmac_key_setup(const u8 key[],
--						   size_t key_len)
-+struct crypto_shash *ieee80211_aes_cmac_key_setup(const u8 key[],
-+						  size_t key_len)
- {
--	struct crypto_cipher *tfm;
-+	struct crypto_shash *tfm;
- 
--	tfm = crypto_alloc_cipher("aes", 0, CRYPTO_ALG_ASYNC);
-+	tfm = crypto_alloc_shash("cmac(aes)", 0, 0);
- 	if (!IS_ERR(tfm))
--		crypto_cipher_setkey(tfm, key, key_len);
-+		crypto_shash_setkey(tfm, key, key_len);
- 
- 	return tfm;
- }
- 
--
--void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm)
-+void ieee80211_aes_cmac_key_free(struct crypto_shash *tfm)
- {
--	crypto_free_cipher(tfm);
-+	crypto_free_shash(tfm);
- }
-diff --git a/net/mac80211/aes_cmac.h b/net/mac80211/aes_cmac.h
-index 3702041f44fd..fef531f42003 100644
---- a/net/mac80211/aes_cmac.h
-+++ b/net/mac80211/aes_cmac.h
-@@ -10,13 +10,14 @@
- #define AES_CMAC_H
- 
- #include <linux/crypto.h>
-+#include <crypto/hash.h>
- 
--struct crypto_cipher *ieee80211_aes_cmac_key_setup(const u8 key[],
--						   size_t key_len);
--void ieee80211_aes_cmac(struct crypto_cipher *tfm, const u8 *aad,
-+struct crypto_shash *ieee80211_aes_cmac_key_setup(const u8 key[],
-+						  size_t key_len);
-+void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
- 			const u8 *data, size_t data_len, u8 *mic);
--void ieee80211_aes_cmac_256(struct crypto_cipher *tfm, const u8 *aad,
-+void ieee80211_aes_cmac_256(struct crypto_shash *tfm, const u8 *aad,
- 			    const u8 *data, size_t data_len, u8 *mic);
--void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm);
-+void ieee80211_aes_cmac_key_free(struct crypto_shash *tfm);
- 
- #endif /* AES_CMAC_H */
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 4aa20cef0859..ebdb80b85dc3 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -93,7 +93,7 @@ struct ieee80211_key {
- 		} ccmp;
- 		struct {
- 			u8 rx_pn[IEEE80211_CMAC_PN_LEN];
--			struct crypto_cipher *tfm;
-+			struct crypto_shash *tfm;
- 			u32 replays; /* dot11RSNAStatsCMACReplays */
- 			u32 icverrors; /* dot11RSNAStatsCMACICVErrors */
- 		} aes_cmac;
+ 		mutex_unlock(&iwlwifi_opmode_table_mtx);
+ 		return 0;
 -- 
-2.7.4
+2.11.0
