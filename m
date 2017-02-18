@@ -1,233 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36450 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751650AbdBEPZk (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:56776 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753537AbdBRUqd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Feb 2017 10:25:40 -0500
-Received: by mail-wm0-f52.google.com with SMTP id c85so93275429wmi.1
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2017 07:25:39 -0800 (PST)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: johannes@sipsolutions.net, jouni@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, davem@davemloft.net,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH v2 2/2] mac80211: aes-cmac: switch to shash CMAC driver
-Date: Sun,  5 Feb 2017 15:23:28 +0000
-Message-Id: <1486308208-3252-3-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170205_162546_753322_232628B7)
-In-Reply-To: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
-References: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
+        Sat, 18 Feb 2017 15:46:33 -0500
+To: Ryan Mounce <ryan@mounce.com.au>, seth.forshee@canonical.com
+References: <20170218063515.16071-1-ryan@mounce.com.au>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <9d768854-e41d-fdb1-967d-7fdd7d692226@dd-wrt.com> (sfid-20170218_214708_035856_C4684961)
+Date: Sat, 18 Feb 2017 21:45:33 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170218063515.16071-1-ryan@mounce.com.au>
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Subject: Re: [PATCH] wireless-regdb: Update rules for Australia (AU) and add
+ 60GHz rules
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of open coding the CMAC algorithm in the mac80211 driver using
-byte wide xors and calls into the crypto layer for each block of data,
-instantiate a cmac(aes) synchronous hash and pass all the data into it
-directly. This does not only simplify the code, it also allows the use
-of more efficient and more secure implementations, especially on
-platforms where SIMD ciphers have considerable setup time.
+maybe i'm blind. but you reduced the channel width from 160 to 80 mhz. 
+but i can't find any restriction in the document in a quick review
 
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
- net/mac80211/aes_cmac.c | 130 +++++---------------
- net/mac80211/aes_cmac.h |  11 +-
- net/mac80211/key.h      |   2 +-
- 3 files changed, 35 insertions(+), 108 deletions(-)
+Sebastian
 
-diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
-index d0bd5fff5f0a..0d4d2af52a56 100644
---- a/net/mac80211/aes_cmac.c
-+++ b/net/mac80211/aes_cmac.c
-@@ -22,126 +22,52 @@
- #define CMAC_TLEN_256 16 /* CMAC TLen = 128 bits (16 octets) */
- #define AAD_LEN 20
- 
--
--void gf_mulx(u8 *pad)
--{
--	int i, carry;
--
--	carry = pad[0] & 0x80;
--	for (i = 0; i < AES_BLOCK_SIZE - 1; i++)
--		pad[i] = (pad[i] << 1) | (pad[i + 1] >> 7);
--	pad[AES_BLOCK_SIZE - 1] <<= 1;
--	if (carry)
--		pad[AES_BLOCK_SIZE - 1] ^= 0x87;
--}
--
--void aes_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
--		     const u8 *addr[], const size_t *len, u8 *mac,
--		     size_t mac_len)
--{
--	u8 cbc[AES_BLOCK_SIZE], pad[AES_BLOCK_SIZE];
--	const u8 *pos, *end;
--	size_t i, e, left, total_len;
--
--	memset(cbc, 0, AES_BLOCK_SIZE);
--
--	total_len = 0;
--	for (e = 0; e < num_elem; e++)
--		total_len += len[e];
--	left = total_len;
--
--	e = 0;
--	pos = addr[0];
--	end = pos + len[0];
--
--	while (left >= AES_BLOCK_SIZE) {
--		for (i = 0; i < AES_BLOCK_SIZE; i++) {
--			cbc[i] ^= *pos++;
--			if (pos >= end) {
--				e++;
--				pos = addr[e];
--				end = pos + len[e];
--			}
--		}
--		if (left > AES_BLOCK_SIZE)
--			crypto_cipher_encrypt_one(tfm, cbc, cbc);
--		left -= AES_BLOCK_SIZE;
--	}
--
--	memset(pad, 0, AES_BLOCK_SIZE);
--	crypto_cipher_encrypt_one(tfm, pad, pad);
--	gf_mulx(pad);
--
--	if (left || total_len == 0) {
--		for (i = 0; i < left; i++) {
--			cbc[i] ^= *pos++;
--			if (pos >= end) {
--				e++;
--				pos = addr[e];
--				end = pos + len[e];
--			}
--		}
--		cbc[left] ^= 0x80;
--		gf_mulx(pad);
--	}
--
--	for (i = 0; i < AES_BLOCK_SIZE; i++)
--		pad[i] ^= cbc[i];
--	crypto_cipher_encrypt_one(tfm, pad, pad);
--	memcpy(mac, pad, mac_len);
--}
--
--
--void ieee80211_aes_cmac(struct crypto_cipher *tfm, const u8 *aad,
-+void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
- 			const u8 *data, size_t data_len, u8 *mic)
- {
--	const u8 *addr[3];
--	size_t len[3];
--	u8 zero[CMAC_TLEN];
-+	struct shash_desc *desc;
-+	u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR;
-+	u8 out[crypto_shash_digestsize(tfm)];
- 
--	memset(zero, 0, CMAC_TLEN);
--	addr[0] = aad;
--	len[0] = AAD_LEN;
--	addr[1] = data;
--	len[1] = data_len - CMAC_TLEN;
--	addr[2] = zero;
--	len[2] = CMAC_TLEN;
-+	desc = (struct shash_desc *)buf;
-+	desc->tfm = tfm;
- 
--	aes_cmac_vector(tfm, 3, addr, len, mic, CMAC_TLEN);
-+	crypto_shash_init(desc);
-+	crypto_shash_update(desc, aad, AAD_LEN);
-+	crypto_shash_update(desc, data, data_len - CMAC_TLEN);
-+	crypto_shash_finup(desc, (u8[CMAC_TLEN]){}, CMAC_TLEN, out);
-+
-+	memcpy(mic, out, CMAC_TLEN);
- }
- 
--void ieee80211_aes_cmac_256(struct crypto_cipher *tfm, const u8 *aad,
-+void ieee80211_aes_cmac_256(struct crypto_shash *tfm, const u8 *aad,
- 			    const u8 *data, size_t data_len, u8 *mic)
- {
--	const u8 *addr[3];
--	size_t len[3];
--	u8 zero[CMAC_TLEN_256];
-+	struct shash_desc *desc;
-+	u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR;
- 
--	memset(zero, 0, CMAC_TLEN_256);
--	addr[0] = aad;
--	len[0] = AAD_LEN;
--	addr[1] = data;
--	len[1] = data_len - CMAC_TLEN_256;
--	addr[2] = zero;
--	len[2] = CMAC_TLEN_256;
-+	desc = (struct shash_desc *)buf;
-+	desc->tfm = tfm;
- 
--	aes_cmac_vector(tfm, 3, addr, len, mic, CMAC_TLEN_256);
-+	crypto_shash_init(desc);
-+	crypto_shash_update(desc, aad, AAD_LEN);
-+	crypto_shash_update(desc, data, data_len - CMAC_TLEN_256);
-+	crypto_shash_finup(desc, (u8[CMAC_TLEN_256]){}, CMAC_TLEN_256, mic);
- }
- 
--struct crypto_cipher *ieee80211_aes_cmac_key_setup(const u8 key[],
--						   size_t key_len)
-+struct crypto_shash *ieee80211_aes_cmac_key_setup(const u8 key[],
-+						  size_t key_len)
- {
--	struct crypto_cipher *tfm;
-+	struct crypto_shash *tfm;
- 
--	tfm = crypto_alloc_cipher("aes", 0, CRYPTO_ALG_ASYNC);
-+	tfm = crypto_alloc_shash("cmac(aes)", 0, 0);
- 	if (!IS_ERR(tfm))
--		crypto_cipher_setkey(tfm, key, key_len);
-+		crypto_shash_setkey(tfm, key, key_len);
- 
- 	return tfm;
- }
- 
--
--void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm)
-+void ieee80211_aes_cmac_key_free(struct crypto_shash *tfm)
- {
--	crypto_free_cipher(tfm);
-+	crypto_free_shash(tfm);
- }
-diff --git a/net/mac80211/aes_cmac.h b/net/mac80211/aes_cmac.h
-index 3702041f44fd..fef531f42003 100644
---- a/net/mac80211/aes_cmac.h
-+++ b/net/mac80211/aes_cmac.h
-@@ -10,13 +10,14 @@
- #define AES_CMAC_H
- 
- #include <linux/crypto.h>
-+#include <crypto/hash.h>
- 
--struct crypto_cipher *ieee80211_aes_cmac_key_setup(const u8 key[],
--						   size_t key_len);
--void ieee80211_aes_cmac(struct crypto_cipher *tfm, const u8 *aad,
-+struct crypto_shash *ieee80211_aes_cmac_key_setup(const u8 key[],
-+						  size_t key_len);
-+void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
- 			const u8 *data, size_t data_len, u8 *mic);
--void ieee80211_aes_cmac_256(struct crypto_cipher *tfm, const u8 *aad,
-+void ieee80211_aes_cmac_256(struct crypto_shash *tfm, const u8 *aad,
- 			    const u8 *data, size_t data_len, u8 *mic);
--void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm);
-+void ieee80211_aes_cmac_key_free(struct crypto_shash *tfm);
- 
- #endif /* AES_CMAC_H */
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 4aa20cef0859..ebdb80b85dc3 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -93,7 +93,7 @@ struct ieee80211_key {
- 		} ccmp;
- 		struct {
- 			u8 rx_pn[IEEE80211_CMAC_PN_LEN];
--			struct crypto_cipher *tfm;
-+			struct crypto_shash *tfm;
- 			u32 replays; /* dot11RSNAStatsCMACReplays */
- 			u32 icverrors; /* dot11RSNAStatsCMACICVErrors */
- 		} aes_cmac;
+Am 18.02.2017 um 07:35 schrieb Ryan Mounce:
+> Sourced from the latest legislation at
+> https://www.legislation.gov.au/Details/F2016C0043
+>
+> The current rules exceed legal limits between 5250-5330MHz, and permit
+> illegal operation in 5600-5650MHz (reserved for weather radar).
+>
+> Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
+> ---
+>   db.txt | 15 ++++++++++-----
+>   1 file changed, 10 insertions(+), 5 deletions(-)
+>
+> diff --git a/db.txt b/db.txt
+> index 05108e0..b951e0c 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -85,12 +85,17 @@ country AT: DFS-ETSI
+>   	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+>   	(57000 - 66000 @ 2160), (40)
+>   
+> +# Source:
+> +# https://www.legislation.gov.au/Details/F2016C00432
+> +# Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B
+>   country AU: DFS-ETSI
+> -	(2402 - 2482 @ 40), (20)
+> -	(5170 - 5250 @ 80), (17), AUTO-BW
+> -	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
+> -	(5490 - 5710 @ 160), (24), DFS
+> -	(5735 - 5835 @ 80), (30)
+> +	(2402 - 2482 @ 40), (36)
+> +	(5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
+> +	(5250 - 5330 @ 80), (23), NO-OUTDOOR, AUTO-BW, DFS
+> +	(5490 - 5590 @ 80), (30), DFS
+> +	(5650 - 5730 @ 80), (30), DFS
+> +	(5735 - 5835 @ 80), (36)
+> +	(57000 - 66000 @ 2160), (43), NO-OUTDOOR
+>   
+>   country AW: DFS-ETSI
+>   	(2402 - 2482 @ 40), (20)
+
+
 -- 
-2.7.4
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
