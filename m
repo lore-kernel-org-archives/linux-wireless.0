@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18682 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751740AbdB0Lgj (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35150 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751008AbdBRGlm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 06:36:39 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V2 0/3] Pre-CAC and sharing DFS state across multiple radios
-Date: Mon, 27 Feb 2017 17:04:32 +0530
-Message-ID: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170227_123657_349678_AD7978C3)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 18 Feb 2017 01:41:42 -0500
+Received: by mail-pf0-f196.google.com with SMTP id 68so5614820pfx.2
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2017 22:41:41 -0800 (PST)
+From: Ryan Mounce <ryan@mounce.com.au>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless-regdb: Update rules for Australia (AU) and add 60GHz rules
+Date: Sat, 18 Feb 2017 17:05:15 +1030
+Message-Id: <20170218063515.16071-1-ryan@mounce.com.au> (sfid-20170218_074158_950702_CFD36DEA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently irrespective of dfs domain and radar detection activity
-pre-CAC results for a wiphy are retained till the wiphy is detroyed.
-This may not be preferred in non-ETSI dfs domain where pre-CAC is not
-explicitly mentioned in the respective DFS requirement spec. This patch
-set modifies the current behaviour of pre-CAC for non-ETSI domain by
-giving 2 seconds grace period for dfs master interface to start operating
-on the CAC completed channel.
+Sourced from the latest legislation at
+https://www.legislation.gov.au/Details/F2016C0043
 
-This patch set also adds support to share dfs channel state across
-multiple radios of the same regulatory configuration.
+The current rules exceed legal limits between 5250-5330MHz, and permit
+illegal operation in 5600-5650MHz (reserved for weather radar).
 
-Vasanthakumar Thiagarajan (3):
-  cfg80211: Make pre-CAC results valid only for ETSI domain
-  cfg80211: Disallow moving out of operating DFS channel in non-ETSI
-  cfg80211: Share Channel DFS state across wiphys of same DFS domain
+Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
+---
+ db.txt | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
- include/uapi/linux/nl80211.h |   5 ++
- net/wireless/ap.c            |   5 ++
- net/wireless/chan.c          | 117 ++++++++++++++++++++++++++++++++++
- net/wireless/core.c          |  37 +++++++++++
- net/wireless/core.h          |  16 +++++
- net/wireless/ibss.c          |   1 +
- net/wireless/mesh.c          |   1 +
- net/wireless/mlme.c          |  50 ++++++++++++---
- net/wireless/nl80211.c       |  52 +++++++++++++++
- net/wireless/reg.c           | 148 +++++++++++++++++++++++++++++++++++++++++++
- net/wireless/reg.h           |  36 +++++++++++
- 11 files changed, 459 insertions(+), 9 deletions(-)
-
+diff --git a/db.txt b/db.txt
+index 05108e0..b951e0c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -85,12 +85,17 @@ country AT: DFS-ETSI
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
++# Source:
++# https://www.legislation.gov.au/Details/F2016C00432
++# Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B
+ country AU: DFS-ETSI
+-	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17), AUTO-BW
+-	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
+-	(5490 - 5710 @ 160), (24), DFS
+-	(5735 - 5835 @ 80), (30)
++	(2402 - 2482 @ 40), (36)
++	(5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
++	(5250 - 5330 @ 80), (23), NO-OUTDOOR, AUTO-BW, DFS
++	(5490 - 5590 @ 80), (30), DFS
++	(5650 - 5730 @ 80), (30), DFS
++	(5735 - 5835 @ 80), (36)
++	(57000 - 66000 @ 2160), (43), NO-OUTDOOR
+ 
+ country AW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
-1.9.1
+2.11.0
