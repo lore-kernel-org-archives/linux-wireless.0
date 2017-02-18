@@ -1,84 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:35205 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752996AbdBIPzJ (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:35222 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750746AbdBRWG3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Feb 2017 10:55:09 -0500
-Received: by mail-qt0-f180.google.com with SMTP id x49so7669538qtc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2017 07:54:59 -0800 (PST)
+        Sat, 18 Feb 2017 17:06:29 -0500
+Received: by mail-lf0-f67.google.com with SMTP id z127so3885003lfa.2
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Feb 2017 14:05:06 -0800 (PST)
+Subject: Re: [RFC v3 0/8] ath10k sdio support
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+ <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com> (sfid-20170218_230643_597628_81D60189)
+Date: Sat, 18 Feb 2017 23:05:03 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170208225651.GB26286@animalcreek.com>
-References: <20161214155743.GA22282@animalcreek.com> <CAO7Z3WKqhS5Q6qAaDs8364KP5-7ma=b_ic2B10=njngMmp5noQ@mail.gmail.com>
- <20161214171010.GA29321@animalcreek.com> <CAO7Z3WLpp0YVxXxo6M11PMPu+5OaA1fRhNQNoPJ-b4LRCPrLAg@mail.gmail.com>
- <20161214223123.GA10281@animalcreek.com> <20161216045210.GA29196@animalcreek.com>
- <20161216203538.GA12608@animalcreek.com> <CAO7Z3W+grhLnP05bPShheuvSet08CoYhFStDpDVgztf=Wz42Fw@mail.gmail.com>
- <20161219030733.GA14962@animalcreek.com> <20170208225339.GA26286@animalcreek.com>
- <20170208225651.GB26286@animalcreek.com>
-From: Geoff Lansberry <geoff@kuvee.com>
-Date: Thu, 9 Feb 2017 10:54:08 -0500
-Message-ID: <CAO7Z3WKxXz1SsvOH8v5Xvy0jSdw1-NU_zXyu0QakR3UHnYgrqA@mail.gmail.com> (sfid-20170209_165524_209669_52FC01EC)
-Subject: Re: [Patch] NFC: trf7970a:
-To: Mark Greer <mgreer@animalcreek.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Justin Bronder <justin@kuvee.com>,
-        linux-nfc <linux-nfc@lists.01.org>,
-        Jaret Cantu <jaret.cantu@timesys.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 8, 2017 at 5:56 PM, Mark Greer <mgreer@animalcreek.com> wrote:
+Hej Kalle,
+
+I was actually about to email you about this.
+
+I have made a few more updates to the sdio code so I think it would be
+best if I could submit a new series of patches based on this code (v4).
+
+Then you can tweak it (v5).
+
+It is only minor updates to the HIF layer (added QCA9377 support) and
+a setup of some pll registers.
+
+I will get back to you shortly.
+
+btw, should I still mark them as RFC or should it be PATCH this time?
+
+If I go for PATCH, should the version be v4 or should I start from v1?
+
+/Erik
+
+On 2017-02-18 14:40, Valo, Kalle wrote:
+> Hej,
 >
-> I just realized that the linux-nfc is not CC'd so adding it.
+> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 >
-> On Wed, Feb 08, 2017 at 03:53:39PM -0700, Mark Greer wrote:
-> > On Sun, Dec 18, 2016 at 08:07:33PM -0700, Mark Greer wrote:
-> > > On Sat, Dec 17, 2016 at 04:19:04PM -0500, Geoff Lansberry wrote:
-> > > > Mark,   from our consultant:
-> > > >
-> > > > It isn't important whether the flood script is successful in writing
-> > > > or not. The point of it is to force a segfault by making many
-> > > > requests. It needs to run for several hundred iterations (successful
-> > > > or not) in order to generate the segfault.
-> > >
-> > > So neard crashes even when the write fails??  Okay, I'll let it run for
-> > > a while tomorrow (Monday).
-> >
-> > [Okay, so not exactly "tomorrow" but I did get back to this.]
-> >
-> > Geoff, a few things:
-> >
-> > 1) Any update on these issues?
-
-Yes - I've discovered the primary trigger of my problems.  I'm using
-some very small tags from Murata, and they don't have a strong signal.
-Sometimes when writing, the tags can get corrupted data written to
-them. When the tag is verified by re-reading it, neard bails out
-because it finds non-utf8 characters.  So far I have found it
-impossible to rewrite a tag once it has been mal-formed.
-
-> >
-> > 2) Do you have all of the NFC-related patches from the nfc-next master
-> > branch?  In particular, do you have all of Thierry's patches to
-> > net/nfc/digial_*.c dated around June-July 2016?  Without those patches,
-> > I see a panic; with them, I don't.
-
-No, we don't.  the last patch I've got in our kernel version is yours
-from 7-21-2014.  I'm inquiring with more experienced people to see how
-to address that.
-> >
-> > 3) Assuming you have all of those patches, please revert the one with the
-> > summary line of, "NFC: digital: Set the command pending flag", and tell me
-> > if that stops the "Bogus state" messages.  I don't know which repo/branch
-> > you're using so I can't provide a commit id.
-
-No to the patches, but I found the commit you are talking about and
-will look at it.   Maybe possible to cherry pick it.
-> >
-> > Thanks,
-> >
-> > Mark
-> > --
+>> This is the third version of the sdio RFC patch series.
+>> The actual sdio code (patch 6) has been subject to a massive overhaul,
+>> mainly as a result of Kalle's review comments.
+>> It no longer has any strong resemblance of the original ath6kl code from
+>> which it was originally based upon.
+>>
+>> Previous pathes 6 to 10 have been merged into one single patch.
+>>
+>> The previous series had a rework of the "HTC fake service" connect
+>> (ep 0 connect) that introduced a race between the actual endpoint
+>> connect and the HTC ready message. This issue has been addressed,
+>> and the current patches (3 and 4) has been rewritten accordingly.
+>>
+>> * overview of patches *
+>>
+>> Patches 1 to 4 are more or less identical to the previous RFC, with an
+>> exception for patch 3 that changes the "HTC fake service" connect
+>> (mentioned above).
+>>
+>> Patch 5 is a squashed version of previous patches 6 to 10.
+>>
+>> Patch 6 is the actual sdio patch
+>>
+>> Patches 7 to 8 are new and adds special sdio versions of BMI get
+>> target info and HTC ready.
+>>
+>> The new version was built and tested against:
+>> tag: ath-201701121109
+>>
+>> Erik Stromdahl (8):
+>>   ath10k: htc: made static function public
+>>   ath10k: htc: rx trailer lookahead support
+>>   ath10k: htc: move htc ctrl ep connect to htc_init
+>>   ath10k: htc: refactorization
+>>   ath10k: various sdio related definitions
+>>   ath10k: sdio support
+>>   ath10k: sdio get target info
+>>   ath10k: htc: ready_ext msg support
+>
+> Sorry for not getting back to you earlier, haven't found time to look
+> this in detail during the last few weeks.
+>
+> This is looking quite good now. I have some nitpicks (build warnings,
+> maybe reorder some patches etc) still but I think it's faster if I fix
+> those and send v4 as a proper patch (no RFC anymore), naturally
+> attributing you as the author. Is that ok for you?
+>
