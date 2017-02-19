@@ -1,137 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 13.mo1.mail-out.ovh.net ([178.33.253.128]:40202 "EHLO
-        13.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752904AbdBPJlI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29801 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751109AbdBSOHg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2017 04:41:08 -0500
-Received: from player758.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo1.mail-out.ovh.net (Postfix) with ESMTP id 1F5B9581D6
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2017 10:33:01 +0100 (CET)
+        Sun, 19 Feb 2017 09:07:36 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "Hsu, Ryan" <ryanhsu@qca.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3 0/8] ath10k sdio support
+Date: Sun, 19 Feb 2017 14:05:42 +0000
+Message-ID: <87y3x2ff7y.fsf@kamboji.qca.qualcomm.com> (sfid-20170219_150740_659136_9528CA90)
+References: <7b204d34-b791-ea78-cf4e-90e8fe1b79fb@gmail.com>
+        <5a3ad65a-8cc0-ab1a-dc95-a5fd31035bd7@gmail.com>
+In-Reply-To: <5a3ad65a-8cc0-ab1a-dc95-a5fd31035bd7@gmail.com> (Erik
+        Stromdahl's message of "Sun, 19 Feb 2017 14:52:14 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Thu, 16 Feb 2017 10:32:52 +0100
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH V2 2/2] brcmfmac: don't warn user about NVRAM if fallback
- to platform one succeeds
-In-Reply-To: <88182ec9-3344-7468-d3c3-33d9ffa532e2@broadcom.com>
-References: <20170215222948.21030-1-zajec5@gmail.com>
- <20170216072636.7128-1-zajec5@gmail.com>
- <20170216072636.7128-2-zajec5@gmail.com>
- <d2b1cb64-a829-b433-2370-f2c47b9d0a5d@broadcom.com>
- <894daa616fc3bbd875e075b3096dba8e@milecki.pl>
- <88182ec9-3344-7468-d3c3-33d9ffa532e2@broadcom.com>
-Message-ID: <31df911dc857c59b0d36e586f9542113@milecki.pl> (sfid-20170216_104112_950426_B9BA2128)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-16 10:18, Arend Van Spriel wrote:
-> On 16-2-2017 10:04, Rafał Miłecki wrote:
->> On 2017-02-16 09:38, Arend Van Spriel wrote:
->>> On 16-2-2017 8:26, Rafał Miłecki wrote:
->>>> From: Rafał Miłecki <rafal@milecki.pl>
->>>> 
->>>> Failing to load NVRAM file isn't critical if we manage to get 
->>>> platform
->>>> one in the fallback path. It means warnings like:
->>>> [   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for
->>>> brcm/brcmfmac43602-pcie.txt failed with error -2
->>>> are unnecessary & disturbing for people with platform NVRAM. This is
->>>> very common case for Broadcom home routers.
->>>> 
->>>> So instead of printing warning immediately with the firmware 
->>>> subsystem
->>>> let's first try our fallback code. If that fails as well, then it's 
->>>> a
->>>> right moment to print an error.
->>>> 
->>>> This should reduce amount of false reports from users seeing this
->>>> warning while having wireless working perfectly fine.
->>> 
->>> There are of course people with issues who take this warning as a 
->>> straw
->>> to clutch.
->>> 
->>>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>>> ---
->>>> V2: Update commit message as it wasn't clear enough (thanks Andy) &
->>>> add extra
->>>>     messages to the firmware.c.
->>>> 
->>>> Kalle, Arend: this patch is strictly related to the bigger 1/2. 
->>>> Could
->>>> you ack
->>>> this change as I expect this patchset to be picked by Ming, Luis or
->>>> Greg?
->>>> ---
->>>>  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c  | 16
->>>> +++++++++++-----
->>>>  1 file changed, 11 insertions(+), 5 deletions(-)
->>>> 
->>>> diff --git
->>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>> index c7c1e9906500..510a76d99eee 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>>> @@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const
->>>> struct firmware *fw, void *ctx)
->>>>          raw_nvram = false;
->>>>      } else {
->>>>          data = bcm47xx_nvram_get_contents(&data_len);
->>>> -        if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->>>> -            goto fail;
->>>> +        if (!data) {
->>>> +            brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
->>>> +            if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
->>>> +                brcmf_err("Loading NVRAM from %s and using platform
->>>> one both failed\n",
->>>> +                      fwctx->nvram_name);
->>>> +                goto fail;
->>>> +            }
->>>> +        }
->>>>          raw_nvram = true;
->>>>      }
->>>> 
->>>> @@ -504,9 +510,9 @@ static void brcmf_fw_request_code_done(const
->>>> struct firmware *fw, void *ctx)
->>>>          return;
->>>>      }
->>>>      fwctx->code = fw;
->>>> -    ret = request_firmware_nowait(THIS_MODULE, true, 
->>>> fwctx->nvram_name,
->>>> -                      fwctx->dev, GFP_KERNEL, fwctx,
->>>> -                      brcmf_fw_request_nvram_done);
->>>> +    ret = request_firmware_async(THIS_MODULE, FW_OPT_NO_WARN,
->>>> +                     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
->>>> +                     fwctx, brcmf_fw_request_nvram_done);
->>> 
->>> You changed the behaviour, because of your change in patch 1/2:
->>> 
->>> -    fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
->>> -        (uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
->>> +    fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
->>> 
->>> So: (FW_OPT_NOWAIT | FW_OPT_UEVENT) vs (FW_OPT_NOWAIT | 
->>> FW_OPT_NO_WARN)
->> 
->> Sorry, I didn't realize brcmfmac needs FW_OPT_UEVENT. I'll re-add it 
->> in
->> V3, just
->> let me wait to see if there will be more comments.
-> 
-> To be honest whether or not FW_OPT_UEVENT is needed should not be
-> something a driver needs to concern about. It is really a system
-> configuration issue if you ask me. So the only thing we could do is to
-> have it just in case.
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-Drivers always got a choice (see bool uevent) so I didn't want to change 
-it.
+> I just noticed that Ryan Hsu submitted two patches containing similar
+> functionality to what I have in my tree on github. They have not been
+> integrated in the ath master yet, but they have been added to master-pend=
+ing.
+>
+> Below are the commits I am talking about
+>
+> bc1054a15be3c962c83aa22476a3e9c1266da792 ath10k: improve the firmware
+> download time for QCA9377
+> db5af2a25bd8c1410ec4456d1d4f4e6ded2649ca ath10k: improve the firmware
+> download time for QCA6174
+>
+> Since some of my patches overlap with these I think it would be best if
+> I add these to my tree and rewrite my patches.
+>
+> If they haven't made it into master before I submit my updated patch seri=
+es
+> I will include them in my set.
+>
+> Is this OK?
+>
+> If they will be added to master soon there is no issue since I will of co=
+urse
+> rebase to the latest ath-YYYYMMDDHHmm before I submit anything.
+
+That's ok, just mention this in the cover letter.
+
+Even better is that if you can use master-pending from ath.git as the
+baseline (compared to the master branch normally recommended), Ryan's
+patches are there now. That way you don't need to apply anything extra
+to your tree. But I'm hoping to apply Ryan's patches soon anyway.
+
+--=20
+Kalle Valo=
