@@ -1,106 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:35581 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752149AbdBGFWN (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:32856 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751717AbdBSVXD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 00:22:13 -0500
-From: Heiko Schocher <hs@denx.de>
-To: netdev@vger.kernel.org
-Cc: Guan Ben <ben.guan@cn.bosch.com>,
-        Mark Jonas <mark.jonas@de.bosch.com>,
-        Heiko Schocher <hs@denx.de>, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH] Make EN2 pin optional in the TRF7970A driver
-Date: Tue,  7 Feb 2017 06:22:04 +0100
-Message-Id: <1486444924-18444-1-git-send-email-hs@denx.de> (sfid-20170207_062259_545469_286AF178)
+        Sun, 19 Feb 2017 16:23:03 -0500
+Received: by mail-oi0-f66.google.com with SMTP id 2so1232590oif.0
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 13:23:03 -0800 (PST)
+Subject: Re: [PATCH] Fix rtl8187 multicast reception
+To: Nils Holland <nholland@tisys.org>
+References: <20170219013520.GA3190@tisys.org>
+ <2eb1dd33-4d71-86b7-c579-412419e2a2e5@lwfinger.net>
+ <87lgt28vxz.fsf@purkki.adurom.net> <20170219094138.GA3228@tisys.org>
+ <87y3x22tsn.fsf@codeaurora.org>
+ <65e6d653-b1e8-e9f7-ce18-210ae1b3ee63@lwfinger.net>
+ <20170219185332.GA7643@tisys.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <1ef4181b-66bf-6e0c-2938-566aeb41bb28@lwfinger.net> (sfid-20170219_222309_597827_21BF30F9)
+Date: Sun, 19 Feb 2017 15:23:01 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170219185332.GA7643@tisys.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Guan Ben <ben.guan@cn.bosch.com>
+On 02/19/2017 12:53 PM, Nils Holland wrote:
+> On Sun, Feb 19, 2017 at 12:11:50PM -0600, Larry Finger wrote:
+>> On 02/19/2017 07:29 AM, Kalle Valo wrote:
+>>> Nils Holland <nholland@tisys.org> writes:
+>>>
+>>>> On Sun, Feb 19, 2017 at 09:46:16AM +0200, Kalle Valo wrote:
+>>>>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>>>>>
+>>>>>> On 02/18/2017 07:35 PM, Nils Holland wrote:
+>>>>>>
+>>>>>> I would prefer a module parameter that would allow this change to be
+>>>>>> implemented only if the user takes special action. I suspect that you
+>>>>>> will have no difficulty preparing such a change. If that is not true,
+>>>>>> I would be happy to help.
+>>>>>
+>>>>> I understand why you prefer having a module parameter but the thing is
+>>>>> that being able to receive multicast frames is really basic
+>>>>> functionality. We should not hide it under a module parameter.
+>>>>
+>>>> Well, this is a tough question, I have to admit that I have a somewhat
+>>>> weird feeling making a change that also applies to other hardware that
+>>>> I cannot test on, so I don't know about any negative consequences that
+>>>> might arise there, especially when the change isn't based on some
+>>>> official information from some documentation, but rather a result of
+>>>> trial & error. So I can fully understand Larry's concerns and do in
+>>>> fact think that a module parameter could be a nice solution, so that
+>>>> by default the behavior if the driver does not change.
+>>>
+>>> There are lots of hardware variations that cannot be tested when a patch
+>>> is commited. If we followed the same methdology with all patches we
+>>> would have thousands of module parameters in kernel in no time :)
+>>>
+>>>> From an end-user standpoint, it's probably always worse to see
+>>>> something break which has always worked before than it is to have
+>>>> something not work properly right from the start, but being able to
+>>>> easily find some parameter to fix this.
+>>>
+>>> Sure. But if there's a report about this patch breaking something, it's
+>>> easy to revert it.
+>>>
+>>>> On the other hand, use of this particular USB wifi card is probably
+>>>> not so common these days so relatively few people would notice at all.
+>>>> Tough! I guess I'll submit a module parameter based v2 of the patch
+>>>> later today, just as Larry suggested!
+>>>
+>>> Also remember to add a prefix to the title:
+>>>
+>>> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject
+>>>
+>>>>> Isn't there any other option, for example does anyone have hw to test
+>>>>> this with other hw? (what exactly?) Or maybe we just take the risk and
+>>>>> take it as is and revert if problems arise?
+>>>>
+>>>> Of course, if someone has other hw, more testing would be nice! Any
+>>>> situation where the card is supposed to receive multicast frames
+>>>> should be suitable as a test case - in my case, just connecting to my
+>>>> local network and expecting to see the card pick up RAs and acquire an
+>>>> IPv6 address is the easiest test case. This works nicely on several
+>>>> other machines with completely different wifi hardware as well as
+>>>> wired machines, but fails without the fix on the rtl8187b. It would,
+>>>> for example, be interesting to see if a non-b 8187 behaves the same or
+>>>> if things work there out of the box.
+>>>
+>>> I'm not familiar with the driver so when you say "non-b 8187" what do
+>>> you mean exactly? What kind of hardware are we talking about? How many
+>>> different hardware versions are there that this patch affects? Is the
+>>> firmware/hardware really so different that the chances are high that
+>>> this breaks something?
+>>>
+>>>> In that case, instead of doing a module parameter, I could also change
+>>>> the fix so that it only does something different on the b-variants of
+>>>> the card and doesn't change behavior at all on non-b.
+>>>
+>>> Now that's much better option than adding a module parameter.
+>>
+>> There are three variants of the chip, the RTL8187, RTL8187L, and RTL8187B.
+>> Programming for the first two are the same. The RTL8187B has a number of newer
+>> features such as priority queues and a more complete set of parameters in the
+>> descriptors.
+>>
+>> OK, for the moment I agree to this patch with a respin of the commit message. I
+>> will test with my 8187L device. If those fail, I will request that it be limited
+>> to the 8187B.
+>
+> Sounds good, so I guess I'll wait for your report regarding behavior
+> on your 8187l. Then, I'll either re-submit the patch as a v2 with a
+> reworked commit message and proper tag in the title, or, if the fix
+> as-is causes problems on the 8187l, re-submit the patch with limiting
+> the scope of its change to the 8187b only. Sounds good? :-)
 
-Make the EN2 pin optional. This is useful for boards,
-which have this pin fix wired, for example to ground.
+The 8187L is working as expected. The only downside of your patch is that the 
+NIC is put into monitor mode silently, which is probably a security hole. As 
+Kalle is opposed to a module parameter, then I guess that is an acceptable risk. 
+Go ahead with V2 with the revised tag and commit message.
 
-Signed-off-by: Guan Ben <ben.guan@cn.bosch.com>
-Signed-off-by: Mark Jonas <mark.jonas@de.bosch.com>
-Signed-off-by: Heiko Schocher <hs@denx.de>
-
----
-
- .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
- drivers/nfc/trf7970a.c                             | 26 ++++++++++++----------
- 2 files changed, 16 insertions(+), 14 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-index 32b35a0..5889a3d 100644
---- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-+++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-@@ -5,8 +5,8 @@ Required properties:
- - spi-max-frequency: Maximum SPI frequency (<= 2000000).
- - interrupt-parent: phandle of parent interrupt handler.
- - interrupts: A single interrupt specifier.
--- ti,enable-gpios: Two GPIO entries used for 'EN' and 'EN2' pins on the
--  TRF7970A.
-+- ti,enable-gpios: One or two GPIO entries used for 'EN' and 'EN2' pins on the
-+  TRF7970A. EN2 is optional.
- - vin-supply: Regulator for supply voltage to VIN pin
- 
- Optional SoC Specific Properties:
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 26c9dbb..75079fb 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -1885,8 +1885,10 @@ static int trf7970a_power_up(struct trf7970a *trf)
- 	usleep_range(5000, 6000);
- 
- 	if (!(trf->quirks & TRF7970A_QUIRK_EN2_MUST_STAY_LOW)) {
--		gpio_set_value(trf->en2_gpio, 1);
--		usleep_range(1000, 2000);
-+		if (gpio_is_valid(trf->en2_gpio)) {
-+			gpio_set_value(trf->en2_gpio, 1);
-+			usleep_range(1000, 2000);
-+		}
- 	}
- 
- 	gpio_set_value(trf->en_gpio, 1);
-@@ -1914,7 +1916,8 @@ static int trf7970a_power_down(struct trf7970a *trf)
- 	}
- 
- 	gpio_set_value(trf->en_gpio, 0);
--	gpio_set_value(trf->en2_gpio, 0);
-+	if (gpio_is_valid(trf->en2_gpio))
-+		gpio_set_value(trf->en2_gpio, 0);
- 
- 	ret = regulator_disable(trf->regulator);
- 	if (ret)
-@@ -2032,15 +2035,14 @@ static int trf7970a_probe(struct spi_device *spi)
- 
- 	trf->en2_gpio = of_get_named_gpio(np, "ti,enable-gpios", 1);
- 	if (!gpio_is_valid(trf->en2_gpio)) {
--		dev_err(trf->dev, "No EN2 GPIO property\n");
--		return trf->en2_gpio;
--	}
--
--	ret = devm_gpio_request_one(trf->dev, trf->en2_gpio,
--			GPIOF_DIR_OUT | GPIOF_INIT_LOW, "trf7970a EN2");
--	if (ret) {
--		dev_err(trf->dev, "Can't request EN2 GPIO: %d\n", ret);
--		return ret;
-+		dev_info(trf->dev, "No EN2 GPIO property\n");
-+	} else {
-+		ret = devm_gpio_request_one(trf->dev, trf->en2_gpio,
-+				GPIOF_DIR_OUT | GPIOF_INIT_LOW, "trf7970a EN2");
-+		if (ret) {
-+			dev_err(trf->dev, "Can't request EN2 GPIO: %d\n", ret);
-+			return ret;
-+		}
- 	}
- 
- 	if (of_property_read_bool(np, "en2-rf-quirk"))
--- 
-2.7.4
+Larry
