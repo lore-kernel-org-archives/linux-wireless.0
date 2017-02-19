@@ -1,146 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0163.hostedemail.com ([216.40.44.163]:49971 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932234AbdBVLeI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Feb 2017 06:34:08 -0500
-Message-ID: <1487763244.14159.6.camel@perches.com> (sfid-20170222_123412_242071_B7FF845F)
-Subject: Re: [PATCH] ath10k: Modify macros to fix style issues
-From: Joe Perches <joe@perches.com>
-To: Marcin Rokicki <marcin.rokicki@tieto.com>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 22 Feb 2017 03:34:04 -0800
-In-Reply-To: <1487751327-2917-1-git-send-email-marcin.rokicki@tieto.com>
-References: <1487751327-2917-1-git-send-email-marcin.rokicki@tieto.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from celine.tisys.org ([85.25.117.166]:37956 "EHLO celine.tisys.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750844AbdBSQ0G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 19 Feb 2017 11:26:06 -0500
+Date: Sun, 19 Feb 2017 17:25:21 +0100
+From: Nils Holland <nholland@tisys.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Fix rtl8187 multicast reception
+Message-ID: <20170219162521.GA15426@tisys.org> (sfid-20170219_172610_380849_0A45EBCD)
+References: <20170219013520.GA3190@tisys.org>
+ <2eb1dd33-4d71-86b7-c579-412419e2a2e5@lwfinger.net>
+ <87lgt28vxz.fsf@purkki.adurom.net>
+ <20170219094138.GA3228@tisys.org>
+ <87y3x22tsn.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y3x22tsn.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-02-22 at 09:15 +0100, Marcin Rokicki wrote:
-> Both macros are used internally to convert incomming parameters
-> to strings in a switch case statement.
+On Sun, Feb 19, 2017 at 03:29:12PM +0200, Kalle Valo wrote:
+> Nils Holland <nholland@tisys.org> writes:
 > 
-> Current implementation gives following output from checkpatch.pl:
->  - ERROR: Macros with complex values should be enclosed in parentheses
->  - WARNING: Macros with flow control statements should be avoided
+> > On Sun, Feb 19, 2017 at 09:46:16AM +0200, Kalle Valo wrote:
+> >> Larry Finger <Larry.Finger@lwfinger.net> writes:
+> >> 
+> >> > On 02/18/2017 07:35 PM, Nils Holland wrote:
+> >> >
+> >> > I would prefer a module parameter that would allow this change to be
+> >> > implemented only if the user takes special action. I suspect that you
+> >> > will have no difficulty preparing such a change. If that is not true,
+> >> > I would be happy to help.
+> >> 
+> >> I understand why you prefer having a module parameter but the thing is
+> >> that being able to receive multicast frames is really basic
+> >> functionality. We should not hide it under a module parameter.
+> >
+> > Well, this is a tough question, I have to admit that I have a somewhat
+> > weird feeling making a change that also applies to other hardware that
+> > I cannot test on, so I don't know about any negative consequences that
+> > might arise there, especially when the change isn't based on some
+> > official information from some documentation, but rather a result of
+> > trial & error. So I can fully understand Larry's concerns and do in
+> > fact think that a module parameter could be a nice solution, so that
+> > by default the behavior if the driver does not change.
 > 
-> Fix them by modify local variable in the middle and just return at the end.
+> There are lots of hardware variations that cannot be tested when a patch
+> is commited. If we followed the same methdology with all patches we
+> would have thousands of module parameters in kernel in no time :)
+
+Right, that's certainly true as well, and would be a problem, so too
+much should be avoided.
+
+> > On the other hand, use of this particular USB wifi card is probably
+> > not so common these days so relatively few people would notice at all.
+> > Tough! I guess I'll submit a module parameter based v2 of the patch
+> > later today, just as Larry suggested!
 > 
-> Btw add const to function that return string literals
-[]
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-[]
-> @@ -312,9 +312,16 @@ enum wmi_10_4_service {
->  	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
->  };
->  
-> -static inline char *wmi_service_name(int service_id)
-> +#define SVCSTR(x) \
-> +{ \
-> +	case x: \
-> +		str = #x; \
-> +		break; \
-> +}
-> +
-> +static inline const char *wmi_service_name(int service_id)
->  {
-> -#define SVCSTR(x) case x: return #x
-> +	const char *str = NULL;
->  
->  	switch (service_id) {
->  	SVCSTR(WMI_SERVICE_BEACON_OFFLOAD);
-> @@ -408,13 +415,13 @@ static inline char *wmi_service_name(int service_id)
->  	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
->  	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
->  	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
-> -	default:
-> -		return NULL;
->  	}
->  
-> -#undef SVCSTR
-> +	return str;
->  }
->  
-> +#undef SVCSTR
-> +
->  #define WMI_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
->  	((svc_id) < (len) && \
->  	 __le32_to_cpu((wmi_svc_bmap)[(svc_id) / (sizeof(u32))]) & \
-> @@ -6412,10 +6419,17 @@ enum wmi_wow_wakeup_event {
->  	WOW_EVENT_MAX,
->  };
->  
-> -#define C2S(x) case x: return #x
-> +#define C2S(x) \
-> +{ \
-> +	case x: \
-> +		str = #x; \
-> +		break; \
-> +}
->  
->  static inline const char *wow_wakeup_event(enum wmi_wow_wakeup_event ev)
->  {
-> +	const char *str = NULL;
-> +
->  	switch (ev) {
->  	C2S(WOW_BMISS_EVENT);
->  	C2S(WOW_BETTER_AP_EVENT);
-> @@ -6442,9 +6456,9 @@ static inline const char *wow_wakeup_event(enum wmi_wow_wakeup_event ev)
->  	C2S(WOW_BEACON_EVENT);
->  	C2S(WOW_CLIENT_KICKOUT_EVENT);
->  	C2S(WOW_EVENT_MAX);
-> -	default:
-> -		return NULL;
->  	}
-> +
-> +	return str;
->  }
->  
->  enum wmi_wow_wake_reason {
-> @@ -6482,6 +6496,8 @@ enum wmi_wow_wake_reason {
->  
->  static inline const char *wow_reason(enum wmi_wow_wake_reason reason)
->  {
-> +	const char *str = NULL;
-> +
->  	switch (reason) {
->  	C2S(WOW_REASON_UNSPECIFIED);
->  	C2S(WOW_REASON_NLOD);
-> @@ -6513,9 +6529,9 @@ static inline const char *wow_reason(enum wmi_wow_wake_reason reason)
->  	C2S(WOW_REASON_BEACON_RECV);
->  	C2S(WOW_REASON_CLIENT_KICKOUT_EVENT);
->  	C2S(WOW_REASON_DEBUG_TEST);
-> -	default:
-> -		return NULL;
->  	}
-> +
-> +	return str;
->  }
->  
->  #undef C2S
+> Also remember to add a prefix to the title:
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject
 
-Here is an alternate style used a few times in the kernel
+Another helpful hint! Thanks, will keep that in mind for the next
+submission! :-)
 
-Maybe it'd be nicer to change the macros to something like
+> >> Isn't there any other option, for example does anyone have hw to test
+> >> this with other hw? (what exactly?) Or maybe we just take the risk and
+> >> take it as is and revert if problems arise?
+> >
+> > Of course, if someone has other hw, more testing would be nice! Any
+> > situation where the card is supposed to receive multicast frames
+> > should be suitable as a test case - in my case, just connecting to my
+> > local network and expecting to see the card pick up RAs and acquire an
+> > IPv6 address is the easiest test case. This works nicely on several
+> > other machines with completely different wifi hardware as well as
+> > wired machines, but fails without the fix on the rtl8187b. It would,
+> > for example, be interesting to see if a non-b 8187 behaves the same or
+> > if things work there out of the box.
+> 
+> I'm not familiar with the driver so when you say "non-b 8187" what do
+> you mean exactly? What kind of hardware are we talking about? How many
+> different hardware versions are there that this patch affects? Is the
+> firmware/hardware really so different that the chances are high that
+> this breaks something?
 
-#define CASE_STR(x) case x: return #x
+The driver in question seems to apply to, all in all, 21 different usb
+ids, so 21 different USB wifi cards. The existing code classifies
+these into two different categories: rtl8187 and rtl8187b, which seem
+to be different versions / revisions of a realtek usb wifi chip.
+Depending on this classification - if a card is a rtl8187 or rtl8187b
+- the existing code does things a bit different in several cases, for
+example during initialization of the card (however, not during the
+routine that sets the filters and where I've made my changes).
 
-and just return NULL after the switch/case block
+The card I have here and on which I noticed the problem and verified
+the fix is one that the driver classifies as rtl8187b. All such
+classified cards should use the same chip and thus likely behave the
+same regarding the problem and fix. But as far as those cards
+classified as rtl8187 are concerned, I don't have an idea how they
+behave in practice. All I know is that my current patch would change
+behavior on them as well.
 
-Maybe make that a global macro and consolidate the various
-uses to a single style
+If this sounds good to Larry, too, I might in fact - instead of using
+a module parameter - change the patch in such a way that it only
+changes behavior on cards classified as rtl8187b, which should behave
+like mine and thus benefit from the change, and leave the code
+affecting rtl8187 cards, which I honestly cannot say anything about,
+alone. Probably sounds like a safer thing to do.
 
-drivers/net/wireless/ath/ath9k/ath9k.h:#define case_rtn_string(val) case val: return #val
-drivers/net/wireless/ath/ath10k/wmi.h:#define SVCSTR(x) case x: return #x
-drivers/net/wireless/ath/ath10k/wmi.h:#define C2S(x) case x: return #x
-drivers/net/wireless/intel/iwlegacy/common.h:#define IL_CMD(x) case x: return #x
-drivers/net/wireless/intel/iwlwifi/iwl-io.c:#define IWL_CMD(x) case x: return #x
-drivers/net/wireless/intel/iwlwifi/pcie/trans.c:#define IWL_CMD(x) case x: return #x
-drivers/net/wireless/atmel/at76c50x-usb.c:#define MAKE_CMD_CASE(c) case (c): return #c
-drivers/net/wireless/atmel/at76c50x-usb.c:#define MAKE_CMD_STATUS_CASE(c)	case (c): return #c
-drivers/net/ethernet/intel/fm10k/fm10k_pci.c:#define FM10K_ERR_MSG(type) case (type): error = #type; break
-drivers/staging/lustre/lnet/selftest/selftest.h:#define STATE2STR(x) case x: return #x
-include/linux/genl_magic_func.h:	case op_num: return #op_name;
-t_case_default.c:#define FOO(BAR)	{ case BAR: return #BAR; }
+Greetings
+Nils
