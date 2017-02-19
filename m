@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59830 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751131AbdBJW6c (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17015 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750893AbdBSQeE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 17:58:32 -0500
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: VHT 160Mhz and nss related config.
-Message-ID: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com> (sfid-20170210_235835_296103_8149499F)
-Date: Fri, 10 Feb 2017 14:58:31 -0800
+        Sun, 19 Feb 2017 11:34:04 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v3 0/8] ath10k sdio support
+Date: Sun, 19 Feb 2017 16:33:55 +0000
+Message-ID: <87tw7q2l8v.fsf@qca.qualcomm.com> (sfid-20170219_173408_196609_9E4C2395)
+References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+        <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
+        <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com>
+        <877f4ngii5.fsf@kamboji.qca.qualcomm.com>
+        <8737fagu28.fsf@kamboji.qca.qualcomm.com>
+        <e8e1a379-129a-a8c3-9e1f-fb4c70fd0ab6@gmail.com>
+In-Reply-To: <e8e1a379-129a-a8c3-9e1f-fb4c70fd0ab6@gmail.com> (Erik
+        Stromdahl's message of "Sun, 19 Feb 2017 17:21:43 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So, it appears that the ath10k QCA9984 4x4 160Mhz chip can do 4x4 MIMO at VHT80, but
-it can do only 2x2 MIMO at VHT160/80+80.
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-When configuring a peer, we need to tell the firmware the number of spatial streams
-of the peer at VHT160 and at VHT80 and lower.  They are not the same value.
+> Ok, I'll do another round of checkpatch before I submit anything.
+> I couldn't find the script you mentioned though (ath10k-check).
 
-I cannot think of any standard way to get this information based on VHT capabilities
-and such.  Currently, one could just assume VHT160 NSS is 1/2 of the VHT80 NSS,
-but that is unlikely to be true for all vendors.
+Did you check the link I gave you:
 
-Any ideas?
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checki=
+ng_code
 
-Thanks,
-Ben
+> Is it some kind of checkpatch wrapper?
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+It runs various tests (gcc, sparse, checkpatch), sets some checkpatch
+settings (like line length) and filters out warnings we don't care
+about.
+
+> Anyway, I have a few warnings related to 'line over 80 chars' that
+> is really hard to get rid of (without breaking indentation etc.) so
+> I won't do anything about those for now.
+>
+> Then there are some other warnings about the BIT macro being preferred
+> over (1 << x). I have used (1 << x) in some files despite the checkpatch
+> warning in order to keep the patches consistent with the existing code.
+> I think the best approach is to have a separate round of cleanup-patches
+> replacing all (1 << x) with BIT(x).
+
+These are all disabled by ath10k-check. I think it's easiest that you
+forget ath10k-check for now and let me fix those in the next round.
+
+--=20
+Kalle Valo=
