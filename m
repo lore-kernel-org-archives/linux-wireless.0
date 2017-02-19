@@ -1,102 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41683 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753811AbdBDLf3 (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34348 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751350AbdBSQVq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Feb 2017 06:35:29 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC PATCH 0/2] mac80211: use crypto shash for AES cmac
-Date: Sat, 4 Feb 2017 11:35:22 +0000
-Message-ID: <20170204113514.GA4350@jouni.qca.qualcomm.com> (sfid-20170204_123547_823574_B2FB7520)
-References: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170203214707.GA14147@jouni.qca.qualcomm.com>
- <CAKv+Gu9zp+vptF2mHP5MW=x_K5m7WQgMxNNSD5hn93aT_-99xA@mail.gmail.com>
-In-Reply-To: <CAKv+Gu9zp+vptF2mHP5MW=x_K5m7WQgMxNNSD5hn93aT_-99xA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+        Sun, 19 Feb 2017 11:21:46 -0500
+Received: by mail-lf0-f68.google.com with SMTP id q89so7223904lfi.1
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 08:21:45 -0800 (PST)
+Subject: Re: [RFC v3 0/8] ath10k sdio support
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+ <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
+ <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com>
+ <877f4ngii5.fsf@kamboji.qca.qualcomm.com>
+ <8737fagu28.fsf@kamboji.qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <e8e1a379-129a-a8c3-9e1f-fb4c70fd0ab6@gmail.com> (sfid-20170219_172150_087153_EEFC4857)
+Date: Sun, 19 Feb 2017 17:21:43 +0100
 MIME-Version: 1.0
+In-Reply-To: <8737fagu28.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 03, 2017 at 09:55:36PM +0000, Ard Biesheuvel wrote:
-> OK, that looks like something I could figure out how to use. But are
-> you saying the CMAC code is never called in practice?
+Ok, I'll do another round of checkpatch before I submit anything.
+I couldn't find the script you mentioned though (ath10k-check).
+Is it some kind of checkpatch wrapper?
 
-It will get called if there is a frame that were to need to use BIP.
-There are some APs that do send broadcast addressed Deauthentication and
-Disassociation frames when terminating the network and those would get
-here. In theory, someone could come up with a new Action frame use case
-as well with a group addressed Robust Action frame, but no such thing is
-defined today. Anyway, this will be needed for certification purposes
-and to block DoS with broadcast addressed Deauthentication and
-Disassociation frames even if there is not really a common use case
-using BIP frames today.
+Anyway, I have a few warnings related to 'line over 80 chars' that
+is really hard to get rid of (without breaking indentation etc.) so
+I won't do anything about those for now.
 
-> I did spot something peculiar when looking at the code: if I am
-> reading the following sequence correctly (from
-> fils_encrypt_assoc_req())
+Then there are some other warnings about the BIT macro being preferred
+over (1 << x). I have used (1 << x) in some files despite the checkpatch
+warning in order to keep the patches consistent with the existing code.
+I think the best approach is to have a separate round of cleanup-patches
+replacing all (1 << x) with BIT(x).
 
-> addr[0] =3D mgmt->sa;
-...
-> addr[4] =3D capab;
-> len[4] =3D encr - capab;
->=20
-> crypt_len =3D skb->data + skb->len - encr;
-> skb_put(skb, AES_BLOCK_SIZE);
-> return aes_siv_encrypt(assoc_data->fils_kek, assoc_data->fils_kek_len,
->       encr, crypt_len, 1, addr, len, encr);
->=20
-> the addr[]/len[] arrays are populated with 5 (addr, len) pairs, but
-> only one is actually passed into aes_siv_encrypt()? This is actually
-> the main reason I stopped looking into whether I could convert it to
-> CMAC, because I couldn't figure it out.
+--
+Erik
 
-Argh.. Thanks for finding this!
-
-That is indeed supposed to have num_elems =3D=3D 5. This "works" since the
-other end of the exchange is actually in user space (hostapd) and a
-similar error is there..
-
-This comes from the development history of FILS support.. The draft
-standard changed this AES-SIV AAD design from P802.11ai/D7.0 to D8.0
-from a single AAD vector with concatenated fields to separate vectors.
-Clearly I added the vectors here in addr[] and len[] arrays, but forgot
-to update the num_elems parameter in this direction (STA->AP); the other
-direction for Association Response frame is actually using correct
-number of AAD vectors.
-
-I'll fix this in hostapd and mac80211.
-
-
-I did not actually remember that the AP side was still in hostapd for
-FILS AEAD in case of mac80211, but with that in mind, the answer to your
-earlier question about testing these becomes much simpler.. All you need
-to do is this with hostap.git hwsim tests:
-
-hostap/tests/hwsim/vm$ ./vm-run.sh ap_cipher_bip fils_sk_erp
-Starting test run in a virtual machine
-./run-all.sh: passing the following args to run-tests.py: ap_cipher_bip fil=
-s_sk_erp=20
-START ap_cipher_bip 1/2
-PASS ap_cipher_bip 0.703048 2017-02-04 11:21:35.341174
-START fils_sk_erp 2/2
-PASS fils_sk_erp 0.667927 2017-02-04 11:21:36.029205
-passed all 2 test case(s)
-ALL-PASSED
-
-
-ap_cipher_bip uses wlantest to verify the BIP (AES-128-CMAC) protection
-in the frames and fils_sk_erp goes through FILS AEAD exchange with one
-side of the operation in mac80211 and the other one in hostapd. This
-should be able to discover if something is broken in the AES related
-changes in crypto.
-
-And this particular example run here was with your two patches applied,
-to the proposed net/mac80211/aes_cmac.c change seems to work fine.
-
---=20
-Jouni Malinen                                            PGP id EFC895FA=
+On 2017-02-19 14:59, Valo, Kalle wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>
+>> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+>>
+>>> I was actually about to email you about this.
+>>>
+>>> I have made a few more updates to the sdio code so I think it would be
+>>> best if I could submit a new series of patches based on this code (v4).
+>>>
+>>> Then you can tweak it (v5).
+>>>
+>>> It is only minor updates to the HIF layer (added QCA9377 support) and
+>>> a setup of some pll registers.
+>>
+>> Ok, that sounds good. I'll wait for v4.
+>
+> Forgot to mention can you run ath10k-check before submitting them, it
+> shows few problems:
+>
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checking_code
+>
+> But if you wonder what this is about it's checkpatch warning about camel
+> case (doesn't like the lower case x character):
+>
+> drivers/net/wireless/ath/ath10k/sdio.h:68: <ATH10K_SDIO_DRIVE_DTSx_TYPE_C>
+>
+> I guess I have a bug in the script when it parses checkpatch output.
+>
