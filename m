@@ -1,107 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45380 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdBAFe0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 00:34:26 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Russell King <rmk+kernel@armlinux.org.uk>
-Cc: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [PATCH 4.10-rc3 12/13] net: ath5k: fix build errors when linux/phy*.h is removed from net/dsa.h
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-        <E1cYdxc-0000XC-N6@rmk-PC.armlinux.org.uk>
-Date: Wed, 01 Feb 2017 07:34:19 +0200
-In-Reply-To: <E1cYdxc-0000XC-N6@rmk-PC.armlinux.org.uk> (Russell King's
-        message of "Tue, 31 Jan 2017 19:19:24 +0000")
-Message-ID: <87r33ibhk4.fsf@codeaurora.org> (sfid-20170201_063438_875724_3817AB96)
+Received: from celine.tisys.org ([85.25.117.166]:49644 "EHLO celine.tisys.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751042AbdBTAAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 19 Feb 2017 19:00:44 -0500
+Date: Mon, 20 Feb 2017 00:59:28 +0100
+From: Nils Holland <nholland@tisys.org>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2] rtl8187: Enable monitor mode to fix multicast reception
+Message-ID: <20170219235919.GA15763@tisys.org> (sfid-20170220_010047_715141_30C08BF6)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Russell King <rmk+kernel@armlinux.org.uk> writes:
+The rtl8187 cards don't seem to receive multicast frames, which,
+among other things, makes them fail to receive RAs in IPv6 networks.
+The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
+have the desired effect.
 
-> Fix these errors reported by the 0-day builder by replacing the
-> linux/export.h include with linux/module.h.
->
-> In file included from include/linux/platform_device.h:14:0,
->                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
-> include/linux/device.h:1463:1: warning: data definition has no type or storage class
->  module_init(__driver##_init); \
->  ^
-> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
->   module_driver(__platform_driver, platform_driver_register, \
->   ^~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
->  module_platform_driver(ath_ahb_driver);
->  ^~~~~~~~~~~~~~~~~~~~~~
-> include/linux/device.h:1463:1: error: type defaults to 'int' in declaration of 'module_init' [-Werror=implicit-int]
->  module_init(__driver##_init); \
->  ^
-> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
->   module_driver(__platform_driver, platform_driver_register, \
->   ^~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
->  module_platform_driver(ath_ahb_driver);
->  ^~~~~~~~~~~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
-> In file included from include/linux/platform_device.h:14:0,
->                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
-> include/linux/device.h:1468:1: warning: data definition has no type or storage class
->  module_exit(__driver##_exit);
->  ^
-> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
->   module_driver(__platform_driver, platform_driver_register, \
->   ^~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
->  module_platform_driver(ath_ahb_driver);
->  ^~~~~~~~~~~~~~~~~~~~~~
-> include/linux/device.h:1468:1: error: type defaults to 'int' in declaration of 'module_exit' [-Werror=implicit-int]
->  module_exit(__driver##_exit);
->  ^
-> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
->   module_driver(__platform_driver, platform_driver_register, \
->   ^~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
->  module_platform_driver(ath_ahb_driver);
->  ^~~~~~~~~~~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
-> In file included from include/linux/platform_device.h:14:0,
->                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
-> drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_exit' defined but not used [-Wunused-function]
->  module_platform_driver(ath_ahb_driver);
->                         ^
-> include/linux/device.h:1464:20: note: in definition of macro 'module_driver'
->  static void __exit __driver##_exit(void) \
->                     ^~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
->  module_platform_driver(ath_ahb_driver);
->  ^~~~~~~~~~~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_init' defined but not used [-Wunused-function]
->  module_platform_driver(ath_ahb_driver);
->                         ^
-> include/linux/device.h:1459:19: note: in definition of macro 'module_driver'
->  static int __init __driver##_init(void) \
->                    ^~~~~~~~
-> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
->  module_platform_driver(ath_ahb_driver);
->  ^~~~~~~~~~~~~~~~~~~~~~
->
-> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Fix the issue by setting RTL818X_RX_CONF_MONITOR instead, which puts the
+card into monitor mode and resolves the problem so that multicast frames
+are sucessfully passed to the kernel.
 
-Looks good to me:
+The existence of the problem and the effectiveness of the solution has
+originally been confirmed on an 8187B based card with the USB id of
+0bda:8197. Subsequent testing by Larry Finger on an 8187L based card,
+which follows the second (8187, i.e. "non-b") code path in the driver,
+has confirmed that the fix does not cause any noticeable regresssions
+there either.
 
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Nils Holland <nholland@tisys.org>
+---
+ drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-I assume Dave will take this so I'll drop the patch from my queue.
-
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+index 231f84db9ab0..56a8686cd367 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+@@ -946,8 +946,7 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+ 		      (7 << 13 /* RX FIFO threshold NONE */) |
+ 		      (7 << 10 /* MAX RX DMA */) |
+ 		      RTL818X_RX_CONF_RX_AUTORESETPHY |
+-		      RTL818X_RX_CONF_ONLYERLPKT |
+-		      RTL818X_RX_CONF_MULTICAST;
++		      RTL818X_RX_CONF_ONLYERLPKT;
+ 		priv->rx_conf = reg;
+ 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+ 
+@@ -1319,12 +1318,11 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+ 		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
+ 	if (changed_flags & FIF_CONTROL)
+ 		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
+-	if (changed_flags & FIF_OTHER_BSS)
+-		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
+-	if (*total_flags & FIF_ALLMULTI || multicast > 0)
+-		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
++	if (*total_flags & FIF_OTHER_BSS ||
++	    *total_flags & FIF_ALLMULTI || multicast > 0)
++		priv->rx_conf |= RTL818X_RX_CONF_MONITOR;
+ 	else
+-		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
++		priv->rx_conf &= ~RTL818X_RX_CONF_MONITOR;
+ 
+ 	*total_flags = 0;
+ 
+@@ -1332,10 +1330,10 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+ 		*total_flags |= FIF_FCSFAIL;
+ 	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
+ 		*total_flags |= FIF_CONTROL;
+-	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
++	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR) {
+ 		*total_flags |= FIF_OTHER_BSS;
+-	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
+ 		*total_flags |= FIF_ALLMULTI;
++	}
+ 
+ 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
+ }
 -- 
-Kalle Valo
+2.11.1
