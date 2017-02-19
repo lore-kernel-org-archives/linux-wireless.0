@@ -1,58 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43590 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752885AbdBMPbJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 10:31:09 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH - REGRESSION] mwifiex: don't enable/disable IRQ 0 during suspend/resume
-References: <20170210215525.139701-1-briannorris@chromium.org>
-Date: Mon, 13 Feb 2017 17:30:57 +0200
-In-Reply-To: <20170210215525.139701-1-briannorris@chromium.org> (Brian
-        Norris's message of "Fri, 10 Feb 2017 13:55:25 -0800")
-Message-ID: <87zihqrtu6.fsf@kamboji.qca.qualcomm.com> (sfid-20170213_163250_353238_D14BBA6D)
+Received: from celine.tisys.org ([85.25.117.166]:39800 "EHLO celine.tisys.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750978AbdBSSyB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 19 Feb 2017 13:54:01 -0500
+Date: Sun, 19 Feb 2017 19:53:39 +0100
+From: Nils Holland <nholland@tisys.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Fix rtl8187 multicast reception
+Message-ID: <20170219185332.GA7643@tisys.org> (sfid-20170219_195725_800284_E6273198)
+References: <20170219013520.GA3190@tisys.org>
+ <2eb1dd33-4d71-86b7-c579-412419e2a2e5@lwfinger.net>
+ <87lgt28vxz.fsf@purkki.adurom.net>
+ <20170219094138.GA3228@tisys.org>
+ <87y3x22tsn.fsf@codeaurora.org>
+ <65e6d653-b1e8-e9f7-ce18-210ae1b3ee63@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <65e6d653-b1e8-e9f7-ce18-210ae1b3ee63@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+On Sun, Feb 19, 2017 at 12:11:50PM -0600, Larry Finger wrote:
+> On 02/19/2017 07:29 AM, Kalle Valo wrote:
+> > Nils Holland <nholland@tisys.org> writes:
+> >
+> >> On Sun, Feb 19, 2017 at 09:46:16AM +0200, Kalle Valo wrote:
+> >>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+> >>>
+> >>>> On 02/18/2017 07:35 PM, Nils Holland wrote:
+> >>>>
+> >>>> I would prefer a module parameter that would allow this change to be
+> >>>> implemented only if the user takes special action. I suspect that you
+> >>>> will have no difficulty preparing such a change. If that is not true,
+> >>>> I would be happy to help.
+> >>>
+> >>> I understand why you prefer having a module parameter but the thing is
+> >>> that being able to receive multicast frames is really basic
+> >>> functionality. We should not hide it under a module parameter.
+> >>
+> >> Well, this is a tough question, I have to admit that I have a somewhat
+> >> weird feeling making a change that also applies to other hardware that
+> >> I cannot test on, so I don't know about any negative consequences that
+> >> might arise there, especially when the change isn't based on some
+> >> official information from some documentation, but rather a result of
+> >> trial & error. So I can fully understand Larry's concerns and do in
+> >> fact think that a module parameter could be a nice solution, so that
+> >> by default the behavior if the driver does not change.
+> >
+> > There are lots of hardware variations that cannot be tested when a patch
+> > is commited. If we followed the same methdology with all patches we
+> > would have thousands of module parameters in kernel in no time :)
+> >
+> >> From an end-user standpoint, it's probably always worse to see
+> >> something break which has always worked before than it is to have
+> >> something not work properly right from the start, but being able to
+> >> easily find some parameter to fix this.
+> >
+> > Sure. But if there's a report about this patch breaking something, it's
+> > easy to revert it.
+> >
+> >> On the other hand, use of this particular USB wifi card is probably
+> >> not so common these days so relatively few people would notice at all.
+> >> Tough! I guess I'll submit a module parameter based v2 of the patch
+> >> later today, just as Larry suggested!
+> >
+> > Also remember to add a prefix to the title:
+> >
+> > https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject
+> >
+> >>> Isn't there any other option, for example does anyone have hw to test
+> >>> this with other hw? (what exactly?) Or maybe we just take the risk and
+> >>> take it as is and revert if problems arise?
+> >>
+> >> Of course, if someone has other hw, more testing would be nice! Any
+> >> situation where the card is supposed to receive multicast frames
+> >> should be suitable as a test case - in my case, just connecting to my
+> >> local network and expecting to see the card pick up RAs and acquire an
+> >> IPv6 address is the easiest test case. This works nicely on several
+> >> other machines with completely different wifi hardware as well as
+> >> wired machines, but fails without the fix on the rtl8187b. It would,
+> >> for example, be interesting to see if a non-b 8187 behaves the same or
+> >> if things work there out of the box.
+> >
+> > I'm not familiar with the driver so when you say "non-b 8187" what do
+> > you mean exactly? What kind of hardware are we talking about? How many
+> > different hardware versions are there that this patch affects? Is the
+> > firmware/hardware really so different that the chances are high that
+> > this breaks something?
+> >
+> >> In that case, instead of doing a module parameter, I could also change
+> >> the fix so that it only does something different on the b-variants of
+> >> the card and doesn't change behavior at all on non-b.
+> >
+> > Now that's much better option than adding a module parameter.
+> 
+> There are three variants of the chip, the RTL8187, RTL8187L, and RTL8187B. 
+> Programming for the first two are the same. The RTL8187B has a number of newer 
+> features such as priority queues and a more complete set of parameters in the 
+> descriptors.
+> 
+> OK, for the moment I agree to this patch with a respin of the commit message. I 
+> will test with my 8187L device. If those fail, I will request that it be limited 
+> to the 8187B.
 
-> If we don't have an out-of-band wakeup IRQ configured through DT (as
-> most platforms don't), then we fall out of this function with
-> 'irq_wakeup == 0'. Other code (e.g., mwifiex_disable_wake() and
-> mwifiex_enable_wake()) treats 'irq_wakeup >= 0' as a valid IRQ, and so
-> we end up calling {enable,disable}_irq() on IRQ 0.
->
-> That seems bad, so let's not do that.
->
-> Same problem as fixed in this patch:
->
-> https://patchwork.kernel.org/patch/9531693/
-> [PATCH v2 2/3] btmrvl: set irq_bt to -1 when failed to parse it
->
-> with the difference that:
-> (a) this one is actually a regression and
-> (b) this affects both device tree and non-device-tree systems
->
-> While fixing the regression, also drop the verbosity on the parse
-> failure, so we don't see this when a DT node is present but doesn't have
-> an interrupt property (this is perfectly legal):
->
-> [   21.999000] mwifiex_pcie 0000:01:00.0: fail to parse irq_wakeup from device tree
->
-> Fixes: 853402a00823 ("mwifiex: Enable WoWLAN for both sdio and pcie")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
-> This is a 4.10 regression. Not sure if it's critical to push quickly, or if it
-> should just be tagged -stable and pushed in 4.11.
+Sounds good, so I guess I'll wait for your report regarding behavior
+on your 8187l. Then, I'll either re-submit the patch as a v2 with a
+reworked commit message and proper tag in the title, or, if the fix
+as-is causes problems on the 8187l, re-submit the patch with limiting
+the scope of its change to the 8187b only. Sounds good? :-)
 
-It's really late for 4.10, so I would rather push it to 4.11.
-
--- 
-Kalle Valo
+Greetings
+Nils
