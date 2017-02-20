@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33607 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752511AbdBHAx0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 19:53:26 -0500
-Subject: Re: rtlwifi: rtl8192c_common: "BUG: KASAN: slab-out-of-bounds"
-To: Tobias Guggenmos <slartibartfas421@gmail.com>
-References: <beff9033-0051-fd0f-87fe-8269a0d9c8d0@gmail.com>
- <1486376979.14226.9.camel@sipsolutions.net>
- <fbe5786e-54eb-b8a7-1540-64a913692361@lwfinger.net>
- <46454409.lUoPi3ZtJt@slartibartfas>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <05892a0b-6745-1fd4-f050-5b0b4aa463b3@lwfinger.net> (sfid-20170208_015407_733888_E766696F)
-Date: Tue, 7 Feb 2017 18:45:01 -0600
+Received: from mx2.suse.de ([195.135.220.15]:41708 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753355AbdBTRcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 12:32:21 -0500
+Date: Mon, 20 Feb 2017 18:32:16 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        "tj@kernel.org" <tj@kernel.org>,
+        "arjan@linux.intel.com" <arjan@linux.intel.com>,
+        "ming.lei@canonical.com" <ming.lei@canonical.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "jeyu@redhat.com" <jeyu@redhat.com>,
+        "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
+        "pmladek@suse.com" <pmladek@suse.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC 1/5] iwlwifi: fix drv cleanup on opmode registration failure
+Message-ID: <20170220173216.GD31264@wotan.suse.de> (sfid-20170220_183247_105404_4CDCDEE9)
+References: <20170217020903.6370-1-mcgrof@kernel.org>
+ <20170217020903.6370-2-mcgrof@kernel.org>
+ <0BA3FCBA62E2DC44AF3030971E174FB3A8F4AD47@hasmsx107.ger.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <46454409.lUoPi3ZtJt@slartibartfas>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3A8F4AD47@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/07/2017 10:45 AM, Tobias Guggenmos wrote:
-> Am Montag, 6. Februar 2017, 09:45:31 CET schrieb Larry Finger:
->> On 02/06/2017 04:29 AM, Johannes Berg wrote:
->>> On Sat, 2017-02-04 at 12:41 -0600, Larry Finger wrote:
->>>> On 02/04/2017 10:58 AM, Dmitry Osipenko wrote:
->>>>> Seems the problem is caused by rtl92c_dm_*() casting .priv to
->>>>> "struct
->>>>> rtl_pci_priv", while it is "struct rtl_usb_priv".
->>>>
->>>> Those routines are shared by rtl8192ce and rtl8192cu, thus we need to
->>>> make that
->>>> difference in cast to be immaterial. I think we need to move "struct
->>>> bt_coexist_info" to the beginning of both rtlpci_priv and
->>>> rtl_usb_priv. Then it
->>>> should not matter.
->>>
->>> I think you really should consider putting a struct rtl_common into
->>> that or something, and getting rid of all the casting that causes this
->>> problem to start with?
->>
->> The fix you suggest is prepared and will be submitted soon. As it is much
->> more invasive with ~150 insertions and ~160 deletions, I decided not to
->> have it be the one that is pushed to all stable kernels from 4.0 onward.
->>
->> Larry
->
-> This is possibly related to the following Fedora Bug:
-> https://bugzilla.redhat.com/show_bug.cgi?id=1391987
+On Sun, Feb 19, 2017 at 09:16:01AM +0000, Grumbach, Emmanuel wrote:
+> > This should in theory fix a detangled drv from the drv list should either of the
+> > opmode modules loaded and handled registration for the drv.
+> > 
+> > The path of having the opmode registration deal with the drv opmode start is
+> > actually the more common path. The other path, from the async callback is
+> > rathe rare (1/8 or so times for me) -- it happens when the the opmode
+> > driver's init routine completed prior to the driver's async callback opmode
+> > start call.
+> 
+> I'd claim it should never happen unless you have several devices on the system using the same
+> opmode, or unless you do:
+> modprobe iwlwifi  #which will load iwl{d,m}vm
+> rmmod iwl{d,m}vm #and do _not_ remove iwlwifi
+> modprobe iwlwifi
 
-This bug is unlikely to be the cause of that problem. In fact, this bug only 
-affects rtl8192cu, not rtl8192ce. The RedHat problem is more likely caused by 
-the not-yet-merged patch entitled "rtlwifi: rtl8192ce: Fix loading of incorrect 
-firmware".
+That is indeed one way one can easily reproduce this. There are however other
+ways too. Try a loop of
 
-Larry
+modprobe -r iwlmvm (which removes iwlwifi) followed by modprobe iwlmvm;
+
+while this check for which path is taken, or better yet check if the
+list of drvs is empty on opmode registration. Every now and then I see
+the list is empty.
+
+I have a feeling this is then also a rare rarely observed by your QA team
+as well, so this code then is also stitching together a set of sequence
+calls for both paths.
+
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > ---
+> 
+> Luca is OOO,  but this looks fine to me.
+
+Reviewed-by ?
+
+  Luis
