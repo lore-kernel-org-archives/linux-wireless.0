@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36297 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752558AbdBJLh2 (ORCPT
+Received: from vmicros1.altlinux.org ([194.107.17.57]:46768 "EHLO
+        vmicros1.altlinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752118AbdBTSWA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 06:37:28 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: Fix crash during rmmod when probe firmware
- fails
-Date: Fri, 10 Feb 2017 11:36:04 +0000
-Message-ID: <874m02i8hj.fsf@kamboji.qca.qualcomm.com> (sfid-20170210_123735_565093_2F8F7B7B)
-References: <1482221351-24029-1-git-send-email-mohammed@qca.qualcomm.com>
-        <8760l38dz0.fsf@kamboji.qca.qualcomm.com>
-        <871svr8d83.fsf@kamboji.qca.qualcomm.com>
-        <20170206100448.GA13894@atheros-ThinkPad-T61>
-        <87lgteidii.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87lgteidii.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Fri, 10 Feb 2017 11:47:01 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Mon, 20 Feb 2017 13:22:00 -0500
+Date: Mon, 20 Feb 2017 21:15:33 +0300
+From: "Dmitry V. Levin" <ldv@altlinux.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-wireless@vger.kernel.org, x86@kernel.org,
+        linux-mips@linux-mips.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] uapi: fix definition of struct sockaddr_nfc_llcp on x32 and mips n32
+Message-ID: <20170220181533.GA11185@altlinux.org> (sfid-20170220_192208_462723_9DE2C94C)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Replace size_t with __kernel_size_t to fix definition of struct
+sockaddr_nfc_llcp on architectures like x32 and mips n32 where
+sizeof(size_t) < sizeof(__kernel_size_t).
 
-> BTW, just curious but why do you have "during rmmod" in the title? I
-> think I was able to reproduce this crash by removing all firmware files
-> and didn't use rmmod at all.
+This also fixes the following linux/nfc.h userspace compilation error:
 
-Nevermind, I was blind again. It was my script which calls rmmod and I
-failed to realise that. Sorry for the noise.
+/usr/include/linux/nfc.h:279:2: error: unknown type name 'size_t'
+  size_t service_name_len;
 
---=20
-Kalle Valo=
+Cc: stable@vger.kernel.org
+Signed-off-by: Dmitry V. Levin <ldv@altlinux.org>
+---
+ include/uapi/linux/nfc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/uapi/linux/nfc.h b/include/uapi/linux/nfc.h
+index 399f39f..f8ccc12 100644
+--- a/include/uapi/linux/nfc.h
++++ b/include/uapi/linux/nfc.h
+@@ -276,7 +276,7 @@ struct sockaddr_nfc_llcp {
+ 	__u8 dsap; /* Destination SAP, if known */
+ 	__u8 ssap; /* Source SAP to be bound to */
+ 	char service_name[NFC_LLCP_MAX_SERVICE_NAME]; /* Service name URI */;
+-	size_t service_name_len;
++	__kernel_size_t service_name_len;
+ };
+ 
+ /* NFC socket protocols */
+-- 
+ldv
