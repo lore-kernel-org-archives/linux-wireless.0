@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:35275 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751728AbdBGD3w (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 22:29:52 -0500
-Received: by mail-ot0-f194.google.com with SMTP id 65so12745291otq.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 19:29:51 -0800 (PST)
-Subject: Re: [PATCH 01/11 V3] rtlwifi: Fix programing CAM content sequence.
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
- <20170120212716.29887-1-Larry.Finger@lwfinger.net>
- <20170120212716.29887-1-Larry.Finger@lwfinger.net>
- <20170120212716.29887-2-Larry.Finger@lwfinger.net>
- <87bmufa3nu.fsf@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        shaofu <shaofu@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <00451ab5-c356-0466-e501-6e08f3839201@lwfinger.net> (sfid-20170207_042956_362509_B057CD57)
-Date: Mon, 6 Feb 2017 21:29:49 -0600
-MIME-Version: 1.0
-In-Reply-To: <87bmufa3nu.fsf@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:50096 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753257AbdBTNYn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 08:24:43 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/6] cfg80211: combine two nested ifs into a single condition
+Date: Mon, 20 Feb 2017 14:24:34 +0100
+Message-Id: <20170220132439.16064-1-johannes@sipsolutions.net> (sfid-20170220_142500_455118_A7A8CD0F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2017 06:45 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> From: Ping-Ke Shih <pkshih@realtek.com>
->>
->> There is a potential race condition when the control byte of a CAM
->> entry is written first. Write in reverse order to correct the condition.
->>
->> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
->> Signed-off-by: shaofu <shaofu@realtek.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->> V2 - no changes
->> V3 - no changes
->
-> I missed in my reply to v2 that you had already sent v3 from this
-> patchset. Strange that I don't see this v3 patchset either in patchwork,
-> only v1.
->
-> Try submitting v4 in case it was just a temporary glitch in patchwork.
-> But if that doesn't help I'll apply these manually.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I have no idea why that patchsets are missing. I will send V4 shortly.
+Combine two instances of having two nested if statements
+into a single one with a combined condition to reduce the
+indentation.
 
-Sorry I did not respond more quickly. I was out of my office today.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 12 ++++++------
+ net/wireless/util.c | 10 +++++-----
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Larry
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 04143df20f7f..76e664144c8e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1216,12 +1216,12 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		 */
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT) &&
+-		    rdev->ops->set_power_mgmt)
+-			if (rdev_set_power_mgmt(rdev, dev, wdev->ps,
+-						wdev->ps_timeout)) {
+-				/* assume this means it's off */
+-				wdev->ps = false;
+-			}
++		    rdev->ops->set_power_mgmt &&
++		    rdev_set_power_mgmt(rdev, dev, wdev->ps,
++					wdev->ps_timeout)) {
++			/* assume this means it's off */
++			wdev->ps = false;
++		}
+ 		break;
+ 	case NETDEV_UNREGISTER:
+ 		/*
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 68e5f2ecee1a..daef500a7b64 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -914,11 +914,11 @@ void cfg80211_upload_connect_keys(struct wireless_dev *wdev)
+ 			netdev_err(dev, "failed to set key %d\n", i);
+ 			continue;
+ 		}
+-		if (wdev->connect_keys->def == i)
+-			if (rdev_set_default_key(rdev, dev, i, true, true)) {
+-				netdev_err(dev, "failed to set defkey %d\n", i);
+-				continue;
+-			}
++		if (wdev->connect_keys->def == i &&
++		    rdev_set_default_key(rdev, dev, i, true, true)) {
++			netdev_err(dev, "failed to set defkey %d\n", i);
++			continue;
++		}
+ 	}
+ 
+ 	kzfree(wdev->connect_keys);
+-- 
+2.9.3
