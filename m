@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55586 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753475AbdBHLr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 06:47:28 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Vishal Thanki <vishalthanki@gmail.com>
-Subject: [PATCH 1/2] rt2x00usb: do not anchor rx and tx urb's
-Date: Wed,  8 Feb 2017 12:18:09 +0100
-Message-Id: <1486552690-27597-1-git-send-email-sgruszka@redhat.com> (sfid-20170208_124733_205071_058D2473)
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:34849 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753434AbdBTQSV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 11:18:21 -0500
+Received: by mail-oi0-f47.google.com with SMTP id 62so40841441oih.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 08:18:20 -0800 (PST)
+Subject: Re: [PATCH v2] rtl8187: Enable monitor mode to fix multicast
+ reception
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Nils Holland <nholland@tisys.org>,
+        linux-wireless@vger.kernel.org
+References: <20170219235919.GA15763@tisys.org>
+ <6dafa711-2118-ed6d-4b55-2640a3b852e5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <33f6e879-541f-ef45-f533-98b44e6aa2a9@lwfinger.net> (sfid-20170220_171841_732321_83E87FF0)
+Date: Mon, 20 Feb 2017 10:18:18 -0600
+MIME-Version: 1.0
+In-Reply-To: <6dafa711-2118-ed6d-4b55-2640a3b852e5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We might kill TX or RX urb during rt2x00usb_flush_entry(), what can
-cause anchor list corruption like shown below:
+On 02/20/2017 12:35 AM, Rafał Miłecki wrote:
+> On 02/20/2017 12:59 AM, Nils Holland wrote:
+>> The rtl8187 cards don't seem to receive multicast frames, which,
+>> among other things, makes them fail to receive RAs in IPv6 networks.
+>> The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
+>> have the desired effect.
+>
+> AFAIU you have RTL8187B chipset card only, but above message describes this as
+> generic issue (including RTL8187 and RTL8187L).
+>
+> Larry: were you able to reproduce this problem using RTL8187L? Is this
+> workaround needed for that chipset as well? I couldn't find clear statement.
 
-[ 2074.035633] WARNING: CPU: 2 PID: 14480 at lib/list_debug.c:33 __list_add+0xac/0xc0
-[ 2074.035634] list_add corruption. prev->next should be next (ffff88020f362c28), but was dead000000000100. (prev=ffff8801d161bb70).
-<snip>
-[ 2074.035670] Call Trace:
-[ 2074.035672]  [<ffffffff813bde47>] dump_stack+0x63/0x8c
-[ 2074.035674]  [<ffffffff810a2231>] __warn+0xd1/0xf0
-[ 2074.035676]  [<ffffffff810a22af>] warn_slowpath_fmt+0x5f/0x80
-[ 2074.035678]  [<ffffffffa073855d>] ? rt2x00usb_register_write_lock+0x3d/0x60 [rt2800usb]
-[ 2074.035679]  [<ffffffff813dbe4c>] __list_add+0xac/0xc0
-[ 2074.035681]  [<ffffffff81591c6c>] usb_anchor_urb+0x4c/0xa0
-[ 2074.035683]  [<ffffffffa07322af>] rt2x00usb_kick_rx_entry+0xaf/0x100 [rt2x00usb]
-[ 2074.035684]  [<ffffffffa0732322>] rt2x00usb_clear_entry+0x22/0x30 [rt2x00usb]
+Yes, the RTL8187L has the same problem as the RTL8187B. The fix is needed for both.
 
-To fix do not anchor TX and RX urb's, it is not needed as during
-shutdown we kill those urbs in rt2x00usb_free_entries().
-
-Cc: Vishal Thanki <vishalthanki@gmail.com>
-Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 5a2bf9f..fe13dd0 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -319,10 +319,8 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, length,
- 			  rt2x00usb_interrupt_txdone, entry);
- 
--	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-@@ -410,10 +408,8 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, entry->skb->len,
- 			  rt2x00usb_interrupt_rxdone, entry);
- 
--	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
--- 
-1.8.3.1
+Larry
