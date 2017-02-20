@@ -1,65 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39458 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751000AbdBHS3z (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:35620 "EHLO
+        mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751041AbdBTGfP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 13:29:55 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Golan Ben-Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 17:51:49 +0200
-Message-Id: <20170208155149.1704-9-luca@coelho.fi> (sfid-20170208_193021_809570_3A82268B)
-In-Reply-To: <20170208155149.1704-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
- <20170208155149.1704-1-luca@coelho.fi>
-Subject: [PATCH 17/17] iwlwifi: mvm: avoid exceeding the allowed print length
+        Mon, 20 Feb 2017 01:35:15 -0500
+Received: by mail-lf0-f46.google.com with SMTP id z127so44644466lfa.2
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 22:35:14 -0800 (PST)
+Subject: Re: [PATCH v2] rtl8187: Enable monitor mode to fix multicast
+ reception
+To: Nils Holland <nholland@tisys.org>, linux-wireless@vger.kernel.org
+References: <20170219235919.GA15763@tisys.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <6dafa711-2118-ed6d-4b55-2640a3b852e5@gmail.com> (sfid-20170220_073519_014589_6480B8FC)
+Date: Mon, 20 Feb 2017 07:35:12 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170219235919.GA15763@tisys.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben-Ami <golan.ben.ami@intel.com>
+On 02/20/2017 12:59 AM, Nils Holland wrote:
+> The rtl8187 cards don't seem to receive multicast frames, which,
+> among other things, makes them fail to receive RAs in IPv6 networks.
+> The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
+> have the desired effect.
 
-Divide a mfuart related print so it won't exceed the allowed
-MAX_MSG_LEN (110 bytes) per print.
+AFAIU you have RTL8187B chipset card only, but above message describes this as
+generic issue (including RTL8187 and RTL8187L).
 
-Fixes: 19f63c531b85 ("iwlwifi: mvm: support v2 of mfuart load notification")
-Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index c42ef8681b75..45cb4f476e76 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1396,19 +1396,15 @@ void iwl_mvm_rx_mfuart_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_mfuart_load_notif *mfuart_notif = (void *)pkt->data;
- 
-+	IWL_DEBUG_INFO(mvm,
-+		       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x\n",
-+		       le32_to_cpu(mfuart_notif->installed_ver),
-+		       le32_to_cpu(mfuart_notif->external_ver),
-+		       le32_to_cpu(mfuart_notif->status),
-+		       le32_to_cpu(mfuart_notif->duration));
-+
- 	if (iwl_rx_packet_payload_len(pkt) == sizeof(*mfuart_notif))
- 		IWL_DEBUG_INFO(mvm,
--			       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x, image size: 0x%08x\n",
--			       le32_to_cpu(mfuart_notif->installed_ver),
--			       le32_to_cpu(mfuart_notif->external_ver),
--			       le32_to_cpu(mfuart_notif->status),
--			       le32_to_cpu(mfuart_notif->duration),
-+			       "MFUART: image size: 0x%08x\n",
- 			       le32_to_cpu(mfuart_notif->image_size));
--	else
--		IWL_DEBUG_INFO(mvm,
--			       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x\n",
--			       le32_to_cpu(mfuart_notif->installed_ver),
--			       le32_to_cpu(mfuart_notif->external_ver),
--			       le32_to_cpu(mfuart_notif->status),
--			       le32_to_cpu(mfuart_notif->duration));
- }
--- 
-2.11.0
+Larry: were you able to reproduce this problem using RTL8187L? Is this
+workaround needed for that chipset as well? I couldn't find clear statement.
