@@ -1,77 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout02.posteo.de ([185.67.36.142]:47617 "EHLO mout02.posteo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751296AbdBXJnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 04:43:33 -0500
-Message-ID: <1487929408.3812.3.camel@embedded.rocks> (sfid-20170224_104526_543931_3B109155)
-Subject: Re: brcmfmac: problem using WPS with wpa_supplicant on BCM43362
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Date: Fri, 24 Feb 2017 10:43:28 +0100
-In-Reply-To: <dd241eff-7e0d-26c1-1758-b3f4d51bc359@broadcom.com>
-References: <1487881302.20481.3.camel@embedded.rocks>
-         <dd241eff-7e0d-26c1-1758-b3f4d51bc359@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f54.google.com ([209.85.214.54]:34949 "EHLO
+        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750881AbdBTXXC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 18:23:02 -0500
+Received: by mail-it0-f54.google.com with SMTP id 203so87618997ith.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 15:23:02 -0800 (PST)
+MIME-Version: 1.0
+From: "Thomas d'Otreppe" <tdotreppe@gmail.com>
+Date: Mon, 20 Feb 2017 16:22:20 -0700
+Message-ID: <CALs6+XLDZLmc6JWMPun4sT+W_M4Cqh47LcK+HjiuZ8gKFLkbTA@mail.gmail.com> (sfid-20170221_002306_313869_E4D6D4DA)
+Subject: Monitor mode 'cook' flag meaning
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+I've been looking through the different flags for monitor mode in iw.
+Most of them are rather obvious (and well explained) but what is
+exactly 'cooked mode'?
 
-On Fri, 2017-02-24 at 09:16 +0100, Arend Van Spriel wrote:
-> 
-> On 23-2-2017 21:21, Jörg Krause wrote:
-> > Hi,
-> > 
-> > I am using Linux Kernel v4.9.9 and wpa_supplicant 2.6. When running
-> > 'wpa_cli wps_pin any', the following messages are printed:
-> > 
-> > """
-> > > wps_pin any         
-> > 
-> > [ 4011.779108] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error :
-> > -30
-> > [ 4011.786190] brcmfmac: brcmf_config_ap_mgmt_ie: Set Beacon IE
-> > Failed
-> > """
-> > 
-> > .. and nothing happens. The data sheet for the BCM43362 states that
-> > the
-> > module supports WPS.
-> 
-> Hi Jörg,
-> 
-> We have never tested WPS with brcmfmac. Most of it is in firmware so
-> it
-> might work. We had some fixes related to setting management IE, but
-> it
-> should be in 4.9. I did not check it (yet).
+I looked up in Google and in the linux-wireless wiki (nothing in
+there) and I only found explanations in 2 patches (most likely still
+in the source code) which are still vague:
+- A monitor interface in "cooked" mode will see all frames that
+mac80211 has not used internally
+- report frames after processing. Overrides all other flags.
 
-As it turns out, WPS does not work if a network configuration in
-wpa_supplicant has the flag `mode=2` (access point mode) set:
+Thinking about what the first one says, it doesn't seem any different
+than just fcsfail. I don't even see when control or otherbss should be
+needed since 'none' is already providing them.
 
-"""
-ctrl_interface=/var/run/wpa_supplicant
-update_config=1
+Am I correct? Or is it related to transmitting frames? And in this case, how?
 
-network={
-	ssid="AP"
-	key_mgmt=NONE
-	mode=2
-	id_str="ap"
-}
-"""
+Thanks in advance,
 
-Setting mode=2 for a network and having ap_scan=1 (default) means if no
-APs matching to the currently enabled networks are found, a new network
- (IBSS or AP mode operation) may be initialized (if configured).
-
-So, WPS does not work if the interface is operating in AP mode. I
-wonder, if this is a desired behavior? At least, wpa_supplicant does
-not complain, but prints "WPS-PBC-ACTIVE", but no messages are
-following, until "WPS-TIMEOUT".
-
-Jörg
+Thomas
