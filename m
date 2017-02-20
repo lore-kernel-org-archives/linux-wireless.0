@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40450 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753604AbdBHHra (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 02:47:30 -0500
-Message-ID: <1486540008.4603.3.camel@sipsolutions.net> (sfid-20170208_084818_668535_BD5A0484)
-Subject: Re: [PATCH v3 1/2] mac80211: fils_aead: Use crypto api CMAC shash
- rather than bare cipher
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Date: Wed, 08 Feb 2017 08:46:48 +0100
-In-Reply-To: <CAKv+Gu9Be-bA-Trn5cMwVvf4+yMm8w2Krm59WGAhdM3bxBSJfw@mail.gmail.com> (sfid-20170208_084553_216930_7D2DAE1D)
-References: <1486378168-31028-1-git-send-email-ard.biesheuvel@linaro.org>
-         <1486378168-31028-2-git-send-email-ard.biesheuvel@linaro.org>
-         <1486537227.4603.2.camel@sipsolutions.net>
-         <CAKv+Gu9Be-bA-Trn5cMwVvf4+yMm8w2Krm59WGAhdM3bxBSJfw@mail.gmail.com>
-         (sfid-20170208_084553_216930_7D2DAE1D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:36461 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751498AbdBTLDt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 06:03:49 -0500
+Received: by mail-pg0-f53.google.com with SMTP id s67so6870431pgb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 03:02:57 -0800 (PST)
+Subject: Re: [RFC V3 0/5] cfg80211: support multiple scheduled scans
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1487155049-1892-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1487582393.5474.2.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <1404cf52-b570-3dfb-031b-ba8eaa28ace1@broadcom.com> (sfid-20170220_120353_836995_84122417)
+Date: Mon, 20 Feb 2017 11:55:22 +0100
+MIME-Version: 1.0
+In-Reply-To: <1487582393.5474.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-02-08 at 07:45 +0000, Ard Biesheuvel wrote:
-> On 8 February 2017 at 07:00, Johannes Berg <johannes@sipsolutions.net
-> > wrote:
-> > This looks strange to me:
-> > 
-> > > +static int aes_s2v(struct crypto_shash *tfm,
-> > >                  size_t num_elem, const u8 *addr[], size_t len[],
-> > > u8 *v)
-> > >  {
-> > > -     u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
-> > > +     u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE] = {};
-> > > +     SHASH_DESC_ON_STACK(desc, tfm);
-> > 
-> > desc declared
-> > 
-> > > 
-> > > +     crypto_shash_digest(desc, tmp, AES_BLOCK_SIZE, d);
-> > 
-> > used here
-> > 
+On 20-2-2017 10:19, Johannes Berg wrote:
+> On Wed, 2017-02-15 at 10:37 +0000, Arend van Spriel wrote:
+>> Another review round for multiple scheduled scan support in nl80211.
+>>
 > 
-> Each digest() call combines a init()/update()/final() sequence
 > 
-> > > +     crypto_shash_init(desc);
-> > 
-> > but initialized now?
-> > 
-> 
-> ... for the 6th time, or so. The final vector may require two
-> update()s, so we cannot use digest() here. But we can use finup() for
-> the last one, which combines update() and final().
-> 
-> Hence,
-> 
-> init()/finup()
-> 
-> or
-> 
-> init()/update()/finup()
-> 
-> depending on the length of the last vector.
+> Looks fine to me. Not sure I see much value in splitting patches 4/5,
+> but whichever you prefer is fine with me.
 
-Great, thanks for the explanation :)
+I was a bit in doubt on granularity of the patches. Let's see what I
+make of it when submitting a formal patch ;-)
 
-johannes
+> Maybe some of the commit messages ("It mainly illustrates ...") could
+> use some rewording :)
+
+Will do.
+
+Thanks,
+Arend
