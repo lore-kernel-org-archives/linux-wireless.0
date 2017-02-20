@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35256 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751909AbdBFNC7 (ORCPT
+Received: from vmicros1.altlinux.org ([194.107.17.57]:46770 "EHLO
+        vmicros1.altlinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751253AbdBTSVp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 08:02:59 -0500
-Received: by mail-io0-f196.google.com with SMTP id m98so9145318iod.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 05:02:59 -0800 (PST)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: Netdev 2.1 update Feb 06
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-        info@netdevconf.org, linux-wireless@vger.kernel.org,
-        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        Rob Echlin <rob@echlin.ca>, lwn@lwn.net
-Message-ID: <bb5b53b7-ae46-e08c-f996-2dbc96fa1c29@mojatatu.com> (sfid-20170206_140439_058041_DFCC7F0E)
-Date: Mon, 6 Feb 2017 08:02:51 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 20 Feb 2017 13:21:45 -0500
+Date: Mon, 20 Feb 2017 21:16:13 +0300
+From: "Dmitry V. Levin" <ldv@altlinux.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] uapi: fix linux/nfc.h userspace compilation errors
+Message-ID: <20170220181613.GB11185@altlinux.org> (sfid-20170220_192208_232282_0D29D0A2)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Replace sa_family_t with __kernel_sa_family_t to fix the following
+linux/nfc.h userspace compilation errors:
 
-A few announcements:
-- We expect to open up registration and announce hotel and location
-this week.
+/usr/include/linux/nfc.h:264:2: error: unknown type name 'sa_family_t'
+  sa_family_t sa_family;
+/usr/include/linux/nfc.h:272:2: error: unknown type name 'sa_family_t'
+  sa_family_t sa_family;
 
-- We are pleased to announce the first netdev 2.1 sponsor!
-Many thanks to Mellanox who has been a strong supporter of the netdev
-community. Mellanox is first to cross the netdev2.1 sponsor line with a
-silver.
+Signed-off-by: Dmitry V. Levin <ldv@altlinux.org>
+---
+ include/uapi/linux/nfc.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-The Call for Proposals is still open, submit early
-to avoid the hazards of last minute traffic. Refer to:
-http://netdevconf.org/2.1/submit-proposal.html
-
-cheers,
-jamal
+diff --git a/include/uapi/linux/nfc.h b/include/uapi/linux/nfc.h
+index f8ccc12..1b6d54a 100644
+--- a/include/uapi/linux/nfc.h
++++ b/include/uapi/linux/nfc.h
+@@ -261,7 +261,7 @@ enum nfc_sdp_attr {
+ #define NFC_SE_ENABLED  0x1
+ 
+ struct sockaddr_nfc {
+-	sa_family_t sa_family;
++	__kernel_sa_family_t sa_family;
+ 	__u32 dev_idx;
+ 	__u32 target_idx;
+ 	__u32 nfc_protocol;
+@@ -269,7 +269,7 @@ struct sockaddr_nfc {
+ 
+ #define NFC_LLCP_MAX_SERVICE_NAME 63
+ struct sockaddr_nfc_llcp {
+-	sa_family_t sa_family;
++	__kernel_sa_family_t sa_family;
+ 	__u32 dev_idx;
+ 	__u32 target_idx;
+ 	__u32 nfc_protocol;
+-- 
+ldv
