@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46598 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752070AbdB1Juk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 04:50:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-02-28
-Date: Tue, 28 Feb 2017 10:50:18 +0100
-Message-Id: <20170228095019.10637-1-johannes@sipsolutions.net> (sfid-20170228_105424_763132_F7AB3CC9)
+Received: from mail-io0-f193.google.com ([209.85.223.193]:32883 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753349AbdBTNS5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 08:18:57 -0500
+Received: by mail-io0-f193.google.com with SMTP id d198so4499669ioe.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 05:18:28 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev 2.1 update Feb 20
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>, lwn@lwn.net,
+        people@netdevconf.org, Brenda Butler <bjb@mojatatu.com>
+Message-ID: <7ac4b86b-5346-e709-6c45-39271a902ef0@mojatatu.com> (sfid-20170220_141919_094024_74EAFE39)
+Date: Mon, 20 Feb 2017 08:18:15 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
-
-First round of fixes - we actually have quite a few.
-
-Please pull and let me know if there's any problem.
-
-I had another question - I have this average.h API change pending
-(you saw it before). It seems it might be a good time to get it in
-now, since no new users should be showing up. If I put it in only
-with the next merge window, new users might show up and break.
-
-Thoughts?
-
-Thanks,
-johannes
 
 
+A few announcements:
+-Registration is open. Register early so we can plan better.
+https://onlineregistrations.ca/netdev21/
 
-The following changes since commit 51fb60eb162ab84c5edf2ae9c63cf0b878e5547e:
+hotel (If you can get the hotel cheaper online than conference
+rates please send us email, dont book ):
+http://www.netdevconf.org/2.1/hotel.html
 
-  l2tp: avoid use-after-free caused by l2tp_ip_backlog_recv (2017-02-26 22:57:17 -0500)
+- We are pleased to announce our first Gold sponsor! We welcome back
+Redhat as sponsors and thank them for their commitment to the netdev
+community!
 
-are available in the git repository at:
+- We are pleased to announce our first Platinum sponsor: Cumulus
+Networks. Cumulus has always been there for the netdev Community from
+our very first conference.  Thank you Cumulus!
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-02-28
+- Our hard working tech committee has accepted another proposal. This
+time veteran netdever Stephen Hemminger digs into the semantics of
+names. Names have consequences he says.
 
-for you to fetch changes up to 19d19e960598161be92a7e4828eb7706c6410ce6:
+Title: What's in a name?
+---
+Network device names have existed from the earliest days of Unix
+networking and their usage has evolved. This talk is a look at some of
+the issues with network device names. kernel developers often think the
+problem is a userspace issue and nothing can be done but the names are
+a key part of the existing ABI.
 
-  mac80211: use driver-indicated transmitter STA only for data frames (2017-02-28 07:42:05 +0100)
+In the talk, I will cover how the choice of naming policy interacts
+with applications and cloud environments, what current expectations
+are, and how this interacts with cloud infrastructure. There is no
+solution but there are several things that can be done to improve
+the user experience. Will also give examples including Amazon, Azure,
+Google Compute as well as other non-Linux environments.
+-----
 
-----------------------------------------------------------------
-First round of fixes - details in the commits:
- * use a valid hrtimer clock ID in mac80211_hwsim
- * don't reorder frames prior to BA session
- * flush a delayed work at suspend so the state is all valid before
-   suspend/resume
- * fix packet statistics in fast-RX, the RX packets
-   counter increment was simply missing
- * don't try to re-transmit filtered frames in an aggregation session
- * shorten (for tracing) a debug message
- * typo fix in another debug message
- * fix nul-termination with HWSIM_ATTR_RADIO_NAME in hwsim
- * fix mgmt RX processing when station is looked up by driver/device
+Please note that The Call for Proposals is still open, submit early
+to avoid the hazards of last minute traffic. Refer to:
+http://netdevconf.org/2.1/submit-proposal.html
 
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      mac80211: fix power saving clients handling in iwlwifi
-
-Felix Fietkau (1):
-      mac80211: don't handle filtered frames within a BA session
-
-Johannes Berg (3):
-      mac80211: fix packet statistics for fast-RX
-      mac80211_hwsim: check HWSIM_ATTR_RADIO_NAME length
-      mac80211: use driver-indicated transmitter STA only for data frames
-
-Matt Chen (1):
-      mac80211: flush delayed work when entering suspend
-
-Sara Sharon (3):
-      mac80211: don't reorder frames with SN smaller than SSN
-      mac80211: shorten debug message
-      mac80211: fix typo in debug print
-
-Thomas Gleixner (1):
-      mac80211_hwsim: Replace bogus hrtimer clockid
-
- drivers/net/wireless/mac80211_hwsim.c | 30 ++++++++++++++++++++++--------
- net/mac80211/agg-rx.c                 |  3 ++-
- net/mac80211/pm.c                     |  1 +
- net/mac80211/rx.c                     | 31 +++++++++++++++++++++++--------
- net/mac80211/sta_info.c               |  4 ++--
- net/mac80211/sta_info.h               |  6 ++++--
- net/mac80211/status.c                 |  3 ++-
- 7 files changed, 56 insertions(+), 22 deletions(-)
+cheers,
+jamal
