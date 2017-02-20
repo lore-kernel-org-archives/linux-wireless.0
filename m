@@ -1,72 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:34327 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751261AbdBLQgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Feb 2017 11:36:44 -0500
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: clean up and fix ath_tx_count_airtime
-References: <20170212132931.43510-1-nbd@nbd.name>
-        <87lgtb5t9h.fsf@alrua-karlstad>
-        <fbda67b4-7db6-984a-af50-610ec25d2fe0@nbd.name>
-        <87d1entltw.fsf@kamboji.qca.qualcomm.com>
-        <61049ab3-a15e-b1cf-ca1d-4840a8aa35d9@nbd.name>
-Date: Sun, 12 Feb 2017 17:36:39 +0100
-In-Reply-To: <61049ab3-a15e-b1cf-ca1d-4840a8aa35d9@nbd.name> (Felix Fietkau's
-        message of "Sun, 12 Feb 2017 17:32:35 +0100")
-Message-ID: <87efz35pt4.fsf@alrua-karlstad> (sfid-20170212_173646_818983_A29C85AF)
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:33467 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751534AbdBTBRv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 19 Feb 2017 20:17:51 -0500
+Received: by mail-ot0-f195.google.com with SMTP id j49so2682811otb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 17:17:50 -0800 (PST)
+Subject: Re: [PATCH v2] rtl8187: Enable monitor mode to fix multicast
+ reception
+To: Nils Holland <nholland@tisys.org>, linux-wireless@vger.kernel.org
+References: <20170219235919.GA15763@tisys.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <94f6a947-afcc-ad49-cc54-ffa28294d370@lwfinger.net> (sfid-20170220_021816_978940_545E93B1)
+Date: Sun, 19 Feb 2017 19:17:47 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170219235919.GA15763@tisys.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+On 02/19/2017 05:59 PM, Nils Holland wrote:
+> The rtl8187 cards don't seem to receive multicast frames, which,
+> among other things, makes them fail to receive RAs in IPv6 networks.
+> The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
+> have the desired effect.
+>
+> Fix the issue by setting RTL818X_RX_CONF_MONITOR instead, which puts the
+> card into monitor mode and resolves the problem so that multicast frames
+> are sucessfully passed to the kernel.
+>
+> The existence of the problem and the effectiveness of the solution has
+> originally been confirmed on an 8187B based card with the USB id of
+> 0bda:8197. Subsequent testing by Larry Finger on an 8187L based card,
+> which follows the second (8187, i.e. "non-b") code path in the driver,
+> has confirmed that the fix does not cause any noticeable regresssions
+> there either.
+>
+> Signed-off-by: Nils Holland <nholland@tisys.org>
 
-> On 2017-02-12 17:28, Kalle Valo wrote:
->> Felix Fietkau <nbd@nbd.name> writes:
->>=20
->>> On 2017-02-12 16:22, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>>> Felix Fietkau <nbd@nbd.name> writes:
->>>>=20
->>>>> ath_tx_count_airtime is doing a lot of unnecessary work:
->>>>>
->>>>> - Redundant station lookup
->>>>> - Redundant rcu_read_lock/unlock
->>>>> - Useless memcpy of bf->rates
->>>>> - Useless NULL check of bf->bf_mpdu
->>>>> - Redundant lookup of the skb tid
->>>>>
->>>>> Additionally, it tries to look up the mac80211 queue index from the t=
-xq,
->>>>> which fails if the frame was delivered via the power save queue.
->>=20
->> What does this mean in practise, what's the user level impact?
->>=20
->>>>> This patch fixes all of these issues by passing down the right set of
->>>>> pointers instead of doing extra work
->>>>>
->>>>> Cc: stable@vger.kernel.org
->>>>> Fixes: 63fefa050477 ("ath9k: Introduce airtime fairness scheduling
->>>>> between stations")
->>>>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->>>>=20
->>>> Not sure if there's anything for stable to do with this; don't think t=
-he
->>>> airtime fairness code has gone into a release yet? Otherwise:
->>>>=20
->>>> Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
->>>
->>> I added this, because I'm not sure this patch will make it to 4.10 in
->>> time, since we're really close to a release. I assume this patch will
->>> probably go into 4.11.
->>=20
->> Yeah, to try to get a patch to 4.10 at this point needs to be a really
->> high profile regression. That is if Linus doesn't release 4.10 today, of
->> course.
-> The symptoms are kernel crashes at least when operating in AP mode.
-> It's pretty severe, so getting it into 4.10 would be preferable.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-I'm confused now. Wasn't the airtime fairness patch queued for 4.11?
+Thanks,
 
--Toke
+Larry
+
+> ---
+>  drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 16 +++++++---------
+>  1 file changed, 7 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+> index 231f84db9ab0..56a8686cd367 100644
+> --- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+> +++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+> @@ -946,8 +946,7 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+>  		      (7 << 13 /* RX FIFO threshold NONE */) |
+>  		      (7 << 10 /* MAX RX DMA */) |
+>  		      RTL818X_RX_CONF_RX_AUTORESETPHY |
+> -		      RTL818X_RX_CONF_ONLYERLPKT |
+> -		      RTL818X_RX_CONF_MULTICAST;
+> +		      RTL818X_RX_CONF_ONLYERLPKT;
+>  		priv->rx_conf = reg;
+>  		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+>
+> @@ -1319,12 +1318,11 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+>  		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
+>  	if (changed_flags & FIF_CONTROL)
+>  		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
+> -	if (changed_flags & FIF_OTHER_BSS)
+> -		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
+> -	if (*total_flags & FIF_ALLMULTI || multicast > 0)
+> -		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
+> +	if (*total_flags & FIF_OTHER_BSS ||
+> +	    *total_flags & FIF_ALLMULTI || multicast > 0)
+> +		priv->rx_conf |= RTL818X_RX_CONF_MONITOR;
+>  	else
+> -		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
+> +		priv->rx_conf &= ~RTL818X_RX_CONF_MONITOR;
+>
+>  	*total_flags = 0;
+>
+> @@ -1332,10 +1330,10 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
+>  		*total_flags |= FIF_FCSFAIL;
+>  	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
+>  		*total_flags |= FIF_CONTROL;
+> -	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
+> +	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR) {
+>  		*total_flags |= FIF_OTHER_BSS;
+> -	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
+>  		*total_flags |= FIF_ALLMULTI;
+> +	}
+>
+>  	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
+>  }
+>
