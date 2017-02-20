@@ -1,59 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39176 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932096AbdBHL2e (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55429 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752468AbdBTKj6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 06:28:34 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 13:23:13 +0200
-Message-Id: <20170208112322.29413-9-luca@coelho.fi> (sfid-20170208_122859_931718_3242750A)
-In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
-Subject: [PATCH 08/17] iwlwifi: mvm: use the PROBE_RESP_QUEUE to send deauth to unknown station
+        Mon, 20 Feb 2017 05:39:58 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 2/3] cfg80211: Disallow moving out of operating DFS channel in non-ETSI
+Date: Mon, 20 Feb 2017 16:09:14 +0530
+Message-ID: <1487587155-30487-3-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170220_114126_829809_3723E49E)
+In-Reply-To: <1487587155-30487-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1487587155-30487-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+For non-ETSI regulatory domain, CAC result on DFS channel
+may not be valid once moving out of that channel (as done
+during remain-on-channel, scannning and off-channel tx).
+Running CAC on an operating DFS channel after every off-channel
+operation will only add complexity and disturb the current
+link. Better do not allow any off-channel switch from a DFS
+operating channel in non-ETSI domain.
 
-When we send a deauth to a station we don't know about, we
-need to use the PROBE_RESP queue. This can happen when we
-send a deauth to a station that is not associated to us.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ net/wireless/nl80211.c | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 1d147599cca9..dd2b4a300819 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -506,15 +506,17 @@ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
- 	switch (info->control.vif->type) {
- 	case NL80211_IFTYPE_AP:
- 		/*
--		 * handle legacy hostapd as well, where station may be added
--		 * only after assoc.
-+		 * Handle legacy hostapd as well, where station may be added
-+		 * only after assoc. Take care of the case where we send a
-+		 * deauth to a station that we don't have.
- 		 */
--		if (ieee80211_is_probe_resp(fc) || ieee80211_is_auth(fc))
-+		if (ieee80211_is_probe_resp(fc) || ieee80211_is_auth(fc) ||
-+		    ieee80211_is_deauth(fc))
- 			return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
- 		if (info->hw_queue == info->control.vif->cab_queue)
- 			return info->hw_queue;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d516527..b15903b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6556,6 +6556,19 @@ static int nl80211_parse_random_mac(struct nlattr **attrs,
+ 	return 0;
+ }
  
--		WARN_ON_ONCE(1);
-+		WARN_ONCE(1, "fc=0x%02x", le16_to_cpu(fc));
- 		return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		if (ieee80211_is_mgmt(fc))
++static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev)
++{
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (!cfg80211_beaconing_iface_active(wdev))
++		return true;
++
++	if (!(wdev->chandef.chan->flags & IEEE80211_CHAN_RADAR))
++		return true;
++
++	return regulatory_pre_cac_allowed(wdev->wiphy);
++}
++
+ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -6681,6 +6694,25 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	request->n_channels = i;
+ 
++	wdev_lock(wdev);
++	if (!cfg80211_off_channel_oper_allowed(wdev)) {
++		struct ieee80211_channel *chan;
++
++		if (request->n_channels != 1) {
++			wdev_unlock(wdev);
++			err = -EBUSY;
++			goto out_free;
++		}
++
++		chan = request->channels[0];
++		if (chan->center_freq != wdev->chandef.chan->center_freq) {
++			wdev_unlock(wdev);
++			err = -EBUSY;
++			goto out_free;
++		}
++	}
++	wdev_unlock(wdev);
++
+ 	i = 0;
+ 	if (n_ssids) {
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
+@@ -9103,6 +9135,7 @@ static int nl80211_remain_on_channel(struct sk_buff *skb,
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct wireless_dev *wdev = info->user_ptr[1];
+ 	struct cfg80211_chan_def chandef;
++	const struct cfg80211_chan_def *compat_chandef;
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 	u64 cookie;
+@@ -9131,6 +9164,18 @@ static int nl80211_remain_on_channel(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
++	wdev_lock(wdev);
++	if (!cfg80211_off_channel_oper_allowed(wdev) &&
++	    !cfg80211_chandef_identical(&wdev->chandef, &chandef)) {
++		compat_chandef = cfg80211_chandef_compatible(&wdev->chandef,
++							     &chandef);
++		if (compat_chandef != &chandef) {
++			wdev_unlock(wdev);
++			return -EBUSY;
++		}
++	}
++	wdev_unlock(wdev);
++
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
+@@ -9306,6 +9351,13 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	if (!chandef.chan && params.offchan)
+ 		return -EINVAL;
+ 
++	wdev_lock(wdev);
++	if (params.offchan && !cfg80211_off_channel_oper_allowed(wdev)) {
++		wdev_unlock(wdev);
++		return -EBUSY;
++	}
++	wdev_unlock(wdev);
++
+ 	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
+ 	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
+ 
 -- 
-2.11.0
+1.9.1
