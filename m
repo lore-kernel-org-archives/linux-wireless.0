@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39312 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50120 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752775AbdBHG6q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 01:58:46 -0500
-Message-ID: <1486537122.4603.1.camel@sipsolutions.net> (sfid-20170208_075916_732308_0530EAAD)
-Subject: Re: Changing of WMM queue parameters forbidden for IBSS interfaces
+        id S1753292AbdBTNYv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 08:24:51 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?J=F6rg?= Pommnitz <j.pommnitz@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 08 Feb 2017 07:58:42 +0100
-In-Reply-To: <CAEvAWuH-HkC1VNbtLZdjtNQehcE2CR+k0RP=24xMx3TTxzFdUg@mail.gmail.com> (sfid-20170201_152438_772895_B51E2A0E)
-References: <CAEvAWuH-HkC1VNbtLZdjtNQehcE2CR+k0RP=24xMx3TTxzFdUg@mail.gmail.com>
-         (sfid-20170201_152438_772895_B51E2A0E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Matt Chen <matt.chen@intel.com>
+Subject: [PATCH 1/2] mac80211: flush delayed work when entering suspend
+Date: Mon, 20 Feb 2017 14:24:47 +0100
+Message-Id: <20170220132448.16140-1-johannes@sipsolutions.net> (sfid-20170220_142501_576592_BEB74E55)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-02-01 at 15:24 +0100, Jörg Pommnitz wrote:
-> Hello all,
-> 
-> I'm trying to change the WMM parameters for an IBSS network. I'm
-> adding a command to set txq_params to iw. Sadly the current kernel
-> code explicitly denies this for interfaces other than AP and P2P (see
-> http://lxr.free-electrons.com/source/net/wireless/nl80211.c#L2279).
-> 
-> Is there a reason why this should not be done for IBSS interfaces?
+From: Matt Chen <matt.chen@intel.com>
 
-I guess the whole thing was just ignored - we should also *adopt* the
-EDCA parameters when joining an IBSS network, which I don't think we do
-either.
+The issue was found when entering suspend and resume.
+It triggers a warning in:
+mac80211/key.c: ieee80211_enable_keys()
+...
+WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt ||
+             sdata->crypto_tx_tailroom_pending_dec);
+...
 
-I'm not sure we can actually modify them on the fly though - since
-adoption is required, such changes would have a hard time propagating
-through.
+It points out sdata->crypto_tx_tailroom_pending_dec isn't cleaned up successfully
+in a delayed_work during suspend. Add a flush_delayed_work to fix it.
 
-If really necessary, we'd have to implement adoption and probably only
-allow setting it at IBSS creation time.
+Cc: stable@vger.kernel.org
+Signed-off-by: Matt Chen <matt.chen@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/pm.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 28a3a0957c9e..76a8bcd8ef11 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -168,6 +168,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 			break;
+ 		}
+ 
++		flush_delayed_work(&sdata->dec_tailroom_needed_wk);
+ 		drv_remove_interface(local, sdata);
+ 	}
+ 
+-- 
+2.9.3
