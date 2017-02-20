@@ -1,153 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752748AbdBUOcO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:32:14 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 01/10] wil6210: set dma mask to reflect device capability
-Date: Tue, 21 Feb 2017 16:31:59 +0200
-Message-Id: <1487687528-12832-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153218_477349_F1DB1E8E)
-In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50112 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753292AbdBTNYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Feb 2017 08:24:44 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>
+Subject: [PATCH 5/6] mac80211: fix typo in debug print
+Date: Mon, 20 Feb 2017 14:24:38 +0100
+Message-Id: <20170220132439.16064-5-johannes@sipsolutions.net> (sfid-20170220_142500_971786_F764DE95)
+In-Reply-To: <20170220132439.16064-1-johannes@sipsolutions.net>
+References: <20170220132439.16064-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-device supports 48bit addresses, reflect that by
-setting the dma mask accordingly.
-
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 16 ++++++++++++++++
- drivers/net/wireless/ath/wil6210/pmc.c      | 17 ++++++++++++++++-
- drivers/net/wireless/ath/wil6210/txrx.c     | 19 ++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
- 4 files changed, 51 insertions(+), 2 deletions(-)
+ net/mac80211/agg-rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 874c787..b38515f 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -211,6 +211,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		dev_err(dev, "wil_if_alloc failed: %d\n", rc);
- 		return rc;
- 	}
-+
- 	wil->pdev = pdev;
- 	pci_set_drvdata(pdev, wil);
- 	/* rollback to if_free */
-@@ -224,6 +225,21 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 	/* rollback to err_plat */
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 3b5fd4188f2a..4463c61d068e 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -85,7 +85,7 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 	ht_dbg(sta->sdata,
+ 	       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
+ 	       sta->sta.addr, tid,
+-	       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "inititator",
++	       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
+ 	       (int)reason);
  
-+	/* device supports 48bit addresses */
-+	rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
-+	if (rc) {
-+		dev_err(dev, "dma_set_mask_and_coherent(48) failed: %d\n", rc);
-+		rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-+		if (rc) {
-+			dev_err(dev,
-+				"dma_set_mask_and_coherent(32) failed: %d\n",
-+				rc);
-+			goto err_plat;
-+		}
-+	} else {
-+		wil->use_extended_dma_addr = 1;
-+	}
-+
- 	rc = pci_enable_device(pdev);
- 	if (rc) {
- 		wil_err(wil,
-diff --git a/drivers/net/wireless/ath/wil6210/pmc.c b/drivers/net/wireless/ath/wil6210/pmc.c
-index 3ff4f4c..b067fdf 100644
---- a/drivers/net/wireless/ath/wil6210/pmc.c
-+++ b/drivers/net/wireless/ath/wil6210/pmc.c
-@@ -107,13 +107,28 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
- 
- 	/* Allocate pring buffer and descriptors.
- 	 * vring->va should be aligned on its size rounded up to power of 2
--	 * This is granted by the dma_alloc_coherent
-+	 * This is granted by the dma_alloc_coherent.
-+	 *
-+	 * HW has limitation that all vrings addresses must share the same
-+	 * upper 16 msb bits part of 48 bits address. To workaround that,
-+	 * if we are using 48 bit addresses switch to 32 bit allocation
-+	 * before allocating vring memory.
-+	 *
-+	 * There's no check for the return value of dma_set_mask_and_coherent,
-+	 * since we assume if we were able to set the mask during
-+	 * initialization in this system it will not fail if we set it again
- 	 */
-+	if (wil->use_extended_dma_addr)
-+		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-+
- 	pmc->pring_va = dma_alloc_coherent(dev,
- 			sizeof(struct vring_tx_desc) * num_descriptors,
- 			&pmc->pring_pa,
- 			GFP_KERNEL);
- 
-+	if (wil->use_extended_dma_addr)
-+		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
-+
- 	wil_dbg_misc(wil,
- 		     "pmc_alloc: allocated pring %p => %pad. %zd x %d = total %zd bytes\n",
- 		     pmc->pring_va, &pmc->pring_pa,
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 072182e..67f50ae 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -123,15 +123,32 @@ static int wil_vring_alloc(struct wil6210_priv *wil, struct vring *vring)
- 		vring->va = NULL;
- 		return -ENOMEM;
- 	}
-+
- 	/* vring->va should be aligned on its size rounded up to power of 2
--	 * This is granted by the dma_alloc_coherent
-+	 * This is granted by the dma_alloc_coherent.
-+	 *
-+	 * HW has limitation that all vrings addresses must share the same
-+	 * upper 16 msb bits part of 48 bits address. To workaround that,
-+	 * if we are using 48 bit addresses switch to 32 bit allocation
-+	 * before allocating vring memory.
-+	 *
-+	 * There's no check for the return value of dma_set_mask_and_coherent,
-+	 * since we assume if we were able to set the mask during
-+	 * initialization in this system it will not fail if we set it again
- 	 */
-+	if (wil->use_extended_dma_addr)
-+		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-+
- 	vring->va = dma_alloc_coherent(dev, sz, &vring->pa, GFP_KERNEL);
- 	if (!vring->va) {
- 		kfree(vring->ctx);
- 		vring->ctx = NULL;
- 		return -ENOMEM;
- 	}
-+
-+	if (wil->use_extended_dma_addr)
-+		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
-+
- 	/* initially, all descriptors are SW owned
- 	 * For Tx and Rx, ownership bit is at the same location, thus
- 	 * we can use any
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 085a2db..ea1e5b34 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -657,6 +657,7 @@ struct wil6210_priv {
- 	u8 vring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
- 	struct wil_sta_info sta[WIL6210_MAX_CID];
- 	int bcast_vring;
-+	bool use_extended_dma_addr; /* indicates whether we are using 48 bits */
- 	/* scan */
- 	struct cfg80211_scan_request *scan_request;
- 
+ 	if (drv_ampdu_action(local, sta->sdata, &params))
 -- 
-1.9.1
+2.9.3
