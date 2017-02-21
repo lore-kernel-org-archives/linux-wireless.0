@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41210 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751154AbdBFOic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 09:38:32 -0500
-Message-ID: <1486391893.5430.6.camel@sipsolutions.net> (sfid-20170206_153946_062767_75AF50A9)
-Subject: Re: [PATCH v2 1/2] cfg80211: Add support to set tx power for a
- station associated
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        Ashok Raj Nagarajan <arnagara@codeaurora.org>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Mon, 06 Feb 2017 15:38:13 +0100
-In-Reply-To: <00887d68-80b7-cf80-e426-e3772d8122f1@candelatech.com>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
-         <12efc3d8-2274-a6e8-6d74-c06bf89762fb@candelatech.com>
-         <14f6b3acb8b26d0eb806148c0ee47fb0@codeaurora.org>
-         <2b68dc12-44bf-f510-339a-3d987a88e8b5@candelatech.com>
-         <1f3a3dec67fbe4f580750eb06f9b628b@codeaurora.org>
-         <00887d68-80b7-cf80-e426-e3772d8122f1@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752885AbdBUOc3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 09:32:29 -0500
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 08/10] wil6210: use WMI_DISCONNECT_CMDID upon connect timeout
+Date: Tue, 21 Feb 2017 16:32:06 +0200
+Message-Id: <1487687528-12832-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153235_038388_41EB73EF)
+In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-> You use value '0' to mean set to default values, as far as I can
-> tell.
+Upon connect timeout driver invokes _wil6210_disconnect() which iterates
+over sta array and disconnects each connected sta. In practice, because
+the connection is still ongoing and because cid is not yet allocated,
+disconnect is not actually happening. This leaves FW in connecting
+state while driver is in disconnected state.
+To fix this, upon connect timeout, explicitly send WMI_DISCONNECT_CMDID
+to FW to make sure it gets disconnected.
 
-I think you're confusing the internal API and the userspace API - at a
-userspace level you have to set NL80211_ATTR_STA_TX_POWER_SETTING to
-NL80211_TX_POWER_AUTOMATIC to revert back to defaults, no?
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 30 +++++++++++++++++++++++++++---
+ 1 file changed, 27 insertions(+), 3 deletions(-)
 
-For perfect backwards compatibility we should ignore it if not
-supported, but that doesn't really make sense - I think we should
-reject it and handle errors elsewhere in the not supported case.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 5d45fac..79aeb2b8 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -306,10 +306,34 @@ static void wil_disconnect_worker(struct work_struct *work)
+ {
+ 	struct wil6210_priv *wil = container_of(work,
+ 			struct wil6210_priv, disconnect_worker);
++	struct net_device *ndev = wil_to_ndev(wil);
++	int rc;
++	struct {
++		struct wmi_cmd_hdr wmi;
++		struct wmi_disconnect_event evt;
++	} __packed reply;
+ 
+-	mutex_lock(&wil->mutex);
+-	_wil6210_disconnect(wil, NULL, WLAN_REASON_UNSPECIFIED, false);
+-	mutex_unlock(&wil->mutex);
++	if (test_bit(wil_status_fwconnected, wil->status))
++		/* connect succeeded after all */
++		return;
++
++	if (!test_bit(wil_status_fwconnecting, wil->status))
++		/* already disconnected */
++		return;
++
++	rc = wmi_call(wil, WMI_DISCONNECT_CMDID, NULL, 0,
++		      WMI_DISCONNECT_EVENTID, &reply, sizeof(reply),
++		      WIL6210_DISCONNECT_TO_MS);
++	if (rc) {
++		wil_err(wil, "disconnect error %d\n", rc);
++		return;
++	}
++
++	wil_update_net_queues_bh(wil, NULL, true);
++	netif_carrier_off(ndev);
++	cfg80211_connect_result(ndev, NULL, NULL, 0, NULL, 0,
++				WLAN_STATUS_UNSPECIFIED_FAILURE, GFP_KERNEL);
++	clear_bit(wil_status_fwconnecting, wil->status);
+ }
+ 
+ static void wil_connect_timer_fn(ulong x)
+-- 
+1.9.1
