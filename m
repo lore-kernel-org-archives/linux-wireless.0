@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60331 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752399AbdBJM2E (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 07:28:04 -0500
-Subject: [PATCH v2 2/4] ath10k: add directory to board data error message
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 10 Feb 2017 14:26:44 +0200
-Message-ID: <148672960431.8556.7607639090307029208.stgit@potku.adurom.net> (sfid-20170210_132809_932290_4B813503)
-In-Reply-To: <148672934198.8556.5588600166627442652.stgit@potku.adurom.net>
-References: <148672934198.8556.5588600166627442652.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35304 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751563AbdBUKkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 05:40:06 -0500
+Message-ID: <1487673603.2215.3.camel@sipsolutions.net> (sfid-20170221_114015_410034_B1982C48)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
+ WPA/WPA2-PSK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>
+Date: Tue, 21 Feb 2017 11:40:03 +0100
+In-Reply-To: <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com> (sfid-20170221_113217_027474_7273A408)
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+         <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
+         (sfid-20170221_113217_027474_7273A408)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This way user has a better idea what file exactly is missing.
-This is needed when we switch to using request_firmware_direct() which doesn't
-print any errors anymore.
+On Tue, 2017-02-21 at 11:32 +0100, Arend Van Spriel wrote:
+> On 21-2-2017 11:09, Johannes Berg wrote:
+> > From: Eliad Peller <eliad@wizery.com>
+> > 
+> > Let drivers advertise support for station-mode 4-way handshake
+> > offloading with a new
+> > NL80211_EXT_FEATURE_4WAY_HANDSHAKE_OFFLOAD_STA
+> > flag.
+> 
+> I find use of the term OFFLOAD a bit redundant as it is implied by
+> its presence anyway.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Fair enough, we can remove that.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 9674c08464ab..f395d3a98bc5 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1168,7 +1168,8 @@ static int ath10k_core_fetch_board_file(struct ath10k *ar)
- 	ar->bd_api = 1;
- 	ret = ath10k_core_fetch_board_data_api_1(ar);
- 	if (ret) {
--		ath10k_err(ar, "failed to fetch board data\n");
-+		ath10k_err(ar, "failed to fetch board-2.bin or board.bin from %s\n",
-+			   ar->hw_params.fw.dir);
- 		return ret;
- 	}
- 
+> > Add a new NL80211_ATTR_PMK attribute that might be passed as part
+> > of NL80211_CMD_CONNECT command, and contain the PSK (which is the
+> > PMK, hence the name.)
+> > 
+> > The driver/device is assumed to handle the 4-way handshake by
+> > itself in this case (including key derivations, etc.), instead
+> > of relying on the supplicant.
+> > 
+> > This patch is somewhat based on this one (by Vladimir Kondratiev):
+> > https://patchwork.kernel.org/patch/1309561/.
+> 
+> It also looks quite like this one we posted a while ago [1]. Our bad
+> that we did not follow-up :-p
+
+Indeed, I was looking for the better link (had gmane recorded in the
+internal commit log) and found a few that all looked the same ... :)
+
+Would this work for you? We should have wpa_supplicant support too, but
+need to ask Andrei to look at that.
+
+johannes
