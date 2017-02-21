@@ -1,92 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:35151 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752584AbdBNNHO (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36108 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753768AbdBUQQe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 08:07:14 -0500
-Received: by mail-wr0-f181.google.com with SMTP id c4so11730928wrd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 05:07:14 -0800 (PST)
-Subject: Re: [RFC V2 1/5] nl80211: allow multiple active scheduled scan
- requests
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
- <1484566941-27000-2-git-send-email-arend.vanspriel@broadcom.com>
- <1485250815.7244.8.camel@sipsolutions.net>
- <fd4c2573-caea-1cdc-ee33-f010bb0aad58@broadcom.com>
- <1487076714.4705.11.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <deef3e83-b6d8-f99d-516d-dc6e99013560@broadcom.com> (sfid-20170214_140802_516671_BD04D8C1)
-Date: Tue, 14 Feb 2017 14:07:11 +0100
-MIME-Version: 1.0
-In-Reply-To: <1487076714.4705.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Tue, 21 Feb 2017 11:16:34 -0500
+Received: by mail-lf0-f68.google.com with SMTP id 90so4027226lfr.3
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:33 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 20/21] ath10k: add QCA9377 sdio hw_param item
+Date: Tue, 21 Feb 2017 17:15:40 +0100
+Message-Id: <1487693741-10042-21-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171705_710546_1896EE4C)
+In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-2-2017 13:51, Johannes Berg wrote:
-> On Tue, 2017-02-14 at 13:35 +0100, Arend Van Spriel wrote:
->> On 24-1-2017 10:40, Johannes Berg wrote:
->>>
->>>> + * @max_sched_scan_reqs: maximum number of scheduled scan
->>>> requests
->>>> that
->>>> + *	the device can run concurrently.
->>>
->>> Perhaps we should get rid of WIPHY_FLAG_SUPPORTS_SCHED_SCAN and
->>> just
->>> set this to 1 for such devices? Otherwise we have two different
->>> requirements, and we need to track that 0 is an invalid value here
->>> if
->>> WIPHY_FLAG_SUPPORTS_SCHED_SCAN is set, or something like that?
->>
->> Ok. Doesn't that cause issues in user-space. Or do you only want to
->> get rid of it in cfg80211 api and report the flag to user-space when
->> max_sched_scan_reqs equals 1?
-> 
-> WIPHY_FLAG_* aren't directly reported to userspace at all.
+Hardware parameters for QCA9377 sdio devices.
 
-I noticed diving in the code. Indirectly it is used for reporting
-support of sched_scan_start command. Anyway, I got rid of it.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 25 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  1 +
+ 2 files changed, 26 insertions(+)
 
->>> This might break older userspace - you'll have to put it in a later
->>> portion of the code.
->>>
->>> I'm also a bit surprised the attributes aren't actually optional
->>> for when sched scan isn't supported, I'd make the new one optional
->>> and I guess we can fix the others later too, if desired.
->>
->> Why would it break user-space. Is the order in which attributes are
->> added into the stream something user-space relies on.
-> 
-> No. But there was a size limit on how much older userspace could
-> process before we did the splitting.
-
-I see. So basically adding stuff to (split_start == 0) is not wanted.
-Just trying to get a clear requirement/rule here. Do we (still) know the
-exact size limit?
-
->>>> +static struct cfg80211_sched_scan_request *
->>>> +cfg80211_find_sched_scan_req(struct cfg80211_registered_device
->>>> *rdev, u64 reqid)
->>>> +{
->>>> +	struct cfg80211_sched_scan_request *pos;
->>>> +
->>>> +	list_for_each_entry(pos, &rdev->sched_scan_req_list,
->>>> list) {
->>>> +		if (pos->reqid == reqid)
->>>> +			return pos;
->>>> +	}
->>>> +	return ERR_PTR(-ENOENT);
->>>> +}
->>>
->>> Here too, I guess, since you don't actually use RCU.
->>
->> So should I use RCU here? Not sure what is the better choice here.
-> 
-> No no, I just meant to add locking assertions :)
-
-Sure. Did that already pending your reply ;-)
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 96b278b..a884e34 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -311,6 +311,31 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.start_once = true,
+ 	},
+ 	{
++		.id = QCA9377_HW_1_1_DEV_VERSION,
++		.dev_id = QCA9377_1_0_DEVICE_ID,
++		.name = "qca9377 hw1.1 sdio",
++		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
++		.uart_pin = 19,
++		.otp_exe_param = 0,
++		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
++		.cal_data_len = 8124,
++		.fw = {
++			.dir = QCA9377_HW_1_0_FW_DIR,
++			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_SDIO,
++			.board_size = QCA9377_BOARD_DATA_SZ,
++			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
++		},
++		.hw_ops = &qca6174_ops,
++		.hw_clk = qca6174_clk,
++		.target_cpu_freq = 176000000,
++		.decap_align_bytes = 4,
++		.max_num_peers = TARGET_QCA9377_HL_NUM_PEERS,
++		.is_high_latency = true,
++		.bus = ATH10K_BUS_SDIO,
++		.start_once = true,
++	},
++	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+ 		.dev_id = 0,
+ 		.name = "qca4019 hw1.0",
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 5408ebc..d76b206 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -128,6 +128,7 @@ enum qca9377_chip_id_rev {
+ #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
+ #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
+ #define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
++#define QCA9377_HW_1_0_BOARD_DATA_FILE_SDIO "board-sdio.bin"
+ #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
+ 
+ /* QCA4019 1.0 definitions */
+-- 
+2.7.4
