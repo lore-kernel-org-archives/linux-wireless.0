@@ -1,60 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2852 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751305AbdBJN3X (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:33578 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752993AbdBUQQS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Feb 2017 08:29:23 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v4] ath10k: fix napi crash during rmmod when probe firmware fails
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <148672748569.28126.12259592472689214081.stgit@potku.adurom.net>
-References: <148672748569.28126.12259592472689214081.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <9338c9758cbf43d7ad3a6c382236e7b2@eusanexr01a.eu.qualcomm.com> (sfid-20170210_142943_512567_65C63C3D)
-Date: Fri, 10 Feb 2017 04:46:55 -0800
+        Tue, 21 Feb 2017 11:16:18 -0500
+Received: by mail-lf0-f66.google.com with SMTP id 86so5299997lfv.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:17 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 04/21] ath10k: htc: refactorization
+Date: Tue, 21 Feb 2017 17:15:24 +0100
+Message-Id: <1487693741-10042-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171649_510204_9CB99D9A)
+In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> This fixes the below crash when ath10k probe firmware fails, NAPI polling tries
-> to access a rx ring resource which was never allocated. An easy way to
-> reproduce this is easy to remove all the firmware files, load ath10k modules
-> and ath10k will crash when calling 'rmmod ath10k_pci'. The fix is to call
-> napi_enable() from ath10k_pci_hif_start() so that it matches with
-> napi_disable() being called from ath10k_pci_hif_stop().
-> 
-> Big thanks to Mohammed Shafi Shajakhan who debugged this and provided first
-> version of the fix. In this patch I just fix the actual problem in pci.c
-> instead of having a workaround in core.c.
-> 
-> BUG: unable to handle kernel NULL pointer dereference at (null)
-> IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-> __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-> 
-> Call Trace:
-> 
-> [<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90
-> [ath10k_core]
-> [<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0
-> [ath10k_core]
-> [<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80
-> [<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150
-> [<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]
-> [<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]
-> [<ffffffff817863af>] net_rx_action+0x20f/0x370
-> 
-> Reported-by: Ben Greear <greearb@candelatech.com>
-> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Code refactorization:
 
-I'm planning to push this to 4.11.
+Moved the code for ep 0 in ath10k_htc_rx_completion_handler
+to ath10k_htc_control_rx_complete.
 
+This eases the implementation of SDIO/mbox significantly since
+the ep_rx_complete cb is invoked directly from the SDIO/mbox
+hif layer.
+
+Since the ath10k_htc_control_rx_complete already is present
+(only containing a warning message) there is no reason for not
+using it (instead of having a special case for ep 0 in
+ath10k_htc_rx_completion_handler).
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 73 ++++++++++++++++-------------------
+ 1 file changed, 34 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index f39eef6..eb036b3 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -459,42 +459,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		/* zero length packet with trailer data, just drop these */
+ 		goto out;
+ 
+-	if (eid == ATH10K_HTC_EP_0) {
+-		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
+-
+-		switch (__le16_to_cpu(msg->hdr.message_id)) {
+-		case ATH10K_HTC_MSG_READY_ID:
+-		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
+-			/* handle HTC control message */
+-			if (completion_done(&htc->ctl_resp)) {
+-				/*
+-				 * this is a fatal error, target should not be
+-				 * sending unsolicited messages on the ep 0
+-				 */
+-				ath10k_warn(ar, "HTC rx ctrl still processing\n");
+-				complete(&htc->ctl_resp);
+-				goto out;
+-			}
+-
+-			htc->control_resp_len =
+-				min_t(int, skb->len,
+-				      ATH10K_HTC_MAX_CTRL_MSG_LEN);
+-
+-			memcpy(htc->control_resp_buffer, skb->data,
+-			       htc->control_resp_len);
+-
+-			complete(&htc->ctl_resp);
+-			break;
+-		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
+-			htc->htc_ops.target_send_suspend_complete(ar);
+-			break;
+-		default:
+-			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
+-			break;
+-		}
+-		goto out;
+-	}
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
+ 		   eid, skb);
+ 	ep->ep_ops.ep_rx_complete(ar, skb);
+@@ -509,9 +473,40 @@ EXPORT_SYMBOL(ath10k_htc_rx_completion_handler);
+ static void ath10k_htc_control_rx_complete(struct ath10k *ar,
+ 					   struct sk_buff *skb)
+ {
+-	/* This is unexpected. FW is not supposed to send regular rx on this
+-	 * endpoint. */
+-	ath10k_warn(ar, "unexpected htc rx\n");
++	struct ath10k_htc *htc = &ar->htc;
++	struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
++
++	switch (__le16_to_cpu(msg->hdr.message_id)) {
++	case ATH10K_HTC_MSG_READY_ID:
++	case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
++		/* handle HTC control message */
++		if (completion_done(&htc->ctl_resp)) {
++			/* this is a fatal error, target should not be
++			 * sending unsolicited messages on the ep 0
++			 */
++			ath10k_warn(ar, "HTC rx ctrl still processing\n");
++			complete(&htc->ctl_resp);
++			goto out;
++		}
++
++		htc->control_resp_len =
++			min_t(int, skb->len,
++			      ATH10K_HTC_MAX_CTRL_MSG_LEN);
++
++		memcpy(htc->control_resp_buffer, skb->data,
++		       htc->control_resp_len);
++
++		complete(&htc->ctl_resp);
++		break;
++	case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
++		htc->htc_ops.target_send_suspend_complete(ar);
++		break;
++	default:
++		ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
++		break;
++	}
++
++out:
+ 	kfree_skb(skb);
+ }
+ 
 -- 
-https://patchwork.kernel.org/patch/9566625/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
