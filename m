@@ -1,71 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:22865
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751296AbdBYGlE (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34269 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753701AbdBUQQZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Feb 2017 01:41:04 -0500
-Date: Sat, 25 Feb 2017 07:37:56 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Tahia Khan <tahia.khan@gmail.com>
-cc: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
-        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [Outreachy kernel] [PATCH v4 1/3] staging: wilc1000: Rename
- struct tstrRSSI to rssi_history_buffer
-In-Reply-To: <da73d1aef379243ba94a5c1a4e1d6663160451fd.1487947616.git.tahia.khan@gmail.com>
-Message-ID: <alpine.DEB.2.20.1702250737410.2088@hadrien> (sfid-20170225_074129_603607_9866CDE0)
-References: <cover.1487947616.git.tahia.khan@gmail.com> <da73d1aef379243ba94a5c1a4e1d6663160451fd.1487947616.git.tahia.khan@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Tue, 21 Feb 2017 11:16:25 -0500
+Received: by mail-lf0-f66.google.com with SMTP id h67so3752227lfg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:24 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 12/21] ath10k: high_latency detection
+Date: Tue, 21 Feb 2017 17:15:32 +0100
+Message-Id: <1487693741-10042-13-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171652_414492_2478B041)
+In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The setup of high latency chips (USB and SDIO) is
+sometimes different than for chips using low latency
+interfaces.
 
+The bus type is used to determine if the interface is
+a high latency interface.
 
-On Fri, 24 Feb 2017, Tahia Khan wrote:
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-> Rename struct tstrRSSI to rssi_history_buffer for clarity
-> and to remove camel casing.
->
-> Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
-
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
-
-
-> ---
->  drivers/staging/wilc1000/coreconfigurator.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-> index cff1698..1c77529 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.h
-> +++ b/drivers/staging/wilc1000/coreconfigurator.h
-> @@ -70,7 +70,7 @@ enum connect_status {
->  	CONNECT_STS_FORCE_16_BIT = 0xFFFF
->  };
->
-> -struct tstrRSSI {
-> +struct rssi_history_buffer {
->  	u8 u8Full;
->  	u8 u8Index;
->  	s8 as8RSSI[NUM_RSSI];
-> @@ -93,7 +93,7 @@ struct network_info {
->  	u8 *ies;
->  	u16 ies_len;
->  	void *join_params;
-> -	struct tstrRSSI str_rssi;
-> +	struct rssi_history_buffer str_rssi;
->  	u64 tsf_hi;
->  };
->
-> --
-> 2.7.4
->
-> --
-> You received this message because you are subscribed to the Google Groups "outreachy-kernel" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to outreachy-kernel+unsubscribe@googlegroups.com.
-> To post to this group, send email to outreachy-kernel@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/outreachy-kernel/da73d1aef379243ba94a5c1a4e1d6663160451fd.1487947616.git.tahia.khan%40gmail.com.
-> For more options, visit https://groups.google.com/d/optout.
->
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a0b331d..39c407e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2400,6 +2400,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 	ar->hw_rev = hw_rev;
+ 	ar->hif.ops = hif_ops;
+ 	ar->hif.bus = bus;
++	ar->is_high_latency = ath10k_is_high_latency(bus);
+ 
+ 	switch (hw_rev) {
+ 	case ATH10K_HW_QCA988X:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 2768b07..0c970fe 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -785,6 +785,8 @@ struct ath10k {
+ 
+ 	bool p2p;
+ 
++	bool is_high_latency;
++
+ 	struct {
+ 		enum ath10k_bus bus;
+ 		const struct ath10k_hif_ops *ops;
+@@ -1003,6 +1005,11 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
+ 	return false;
+ }
+ 
++static inline bool ath10k_is_high_latency(enum ath10k_bus bus)
++{
++	return ((bus == ATH10K_BUS_SDIO) || (bus == ATH10K_BUS_USB));
++}
++
+ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 				  enum ath10k_bus bus,
+ 				  enum ath10k_hw_rev hw_rev,
+-- 
+2.7.4
