@@ -1,51 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:35917 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751304AbdBOK2g (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752885AbdBUOcZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 05:28:36 -0500
-Received: by mail-pg0-f43.google.com with SMTP id v184so36008935pgv.3
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 02:28:36 -0800 (PST)
-Subject: Re: wireless driver crashing frequently
-To: ravin goyal <ravirocks1021@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <CANU0Mn00ju_SZ3L+ipdnZ5R-Y1m+T=MhjHmBjMpKN_i8NPWsrg@mail.gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <dea21c18-30a4-f236-6f8b-1bf8d4391e0b@broadcom.com> (sfid-20170215_112840_470923_9C2233B1)
-Date: Wed, 15 Feb 2017 11:28:32 +0100
-MIME-Version: 1.0
-In-Reply-To: <CANU0Mn00ju_SZ3L+ipdnZ5R-Y1m+T=MhjHmBjMpKN_i8NPWsrg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Tue, 21 Feb 2017 09:32:25 -0500
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 06/10] wil6210: store bss object and use cfg80211_connect_bss()
+Date: Tue, 21 Feb 2017 16:32:04 +0200
+Message-Id: <1487687528-12832-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153230_216259_882BCD0D)
+In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-2-2017 10:54, ravin goyal wrote:
-> Hello, I have a banana pi m2+ running raspbian lite 3.4.112-sun8i
-> I am running hostapd on it
-> 
-> My wireless chip is AP6212 ,when I start hostapd sometime it runs
-> sometime it leads to kernel crash
-> 
-> please follow this link to see the kernel messages: https://clbin.com/PXBSB?hl
-> 
-> I have been told to ask my doubt here since it is the problem of the
-> driver in the kernel
-> 
-> To make hostapd work properly I have to manuallly run this command
-> 
-> modprobe -v bcmdhd op_mode=2
-> 
-> bcmdhd is my wireless driver
-> 
-> after this hostapd is able to broadcast the ssid, if i don't provide
-> the op_mode=2 while loading the module, hostapd will not broadcast the
-> ssid.
-> 
-> any help on this ?
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-You are asking the wrong crowd. bcmdhd is an android driver. In upstream
-linux we have brcmfmac. Are you running android or upstream linux. At
-least you are on a pretty old kernel so I suspect android.
+In a fast disconnect/connect sequence, cfg80211_connect_result() can
+fail to find the bss object which the driver is connecting to. Detailed
+sequence of events:
+* Driver is connected in STA mode
+* Disconnect request arrives from user space. Driver disconnects and
+  calls cfg80211_disconnected() which adds new event to the
+  cfg80211_wq worker thread
+* Connect request arrives from user space. cfg80211_connect() stores
+  ssid/ssid_len and calls rdev_connect()
+* __cfg80211_disconnected() runs in worker thread and zero
+  wdev->ssid_len
+* Connect succeeds. Driver calls cfg80211_connect_result() which fails
+  to find the bss because wdev->ssid_len is zero
 
-Regards,
-Arend
+To overcome this, upon connect request, store the bss object in the
+driver and upon connect completion pass it to kernel using
+cfg80211_connect_bss().
+
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c |  1 +
+ drivers/net/wireless/ath/wil6210/main.c     |  1 +
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ drivers/net/wireless/ath/wil6210/wmi.c      | 14 +++++++++-----
+ 4 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 581a4e2..39ee565 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -681,6 +681,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 	if (rc == 0) {
+ 		netif_carrier_on(ndev);
+ 		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
++		wil->bss = bss;
+ 		/* Connect can take lots of time */
+ 		mod_timer(&wil->connect_timer,
+ 			  jiffies + msecs_to_jiffies(2000));
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index dddde94..5d45fac 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -284,6 +284,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 			cfg80211_connect_result(ndev, bssid, NULL, 0, NULL, 0,
+ 						WLAN_STATUS_UNSPECIFIED_FAILURE,
+ 						GFP_KERNEL);
++			wil->bss = NULL;
+ 		}
+ 		clear_bit(wil_status_fwconnecting, wil->status);
+ 		break;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 89e7eb7..09e2fce 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -613,6 +613,7 @@ struct wil6210_priv {
+ 	u16 channel; /* relevant in AP mode */
+ 	int sinfo_gen;
+ 	u32 ap_isolate; /* no intra-BSS communication */
++	struct cfg80211_bss *bss; /* connected bss, relevant in STA mode */
+ 	/* interrupt moderation */
+ 	u32 tx_max_burst_duration;
+ 	u32 tx_interframe_timeout;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index a7a4ac1..a2a895b 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -573,12 +573,16 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 						GFP_KERNEL);
+ 			goto out;
+ 		} else {
+-			cfg80211_connect_result(ndev, evt->bssid,
+-						assoc_req_ie, assoc_req_ielen,
+-						assoc_resp_ie, assoc_resp_ielen,
+-						WLAN_STATUS_SUCCESS,
+-						GFP_KERNEL);
++			struct wiphy *wiphy = wil_to_wiphy(wil);
++
++			cfg80211_ref_bss(wiphy, wil->bss);
++			cfg80211_connect_bss(ndev, evt->bssid, wil->bss,
++					     assoc_req_ie, assoc_req_ielen,
++					     assoc_resp_ie, assoc_resp_ielen,
++					     WLAN_STATUS_SUCCESS, GFP_KERNEL,
++					     NL80211_TIMEOUT_UNSPECIFIED);
+ 		}
++		wil->bss = NULL;
+ 	} else if ((wdev->iftype == NL80211_IFTYPE_AP) ||
+ 		   (wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
+ 		if (rc) {
+-- 
+1.9.1
