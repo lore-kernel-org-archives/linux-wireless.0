@@ -1,139 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:34998 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751287AbdBXMQC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51636 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751069AbdBUJcy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 07:16:02 -0500
-Received: by mail-qk0-f181.google.com with SMTP id u188so16607525qkc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 04:16:01 -0800 (PST)
-Subject: Re: brcmfmac: problem using WPS with wpa_supplicant on BCM43362
-To: =?UTF-8?Q?J=c3=b6rg_Krause?= <joerg.krause@embedded.rocks>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1487881302.20481.3.camel@embedded.rocks>
- <dd241eff-7e0d-26c1-1758-b3f4d51bc359@broadcom.com>
- <1487929408.3812.3.camel@embedded.rocks>
- <ce3bf3a5-2cd7-eb77-bb7d-57df8388e1ba@broadcom.com>
- <1487932016.3812.10.camel@embedded.rocks>
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <9c8e71d8-c6af-1d2b-3d91-ac791bc33327@broadcom.com> (sfid-20170224_131651_949590_038BBE20)
-Date: Fri, 24 Feb 2017 13:15:52 +0100
+        Tue, 21 Feb 2017 04:32:54 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jiri Kosina <jikos@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        davem@davemloft.net
+Subject: ath10k regression on XPS13
+References: <alpine.LSU.2.20.1702201508280.24579@cbobk.fhfr.pm>
+        <CA+55aFxLmgA7drrGfUJmCRPT-A74ROYf6GQHFGO5pzVjZ0dL7Q@mail.gmail.com>
+Date: Tue, 21 Feb 2017 11:32:49 +0200
+In-Reply-To: <CA+55aFxLmgA7drrGfUJmCRPT-A74ROYf6GQHFGO5pzVjZ0dL7Q@mail.gmail.com>
+        (Linus Torvalds's message of "Mon, 20 Feb 2017 18:48:19 -0800")
+Message-ID: <87d1eb99dq.fsf_-_@purkki.adurom.net> (sfid-20170221_103259_209916_4A4A3CEC)
 MIME-Version: 1.0
-In-Reply-To: <1487932016.3812.10.camel@embedded.rocks>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24-2-2017 11:26, Jörg Krause wrote:
-> Hi Arend,
-> 
-> On Fri, 2017-02-24 at 10:58 +0100, Arend Van Spriel wrote:
->> On 24-2-2017 10:43, Jörg Krause wrote:
->>> Hi Arend,
->>>
->>> On Fri, 2017-02-24 at 09:16 +0100, Arend Van Spriel wrote:
->>>>
->>>> On 23-2-2017 21:21, Jörg Krause wrote:
->>>>> Hi,
->>>>>
->>>>> I am using Linux Kernel v4.9.9 and wpa_supplicant 2.6. When
->>>>> running
->>>>> 'wpa_cli wps_pin any', the following messages are printed:
->>>>>
->>>>> """
->>>>>> wps_pin any         
->>>>>
->>>>> [ 4011.779108] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set
->>>>> error :
->>>>> -30
->>>>> [ 4011.786190] brcmfmac: brcmf_config_ap_mgmt_ie: Set Beacon IE
->>>>> Failed
->>>>> """
->>>>>
->>>>> .. and nothing happens. The data sheet for the BCM43362 states
->>>>> that
->>>>> the
->>>>> module supports WPS.
->>>>
->>>> Hi Jörg,
->>>>
->>>> We have never tested WPS with brcmfmac. Most of it is in firmware
->>>> so
->>>> it
->>>> might work. We had some fixes related to setting management IE,
->>>> but
->>>> it
->>>> should be in 4.9. I did not check it (yet).
->>>
->>> As it turns out, WPS does not work if a network configuration in
->>> wpa_supplicant has the flag `mode=2` (access point mode) set:
->>>
->>> """
->>> ctrl_interface=/var/run/wpa_supplicant
->>> update_config=1
->>>
->>> network={
->>> 	ssid="AP"
->>> 	key_mgmt=NONE
->>> 	mode=2
->>> 	id_str="ap"
->>> }
->>> """
->>>
->>> Setting mode=2 for a network and having ap_scan=1 (default) means
->>> if no
->>> APs matching to the currently enabled networks are found, a new
->>> network
->>>  (IBSS or AP mode operation) may be initialized (if configured).
->>>
->>> So, WPS does not work if the interface is operating in AP mode. I
->>> wonder, if this is a desired behavior? At least, wpa_supplicant
->>> does
->>> not complain, but prints "WPS-PBC-ACTIVE", but no messages are
->>> following, until "WPS-TIMEOUT".
+(Changing subject, adding Dave and relevant lists)
+
+Linus Torvalds <torvalds@linux-foundation.org> writes:
+
+> On Mon, Feb 20, 2017 at 7:20 AM, Jiri Kosina <jikos@kernel.org> wrote:
 >>
->> So what do you expect exactly? Are you trying to connect with some
->> other
->> device to this AP interface?
-> 
-> Sorry, I got confused. The device operating in AP mode shall be
-> connected to some other AP as a station. Of course, WPS cannot be used
-> to do so as long as the interface is operation in AP mode, as the
-> device should be the WPS enrollee and not the registrar. My bad! Thanks
-> for pointing that out.
-> 
-> So, to use WPS for connecting the device to another AP I have to bring
-> the interface into an non-AP mode first.
-> 
-> So, I can confirm that using WPS works when the interface is
-> unconfigured. However, if the in the interface is in AP mode and WPS is
-> started the error messages pop up.
+>>   git://git.kernel.org/pub/scm/linux/kernel/git/jikos/hid.git for-linus
+>>
+>> to receive HID subsystem updates for 4.11:
+>
+> The touchpad on my XPS13 no longer works. It might not be this pull
+> request, and I'll bisect the exact cause, but this pull seems the most
+> likely culprit.
+>
+> Just an early heads-up,
 
-You mean the message you emailed earlier as below?
+While talking about XPS13 also a heads-up from me as we have a nasty
+regression in ath10k on XPS13 with QCA6174 (though not sure if you have
+QCA6174, recent models seem to have that) which completely breaks driver
+initialisation an error:
 
-[ 4011.779108] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set
-error :
--30
-[ 4011.786190] brcmfmac: brcmf_config_ap_mgmt_ie: Set Beacon IE
-Failed
+"ath10k_pci 0000:3a:00.0: failed to fetch board data for
+bus=pci,vendor=168c,device=003e,subsystem-vendor=1a56,subsystem-device=1535,variant=RV_0520
+from ath10k/QCA6174/hw3.0/board-2.bin"
 
-You get firmware error -30 which is BCME_NOTFOUND. This can happen in
-firmware upon deleting an IE. However, it is hard to say what is exactly
-happening without knowing the message content that goes to firmware. You
-can enable firmware console logging to see if you get any message
-regarding this, eg. "wlc_del_ie: IE not in list". Do insmod with
-debug=0x00100000.
+https://bugzilla.kernel.org/show_bug.cgi?id=185621#c9
 
-	if (total_ie_buf_len) {
-		err  = brcmf_fil_bsscfg_data_set(ifp, "vndr_ie", iovar_ie_buf,
-						 total_ie_buf_len);
-		if (err)
-			brcmf_err("vndr ie set error : %d\n", err);
-	}
+This is caused by this commit which I believe Dave will be sending to
+you soon:
 
-If this happens in the .start_ap() callback the error is ignored so it
-should not affect AP operation although beacon may not be setup properly.
+f2593cb1b291 ath10k: Search SMBIOS for OEM board file extension
 
-Regards,
-Arend
+As a workaround I recommend updating ath10k/QCA6174/hw3.0/board-2.bin
+from this link _before_ updating the kernel:
+
+https://github.com/kvalo/ath10k-firmware/blob/8d15818b0f9c7b09f743538ac2d3e1409779f52a/QCA6174/hw3.0/board-2.bin
+
+We are working on a fix so that ath10k continues to work with older
+board-2.bin, but that might take a day or two still.
+
+-- 
+Kalle Valo
