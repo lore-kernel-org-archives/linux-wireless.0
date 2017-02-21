@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39196 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932349AbdBHL27 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 06:28:59 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 13:23:10 +0200
-Message-Id: <20170208112322.29413-6-luca@coelho.fi> (sfid-20170208_122905_664565_CE8BEBC7)
-In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
-Subject: [PATCH 05/17] iwlwifi: mvm: fix a print of NSS for HT rate
+Received: from s3.sipsolutions.net ([5.9.151.49]:35852 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752080AbdBULqZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 06:46:25 -0500
+Message-ID: <1487677574.2215.4.camel@sipsolutions.net> (sfid-20170221_124646_341452_4802AC0E)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
+ WPA/WPA2-PSK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>
+Date: Tue, 21 Feb 2017 12:46:14 +0100
+In-Reply-To: <a021dbf9-854d-0339-b87d-b27b746ccd1b@broadcom.com> (sfid-20170221_124525_355347_D9C99AD5)
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+         <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
+         <1487673603.2215.3.camel@sipsolutions.net>
+         <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
+         <a021dbf9-854d-0339-b87d-b27b746ccd1b@broadcom.com>
+         (sfid-20170221_124525_355347_D9C99AD5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
 
-Handling of the number of space time streams was missing for HT rate in
-rate printing function. Fix it.
+> > > Would this work for you? We should have wpa_supplicant support
+> > > too, but need to ask Andrei to look at that.
+> 
+> Forgot to reply to this. Yes, this will work. Can come up with
+> wpa_supp changes.
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 2 ++
- 1 file changed, 2 insertions(+)
+No, we have them. Just need to see where they are :)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 80f99c365b6a..13be9a5b83ee 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -3616,6 +3616,8 @@ int rs_pretty_print_rate(char *buf, const u32 rate)
- 	} else if (rate & RATE_MCS_HT_MSK) {
- 		type = "HT";
- 		mcs = rate & RATE_HT_MCS_INDEX_MSK;
-+		nss = ((rate & RATE_HT_MCS_NSS_MSK)
-+		       >> RATE_HT_MCS_NSS_POS) + 1;
- 	} else {
- 		type = "Unknown"; /* shouldn't happen */
- 	}
--- 
-2.11.0
+johannes
