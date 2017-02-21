@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39318 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754715AbdBHPxM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752823AbdBUOcX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 10:53:12 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 17:51:42 +0200
-Message-Id: <20170208155149.1704-2-luca@coelho.fi> (sfid-20170208_165325_803640_25947E5D)
-In-Reply-To: <20170208155149.1704-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
- <20170208155149.1704-1-luca@coelho.fi>
-Subject: [PATCH 10/17] iwlwifi: make RTPM depend on EXPERT
+        Tue, 21 Feb 2017 09:32:23 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 05/10] wil6210: missing reinit_completion in HALP voting
+Date: Tue, 21 Feb 2017 16:32:03 +0200
+Message-Id: <1487687528-12832-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153228_193348_A3481744)
+In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+After setting HALP ICR bit, we keep it set until HALP unvote.
+Masking HALP ICR should protect the driver from hitting the HALP ICR
+over and over again. However, in case there is another MISC ICR
+we will read the HALP ICR and issue a completion. This can lead to
+a case where HALP voting is completed immediately, as the completion
+is already set.
+Reinit the HALP completion before the actual vote will clear previous
+completions and protect from such cases.
 
-Enabling the RTPM Kconfig option can be fairly risky.
-Runtime PM must be validated against a specific platform
-before it can be safely enabled. Hence, it makes no sense
-for distros and other big OS vendors to enable it since
-they ship code to various systems and unknown platform.
-
-Make sure that this is hinted properly by making the
-IWLWIFI_PCIE_RTPM Kconfig option depend on EXPERT.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=172411
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/Kconfig | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index b64db47b31bb..c5f2ddf9b0fe 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -90,13 +90,16 @@ config IWLWIFI_BCAST_FILTERING
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 21b7fac..dddde94 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1158,6 +1158,7 @@ void wil_halp_vote(struct wil6210_priv *wil)
+ 		    wil->halp.ref_cnt);
  
- config IWLWIFI_PCIE_RTPM
-        bool "Enable runtime power management mode for PCIe devices"
--       depends on IWLMVM && PM
-+       depends on IWLMVM && PM && EXPERT
-        default false
-        help
-          Say Y here to enable runtime power management for PCIe
-          devices.  If enabled, the device will go into low power mode
-          when idle for a short period of time, allowing for improved
--         power saving during runtime.
-+         power saving during runtime. Note that this feature requires
-+         a tight integration with the platform. It is not recommended
-+         to enable this feature without proper validation with the
-+         specific target platform.
- 
- 	 If unsure, say N.
- 
+ 	if (++wil->halp.ref_cnt == 1) {
++		reinit_completion(&wil->halp.comp);
+ 		wil6210_set_halp(wil);
+ 		rc = wait_for_completion_timeout(&wil->halp.comp, to_jiffies);
+ 		if (!rc) {
 -- 
-2.11.0
+1.9.1
