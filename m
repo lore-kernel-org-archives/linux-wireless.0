@@ -1,55 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:26246 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751338AbdB0RQ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 12:16:26 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by mail.neratec.com (Postfix) with ESMTP id 3F44ACE0374
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 15:49:40 +0100 (CET)
-Received: from mail.neratec.com ([127.0.0.1])
-        by localhost (mail.neratec.com [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id GlOIHHN7bcic for <linux-wireless@vger.kernel.org>;
-        Mon, 27 Feb 2017 15:49:40 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by mail.neratec.com (Postfix) with ESMTP id 1F301CE0397
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 15:49:40 +0100 (CET)
-Received: from mail.neratec.com ([127.0.0.1])
-        by localhost (mail.neratec.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ejy44u1O6ymK for <linux-wireless@vger.kernel.org>;
-        Mon, 27 Feb 2017 15:49:40 +0100 (CET)
-Received: from zefir.neratec.local (zefir.neratec.local [192.168.11.169])
-        by mail.neratec.com (Postfix) with ESMTPSA id F12C9CE0374
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 15:49:39 +0100 (CET)
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: don't trigger spectral scan when not enabled
-Date: Mon, 27 Feb 2017 15:49:36 +0100
-Message-Id: <1488206976-7775-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20170227_181736_085678_C868038C)
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33573 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753583AbdBUQQQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 11:16:16 -0500
+Received: by mail-lf0-f65.google.com with SMTP id 86so5299888lfv.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:15 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 02/21] ath10k: htc: rx trailer lookahead support
+Date: Tue, 21 Feb 2017 17:15:22 +0100
+Message-Id: <1487693741-10042-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171648_867799_5758169C)
+In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doing so enables the FFT generation without prior
-configuration, leading to an IRQ storm caused by
-invalid (or at least unwanted) PHY errors.
+The RX trailer parsing is now capable of parsing lookahead reports.
+A lookahead contains the first 4 bytes of the next HTC message
+(that will be read in the next SDIO read operation).
+Lookaheads are used by the SDIO/mbox HIF layer to determine if
+the next message is part of a bundle, which endpoint it belongs
+to and how long it is.
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/common-spectral.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/htc.c | 93 ++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/htc.h | 30 +++++++++--
+ 2 files changed, 118 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
-index 58f1ed1..51b618c 100644
---- a/drivers/net/wireless/ath/ath9k/common-spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
-@@ -739,6 +739,9 @@ void ath9k_cmn_spectral_scan_trigger(struct ath_common *common,
- 		return;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 35e67c4..e72f385 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -228,10 +228,76 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
+ 	spin_unlock_bh(&htc->tx_lock);
+ }
  
-+	if (!spec_priv->spec_config.enabled)
-+		return;
++static int
++ath10k_htc_process_lookahead(struct ath10k_htc *htc,
++			     const struct ath10k_htc_lookahead_report *report,
++			     int len,
++			     enum ath10k_htc_ep_id eid,
++			     void *next_lookaheads,
++			     int *next_lookaheads_len)
++{
++	struct ath10k *ar = htc->ar;
 +
- 	ath_ps_ops(common)->wakeup(common);
- 	rxfilter = ath9k_hw_getrxfilter(ah);
- 	ath9k_hw_setrxfilter(ah, rxfilter |
++	/* Invalid lookahead flags are actually transmitted by
++	 * the target in the HTC control message.
++	 * Since this will happen at every boot we silently ignore
++	 * the lookahead in this case
++	 */
++	if (report->pre_valid != ((~report->post_valid) & 0xFF))
++		return 0;
++
++	if (next_lookaheads && next_lookaheads_len) {
++		ath10k_dbg(ar, ATH10K_DBG_HTC,
++			   "htc rx lookahead found pre_valid 0x%x post_valid 0x%x\n",
++			   report->pre_valid, report->post_valid);
++
++		/* look ahead bytes are valid, copy them over */
++		memcpy((u8 *)next_lookaheads, report->lookahead, 4);
++
++		*next_lookaheads_len = 1;
++	}
++
++	return 0;
++}
++
++static int
++ath10k_htc_process_lookahead_bundle(struct ath10k_htc *htc,
++				    const struct ath10k_htc_lookahead_report_bundle *report,
++				    int len,
++				    enum ath10k_htc_ep_id eid,
++				    void *next_lookaheads,
++				    int *next_lookaheads_len)
++{
++	struct ath10k *ar = htc->ar;
++	int bundle_cnt = len / sizeof(*report);
++
++	if (!bundle_cnt || (bundle_cnt > HTC_HOST_MAX_MSG_PER_BUNDLE)) {
++		ath10k_warn(ar, "Invalid lookahead bundle count: %d\n",
++			    bundle_cnt);
++		return -EINVAL;
++	}
++
++	if (next_lookaheads && next_lookaheads_len) {
++		int i;
++
++		for (i = 0; i < bundle_cnt; i++) {
++			memcpy(((u8 *)next_lookaheads) + 4 * i,
++			       report->lookahead, 4);
++			report++;
++		}
++
++		*next_lookaheads_len = bundle_cnt;
++	}
++
++	return 0;
++}
++
+ int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 			       u8 *buffer,
+ 			       int length,
+-			       enum ath10k_htc_ep_id src_eid)
++			       enum ath10k_htc_ep_id src_eid,
++			       void *next_lookaheads,
++			       int *next_lookaheads_len)
+ {
+ 	struct ath10k *ar = htc->ar;
+ 	int status = 0;
+@@ -272,6 +338,28 @@ int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 							 record->hdr.len,
+ 							 src_eid);
+ 			break;
++		case ATH10K_HTC_RECORD_LOOKAHEAD:
++			len = sizeof(struct ath10k_htc_lookahead_report);
++			if (record->hdr.len < len) {
++				ath10k_warn(ar, "Lookahead report too long\n");
++				status = -EINVAL;
++				break;
++			}
++			status = ath10k_htc_process_lookahead(htc,
++							      record->lookahead_report,
++							      record->hdr.len,
++							      src_eid,
++							      next_lookaheads,
++							      next_lookaheads_len);
++			break;
++		case ATH10K_HTC_RECORD_LOOKAHEAD_BUNDLE:
++			status = ath10k_htc_process_lookahead_bundle(htc,
++								     record->lookahead_bundle,
++								     record->hdr.len,
++								     src_eid,
++								     next_lookaheads,
++								     next_lookaheads_len);
++			break;
+ 		default:
+ 			ath10k_warn(ar, "Unhandled record: id:%d length:%d\n",
+ 				    record->hdr.id, record->hdr.len);
+@@ -359,7 +447,8 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		trailer += payload_len;
+ 		trailer -= trailer_len;
+ 		status = ath10k_htc_process_trailer(htc, trailer,
+-						    trailer_len, hdr->eid);
++						    trailer_len, hdr->eid,
++						    NULL, NULL);
+ 		if (status)
+ 			goto out;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index f728ce7..9a1db90 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -50,6 +50,8 @@ struct ath10k;
+  * 4-byte aligned.
+  */
+ 
++#define HTC_HOST_MAX_MSG_PER_BUNDLE        8
++
+ enum ath10k_htc_tx_flags {
+ 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
+ 	ATH10K_HTC_FLAG_SEND_BUNDLE        = 0x02
+@@ -174,8 +176,10 @@ struct ath10k_htc_msg {
+ } __packed __aligned(4);
+ 
+ enum ath10k_ath10k_htc_record_id {
+-	ATH10K_HTC_RECORD_NULL    = 0,
+-	ATH10K_HTC_RECORD_CREDITS = 1
++	ATH10K_HTC_RECORD_NULL             = 0,
++	ATH10K_HTC_RECORD_CREDITS          = 1,
++	ATH10K_HTC_RECORD_LOOKAHEAD        = 2,
++	ATH10K_HTC_RECORD_LOOKAHEAD_BUNDLE = 3,
+ };
+ 
+ struct ath10k_ath10k_htc_record_hdr {
+@@ -192,10 +196,28 @@ struct ath10k_htc_credit_report {
+ 	u8 pad1;
+ } __packed;
+ 
++struct ath10k_htc_lookahead_report {
++	u8 pre_valid;
++	u8 pad0;
++	u8 pad1;
++	u8 pad2;
++	u8 lookahead[4];
++	u8 post_valid;
++	u8 pad3;
++	u8 pad4;
++	u8 pad5;
++} __packed;
++
++struct ath10k_htc_lookahead_report_bundle {
++	u8 lookahead[4];
++} __packed;
++
+ struct ath10k_htc_record {
+ 	struct ath10k_ath10k_htc_record_hdr hdr;
+ 	union {
+ 		struct ath10k_htc_credit_report credit_report[0];
++		struct ath10k_htc_lookahead_report lookahead_report[0];
++		struct ath10k_htc_lookahead_report_bundle lookahead_bundle[0];
+ 		u8 pauload[0];
+ 	};
+ } __packed __aligned(4);
+@@ -356,6 +378,8 @@ void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 			       u8 *buffer,
+ 			       int length,
+-			       enum ath10k_htc_ep_id src_eid);
++			       enum ath10k_htc_ep_id src_eid,
++			       void *next_lookaheads,
++			       int *next_lookaheads_len);
+ 
+ #endif
 -- 
 2.7.4
