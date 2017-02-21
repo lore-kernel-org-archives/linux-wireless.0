@@ -1,37 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21550 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754500AbdBNR56 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752848AbdBUOcV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 12:57:58 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath6kl: Use net_device_stats from struct net_device
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170209112117.23994-1-tklauser@distanz.ch>
-References: <20170209112117.23994-1-tklauser@distanz.ch>
-To: Tobias Klauser <tklauser@distanz.ch>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Message-ID: <5bff5d456de54c548b0b9e8e25f3f825@eusanexr01a.eu.qualcomm.com> (sfid-20170214_185838_487358_698D0047)
-Date: Tue, 14 Feb 2017 09:57:54 -0800
+        Tue, 21 Feb 2017 09:32:21 -0500
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 04/10] wil6210: use print_hex_dump_debug instead of print_hex_dump_bytes
+Date: Tue, 21 Feb 2017 16:32:02 +0200
+Message-Id: <1487687528-12832-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153225_608684_D89C8121)
+In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tobias Klauser <tklauser@distanz.ch> wrote:
-> Instead of using a private copy of struct net_device_stats in struct
-> ath6kl_vif, use stats from struct net_device. Also remove the now
-> unnecessary .ndo_get_stats function.
-> 
-> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Some dynamic debug printouts in driver are using print_hex_dump_bytes.
+However, with dynamic debug disabled, print_hex_dump_bytes outputs to
+log unconditionally.
+Use print_hex_dump_debug instead to prevent log pollution when dynamic
+debug disabled.
 
-1235a3b66cbf ath6kl: Use net_device_stats from struct net_device
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 41 +++++++++++++++--------------
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 12 +++++++++
+ 2 files changed, 33 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 2dc594d..581a4e2 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -416,9 +416,9 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 
+ 	for (i = 0; i < request->n_ssids; i++) {
+ 		wil_dbg_misc(wil, "SSID[%d]", i);
+-		print_hex_dump_bytes("SSID ", DUMP_PREFIX_OFFSET,
+-				     request->ssids[i].ssid,
+-				     request->ssids[i].ssid_len);
++		wil_hex_dump_misc("SSID ", DUMP_PREFIX_OFFSET, 16, 1,
++				  request->ssids[i].ssid,
++				  request->ssids[i].ssid_len, true);
+ 	}
+ 
+ 	if (request->n_ssids)
+@@ -455,8 +455,8 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 	}
+ 
+ 	if (request->ie_len)
+-		print_hex_dump_bytes("Scan IE ", DUMP_PREFIX_OFFSET,
+-				     request->ie, request->ie_len);
++		wil_hex_dump_misc("Scan IE ", DUMP_PREFIX_OFFSET, 16, 1,
++				  request->ie, request->ie_len, true);
+ 	else
+ 		wil_dbg_misc(wil, "Scan has no IE's\n");
+ 
+@@ -762,7 +762,8 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	 */
+ 
+ 	wil_dbg_misc(wil, "mgmt_tx\n");
+-	print_hex_dump_bytes("mgmt tx frame ", DUMP_PREFIX_OFFSET, buf, len);
++	wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
++			  len, true);
+ 
+ 	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
+ 	if (!cmd) {
+@@ -1095,18 +1096,18 @@ static int _wil_cfg80211_merge_extra_ies(const u8 *ies1, u16 ies1_len,
+ 
+ static void wil_print_bcon_data(struct cfg80211_beacon_data *b)
+ {
+-	print_hex_dump_bytes("head     ", DUMP_PREFIX_OFFSET,
+-			     b->head, b->head_len);
+-	print_hex_dump_bytes("tail     ", DUMP_PREFIX_OFFSET,
+-			     b->tail, b->tail_len);
+-	print_hex_dump_bytes("BCON IE  ", DUMP_PREFIX_OFFSET,
+-			     b->beacon_ies, b->beacon_ies_len);
+-	print_hex_dump_bytes("PROBE    ", DUMP_PREFIX_OFFSET,
+-			     b->probe_resp, b->probe_resp_len);
+-	print_hex_dump_bytes("PROBE IE ", DUMP_PREFIX_OFFSET,
+-			     b->proberesp_ies, b->proberesp_ies_len);
+-	print_hex_dump_bytes("ASSOC IE ", DUMP_PREFIX_OFFSET,
+-			     b->assocresp_ies, b->assocresp_ies_len);
++	wil_hex_dump_misc("head     ", DUMP_PREFIX_OFFSET, 16, 1,
++			  b->head, b->head_len, true);
++	wil_hex_dump_misc("tail     ", DUMP_PREFIX_OFFSET, 16, 1,
++			  b->tail, b->tail_len, true);
++	wil_hex_dump_misc("BCON IE  ", DUMP_PREFIX_OFFSET, 16, 1,
++			  b->beacon_ies, b->beacon_ies_len, true);
++	wil_hex_dump_misc("PROBE    ", DUMP_PREFIX_OFFSET, 16, 1,
++			  b->probe_resp, b->probe_resp_len, true);
++	wil_hex_dump_misc("PROBE IE ", DUMP_PREFIX_OFFSET, 16, 1,
++			  b->proberesp_ies, b->proberesp_ies_len, true);
++	wil_hex_dump_misc("ASSOC IE ", DUMP_PREFIX_OFFSET, 16, 1,
++			  b->assocresp_ies, b->assocresp_ies_len, true);
+ }
+ 
+ /* internal functions for device reset and starting AP */
+@@ -1302,8 +1303,8 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wil_dbg_misc(wil, "BI %d DTIM %d\n", info->beacon_interval,
+ 		     info->dtim_period);
+ 	wil_dbg_misc(wil, "PBSS %d\n", info->pbss);
+-	print_hex_dump_bytes("SSID ", DUMP_PREFIX_OFFSET,
+-			     info->ssid, info->ssid_len);
++	wil_hex_dump_misc("SSID ", DUMP_PREFIX_OFFSET, 16, 1,
++			  info->ssid, info->ssid_len, true);
+ 	wil_print_bcon_data(bcon);
+ 	wil_print_crypto(wil, crypto);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 12de74a..89e7eb7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -766,6 +766,12 @@ static inline void wil_c(struct wil6210_priv *wil, u32 reg, u32 val)
+ 			 print_hex_dump_debug("DBG[ WMI]" prefix_str,\
+ 					prefix_type, rowsize,	\
+ 					groupsize, buf, len, ascii)
++
++#define wil_hex_dump_misc(prefix_str, prefix_type, rowsize,	\
++			  groupsize, buf, len, ascii)		\
++			  print_hex_dump_debug("DBG[MISC]" prefix_str,\
++					prefix_type, rowsize,	\
++					groupsize, buf, len, ascii)
+ #else /* defined(CONFIG_DYNAMIC_DEBUG) */
+ static inline
+ void wil_hex_dump_txrx(const char *prefix_str, int prefix_type, int rowsize,
+@@ -778,6 +784,12 @@ void wil_hex_dump_wmi(const char *prefix_str, int prefix_type, int rowsize,
+ 		      int groupsize, const void *buf, size_t len, bool ascii)
+ {
+ }
++
++static inline
++void wil_hex_dump_misc(const char *prefix_str, int prefix_type, int rowsize,
++		       int groupsize, const void *buf, size_t len, bool ascii)
++{
++}
+ #endif /* defined(CONFIG_DYNAMIC_DEBUG) */
+ 
+ void wil_memcpy_fromio_32(void *dst, const volatile void __iomem *src,
 -- 
-https://patchwork.kernel.org/patch/9564413/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
