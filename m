@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36269 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751334AbdBWRUH (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:57244 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753083AbdBUSxk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 12:20:07 -0500
-Received: by mail-oi0-f66.google.com with SMTP id l128so1767362oia.3
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 09:20:06 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+        Tue, 21 Feb 2017 13:53:40 -0500
+Date: Tue, 21 Feb 2017 13:53:37 -0500 (EST)
+Message-Id: <20170221.135337.291678413491553794.davem@davemloft.net> (sfid-20170221_195711_477687_00156476)
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 0/4] rtlwifi: Various updates
-Date: Thu, 23 Feb 2017 11:19:53 -0600
-Message-Id: <20170223171957.22500-1-Larry.Finger@lwfinger.net> (sfid-20170223_182204_731352_990BA079)
+Cc: torvalds@linux-foundation.org, jikos@kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: ath10k regression on XPS13
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87y3wzbd8n.fsf@kamboji.qca.qualcomm.com>
+References: <87d1eb99dq.fsf_-_@purkki.adurom.net>
+        <20170221.131858.949421414784612398.davem@davemloft.net>
+        <87y3wzbd8n.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes implement new phy parameters for RTL8821AE and RTL8812AE
-devices, and add some new pre-loaded packets to the reserved pages of
-various devices.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Tue, 21 Feb 2017 20:38:48 +0200
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> David Miller <davem@davemloft.net> writes:
+> 
+>> From: Kalle Valo <kvalo@codeaurora.org>
+>> Date: Tue, 21 Feb 2017 11:32:49 +0200
+>>
+>>> We are working on a fix so that ath10k continues to work with older
+>>> board-2.bin, but that might take a day or two still.
+>>
+>> Kalle I really wanted to send my net-next pull request to Linus later
+>> today.  But I guess I have to wait for this ath10k first.
+>>
+>> Please get this to me as soon as possible, thanks.
+> 
+> We have a fix now but it's not really tested that well so I'm reluctant
+> to submit it yet. As I don't want to make you wait I think I'll submit
+> you a patch reverting f2593cb1b291 in an hour or two. And later in the
+> week I send you a properly fixed (and tested) version of f2593cb1b291.
+> 
+> Does that sound ok to you?
 
-Larry Finger (1):
-  rtlwifi: Add code to read new versions of firmware
-
-Ping-Ke Shih (3):
-  rtlwifi: Update 8821ae new phy parameters and its parser.
-  rtlwifi: Update 8812ae new phy parameters and its parser.
-  rtlwifi: Add QoS-NULL and BT-QoS-NULL to reserved page.
-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |   64 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.h    |    4 +
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |    4 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |   69 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/fw.h    |    4 +
- .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |   15 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |  165 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.h    |    2 +
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |    8 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   |  385 ++--
- .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |   15 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/table.c | 1858 ++++++--------------
- .../net/wireless/realtek/rtlwifi/rtl8821ae/table.h |   28 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |   18 +
- 14 files changed, 1055 insertions(+), 1584 deletions(-)
-
--- 
-2.10.2
+Sure.
