@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36896 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751001AbdBXISQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 03:18:16 -0500
-Received: by mail-wm0-f49.google.com with SMTP id v77so8571207wmv.0
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 00:16:47 -0800 (PST)
-Subject: Re: brcmfmac: problem using WPS with wpa_supplicant on BCM43362
-To: =?UTF-8?Q?J=c3=b6rg_Krause?= <joerg.krause@embedded.rocks>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1487881302.20481.3.camel@embedded.rocks>
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <dd241eff-7e0d-26c1-1758-b3f4d51bc359@broadcom.com> (sfid-20170224_091847_252899_450A6CE7)
-Date: Fri, 24 Feb 2017 09:16:44 +0100
+Received: from chaossource.net ([91.250.114.129]:41268 "EHLO chaossource.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751329AbdBUTav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 14:30:51 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by chaossource.net (Postfix) with ESMTP id 3B3C6812FB
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 20:23:16 +0100 (CET)
+Received: from chaossource.net ([127.0.0.1])
+        by localhost (lvps91-250-114-129.dedicated.hosteurope.de [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id tHVXKFwnrQLi for <linux-wireless@vger.kernel.org>;
+        Tue, 21 Feb 2017 20:23:14 +0100 (CET)
+Received: from [192.168.1.75] (c-81a072d5.07-28-73746f34.cust.bredbandsbolaget.se [213.114.160.129])
+        by chaossource.net (Postfix) with ESMTPSA id 54B32812C0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 20:23:14 +0100 (CET)
+To: linux-wireless@vger.kernel.org
+From: Marius Melzer <marius@rasumi.net>
+Subject: Problem with RTL8191SU driver
+Message-ID: <fd1fdef3-6233-48ad-1c7c-3b9cef5f66f7@rasumi.net> (sfid-20170221_203054_634986_09F6FCF3)
+Date: Tue, 21 Feb 2017 20:23:26 +0100
 MIME-Version: 1.0
-In-Reply-To: <1487881302.20481.3.camel@embedded.rocks>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
+I have a usb wifi stick with a RTL8191SU chipset and the driver doesn't
+work for me (at least I think that's the problem). I'm using the
+following driver: [1] which refers on its page to this email address for
+reports.
 
-On 23-2-2017 21:21, Jörg Krause wrote:
-> Hi,
-> 
-> I am using Linux Kernel v4.9.9 and wpa_supplicant 2.6. When running
-> 'wpa_cli wps_pin any', the following messages are printed:
-> 
-> """
->> wps_pin any         
-> [ 4011.779108] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error : -30
-> [ 4011.786190] brcmfmac: brcmf_config_ap_mgmt_ie: Set Beacon IE Failed
-> """
-> 
-> .. and nothing happens. The data sheet for the BCM43362 states that the
-> module supports WPS.
+I listed all relevant information in a post [2] in the archlinux forum,
+espescially interesting is probably the dmesg output [3] and the
+systemctl status NetworkManager output [4]. Also with NetworkManager
+stopped it doesn't work (which was one of the proposed solutions): [5]
 
-Hi Jörg,
+Is this a driver problem? If yes, how can I solve this? Espescially the
+"does not support SSID scanning" is a bit weird for a usb wifi stick
+which should at least support this, right?
 
-We have never tested WPS with brcmfmac. Most of it is in firmware so it
-might work. We had some fixes related to setting management IE, but it
-should be in 4.9. I did not check it (yet).
+Thanks in advance,
+Marius
 
-Regards,
-Arend
+PS: Please keep me in CC or send me a quick message if I need to
+subscribe to the mailinglist to follow the thread.
+
+[1] https://github.com/chunkeey/rtl8192su
+[2] https://bbs.archlinux.org/viewtopic.php?id=223264
+[3] https://bbs.archlinux.org/viewtopic.php?pid=1691938#p1691938
+[4] https://bbs.archlinux.org/viewtopic.php?pid=1692639#p1692639
+[5] https://bbs.archlinux.org/viewtopic.php?pid=1692790#p1692790
