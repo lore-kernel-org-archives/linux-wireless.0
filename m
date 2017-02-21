@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50108 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753281AbdBTNYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 08:24:44 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Matt Chen <matt.chen@intel.com>
-Subject: [PATCH 4/6] mac80211: flush delayed work when enter suspend
-Date: Mon, 20 Feb 2017 14:24:37 +0100
-Message-Id: <20170220132439.16064-4-johannes@sipsolutions.net> (sfid-20170220_142501_243979_1ADE575C)
-In-Reply-To: <20170220132439.16064-1-johannes@sipsolutions.net>
-References: <20170220132439.16064-1-johannes@sipsolutions.net>
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:34276 "EHLO
+        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750992AbdBUJEh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 04:04:37 -0500
+Received: by mail-lf0-f50.google.com with SMTP id g134so17495007lfe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 01:04:36 -0800 (PST)
+From: Marcin Rokicki <marcin.rokicki@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: Remove return statement from a void function
+Date: Tue, 21 Feb 2017 10:04:33 +0100
+Message-Id: <1487667873-3493-1-git-send-email-marcin.rokicki@tieto.com> (sfid-20170221_100442_296515_9E8F69AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matt Chen <matt.chen@intel.com>
+The empty 'return;' statement in a void function should be
+used to return from somewhere else then the end.
 
-The issue was found when entering suspend and resume.
-It triggers a warning in:
-mac80211/key.c: ieee80211_enable_keys()
-...
-WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt ||
-             sdata->crypto_tx_tailroom_pending_dec);
-...
-
-It points out sdata->crypto_tx_tailroom_pending_dec isn't cleaned up successfully
-in a delayed_work during suspend. Add a flush_delayed_work to fix it.
-
-type=bugfix
-fixes=unknown
-bug=chrome-os-partner:62283
-
-Change-Id: Iad6b1c86c8792aae81934e7c205f44add10f062b
-Signed-off-by: Matt Chen <matt.chen@intel.com>
-Reviewed-on: https://git-amr-3.devtools.intel.com/gerrit/88500
-Tested-by: ec ger unix iil jenkins <EC.GER.UNIX.IIL.JENKINS@INTEL.COM>
-Reviewed-by: Coelho, Luciano <luciano.coelho@intel.com>
+Signed-off-by: Marcin Rokicki <marcin.rokicki@tieto.com>
 ---
- net/mac80211/pm.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath10k/core.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 28a3a0957c9e..76a8bcd8ef11 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -168,6 +168,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 			break;
- 		}
- 
-+		flush_delayed_work(&sdata->dec_tailroom_needed_wk);
- 		drv_remove_interface(local, sdata);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 59729aa..d65850e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2268,7 +2268,7 @@ static void ath10k_core_register_work(struct work_struct *work)
+ 	status = ath10k_core_probe_fw(ar);
+ 	if (status) {
+ 		ath10k_err(ar, "could not probe fw (%d)\n", status);
+-		goto err;
++		return;
  	}
  
+ 	status = ath10k_mac_register(ar);
+@@ -2307,11 +2307,10 @@ static void ath10k_core_register_work(struct work_struct *work)
+ 	ath10k_mac_unregister(ar);
+ err_release_fw:
+ 	ath10k_core_free_firmware_files(ar);
+-err:
+-	/* TODO: It's probably a good idea to release device from the driver
+-	 * but calling device_release_driver() here will cause a deadlock.
+-	 */
+-	return;
++
++/* TODO: It's probably a good idea to release device from the driver
++ * but calling device_release_driver() here will cause a deadlock.
++ */
+ }
+ 
+ int ath10k_core_register(struct ath10k *ar, u32 chip_id)
 -- 
-2.9.3
+2.7.4
