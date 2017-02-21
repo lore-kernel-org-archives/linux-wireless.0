@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52366 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752505AbdBOXwA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 18:52:00 -0500
-From: <ryanhsu@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC: <lenb@kernel.org>, <ryanhsu@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: improve the firmware download time for QCA9377
-Date: Wed, 15 Feb 2017 15:50:38 -0800
-Message-ID: <1487202638-13244-2-git-send-email-ryanhsu@qca.qualcomm.com> (sfid-20170216_005207_167508_D90A58CB)
-In-Reply-To: <1487202638-13244-1-git-send-email-ryanhsu@qca.qualcomm.com>
-References: <1487202638-13244-1-git-send-email-ryanhsu@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:36260 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752466AbdBUMhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 07:37:38 -0500
+Message-ID: <1487680651.2215.5.camel@sipsolutions.net> (sfid-20170221_133741_489768_148C9B90)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
+ WPA/WPA2-PSK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>
+Date: Tue, 21 Feb 2017 13:37:31 +0100
+In-Reply-To: <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com> (sfid-20170221_123449_168516_EAA590DB)
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+         <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
+         <1487673603.2215.3.camel@sipsolutions.net>
+         <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
+         (sfid-20170221_123449_168516_EAA590DB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 
-QCA9377 is the family of QCA61x4 which shared the same procedure
-to enable the hardware clock that could improve the firmware download time.
+> What I am also missing is how to deal with NL80211_CMD_CONNECTED
+> event signalling. Should that be given after (un)successful
+> completion of the 4-way handshake or should we have a separate event
+> for that? 
 
-Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+That's a good point. I don't think a new event really works well, but
+perhaps we should extend the NL80211_TIMEOUT_* values with this? It's
+not strictly a timeout, I guess, but it's not a direct rejection of the
+association either.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c6de267..91e2731 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -282,7 +282,9 @@
- 			.board_size = QCA9377_BOARD_DATA_SZ,
- 			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
- 		},
--		.hw_ops = &qca988x_ops,
-+		.hw_ops = &qca6174_ops,
-+		.hw_clk = qca6174_clk,
-+		.target_cpu_freq = 176000000,
- 		.decap_align_bytes = 4,
- 	},
- 	{
--- 
-1.9.1
+Any thoughts?
+
+johannes
