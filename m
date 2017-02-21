@@ -1,97 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51650 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751020AbdBBKC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Feb 2017 05:02:27 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Vishal Thanki <vishalthanki@gmail.com>
-Subject: [PATCH v4] rt2x00: avoid introducing a USB dependency in the rt2x00lib module
-Date: Thu,  2 Feb 2017 10:57:40 +0100
-Message-Id: <1486029460-23431-1-git-send-email-sgruszka@redhat.com> (sfid-20170202_110230_697930_A5E72D0B)
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:33346 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750954AbdBUJU1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 04:20:27 -0500
+Received: by mail-qk0-f180.google.com with SMTP id p22so116658623qka.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 01:20:27 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Avery Pennarun <apenwarr@gmail.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: wpa psk offloading
+Message-ID: <11aeb0b3-5c44-32d5-c73a-c809f3d53c9f@broadcom.com> (sfid-20170221_102031_441573_6B97A86B)
+Date: Tue, 21 Feb 2017 10:20:24 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported by Felix:
+Hi Johannes,
 
-Though protected by an ifdef, introducing an usb symbol dependency in
-the rt2x00lib module is a major inconvenience for distributions that
-package kernel modules split into individual packages.
+Internally I am asked to look at "pmk plumbing" patches allowing
+firmware to deal with 4-way handshake. Now I noticed this topic being
+discussed during last wireless workshop in Santa Fe [1].
 
-Get rid of this unnecessary dependency by calling the usb related
-function from a more suitable place.
+I do not recall any follow-up after that. At least no concrete patches,
+right? Also in wpa_supplicant there is already a solution using QCA
+vendor command. Should we aim to adopt just that or are there
+issues/requirements not covered by that.
 
-Cc: Vishal Thanki <vishalthanki@gmail.com>
-Reported-by: Felix Fietkau <nbd@nbd.name>
-Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-v1 -> v2 do not break shutdown sequence
-v2 -> v3 update patch to current kernel version
-v3 -> v4 fix topic
+Regards,
+Arend
 
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 23 ++++++++---------------
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c |  5 +++++
- 2 files changed, 13 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index 8fcbc8d..4b08007 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -1436,21 +1436,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	cancel_work_sync(&rt2x00dev->intf_work);
- 	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
- 	cancel_work_sync(&rt2x00dev->sleep_work);
--#if IS_ENABLED(CONFIG_RT2X00_LIB_USB)
--	if (rt2x00_is_usb(rt2x00dev)) {
--		usb_kill_anchored_urbs(rt2x00dev->anchor);
--		hrtimer_cancel(&rt2x00dev->txstatus_timer);
--		cancel_work_sync(&rt2x00dev->rxdone_work);
--		cancel_work_sync(&rt2x00dev->txdone_work);
--	}
--#endif
--	if (rt2x00dev->workqueue)
--		destroy_workqueue(rt2x00dev->workqueue);
--
--	/*
--	 * Free the tx status fifo.
--	 */
--	kfifo_free(&rt2x00dev->txstatus_fifo);
- 
- 	/*
- 	 * Kill the tx status tasklet.
-@@ -1466,6 +1451,14 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	rt2x00lib_uninitialize(rt2x00dev);
- 
-+	if (rt2x00dev->workqueue)
-+		destroy_workqueue(rt2x00dev->workqueue);
-+
-+	/*
-+	 * Free the tx status fifo.
-+	 */
-+	kfifo_free(&rt2x00dev->txstatus_fifo);
-+
- 	/*
- 	 * Free extra components
- 	 */
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 838ca58..5a2bf9f 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -744,6 +744,11 @@ void rt2x00usb_uninitialize(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
- 
-+	usb_kill_anchored_urbs(rt2x00dev->anchor);
-+	hrtimer_cancel(&rt2x00dev->txstatus_timer);
-+	cancel_work_sync(&rt2x00dev->rxdone_work);
-+	cancel_work_sync(&rt2x00dev->txdone_work);
-+
- 	queue_for_each(rt2x00dev, queue)
- 		rt2x00usb_free_entries(queue);
- }
--- 
-1.8.3.1
+[1]
+https://docs.google.com/document/u/1/d/e/2PACX-1vQXbVQ-3zQt3Bcr3OWfwzbw_C49tTvf0ed8Hmf7b20E6tXc3a40tWZmPku49iGDE-OhgxNmO_lkkHEn/pub#h.kj1rq2w7lxdv
