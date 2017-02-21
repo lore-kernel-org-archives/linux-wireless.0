@@ -1,61 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34270 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753754AbdBUQQb (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33530 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751621AbdBUJsG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:31 -0500
-Received: by mail-lf0-f66.google.com with SMTP id h67so3752237lfg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:30 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 13/21] ath10k: different fw file names for usb and sdio
-Date: Tue, 21 Feb 2017 17:15:33 +0100
-Message-Id: <1487693741-10042-14-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171706_415636_3AE11E59)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        Tue, 21 Feb 2017 04:48:06 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 2/2] brcmfmac: don't warn user about NVRAM if fallback to platform one succeeds
+Date: Tue, 21 Feb 2017 10:47:54 +0100
+Message-Id: <20170221094754.15406-2-zajec5@gmail.com> (sfid-20170221_104855_935464_C3963B27)
+In-Reply-To: <20170221094754.15406-1-zajec5@gmail.com>
+References: <20170216072636.7128-1-zajec5@gmail.com>
+ <20170221094754.15406-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since both SDIO and USB based chipsets will use different
-firmware from the PCIe and AHB chipsets, the fw file name
-must be different depending on bus type.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-The new firmware names are:
+Failing to load NVRAM file isn't critical if we manage to get platform
+one in the fallback path. It means warnings like:
+[   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error -2
+are unnecessary & disturbing for people with platform NVRAM. This is
+very common case for Broadcom home routers.
 
-For PCIe and AHB:
-firmware-<api_version>.bin (same as before)
+So instead of printing warning immediately with the firmware subsystem
+let's first try our fallback code. If that fails as well, then it's a
+right moment to print an error.
 
-For SDIO:
-firmware-sdio-<api_version>.bin
+This should reduce amount of false reports from users seeing this
+warning while having wireless working perfectly fine.
 
-For USB:
-firmware-usb-<api_version>.bin
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+V2: Update commit message as it wasn't clear enough (thanks Andy) & add extra
+    messages to the firmware.c.
+V3: Set FW_OPT_UEVENT to don't change behavior
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 39c407e..9d60f4b 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1387,7 +1387,13 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
- static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
- 				    size_t fw_name_len, int fw_api)
- {
--	scnprintf(fw_name, fw_name_len, "%s-%d.bin", ATH10K_FW_FILE_BASE, fw_api);
-+	if ((ar->hif.bus != ATH10K_BUS_PCI) && (ar->hif.bus != ATH10K_BUS_AHB))
-+		scnprintf(fw_name, fw_name_len, "%s-%s-%d.bin",
-+			  ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
-+			  fw_api);
-+	else
-+		scnprintf(fw_name, fw_name_len, "%s-%d.bin",
-+			  ATH10K_FW_FILE_BASE, fw_api);
- }
+Kalle, Arend: this patch is strictly related to the bigger 1/2. Could you ack
+this change as I expect this patchset to be picked by Ming, Luis or Greg?
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index c7c1e9906500..6dbcceff2529 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 		raw_nvram = false;
+ 	} else {
+ 		data = bcm47xx_nvram_get_contents(&data_len);
+-		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+-			goto fail;
++		if (!data) {
++			brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
++			if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
++				brcmf_err("Loading NVRAM from %s and using platform one both failed\n",
++					  fwctx->nvram_name);
++				goto fail;
++			}
++		}
+ 		raw_nvram = true;
+ 	}
  
- static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+@@ -504,9 +510,10 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
+ 		return;
+ 	}
+ 	fwctx->code = fw;
+-	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+-				      fwctx->dev, GFP_KERNEL, fwctx,
+-				      brcmf_fw_request_nvram_done);
++	ret = request_firmware_async(THIS_MODULE,
++				     FW_OPT_UEVENT | FW_OPT_NO_WARN,
++				     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
++				     fwctx, brcmf_fw_request_nvram_done);
+ 
+ 	if (!ret)
+ 		return;
 -- 
-2.7.4
+2.11.0
