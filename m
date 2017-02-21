@@ -1,50 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60240 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753497AbdBGOqu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752823AbdBUOcT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 09:46:50 -0500
-Message-ID: <5899DDD7.7000605@candelatech.com> (sfid-20170207_154723_362115_D4672AA2)
-Date: Tue, 07 Feb 2017 06:46:47 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        Adrian Chadd <adrian@freebsd.org>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        =?UTF-8?B?QW1hZGV1c3ogU8WCYXdpxYRza2k=?=
-        <amadeusz.slawinski@tieto.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: remove ath10k_vif_to_arvif()
-References: <1486030773-30600-1-git-send-email-amadeusz.slawinski@tieto.com> <CAJ-VmonrHpS3MArM9ohHgLvb6xspP_gnVVeJWA9F-pjUpJ+LZA@mail.gmail.com> <87y3xi4b28.fsf@qca.qualcomm.com>
-In-Reply-To: <87y3xi4b28.fsf@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        Tue, 21 Feb 2017 09:32:19 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 03/10] wil6210: bus_request platform operation refinement
+Date: Tue, 21 Feb 2017 16:32:01 +0200
+Message-Id: <1487687528-12832-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153223_725336_686821B5)
+In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Lior David <qca_liord@qca.qualcomm.com>
 
+The driver uses the bus_request platform operation to
+request resources from the platform for a specific bandwidth.
+Currently the driver requests resources for the maximum
+theoretical bandwidth, when interface is brought up.
+Refine this process a bit: now the driver will request a
+small amount of resources when interface is up, and will only
+issue the maximum request when connected.
+This mechanism will be improved further in the future to make
+more refined requests based on actual bandwidth.
 
-On 02/07/2017 01:14 AM, Valo, Kalle wrote:
-> Adrian Chadd <adrian@freebsd.org> writes:
->
->> Removing this method makes the diff to FreeBSD larger, as "vif" in
->> FreeBSD is a different pointer.
->>
->> (Yes, I have ath10k on freebsd working and I'd like to find a way to
->> reduce the diff moving forward.)
->
-> I don't like this "(void *) vif->drv_priv" style that much either but
-> apparently it's commonly used in Linux wireless code and already parts
-> of ath10k. So this patch just unifies the coding style.
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c |  4 ++++
+ drivers/net/wireless/ath/wil6210/main.c     | 14 +++++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  5 +++--
+ drivers/net/wireless/ath/wil6210/wmi.c      |  1 +
+ 4 files changed, 17 insertions(+), 7 deletions(-)
 
-Surely the code compiles to the same thing, so why add a patch that
-makes it more difficult for Adrian and makes the code no easier to read
-for the rest of us?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 14aa6d3..2dc594d 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -680,6 +680,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 	rc = wmi_send(wil, WMI_CONNECT_CMDID, &conn, sizeof(conn));
+ 	if (rc == 0) {
+ 		netif_carrier_on(ndev);
++		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
+ 		/* Connect can take lots of time */
+ 		mod_timer(&wil->connect_timer,
+ 			  jiffies + msecs_to_jiffies(2000));
+@@ -1199,6 +1200,7 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wil->pbss = pbss;
+ 
+ 	netif_carrier_on(ndev);
++	wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
+ 
+ 	rc = wmi_pcp_start(wil, bi, wmi_nettype, chan, hidden_ssid, is_go);
+ 	if (rc)
+@@ -1214,6 +1216,7 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wmi_pcp_stop(wil);
+ err_pcp_start:
+ 	netif_carrier_off(ndev);
++	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ out:
+ 	mutex_unlock(&wil->mutex);
+ 	return rc;
+@@ -1320,6 +1323,7 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
+ 	wil_dbg_misc(wil, "stop_ap\n");
+ 
+ 	netif_carrier_off(ndev);
++	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ 	wil_set_recovery_state(wil, fw_recovery_idle);
+ 
+ 	mutex_lock(&wil->mutex);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index efb1f59..21b7fac 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -274,6 +274,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 		wil_bcast_fini(wil);
+ 		wil_update_net_queues_bh(wil, NULL, true);
+ 		netif_carrier_off(ndev);
++		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ 
+ 		if (test_bit(wil_status_fwconnected, wil->status)) {
+ 			clear_bit(wil_status_fwconnected, wil->status);
+@@ -555,6 +556,12 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	return -EAGAIN;
+ }
+ 
++void wil6210_bus_request(struct wil6210_priv *wil, u32 kbps)
++{
++	if (wil->platform_ops.bus_request)
++		wil->platform_ops.bus_request(wil->platform_handle, kbps);
++}
++
+ /**
+  * wil6210_disconnect - disconnect one connection
+  * @wil: driver context
+@@ -1066,9 +1073,7 @@ int __wil_up(struct wil6210_priv *wil)
+ 	napi_enable(&wil->napi_tx);
+ 	set_bit(wil_status_napi_en, wil->status);
+ 
+-	if (wil->platform_ops.bus_request)
+-		wil->platform_ops.bus_request(wil->platform_handle,
+-					      WIL_MAX_BUS_REQUEST_KBPS);
++	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ 
+ 	return 0;
+ }
+@@ -1092,8 +1097,7 @@ int __wil_down(struct wil6210_priv *wil)
+ 
+ 	set_bit(wil_status_resetting, wil->status);
+ 
+-	if (wil->platform_ops.bus_request)
+-		wil->platform_ops.bus_request(wil->platform_handle, 0);
++	wil6210_bus_request(wil, 0);
+ 
+ 	wil_disable_irq(wil);
+ 	if (test_and_clear_bit(wil_status_napi_en, wil->status)) {
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ea1e5b34..12de74a 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2016 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -40,6 +40,7 @@
+ #define WIL_FW_NAME_SPARROW_PLUS "wil6210_sparrow_plus.fw" /* code Sparrow D0 */
+ #define WIL_BOARD_FILE_NAME "wil6210.brd" /* board & radio parameters */
+ 
++#define WIL_DEFAULT_BUS_REQUEST_KBPS 128000 /* ~1Gbps */
+ #define WIL_MAX_BUS_REQUEST_KBPS 800000 /* ~6.1Gbps */
+ 
+ /**
+@@ -900,7 +901,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
+ int wmi_led_cfg(struct wil6210_priv *wil, bool enable);
+ int wmi_abort_scan(struct wil6210_priv *wil);
+ void wil_abort_scan(struct wil6210_priv *wil, bool sync);
+-
++void wil6210_bus_request(struct wil6210_priv *wil, u32 kbps);
+ void wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 			u16 reason_code, bool from_event);
+ void wil_probe_client_flush(struct wil6210_priv *wil);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 1f22c19..a7a4ac1 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -565,6 +565,7 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 	    (wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)) {
+ 		if (rc) {
+ 			netif_carrier_off(ndev);
++			wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ 			wil_err(wil, "cfg80211_connect_result with failure\n");
+ 			cfg80211_connect_result(ndev, evt->bssid, NULL, 0,
+ 						NULL, 0,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
