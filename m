@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32495 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751564AbdB0Kd5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2017 05:33:57 -0500
-From: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: RE: [PATCHv2 0/4] cfg80211: mac80211: BTCOEX feature support
-Date: Mon, 27 Feb 2017 10:33:50 +0000
-Message-ID: <97411eac047e4516b757d432c27cfacd@aphydexm01f.ap.qualcomm.com> (sfid-20170227_113407_681937_2D43D37A)
-References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
- <d8f813bb-fd25-9957-360e-7aa4cd117822@broadcom.com>
-In-Reply-To: <d8f813bb-fd25-9957-360e-7aa4cd117822@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:37604 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752540AbdBUOra (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 09:47:30 -0500
+Message-ID: <1487688447.15350.4.camel@sipsolutions.net> (sfid-20170221_154733_396618_1C023A7D)
+Subject: Re: [RFC v2 1/2] cfg80211: support 4-way handshake offloading for
+ WPA/WPA2-PSK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
+Date: Tue, 21 Feb 2017 15:47:27 +0100
+In-Reply-To: <1487688369.15350.3.camel@sipsolutions.net> (sfid-20170221_154616_216812_DC7B7832)
+References: <20170221123758.5339-1-johannes@sipsolutions.net>
+         <20170221144335.GA17601@w1.fi> <1487688369.15350.3.camel@sipsolutions.net>
+         (sfid-20170221_154616_216812_DC7B7832)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
 
-> >
-> > This patchset add support for BTCOEX feature to enable/disable and
-> > modifying btcoex priority value via nl80211
-> >
-> > Tamizh chelvam (4):
-> >   ath10k: Add support to enable or disable btcoex via nl80211
-> >   ath10k: Add support to update btcoex priority value via nl80211
-> >   dt: bindings: add new dt entry for BTCOEX feature in qcom,ath10k.txt
-> >   ath10k: Add support to read btcoex related data from DT
->=20
-> This cover letter does not seem to reflect the other patches that were se=
-nt to
-> the wireless list as those are about cfg80211/mac80211; not ath10k?
+> The .len verifies that it's at least that long. We're thus ignoring
+> additional bytes in the PSK case if they're present, which I suppose
+> we should fix by checking the exact length in the code separately.
+> 
+IOW, I'll add this:
 
-[Tamizh] ath10k patches are under progress, will send it soon.
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8044,6 +8044,8 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 		if (!wiphy_ext_feature_isset(&rdev->wiphy,
+ 					     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK))
+ 			return -EINVAL;
++		if (nla_len(info->attrs[NL80211_ATTR_PMK]) != WLAN_PMK_LEN)
++			return -EINVAL;
+ 		settings->psk = nla_data(info->attrs[NL80211_ATTR_PMK]);
+ 	}
+ 
 
->=20
-> Regards,
-> Arend
->=20
-> > v2 :
-> >   * Introduced NL80211_CMD_SET_BTCOEX to enable/disable btcoex and
-> >     to set/modify btcoex_priority.
-> >   * Added bool variable in wiphy structure to advertise btcoex_priority
-> >     feature and removed BITMAP calculation for btcoex_priority value.
-> >
-> >  .../bindings/net/wireless/qcom,ath10k.txt          |    4 +
-> >  drivers/net/wireless/ath/ath10k/core.c             |   44 ++++++++-
-> >  drivers/net/wireless/ath/ath10k/core.h             |    9 ++
-> >  drivers/net/wireless/ath/ath10k/debug.c            |   40 ++-------
-> >  drivers/net/wireless/ath/ath10k/mac.c              |   94
-> +++++++++++++++++++-
-> >  drivers/net/wireless/ath/ath10k/mac.h              |    1 +
-> >  drivers/net/wireless/ath/ath10k/wmi-ops.h          |   19 ++++
-> >  drivers/net/wireless/ath/ath10k/wmi.c              |   20 +++++
-> >  drivers/net/wireless/ath/ath10k/wmi.h              |   20 +++++
-> >  9 files changed, 215 insertions(+), 36 deletions(-)
-> >
+johannes
