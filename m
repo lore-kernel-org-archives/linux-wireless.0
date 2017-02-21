@@ -1,66 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61519 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753116AbdBNPFv (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:33296 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750992AbdBUJ5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 10:05:51 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: kbuild test robot <lkp@intel.com>
-CC: "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>,
-        "arnagara@codeaurora.org" <arnagara@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kbuild-all@01.org" <kbuild-all@01.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v3] ath10k: add support for controlling tx power to a
- station
-Date: Tue, 14 Feb 2017 15:05:45 +0000
-Message-ID: <87zihoq0ce.fsf@kamboji.qca.qualcomm.com> (sfid-20170214_160555_434734_A4F1383E)
-References: <201702120825.pCIZZp0b%fengguang.wu@intel.com>
-In-Reply-To: <201702120825.pCIZZp0b%fengguang.wu@intel.com> (kbuild test
-        robot's message of "Sun, 12 Feb 2017 08:17:48 +0800")
-Content-Type: text/plain; charset="iso-8859-1"
+        Tue, 21 Feb 2017 04:57:11 -0500
+Received: by mail-qt0-f170.google.com with SMTP id b16so57362438qte.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 01:57:11 -0800 (PST)
+Subject: Re: [PATCH V3 2/2] brcmfmac: don't warn user about NVRAM if fallback
+ to platform one succeeds
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20170216072636.7128-1-zajec5@gmail.com>
+ <20170221094754.15406-1-zajec5@gmail.com>
+ <20170221094754.15406-2-zajec5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9ac0557a-2746-bc61-7397-a7fa58a02787@broadcom.com> (sfid-20170221_105739_247965_2D0941D4)
+Date: Tue, 21 Feb 2017 10:57:07 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170221094754.15406-2-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
+On 21-2-2017 10:47, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Failing to load NVRAM file isn't critical if we manage to get platform
+> one in the fallback path. It means warnings like:
+> [   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error -2
+> are unnecessary & disturbing for people with platform NVRAM. This is
+> very common case for Broadcom home routers.
+> 
+> So instead of printing warning immediately with the firmware subsystem
+> let's first try our fallback code. If that fails as well, then it's a
+> right moment to print an error.
+> 
+> This should reduce amount of false reports from users seeing this
+> warning while having wireless working perfectly fine.
 
-> Hi Ashok,
->
-> [auto build test ERROR on v4.9-rc8]
-> [cannot apply to ath6kl/ath-next next-20170210]
-> [if your patch is applied to the wrong git tree, please drop us a note to=
- help improve the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Ashok-Raj-Nagarajan/ath1=
-0k-add-support-for-controlling-tx-power-to-a-station/20170208-203305
-> config: x86_64-randconfig-in0-02120025 (attached as .config)
-> compiler: gcc-4.6 (Debian 4.6.4-7) 4.6.4
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=3Dx86_64=20
->
-> All errors (new ones prefixed by >>):
->
->    drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_sta_set_txp=
-wr':
->>> drivers/net/wireless/ath/ath10k/mac.c:5900:10: error: 'struct
->>> ieee80211_sta' has no member named 'txpwr'
->    drivers/net/wireless/ath/ath10k/mac.c: At top level:
->>> drivers/net/wireless/ath/ath10k/mac.c:7469:2: error: unknown field
->>> 'sta_set_txpwr' specified in initializer
->    drivers/net/wireless/ath/ath10k/mac.c:7469:2: warning:
-> initialization from incompatible pointer type [enabled by default]
->    drivers/net/wireless/ath/ath10k/mac.c:7469:2: warning: (near
-> initialization for 'ath10k_ops.sta_pre_rcu_remove') [enabled by
-> default]
->    drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_mac_registe=
-r':
->>> drivers/net/wireless/ath/ath10k/mac.c:8008:11: error:
->>> 'NL80211_EXT_FEATURE_STA_TX_PWR' undeclared (first use in this
->>> function)
+I think FW_OPT_NO_WARN does not cover all warnings in firmware_class
+although I did not check. Anyway...
 
-These are expected as this depends on cfg80211 patch not yet applied.
-
---=20
-Kalle Valo=
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V2: Update commit message as it wasn't clear enough (thanks Andy) & add extra
+>     messages to the firmware.c.
+> V3: Set FW_OPT_UEVENT to don't change behavior
+> 
+> Kalle, Arend: this patch is strictly related to the bigger 1/2. Could you ack
+> this change as I expect this patchset to be picked by Ming, Luis or Greg?
+> ---
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 17 ++++++++++++-----
+>  1 file changed, 12 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> index c7c1e9906500..6dbcceff2529 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> @@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+>  		raw_nvram = false;
+>  	} else {
+>  		data = bcm47xx_nvram_get_contents(&data_len);
+> -		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+> -			goto fail;
+> +		if (!data) {
+> +			brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
+> +			if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
+> +				brcmf_err("Loading NVRAM from %s and using platform one both failed\n",
+> +					  fwctx->nvram_name);
+> +				goto fail;
+> +			}
+> +		}
+>  		raw_nvram = true;
+>  	}
+>  
+> @@ -504,9 +510,10 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
+>  		return;
+>  	}
+>  	fwctx->code = fw;
+> -	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+> -				      fwctx->dev, GFP_KERNEL, fwctx,
+> -				      brcmf_fw_request_nvram_done);
+> +	ret = request_firmware_async(THIS_MODULE,
+> +				     FW_OPT_UEVENT | FW_OPT_NO_WARN,
+> +				     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
+> +				     fwctx, brcmf_fw_request_nvram_done);
