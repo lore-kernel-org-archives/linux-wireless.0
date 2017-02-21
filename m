@@ -1,74 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54598 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751141AbdBKTiH (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34282 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753583AbdBUQQ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Feb 2017 14:38:07 -0500
-Subject: Re: VHT 160Mhz and nss related config.
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <0082a9e3-83f3-9bc3-af43-b890b91cfd93@candelatech.com>
- <e71fe0b1-4482-b80b-2624-240b154ff980@dd-wrt.com>
- <CAJ-VmokKafmamWJJ0-=PJ_oNBejbqcHbd8NO7-M9=Z6DFRuhzw@mail.gmail.com>
- <589F50B8.4020609@candelatech.com>
- <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <02b7f70a-7da2-f2e4-8904-bdffc3ca90a1@candelatech.com> (sfid-20170211_203833_614989_12E4F59A)
-Date: Sat, 11 Feb 2017 11:38:06 -0800
-MIME-Version: 1.0
-In-Reply-To: <bbf485eb-f3aa-f49b-8401-03632bc70a7f@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 21 Feb 2017 11:16:29 -0500
+Received: by mail-lf0-f66.google.com with SMTP id h67so3752371lfg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:28 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 15/21] ath10k: per target configurablity of various items
+Date: Tue, 21 Feb 2017 17:15:35 +0100
+Message-Id: <1487693741-10042-16-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_172342_767403_64059987)
+In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2017 10:21 AM, Sebastian Gottschall wrote:
-> Am 11.02.2017 um 18:58 schrieb Ben Greear:
->> On 02/10/2017 08:37 PM, Adrian Chadd wrote:
->>> On 10 February 2017 at 20:22, Sebastian Gottschall
->>> <s.gottschall@dd-wrt.com> wrote:
->>>> i really can't believe this. if this is true the  160 mhz mode would not
->>>> make any sense.
->>>> the maximum tx / rx rate for 4x4 vht80 and 2x2 vht160 is identical. so
->>>> vht160 would not increase performance in any way
->>>
->>> Well, if it can also do 2x2 MU-MIMO at 160MHz then it can be a
->>> perfectly fine STA to a 4x4 160MHz MU-MIMO chip that can actually
->>> transmit 2x2 rates to different MU-MIMO peers.
->>>
->>> That's the outstanding question I have - is it like, 2x2 MU only, or
->>> is it say, 2 concurrently different spatial stream 2x2 MU? Ie, can you
->>> have 2 peers, different VHT spatial groups (or 4 peers, 1 spatial
->>> group each) all going at the same time?
->>>
->>> I'm .. not even sure how you're supposed to cleanly negotiate that you
->>> can do 4NSS in VHT80 but 2NSS in VHT160 to a peer... that only makes
->>> sense if you're doing lots of 1NSS and 2NSS MU-MIMO peers..
->>
->> I think using the max-rx-rate logic might could imply this, but I am not sure
->> many drivers fill this out properly.
->>
->> Looks like a mess waiting to happen to me.
->>
->> Even if you can do 1x1 160Mhz MU-MIMO to two stations, and I am not certain you
->> can since in 80Mhz you can only do a 1x1 and a 2x2 (not two 2x2).
->>
->> So, from what I know currently, 80+80 is not that useful on the 9984 NIC...
-> never tried 80+80 since i need to enhance the channel logic alot in my firmware code to handle it. would be great enough if vht160 would work as expected and
-> i'm not sure right now if it really works, even if the interface initialized correctly it assocs only with vht80
+Added ability to set bus type and configure the max number of
+peers in the ath10k_hw_params struct.
 
-160Mhz is really implemented as 80+80 internally it seems, so what I meant is that
-160Mhz or 80+80 both have the 2x2 restriction.
+With this functionality it is possible to have a different
+hw configuration depending on bus type for the same radio
+chipset.
 
-Stock ath10k driver doesn't set the rxnss_override, so the chip will always be forced
-to send 1x1 at 160Mhz, so even if it associates and works at all, it will probably not put
-many 160Mhz frames on air since the rate-ctrl should choose 3x3 or 4x4 80Mhz as faster speeds.
+E.g. SDIO and USB devices using the same chipset as PCIe
+devices will potentially use different board files and perhaps
+other configuration parameters.
 
-Thanks,
-Ben
+One such parameter is the max number of peers.
+Instead of using a default value (suitable for PCIe devices)
+derived from the WMI op version, a per target value can be
+used instead.
 
+This is needed by the QCA9377 USB device in order to prevent
+the target fw to crash after HTT RX ring cfg is issued.
 
+Apparently, the QCA9377 HL device does not seem to handle the
+same amount of peers as the LL devices.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c    | 33 +++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath10k/core.h    |  7 -------
+ drivers/net/wireless/ath/ath10k/hw.h      | 22 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
+ 4 files changed, 49 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 9d60f4b..6b667c7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1592,9 +1592,19 @@ static int ath10k_init_hw_params(struct ath10k *ar)
+ 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
+ 		hw_params = &ath10k_hw_params_list[i];
+ 
+-		if (hw_params->id == ar->target_version &&
+-		    hw_params->dev_id == ar->dev_id)
+-			break;
++		if (ar->is_high_latency) {
++			/* High latency devices will use different fw depending
++			 * on if it is a USB or SDIO device.
++			 */
++			if (hw_params->bus == ar->hif.bus &&
++			    hw_params->id == ar->target_version &&
++			    hw_params->dev_id == ar->dev_id)
++				break;
++		} else {
++			if (hw_params->id == ar->target_version &&
++			    hw_params->dev_id == ar->dev_id)
++				break;
++		}
+ 	}
+ 
+ 	if (i == ARRAY_SIZE(ath10k_hw_params_list)) {
+@@ -1685,6 +1695,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
+ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
++	int max_num_peers;
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
+ 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
+@@ -1764,7 +1775,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 
+ 	switch (fw_file->wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+-		ar->max_num_peers = TARGET_NUM_PEERS;
++		max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
+@@ -1776,10 +1787,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+ 		if (ath10k_peer_stats_enabled(ar)) {
+-			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
++			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
+ 		} else {
+-			ar->max_num_peers = TARGET_10X_NUM_PEERS;
++			max_num_peers = TARGET_10X_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+ 		}
+ 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
+@@ -1788,7 +1799,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_TLV:
+-		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
++		max_num_peers = TARGET_TLV_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
+ 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
+@@ -1799,7 +1810,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
+-		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
++		max_num_peers = TARGET_10_4_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
+ 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
+ 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
+@@ -1816,10 +1827,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
++	default:
+ 		WARN_ON(1);
+ 		return -EINVAL;
+ 	}
+ 
++	if (ar->hw_params.max_num_peers)
++		ar->max_num_peers = ar->hw_params.max_num_peers;
++	else
++		ar->max_num_peers = max_num_peers;
++
+ 	/* Backwards compatibility for firmwares without
+ 	 * ATH10K_FW_IE_HTT_OP_VERSION.
+ 	 */
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 0c970fe..e3cdaba 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -88,13 +88,6 @@
+ 
+ struct ath10k;
+ 
+-enum ath10k_bus {
+-	ATH10K_BUS_PCI,
+-	ATH10K_BUS_AHB,
+-	ATH10K_BUS_SDIO,
+-	ATH10K_BUS_USB,
+-};
+-
+ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+ {
+ 	switch (bus) {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 4055144..bc4fd43 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -20,6 +20,13 @@
+ 
+ #include "targaddrs.h"
+ 
++enum ath10k_bus {
++	ATH10K_BUS_PCI,
++	ATH10K_BUS_AHB,
++	ATH10K_BUS_SDIO,
++	ATH10K_BUS_USB,
++};
++
+ #define ATH10K_FW_DIR			"ath10k"
+ 
+ #define QCA988X_2_0_DEVICE_ID   (0x003c)
+@@ -447,6 +454,18 @@ struct ath10k_hw_params {
+ 	/* hw specific clock control parameters */
+ 	const struct ath10k_hw_clk_params *hw_clk;
+ 	int target_cpu_freq;
++
++	/* max_num_peers can be used to override the setting derived from
++	 * the WMI op version. If this value is non-zero, it will always
++	 * be used instead of the default value derived from the WMI op
++	 * version.
++	 */
++	int max_num_peers;
++
++	/* Specifies whether or not the device is a high latency device */
++	bool is_high_latency;
++
++	enum ath10k_bus bus;
+ };
+ 
+ struct htt_rx_desc;
+@@ -557,6 +576,9 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
+ #define TARGET_TLV_NUM_WOW_PATTERNS		22
+ 
++/* Target specific defines for QCA9377 high latency firmware */
++#define TARGET_QCA9377_HL_NUM_PEERS		15
++
+ /* Diagnostic Window */
+ #define CE_DIAG_PIPE	7
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index f918802..754d445 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1406,7 +1406,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
+ 
+ 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+-	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
++	cfg->num_peers = __cpu_to_le32(ar->max_num_peers);
+ 
+ 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
+ 		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+@@ -1417,7 +1417,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	}
+ 
+ 	cfg->num_peer_keys = __cpu_to_le32(2);
+-	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
++	cfg->num_tids = __cpu_to_le32(ar->max_num_peers * 2);
+ 	cfg->ast_skid_limit = __cpu_to_le32(0x10);
+ 	cfg->tx_chain_mask = __cpu_to_le32(0x7);
+ 	cfg->rx_chain_mask = __cpu_to_le32(0x7);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
