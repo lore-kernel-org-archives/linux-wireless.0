@@ -1,90 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:52781 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752560AbdBAWTt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753080AbdBUOcd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 17:19:49 -0500
-Date: Wed, 1 Feb 2017 23:19:45 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>, kbuild-all@01.org
-Subject: Re: [PATCH 05/11 V2] rtlwifi: btcoexist: Change logging in
- halbtc8192e2ant.c (fwd)
-Message-ID: <alpine.DEB.2.20.1702012318350.2021@hadrien> (sfid-20170201_231952_466657_10668059)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Tue, 21 Feb 2017 09:32:33 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 10/10] wil6210: add oob_mode for AP certification
+Date: Tue, 21 Feb 2017 16:32:08 +0200
+Message-Id: <1487687528-12832-11-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153242_652283_ADBA723A)
+In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indeed, there are the four cases where the then and else branches are the
-same.  Is it generated code?
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-julia
+Add a new value to the oob_mode module parameter for
+supporting AP certification.
+All enabled values of oob_mode (>0) are intended only
+for debugging and diagnostics.
 
----------- Forwarded message ----------
-Date: Thu, 2 Feb 2017 06:10:01 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: kbuild@01.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 05/11 V2] rtlwifi: btcoexist: Change logging in
-    halbtc8192e2ant.c
-
-In-Reply-To: <20170120212716.29887-6-Larry.Finger@lwfinger.net>
-
-Hi Larry,
-
-[auto build test WARNING on wireless-drivers-next/master]
-[also build test WARNING on v4.10-rc6 next-20170201]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Larry-Finger/rtlwifi-Various-updates/20170202-045716
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-:::::: branch date: 72 minutes ago
-:::::: commit date: 73 minutes ago
-
->> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c:2186:11-13: WARNING: possible condition with no effect (if == else)
-   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c:2208:11-13: WARNING: possible condition with no effect (if == else)
-   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c:2232:11-13: WARNING: possible condition with no effect (if == else)
-   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c:2254:11-13: WARNING: possible condition with no effect (if == else)
-
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout 2e5b0b84cf4c19a9b761ecbfbcbec52ac35f39da
-vim +2186 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2170  	if (!coex_dm->auto_tdma_adjust) {
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2171  		coex_dm->auto_tdma_adjust = true;
-2e5b0b84 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c Larry Finger 2017-02-01  2172  		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2173  			 "[BTCoex], first run TdmaDurationAdjust()!!\n");
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2174  		if (sco_hid) {
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2175  			if (tx_pause) {
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2176  				if (max_interval == 1) {
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2177  					halbtc8192e2ant_ps_tdma(btcoexist,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2178  								NORMAL_EXEC,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2179  								true, 13);
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2180  					coex_dm->tdma_adj_type = 13;
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2181  				} else if (max_interval == 2) {
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2182  					halbtc8192e2ant_ps_tdma(btcoexist,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2183  								NORMAL_EXEC,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2184  								true, 14);
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2185  					coex_dm->tdma_adj_type = 14;
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04 @2186  				} else if (max_interval == 3) {
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2187  					halbtc8192e2ant_ps_tdma(btcoexist,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2188  								NORMAL_EXEC,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2189  								true, 15);
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2190  					coex_dm->tdma_adj_type = 15;
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2191  				} else {
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2192  					halbtc8192e2ant_ps_tdma(btcoexist,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2193  								NORMAL_EXEC,
-2187e9a2 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c         Larry Finger 2014-09-04  2194  								true, 15);
-
-:::::: The code at line 2186 was first introduced by commit
-:::::: 2187e9a2ce575ee85a1ce31fa2ecbc0f580c105f rtlwifi: btcoexist: Modify driver for V062814 Realtek driver
-
-:::::: TO: Larry Finger <Larry.Finger@lwfinger.net>
-:::::: CC: John W. Linville <linville@tuxdriver.com>
-
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/net/wireless/ath/wil6210/main.c    | 24 ++++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
+ 2 files changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 3206aea..c33cc4a 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -30,8 +30,8 @@
+ module_param(debug_fw, bool, 0444);
+ MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
+ 
+-static bool oob_mode;
+-module_param(oob_mode, bool, 0444);
++static u8 oob_mode;
++module_param(oob_mode, byte, 0444);
+ MODULE_PARM_DESC(oob_mode,
+ 		 " enable out of the box (OOB) mode in FW, for diagnostics and certification");
+ 
+@@ -642,13 +642,25 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
+ 	wil_w(wil, RGF_USER_USER_CPU_0, 1);
+ }
+ 
+-static void wil_set_oob_mode(struct wil6210_priv *wil, bool enable)
++static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
+ {
+-	wil_info(wil, "enable=%d\n", enable);
+-	if (enable)
++	wil_info(wil, "oob_mode to %d\n", mode);
++	switch (mode) {
++	case 0:
++		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE |
++		      BIT_USER_OOB_R2_MODE);
++		break;
++	case 1:
++		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_R2_MODE);
+ 		wil_s(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
+-	else
++		break;
++	case 2:
+ 		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
++		wil_s(wil, RGF_USER_USAGE_6, BIT_USER_OOB_R2_MODE);
++		break;
++	default:
++		wil_err(wil, "invalid oob_mode: %d\n", mode);
++	}
+ }
+ 
+ static int wil_target_reset(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index cb825cc..fee1891 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -140,6 +140,7 @@ struct RGF_ICR {
+ #define RGF_USER_USAGE_1		(0x880004)
+ #define RGF_USER_USAGE_6		(0x880018)
+ 	#define BIT_USER_OOB_MODE		BIT(31)
++	#define BIT_USER_OOB_R2_MODE		BIT(30)
+ #define RGF_USER_HW_MACHINE_STATE	(0x8801dc)
+ 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
+ #define RGF_USER_USER_CPU_0		(0x8801e0)
+-- 
+1.9.1
