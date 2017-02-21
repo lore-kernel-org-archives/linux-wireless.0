@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22890 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750905AbdBRX5i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Feb 2017 18:57:38 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 0/8] ath10k sdio support
-Date: Sat, 18 Feb 2017 23:57:10 +0000
-Message-ID: <877f4ngii5.fsf@kamboji.qca.qualcomm.com> (sfid-20170219_005741_725208_BB1C7FF3)
-References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
-        <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
-        <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com>
-In-Reply-To: <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com> (Erik
-        Stromdahl's message of "Sat, 18 Feb 2017 23:05:03 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mx2.suse.de ([195.135.220.15]:60140 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751272AbdBUSPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 13:15:46 -0500
+Date: Tue, 21 Feb 2017 19:15:41 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        "tj@kernel.org" <tj@kernel.org>,
+        "arjan@linux.intel.com" <arjan@linux.intel.com>,
+        "ming.lei@canonical.com" <ming.lei@canonical.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "jeyu@redhat.com" <jeyu@redhat.com>,
+        "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
+        "pmladek@suse.com" <pmladek@suse.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC 2/5] iwlwifi: fix request_module() use
+Message-ID: <20170221181541.GN31264@wotan.suse.de> (sfid-20170221_192005_565187_ECAC0030)
+References: <20170217020903.6370-1-mcgrof@kernel.org>
+ <20170217020903.6370-3-mcgrof@kernel.org>
+ <0BA3FCBA62E2DC44AF3030971E174FB3A8F4AE27@hasmsx107.ger.corp.intel.com>
+ <20170221022337.GG31264@wotan.suse.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB3A8F4DEAB@hasmsx107.ger.corp.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3A8F4DEAB@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
-
-> I was actually about to email you about this.
+On Tue, Feb 21, 2017 at 07:16:16AM +0000, Grumbach, Emmanuel wrote:
+> > 
+> > a) just remove the print and use instead request_module_nowait() (this is
+> > more in alignment of what your code actually does today; or
+> > 
+> > b) fix the request_module() use so that the error print matches the
+> > expected and proper recommended use of request_module() (what this patch
+> > does)
+> > 
+> > I prefer a) actually but I had to show what b) looked like first :)
 >
-> I have made a few more updates to the sdio code so I think it would be
-> best if I could submit a new series of patches based on this code (v4).
->
-> Then you can tweak it (v5).
->
-> It is only minor updates to the HIF layer (added QCA9377 support) and
-> a setup of some pll registers.
+> Me too. Let's do the simple thing. After all, it's been working for 5 years
+> now (maybe more?) and I don't see a huge need to verify that the opmode
+> module has been loaded.  It is very unlikely to fail anyway, and in the case
+> it did fail, it's not that we can do much from iwlwifi point of view. 
 
-Ok, that sounds good. I'll wait for v4.
+I tend to agree with you on this, retries would be the only sensible thing to
+do, but why do that -- the error should be logged right and addressed by any
+upper layers. Its one reason to consider in the future adding verifiers
+as built-in optional part of module loading.
 
-> btw, should I still mark them as RFC or should it be PATCH this time?
->
-> If I go for PATCH, should the version be v4 or should I start from v1?
+> iwlwifi will stay loaded and sit idle since no opmode will be there to start
+> using the hardware. We will keep having the device claimed, and will keep the
+> interrupt registered and all that. No WiFi for you, but no harm caused
+> either.
 
-v4 would be fine. Thanks.
+Fine by me. Will send follow up simple patches.
 
---=20
-Kalle Valo=
+  Luis
