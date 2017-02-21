@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33570 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752573AbdBNJjJ (ORCPT
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:33194 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751266AbdBUK2Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 04:39:09 -0500
-Received: by mail-oi0-f65.google.com with SMTP id j15so2497161oih.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 01:39:09 -0800 (PST)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v2] iw: Fix bitrate output when no rate info found
-Date: Tue, 14 Feb 2017 18:38:58 +0900
-Message-Id: <1487065138-4892-1-git-send-email-masashi.honma@gmail.com> (sfid-20170214_103945_964926_393DEED5)
-In-Reply-To: <1487049663-2942-1-git-send-email-masashi.honma@gmail.com>
-References: <1487049663-2942-1-git-send-email-masashi.honma@gmail.com>
+        Tue, 21 Feb 2017 05:28:16 -0500
+Received: by mail-wr0-f169.google.com with SMTP id 97so589388wrb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 02:28:16 -0800 (PST)
+From: Marcin Rokicki <marcin.rokicki@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com
+Subject: [PATCH v2] ath10k: Remove return statement from a void function
+Date: Tue, 21 Feb 2017 11:28:11 +0100
+Message-Id: <1487672891-8584-1-git-send-email-marcin.rokicki@tieto.com> (sfid-20170221_112820_261636_78E4E980)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, bitrate showed uninitialized buffer when no rate info found.
-This patch fixes the issue.
+The empty 'return;' statement in a void function should be
+used to return from somewhere else than the end.
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+Signed-off-by: Marcin Rokicki <marcin.rokicki@tieto.com>
 ---
- station.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/station.c b/station.c
-index f3e3da8..4885dc0 100644
---- a/station.c
-+++ b/station.c
-@@ -151,6 +151,8 @@ void parse_bitrate(struct nlattr *bitrate_attr, char *buf, int buflen)
- 	if (rate > 0)
- 		pos += snprintf(pos, buflen - (pos - buf),
- 				"%d.%d MBit/s", rate / 10, rate % 10);
-+	else
-+		pos += snprintf(pos, buflen - (pos - buf), "(unknown)");
+Changes for v2
+ -remove only return statement instead of empty err label
+  which can be used in the future
+
+---
+ drivers/net/wireless/ath/ath10k/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 59729aa..a22d3c9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2311,7 +2311,7 @@ static void ath10k_core_register_work(struct work_struct *work)
+ 	/* TODO: It's probably a good idea to release device from the driver
+ 	 * but calling device_release_driver() here will cause a deadlock.
+ 	 */
+-	return;
++	;
+ }
  
- 	if (rinfo[NL80211_RATE_INFO_MCS])
- 		pos += snprintf(pos, buflen - (pos - buf),
+ int ath10k_core_register(struct ath10k *ar, u32 chip_id)
 -- 
 2.7.4
