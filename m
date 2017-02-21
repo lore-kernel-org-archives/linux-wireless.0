@@ -1,50 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:45783 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751989AbdB1MnX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17504 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753032AbdBUOcb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 07:43:23 -0500
-From: Colin King <colin.king@canonical.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: remove redundant result < 0 check
-Date: Tue, 28 Feb 2017 12:05:48 +0000
-Message-Id: <20170228120548.20734-1-colin.king@canonical.com> (sfid-20170228_134431_954458_5E41245A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Tue, 21 Feb 2017 09:32:31 -0500
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 09/10] wil6210: correctly report locally generated disconnect in STA mode
+Date: Tue, 21 Feb 2017 16:32:07 +0200
+Message-Id: <1487687528-12832-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170221_153243_884592_6C952913)
+In-Reply-To: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1487687528-12832-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-The check for result < 0 is redundant because at that point result
-is always zero, hence we can remove this check and the netdev_err
-message.
+Driver always invoke cfg80211_disconnected() with locally_generated as
+false.
+Fix this by reporting true whenever the disconnect is triggered from
+upper layers (cfg80211) or from within the driver itself (reset,
+deinit).
 
-Detected by CoverityScan, CID#1357147 ("Logically Dead Code")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 1 +
+ drivers/net/wireless/ath/wil6210/main.c     | 5 ++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 1 +
+ drivers/net/wireless/ath/wil6210/wmi.c      | 1 +
+ 4 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e83fa21..f848bb8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3350,10 +3350,6 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	init_completion(&hif_drv->comp_inactive_time);
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 39ee565..1981ec2 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -710,6 +710,7 @@ static int wil_cfg80211_disconnect(struct wiphy *wiphy,
+ 		return 0;
+ 	}
  
- 	if (clients_count == 0)	{
--		if (result < 0) {
--			netdev_err(vif->ndev, "Failed to creat MQ\n");
--			goto _fail_;
--		}
- 		hif_workqueue = create_singlethread_workqueue("WILC_wq");
- 		if (!hif_workqueue) {
- 			netdev_err(vif->ndev, "Failed to create workqueue\n");
++	wil->locally_generated_disc = true;
+ 	rc = wmi_call(wil, WMI_DISCONNECT_CMDID, NULL, 0,
+ 		      WMI_DISCONNECT_EVENTID, NULL, 0,
+ 		      WIL6210_DISCONNECT_TO_MS);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 79aeb2b8..3206aea 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -279,7 +279,10 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 		if (test_bit(wil_status_fwconnected, wil->status)) {
+ 			clear_bit(wil_status_fwconnected, wil->status);
+ 			cfg80211_disconnected(ndev, reason_code,
+-					      NULL, 0, false, GFP_KERNEL);
++					      NULL, 0,
++					      wil->locally_generated_disc,
++					      GFP_KERNEL);
++			wil->locally_generated_disc = false;
+ 		} else if (test_bit(wil_status_fwconnecting, wil->status)) {
+ 			cfg80211_connect_result(ndev, bssid, NULL, 0, NULL, 0,
+ 						WLAN_STATUS_UNSPECIFIED_FAILURE,
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 09e2fce..cb825cc 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -614,6 +614,7 @@ struct wil6210_priv {
+ 	int sinfo_gen;
+ 	u32 ap_isolate; /* no intra-BSS communication */
+ 	struct cfg80211_bss *bss; /* connected bss, relevant in STA mode */
++	int locally_generated_disc; /* relevant in STA mode */
+ 	/* interrupt moderation */
+ 	u32 tx_max_burst_duration;
+ 	u32 tx_interframe_timeout;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 02ccdae..9255c47 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1497,6 +1497,7 @@ int wmi_disconnect_sta(struct wil6210_priv *wil, const u8 *mac,
+ 
+ 	wil_dbg_wmi(wil, "disconnect_sta: (%pM, reason %d)\n", mac, reason);
+ 
++	wil->locally_generated_disc = true;
+ 	if (del_sta) {
+ 		ether_addr_copy(del_sta_cmd.dst_mac, mac);
+ 		rc = wmi_call(wil, WMI_DEL_STA_CMDID, &del_sta_cmd,
 -- 
-2.10.2
+1.9.1
