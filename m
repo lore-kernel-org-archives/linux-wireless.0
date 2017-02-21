@@ -1,202 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37962 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751958AbdBCOjb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:39:31 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:38:12 +0200
-Message-Id: <20170203143812.7525-26-luca@coelho.fi> (sfid-20170203_153933_905211_B200DAB6)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 25/25] iwlwifi: mvm: support new beacon template command
+Received: from mx2.suse.de ([195.135.220.15]:38323 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751161AbdBUURT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 15:17:19 -0500
+Date: Tue, 21 Feb 2017 21:17:15 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        "tj@kernel.org" <tj@kernel.org>,
+        "arjan@linux.intel.com" <arjan@linux.intel.com>,
+        "ming.lei@canonical.com" <ming.lei@canonical.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "jeyu@redhat.com" <jeyu@redhat.com>,
+        "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
+        "pmladek@suse.com" <pmladek@suse.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC 2/5] iwlwifi: fix request_module() use
+Message-ID: <20170221201715.GZ31264@wotan.suse.de> (sfid-20170221_211728_915941_54B7FF00)
+References: <20170217020903.6370-1-mcgrof@kernel.org>
+ <20170217020903.6370-3-mcgrof@kernel.org>
+ <0BA3FCBA62E2DC44AF3030971E174FB3A8F4AE27@hasmsx107.ger.corp.intel.com>
+ <20170221022337.GG31264@wotan.suse.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB3A8F4DEAB@hasmsx107.ger.corp.intel.com>
+ <20170221181541.GN31264@wotan.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170221181541.GN31264@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Tue, Feb 21, 2017 at 07:15:41PM +0100, Luis R. Rodriguez wrote:
+> On Tue, Feb 21, 2017 at 07:16:16AM +0000, Grumbach, Emmanuel wrote:
+> > > 
+> > > a) just remove the print and use instead request_module_nowait() (this is
+> > > more in alignment of what your code actually does today; or
+> > > 
+> > > b) fix the request_module() use so that the error print matches the
+> > > expected and proper recommended use of request_module() (what this patch
+> > > does)
+> > > 
+> > > I prefer a) actually but I had to show what b) looked like first :)
+> >
+> > Me too. Let's do the simple thing. After all, it's been working for 5 years
+> > now (maybe more?) and I don't see a huge need to verify that the opmode
+> > module has been loaded.  It is very unlikely to fail anyway, and in the case
+> > it did fail, it's not that we can do much from iwlwifi point of view. 
+> 
+> I tend to agree with you on this, retries would be the only sensible thing to
+> do, but why do that -- the error should be logged right and addressed by any
+> upper layers. Its one reason to consider in the future adding verifiers
+> as built-in optional part of module loading.
 
-Support new version of beacon template command which deprecates
-the use of the tx command inside.
+It would seem we still need to offload the opmode start as it is the one that
+really should be issuing the completion, otherwise we would end up sending a
+completion while the opmode module is being loaded asynchronously. The changes
+are for that are still very likely desirable as it should help with speeding
+boot up.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 29 +++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  | 71 +++++++++++++++-------
- 2 files changed, 73 insertions(+), 27 deletions(-)
+So the sharing of the opcode start will go first.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 59ca97a11b2b..b38cc073adcc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -672,8 +672,7 @@ struct iwl_mac_beacon_cmd_v6 {
- } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_6 */
- 
- /**
-- * struct iwl_mac_beacon_cmd - beacon template command with offloaded CSA
-- * @tx: the tx commands associated with the beacon frame
-+ * struct iwl_mac_beacon_cmd_data - data of beacon template with offloaded CSA
-  * @template_id: currently equal to the mac context id of the coresponding
-  *  mac.
-  * @tim_idx: the offset of the tim IE in the beacon
-@@ -682,16 +681,38 @@ struct iwl_mac_beacon_cmd_v6 {
-  * @csa_offset: offset to the CSA IE if present
-  * @frame: the template of the beacon frame
-  */
--struct iwl_mac_beacon_cmd {
--	struct iwl_tx_cmd tx;
-+struct iwl_mac_beacon_cmd_data {
- 	__le32 template_id;
- 	__le32 tim_idx;
- 	__le32 tim_size;
- 	__le32 ecsa_offset;
- 	__le32 csa_offset;
- 	struct ieee80211_hdr frame[0];
-+};
-+
-+/**
-+ * struct iwl_mac_beacon_cmd_v7 - beacon template command with offloaded CSA
-+ * @tx: the tx commands associated with the beacon frame
-+ * @data: see &iwl_mac_beacon_cmd_data
-+ */
-+struct iwl_mac_beacon_cmd_v7 {
-+	struct iwl_tx_cmd tx;
-+	struct iwl_mac_beacon_cmd_data data;
- } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_7 */
- 
-+/**
-+ * struct iwl_mac_beacon_cmd - beacon template command with offloaded CSA
-+ * @byte_cnt: byte count of the beacon frame
-+ * @flags: for future use
-+ * @data: see &iwl_mac_beacon_cmd_data
-+ */
-+struct iwl_mac_beacon_cmd {
-+	__le16 byte_cnt;
-+	__le16 flags;
-+	__le64 reserved;
-+	struct iwl_mac_beacon_cmd_data data;
-+} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_8 */
-+
- struct iwl_beacon_notif {
- 	struct iwl_mvm_tx_resp beacon_notify_hdr;
- 	__le64 tsf;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index bf0555fcf695..99132ea16ede 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -979,7 +979,7 @@ static int iwl_mvm_mac_ctxt_cmd_p2p_device(struct iwl_mvm *mvm,
- }
- 
- static void iwl_mvm_mac_ctxt_set_tim(struct iwl_mvm *mvm,
--				     struct iwl_mac_beacon_cmd_v6 *beacon_cmd,
-+				     __le32 *tim_index, __le32 *tim_size,
- 				     u8 *beacon, u32 frame_size)
- {
- 	u32 tim_idx;
-@@ -996,8 +996,8 @@ static void iwl_mvm_mac_ctxt_set_tim(struct iwl_mvm *mvm,
- 
- 	/* If TIM field was found, set variables */
- 	if ((tim_idx < (frame_size - 1)) && (beacon[tim_idx] == WLAN_EID_TIM)) {
--		beacon_cmd->tim_idx = cpu_to_le32(tim_idx);
--		beacon_cmd->tim_size = cpu_to_le32((u32)beacon[tim_idx+1]);
-+		*tim_index = cpu_to_le32(tim_idx);
-+		*tim_size = cpu_to_le32((u32)beacon[tim_idx + 1]);
- 	} else {
- 		IWL_WARN(mvm, "Unable to find TIM Element in beacon\n");
- 	}
-@@ -1031,8 +1031,9 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 	};
- 	union {
- 		struct iwl_mac_beacon_cmd_v6 beacon_cmd_v6;
--		struct iwl_mac_beacon_cmd beacon_cmd;
-+		struct iwl_mac_beacon_cmd_v7 beacon_cmd;
- 	} u = {};
-+	struct iwl_mac_beacon_cmd beacon_cmd;
- 	struct ieee80211_tx_info *info;
- 	u32 beacon_skb_len;
- 	u32 rate, tx_flags;
-@@ -1042,6 +1043,46 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 
- 	beacon_skb_len = beacon->len;
- 
-+	if (fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD)) {
-+		u32 csa_offset, ecsa_offset;
-+
-+		csa_offset = iwl_mvm_find_ie_offset(beacon->data,
-+						    WLAN_EID_CHANNEL_SWITCH,
-+						    beacon_skb_len);
-+		ecsa_offset =
-+			iwl_mvm_find_ie_offset(beacon->data,
-+					       WLAN_EID_EXT_CHANSWITCH_ANN,
-+					       beacon_skb_len);
-+
-+		if (iwl_mvm_has_new_tx_api(mvm)) {
-+			beacon_cmd.data.template_id =
-+				cpu_to_le32((u32)mvmvif->id);
-+			beacon_cmd.data.ecsa_offset = cpu_to_le32(ecsa_offset);
-+			beacon_cmd.data.csa_offset = cpu_to_le32(csa_offset);
-+			beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon_skb_len);
-+			if (vif->type == NL80211_IFTYPE_AP)
-+				iwl_mvm_mac_ctxt_set_tim(mvm,
-+							 &beacon_cmd.data.tim_idx,
-+							 &beacon_cmd.data.tim_size,
-+							 beacon->data,
-+							 beacon_skb_len);
-+			cmd.len[0] = sizeof(beacon_cmd);
-+			cmd.data[0] = &beacon_cmd;
-+			goto send;
-+
-+		} else {
-+			u.beacon_cmd.data.ecsa_offset =
-+				cpu_to_le32(ecsa_offset);
-+			u.beacon_cmd.data.csa_offset = cpu_to_le32(csa_offset);
-+			cmd.len[0] = sizeof(u.beacon_cmd);
-+			cmd.data[0] = &u;
-+		}
-+	} else {
-+		cmd.len[0] = sizeof(u.beacon_cmd_v6);
-+		cmd.data[0] = &u;
-+	}
-+
- 	/* TODO: for now the beacon template id is set to be the mac context id.
- 	 * Might be better to handle it as another resource ... */
- 	u.beacon_cmd_v6.template_id = cpu_to_le32((u32)mvmvif->id);
-@@ -1080,29 +1121,13 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 
- 	/* Set up TX beacon command fields */
- 	if (vif->type == NL80211_IFTYPE_AP)
--		iwl_mvm_mac_ctxt_set_tim(mvm, &u.beacon_cmd_v6,
-+		iwl_mvm_mac_ctxt_set_tim(mvm, &u.beacon_cmd_v6.tim_idx,
-+					 &u.beacon_cmd_v6.tim_size,
- 					 beacon->data,
- 					 beacon_skb_len);
- 
-+send:
- 	/* Submit command */
--
--	if (fw_has_capa(&mvm->fw->ucode_capa,
--			IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD)) {
--		u.beacon_cmd.csa_offset =
--			cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
--						    WLAN_EID_CHANNEL_SWITCH,
--						    beacon_skb_len));
--		u.beacon_cmd.ecsa_offset =
--			cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
--						    WLAN_EID_EXT_CHANSWITCH_ANN,
--						    beacon_skb_len));
--
--		cmd.len[0] = sizeof(u.beacon_cmd);
--	} else {
--		cmd.len[0] = sizeof(u.beacon_cmd_v6);
--	}
--
--	cmd.data[0] = &u;
- 	cmd.dataflags[0] = 0;
- 	cmd.len[1] = beacon_skb_len;
- 	cmd.data[1] = beacon->data;
--- 
-2.11.0
+Will send v2.
+
+  Luis
