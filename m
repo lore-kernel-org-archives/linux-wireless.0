@@ -1,35 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37520 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751155AbdBFJEj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 04:04:39 -0500
-Message-ID: <1486371873.14226.8.camel@sipsolutions.net> (sfid-20170206_100647_162824_79A7DB33)
-Subject: Re: [PATCH] mac80211: Allocate a sync skcipher explicitly for FILS
- AEAD
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 06 Feb 2017 10:04:33 +0100
-In-Reply-To: <20170206090039.GA9467@gondor.apana.org.au>
-References: <1486224522-26392-1-git-send-email-jouni@qca.qualcomm.com>
-         <1486364077.14226.1.camel@sipsolutions.net>
-         <20170206090039.GA9467@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([184.105.139.130]:56068 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932155AbdBUSTF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 13:19:05 -0500
+Date: Tue, 21 Feb 2017 13:18:58 -0500 (EST)
+Message-Id: <20170221.131858.949421414784612398.davem@davemloft.net> (sfid-20170221_192004_189087_392F5B96)
+To: kvalo@codeaurora.org
+Cc: torvalds@linux-foundation.org, jikos@kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: ath10k regression on XPS13
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87d1eb99dq.fsf_-_@purkki.adurom.net>
+References: <alpine.LSU.2.20.1702201508280.24579@cbobk.fhfr.pm>
+        <CA+55aFxLmgA7drrGfUJmCRPT-A74ROYf6GQHFGO5pzVjZ0dL7Q@mail.gmail.com>
+        <87d1eb99dq.fsf_-_@purkki.adurom.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Tue, 21 Feb 2017 11:32:49 +0200
 
-> The type and mask are used as follows when checking an algorithm:
-> 
-> 	alg->type & mask == type & mask
-> 
-> So to request a synchronous algorithm (that is, one with the
-> CRYPTO_ALG_ASYNC bit set to zero), you would set type to 0 and
-> mask to CRYPTO_ALG_ASYNC.
+> We are working on a fix so that ath10k continues to work with older
+> board-2.bin, but that might take a day or two still.
 
-Ah. Ok, that makes sense, thanks for the explanation.
+Kalle I really wanted to send my net-next pull request to Linus later
+today.  But I guess I have to wait for this ath10k first.
 
-johannes
+Please get this to me as soon as possible, thanks.
