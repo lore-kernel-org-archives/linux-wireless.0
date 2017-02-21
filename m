@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36636 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdBXLEV (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34270 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753754AbdBUQQb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 06:04:21 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Rajat Jain <rajatja@google.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH 3/3] mwifiex: wake system up when receives a wake irq
-References: <1487917471-5501-1-git-send-email-jeffy.chen@rock-chips.com>
-        <1487917471-5501-3-git-send-email-jeffy.chen@rock-chips.com>
-Date: Fri, 24 Feb 2017 13:01:42 +0200
-In-Reply-To: <1487917471-5501-3-git-send-email-jeffy.chen@rock-chips.com>
-        (Jeffy Chen's message of "Fri, 24 Feb 2017 14:24:31 +0800")
-Message-ID: <87d1e726p5.fsf@codeaurora.org> (sfid-20170224_120523_440964_56733EE0)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 21 Feb 2017 11:16:31 -0500
+Received: by mail-lf0-f66.google.com with SMTP id h67so3752237lfg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:30 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 13/21] ath10k: different fw file names for usb and sdio
+Date: Tue, 21 Feb 2017 17:15:33 +0100
+Message-Id: <1487693741-10042-14-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171706_415636_3AE11E59)
+In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeffy Chen <jeffy.chen@rock-chips.com> writes:
+Since both SDIO and USB based chipsets will use different
+firmware from the PCIe and AHB chipsets, the fw file name
+must be different depending on bus type.
 
-> Currrently we are disabling this wake irq after receiving it. If this
-> happens before we finish suspend and the pm event check is disabled,
-> the system will continue suspending, and this irq would not work again.
->
-> We may need to abort system suspend to avoid that.
->
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+The new firmware names are:
 
-I only see patch 3 in patchwork. Where are patches 1 and 2?
+For PCIe and AHB:
+firmware-<api_version>.bin (same as before)
 
+For SDIO:
+firmware-sdio-<api_version>.bin
+
+For USB:
+firmware-usb-<api_version>.bin
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 39c407e..9d60f4b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1387,7 +1387,13 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
+ 				    size_t fw_name_len, int fw_api)
+ {
+-	scnprintf(fw_name, fw_name_len, "%s-%d.bin", ATH10K_FW_FILE_BASE, fw_api);
++	if ((ar->hif.bus != ATH10K_BUS_PCI) && (ar->hif.bus != ATH10K_BUS_AHB))
++		scnprintf(fw_name, fw_name_len, "%s-%s-%d.bin",
++			  ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
++			  fw_api);
++	else
++		scnprintf(fw_name, fw_name_len, "%s-%d.bin",
++			  ATH10K_FW_FILE_BASE, fw_api);
+ }
+ 
+ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
 -- 
-Kalle Valo
+2.7.4
