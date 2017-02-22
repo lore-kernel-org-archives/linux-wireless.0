@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35800 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752942AbdBIOhp (ORCPT
+Received: from smtp06.msg.oleane.net ([62.161.4.6]:36985 "EHLO
+        smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932120AbdBVN4j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Feb 2017 09:37:45 -0500
-Received: by mail-wm0-f65.google.com with SMTP id u63so3178014wmu.2
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2017 06:37:44 -0800 (PST)
-From: Iain Hunter <drhunter95@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@aurora.org, Iain Hunter <i-hunter1@ti.com>
-Subject: [PATCH v5] wlcore: disable multicast filter in AP mode
-Date: Thu,  9 Feb 2017 14:37:28 +0000
-Message-Id: <20170209143728.22831-1-i-hunter1@ti.com> (sfid-20170209_153753_855469_ABDB9CE5)
-In-Reply-To: <20170131104840.10366-1-i-hunter1@ti.com>
-References: <20170131104840.10366-1-i-hunter1@ti.com>
+        Wed, 22 Feb 2017 08:56:39 -0500
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Valo, Kalle'" <kvalo@qca.qualcomm.com>
+Cc: "'OpenWrt Development List'" <openwrt-devel@lists.openwrt.org>,
+        "'linux-wireless'" <linux-wireless@vger.kernel.org>,
+        <ath10k@lists.infradead.org>
+References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>        <566849DB.9040901@candelatech.com>        <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>        <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>        <87twbnueqv.fsf@kamboji.qca.qualcomm.com>        <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>        <871syn5fnb.fsf@qca.qualcomm.com>        <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>        <87polwq2nq.fsf@kamboji.qca.qualcomm.com>        <027001d28c42$5042c910$f0c85b30$@acksys.fr> <87efyrd6lv.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87efyrd6lv.fsf@kamboji.qca.qualcomm.com>
+Subject: RE: [OpenWrt-Devel] ATH10K VLAN firmware issue
+Date: Wed, 22 Feb 2017 14:55:09 +0100
+Message-ID: <02ef01d28d13$48181ac0$d8485040$@acksys.fr> (sfid-20170222_145644_023820_A1379D87)
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable AP support for allmulticast for MDNS. It can be enabled by bringing
-up the interface with ip command with argument allmulticast on
+	Thanks for your answer, 
 
-Signed-off-by: Iain Hunter <i-hunter1@ti.com>
----
+	How I can know when this issue will be fixed in ath10k firmware
+mainline?
+	Do you know if Qualcomm publish a release note for this firmware?
 
-PATCH v5: fixes indentation of other closing bracket and missing Signed Off
-
- drivers/net/wireless/ti/wlcore/main.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 3241e9eba73..242111cd016 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3281,6 +3281,21 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
- 			if (ret < 0)
- 				goto out_sleep;
- 		}
-+
-+		/*
-+		 * If interface in AP mode and created with allmulticast then disable
-+		 * the firmware filters so that all multicast packets are passed
-+		 * This is mandatory for MDNS based discovery protocols 
-+		 */
-+ 		if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
-+ 			if (*total & FIF_ALLMULTI) {
-+				ret = wl1271_acx_group_address_tbl(wl, wlvif,
-+							false,
-+							NULL, 0);
-+				if (ret < 0)
-+					goto out_sleep;
-+			}
-+		}
- 	}
- 
- 	/*
--- 
-2.11.0
+> -----Message d'origine-----
+> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] De la part de Valo, Kalle
+> Envoyé : mardi 21 février 2017 14:19
+> À : voncken
+> Cc : 'OpenWrt Development List'; 'linux-wireless';
+> ath10k@lists.infradead.org
+> Objet : Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
+> 
+> voncken <cedric.voncken@acksys.fr> writes:
+> 
+> > Do you know if the firmware team planned to fix the VLAN issue on
+> > ath10k firmware?
+> 
+> I reported it forward only this week.
+> 
+> --
+> Kalle Valo
