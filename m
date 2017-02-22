@@ -1,73 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36220 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753849AbdBGXLy (ORCPT
+Received: from mail-it0-f68.google.com ([209.85.214.68]:36283 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753783AbdBVEzp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 18:11:54 -0500
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: netdev@vger.kernel.org, linux-mips@linux-mips.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Madalin Bucur <madalin.bucur@nxp.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Timur Tabi <timur@codeaurora.org>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        Vivien Didelot <vivien.didelot@savoirfairelinux.com>,
-        Woojung Huh <woojung.huh@microchip.com>
-Subject: [PATCH net-next v2 04/12] net: lan78xx: fix build errors when linux/phy*.h is removed from net/dsa.h
-Date: Tue,  7 Feb 2017 15:02:57 -0800
-Message-Id: <20170207230305.18222-5-f.fainelli@gmail.com> (sfid-20170208_001207_277902_D1FD6C6D)
-In-Reply-To: <20170207230305.18222-1-f.fainelli@gmail.com>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
+        Tue, 21 Feb 2017 23:55:45 -0500
+Date: Tue, 21 Feb 2017 23:55:43 -0500
+From: Tahia Khan <tahia.khan@gmail.com>
+To: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: renames struct tstrRSSI and its members
+ u8Index, u8Full
+Message-ID: <20170222045543.GA27847@coolbox> (sfid-20170222_055556_219020_84BCCE66)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+Fixes multiple camel case checks on struct tstrRSSI from checkpatch.pl:
 
-drivers/net/usb/lan78xx.c:394:33: sparse: expected ; at end of declaration
-drivers/net/usb/lan78xx.c:394:33: sparse: Expected } at end of struct-union-enum-specifier
-drivers/net/usb/lan78xx.c:394:33: sparse: got interface
-drivers/net/usb/lan78xx.c:403:1: sparse: Expected ; at the end of type declaration
-drivers/net/usb/lan78xx.c:403:1: sparse: got }
+Avoid CamelCase: <tstrRSSI>
+Avoid CamelCase: <u8Full>
+Avoid CamelCase: <u8Index>
 
-Add linux/phy.h to lan78xx.c
-
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
 ---
- drivers/net/usb/lan78xx.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/coreconfigurator.h       |  8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/usb/lan78xx.c b/drivers/net/usb/lan78xx.c
-index 08f8703e4d54..9889a70ff4f6 100644
---- a/drivers/net/usb/lan78xx.c
-+++ b/drivers/net/usb/lan78xx.c
-@@ -35,6 +35,7 @@
- #include <linux/irq.h>
- #include <linux/irqchip/chained_irq.h>
- #include <linux/microchipphy.h>
-+#include <linux/phy.h>
- #include "lan78xx.h"
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index cff1698..c9cf23b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -70,9 +70,9 @@ enum connect_status {
+ 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
+ };
  
- #define DRIVER_AUTHOR	"WOOJUNG HUH <woojung.huh@microchip.com>"
+-struct tstrRSSI {
+-	u8 u8Full;
+-	u8 u8Index;
++struct tstr_RSSI {
++	u8 u8_full;
++	u8 u8_index;
+ 	s8 as8RSSI[NUM_RSSI];
+ };
+ 
+@@ -93,7 +93,7 @@ struct network_info {
+ 	u8 *ies;
+ 	u16 ies_len;
+ 	void *join_params;
+-	struct tstrRSSI str_rssi;
++	struct tstr_RSSI str_rssi;
+ 	u64 tsf_hi;
+ };
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f7ce47c..30285b9 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -205,8 +205,8 @@ static u32 get_rssi_avg(struct network_info *network_info)
+ {
+ 	u8 i;
+ 	int rssi_v = 0;
+-	u8 num_rssi = (network_info->str_rssi.u8Full) ?
+-		       NUM_RSSI : (network_info->str_rssi.u8Index);
++	u8 num_rssi = (network_info->str_rssi.u8_full) ?
++		       NUM_RSSI : (network_info->str_rssi.u8_index);
+ 
+ 	for (i = 0; i < num_rssi; i++)
+ 		rssi_v += network_info->str_rssi.as8RSSI[i];
+@@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	} else {
+ 		ap_index = ap_found;
+ 	}
+-	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
++	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8_index;
+ 	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
+ 	if (rssi_index == NUM_RSSI) {
+ 		rssi_index = 0;
+-		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
++		last_scanned_shadow[ap_index].str_rssi.u8_full = 1;
+ 	}
+-	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
++	last_scanned_shadow[ap_index].str_rssi.u8_index = rssi_index;
+ 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
+ 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
+ 	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
 -- 
-2.9.3
+2.7.4
