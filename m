@@ -1,84 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from celine.tisys.org ([85.25.117.166]:49644 "EHLO celine.tisys.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751042AbdBTAAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 19:00:44 -0500
-Date: Mon, 20 Feb 2017 00:59:28 +0100
-From: Nils Holland <nholland@tisys.org>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2] rtl8187: Enable monitor mode to fix multicast reception
-Message-ID: <20170219235919.GA15763@tisys.org> (sfid-20170220_010047_715141_30C08BF6)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:36013 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754345AbdBVROo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Feb 2017 12:14:44 -0500
+Date: Wed, 22 Feb 2017 12:14:41 -0500
+From: Tahia Khan <tahia.khan@gmail.com>
+To: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2] staging: wilc1000: renames struct tstrRSSI and its
+ members u8Index, u8Full
+Message-ID: <20170222171403.GA20626@coolbox> (sfid-20170222_181450_177693_68BA4491)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtl8187 cards don't seem to receive multicast frames, which,
-among other things, makes them fail to receive RAs in IPv6 networks.
-The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
-have the desired effect.
+Fixes multiple camel case checks on struct tstrRSSI from checkpatch.pl:
 
-Fix the issue by setting RTL818X_RX_CONF_MONITOR instead, which puts the
-card into monitor mode and resolves the problem so that multicast frames
-are sucessfully passed to the kernel.
+Avoid CamelCase: <tstrRSSI>
+Avoid CamelCase: <u8Full>
+Avoid CamelCase: <u8Index>
 
-The existence of the problem and the effectiveness of the solution has
-originally been confirmed on an 8187B based card with the USB id of
-0bda:8197. Subsequent testing by Larry Finger on an 8187L based card,
-which follows the second (8187, i.e. "non-b") code path in the driver,
-has confirmed that the fix does not cause any noticeable regresssions
-there either.
-
-Signed-off-by: Nils Holland <nholland@tisys.org>
+Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.h       |  8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index 231f84db9ab0..56a8686cd367 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -946,8 +946,7 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 		      (7 << 13 /* RX FIFO threshold NONE */) |
- 		      (7 << 10 /* MAX RX DMA */) |
- 		      RTL818X_RX_CONF_RX_AUTORESETPHY |
--		      RTL818X_RX_CONF_ONLYERLPKT |
--		      RTL818X_RX_CONF_MULTICAST;
-+		      RTL818X_RX_CONF_ONLYERLPKT;
- 		priv->rx_conf = reg;
- 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index cff1698..5b65c4f 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -70,9 +70,9 @@ enum connect_status {
+ 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
+ };
  
-@@ -1319,12 +1318,11 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
- 	if (changed_flags & FIF_CONTROL)
- 		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
--	if (changed_flags & FIF_OTHER_BSS)
--		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
--	if (*total_flags & FIF_ALLMULTI || multicast > 0)
--		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
-+	if (*total_flags & FIF_OTHER_BSS ||
-+	    *total_flags & FIF_ALLMULTI || multicast > 0)
-+		priv->rx_conf |= RTL818X_RX_CONF_MONITOR;
- 	else
--		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
-+		priv->rx_conf &= ~RTL818X_RX_CONF_MONITOR;
+-struct tstrRSSI {
+-	u8 u8Full;
+-	u8 u8Index;
++struct tstr_RSSI {
++	u8 full;
++	u8 index;
+ 	s8 as8RSSI[NUM_RSSI];
+ };
  
- 	*total_flags = 0;
+@@ -93,7 +93,7 @@ struct network_info {
+ 	u8 *ies;
+ 	u16 ies_len;
+ 	void *join_params;
+-	struct tstrRSSI str_rssi;
++	struct tstr_RSSI str_rssi;
+ 	u64 tsf_hi;
+ };
  
-@@ -1332,10 +1330,10 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 		*total_flags |= FIF_FCSFAIL;
- 	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
- 		*total_flags |= FIF_CONTROL;
--	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
-+	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR) {
- 		*total_flags |= FIF_OTHER_BSS;
--	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
- 		*total_flags |= FIF_ALLMULTI;
-+	}
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f7ce47c..56f133e 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -205,8 +205,8 @@ static u32 get_rssi_avg(struct network_info *network_info)
+ {
+ 	u8 i;
+ 	int rssi_v = 0;
+-	u8 num_rssi = (network_info->str_rssi.u8Full) ?
+-		       NUM_RSSI : (network_info->str_rssi.u8Index);
++	u8 num_rssi = (network_info->str_rssi.full) ?
++		       NUM_RSSI : (network_info->str_rssi.index);
  
- 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
- }
+ 	for (i = 0; i < num_rssi; i++)
+ 		rssi_v += network_info->str_rssi.as8RSSI[i];
+@@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	} else {
+ 		ap_index = ap_found;
+ 	}
+-	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
++	rssi_index = last_scanned_shadow[ap_index].str_rssi.index;
+ 	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
+ 	if (rssi_index == NUM_RSSI) {
+ 		rssi_index = 0;
+-		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
++		last_scanned_shadow[ap_index].str_rssi.full = 1;
+ 	}
+-	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
++	last_scanned_shadow[ap_index].str_rssi.index = rssi_index;
+ 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
+ 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
+ 	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
 -- 
-2.11.1
+2.7.4
