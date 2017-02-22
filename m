@@ -1,206 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49290 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752902AbdBAR1M (ORCPT
+Received: from smtprelay0163.hostedemail.com ([216.40.44.163]:49971 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932234AbdBVLeI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 12:27:12 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 01 Feb 2017 22:57:08 +0530
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        Wed, 22 Feb 2017 06:34:08 -0500
+Message-ID: <1487763244.14159.6.camel@perches.com> (sfid-20170222_123412_242071_B7FF845F)
+Subject: Re: [PATCH] ath10k: Modify macros to fix style issues
+From: Joe Perches <joe@perches.com>
+To: Marcin Rokicki <marcin.rokicki@tieto.com>,
         ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 1/2] cfg80211: Add support to set tx power for a
- station associated
-In-Reply-To: <12efc3d8-2274-a6e8-6d74-c06bf89762fb@candelatech.com>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
- <12efc3d8-2274-a6e8-6d74-c06bf89762fb@candelatech.com>
-Message-ID: <14f6b3acb8b26d0eb806148c0ee47fb0@codeaurora.org> (sfid-20170201_182752_733004_5B156D7D)
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 22 Feb 2017 03:34:04 -0800
+In-Reply-To: <1487751327-2917-1-git-send-email-marcin.rokicki@tieto.com>
+References: <1487751327-2917-1-git-send-email-marcin.rokicki@tieto.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-01 00:36, Ben Greear wrote:
-> On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
->> This patch adds support to set transmit power setting type and 
->> transmit
->> power level attributes to NL80211_CMD_SET_STATION in order to 
->> facilitate
->> adjusting the transmit power level of a station associated to the AP.
->> 
->> The added attributes allow selection of automatic and limited transmit
->> power level, with the level defined in mBm format.
->> 
->> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
->> ---
->> v2:
->> 	- refactor the shared code
->> 	- "keep what you had" using STATION_PARAM_APPLY_* BIT
->> 	- feature flag to let the user know if this feature is supported or 
->> not (Johannes)
->> 
->>  include/net/cfg80211.h       |  6 ++++++
->>  include/uapi/linux/nl80211.h | 15 +++++++++++++
->>  net/wireless/nl80211.c       | 50 
->> ++++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 71 insertions(+)
->> 
->> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
->> index 814be4b..c989fbd 100644
->> --- a/include/net/cfg80211.h
->> +++ b/include/net/cfg80211.h
->> @@ -808,6 +808,7 @@ enum station_parameters_apply_mask {
->>  	STATION_PARAM_APPLY_UAPSD = BIT(0),
->>  	STATION_PARAM_APPLY_CAPABILITY = BIT(1),
->>  	STATION_PARAM_APPLY_PLINK_STATE = BIT(2),
->> +	STATION_PARAM_APPLY_STA_TXPOWER = BIT(3),
->>  };
->> 
->>  /**
->> @@ -849,6 +850,10 @@ enum station_parameters_apply_mask {
->>   * @opmode_notif: operating mode field from Operating Mode 
->> Notification
->>   * @opmode_notif_used: information if operating mode field is used
->>   * @support_p2p_ps: information if station supports P2P PS mechanism
->> + * @txpwr: tx power (in mBm) to be used for sending data traffic. If 
->> tx power
->> + *	is not provided, the default per-interface tx power setting will 
->> be
->> + *	overriding. Driver should be picking up the lowest tx power, 
->> either tx
->> + *	power per-interface or per-station.
->>   */
->>  struct station_parameters {
->>  	const u8 *supported_rates;
->> @@ -876,6 +881,7 @@ struct station_parameters {
->>  	u8 opmode_notif;
->>  	bool opmode_notif_used;
->>  	int support_p2p_ps;
->> +	unsigned int txpwr;
->>  };
->> 
->>  /**
->> diff --git a/include/uapi/linux/nl80211.h 
->> b/include/uapi/linux/nl80211.h
->> index 6b76e3b..de2f72c 100644
->> --- a/include/uapi/linux/nl80211.h
->> +++ b/include/uapi/linux/nl80211.h
->> @@ -1980,6 +1980,15 @@ enum nl80211_commands {
->>   * @NL80211_ATTR_BSSID: The BSSID of the AP. Note that 
->> %NL80211_ATTR_MAC is also
->>   *	used in various commands/events for specifying the BSSID.
->>   *
->> + * @NL80211_ATTR_STA_TX_POWER_SETTING: Transmit power setting type 
->> (u32) for
->> + *	station associated with the AP. See &enum nl80211_tx_power_setting 
->> for
->> + *	possible values.
->> + * @NL80211_ATTR_STA_TX_POWER: Transmit power level (u32) in mBm 
->> units. This
->> + *	allows to set Tx power for a station. If this attribute is not 
->> included,
->> + *	the default per-interface tx power setting will be overriding. 
->> Driver
->> + *	should be picking up the lowest tx power, either tx power 
->> per-interface
->> + *	or per-station.
->> + *
->>   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
->>   * @NL80211_ATTR_MAX: highest attribute number currently defined
->>   * @__NL80211_ATTR_AFTER_LAST: internal use
->> @@ -2386,6 +2395,9 @@ enum nl80211_attrs {
->> 
->>  	NL80211_ATTR_BSSID,
->> 
->> +	NL80211_ATTR_STA_TX_POWER_SETTING,
->> +	NL80211_ATTR_STA_TX_POWER,
->> +
->>  	/* add attributes here, update the policy in nl80211.c */
->> 
->>  	__NL80211_ATTR_AFTER_LAST,
->> @@ -4697,6 +4709,8 @@ enum nl80211_feature_flags {
->>   *	configuration (AP/mesh) with VHT rates.
->>   * @NL80211_EXT_FEATURE_FILS_STA: This driver supports Fast Initial 
->> Link Setup
->>   *	with user space SME (NL80211_CMD_AUTHENTICATE) in station mode.
->> + * @NL80211_EXT_FEATURE_STA_TX_PWR: This driver supports controlling 
->> tx power
->> + *	to a station.
->>   *
->>   * @NUM_NL80211_EXT_FEATURES: number of extended features.
->>   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
->> @@ -4712,6 +4726,7 @@ enum nl80211_ext_feature_index {
->>  	NL80211_EXT_FEATURE_BEACON_RATE_HT,
->>  	NL80211_EXT_FEATURE_BEACON_RATE_VHT,
->>  	NL80211_EXT_FEATURE_FILS_STA,
->> +	NL80211_EXT_FEATURE_STA_TX_PWR,
->> 
->>  	/* add new features before the definition below */
->>  	NUM_NL80211_EXT_FEATURES,
->> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> index ef5eff93..ace87de 100644
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
->> @@ -246,6 +246,8 @@ enum nl80211_multicast_groups {
->>  	[NL80211_ATTR_STA_SUPPORTED_RATES] = { .type = NLA_BINARY,
->>  					       .len = NL80211_MAX_SUPP_RATES },
->>  	[NL80211_ATTR_STA_PLINK_ACTION] = { .type = NLA_U8 },
->> +	[NL80211_ATTR_STA_TX_POWER_SETTING] = { .type = NLA_U32 },
->> +	[NL80211_ATTR_STA_TX_POWER] = { .type = NLA_U32 },
->>  	[NL80211_ATTR_STA_VLAN] = { .type = NLA_U32 },
->>  	[NL80211_ATTR_MNTR_FLAGS] = { /* NLA_NESTED can't be empty */ },
->>  	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
->> @@ -4548,6 +4550,8 @@ int cfg80211_check_station_change(struct wiphy 
->> *wiphy,
->>  			return -EINVAL;
->>  		if (params->sta_modify_mask & STATION_PARAM_APPLY_CAPABILITY)
->>  			return -EINVAL;
->> +		if (params->sta_modify_mask & STATION_PARAM_APPLY_STA_TXPOWER)
->> +			return -EINVAL;
+On Wed, 2017-02-22 at 09:15 +0100, Marcin Rokicki wrote:
+> Both macros are used internally to convert incomming parameters
+> to strings in a switch case statement.
 > 
-> Does this mean that we cannot change the tx-power after the station is
-> associated?
+> Current implementation gives following output from checkpatch.pl:
+>  - ERROR: Macros with complex values should be enclosed in parentheses
+>  - WARNING: Macros with flow control statements should be avoided
 > 
-> Seems like that would be a good limitation to remove if possible!
+> Fix them by modify local variable in the middle and just return at the end.
 > 
-> 
+> Btw add const to function that return string literals
+[]
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+[]
+> @@ -312,9 +312,16 @@ enum wmi_10_4_service {
+>  	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
+>  };
+>  
+> -static inline char *wmi_service_name(int service_id)
+> +#define SVCSTR(x) \
+> +{ \
+> +	case x: \
+> +		str = #x; \
+> +		break; \
+> +}
+> +
+> +static inline const char *wmi_service_name(int service_id)
+>  {
+> -#define SVCSTR(x) case x: return #x
+> +	const char *str = NULL;
+>  
+>  	switch (service_id) {
+>  	SVCSTR(WMI_SERVICE_BEACON_OFFLOAD);
+> @@ -408,13 +415,13 @@ static inline char *wmi_service_name(int service_id)
+>  	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
+>  	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
+>  	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
+> -	default:
+> -		return NULL;
+>  	}
+>  
+> -#undef SVCSTR
+> +	return str;
+>  }
+>  
+> +#undef SVCSTR
+> +
+>  #define WMI_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
+>  	((svc_id) < (len) && \
+>  	 __le32_to_cpu((wmi_svc_bmap)[(svc_id) / (sizeof(u32))]) & \
+> @@ -6412,10 +6419,17 @@ enum wmi_wow_wakeup_event {
+>  	WOW_EVENT_MAX,
+>  };
+>  
+> -#define C2S(x) case x: return #x
+> +#define C2S(x) \
+> +{ \
+> +	case x: \
+> +		str = #x; \
+> +		break; \
+> +}
+>  
+>  static inline const char *wow_wakeup_event(enum wmi_wow_wakeup_event ev)
+>  {
+> +	const char *str = NULL;
+> +
+>  	switch (ev) {
+>  	C2S(WOW_BMISS_EVENT);
+>  	C2S(WOW_BETTER_AP_EVENT);
+> @@ -6442,9 +6456,9 @@ static inline const char *wow_wakeup_event(enum wmi_wow_wakeup_event ev)
+>  	C2S(WOW_BEACON_EVENT);
+>  	C2S(WOW_CLIENT_KICKOUT_EVENT);
+>  	C2S(WOW_EVENT_MAX);
+> -	default:
+> -		return NULL;
+>  	}
+> +
+> +	return str;
+>  }
+>  
+>  enum wmi_wow_wake_reason {
+> @@ -6482,6 +6496,8 @@ enum wmi_wow_wake_reason {
+>  
+>  static inline const char *wow_reason(enum wmi_wow_wake_reason reason)
+>  {
+> +	const char *str = NULL;
+> +
+>  	switch (reason) {
+>  	C2S(WOW_REASON_UNSPECIFIED);
+>  	C2S(WOW_REASON_NLOD);
+> @@ -6513,9 +6529,9 @@ static inline const char *wow_reason(enum wmi_wow_wake_reason reason)
+>  	C2S(WOW_REASON_BEACON_RECV);
+>  	C2S(WOW_REASON_CLIENT_KICKOUT_EVENT);
+>  	C2S(WOW_REASON_DEBUG_TEST);
+> -	default:
+> -		return NULL;
+>  	}
+> +
+> +	return str;
+>  }
+>  
+>  #undef C2S
 
-Ben, that is a good catch! We don't want to have that limitation and 
-would remove in the next version.
+Here is an alternate style used a few times in the kernel
 
-> 
->>  		if (params->supported_rates)
->>  			return -EINVAL;
->>  		if (params->ext_capab || params->ht_capa || params->vht_capa)
->> @@ -4755,6 +4759,40 @@ static int nl80211_set_station_tdls(struct 
->> genl_info *info,
->>  	return nl80211_parse_sta_wme(info, params);
->>  }
->> 
->> +static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
->> +					     struct station_parameters *params)
->> +{
->> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> +	enum nl80211_tx_power_setting type;
->> +	int idx;
->> +
->> +	if (!rdev->ops->set_tx_power ||
->> +	    !wiphy_ext_feature_isset(&rdev->wiphy,
->> +				     NL80211_EXT_FEATURE_STA_TX_PWR))
->> +		return -EOPNOTSUPP;
-> 
-> Maybe always let a user set to default value even if the driver does 
-> not
-> support setting specific values?
-> 
+Maybe it'd be nicer to change the macros to something like
 
-IMHO, having some default value in place of non-valid values may not be 
-the right way.
+#define CASE_STR(x) case x: return #x
 
-Thanks,
-Ashok
+and just return NULL after the switch/case block
 
-> Thanks,
-> Ben
+Maybe make that a global macro and consolidate the various
+uses to a single style
+
+drivers/net/wireless/ath/ath9k/ath9k.h:#define case_rtn_string(val) case val: return #val
+drivers/net/wireless/ath/ath10k/wmi.h:#define SVCSTR(x) case x: return #x
+drivers/net/wireless/ath/ath10k/wmi.h:#define C2S(x) case x: return #x
+drivers/net/wireless/intel/iwlegacy/common.h:#define IL_CMD(x) case x: return #x
+drivers/net/wireless/intel/iwlwifi/iwl-io.c:#define IWL_CMD(x) case x: return #x
+drivers/net/wireless/intel/iwlwifi/pcie/trans.c:#define IWL_CMD(x) case x: return #x
+drivers/net/wireless/atmel/at76c50x-usb.c:#define MAKE_CMD_CASE(c) case (c): return #c
+drivers/net/wireless/atmel/at76c50x-usb.c:#define MAKE_CMD_STATUS_CASE(c)	case (c): return #c
+drivers/net/ethernet/intel/fm10k/fm10k_pci.c:#define FM10K_ERR_MSG(type) case (type): error = #type; break
+drivers/staging/lustre/lnet/selftest/selftest.h:#define STATE2STR(x) case x: return #x
+include/linux/genl_magic_func.h:	case op_num: return #op_name;
+t_case_default.c:#define FOO(BAR)	{ case BAR: return #BAR; }
