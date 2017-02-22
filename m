@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:40339 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751338AbdBOUq6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 15:46:58 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2] mac80211: fix mesh fail_avg check
-Date: Wed, 15 Feb 2017 12:46:50 -0800
-Message-ID: <1487191610-20948-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20170215_214701_903968_984BB56D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.136]:55604 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754225AbdBVCKo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 21:10:44 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: johannes.berg@intel.com, luciano.coelho@intel.com,
+        emmanuel.grumbach@intel.com
+Cc: ming.lei@canonical.com, zajec5@gmail.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v2 0/2] iwlwifi: share opmode start code
+Date: Tue, 21 Feb 2017 18:10:37 -0800
+Message-Id: <20170222021039.28193-1-mcgrof@kernel.org> (sfid-20170222_031114_331134_CEBE5D09)
+In-Reply-To: <20170222001822.GE31264@wotan.suse.de>
+References: <20170222001822.GE31264@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh failure average never be more than 100. Only in case of
-fixed path, average will be more than threshold limit (95%).
-With recent EWMA changes it may go upto 99 as it is scaled to
-100. It make sense to return maximum metric when average is
-greater than threshold limit.
+This v2 split off the opmode handling sharing code into its
+own series, it however depends on the request_module_nowait()
+change.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
-v2: define MACRO for threshold
+The sharing of the opmode handling makes it easier to share fixes
+when dealing with opmode handling on devices. It should also hopefully
+make the code easier to grok. Lastly, since we are moving things to
+a workqueue naturally the module_init() for iwlmvm is not offloaded,
+and so this should reduce the boot time by a bit.
 
- net/mac80211/mesh_hwmp.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+As per the average of systemd-analyze on 5 boots using next-20170221
+as base:
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index d07ee3ca07ee..4005edd71fe8 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -16,6 +16,7 @@
- #define TEST_FRAME_LEN	8192
- #define MAX_METRIC	0xffffffff
- #define ARITH_SHIFT	8
-+#define LINK_FAIL_THRESH 95
- 
- #define MAX_PREQ_QUEUE_LEN	64
- 
-@@ -311,7 +312,8 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	 * feed failure as 100 and success as 0
- 	 */
- 	ewma_mesh_fail_avg_add(&sta->mesh->fail_avg, failed * 100);
--	if (ewma_mesh_fail_avg_read(&sta->mesh->fail_avg) > 95)
-+	if (ewma_mesh_fail_avg_read(&sta->mesh->fail_avg) >
-+			LINK_FAIL_THRESH)
- 		mesh_plink_broken(sta);
- }
- 
-@@ -339,7 +341,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	if (rate) {
- 		err = 0;
- 	} else {
--		if (fail_avg >= 100)
-+		if (fail_avg > LINK_FAIL_THRESH)
- 			return MAX_METRIC;
- 
- 		sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
+next-20170221:
+Startup finished in   2.6142s (kernel) +   5.1916s (initrd) +  10.8968s (userspace) =  18.7036s
+
+After these patches:
+Startup finished in   2.5468s (kernel) +   4.9536s (initrd) +   10.798s (userspace) =  18.2994s
+
+Luis R. Rodriguez (2):
+  iwlwifi: share opmode start work code
+  iwlwifi: convert final opmode work into a workqueue
+
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 93 +++++++++++++++++++---------
+ 1 file changed, 64 insertions(+), 29 deletions(-)
+
 -- 
-1.9.1
+2.11.0
