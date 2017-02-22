@@ -1,127 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37986 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752521AbdBCOj6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:39:58 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:38:09 +0200
-Message-Id: <20170203143812.7525-23-luca@coelho.fi> (sfid-20170203_154001_344009_1D2DE403)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 22/25] iwlwifi: remove unnecessary cfg element in iwl_drv
+Received: from mail.kernel.org ([198.145.29.136]:55652 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754250AbdBVCKq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Feb 2017 21:10:46 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: johannes.berg@intel.com, luciano.coelho@intel.com,
+        emmanuel.grumbach@intel.com
+Cc: ming.lei@canonical.com, zajec5@gmail.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v2 2/2] iwlwifi: convert final opmode work into a workqueue
+Date: Tue, 21 Feb 2017 18:10:39 -0800
+Message-Id: <20170222021039.28193-3-mcgrof@kernel.org> (sfid-20170222_031113_742567_19477925)
+In-Reply-To: <20170222021039.28193-1-mcgrof@kernel.org>
+References: <20170222001822.GE31264@wotan.suse.de>
+ <20170222021039.28193-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+This lets us offload and share all the final opmode related work
+necessary for either an opmode driver or new device. This has the most
+impact for opmode drivers as this now offloads opmode start for each
+device onto the workqueue.
 
-The iwl_drv structure contains trans which already contains cfg, so
-storing cfg separately in iwl_drv is redundant.  Remove it and access
-trans->cfg instead.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 899223e8414c..0e0293d42b5d 100644
+index ea88b5cec869..1db372e9c039 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -102,7 +102,6 @@ static struct dentry *iwl_dbgfs_root;
-  * @op_mode: the running op_mode
-  * @trans: transport layer
-  * @dev: for debug prints only
-- * @cfg: configuration struct
-  * @fw_index: firmware revision to try loading
-  * @firmware_name: composite filename of ucode file to load
-  * @request_firmware_complete: the firmware has been obtained from user space
-@@ -114,7 +113,6 @@ struct iwl_drv {
- 	struct iwl_op_mode *op_mode;
- 	struct iwl_trans *trans;
- 	struct device *dev;
--	const struct iwl_cfg *cfg;
+@@ -143,6 +143,8 @@ static struct iwlwifi_opmode_table {
+ 	[DVM_OP_MODE] = { .name = "iwldvm", .ops = NULL },
+ 	[MVM_OP_MODE] = { .name = "iwlmvm", .ops = NULL },
+ };
++static void iwlwifi_opmode_dowork(struct work_struct *work);
++static DECLARE_WORK(iwlwifi_opmode_work, iwlwifi_opmode_dowork);
  
- 	int fw_index;                   /* firmware we're trying to load */
- 	char firmware_name[64];         /* name of firmware file to load */
-@@ -213,18 +211,18 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw,
+ #define IWL_DEFAULT_SCAN_CHANNELS 40
  
- static int iwl_request_firmware(struct iwl_drv *drv, bool first)
+@@ -1261,7 +1263,7 @@ static void iwlwifi_opmode_start(struct iwlwifi_opmode_table *op)
+ 		iwlwifi_opmode_start_drv(op, drv);
+ }
+ 
+-static void iwlwifi_opmode_dowork(void)
++static void iwlwifi_opmode_dowork(struct work_struct *unused_work)
  {
--	const char *name_pre = drv->cfg->fw_name_pre;
-+	const char *name_pre = drv->trans->cfg->fw_name_pre;
- 	char tag[8];
- 
- 	if (first) {
--		drv->fw_index = drv->cfg->ucode_api_max;
-+		drv->fw_index = drv->trans->cfg->ucode_api_max;
- 		sprintf(tag, "%d", drv->fw_index);
- 	} else {
- 		drv->fw_index--;
- 		sprintf(tag, "%d", drv->fw_index);
- 	}
- 
--	if (drv->fw_index < drv->cfg->ucode_api_min) {
-+	if (drv->fw_index < drv->trans->cfg->ucode_api_min) {
- 		IWL_ERR(drv, "no suitable firmware found!\n");
- 		return -ENOENT;
- 	}
-@@ -1207,7 +1205,7 @@ _iwl_op_mode_start(struct iwl_drv *drv, struct iwlwifi_opmode_table *op)
- 	dbgfs_dir = drv->dbgfs_op_mode;
- #endif
- 
--	op_mode = ops->start(drv->trans, drv->cfg, &drv->fw, dbgfs_dir);
-+	op_mode = ops->start(drv->trans, drv->trans->cfg, &drv->fw, dbgfs_dir);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	if (!op_mode) {
-@@ -1247,8 +1245,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	unsigned int i;
  	struct iwlwifi_opmode_table *op;
- 	int err;
- 	struct iwl_firmware_pieces *pieces;
--	const unsigned int api_max = drv->cfg->ucode_api_max;
--	const unsigned int api_min = drv->cfg->ucode_api_min;
-+	const unsigned int api_max = drv->trans->cfg->ucode_api_max;
-+	const unsigned int api_min = drv->trans->cfg->ucode_api_min;
- 	size_t trigger_tlv_sz[FW_DBG_TRIGGER_MAX];
- 	u32 api_ver;
- 	int i;
-@@ -1310,7 +1308,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	 * In mvm uCode there is no difference between data and instructions
- 	 * sections.
- 	 */
--	if (fw->type == IWL_FW_DVM && validate_sec_sizes(drv, pieces, drv->cfg))
-+	if (fw->type == IWL_FW_DVM && validate_sec_sizes(drv, pieces,
-+							 drv->trans->cfg))
- 		goto try_again;
+@@ -1497,7 +1499,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	if (err)
+ 		goto out_unbind;
  
- 	/* Allocate ucode buffers for card's bus-master loading ... */
-@@ -1408,14 +1407,14 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 		fw->init_evtlog_size = (pieces->init_evtlog_size - 16)/12;
- 	else
- 		fw->init_evtlog_size =
--			drv->cfg->base_params->max_event_log_size;
-+			drv->trans->cfg->base_params->max_event_log_size;
- 	fw->init_errlog_ptr = pieces->init_errlog_ptr;
- 	fw->inst_evtlog_ptr = pieces->inst_evtlog_ptr;
- 	if (pieces->inst_evtlog_size)
- 		fw->inst_evtlog_size = (pieces->inst_evtlog_size - 16)/12;
- 	else
- 		fw->inst_evtlog_size =
--			drv->cfg->base_params->max_event_log_size;
-+			drv->trans->cfg->base_params->max_event_log_size;
- 	fw->inst_errlog_ptr = pieces->inst_errlog_ptr;
+-	iwlwifi_opmode_dowork();
++	schedule_work(&iwlwifi_opmode_work);
+ 	goto free;
  
- 	/*
-@@ -1517,7 +1516,6 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
+  try_again:
+@@ -1581,6 +1583,7 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
+ void iwl_drv_stop(struct iwl_drv *drv)
+ {
+ 	wait_for_completion(&drv->request_firmware_complete);
++	cancel_work_sync(&iwlwifi_opmode_work);
  
- 	drv->trans = trans;
- 	drv->dev = trans->dev;
--	drv->cfg = trans->cfg;
+ 	_iwl_op_mode_stop(drv);
  
- 	init_completion(&drv->request_firmware_complete);
- 	INIT_LIST_HEAD(&drv->list);
+@@ -1634,7 +1637,7 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
+ 	mutex_unlock(&iwlwifi_opmode_table_mtx);
+ 
+ 	if (!ret)
+-		iwlwifi_opmode_dowork();
++		schedule_work(&iwlwifi_opmode_work);
+ 
+ 	return ret;
+ }
 -- 
 2.11.0
