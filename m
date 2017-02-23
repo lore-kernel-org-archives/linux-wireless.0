@@ -1,201 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52808 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751626AbdBOJaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 04:30:19 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH v2 07/10] rt2x00: use txdone_nomatch on rt2800usb
-Date: Wed, 15 Feb 2017 10:25:10 +0100
-Message-Id: <1487150713-3510-8-git-send-email-sgruszka@redhat.com> (sfid-20170215_103031_025158_559E967D)
-In-Reply-To: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
-References: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36465 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751127AbdBWNxe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Feb 2017 08:53:34 -0500
+Received: by mail-pf0-f193.google.com with SMTP id c193so1630405pfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 05:53:00 -0800 (PST)
+From: Ryan Mounce <ryan@mounce.com.au>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wireless-regdb: Update rules for Australia (AU) and add 60GHz rules
+Date: Fri, 24 Feb 2017 00:22:53 +1030
+Message-Id: <20170223135253.1681-1-ryan@mounce.com.au> (sfid-20170223_145340_443579_3A32B71E)
+In-Reply-To: <20170223130142.GA90803@ubuntu-hedt>
+References: <20170223130142.GA90803@ubuntu-hedt>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not match skb entry, provide tx status via nomatch procedure.
+Sourced from the current legislation at
+https://www.legislation.gov.au/Details/F2016C00432
 
-Currently in that case we do rt2x00lib_txdone_noinfo(TXDONE_NOINFO),
-which actually assume that entry->skb was posted without retries and
-provide rate saved in skb desc as successful. Patch changed that to
-rate read from TX_STAT_FIFO, however still do not provide correct
-number of retries.
+The current rules exceed legal limits between 5250-5330MHz, and permit
+illegal operation in 5600-5650MHz (disallowed regardless of DFS).
 
-On SoC/PCI devices we keep providing status via standard txdone
-procedure, no change in those devices, though we should thing about it.
+Frequency ranges and EIRP limits for all ranges have been updated to
+match items 59-63, 65 in the linked document. As the rules for AU have
+never previously mirrored local regulations, changes include a
+significant increase in the allowable 2.4GHz EIRP and smaller increases
+in most other bands.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+In order to allow 80MHz operation between 5650-5730MHz (bordering two
+bands) the lower, more restrictive band has been rounded up by 5MHz.
+
+Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c  | 31 ++++++++++++++++++++-----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h  |  3 ++-
- drivers/net/wireless/ralink/rt2x00/rt2800mmio.c |  2 +-
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c  | 18 ++++++--------
- 4 files changed, 35 insertions(+), 19 deletions(-)
+ db.txt | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 46405cc..4a7bec7 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -852,7 +852,8 @@ void rt2800_process_rxwi(struct queue_entry *entry,
- }
- EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
+diff --git a/db.txt b/db.txt
+index 05108e0..00e81b6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -85,12 +85,17 @@ country AT: DFS-ETSI
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
  
--void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
-+void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
-+			 bool match)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-@@ -860,8 +861,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
- 	struct txdone_entry_desc txdesc;
- 	u32 word;
- 	u16 mcs, real_mcs;
--	int aggr, ampdu;
--	int wcid;
-+	int aggr, ampdu, wcid, ack_req;
++# Source:
++# https://www.legislation.gov.au/Details/F2016C00432
++# Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B
+ country AU: DFS-ETSI
+-	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17), AUTO-BW
+-	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
+-	(5490 - 5710 @ 160), (24), DFS
+-	(5735 - 5835 @ 80), (30)
++	(2400 - 2483.5 @ 40), (36)
++	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (23), NO-OUTDOOR, AUTO-BW, DFS
++	(5470 - 5600 @ 80), (30), DFS
++	(5650 - 5730 @ 80), (30), DFS
++	(5730 - 5850 @ 80), (36)
++	(57000 - 66000 @ 2160), (43), NO-OUTDOOR
  
- 	/*
- 	 * Obtain the status about this packet.
-@@ -875,6 +875,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
- 	real_mcs = rt2x00_get_field32(status, TX_STA_FIFO_MCS);
- 	aggr = rt2x00_get_field32(status, TX_STA_FIFO_TX_AGGRE);
- 	wcid = rt2x00_get_field32(status, TX_STA_FIFO_WCID);
-+	ack_req	= rt2x00_get_field32(status, TX_STA_FIFO_TX_ACK_REQUIRED);
- 
- 	/*
- 	 * If a frame was meant to be sent as a single non-aggregated MPDU
-@@ -891,8 +892,12 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
- 	 * Hence, replace the requested rate with the real tx rate to not
- 	 * confuse the rate control algortihm by providing clearly wrong
- 	 * data.
--	 */
--	if (unlikely(aggr == 1 && ampdu == 0 && real_mcs != mcs)) {
-+	 *
-+	 * FIXME: if we do not find matching entry, we tell that frame was
-+	 * posted without any retries. We need to find a way to fix that
-+	 * and provide retry count.
-+ 	 */
-+	if (unlikely((aggr == 1 && ampdu == 0 && real_mcs != mcs)) || !match) {
- 		skbdesc->tx_rate_idx = real_mcs;
- 		mcs = real_mcs;
- 	}
-@@ -900,6 +905,9 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
- 	if (aggr == 1 || ampdu == 1)
- 		__set_bit(TXDONE_AMPDU, &txdesc.flags);
- 
-+	if (!ack_req)
-+		__set_bit(TXDONE_NO_ACK_REQ, &txdesc.flags);
-+
- 	/*
- 	 * Ralink has a retry mechanism using a global fallback
- 	 * table. We setup this fallback table to try the immediate
-@@ -931,7 +939,18 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
- 	if (txdesc.retry)
- 		__set_bit(TXDONE_FALLBACK, &txdesc.flags);
- 
--	rt2x00lib_txdone(entry, &txdesc);
-+	if (!match) {
-+		/* RCU assures non-null sta will not be freed by mac80211. */
-+		rcu_read_lock();
-+		if (likely(wcid >= WCID_START && wcid <= WCID_END))
-+			skbdesc->sta = drv_data->wcid_to_sta[wcid - WCID_START];
-+		else
-+			skbdesc->sta = NULL;
-+		rt2x00lib_txdone_nomatch(entry, &txdesc);
-+		rcu_read_unlock();
-+	} else {
-+		rt2x00lib_txdone(entry, &txdesc);
-+	}
- }
- EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-index 6811d67..d9ef260 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-@@ -191,7 +191,8 @@ void rt2800_write_tx_data(struct queue_entry *entry,
- 			  struct txentry_desc *txdesc);
- void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
- 
--void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32* txwi);
-+void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
-+			 bool match);
- 
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
- void rt2800_clear_beacon(struct queue_entry *entry);
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-index de4790b..3ab3b53 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-@@ -239,7 +239,7 @@ static bool rt2800mmio_txdone_release_entries(struct queue_entry *entry,
- {
- 	if (test_bit(ENTRY_DATA_STATUS_SET, &entry->flags)) {
- 		rt2800_txdone_entry(entry, entry->status,
--				    rt2800mmio_get_txwi(entry));
-+				    rt2800mmio_get_txwi(entry), true);
- 		return false;
- 	}
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-index 205a7b8..f11e3f5 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-@@ -501,8 +501,7 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
- /*
-  * TX control handlers
-  */
--static enum txdone_entry_desc_flags
--rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
-+static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
- {
- 	__le32 *txwi;
- 	u32 word;
-@@ -515,7 +514,7 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
- 	 * frame.
- 	 */
- 	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
--		return TXDONE_FAILURE;
-+		return false;
- 
- 	wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
- 	ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
-@@ -537,10 +536,10 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
- 		rt2x00_dbg(entry->queue->rt2x00dev,
- 			   "TX status report missed for queue %d entry %d\n",
- 			   entry->queue->qid, entry->entry_idx);
--		return TXDONE_UNKNOWN;
-+		return false;
- 	}
- 
--	return TXDONE_SUCCESS;
-+	return true;
- }
- 
- static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
-@@ -549,7 +548,7 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
- 	struct queue_entry *entry;
- 	u32 reg;
- 	u8 qid;
--	enum txdone_entry_desc_flags done_status;
-+	bool match;
- 
- 	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
- 		/*
-@@ -574,11 +573,8 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
- 			break;
- 		}
- 
--		done_status = rt2800usb_txdone_entry_check(entry, reg);
--		if (likely(done_status == TXDONE_SUCCESS))
--			rt2800_txdone_entry(entry, reg, rt2800usb_get_txwi(entry));
--		else
--			rt2x00lib_txdone_noinfo(entry, done_status);
-+		match = rt2800usb_txdone_entry_check(entry, reg);
-+		rt2800_txdone_entry(entry, reg, rt2800usb_get_txwi(entry), match);
- 	}
- }
- 
+ country AW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
-1.8.3.1
+2.11.0
