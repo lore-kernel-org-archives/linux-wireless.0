@@ -1,92 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58750 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751646AbdBXA3K (ORCPT
+Received: from mail-ot0-f181.google.com ([74.125.82.181]:35475 "EHLO
+        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751224AbdBWUyT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 19:29:10 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 102/306] mac80211-hwsim: enable better rx-status when using netlink.
-Date: Thu, 23 Feb 2017 16:28:26 -0800
-Message-Id: <1487896109-23851-4-git-send-email-greearb@candelatech.com> (sfid-20170224_012923_520729_BEBC6FBE)
-In-Reply-To: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
-References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
+        Thu, 23 Feb 2017 15:54:19 -0500
+Received: by mail-ot0-f181.google.com with SMTP id w44so2128548otw.2
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 12:53:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CACna6ryBmEX1OVijdapGiTXs9dYssy+gzMnY2Sr_rd+OpMO1-g@mail.gmail.com>
+References: <CACna6ryBmEX1OVijdapGiTXs9dYssy+gzMnY2Sr_rd+OpMO1-g@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 23 Feb 2017 21:53:41 +0100
+Message-ID: <CACna6rywt_U+SSLRGAgnqZiwO8TmY8z406m8o5gCOsGiyUc+oQ@mail.gmail.com> (sfid-20170223_215447_386720_4ED9A861)
+Subject: Re: Request for brcmfmac4366c-pcie.bin
+To: Hante Meuleman <hante.meuleman@broadcom.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        Nathan Grennan <kernel-bugzilla@cygnusx-1.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi guys,
 
-This allows proper rx-status reporting for packets received
-from the netlink api.
+On 12 September 2016 at 07:22, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> w=
+rote:
+> Few months ago Hante added support for 4366c0 to the brcmfmac. There
+> are already few devices with this chipset on the market. We even have
+> some related bug report at kernel:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D135321
+>
+> Unfortunately the firmware for this chipset is still missing. Can you
+> build it and submit to linux-firmware.git, please?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 10 ++++++++++
- drivers/net/wireless/mac80211_hwsim.h | 18 ++++++++++++++++++
- 2 files changed, 28 insertions(+)
+Last answer I got from Arend was "Router group still working on a
+solution. Will ask about status again :-(" in December.
+Are there any news on 4366c1 firmware?
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 853c7ae..8d494ac 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3068,6 +3068,16 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	rx_status.rate_idx = nla_get_u32(info->attrs[HWSIM_ATTR_RX_RATE]);
- 	rx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
- 
-+	if (info->attrs[HWSIM_ATTR_RX_INFO]) {
-+		struct hwsim_rx_info *r;
-+		r = (struct hwsim_rx_info *)nla_data(
-+			info->attrs[HWSIM_ATTR_RX_INFO]);
-+		rx_status.flag = r->rx_flags;
-+		rx_status.vht_flag = r->vht_flags;
-+		rx_status.vht_nss = r->vht_nss;
-+		rx_status.ampdu_reference = r->ampdu_reference;
-+	}
-+
- 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
- 	data2->rx_pkts++;
- 	data2->rx_bytes += skb->len;
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index 480c0a7..d9dd2f8 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -130,6 +130,7 @@ enum {
-  * @HWSIM_ATTR_NO_VIF:  Do not create vif (wlanX) when creating radio.
-  * @HWSIM_ATTR_FREQ: Frequency at which packet is transmitted or received.
-  * @HWSIM_ATTR_TX_INFO2: hwsim_tx_rate2 array
-+ * @HWSIM_ATTR_RX_INFO: hwsim_rx_info
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- 
-@@ -157,6 +158,7 @@ enum {
- 	HWSIM_ATTR_FREQ,
- 	HWSIM_ATTR_PAD,
- 	HWSIM_ATTR_TX_INFO2,
-+	HWSIM_ATTR_RX_INFO,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
-@@ -185,4 +187,20 @@ struct hwsim_tx_rate2 {
- 	s16 power_level;
- } __packed;
- 
-+/**
-+ * This relates to the ieee80211_rx_status struct in mac80211.h
-+ * @rx_flags: %RX_FLAG_* (see  mac80211_rx_flags)
-+ * @vht_flags: %RX_VHT_FLAG_*
-+ * @vht_nss: number of streams (VHT only)
-+ * @ampdu_reference: A-MPDU reference number, must be a different value for
-+ *	each A-MPDU but the same for each subframe within one A-MPDU
-+ */
-+struct hwsim_rx_info {
-+	u32 rx_flags;
-+	u8 vht_flags;
-+	u8 vht_nss;
-+	u16 unused_pad; /* pad to 32-bits, and space for growth */
-+	u32 ampdu_reference;
-+} __packed;
-+
- #endif /* __MAC80211_HWSIM_H */
--- 
-2.4.11
+We need it to support e.g. Linksys EA9500 home router.
+There is also report in bugzilla:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D135321
+
+--=20
+Rafa=C5=82
