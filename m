@@ -1,143 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36266 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752438AbdBUMiC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 07:38:02 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>
-Subject: [RFC v2 1/2] cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
-Date: Tue, 21 Feb 2017 13:37:57 +0100
-Message-Id: <20170221123758.5339-1-johannes@sipsolutions.net> (sfid-20170221_133804_840282_6AA3DCE4)
+Received: from mail-it0-f54.google.com ([209.85.214.54]:37610 "EHLO
+        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751112AbdBWN3J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Feb 2017 08:29:09 -0500
+Received: by mail-it0-f54.google.com with SMTP id 203so15862461ith.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 05:29:08 -0800 (PST)
+Date: Thu, 23 Feb 2017 07:01:42 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ryan Mounce <ryan@mounce.com.au>,
+        wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: Update rules for Australia (AU) and add
+ 60GHz rules
+Message-ID: <20170223130142.GA90803@ubuntu-hedt> (sfid-20170223_142912_969339_69E6BE8A)
+References: <20170218063515.16071-1-ryan@mounce.com.au>
+ <20170222213057.GA33925@ubuntu-hedt>
+ <CAN+fvRb8R_3QyrnFFp0gd8PCcFXwbitNyh8K=ONqbmsGTrBsHQ@mail.gmail.com>
+ <1487829525.1956.2.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1487829525.1956.2.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Thu, Feb 23, 2017 at 06:58:45AM +0100, Johannes Berg wrote:
+> 
+> > The frequency ranges have been "rounded down" to conform with the
+> > apparent convention of only including ranges used by standard 802.11
+> > channels, rather than using the actual frequency ranges as has been
+> > done for some countries (and most 60GHz rules). My preference is the
+> > latter so that there is a clear correlation between the regdb and
+> > relevant documentation, and so that the regdb may become useful
+> > beyond 802.11. With your blessing as maintainer I will also make this
+> > change to the patch.
+> 
+> I think that's just an artifact of the original database source and
+> would also prefer the documented ranges to be used.
 
-Let drivers advertise support for station-mode 4-way handshake
-offloading with a new NL80211_EXT_FEATURE_4WAY_HANDSHAKE_OFFLOAD_STA
-flag.
+Yes, I prefer the documented ranges as well.
 
-Add a new NL80211_ATTR_PMK attribute that might be passed as part
-of NL80211_CMD_CONNECT command, and contain the PSK (which is the
-PMK, hence the name.)
-
-The driver/device is assumed to handle the 4-way handshake by
-itself in this case (including key derivations, etc.), instead
-of relying on the supplicant.
-
-This patch is somewhat based on this one (by Vladimir Kondratiev):
-https://patchwork.kernel.org/patch/1309561/.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h    | 1 +
- include/net/cfg80211.h       | 2 ++
- include/uapi/linux/nl80211.h | 9 +++++++++
- net/wireless/nl80211.c       | 8 ++++++++
- 4 files changed, 20 insertions(+)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 6ea381c98aae..2049e983a994 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2357,6 +2357,7 @@ enum ieee80211_sa_query_action {
- #define WLAN_MAX_KEY_LEN		32
- 
- #define WLAN_PMKID_LEN			16
-+#define WLAN_PMK_LEN			32
- 
- #define WLAN_OUI_WFA			0x506f9a
- #define WLAN_OUI_TYPE_WFA_P2P		9
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 86c12f85fb53..4ca968927d60 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -643,6 +643,7 @@ struct survey_info {
-  * @wep_keys: static WEP keys, if not NULL points to an array of
-  *	CFG80211_MAX_WEP_KEYS WEP keys
-  * @wep_tx_key: key index (0..3) of the default TX static WEP key
-+ * @psk: PSK (for devices supporting 4-way-handshake offload)
-  */
- struct cfg80211_crypto_settings {
- 	u32 wpa_versions;
-@@ -656,6 +657,7 @@ struct cfg80211_crypto_settings {
- 	bool control_port_no_encrypt;
- 	struct key_params *wep_keys;
- 	int wep_tx_key;
-+	const u8 *psk;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 9a499b15cfbc..bb5e1904a107 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2012,6 +2012,9 @@ enum nl80211_commands {
-  *	u32 attribute with an &enum nl80211_timeout_reason value. This is used,
-  *	e.g., with %NL80211_CMD_CONNECT event.
-  *
-+ * @NL80211_ATTR_PMK: PSK for offloaded 4-Way Handshake. Relevant only
-+ *	with %NL80211_CMD_CONNECT (for WPA/WPA2-PSK networks).
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2423,6 +2426,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_TIMEOUT_REASON,
- 
-+	NL80211_ATTR_PMK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4759,6 +4764,9 @@ enum nl80211_feature_flags {
-  * @NL80211_EXT_FEATURE_CQM_RSSI_LIST: With this driver the
-  *	%NL80211_ATTR_CQM_RSSI_THOLD attribute accepts a list of zero or more
-  *	RSSI threshold values to monitor rather than exactly one threshold.
-+ * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK: Device supports doing 4-way
-+ *	handshake with PSK in station mode (PSK is passed as part of the connect
-+ *	and associate commands).
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -4778,6 +4786,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA_CONNECTED,
- 	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
- 	NL80211_EXT_FEATURE_CQM_RSSI_LIST,
-+	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d516527fcb8e..494b50b3eb71 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -410,6 +410,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 		.len = sizeof(struct nl80211_bss_select_rssi_adjust)
- 	},
- 	[NL80211_ATTR_TIMEOUT_REASON] = { .type = NLA_U32 },
-+	[NL80211_ATTR_PMK] = { .len = WLAN_PMK_LEN },
- };
- 
- /* policy for the key attributes */
-@@ -8039,6 +8040,13 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 		memcpy(settings->akm_suites, data, len);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_PMK]) {
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK))
-+			return -EINVAL;
-+		settings->psk = nla_data(info->attrs[NL80211_ATTR_PMK]);
-+	}
-+
- 	return 0;
- }
- 
--- 
-2.9.3
+Thanks,
+Seth
