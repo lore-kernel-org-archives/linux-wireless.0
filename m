@@ -1,88 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39174 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932093AbdBHL2d (ORCPT
+Received: from smtprelay0141.hostedemail.com ([216.40.44.141]:48310 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751199AbdBWMzU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 06:28:33 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 13:23:11 +0200
-Message-Id: <20170208112322.29413-7-luca@coelho.fi> (sfid-20170208_122839_816798_FB5ADB16)
-In-Reply-To: <20170208112322.29413-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
-Subject: [PATCH 06/17] iwlwifi: mvm: fix references to first_agg_queue in DQA mode
+        Thu, 23 Feb 2017 07:55:20 -0500
+Message-ID: <1487854470.14159.24.camel@perches.com> (sfid-20170223_135524_626503_A6B8AB52)
+Subject: Re: [PATCH v2] ath10k: Remove return statement from a void function
+From: Joe Perches <joe@perches.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Marcin Rokicki <marcin.rokicki@tieto.com>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 23 Feb 2017 04:54:30 -0800
+In-Reply-To: <b7ac6892-4cbd-bd60-382f-5c51e9ae588a@broadcom.com>
+References: <1487672891-8584-1-git-send-email-marcin.rokicki@tieto.com>
+         <b7ac6892-4cbd-bd60-382f-5c51e9ae588a@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Wed, 2017-02-22 at 20:54 +0100, Arend Van Spriel wrote:
+> 
+> On 21-2-2017 11:28, Marcin Rokicki wrote:
+> > The empty 'return;' statement in a void function should be
+> > used to return from somewhere else than the end.
+> > 
+> > Signed-off-by: Marcin Rokicki <marcin.rokicki@tieto.com>
+> > ---
+> > 
+> > Changes for v2
+> >  -remove only return statement instead of empty err label
+> >   which can be used in the future
+> > 
+> > ---
+> >  drivers/net/wireless/ath/ath10k/core.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> > index 59729aa..a22d3c9 100644
+> > --- a/drivers/net/wireless/ath/ath10k/core.c
+> > +++ b/drivers/net/wireless/ath/ath10k/core.c
+> > @@ -2311,7 +2311,7 @@ static void ath10k_core_register_work(struct work_struct *work)
+> >  	/* TODO: It's probably a good idea to release device from the driver
+> >  	 * but calling device_release_driver() here will cause a deadlock.
+> >  	 */
+> > -	return;
+> > +	;
+> 
+> Not exactly what I meant. Just drop the whole line include semicolon.
 
-In DQA mode, first_agg_queue is initialized to
-IWL_MVM_DQA_MIN_DATA_QUEUE. This causes two bugs in the tx response
-flow:
+gcc doesn't support a goto label without a
+statement immediately before the end-of-function.
 
-1. When TX fails, we set IEEE80211_TX_STAT_AMPDU_NO_BACK regardless
-   if we actually have aggregation open on the queue. This causes
-   mac80211 to send a BAR frame even though there is no aggregation
-   open.
-   Fix that by simply checking the AMPDU flag that is set on by
-   mac80211 for AMPDU packets.
+ie:
 
-2. When reclaiming frames in aggregation mode, we reclaim based on
-   scheduler ssn and not the SN.
-   The reason is that scheduler ssn may be ahead of SN due to a hole
-   in the BA window that was filled.
-   However, if we have aggregations open on IWL_MVM_DQA_BSS_CLIENT_QUEUE
-   the reclaim flow will still go to the code of non-aggregation
-   instead of the aggregation code since IWL_MVM_DQA_BSS_CLIENT_QUEUE
-   is smaller than IWL_MVM_DQA_MIN_DATA_QUEUE, although it is a valid
-   aggregation queue.
-   Fix that by always using the aggregation reclaim code by default in
-   DQA mode (currently it is implicitly used by default for all queues
-   except the reserved BSS queue).
+void foo(void)
+{
+	goto err;
+err:
+}
 
-Fixes: cf961e16620f ("iwlwifi: mvm: support dqa-mode agg on non-shared queue")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 4ba639eda7a3..1d147599cca9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1274,8 +1274,6 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 
- 		memset(&info->status, 0, sizeof(info->status));
- 
--		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
--
- 		/* inform mac80211 about what happened with the frame */
- 		switch (status & TX_STATUS_MSK) {
- 		case TX_STATUS_SUCCESS:
-@@ -1298,10 +1296,11 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			(void *)(uintptr_t)le32_to_cpu(tx_resp->initial_rate);
- 
- 		/* Single frame failure in an AMPDU queue => send BAR */
--		if (txq_id >= mvm->first_agg_queue &&
-+		if (info->flags & IEEE80211_TX_CTL_AMPDU &&
- 		    !(info->flags & IEEE80211_TX_STAT_ACK) &&
- 		    !(info->flags & IEEE80211_TX_STAT_TX_FILTERED))
- 			info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
-+		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
- 
- 		/* W/A FW bug: seq_ctl is wrong when the status isn't success */
- 		if (status != TX_STATUS_SUCCESS) {
-@@ -1336,7 +1335,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 		ieee80211_tx_status(mvm->hw, skb);
- 	}
- 
--	if (txq_id >= mvm->first_agg_queue) {
-+	if (iwl_mvm_is_dqa_supported(mvm) || txq_id >= mvm->first_agg_queue) {
- 		/* If this is an aggregation queue, we use the ssn since:
- 		 * ssn = wifi seq_num % 256.
- 		 * The seq_ctl is the sequence control of the packet to which
--- 
-2.11.0
+fails to compile.
