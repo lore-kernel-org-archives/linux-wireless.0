@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.183]:56622 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751859AbdBHQlD (ORCPT
+Received: from mail.free-electrons.com ([62.4.15.54]:45495 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751049AbdBWQVH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 11:41:03 -0500
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Johannes Berg' <johannes@sipsolutions.net>,
-        Arnd Bergmann <arnd@arndb.de>,
-        David Miller <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Andrey Ryabinin" <a.ryabinin@samsung.com>,
-        "nikolay@cumulusnetworks.com" <nikolay@cumulusnetworks.com>,
-        "nicolas.dichtel@6wind.com" <nicolas.dichtel@6wind.com>,
-        "adobriyan@gmail.com" <adobriyan@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: KASAN+netlink, was: [PATCH] [net-next?] hns: avoid stack
- overflow with CONFIG_KASAN
-Date: Wed, 8 Feb 2017 16:00:24 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB027F2B4@AcuExch.aculab.com> (sfid-20170208_174226_933764_68B419C8)
-References: <20170203163607.3488037-1-arnd@arndb.de>
-         <20170206.120318.1268240226202516488.davem@davemloft.net>
-         <4910112.l20yySyWnA@wuerfel> (sfid-20170208_130733_449950_64BEF84C)
- <1486556665.24745.6.camel@sipsolutions.net>
-In-Reply-To: <1486556665.24745.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Thu, 23 Feb 2017 11:21:07 -0500
+From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+To: Simon Kelley <simon@thekelleys.org.uk>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Subject: [PATCH] wireless/atmel: remove time_t usage
+Date: Thu, 23 Feb 2017 17:14:45 +0100
+Message-Id: <20170223161445.19200-1-alexandre.belloni@free-electrons.com> (sfid-20170223_172143_846726_360B3809)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBKb2hhbm5lcyBCZXJnDQo+IFNlbnQ6IDA4IEZlYnJ1YXJ5IDIwMTcgMTI6MjQNCi4u
-Lg0KPiBCdHcsIHdoYXQncyBjYXVzaW5nIHRoaXMgdG8gc3RhcnQgd2l0aD8gQ2FuJ3QgdGhlIGNv
-bXBpbGVyIHJldXNlIHRoZQ0KPiBzdGFjayBwbGFjZXM/DQoNCk9ubHkgaWYgaXQgcmVhbGlzZXMg
-dGhleSd2ZSBnb25lIG91dCBvZiBzY29wZSAtIHdoaWNoIHByb2JhYmx5DQpkb2Vzbid0IGhhcHBl
-biB3aGVuIHRoZSBmdW5jdGlvbnMgYXJlIGlubGluZWQuDQpUaGUgYWRkcmVzcyBvZiB0aGUgcGFy
-YW1ldGVyIGNhbiBiZSBzYXZlZCBieSB0aGUgY2FsbGluZyBmdW5jdGlvbg0KYW5kIHVzZWQgaW4g
-YSBsYXRlciBjYWxsLg0KDQpTb21ldGhpbmcgbGlrZSB0aGlzIGlzIHZhbGlkOg0KDQppbnQgZm9v
-KGludCAqcCwgaW50IHYpDQp7DQoJc3RhdGljIGludCAqc3Y7DQoJaW50IG9sZCA9IC0xOw0KCWlm
-IChzdikge29sZCA9ICpzdjsgKnN2ID0gdjt9DQoJc3YgPSB2Ow0KCXJldHVybiBvbGQ7DQp9DQoN
-CnZvaWQgYmFyKC4uLikgew0KCWludCBhLCBiOw0KCS4uLg0KCWZvbygmYSwgMCk7DQoJLi4uDQoJ
-Zm9vKCZiLCAxKTsNCgkuLi4NCglmb28oTlVMTCwgMik7DQoJLi4uDQoNCklmIHRoZSBjb21waWxl
-ciBzdGFydHMgc2hhcmluZyBzdGFjayBpdCBhbGwgZ29lcyB3cm9uZy4NCg0KCURhdmlkDQoNCg0K
+last_qual never really holds a time. It only holds jiffies. Make it the
+same type as jiffies.
+
+Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+---
+ drivers/net/wireless/atmel/atmel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
+index e12f62356fd1..27b110dc8cc6 100644
+--- a/drivers/net/wireless/atmel/atmel.c
++++ b/drivers/net/wireless/atmel/atmel.c
+@@ -513,7 +513,7 @@ struct atmel_private {
+ 	} station_state;
+ 
+ 	int operating_mode, power_mode;
+-	time_t last_qual;
++	unsigned long last_qual;
+ 	int beacons_this_sec;
+ 	int channel;
+ 	int reg_domain, config_reg_domain;
+-- 
+2.11.0
