@@ -1,59 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64229 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750987AbdBOJ1D (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:37246 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751422AbdBWKmm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 04:27:03 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 23 Feb 2017 05:42:42 -0500
+Received: by mail-wm0-f54.google.com with SMTP id v77so7592338wmv.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 02:42:41 -0800 (PST)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
+ WPA/WPA2-PSK
+To: Jithu Jance <jithu.jance@broadcom.com>
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+ <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
+ <1487673603.2215.3.camel@sipsolutions.net>
+ <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
+ <1487680651.2215.5.camel@sipsolutions.net>
+ <3fa1e3ac-5722-c46d-acc1-62407f4eef07@broadcom.com>
+ <CA+gyVQ11yZjkJXjiVoMVijs=_K8itZMQrces9XQha_bT4=H-DA@mail.gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+        Jouni Malinen <j@w1.fi>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9b6de09f-d872-fd67-971a-6da369fefe1a@broadcom.com> (sfid-20170223_114306_832288_B79D82AF)
+Date: Thu, 23 Feb 2017 11:36:30 +0100
 MIME-Version: 1.0
-Subject: Re: ath10k: Configure rxnss_override for 10.4 firmware.
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1486771745-15150-1-git-send-email-greearb@candelatech.com>
-References: <1486771745-15150-1-git-send-email-greearb@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <linux-wireless@vger.kernel.org>,
-        Ben Greear <greearb@candelatech.com>,
-        <ath10k@lists.infradead.org>
-Message-ID: <e379002d2a6a4563baefb435b4552586@eusanexr01a.eu.qualcomm.com> (sfid-20170215_102720_837495_33DFAC58)
-Date: Wed, 15 Feb 2017 01:26:58 -0800
+In-Reply-To: <CA+gyVQ11yZjkJXjiVoMVijs=_K8itZMQrces9XQha_bT4=H-DA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On 22-2-2017 13:24, Jithu Jance wrote:
+> Hi Jouni, Johannes et al.,
 > 
-> QCA9984 hardware can do 4x4 at 80Mhz, but only 2x2 at 160Mhz.
+> On Wed, Feb 22, 2017 at 1:27 AM, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 21-2-2017 13:37, Johannes Berg wrote:
+>>>
+>>>> What I am also missing is how to deal with NL80211_CMD_CONNECTED
+>>>> event signalling. Should that be given after (un)successful
+>>>> completion of the 4-way handshake or should we have a separate event
+>>>> for that?
+>>>
+>>> That's a good point. I don't think a new event really works well, but
+>>> perhaps we should extend the NL80211_TIMEOUT_* values with this? It's
+>>> not strictly a timeout, I guess, but it's not a direct rejection of the
+>>> association either.
+>>>
+>>> Any thoughts?
+>>
+>> I discussed about the event mechanism with Jithu which is who asked me
+>> to look at their patches for this feature. His suggestion was to have a
+>> "port authorized" event after successful handshake as it will help in
+>> key mgmt offload cases. He gave the following example: Suppose you are
+>> doing a fresh 8021x followed by 4way handshake offload. Right now there
+>> is no event to indicate to the upper layer that the 4way handshake have
+>> been completed successfully. So the only thing to do in wpa_supplicant
+>> is to consider it completed and if not be hit with deauth.
 > 
-> First, report this to user-space by setting the max-tx-speed
-> and max-rx-speed vht capabilities.
-> 
-> Second, if the peer rx-speed is configured, and if we
-> are in 160 or 80+80 mode, and the peer rx-speed matches
-> the max speed for 2x2 or 1x1 at 160Mhz (long guard interval),
-> then use that info to set the peer_bw_rxnss_override appropriately.
-> 
-> Without this, a 9984 firmware will not use 2x2 ratesets when
-> transmitting to peer (it will be stuck at 1x1), because
-> the firmware would not have configured the rxnss_override.
-> 
-> This could use some testing....
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> In wpa_supplicant terms, I was looking for an event notification to move the
+> wpa_state from WPA_ASSOCIATED to WPA_COMPLETED.  :)
 
-Does not apply:
+Currently in wpa_supplicant_event_assoc() the 4-way handshake offload is
+handled as below:
 
-error: patch failed: drivers/net/wireless/ath/ath10k/mac.c:2760
-error: drivers/net/wireless/ath/ath10k/mac.c: patch does not apply
-error: patch failed: drivers/net/wireless/ath/ath10k/wmi.h:6173
-error: drivers/net/wireless/ath/ath10k/wmi.h: patch does not apply
-stg import: Diff does not apply cleanly
+        if ((wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE) &&
+            wpa_key_mgmt_wpa_psk(wpa_s->key_mgmt)) {
+                /*
+                 * We are done; the driver will take care of RSN 4-way
+                 * handshake.
+                 */
+                wpa_supplicant_cancel_auth_timeout(wpa_s);
+                wpa_supplicant_set_state(wpa_s, WPA_COMPLETED);
+                eapol_sm_notify_portValid(wpa_s->eapol, TRUE);
+                eapol_sm_notify_eap_success(wpa_s->eapol, TRUE);
+        } else if ((wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE) &&
+                   wpa_key_mgmt_wpa_ieee8021x(wpa_s->key_mgmt)) {
+                /*
+                 * The driver will take care of RSN 4-way handshake, so
+we need
+                 * to allow EAPOL supplicant to complete its work without
+                 * waiting for WPA supplicant.
+                 */
+                eapol_sm_notify_portValid(wpa_s->eapol, TRUE);
+        } else if (ft_completed) {
 
-Patch set to Changes Requested.
+So for 4-way hs offload for wpa/wpa2-psk it already calls
+eapol_sm_notify_eap_success() and reading the documentation of that
+function:
 
--- 
-https://patchwork.kernel.org/patch/9567655/
+/**
+ * eapol_sm_notify_eap_success - Notification of external EAP success
+trigger
+ * @sm: Pointer to EAPOL state machine allocated with eapol_sm_init()
+ * @success: %TRUE = set success, %FALSE = clear success
+ *
+ * Notify the EAPOL state machine that external event has forced EAP
+state to
+ * success (success = %TRUE). This can be cleared by setting success =
+%FALSE.
+ *
+ * This function is called to update EAP state when WPA-PSK key
+handshake has
+ * been completed successfully since WPA-PSK does not use EAP state machine.
+ */
+void eapol_sm_notify_eap_success(struct eapol_sm *sm, Boolean success)
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+So the code in wpa_supplicant_event_assoc() is either lying or the assoc
+event should come after driver has completed successfully. To me it
+seems worth it to have NL80211_CMD_EAP_COMPLETED event carrying the
+result or indeed give the CONNECTED event later in the driver.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
