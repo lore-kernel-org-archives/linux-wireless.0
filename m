@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56112 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751496AbdBFOBq (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36269 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751334AbdBWRUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 09:01:46 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
+        Thu, 23 Feb 2017 12:20:07 -0500
+Received: by mail-oi0-f66.google.com with SMTP id l128so1767362oia.3
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 09:20:06 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 14/25] iwlwifi: mvm: overwrite skb info later
-References: <20170203143812.7525-1-luca@coelho.fi>
-        <20170203143812.7525-15-luca@coelho.fi>
-Date: Mon, 06 Feb 2017 16:01:41 +0200
-In-Reply-To: <20170203143812.7525-15-luca@coelho.fi> (Luca Coelho's message of
-        "Fri, 3 Feb 2017 16:38:01 +0200")
-Message-ID: <874m07a056.fsf@codeaurora.org> (sfid-20170206_150157_052469_F20A3513)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/4] rtlwifi: Various updates
+Date: Thu, 23 Feb 2017 11:19:53 -0600
+Message-Id: <20170223171957.22500-1-Larry.Finger@lwfinger.net> (sfid-20170223_182204_731352_990BA079)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+These changes implement new phy parameters for RTL8821AE and RTL8812AE
+devices, and add some new pre-loaded packets to the reserved pages of
+various devices.
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> We don't really need clear the skb's status area nor store the
-> dev_cmd into it until we really commit to the frame by handing
-> it to the transport - defer those operations until just before
-> we do that.
->
-> This doesn't entirely fix the bug with frames not getting sent
-> out after having been deferred due to DQA, because it doesn't
-> restore the info->driver_data[0] place that was already set to
-> zero (or another value) by the A-MSDU logic.
->
-> Fixes: commit 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-s/commit // :)
+Larry Finger (1):
+  rtlwifi: Add code to read new versions of firmware
+
+Ping-Ke Shih (3):
+  rtlwifi: Update 8821ae new phy parameters and its parser.
+  rtlwifi: Update 8812ae new phy parameters and its parser.
+  rtlwifi: Add QoS-NULL and BT-QoS-NULL to reserved page.
+
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |   64 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.h    |    4 +
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |    4 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |   69 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.h    |    4 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |   15 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |  165 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.h    |    2 +
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |    8 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   |  385 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |   15 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/table.c | 1858 ++++++--------------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/table.h |   28 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |   18 +
+ 14 files changed, 1055 insertions(+), 1584 deletions(-)
 
 -- 
-Kalle Valo
+2.10.2
