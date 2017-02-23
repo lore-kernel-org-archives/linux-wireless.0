@@ -1,188 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55632 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754324AbdBVCKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 21:10:51 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: johannes.berg@intel.com, luciano.coelho@intel.com,
-        emmanuel.grumbach@intel.com
-Cc: ming.lei@canonical.com, zajec5@gmail.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v2 1/2] iwlwifi: share opmode start work code
-Date: Tue, 21 Feb 2017 18:10:38 -0800
-Message-Id: <20170222021039.28193-2-mcgrof@kernel.org> (sfid-20170222_031114_913060_8F63DC0F)
-In-Reply-To: <20170222021039.28193-1-mcgrof@kernel.org>
-References: <20170222001822.GE31264@wotan.suse.de>
- <20170222021039.28193-1-mcgrof@kernel.org>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:32971 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750828AbdBWShB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Feb 2017 13:37:01 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V4 1/2] firmware: add more flexible request_firmware_async function
+Date: Thu, 23 Feb 2017 19:30:17 +0100
+Message-Id: <20170223183018.16704-1-zajec5@gmail.com> (sfid-20170223_193738_719395_A813602E)
+In-Reply-To: <20170221094754.15406-1-zajec5@gmail.com>
+References: <20170221094754.15406-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware async callback and the opmode registration share
-some functionality -- to start the drv's opmode. Move this work
-into a helper which is shared. This should help us share fixes
-should these diverging code paths change.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+So far we got only one function for loading firmware asynchronously:
+request_firmware_nowait. It didn't allow much customization of firmware
+loading process - there is only one bool uevent argument. Moreover this
+bool also controls user helper in an unclear way.
+
+Resolve this problem by adding one internally shared  function that
+allows specifying any flags manually.
+
+This implementation:
+1) Allows keeping old request_firmware_nowait API unchanged
+2) Doesn't require adjusting / rewriting current drivers
+3) Minimizes risk of regressions
+4) Adds new function for drivers that need more control over loading a
+   firmware.
+
+The new function takes options struct pointer as an argument to make
+further improvements possible (without any big reworks).
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 90 +++++++++++++++++++---------
- 1 file changed, 61 insertions(+), 29 deletions(-)
+V3: Don't expose all FW_OPT_* flags.
+    As Luis noted we want a struct so add struct firmware_opts for real
+    flexibility.
+    Thank you Luis for your review!
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index e96095c1824a..ea88b5cec869 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -102,6 +102,7 @@ static struct dentry *iwl_dbgfs_root;
-  * @op_mode: the running op_mode
-  * @trans: transport layer
-  * @dev: for debug prints only
-+ * @start_requested: start op has been requested and is pending on this device
-  * @fw_index: firmware revision to try loading
-  * @firmware_name: composite filename of ucode file to load
-  * @request_firmware_complete: the firmware has been obtained from user space
-@@ -113,6 +114,7 @@ struct iwl_drv {
- 	struct iwl_op_mode *op_mode;
- 	struct iwl_trans *trans;
- 	struct device *dev;
-+	bool start_requested;
+Ming/Luis/Greg: assuming this gets a positive review, could someone of you pick
+this patchset?
+---
+ drivers/base/firmware_class.c | 43 ++++++++++++++++++++++++++++++++++---------
+ include/linux/firmware.h      | 15 ++++++++++++++-
+ 2 files changed, 48 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index d05be1732c8b..b67b294eb31a 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -1356,7 +1356,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ 	_request_firmware(&fw, fw_work->name, fw_work->device, NULL, 0,
+ 			  fw_work->opt_flags);
+ 	fw_work->cont(fw, fw_work->context);
+-	put_device(fw_work->device); /* taken in request_firmware_nowait() */
++	put_device(fw_work->device); /* taken in __request_firmware_nowait() */
  
- 	int fw_index;                   /* firmware we're trying to load */
- 	char firmware_name[64];         /* name of firmware file to load */
-@@ -1231,6 +1233,48 @@ static void _iwl_op_mode_stop(struct iwl_drv *drv)
- 	}
+ 	module_put(fw_work->module);
+ 	kfree_const(fw_work->name);
+@@ -1364,10 +1364,9 @@ static void request_firmware_work_func(struct work_struct *work)
  }
  
-+static void iwlwifi_opmode_start_drv(struct iwlwifi_opmode_table *op,
-+				     struct iwl_drv *drv)
-+{
-+	if (!drv->start_requested)
-+		return;
-+
-+	drv->op_mode = _iwl_op_mode_start(drv, op);
-+	drv->start_requested = false;
-+
-+	/*
-+	 * Complete the firmware request last so that
-+	 * a driver unbind (stop) doesn't run while we
-+	 * are doing the start() above.
-+	 */
-+	complete(&drv->request_firmware_complete);
-+
-+	if (!drv->op_mode)
-+		device_release_driver(drv->trans->dev);
-+}
-+
-+static void iwlwifi_opmode_start(struct iwlwifi_opmode_table *op)
-+{
-+	struct iwl_drv *drv;
-+
-+	list_for_each_entry(drv, &op->drv, list)
-+		iwlwifi_opmode_start_drv(op, drv);
-+}
-+
-+static void iwlwifi_opmode_dowork(void)
-+{
-+	unsigned int i;
-+	struct iwlwifi_opmode_table *op;
-+
-+	mutex_lock(&iwlwifi_opmode_table_mtx);
-+	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
-+		op = &iwlwifi_opmode_table[i];
-+		if (op->ops)
-+			iwlwifi_opmode_start(op);
-+	}
-+	mutex_unlock(&iwlwifi_opmode_table_mtx);
-+}
-+
  /**
-  * iwl_req_fw_callback - callback when firmware was loaded
+- * request_firmware_nowait - asynchronous version of request_firmware
++ * __request_firmware_nowait - asynchronous version of request_firmware
+  * @module: module requesting the firmware
+- * @uevent: sends uevent to copy the firmware image if this flag
+- *	is non-zero else the firmware copy must be done manually.
++ * @opt_flags: flags that control firmware loading process, see FW_OPT_*
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
+  * @gfp: allocation flags
+@@ -1386,9 +1385,9 @@ static void request_firmware_work_func(struct work_struct *work)
   *
-@@ -1443,30 +1487,17 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	IWL_INFO(drv, "loaded firmware version %s op_mode %s\n",
- 		 drv->fw.fw_version, op->name);
- 
-+	drv->start_requested = true;
- 	/* add this device to the list of devices using this op_mode */
- 	list_add_tail(&drv->list, &op->drv);
- 
--	if (op->ops) {
--		drv->op_mode = _iwl_op_mode_start(drv, op);
--
--		if (!drv->op_mode) {
--			mutex_unlock(&iwlwifi_opmode_table_mtx);
--			goto out_unbind;
--		}
--	}
- 	mutex_unlock(&iwlwifi_opmode_table_mtx);
- 
--	/*
--	 * Complete the firmware request last so that
--	 * a driver unbind (stop) doesn't run while we
--	 * are doing the start() above.
--	 */
--	complete(&drv->request_firmware_complete);
--
- 	err = request_module_nowait("%s", op->name);
- 	if (err)
- 		goto out_unbind;
- 
-+	iwlwifi_opmode_dowork();
- 	goto free;
- 
-  try_again:
-@@ -1588,8 +1619,8 @@ IWL_EXPORT_SYMBOL(iwlwifi_mod_params);
- int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
+  *		- can't sleep at all if @gfp is GFP_ATOMIC.
+  **/
+-int
+-request_firmware_nowait(
+-	struct module *module, bool uevent,
++static int
++__request_firmware_nowait(
++	struct module *module, unsigned int opt_flags,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
  {
- 	int i;
--	struct iwl_drv *drv;
- 	struct iwlwifi_opmode_table *op;
-+	int ret = -EIO;
+@@ -1407,8 +1406,7 @@ request_firmware_nowait(
+ 	fw_work->device = device;
+ 	fw_work->context = context;
+ 	fw_work->cont = cont;
+-	fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
+-		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
++	fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
  
- 	mutex_lock(&iwlwifi_opmode_table_mtx);
- 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
-@@ -1597,20 +1628,15 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
- 		if (strcmp(op->name, name))
- 			continue;
- 		op->ops = ops;
--		/* TODO: need to handle exceptional case */
--		list_for_each_entry(drv, &op->drv, list) {
--			drv->op_mode = _iwl_op_mode_start(drv, op);
--			if (!drv->op_mode) {
--				complete(&drv->request_firmware_complete);
--				device_release_driver(drv->trans->dev);
--			}
--		}
--
--		mutex_unlock(&iwlwifi_opmode_table_mtx);
--		return 0;
-+		ret = 0;
-+		break;
- 	}
- 	mutex_unlock(&iwlwifi_opmode_table_mtx);
--	return -EIO;
-+
-+	if (!ret)
-+		iwlwifi_opmode_dowork();
-+
-+	return ret;
+ 	if (!try_module_get(module)) {
+ 		kfree_const(fw_work->name);
+@@ -1421,8 +1419,35 @@ request_firmware_nowait(
+ 	schedule_work(&fw_work->work);
+ 	return 0;
  }
- IWL_EXPORT_SYMBOL(iwl_opmode_register);
++
++int request_firmware_nowait(struct module *module, bool uevent,
++			    const char *name, struct device *device, gfp_t gfp,
++			    void *context,
++			    void (*cont)(const struct firmware *fw, void *context))
++{
++	unsigned int opt_flags = FW_OPT_FALLBACK |
++		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
++
++	return __request_firmware_nowait(module, opt_flags, name, device, gfp,
++					 context, cont);
++}
+ EXPORT_SYMBOL(request_firmware_nowait);
  
-@@ -1626,8 +1652,14 @@ void iwl_opmode_deregister(const char *name)
- 		iwlwifi_opmode_table[i].ops = NULL;
++int __request_firmware_async(struct module *module, const char *name,
++			     struct firmware_opts *fw_opts, struct device *dev,
++			     void *context,
++			     void (*cont)(const struct firmware *fw, void *context))
++{
++	unsigned int opt_flags = FW_OPT_UEVENT;
++
++	if (fw_opts->optional)
++		opt_flags |= FW_OPT_NO_WARN;
++
++	return __request_firmware_nowait(module, opt_flags, name, dev,
++					 GFP_KERNEL, context, cont);
++}
++EXPORT_SYMBOL(__request_firmware_async);
++
+ #ifdef CONFIG_PM_SLEEP
+ static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
  
- 		/* call the stop routine for all devices */
--		list_for_each_entry(drv, &iwlwifi_opmode_table[i].drv, list)
-+		list_for_each_entry(drv, &iwlwifi_opmode_table[i].drv, list) {
- 			_iwl_op_mode_stop(drv);
-+			/*
-+			 * So that if iwlmvm gets unloaded alone, but then
-+			 * loaded again we can kick the old registered devices
-+			 */
-+			drv->start_requested = true;
-+		}
- 
- 		mutex_unlock(&iwlwifi_opmode_table_mtx);
- 		return;
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index b1f9f0ccb8ac..a32b6e67462d 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -82,6 +82,19 @@ static inline int request_firmware_into_buf(const struct firmware **firmware_p,
+ {
+ 	return -EINVAL;
+ }
+-
+ #endif
++
++struct firmware_opts {
++	bool optional;
++};
++
++int __request_firmware_async(struct module *module, const char *name,
++			     struct firmware_opts *fw_opts, struct device *dev,
++			     void *context,
++			     void (*cont)(const struct firmware *fw, void *context));
++
++#define request_firmware_async(name, fw_opts, dev, context, cont)	\
++	__request_firmware_async(THIS_MODULE, name, fw_opts, dev,	\
++				 context, cont)
++
+ #endif
 -- 
 2.11.0
