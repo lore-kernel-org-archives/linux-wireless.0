@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58024 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33464 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750826AbdBTX04 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 18:26:56 -0500
-Message-ID: <1487633211.484.1.camel@sipsolutions.net> (sfid-20170221_002659_973615_F165814A)
-Subject: Re: Monitor mode 'cook' flag meaning
+        id S1751049AbdBWKzf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Feb 2017 05:55:35 -0500
+Message-ID: <1487846241.18380.2.camel@sipsolutions.net> (sfid-20170223_115539_028158_125C34C6)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
+ WPA/WPA2-PSK
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas d'Otreppe <tdotreppe@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 21 Feb 2017 00:26:51 +0100
-In-Reply-To: <CALs6+XLDZLmc6JWMPun4sT+W_M4Cqh47LcK+HjiuZ8gKFLkbTA@mail.gmail.com> (sfid-20170221_002306_313869_E4D6D4DA)
-References: <CALs6+XLDZLmc6JWMPun4sT+W_M4Cqh47LcK+HjiuZ8gKFLkbTA@mail.gmail.com>
-         (sfid-20170221_002306_313869_E4D6D4DA)
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Jithu Jance <jithu.jance@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+        Jouni Malinen <j@w1.fi>
+Date: Thu, 23 Feb 2017 11:37:21 +0100
+In-Reply-To: <9b6de09f-d872-fd67-971a-6da369fefe1a@broadcom.com> (sfid-20170223_113633_280663_6FA7C88C)
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+         <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
+         <1487673603.2215.3.camel@sipsolutions.net>
+         <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
+         <1487680651.2215.5.camel@sipsolutions.net>
+         <3fa1e3ac-5722-c46d-acc1-62407f4eef07@broadcom.com>
+         <CA+gyVQ11yZjkJXjiVoMVijs=_K8itZMQrces9XQha_bT4=H-DA@mail.gmail.com>
+         <9b6de09f-d872-fd67-971a-6da369fefe1a@broadcom.com>
+         (sfid-20170223_113633_280663_6FA7C88C)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-02-20 at 16:22 -0700, Thomas d'Otreppe wrote:
-> I've been looking through the different flags for monitor mode in iw.
-> Most of them are rather obvious (and well explained) but what is
-> exactly 'cooked mode'?
-> 
-> I looked up in Google and in the linux-wireless wiki (nothing in
-> there) and I only found explanations in 2 patches (most likely still
-> in the source code) which are still vague:
-> - A monitor interface in "cooked" mode will see all frames that
-> mac80211 has not used internally
-> - report frames after processing. Overrides all other flags.
-> 
-> Thinking about what the first one says, it doesn't seem any different
-> than just fcsfail.
 
-No, that's the wrong idea. "cook" means that e.g. auth frames that
-mac80211 didn't actually look at will be sent there.
+> So the code in wpa_supplicant_event_assoc() is either lying or the
+> assoc event should come after driver has completed successfully. To
+> me it seems worth it to have NL80211_CMD_EAP_COMPLETED event carrying
+> the result or indeed give the CONNECTED event later in the driver.
 
-Anyway, ignore cooked mode. It's only for ancient hostapd versions.
+Sorry - need to look at this in more detail later.
 
-> I don't even see when control or otherbss should be needed since
-> 'none' is already providing them.
-
-Those are hw-dependent.
+But yes, we do give CONNECTED event later in the driver right now.
 
 johannes
