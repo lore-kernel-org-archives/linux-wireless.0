@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:34663 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751850AbdBMRrV (ORCPT
+Received: from mail-vk0-f41.google.com ([209.85.213.41]:34074 "EHLO
+        mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750944AbdBWLFG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Feb 2017 12:47:21 -0500
-Received: by mail-yb0-f195.google.com with SMTP id w194so4332148ybe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2017 09:47:21 -0800 (PST)
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] rtl8xxxu: Add (0x2357 0x0107) to the tested devices list.
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Aaryn Coutanche <aaryncoutanche@gmail.com>
-References: <1486814067-9874-1-git-send-email-aaryncoutanche@gmail.com>
- <87o9y6bg9y.fsf@purkki.adurom.net>
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <9c57441d-4c97-febc-d2bc-fe1dc1b06b1b@gmail.com> (sfid-20170213_184725_348299_674F7AC4)
-Date: Mon, 13 Feb 2017 12:47:18 -0500
+        Thu, 23 Feb 2017 06:05:06 -0500
+Received: by mail-vk0-f41.google.com with SMTP id r136so17752148vke.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 03:04:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <87o9y6bg9y.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1248c04b-a643-9254-383c-707ab68c0815@broadcom.com>
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+ <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com> <1487673603.2215.3.camel@sipsolutions.net>
+ <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com> <1487680651.2215.5.camel@sipsolutions.net>
+ <3fa1e3ac-5722-c46d-acc1-62407f4eef07@broadcom.com> <CA+gyVQ11yZjkJXjiVoMVijs=_K8itZMQrces9XQha_bT4=H-DA@mail.gmail.com>
+ <9b6de09f-d872-fd67-971a-6da369fefe1a@broadcom.com> <1248c04b-a643-9254-383c-707ab68c0815@broadcom.com>
+From: Jithu Jance <jithu.jance@broadcom.com>
+Date: Thu, 23 Feb 2017 16:26:31 +0530
+Message-ID: <CA+gyVQ24qDqpOBKPjVaZ_BFAJa9kLMjA=nD8FF8V7HvxUkWb=w@mail.gmail.com> (sfid-20170223_120509_812051_CF6A8B21)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+        Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2017 04:18 AM, Kalle Valo wrote:
-> Aaryn Coutanche <aaryncoutanche@gmail.com> writes:
+On Thu, Feb 23, 2017 at 4:10 PM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
 >
->> From: Aaryn Coutanche <aaryncoutanche@gmail.com>
->>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 +++
->>  1 file changed, 3 insertions(+)
->
-> Signed-off-by is missing, please read Documentation/SubmittingPatches.
-> Also write a short commit log and document the device you used to test
-> this etc.
->
+> Ehm. Looking at the code in wpa_supplicant_event_assoc() it would be
+> better to use NL80211_CMD_EAPOL_PORT_VALID event to cover both
+> WPA/WPA2-PSK and 8021X.
+Yes. IMHO, the assoc/reassoc ind should move the state to WPA_ASSOCIATED
+and a separate event like NL80211_CMD_EAPOL_PORT_VALID/AUTHORIZED should
+move the connection state to WPA_COMPLETED.
 
-Aaryn,
 
-I already mentioned the Signed-off-by part to you - please make sure to 
-always include that.
+Thanks,
+-- 
 
-In general a commit message should have a headline and then a body 
-message with a little more detail.
-
-Cheers,
-Jes
+Jithu Jance
