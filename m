@@ -1,73 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:33209 "EHLO
-        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750877AbdBDOoR (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:33751 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbdBWVla (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Feb 2017 09:44:17 -0500
-Received: by mail-io0-f181.google.com with SMTP id v96so38073549ioi.0
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Feb 2017 06:44:16 -0800 (PST)
+        Thu, 23 Feb 2017 16:41:30 -0500
+Received: by mail-ot0-f193.google.com with SMTP id k4so410791otc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 13:41:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20170204143913.GA24691@jouni.qca.qualcomm.com>
-References: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170203214707.GA14147@jouni.qca.qualcomm.com> <CAKv+Gu9zp+vptF2mHP5MW=x_K5m7WQgMxNNSD5hn93aT_-99xA@mail.gmail.com>
- <20170204113514.GA4350@jouni.qca.qualcomm.com> <CAKv+Gu9p_yng=_=sri8VtRpBCpvL-r1iZ=YgEqNhuQf55p1xBA@mail.gmail.com>
- <20170204143913.GA24691@jouni.qca.qualcomm.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Sat, 4 Feb 2017 14:44:15 +0000
-Message-ID: <CAKv+Gu_tn+wc=19_ZZELSXxVknqswFrM1+b2KJCHYBgvFbjo3A@mail.gmail.com> (sfid-20170204_154923_229486_AF52A0E2)
-Subject: Re: [RFC PATCH 0/2] mac80211: use crypto shash for AES cmac
-To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+In-Reply-To: <2812805e-9108-284f-2165-34624d603364@broadcom.com>
+References: <20170202213321.11591-1-zajec5@gmail.com> <20170202213321.11591-4-zajec5@gmail.com>
+ <2812805e-9108-284f-2165-34624d603364@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 23 Feb 2017 22:41:28 +0100
+Message-ID: <CACna6rzxbgkuvHWEk=7CgCzSeDfyR-RT_gHY=rwoZW_yC=LdOQ@mail.gmail.com> (sfid-20170223_224133_341323_B5CCF9F4)
+Subject: Re: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 February 2017 at 14:39, Malinen, Jouni <jouni@qca.qualcomm.com> wrote:
-> On Sat, Feb 04, 2017 at 02:24:36PM +0000, Ard Biesheuvel wrote:
->> There is another issue I spotted: the skcipher you allocate may be of
->> the async variant, which may return from skcipher_encrypt() with
->> -EINPROGRESS as soon as it has queued the request. Since you don't
->> deal with that result, you should allocate a sync cipher explicitly:
->
->> diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
->> -       tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, 0);
->> +       tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, CRYPTO_ALG_ASYNC);
->
->> -       tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, 0);
->> +       tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, CRYPTO_ALG_ASYNC);
->
-> Thanks! Can you send this as a full contribution or do you want me to
-> do that?
+Hey Arend,
 
-Please go ahead if you don't mind doing it
+On 8 February 2017 at 10:54, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 2-2-2017 22:33, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> This will allow getting struct device reference from the passed
+>> brcmf_pub for the needs of dev_err. More detailed messages are really
+>> important for home routers which frequently have 2 (or even 3) wireless
+>> cards supported by brcmfmac.
+>>
+>> Note that all calls are yet to be updated as for now brcmf_err macro
+>> always passes NULL. This will be handled in following patch to make this
+>> change easier to review.
+>
+> I prefer brcmf_err() to have struct device reference directly instead of
+> using brcmf_pub. That would remove the need for patches 5 till 7 as bus
+> specific code already has struct device. So I have acked the first three
+> patches, but would like to revise 8 and 9.
 
-> I did run this through all the FILS test cases with
-> mac80211_hwsim.
->
+I wanted to have some better perspective so I analyzed few upstream
+Linux wireless drivers. It seems to be a pretty common pattern to have
+one struct describing hardware that gets passed across the whole
+driver. This way you can access any important info from any place of
+the driver & some will probably say it also simplifies a driver.
 
-Well, even async ciphers can act synchronously: the SIMD based async
-ciphers will only enqueue the request for deferred processing when
-called in interrupt context (on most architectures) but if you happen
-to run on a platform that has a h/w accelerator for ctr(aes), you are
-quite likely to see failures here.
+For example following drivers use following struct in almost every
+part of their code (across multiple files):
+ath9k: struct ath_hw
+ath10k: struct ath10k
+iwlmvm: struct iwl_mvm
+mt7601u: struct mt7601u_dev
+mwifiex: struct mwifiex_private
+rt2x00: struct rt2x00_dev
 
->> Thanks for the instructions and thanks for testing. If I manage to run
->> this locally, I will follow up with an alternative patch #1 tha here
->> switches FILS to use cmac(aes) as well (which looks reasonably
->> feasible now that I understand the code)
->
-> If you have any issues in getting the hwsim test setup working, please
-> let me know. I'm trying to make it easy for anyone to run those tests in
-> hopes of improving quality of Linux WLAN contributions and what gets
-> applied into cfg80211 or mac80211 (or hostap.git for that matter). In
-> particular the latest step-by-step guide I added for the VM version (*)
-> was hoping to show how that can be done in 15 minutes from scratch..
->
->
-> (*) http://w1.fi/cgit/hostap/plain/tests/hwsim/vm/example-vm-setup.txt
->
+The most common / generic struct I found in brcmfmac was struct
+brcmf_pub. That's why I tried to use it for the commonly used
+brcmf_err.
 
-I will take a look on Monday
+What's the reason for hiding this struct from few random parts of the
+code? Is there any real gain from this?
+
+--=20
+Rafa=C5=82
