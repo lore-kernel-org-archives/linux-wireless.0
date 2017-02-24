@@ -1,46 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38864 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752203AbdBGIvq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2017 03:51:46 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Add debugfs support to get per peer tids log via tracing
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1485756147-13762-1-git-send-email-c_mkenna@qti.qualcomm.com>
-References: <1485756147-13762-1-git-send-email-c_mkenna@qti.qualcomm.com>
-To: <c_mkenna@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mkenna@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
-Message-ID: <6f8d8b25a8d443eabd8f3b6ceb51e24e@eusanexr01a.eu.qualcomm.com> (sfid-20170207_095149_918917_94619224)
-Date: Tue, 7 Feb 2017 00:51:41 -0800
+Received: from s3.sipsolutions.net ([5.9.151.49]:45406 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751115AbdBXMPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Feb 2017 07:15:00 -0500
+Message-ID: <1487938414.2540.15.camel@sipsolutions.net> (sfid-20170224_131601_327533_005487FF)
+Subject: Re: Regression with Intel 3160 AP: client not reconnecting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jarek =?UTF-8?Q?Kami=C5=84ski?= <Jarek@Freeside.be>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 24 Feb 2017 13:13:34 +0100
+In-Reply-To: <20170221213340.GA14974@Straylight.freeside.be> (sfid-20170221_224221_697139_D71C5101)
+References: <20170221213340.GA14974@Straylight.freeside.be>
+         (sfid-20170221_224221_697139_D71C5101)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-c_mkenna@qti.qualcomm.com wrote:
-> From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
-> 
-> This patch provides support to get per peer tids log.
-> 
-> echo 1 > /sys/kernel/debug/ieee80211/phyX/netdev\:wlanX/stations/
-> XX:XX/peer_debug_trigger
-> 
-> These logs will be the part of FWLOGS which we collect the logs
-> via tracing interface. Here we will get the peer tigd logs only
-> once(not repeatedly) when we write 1 to the debugfs file.
-> 
-> Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Hi Jarek,
 
-Patch applied to ath-next branch of ath.git, thanks.
+[snip]
 
-ee8b08a1be82 ath10k: add debugfs support to get per peer tids log via tracing
+> What might be the cause? Is there anything I can do to help debug or
+> fix this?
 
--- 
-https://patchwork.kernel.org/patch/9544499/
+Thanks for the detailed bug report and analysis! I can't analyse this
+in depth right now, can you please file a bug on bugzilla.kernel.org?
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks,
+johannes
