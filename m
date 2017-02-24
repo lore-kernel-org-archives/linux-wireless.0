@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60140 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:59732 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751272AbdBUSPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 13:15:46 -0500
-Date: Tue, 21 Feb 2017 19:15:41 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "arjan@linux.intel.com" <arjan@linux.intel.com>,
-        "ming.lei@canonical.com" <ming.lei@canonical.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "jeyu@redhat.com" <jeyu@redhat.com>,
-        "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
-        "pmladek@suse.com" <pmladek@suse.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC 2/5] iwlwifi: fix request_module() use
-Message-ID: <20170221181541.GN31264@wotan.suse.de> (sfid-20170221_192005_565187_ECAC0030)
-References: <20170217020903.6370-1-mcgrof@kernel.org>
- <20170217020903.6370-3-mcgrof@kernel.org>
- <0BA3FCBA62E2DC44AF3030971E174FB3A8F4AE27@hasmsx107.ger.corp.intel.com>
- <20170221022337.GG31264@wotan.suse.de>
- <0BA3FCBA62E2DC44AF3030971E174FB3A8F4DEAB@hasmsx107.ger.corp.intel.com>
+        id S1751291AbdBXVxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Feb 2017 16:53:02 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3A8F4DEAB@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <9E986B17-64EA-46E5-BEE3-76217E31B0D1@holtmann.org>
+References: <20170125222307.3044-1-robh@kernel.org> <3B67FD13-A482-4BEF-B619-DD9AF9CC129F@holtmann.org>
+ <CAL_JsqL1c9vU0R0m73UXi6wvPscqNT9ZAxX8FxhMmLFGMRAeVQ@mail.gmail.com> <9E986B17-64EA-46E5-BEE3-76217E31B0D1@holtmann.org>
+From: Rob Herring <robh@kernel.org>
+Date: Fri, 24 Feb 2017 15:52:37 -0600
+Message-ID: <CAL_JsqKqGcZ-T01wbH+pCM+NYaET2v-FRPtk_Rafojq179KiFw@mail.gmail.com> (sfid-20170224_225324_843458_A7853791)
+Subject: Re: [PATCH] NFC: remove TI nfcwilink driver
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Ilan Elias <ilane@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 21, 2017 at 07:16:16AM +0000, Grumbach, Emmanuel wrote:
-> > 
-> > a) just remove the print and use instead request_module_nowait() (this is
-> > more in alignment of what your code actually does today; or
-> > 
-> > b) fix the request_module() use so that the error print matches the
-> > expected and proper recommended use of request_module() (what this patch
-> > does)
-> > 
-> > I prefer a) actually but I had to show what b) looked like first :)
+On Fri, Feb 24, 2017 at 3:43 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Rob,
 >
-> Me too. Let's do the simple thing. After all, it's been working for 5 years
-> now (maybe more?) and I don't see a huge need to verify that the opmode
-> module has been loaded.  It is very unlikely to fail anyway, and in the case
-> it did fail, it's not that we can do much from iwlwifi point of view. 
+>>>> It appears that TI WiLink devices including NFC (WL185x/WL189x) never
+>>>> shipped. The only information I found were announcements in Feb
+>>>> 2012 about the parts. There's been no activity on this driver besided
+>>>> common changes since initially added in Jan 2012. There's also no in
+>>>> users that instantiate the platform device (nor DT bindings).
+>>>>
+>>>> This is a first step in removing TI ST (shared transport) driver in
+>>>> favor of extending the BT hci_ll driver to support WL183x chips.
+>>>
+>>> since the firmware files TINfcInit_* also never made it into the linux-firmware tree, I have no idea who is using this driver. I am actually fine with removing it since it would be easy enough to bring back based on hci_ll driver once there is hardware to test this on.
+>>
+>> Ping. Someone going to pick up this patch?
+>
+> if Samuel does not have anything pending for his tree, I can take it through bluetooth-next tree.
 
-I tend to agree with you on this, retries would be the only sensible thing to
-do, but why do that -- the error should be logged right and addressed by any
-upper layers. Its one reason to consider in the future adding verifiers
-as built-in optional part of module loading.
+>From the looks of -next, it doesn't appear so.
 
-> iwlwifi will stay loaded and sit idle since no opmode will be there to start
-> using the hardware. We will keep having the device claimed, and will keep the
-> interrupt registered and all that. No WiFi for you, but no harm caused
-> either.
-
-Fine by me. Will send follow up simple patches.
-
-  Luis
+Rob
