@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38410 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753094AbdBAR5U (ORCPT
+Received: from mail-it0-f68.google.com ([209.85.214.68]:35188 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751465AbdBXIp6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 12:57:20 -0500
+        Fri, 24 Feb 2017 03:45:58 -0500
+Received: by mail-it0-f68.google.com with SMTP id 203so2312524ith.2
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 00:45:16 -0800 (PST)
+Received: from mail-it0-f51.google.com (mail-it0-f51.google.com. [209.85.214.51])
+        by smtp.gmail.com with ESMTPSA id r203sm481605itc.5.2017.02.24.00.45.15
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 24 Feb 2017 00:45:15 -0800 (PST)
+Received: by mail-it0-f51.google.com with SMTP id d9so9970353itc.0
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 00:45:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 01 Feb 2017 23:27:18 +0530
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 1/2] cfg80211: Add support to set tx power for a
- station associated
-In-Reply-To: <2b68dc12-44bf-f510-339a-3d987a88e8b5@candelatech.com>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
- <12efc3d8-2274-a6e8-6d74-c06bf89762fb@candelatech.com>
- <14f6b3acb8b26d0eb806148c0ee47fb0@codeaurora.org>
- <2b68dc12-44bf-f510-339a-3d987a88e8b5@candelatech.com>
-Message-ID: <1f3a3dec67fbe4f580750eb06f9b628b@codeaurora.org> (sfid-20170201_185821_761211_A762F11C)
+In-Reply-To: <1487896109-23851-7-git-send-email-greearb@candelatech.com>
+References: <1487896109-23851-1-git-send-email-greearb@candelatech.com> <1487896109-23851-7-git-send-email-greearb@candelatech.com>
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Fri, 24 Feb 2017 09:45:14 +0100
+Message-ID: <CAOq732+L3KDLP-5E4XnKE0-+TKV6KG_V5AVqeBjQRdyQ5Nr74g@mail.gmail.com> (sfid-20170224_094714_948843_6CA2D5F3)
+Subject: Re: [PATCH 162/306] mac80211-hwsim: add length checks before
+ allocating skb.
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-01 23:06, Ben Greear wrote:
-> On 02/01/2017 09:27 AM, Ashok Raj Nagarajan wrote:
-> 
->>>> +static int nl80211_parse_sta_txpower_setting(struct genl_info 
->>>> *info,
->>>> +                         struct station_parameters *params)
->>>> +{
->>>> +    struct cfg80211_registered_device *rdev = info->user_ptr[0];
->>>> +    enum nl80211_tx_power_setting type;
->>>> +    int idx;
->>>> +
->>>> +    if (!rdev->ops->set_tx_power ||
->>>> +        !wiphy_ext_feature_isset(&rdev->wiphy,
->>>> +                     NL80211_EXT_FEATURE_STA_TX_PWR))
->>>> +        return -EOPNOTSUPP;
->>> 
->>> Maybe always let a user set to default value even if the driver does 
->>> not
->>> support setting specific values?
->>> 
->> 
->> IMHO, having some default value in place of non-valid values may not 
->> be the right way.
-> 
-> If a user or user-space script wants to always be able to initialize
-> things to default
-> values, it would be nice if it did not have to pay specific attention
-> to whether the
-> NIC supports STA_TX_PWR feature or not.  Since a NIC that does not
-> support this feature will always
-> have sta TX power set to default by definition, that is why I think
-> you should let
-> the call succeed in that case.
-> 
+On 24 February 2017 at 01:28,  <greearb@candelatech.com> wrote:
+> Modify the receive-from-user-space logic to do length
+> and 'is-down' checks before trying to allocate an skb.
+>
+> And, if we are going to ignore the pkt due to radio idle,
+> then do not return an error code to user-space.  User-space
+> cannot reliably know exactly when a radio is idle or not.
 
-I think it would be better/easier to handle the error cases in the 
-user-space scripts than at the driver here, no? NIC that doesn't support 
-this feature will set the tx power to the station depending on the rate 
-algorithm in place. So the same NIC and same station will have different 
-txpower depending on the environment? On the other hand, how do we 
-decide what constant (?) default value to be sent to userspace?
+You probably want to return some error code anyway because 0, if you
+compare to the kernel medium, currently maps to the ack returned bit
+and is possibly the only way for userspace to set the
+HWSIM_TX_STAT_ACK flag in a meaningful way.
 
-Thanks,
-Ashok
-
-> Thanks,
-> Ben
+Best regards
