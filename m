@@ -1,38 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Straylight.Freeside.be ([94.177.230.162]:49599 "EHLO
-        Straylight.freeside.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751420AbdBXMzj (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36233 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751125AbdBXN3p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 07:55:39 -0500
-Subject: Re: Regression with Intel 3160 AP: client not reconnecting
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <20170221213340.GA14974@Straylight.freeside.be>
- <1487938414.2540.15.camel@sipsolutions.net>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        linux-wireless@vger.kernel.org
-From: =?UTF-8?Q?Jarek_Kami=c5=84ski?= <jarek@freeside.be>
-Message-ID: <c0d20897-9e94-04aa-476f-6daca58d21d4@freeside.be> (sfid-20170224_140154_455852_8D977551)
-Date: Fri, 24 Feb 2017 13:55:34 +0100
+        Fri, 24 Feb 2017 08:29:45 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: fix kernel crash after shutdown command timeout
+Date: Fri, 24 Feb 2017 18:59:24 +0530
+Message-ID: <1487942964-3193-1-git-send-email-akarwar@marvell.com> (sfid-20170224_142950_056098_022BEA9F)
 MIME-Version: 1.0
-In-Reply-To: <1487938414.2540.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 24.02.2017 o 13:13, Johannes Berg pisze:
-> Hi Jarek,
+We observed a SHUTDOWN command timeout during reboot stress test due
+to a corner case firmware bug. It leads to use-after-free on adapter
+structure pointer and crash.
 
-Hello Johannes,
+We already have a cancel_work_sync() call in teardown thread. This
+issue is fixed by having this call just before mwifiex_remove_card().
+At this point no further work will be scheduled.
 
->> What might be the cause? Is there anything I can do to help debug or
->> fix this?
-> 
-> Thanks for the detailed bug report and analysis! I can't analyse this
-> in depth right now, can you please file a bug on bugzilla.kernel.org?
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 3 +--
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-Sure, I'll do that during the weekend. Thanks for response!
-
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index a0d9180..f31c5ea 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -294,8 +294,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+ 
+-	cancel_work_sync(&card->work);
+-
+ 	reg = card->pcie.reg;
+ 	if (reg)
+ 		ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
+@@ -312,6 +310,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
++	cancel_work_sync(&card->work);
+ 	mwifiex_remove_card(adapter);
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index a4b356d..9534b47 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -387,8 +387,6 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+ 
+-	cancel_work_sync(&card->work);
+-
+ 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+ 
+ 	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
+@@ -400,6 +398,7 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
++	cancel_work_sync(&card->work);
+ 	mwifiex_remove_card(adapter);
+ }
+ 
 -- 
-pozdr(); // Jarek
+1.9.1
