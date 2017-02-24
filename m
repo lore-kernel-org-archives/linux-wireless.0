@@ -1,69 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38096 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751131AbdBCQnM (ORCPT
+Received: from mail-qk0-f177.google.com ([209.85.220.177]:34399 "EHLO
+        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751846AbdBXNVs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 11:43:12 -0500
-Message-ID: <1486140182.26003.100.camel@coelho.fi> (sfid-20170203_174340_259638_239FF08D)
-From: Luca Coelho <luca@coelho.fi>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>,
-        "matti.gottlieb@intel.com" <matti.gottlieb@intel.com>,
-        "sara.sharon@intel.com" <sara.sharon@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-Date: Fri, 03 Feb 2017 18:43:02 +0200
-In-Reply-To: <8520D5D51A55D047800579B094147198263E067A@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198263E067A@XAP-PVEXMBX02.xlnx.xilinx.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Issues with FW with Intel 720 wifi card
+        Fri, 24 Feb 2017 08:21:48 -0500
+Received: by mail-qk0-f177.google.com with SMTP id s186so18011259qkb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 05:21:34 -0800 (PST)
+Subject: Re: [PATCH 4.12 1/2] brcmfmac: don't use 43602a1 firmware for 43602a0
+ chipset
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170224122739.1778-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c7c82c1f-df42-c4a2-4f1f-1ff4928590d1@broadcom.com> (sfid-20170224_142313_876917_82779900)
+Date: Fri, 24 Feb 2017 14:21:28 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170224122739.1778-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bharat,
 
 
-On Fri, 2017-02-03 at 16:27 +0000, Bharat Kumar Gogada wrote:
-> Hi,
+On 24-2-2017 13:27, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> Im using linux 4.6 kernel, I get following error when I do interface up.
+> 43602a0 uses chip revision 0 compared to 43602a1 with revision 1. In
+> brcmfmac there is support for 43602a1 and from what I know supporting
+> 43602a0 would require loading a different firmware.
+
+This is not necessarily true. It depends on whether the rom image is
+different or not and there is no way to tell up front. So if a0 has same
+rom image as a1 the firmware is compatible and no distinction is needed.
+This tends to be the case for chips that only change the digit and not
+the letter in the chip revision. Anyway, I do not know if a0 has
+different rom image, but the a0 was never sold so there is no harm in
+keeping it as is.
+
+Regards,
+Arend
+
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Here is the boot log.
-> [    4.407681] iwlwifi 0000:01:00.0: loaded firmware version 16.242414.0 op_mode iwlmvm
-> [    4.407742] iwlwifi 0000:01:00.0: Detected Intel(R) Wireless N 7260, REV=0x144
-> [    4.407831] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
-> [    4.408116] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> index 6fae4cf3f6ab..2a171479b42b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> @@ -60,7 +60,7 @@ BRCMF_FW_NVRAM_DEF(4366C, "brcmfmac4366c-pcie.bin", "brcmfmac4366c-pcie.txt");
+>  BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
+>  
+>  static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+> -	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
+> +	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFE, 43602),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0x000000FF, 4350C),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFF00, 4350),
 > 
-> When I do interface up I get following :
-> [    9.419999] iwlwifi 0000:01:00.0: Failed to load firmware chunk!
-> [    9.425947] iwlwifi 0000:01:00.0: Could not load the [0] uCode section
-> [    9.432472] iwlwifi 0000:01:00.0: Failed to start INIT ucode: -110
-> [    9.438899] iwlwifi 0000:01:00.0: Failed to run INIT ucode: -110
-> [    9.444858] iwlwifi 0000:01:00.0: L1 Disabled - LTR Disabled
-
-It's hard to say why this is happening.
-
-
-> I downloaded firmware from here
-> https://wireless.wiki.kernel.org/en/users/Drivers/iwlwifi
-
-Why did you have to download the firmware? Doesn't your distro include
-the binaries from linux-firmware.git?
-
-The firmware you are using is version 16, but that kernel already
-supports version -17.  I recommend you try to take the latest firmware
-for the 7260 NIC from our copy of linux-firmware.git[2].
-
-If this doesn't help, the best thing to do would be to report this as a
-bug in bugzilla.kernel.org following the instructions in our wiki[1]. 
-This way we can help you more easily.
-
-
-[1] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
-[2] http://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git/plain/iwlwifi-7260-17.ucode
-
---
-Cheers,
-Luca.
