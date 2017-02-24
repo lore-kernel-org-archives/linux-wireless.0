@@ -1,40 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4903 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752100AbdBUNTX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 08:19:23 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: voncken <cedric.voncken@acksys.fr>
-CC: 'OpenWrt Development List' <openwrt-devel@lists.openwrt.org>,
-        'linux-wireless' <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-Date: Tue, 21 Feb 2017 13:19:17 +0000
-Message-ID: <87efyrd6lv.fsf@kamboji.qca.qualcomm.com> (sfid-20170221_141926_671789_49C5F985)
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
-        <566849DB.9040901@candelatech.com>
-        <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
-        <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
-        <87twbnueqv.fsf@kamboji.qca.qualcomm.com>
-        <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>
-        <871syn5fnb.fsf@qca.qualcomm.com>
-        <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>
-        <87polwq2nq.fsf@kamboji.qca.qualcomm.com>
-        <027001d28c42$5042c910$f0c85b30$@acksys.fr>
-In-Reply-To: <027001d28c42$5042c910$f0c85b30$@acksys.fr> (voncken's message of
-        "Tue, 21 Feb 2017 13:59:18 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:49170 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751265AbdBXTha (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Feb 2017 14:37:30 -0500
+Message-ID: <1487965047.30601.2.camel@sipsolutions.net> (sfid-20170224_203734_401490_C2A8774F)
+Subject: Re: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to
+ suspend async: error -16)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Oliver Freyermuth <o.freyermuth@googlemail.com>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 24 Feb 2017 20:37:27 +0100
+In-Reply-To: <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com> (sfid-20170224_185135_976515_957672BC)
+References: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com>
+         <1487938277.2540.13.camel@sipsolutions.net>
+         <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com>
+         (sfid-20170224_185135_976515_957672BC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-voncken <cedric.voncken@acksys.fr> writes:
+On Fri, 2017-02-24 at 19:51 +0100, Oliver Freyermuth wrote:
+> 
+> Thanks for your reply and the suggestion! I have put the two lines
+> directly after the last #include
+> in both files, i.e. both drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+> and net/mac80211/ieee80211_i.h . 
+> Sadly, none of them triggers when trying to enter suspend. 
+> 
+> I still get:
+> [   85.308756] dpm_run_callback(): wiphy_suspend+0x0/0x97 [cfg80211]
+> returns -16
+> [   85.308757] PM: Device phy0 failed to suspend async: error -16
+> [   85.310518] sd 5:0:0:0: [sdb] Stopping disk
+> [   85.857976] PM: Some devices failed to suspend, or early wake
+> event detected
+> with nothing in between. 
 
-> Do you know if the firmware team planned to fix the VLAN issue on ath10k
-> firmware?
+I'd have expected the message to show up *before* the first one
+(dpm_run_callback) you quoted, because this one already has the -16
+return value printed, and it must've been generated before that.
 
-I reported it forward only this week.
+I just tried on one of my systems, but it's not exactly the same kernel
+version (would be difficult to install right now), and it works just
+fine for me. Perhaps there's something going on with your system.
 
---=20
-Kalle Valo=
+> Just to make sure, I can confirm the change is effective, since I get
+> many of:
+> [   57.819114] WARNING: CPU: 4 PID: 4092 at
+> drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1503
+> iwl_mvm_rx_tx_cmd+0x51e/0x579 [iwlmvm]
+> (with the tracebacks) for example when connecting to a different
+> network. But none of these when trying to suspend...
+
+Oops. I didn't see this instance of EBUSY in the success path - it's
+used for a comparison that probably never triggered. Anyway, no harm
+done apart from logging lots of useless stack traces :)
+
+> Any other ideas on where I could look, or how I could trace the
+> origin of this -16? 
+
+(see below)
+
+> You are right about the bug report - I provided the wrong link,
+> sorry. 
+> The report I meant is here:
+> https://bugzilla.redhat.com/show_bug.cgi?id=1362311
+> for a 7260 similar to mine. 
+
+Yes, that one looks like the same as yours.
+
+> I believe that 
+>  https://bugzilla.kernel.org/show_bug.cgi?id=109591#c25
+> i.e. comment 25 was made by the same person who just hijacked that
+> kernel
+> bug report even though it was indeed for a very different hardware. 
+
+Ok, that's possible.
+
+So let's see. The error *isn't* generated by mac80211 or iwlwifi, but
+it's still returned through wiphy_suspend(). That function just calls
+mac80211 though, and never generates any error conditions by itself. As
+a consequence, this must be generated in some callee of wiphy_suspend()
+that *isn't* in mac80211/iwlwifi...
+
+__ieee80211_suspend() also doesn't generate any error codes by itself,
+let's take a look at iwlmvm's suspend (called through drv_suspend()),
+that's iwl_mvm_suspend().
+
+Oh. Can you see if you have CONFIG_IWLWIFI_PCIE_RTPM enabled in your
+configuration? If you do, please turn it off and see if that fixes it.
+
+This still looks fishy in the code though, but let's see if that's the
+problem first.
+
+johannes
