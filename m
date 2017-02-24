@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:54111 "EHLO
-        helcar.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751376AbdBFJBJ (ORCPT
+Received: from regular1.263xmail.com ([211.150.99.134]:50701 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750873AbdBXGYx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 04:01:09 -0500
-Date: Mon, 6 Feb 2017 17:00:39 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] mac80211: Allocate a sync skcipher explicitly for FILS
- AEAD
-Message-ID: <20170206090039.GA9467@gondor.apana.org.au> (sfid-20170206_100303_921394_0107D93F)
-References: <1486224522-26392-1-git-send-email-jouni@qca.qualcomm.com>
- <1486364077.14226.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1486364077.14226.1.camel@sipsolutions.net>
+        Fri, 24 Feb 2017 01:24:53 -0500
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        Rajat Jain <rajatja@google.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 3/3] mwifiex: wake system up when receives a wake irq
+Date: Fri, 24 Feb 2017 14:24:31 +0800
+Message-Id: <1487917471-5501-3-git-send-email-jeffy.chen@rock-chips.com> (sfid-20170224_072553_793519_3319B506)
+In-Reply-To: <1487917471-5501-1-git-send-email-jeffy.chen@rock-chips.com>
+References: <1487917471-5501-1-git-send-email-jeffy.chen@rock-chips.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 07:54:37AM +0100, Johannes Berg wrote:
-> Hi,
-> 
-> > The skcipher could have been of the async variant which may return
-> > from skcipher_encrypt() with -EINPROGRESS after having queued the
-> > request.
-> > The FILS AEAD implementation here does not have code for dealing with
-> > that possibility, so allocate a sync cipher explicitly to avoid
-> > potential issues with hardware accelerators.
-> 
-> > -	tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, 0);
-> > +	tfm2 = crypto_alloc_skcipher("ctr(aes)", 0,
-> > CRYPTO_ALG_ASYNC);
-> 
-> I'll apply this, after having found some code elsewhere that does
-> something similar, but I'll note that this is super confusing, since
-> the only documentation mentioning this flag says:
-> 
-> The mask flag restricts the type of cipher. The only allowed flag is
-> CRYPTO_ALG_ASYNC to restrict the cipher lookup function to
-> asynchronous ciphers. Usually, a caller provides a 0 for the mask flag.
+Currrently we are disabling this wake irq after receiving it. If this
+happens before we finish suspend and the pm event check is disabled,
+the system will continue suspending, and this irq would not work again.
 
-The type and mask are used as follows when checking an algorithm:
+We may need to abort system suspend to avoid that.
 
-	alg->type & mask == type & mask
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-So to request a synchronous algorithm (that is, one with the
-CRYPTO_ALG_ASYNC bit set to zero), you would set type to 0 and
-mask to CRYPTO_ALG_ASYNC.
+ drivers/net/wireless/marvell/mwifiex/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Cheers,
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 5ebca1d..30f4994 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -17,6 +17,8 @@
+  * this warranty disclaimer.
+  */
+ 
++#include <linux/suspend.h>
++
+ #include "main.h"
+ #include "wmm.h"
+ #include "cfg80211.h"
+@@ -1509,6 +1511,7 @@ static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
+ 
+ 	/* Notify PM core we are wakeup source */
+ 	pm_wakeup_event(adapter->dev, 0);
++	pm_system_wakeup();
+ 
+ 	return IRQ_HANDLED;
+ }
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+2.1.4
