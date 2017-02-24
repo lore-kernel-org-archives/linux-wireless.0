@@ -1,91 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51072 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754091AbdBARrc (ORCPT
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:36152 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751246AbdBXRvi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 12:47:32 -0500
+        Fri, 24 Feb 2017 12:51:38 -0500
+Received: by mail-wr0-f179.google.com with SMTP id 89so17831576wrr.3
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 09:51:37 -0800 (PST)
+Subject: Re: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to
+ suspend async: error -16)
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com>
+ <1487938277.2540.13.camel@sipsolutions.net>
+From: Oliver Freyermuth <o.freyermuth@googlemail.com>
+Message-ID: <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com> (sfid-20170224_185152_223023_9A7EF347)
+Date: Fri, 24 Feb 2017 19:51:33 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 01 Feb 2017 23:17:30 +0530
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 2/2] mac80211: store tx power value from user to
- station
-In-Reply-To: <35c617ff-c07a-b221-5742-b1487618bce7@candelatech.com>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
- <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com>
- <eff562d4-7dd8-4b5a-812c-58f4f690cde3@candelatech.com>
- <7584a5235b49b7799a2c15f91fb03794@codeaurora.org>
- <35c617ff-c07a-b221-5742-b1487618bce7@candelatech.com>
-Message-ID: <cef8a7325bc010dc26de0bbd006ceff3@codeaurora.org> (sfid-20170201_184823_290932_C187F6BF)
+In-Reply-To: <1487938277.2540.13.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-02-01 23:02, Ben Greear wrote:
-> On 02/01/2017 09:29 AM, Ashok Raj Nagarajan wrote:
->> On 2017-02-01 00:30, Ben Greear wrote:
->>> On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
->>>> This patch introduce a new driver callback drv_sta_set_txpwr. This 
->>>> API will
->>>> copy the transmit power value passed from user space and call the 
->>>> driver
->>>> callback to set the tx power for the station.
->>>> 
->>>> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
->>>> ---
->>>>  include/net/mac80211.h    |  6 ++++++
->>>>  net/mac80211/cfg.c        |  7 +++++++
->>>>  net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
->>>>  net/mac80211/driver-ops.h |  5 +++++
->>>>  net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
->>>>  5 files changed, 66 insertions(+)
->>>> 
->>>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->>>> index 5345d35..e059d5a 100644
->>>> --- a/include/net/mac80211.h
->>>> +++ b/include/net/mac80211.h
->>>> @@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
->>>>   *    This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 
->>>> NOTE 2).
->>>>   * @support_p2p_ps: indicates whether the STA supports P2P PS 
->>>> mechanism or not.
->>>>   * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by 
->>>> rate control.
->>>> + * @txpwr: indicates the tx power, in dBm, to be used when sending 
->>>> data frames
->>>> + *    to the STA. Value of 0 means, automatic (default) tx power.
->>> 
->>> Atheros NICs use 1/2 dBm increments internally, so maybe pass down 
->>> mBm
->>> to the driver so you don't
->>> loose the granularity?  (Other NICs may potentially have even finer 
->>> control.)
->>> 
->> 
->> ath10k firmware expects values to be in dBm and the calculations 
->> regarding 1/2 dBm is taken care in firmware.
+Am 24.02.2017 um 13:11 schrieb Johannes Berg:
+>> However, when trying to suspend to RAM ( echo mem > /sys/power/state
+>> ), I get:
+>> [46656.403767] dpm_run_callback(): wiphy_suspend+0x0/0x97 [cfg80211]
+>> returns -16
+>> [46656.403769] PM: Device phy0 failed to suspend async: error -16
+>>
 > 
-> Other drivers may want more precision, so I still think you should
-> store this in mBm instead
-> of throwing away precision in the API.
+> However, I don't see EBUSY anywhere there in the driver.
 > 
+> Can you recompile the kernel and run a quick experiment?
+> 
+> Open drivers/net/wireless/intel/iwlwifi/mvm/mvm.h and put something
+> like this after the includes:
+> 
+> #undef EBUSY
+> #define EBUSY ({ WARN_ON(1); 16; })
+> 
+> that should trigger a warning at the place where the EBUSY came from,
+> assuming it did in fact come from the driver. You could repeat it for
+> net/mac80211/ieee80211_i.h if that doesn't trigger.
 
-Okay point taken! Instead of having the conversion happening now in API, 
-I will push it down to the ath10k driver.
+Thanks for your reply and the suggestion! I have put the two lines directly after the last #include
+in both files, i.e. both drivers/net/wireless/intel/iwlwifi/mvm/mvm.h and net/mac80211/ieee80211_i.h . 
+Sadly, none of them triggers when trying to enter suspend. 
 
-> A new and improved ath10k firmware may support 1/2 dBm units directly,
-> for instance.
+I still get:
+[   85.308756] dpm_run_callback(): wiphy_suspend+0x0/0x97 [cfg80211] returns -16
+[   85.308757] PM: Device phy0 failed to suspend async: error -16
+[   85.310518] sd 5:0:0:0: [sdb] Stopping disk
+[   85.857976] PM: Some devices failed to suspend, or early wake event detected
+with nothing in between. 
+
+Just to make sure, I can confirm the change is effective, since I get many of:
+[   57.819114] WARNING: CPU: 4 PID: 4092 at drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1503 iwl_mvm_rx_tx_cmd+0x51e/0x579 [iwlmvm]
+(with the tracebacks) for example when connecting to a different network. But none of these when trying to suspend...
+
+Any other ideas on where I could look, or how I could trace the origin of this -16? 
+
 > 
-> Thanks,
-> Ben
+>> https://bugzilla.kernel.org/show_bug.cgi?id=109591#c25
 > 
->> 
->> Thanks,
->> Ashok
->>> Thanks,
->>> Ben
->> 
+> That device is like mine, afaict, so this seems to be a different bug.
+You are right about the bug report - I provided the wrong link, sorry. 
+The report I meant is here:
+https://bugzilla.redhat.com/show_bug.cgi?id=1362311
+for a 7260 similar to mine. 
+
+I believe that 
+ https://bugzilla.kernel.org/show_bug.cgi?id=109591#c25
+i.e. comment 25 was made by the same person who just hijacked that kernel
+bug report even though it was indeed for a very different hardware. 
+
+I'm open for any other suggestions, let me know if anything comes to mind. 
+
+Cheers and thanks for your reply, 
+	Oliver
