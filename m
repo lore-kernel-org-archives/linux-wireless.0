@@ -1,60 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9406 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750890AbdBDOjX (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:12019
+        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750873AbdBXGjK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Feb 2017 09:39:23 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC PATCH 0/2] mac80211: use crypto shash for AES cmac
-Date: Sat, 4 Feb 2017 14:39:16 +0000
-Message-ID: <20170204143913.GA24691@jouni.qca.qualcomm.com> (sfid-20170204_153931_133055_3B538C0F)
-References: <1486149955-11825-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170203214707.GA14147@jouni.qca.qualcomm.com>
- <CAKv+Gu9zp+vptF2mHP5MW=x_K5m7WQgMxNNSD5hn93aT_-99xA@mail.gmail.com>
- <20170204113514.GA4350@jouni.qca.qualcomm.com>
- <CAKv+Gu9p_yng=_=sri8VtRpBCpvL-r1iZ=YgEqNhuQf55p1xBA@mail.gmail.com>
-In-Reply-To: <CAKv+Gu9p_yng=_=sri8VtRpBCpvL-r1iZ=YgEqNhuQf55p1xBA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 24 Feb 2017 01:39:10 -0500
+Date: Fri, 24 Feb 2017 07:39:06 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Tahia Khan <tahia.khan@gmail.com>
+cc: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [Outreachy kernel] [PATCH v3 3/3] staging: wilc1000: Rename
+ network_info member str_rssi to rssi_history
+In-Reply-To: <6fd3f34baa31c00a77e2805d5d8a820b3ac7a43f.1487912400.git.tahia.khan@gmail.com>
+Message-ID: <alpine.DEB.2.20.1702240738340.2095@hadrien> (sfid-20170224_073927_669986_0CFD0A90)
+References: <cover.1487912400.git.tahia.khan@gmail.com> <6fd3f34baa31c00a77e2805d5d8a820b3ac7a43f.1487912400.git.tahia.khan@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 04, 2017 at 02:24:36PM +0000, Ard Biesheuvel wrote:
-> There is another issue I spotted: the skcipher you allocate may be of
-> the async variant, which may return from skcipher_encrypt() with
-> -EINPROGRESS as soon as it has queued the request. Since you don't
-> deal with that result, you should allocate a sync cipher explicitly:
-
-> diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
-> -       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, 0);
-> +       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, CRYPTO_ALG_ASYNC);
-
-> -       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, 0);
-> +       tfm2 =3D crypto_alloc_skcipher("ctr(aes)", 0, CRYPTO_ALG_ASYNC);
-
-Thanks! Can you send this as a full contribution or do you want me to
-do that? I did run this through all the FILS test cases with
-mac80211_hwsim.
-
-> Thanks for the instructions and thanks for testing. If I manage to run
-> this locally, I will follow up with an alternative patch #1 that
-> switches FILS to use cmac(aes) as well (which looks reasonably
-> feasible now that I understand the code)
-
-If you have any issues in getting the hwsim test setup working, please
-let me know. I'm trying to make it easy for anyone to run those tests in
-hopes of improving quality of Linux WLAN contributions and what gets
-applied into cfg80211 or mac80211 (or hostap.git for that matter). In
-particular the latest step-by-step guide I added for the VM version (*)
-was hoping to show how that can be done in 15 minutes from scratch..
 
 
-(*) http://w1.fi/cgit/hostap/plain/tests/hwsim/vm/example-vm-setup.txt
+On Fri, 24 Feb 2017, Tahia Khan wrote:
 
---=20
-Jouni Malinen                                            PGP id EFC895FA=
+> Change name of str_rssi to rssi_history within the network_info struct for clarity.
+>
+> Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
+
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+
+Good job at cutting up the patch in a meaningful way.
+
+julia
+
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+>  2 files changed, 8 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+> index 9712d89..10101f8 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.h
+> +++ b/drivers/staging/wilc1000/coreconfigurator.h
+> @@ -93,7 +93,7 @@ struct network_info {
+>  	u8 *ies;
+>  	u16 ies_len;
+>  	void *join_params;
+> -	struct rssi_history_buffer str_rssi;
+> +	struct rssi_history_buffer rssi_history;
+>  	u64 tsf_hi;
+>  };
+>
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index 9601ab8..4a6fe90 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -205,11 +205,11 @@ static u32 get_rssi_avg(struct network_info *network_info)
+>  {
+>  	u8 i;
+>  	int rssi_v = 0;
+> -	u8 num_rssi = (network_info->str_rssi.full) ?
+> -		       NUM_RSSI : (network_info->str_rssi.index);
+> +	u8 num_rssi = (network_info->rssi_history.full) ?
+> +		       NUM_RSSI : (network_info->rssi_history.index);
+>
+>  	for (i = 0; i < num_rssi; i++)
+> -		rssi_v += network_info->str_rssi.samples[i];
+> +		rssi_v += network_info->rssi_history.samples[i];
+>
+>  	rssi_v /= num_rssi;
+>  	return rssi_v;
+> @@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+>  	} else {
+>  		ap_index = ap_found;
+>  	}
+> -	rssi_index = last_scanned_shadow[ap_index].str_rssi.index;
+> -	last_scanned_shadow[ap_index].str_rssi.samples[rssi_index++] = pstrNetworkInfo->rssi;
+> +	rssi_index = last_scanned_shadow[ap_index].rssi_history.index;
+> +	last_scanned_shadow[ap_index].rssi_history.samples[rssi_index++] = pstrNetworkInfo->rssi;
+>  	if (rssi_index == NUM_RSSI) {
+>  		rssi_index = 0;
+> -		last_scanned_shadow[ap_index].str_rssi.full = true;
+> +		last_scanned_shadow[ap_index].rssi_history.full = true;
+>  	}
+> -	last_scanned_shadow[ap_index].str_rssi.index = rssi_index;
+> +	last_scanned_shadow[ap_index].rssi_history.index = rssi_index;
+>  	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
+>  	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
+>  	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
+> --
+> 2.7.4
+>
+> --
+> You received this message because you are subscribed to the Google Groups "outreachy-kernel" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to outreachy-kernel+unsubscribe@googlegroups.com.
+> To post to this group, send email to outreachy-kernel@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/outreachy-kernel/6fd3f34baa31c00a77e2805d5d8a820b3ac7a43f.1487912400.git.tahia.khan%40gmail.com.
+> For more options, visit https://groups.google.com/d/optout.
+>
