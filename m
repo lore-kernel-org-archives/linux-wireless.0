@@ -1,45 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f176.google.com ([209.85.217.176]:33463 "EHLO
-        mail-ua0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751616AbdBOKzb (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58742 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751402AbdBXA3K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 05:55:31 -0500
-Received: by mail-ua0-f176.google.com with SMTP id i68so103386324uad.0
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2017 02:55:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <586c8cf6-75fb-64cb-adaa-4c5de7ec7008@broadcom.com>
-References: <CANU0Mn00ju_SZ3L+ipdnZ5R-Y1m+T=MhjHmBjMpKN_i8NPWsrg@mail.gmail.com>
- <dea21c18-30a4-f236-6f8b-1bf8d4391e0b@broadcom.com> <CANU0Mn2Fp=3tYb70qD7J_duA0f1wbRNr_Q3e5iv3pBTHtWM4zg@mail.gmail.com>
- <586c8cf6-75fb-64cb-adaa-4c5de7ec7008@broadcom.com>
-From: ravin goyal <ravirocks1021@gmail.com>
-Date: Wed, 15 Feb 2017 16:25:09 +0530
-Message-ID: <CANU0Mn01mQoWfxvWK_jLRyM9MZwDR7Baeah6ZkJ6pNhxB=YeKQ@mail.gmail.com> (sfid-20170215_115533_455467_E4CAD54F)
-Subject: Re: wireless driver crashing frequently
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Thu, 23 Feb 2017 19:29:10 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 099/306] mac80211-hwsim: notify user-space about channel change.
+Date: Thu, 23 Feb 2017 16:28:23 -0800
+Message-Id: <1487896109-23851-1-git-send-email-greearb@candelatech.com> (sfid-20170224_012921_813683_C1D64839)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-okay thanks for the help.
+From: Ben Greear <greearb@candelatech.com>
 
-regards
-ravin
+The goal is to allow the user-space application to properly
+filter packets before sending them down to the kernel.  This
+should more closely mimic what a real piece of hardware would
+do.
 
-On 15 February 2017 at 16:20, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
->
->
-> On 15-2-2017 11:38, ravin goyal wrote:
->> that is what I have found on my banana pi board running raspbian lite
->> 3.4.112-sun8i.
->> removing bcmdhd results in removing my wlan0 interface from the
->> list(iwconfig/ifconfig/ip).
->
-> Ok. If it is raspbian that choose to include bcmdhd in their distro I
-> would suggest to file the bug there [1].
->
-> Regards,
-> Arend
->
-> [1] https://www.raspbian.org/RaspbianBugs
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 48 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mac80211_hwsim.h |  6 +++++
+ 2 files changed, 54 insertions(+)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index d3bad57..af53317 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1005,6 +1005,52 @@ static int hwsim_unicast_netgroup(struct mac80211_hwsim_data *data,
+ 	return res;
+ }
+ 
++static void mac80211_hwsim_check_nl_notify(struct mac80211_hwsim_data *data)
++{
++	struct sk_buff *skb;
++	u32 center_freq = 0;
++	u32 _portid;
++	void *msg_head;
++
++	/* wmediumd mode check */
++	_portid = ACCESS_ONCE(data->wmediumd);
++
++	if (!_portid)
++		return;
++
++	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_ATOMIC);
++	if (skb == NULL)
++		goto err_print;
++
++	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
++			       HWSIM_CMD_NOTIFY);
++	if (msg_head == NULL) {
++		printk(KERN_DEBUG "mac80211_hwsim: problem with msg_head, notify\n");
++		goto nla_put_failure;
++	}
++
++	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER,
++		    ETH_ALEN, data->addresses[1].addr))
++		goto nla_put_failure;
++
++	if (data->channel)
++		center_freq = data->channel->center_freq;
++
++	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, center_freq))
++		goto nla_put_failure;
++
++	genlmsg_end(skb, msg_head);
++	if (genlmsg_unicast(&init_net, skb, _portid))
++		goto err_print;
++
++	return;
++
++nla_put_failure:
++	nlmsg_free(skb);
++err_print:
++	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
++}
++
+ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 				       struct sk_buff *my_skb,
+ 				       int dst_portid)
+@@ -1622,6 +1668,8 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 				      HRTIMER_MODE_REL);
+ 	}
+ 
++	mac80211_hwsim_check_nl_notify(data);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 39f2246..73646b1 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -71,6 +71,11 @@ enum hwsim_tx_control_flags {
+  * @HWSIM_CMD_DEL_RADIO: destroy a radio, reply is multicasted
+  * @HWSIM_CMD_GET_RADIO: fetch information about existing radios, uses:
+  *	%HWSIM_ATTR_RADIO_ID
++ * @HWSIM_CMD_NOTIFY: notify user-space about driver changes.  This is
++ * designed to help the user-space app better emulate radio hardware.
++ * This command uses:
++ *      %HWSIM_ATTR_FREQ # Notify current operating center frequency.
++ *      %HWSIM_ATTR_ADDR_TRANSMITTER # ID which radio we are notifying about.
+  * @__HWSIM_CMD_MAX: enum limit
+  */
+ enum {
+@@ -81,6 +86,7 @@ enum {
+ 	HWSIM_CMD_NEW_RADIO,
+ 	HWSIM_CMD_DEL_RADIO,
+ 	HWSIM_CMD_GET_RADIO,
++	HWSIM_CMD_NOTIFY,
+ 	__HWSIM_CMD_MAX,
+ };
+ #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
+-- 
+2.4.11
