@@ -1,142 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24348 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751041AbdBWNTe (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35454 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751314AbdBXQdR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 08:19:34 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv2] ath10k: Update available channel list for 5G radio
-Date: Thu, 23 Feb 2017 18:48:22 +0530
-Message-ID: <1487855902-32090-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170223_141938_403731_D2FFD25B)
+        Fri, 24 Feb 2017 11:33:17 -0500
+Received: by mail-lf0-f66.google.com with SMTP id z127so1814705lfa.2
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 08:33:16 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: always print error when PSM's watchdog fires
+Date: Fri, 24 Feb 2017 17:32:46 +0100
+Message-Id: <20170224163246.7748-1-zajec5@gmail.com> (sfid-20170224_173323_347310_35C66A40)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-If a 5 GHz radio is calibrated for operation in both
-the low band (channels 36 to 64) and high band(channels 100 to 169),
-hardware allows operations in all the listed channels. However,
-if the chip has been calibrated only for the low/high band and
-a high/low band channel is configured, due to lack of calibration
-there will be potentially invalid signal on those non calibrated channels.
-To avoid this problem this patch sets IEEE80211_CHAN_DISABLED flag for
-those non calibrated channels by using low_5ghz_chan and high_5ghz_chan
-values which we get from target through wmi service ready event.
+So far we were attaching BRCMF_E_PSM_WATCHDOG event listener in
+brcmf_debug_attach which gets compiled only with CONFIG_BRCMDBG. This
+event means something went wrong and firmware / hardware usually can't
+be expected to work (reliably).
 
-Driver initialized flags are getting re initialized in handle_channel
-in cfg80211. So calling the function to disable the non supported channel
-from reg_notifier().
+Such a problem is significant for user experience so I believe we should
+print an error unconditionally (even with debugging disabled). What can
+be indeed optional is dumping bus memory as this is clearly part of
+debugging process.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+In the future we may also try to extend this listener by trying to
+recover from the error or at least signal it to the cfg80211.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
-v2:
-  * Removed two separate arrays for channel list, and changed logic
-    to disable non calibrated channels.
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 22 ++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.c   | 26 +++-------------------
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.h   |  9 ++++++++
+ 3 files changed, 34 insertions(+), 23 deletions(-)
 
- drivers/net/wireless/ath/ath10k/core.h |    2 ++
- drivers/net/wireless/ath/ath10k/mac.c  |   19 +++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |    6 ++++++
- drivers/net/wireless/ath/ath10k/wmi.h  |    2 ++
- 4 files changed, 29 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 88d14be..d4b9a0e 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -775,6 +775,8 @@ struct ath10k {
- 	u32 num_rf_chains;
- 	u32 max_spatial_stream;
- 	/* protected by conf_mutex */
-+	u32 low_5ghz_chan;
-+	u32 high_5ghz_chan;
- 	bool ani_enabled;
- 
- 	bool p2p;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index abc291d..c5b6c2a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3126,6 +3126,21 @@ static void ath10k_regd_update(struct ath10k *ar)
- 		ath10k_warn(ar, "failed to set pdev regdomain: %d\n", ret);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 60da86a8d95b..2f2f3a5ad86a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -738,6 +738,24 @@ void brcmf_remove_interface(struct brcmf_if *ifp, bool rtnl_locked)
+ 	brcmf_del_if(ifp->drvr, ifp->bsscfgidx, rtnl_locked);
  }
  
-+void ath10k_mac_update_channel_list(struct ath10k *ar,
-+				    struct ieee80211_supported_band *band)
++static int brcmf_psm_watchdog_notify(struct brcmf_if *ifp,
++				     const struct brcmf_event_msg *evtmsg,
++				     void *data)
 +{
-+	int i;
++	int err;
 +
-+	if (ar->low_5ghz_chan && ar->high_5ghz_chan) {
-+		for (i = 0; i < band->n_channels; i++) {
-+			if (band->channels[i].center_freq < ar->low_5ghz_chan ||
-+			    band->channels[i].center_freq > ar->high_5ghz_chan)
-+				band->channels[i].flags |=
-+					IEEE80211_CHAN_DISABLED;
-+		}
-+	}
++	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
++
++	brcmf_err("PSM's watchdog has fired!\n");
++
++	err = brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
++					 evtmsg->datalen);
++	if (err)
++		brcmf_err("Failed to get memory dump, %d\n", err);
++
++	return err;
 +}
 +
- static void ath10k_reg_notifier(struct wiphy *wiphy,
- 				struct regulatory_request *request)
- {
-@@ -3149,6 +3164,10 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
- 	if (ar->state == ATH10K_STATE_ON)
- 		ath10k_regd_update(ar);
- 	mutex_unlock(&ar->conf_mutex);
+ #ifdef CONFIG_INET
+ #define ARPOL_MAX_ENTRIES	8
+ static int brcmf_inetaddr_changed(struct notifier_block *nb,
+@@ -917,6 +935,10 @@ int brcmf_attach(struct device *dev, struct brcmf_mp_device *settings)
+ 		goto fail;
+ 	}
+ 
++	/* Attach to events important for core code */
++	brcmf_fweh_register(drvr, BRCMF_E_PSM_WATCHDOG,
++			    brcmf_psm_watchdog_notify);
 +
-+	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY)
-+		ath10k_mac_update_channel_list(ar,
-+				ar->hw->wiphy->bands[NL80211_BAND_5GHZ]);
+ 	/* attach firmware event handler */
+ 	brcmf_fweh_attach(drvr);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+index f4644cf371c7..1447a8352383 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+@@ -27,8 +27,8 @@
+ 
+ static struct dentry *root_folder;
+ 
+-static int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+-				      size_t len)
++int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
++			       size_t len)
+ {
+ 	void *dump;
+ 	size_t ramsize;
+@@ -54,24 +54,6 @@ static int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+ 	return 0;
  }
  
- /***************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2f1743e..b31c4f7 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4593,6 +4593,8 @@ static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
- 	arg->phy_capab = ev->phy_capability;
- 	arg->num_rf_chains = ev->num_rf_chains;
- 	arg->eeprom_rd = ev->hal_reg_capabilities.eeprom_rd;
-+	arg->low_5ghz_chan = ev->hal_reg_capabilities.low_5ghz_chan;
-+	arg->high_5ghz_chan = ev->hal_reg_capabilities.high_5ghz_chan;
- 	arg->num_mem_reqs = ev->num_mem_reqs;
- 	arg->service_map = ev->wmi_service_bitmap;
- 	arg->service_map_len = sizeof(ev->wmi_service_bitmap);
-@@ -4629,6 +4631,8 @@ static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
- 	arg->phy_capab = ev->phy_capability;
- 	arg->num_rf_chains = ev->num_rf_chains;
- 	arg->eeprom_rd = ev->hal_reg_capabilities.eeprom_rd;
-+	arg->low_5ghz_chan = ev->hal_reg_capabilities.low_5ghz_chan;
-+	arg->high_5ghz_chan = ev->hal_reg_capabilities.high_5ghz_chan;
- 	arg->num_mem_reqs = ev->num_mem_reqs;
- 	arg->service_map = ev->wmi_service_bitmap;
- 	arg->service_map_len = sizeof(ev->wmi_service_bitmap);
-@@ -4682,6 +4686,8 @@ static void ath10k_wmi_event_service_ready_work(struct work_struct *work)
- 	ar->phy_capability = __le32_to_cpu(arg.phy_capab);
- 	ar->num_rf_chains = __le32_to_cpu(arg.num_rf_chains);
- 	ar->hw_eeprom_rd = __le32_to_cpu(arg.eeprom_rd);
-+	ar->low_5ghz_chan = __le32_to_cpu(arg.low_5ghz_chan);
-+	ar->high_5ghz_chan = __le32_to_cpu(arg.high_5ghz_chan);
+-static int brcmf_debug_psm_watchdog_notify(struct brcmf_if *ifp,
+-					   const struct brcmf_event_msg *evtmsg,
+-					   void *data)
+-{
+-	int err;
+-
+-	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
+-
+-	brcmf_err("PSM's watchdog has fired!\n");
+-
+-	err = brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
+-					 evtmsg->datalen);
+-	if (err)
+-		brcmf_err("Failed to get memory dump, %d\n", err);
+-
+-	return err;
+-}
+-
+ void brcmf_debugfs_init(void)
+ {
+ 	root_folder = debugfs_create_dir(KBUILD_MODNAME, NULL);
+@@ -99,9 +81,7 @@ int brcmf_debug_attach(struct brcmf_pub *drvr)
+ 	if (IS_ERR(drvr->dbgfs_dir))
+ 		return PTR_ERR(drvr->dbgfs_dir);
  
- 	ath10k_dbg_dump(ar, ATH10K_DBG_WMI, NULL, "wmi svc: ",
- 			arg.service_map, arg.service_map_len);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 386aa51..78350d4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6335,6 +6335,8 @@ struct wmi_svc_rdy_ev_arg {
- 	__le32 num_rf_chains;
- 	__le32 eeprom_rd;
- 	__le32 num_mem_reqs;
-+	__le32 low_5ghz_chan;
-+	__le32 high_5ghz_chan;
- 	const __le32 *service_map;
- 	size_t service_map_len;
- 	const struct wlan_host_mem_req *mem_reqs[WMI_MAX_MEM_REQS];
+-
+-	return brcmf_fweh_register(drvr, BRCMF_E_PSM_WATCHDOG,
+-				   brcmf_debug_psm_watchdog_notify);
++	return 0;
+ }
+ 
+ void brcmf_debug_detach(struct brcmf_pub *drvr)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 066126123e96..389166abb520 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -99,6 +99,7 @@ do {									\
+ 
+ extern int brcmf_msg_level;
+ 
++struct brcmf_bus;
+ struct brcmf_pub;
+ #ifdef DEBUG
+ void brcmf_debugfs_init(void);
+@@ -108,6 +109,8 @@ void brcmf_debug_detach(struct brcmf_pub *drvr);
+ struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
+ int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+ 			    int (*read_fn)(struct seq_file *seq, void *data));
++int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
++			       size_t len);
+ #else
+ static inline void brcmf_debugfs_init(void)
+ {
+@@ -128,6 +131,12 @@ int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+ {
+ 	return 0;
+ }
++static inline
++int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
++			       size_t len)
++{
++	return 0;
++}
+ #endif
+ 
+ #endif /* BRCMFMAC_DEBUG_H */
 -- 
-1.7.9.5
+2.11.0
