@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53356 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754273AbdBUSjG (ORCPT
+Received: from 3.mo4.mail-out.ovh.net ([46.105.57.129]:39465 "EHLO
+        3.mo4.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751218AbdBXNse (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 13:39:06 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: torvalds@linux-foundation.org, jikos@kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: ath10k regression on XPS13
-References: <alpine.LSU.2.20.1702201508280.24579@cbobk.fhfr.pm>
-        <CA+55aFxLmgA7drrGfUJmCRPT-A74ROYf6GQHFGO5pzVjZ0dL7Q@mail.gmail.com>
-        <87d1eb99dq.fsf_-_@purkki.adurom.net>
-        <20170221.131858.949421414784612398.davem@davemloft.net>
-Date: Tue, 21 Feb 2017 20:38:48 +0200
-In-Reply-To: <20170221.131858.949421414784612398.davem@davemloft.net> (David
-        Miller's message of "Tue, 21 Feb 2017 13:18:58 -0500 (EST)")
-Message-ID: <87y3wzbd8n.fsf@kamboji.qca.qualcomm.com> (sfid-20170221_193951_294567_AD9236F1)
+        Fri, 24 Feb 2017 08:48:34 -0500
+Received: from player746.ha.ovh.net (b6.ovh.net [213.186.33.56])
+        by mo4.mail-out.ovh.net (Postfix) with ESMTP id 1A63C4ABA1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 14:47:47 +0100 (CET)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Fri, 24 Feb 2017 14:47:38 +0100
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH 4.12] brcmfmac: put chip into passive mode (when
+ attaching) just once
+In-Reply-To: <cbcb8722-15bb-bf6e-f329-972797b02028@broadcom.com>
+References: <20170224131027.29880-1-zajec5@gmail.com>
+ <cbcb8722-15bb-bf6e-f329-972797b02028@broadcom.com>
+Message-ID: <64dc2b7028259129cb891a0b795d8c60@milecki.pl> (sfid-20170224_144838_139711_39E8991C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+On 2017-02-24 14:31, Arend Van Spriel wrote:
+> On 24-2-2017 14:10, Rafał Miłecki wrote:
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>> 
+>> It avoids some unnecessary work. Most likely there wasn't much sense 
+>> in
+>> doing this before bus reset anyway, as reset is supposed to put chip
+>> into default state. In PCIe code (only bus implementing reset) we e.g.
+>> use watchdog to perform a chip "reboot".
+> 
+> Sorry, but removing the fisrt passive call will cause chip lockups for
+> sure on certain systems. We learned the hard way :-p
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Tue, 21 Feb 2017 11:32:49 +0200
->
->> We are working on a fix so that ath10k continues to work with older
->> board-2.bin, but that might take a day or two still.
->
-> Kalle I really wanted to send my net-next pull request to Linus later
-> today.  But I guess I have to wait for this ath10k first.
->
-> Please get this to me as soon as possible, thanks.
+OK, acknowledged! ;) I just tested it on my BCM43602 doing warm reboots 
+(they
+were causing problems earlier) and it worked fine.
 
-We have a fix now but it's not really tested that well so I'm reluctant
-to submit it yet. As I don't want to make you wait I think I'll submit
-you a patch reverting f2593cb1b291 in an hour or two. And later in the
-week I send you a properly fixed (and tested) version of f2593cb1b291.
+It also seems I don't use SDK recent enough as my reference :)
 
-Does that sound ok to you?
-
--- 
-Kalle Valo
+Kalle please drop this patch.
