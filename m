@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43742 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753685AbdBNNer (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 08:34:47 -0500
-Message-ID: <1487079282.4705.16.camel@sipsolutions.net> (sfid-20170214_143810_381985_CB02C75D)
-Subject: Re: [RFC V2 1/5] nl80211: allow multiple active scheduled scan
- requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 14 Feb 2017 14:34:42 +0100
-In-Reply-To: <fbaa960e-b14a-e50c-c49e-913e823b1e74@broadcom.com> (sfid-20170214_143342_105651_593FDD48)
-References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1484566941-27000-2-git-send-email-arend.vanspriel@broadcom.com>
-         <1485250815.7244.8.camel@sipsolutions.net>
-         <fbaa960e-b14a-e50c-c49e-913e823b1e74@broadcom.com>
-         (sfid-20170214_143342_105651_593FDD48)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:34114 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751202AbdBXNbt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Feb 2017 08:31:49 -0500
+Received: by mail-qt0-f169.google.com with SMTP id n21so16526672qta.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 05:31:48 -0800 (PST)
+Subject: Re: [PATCH 4.12] brcmfmac: put chip into passive mode (when
+ attaching) just once
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170224131027.29880-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <cbcb8722-15bb-bf6e-f329-972797b02028@broadcom.com> (sfid-20170224_143626_399150_446FA8EC)
+Date: Fri, 24 Feb 2017 14:31:43 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170224131027.29880-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-02-14 at 14:33 +0100, Arend Van Spriel wrote:
-> On 24-1-2017 10:40, Johannes Berg wrote:
-> > > +	/* leave request id zero for legacy request
-> > > +	 * or if driver does not support multi-scheduled scan
-> > > +	 */
-> > > +	if (want_multi && rdev->wiphy.max_sched_scan_reqs > 1) {
-> > 
-> > Why do the >1 check here? It probably doesn't really make a
-> > difference
-> > since only one can be running at a time, but it might be nicer - at
-> > least for debug in userspace - to have a real value for all multi
-> > scans?
+On 24-2-2017 14:10, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> I added the check, because drivers not supporting multi-scheduled
-> scan might not bother using the request id in event reporting.
+> It avoids some unnecessary work. Most likely there wasn't much sense in
+> doing this before bus reset anyway, as reset is supposed to put chip
+> into default state. In PCIe code (only bus implementing reset) we e.g.
+> use watchdog to perform a chip "reboot".
 
-Ok, that's a good point.
+Sorry, but removing the fisrt passive call will cause chip lockups for
+sure on certain systems. We learned the hard way :-p
 
-johannes
+Regards,
+Arend
+
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+> index 05f22ff81d60..670f2f50f9e5 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+> @@ -967,16 +967,14 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
+>  	if (ret)
+>  		return ret;
+>  
+> -	/* assure chip is passive for core access */
+> -	brcmf_chip_set_passive(&ci->pub);
+> -
+>  	/* Call bus specific reset function now. Cores have been determined
+>  	 * but further access may require a chip specific reset at this point.
+>  	 */
+> -	if (ci->ops->reset) {
+> +	if (ci->ops->reset)
+>  		ci->ops->reset(ci->ctx, &ci->pub);
+> -		brcmf_chip_set_passive(&ci->pub);
+> -	}
+> +
+> +	/* assure chip is passive for core access */
+> +	brcmf_chip_set_passive(&ci->pub);
+>  
+>  	return brcmf_chip_get_raminfo(ci);
+>  }
+> 
