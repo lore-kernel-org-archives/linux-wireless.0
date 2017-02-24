@@ -1,95 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:36030 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753578AbdBUQQP (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36853 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751218AbdBXMgX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:15 -0500
-Received: by mail-lf0-f66.google.com with SMTP id 90so4026443lfr.3
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:14 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 01/21] ath10k: htc: made static function public
-Date: Tue, 21 Feb 2017 17:15:21 +0100
-Message-Id: <1487693741-10042-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_171648_232198_98392686)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 24 Feb 2017 07:36:23 -0500
+Received: by mail-lf0-f67.google.com with SMTP id p197so1377325lfp.3
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 04:36:22 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 4.12 2/2] brcmfmac: use more accurate PCIe chip names in fw table
+Date: Fri, 24 Feb 2017 13:27:39 +0100
+Message-Id: <20170224122739.1778-2-zajec5@gmail.com> (sfid-20170224_133742_482061_91D7EB4E)
+In-Reply-To: <20170224122739.1778-1-zajec5@gmail.com>
+References: <20170224122739.1778-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed ath10k_htc_notify_tx_completion and
-ath10k_htc_process_trailer from static to non static.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-These functions are needed by SDIO/mbox.
+Many chips have few variants/versions, e.g. BCM4366 can be 4366b1 or
+4366c0. Cutting name at the letter isn't a good idea as sometimes we may
+have e.g. a0 and a1.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+This is just a cosmetic change, a trivial cleanup. It obviously doesn't
+change fw filenames as we don't want to break user space.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/wireless/ath/ath10k/htc.c | 14 ++++++++------
- drivers/net/wireless/ath/ath10k/htc.h |  6 ++++++
- 2 files changed, 14 insertions(+), 6 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 9f6a915..35e67c4 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -57,8 +57,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
- 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 2a171479b42b..7039f7f09653 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -46,7 +46,7 @@ enum brcmf_pcie_state {
+ 	BRCMFMAC_PCIE_STATE_UP
+ };
  
--static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
--					    struct sk_buff *skb)
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb)
- {
- 	struct ath10k *ar = ep->htc->ar;
+-BRCMF_FW_NVRAM_DEF(43602, "brcmfmac43602-pcie.bin", "brcmfmac43602-pcie.txt");
++BRCMF_FW_NVRAM_DEF(43602a1, "brcmfmac43602-pcie.bin", "brcmfmac43602-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4350, "brcmfmac4350-pcie.bin", "brcmfmac4350-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4350C, "brcmfmac4350c2-pcie.bin", "brcmfmac4350c2-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-pcie.bin", "brcmfmac4356-pcie.txt");
+@@ -55,13 +55,13 @@ BRCMF_FW_NVRAM_DEF(4358, "brcmfmac4358-pcie.bin", "brcmfmac4358-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4359, "brcmfmac4359-pcie.bin", "brcmfmac4359-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4365B, "brcmfmac4365b-pcie.bin", "brcmfmac4365b-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4365C, "brcmfmac4365c-pcie.bin", "brcmfmac4365c-pcie.txt");
+-BRCMF_FW_NVRAM_DEF(4366B, "brcmfmac4366b-pcie.bin", "brcmfmac4366b-pcie.txt");
+-BRCMF_FW_NVRAM_DEF(4366C, "brcmfmac4366c-pcie.bin", "brcmfmac4366c-pcie.txt");
++BRCMF_FW_NVRAM_DEF(4366b1, "brcmfmac4366b-pcie.bin", "brcmfmac4366b-pcie.txt");
++BRCMF_FW_NVRAM_DEF(4366c0, "brcmfmac4366c-pcie.bin", "brcmfmac4366c-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
  
-@@ -75,6 +75,7 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFE, 43602),
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFE, 43602a1),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366c0),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0x000000FF, 4350C),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFF00, 4350),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43525_CHIP_ID, 0xFFFFFFF0, 4365C),
+@@ -73,8 +73,8 @@ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0x0000000F, 4365B),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFF0, 4365C),
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366b1),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366c0),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
+ };
  
- 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
- }
-+EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
- 
- static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 				      struct sk_buff *skb)
-@@ -227,10 +228,10 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
- 	spin_unlock_bh(&htc->tx_lock);
- }
- 
--static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
--				      u8 *buffer,
--				      int length,
--				      enum ath10k_htc_ep_id src_eid)
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid)
- {
- 	struct ath10k *ar = htc->ar;
- 	int status = 0;
-@@ -291,6 +292,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 
- 	return status;
- }
-+EXPORT_SYMBOL(ath10k_htc_process_trailer);
- 
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 6ababa3..f728ce7 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -351,5 +351,11 @@ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
- void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb);
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid);
- 
- #endif
 -- 
-2.7.4
+2.11.0
