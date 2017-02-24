@@ -1,85 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37840 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752641AbdBCOi1 (ORCPT
+Received: from mo68.mail-out.ovh.net ([178.32.228.68]:42090 "EHLO
+        mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751115AbdBXOUU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:38:27 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Golan Ben-Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:37:50 +0200
-Message-Id: <20170203143812.7525-4-luca@coelho.fi> (sfid-20170203_153831_102360_F9662DF1)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 03/25] iwlwifi: mvm: support v2 of mfuart load notification
+        Fri, 24 Feb 2017 09:20:20 -0500
+Received: from player750.ha.ovh.net (b6.ovh.net [213.186.33.56])
+        by mo68.mail-out.ovh.net (Postfix) with ESMTP id EC4673F5BC
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 14:44:09 +0100 (CET)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Fri, 24 Feb 2017 14:43:59 +0100
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH 4.12 1/2] brcmfmac: don't use 43602a1 firmware for 43602a0
+ chipset
+In-Reply-To: <c7c82c1f-df42-c4a2-4f1f-1ff4928590d1@broadcom.com>
+References: <20170224122739.1778-1-zajec5@gmail.com>
+ <c7c82c1f-df42-c4a2-4f1f-1ff4928590d1@broadcom.com>
+Message-ID: <6d84044d4d51bbe99492b3cf06b1cae1@milecki.pl> (sfid-20170224_152023_699495_ABD487CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben-Ami <golan.ben.ami@intel.com>
+On 2017-02-24 14:21, Arend Van Spriel wrote:
+> On 24-2-2017 13:27, Rafał Miłecki wrote:
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>> 
+>> 43602a0 uses chip revision 0 compared to 43602a1 with revision 1. In
+>> brcmfmac there is support for 43602a1 and from what I know supporting
+>> 43602a0 would require loading a different firmware.
+> 
+> This is not necessarily true. It depends on whether the rom image is
+> different or not and there is no way to tell up front. So if a0 has 
+> same
+> rom image as a1 the firmware is compatible and no distinction is 
+> needed.
+> This tends to be the case for chips that only change the digit and not
+> the letter in the chip revision. Anyway, I do not know if a0 has
+> different rom image, but the a0 was never sold so there is no harm in
+> keeping it as is.
 
-Add to the v1 of the mfuart loading notification, the size
-of the mfuart image, and write it to dmesg once the notification
-is received.
+Just to be sure (I don't have such a good hardware knowledge):
+1) Does ROM image mean some code that is permanently on the device?
+2) Does firmware mean code we upload from the host driver?
 
-Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h |  5 ++++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 21 +++++++++++++++------
- 2 files changed, 19 insertions(+), 7 deletions(-)
+I'm not sure if I understand the rest of your description.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 563b17796017..0b77073e719a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -1256,13 +1256,16 @@ struct iwl_missed_beacons_notif {
-  * @external_ver: external image version
-  * @status: MFUART loading status
-  * @duration: MFUART loading time
-+ * @image_size: MFUART image size in bytes
- */
- struct iwl_mfuart_load_notif {
- 	__le32 installed_ver;
- 	__le32 external_ver;
- 	__le32 status;
- 	__le32 duration;
--} __packed; /*MFU_LOADER_NTFY_API_S_VER_1*/
-+	/* image size valid only in v2 of the command */
-+	__le32 image_size;
-+} __packed; /*MFU_LOADER_NTFY_API_S_VER_2*/
- 
- /**
-  * struct iwl_set_calib_default_cmd - set default value for calibration.
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index dd8c8d8e9f18..3c70fb1199d7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1407,10 +1407,19 @@ void iwl_mvm_rx_mfuart_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_mfuart_load_notif *mfuart_notif = (void *)pkt->data;
- 
--	IWL_DEBUG_INFO(mvm,
--		       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x\n",
--		       le32_to_cpu(mfuart_notif->installed_ver),
--		       le32_to_cpu(mfuart_notif->external_ver),
--		       le32_to_cpu(mfuart_notif->status),
--		       le32_to_cpu(mfuart_notif->duration));
-+	if (iwl_rx_packet_payload_len(pkt) == sizeof(*mfuart_notif))
-+		IWL_DEBUG_INFO(mvm,
-+			       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x, image size: 0x%08x\n",
-+			       le32_to_cpu(mfuart_notif->installed_ver),
-+			       le32_to_cpu(mfuart_notif->external_ver),
-+			       le32_to_cpu(mfuart_notif->status),
-+			       le32_to_cpu(mfuart_notif->duration),
-+			       le32_to_cpu(mfuart_notif->image_size));
-+	else
-+		IWL_DEBUG_INFO(mvm,
-+			       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x\n",
-+			       le32_to_cpu(mfuart_notif->installed_ver),
-+			       le32_to_cpu(mfuart_notif->external_ver),
-+			       le32_to_cpu(mfuart_notif->status),
-+			       le32_to_cpu(mfuart_notif->duration));
- }
--- 
-2.11.0
+AFAIU first you said ROM image tends to be the same on chipset 
+variations using
+the same letter. If this is so, why we need different firmware for 
+43602a0 and
+43602a1? Or different firmware for 43570a0 and 43570a2?
+
+Also if what you said about sharing one ROM image between chip 
+variations using
+the same letter was correct, shouldn't you expect the same ROM image on 
+43602a0
+and 43602a1?
+
+Forgive me if something of this is obvious for you, I just don't have 
+access to
+any Broadcom internal documentation :)
