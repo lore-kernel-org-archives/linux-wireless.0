@@ -1,89 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:60128 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751582AbdBDBP6 (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:34206 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751301AbdBXWFa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 20:15:58 -0500
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        linux-wireless@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-nfc@ml01.01.org
-Subject: [PATCH resend 2/4] nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
-References: <871sveu579.fsf@mail.parknet.co.jp>
-Date: Sat, 04 Feb 2017 10:15:55 +0900
-In-Reply-To: <871sveu579.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
-        "Sat, 04 Feb 2017 10:15:22 +0900")
-Message-ID: <87wpd6sqlw.fsf@mail.parknet.co.jp> (sfid-20170204_021622_670013_3EE69EFE)
+        Fri, 24 Feb 2017 17:05:30 -0500
+Date: Fri, 24 Feb 2017 17:05:07 -0500
+From: Tahia Khan <tahia.khan@gmail.com>
+To: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 2/3] staging: wilc1000: Rename tstrRSSI members and change
+ type of u8Full to bool
+Message-ID: <e4e0e4da09635d0cb7ef43223022490b6de739a8.1487947616.git.tahia.khan@gmail.com> (sfid-20170224_230634_169755_CA8DE1AF)
+References: <cover.1487947616.git.tahia.khan@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1487947616.git.tahia.khan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove Hungarian notation and camel casing from all tstrRSSI members' 
+names. Additionally, change type of u8Full to bool since it only takes 
+values 1 or 0.
 
-Now, NFC_EVENT_DEVICE_ADDED doesn't send NFC_ATTR_RF_MODE. But
-NFC_CMD_GET_DEVICE send.
-
-To get NFC_ATTR_RF_MODE, we have to call NFC_CMD_GET_DEVICE just for
-NFC_ATTR_RF_MODE when get NFC_EVENT_DEVICE_ADDED.
-
-This fixes those inconsistent.
-
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
 ---
+ drivers/staging/wilc1000/coreconfigurator.h       |  6 +++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
- net/nfc/netlink.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff -puN net/nfc/netlink.c~nfc-send-same-info net/nfc/netlink.c
---- linux/net/nfc/netlink.c~nfc-send-same-info	2016-12-18 22:16:55.805686290 +0900
-+++ linux-hirofumi/net/nfc/netlink.c	2016-12-18 22:16:55.806686296 +0900
-@@ -311,6 +311,17 @@ free_msg:
- 	return -EMSGSIZE;
- }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 1c77529..9712d89 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -71,9 +71,9 @@ enum connect_status {
+ };
  
-+static int nfc_genl_setup_device_added(struct nfc_dev *dev, struct sk_buff *msg)
-+{
-+	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
-+	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
-+	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
-+	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
-+	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
-+		return -1;
-+	return 0;
-+}
-+
- int nfc_genl_device_added(struct nfc_dev *dev)
+ struct rssi_history_buffer {
+-	u8 u8Full;
+-	u8 u8Index;
+-	s8 as8RSSI[NUM_RSSI];
++	bool full;
++	u8 index;
++	s8 samples[NUM_RSSI];
+ };
+ 
+ struct network_info {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f7ce47c..9601ab8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -205,11 +205,11 @@ static u32 get_rssi_avg(struct network_info *network_info)
  {
- 	struct sk_buff *msg;
-@@ -325,10 +336,7 @@ int nfc_genl_device_added(struct nfc_dev
- 	if (!hdr)
- 		goto free_msg;
+ 	u8 i;
+ 	int rssi_v = 0;
+-	u8 num_rssi = (network_info->str_rssi.u8Full) ?
+-		       NUM_RSSI : (network_info->str_rssi.u8Index);
++	u8 num_rssi = (network_info->str_rssi.full) ?
++		       NUM_RSSI : (network_info->str_rssi.index);
  
--	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
--	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
--	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
--	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up))
-+	if (nfc_genl_setup_device_added(dev, msg))
- 		goto nla_put_failure;
+ 	for (i = 0; i < num_rssi; i++)
+-		rssi_v += network_info->str_rssi.as8RSSI[i];
++		rssi_v += network_info->str_rssi.samples[i];
  
- 	genlmsg_end(msg, hdr);
-@@ -604,11 +612,7 @@ static int nfc_genl_send_device(struct s
- 	if (cb)
- 		genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
- 
--	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
--	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
--	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
--	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
--	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
-+	if (nfc_genl_setup_device_added(dev, msg))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-_
+ 	rssi_v /= num_rssi;
+ 	return rssi_v;
+@@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	} else {
+ 		ap_index = ap_found;
+ 	}
+-	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
+-	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
++	rssi_index = last_scanned_shadow[ap_index].str_rssi.index;
++	last_scanned_shadow[ap_index].str_rssi.samples[rssi_index++] = pstrNetworkInfo->rssi;
+ 	if (rssi_index == NUM_RSSI) {
+ 		rssi_index = 0;
+-		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
++		last_scanned_shadow[ap_index].str_rssi.full = true;
+ 	}
+-	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
++	last_scanned_shadow[ap_index].str_rssi.index = rssi_index;
+ 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
+ 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
+ 	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
 -- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+2.7.4
