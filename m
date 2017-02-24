@@ -1,108 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52105 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932096AbdBHIWc (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58750 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751646AbdBXA3K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 03:22:32 -0500
-From: David Lin <dlin@marvell.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Steve deRosier <derosier@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Johannes Berg" <johannes@sipsolutions.net>,
-        Chor Teck Law <ctlaw@marvell.com>,
-        "James Lin" <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
-Date: Wed, 8 Feb 2017 07:55:08 +0000
-Message-ID: <4b33da1fb23a476ca5bc21eb74f1ffd2@SC-EXCH02.marvell.com> (sfid-20170208_092245_325365_2FC55939)
-References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
- <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
- <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
- <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com>
- <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
- <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com>
- <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
- <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com>
- <CACna6rwE1YE6bokFehgRNsyRGNGORbrYcnuUR-df286h0K4KXw@mail.gmail.com>
-In-Reply-To: <CACna6rwE1YE6bokFehgRNsyRGNGORbrYcnuUR-df286h0K4KXw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Thu, 23 Feb 2017 19:29:10 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 102/306] mac80211-hwsim: enable better rx-status when using netlink.
+Date: Thu, 23 Feb 2017 16:28:26 -0800
+Message-Id: <1487896109-23851-4-git-send-email-greearb@candelatech.com> (sfid-20170224_012923_520729_BEBC6FBE)
+In-Reply-To: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
+References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBSYWZhxYIgTWnFgmVja2kgW21haWx0bzp6YWplYzVAZ21haWwuY29tXSB3b3J0ZTog
-DQo+IE9uIDggRmVicnVhcnkgMjAxNyBhdCAwODoyOCwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwu
-Y29tPiB3cm90ZToNCj4gPj4gRnJvbTogUmFmYcWCIE1pxYJlY2tpIFttYWlsdG86emFqZWM1QGdt
-YWlsLmNvbV0gd29ydGU6DQo+ID4+IFNlbnQ6IFdlZG5lc2RheSwgRmVicnVhcnkgMDgsIDIwMTcg
-MzoyNCBQTSBPbiA4IEZlYnJ1YXJ5IDIwMTcgYXQNCj4gPj4gMDc6MzAsIERhdmlkIExpbiA8ZGxp
-bkBtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+ID4+ID4gc3RldmUuZGVyb3NpZXJAZ21haWwuY29tIFtt
-YWlsdG86c3RldmUuZGVyb3NpZXJAZ21haWwuY29tXSB3cm90ZToNCj4gPj4gPj4gT24gVHVlLCBG
-ZWIgNywgMjAxNyBhdCAxMDoxNSBQTSwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPiB3cm90
-ZToNCj4gPj4gPj4gPj4gUmFmYcWCIE1pxYJlY2tpIFttYWlsdG86emFqZWM1QGdtYWlsLmNvbV0g
-d3JvdGU6DQo+ID4+ID4+ID4+IFBsZWFzZSB1c2UgaWVlZTgwMjExLWZyZXEtbGltaXQ6DQo+ID4+
-ID4+ID4+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2RhdmVt
-L25ldC1uZXh0LmdpdA0KPiA+PiA+PiA+PiAvY28NCj4gPj4gPj4gPj4gbW1pDQo+ID4+ID4+ID4+
-IHQvP2lkPWIzDQo+ID4+ID4+ID4+IDMwYjI1ZWFhYmRhMDBkNzRlNDc1NjZkOTIwMDkwN2RhMzgx
-ODk2DQo+ID4+ID4+ID4+DQo+ID4+ID4+ID4+IE1vc3QgbGlrZWx5IHdpdGggd2lwaHlfcmVhZF9v
-Zl9mcmVxX2xpbWl0cyBoZWxwZXI6DQo+ID4+ID4+ID4+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcv
-Y2dpdC9saW51eC9rZXJuZWwvZ2l0L2RhdmVtL25ldC1uZXh0LmdpdA0KPiA+PiA+PiA+PiAvY28N
-Cj4gPj4gPj4gPj4gbW1pDQo+ID4+ID4+ID4+IHQvP2lkPWU2DQo+ID4+ID4+ID4+IDkxYWMyZjc1
-YjY5YmVlNzQzZjAzNzBkNzk0NTRiYTQ0MjliMTc1DQo+ID4+ID4+ID4NCj4gPj4gPj4gPiBJIGFs
-cmVhZHkgcmVwbGllZCBtZWFuaW5nIG9mIHRoZXNlIHBhcmFtZXRlcnM6DQo+ID4+ID4+ID4gPG1h
-cnZlbGwsMmdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDJnIGJhbmQuDQo+ID4+ID4+ID4gPG1hcnZl
-bGwsNWdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDVnIGJhbmQuDQo+ID4+ID4+ID4gPG1hcnZlbGws
-IGNoYWlubWFzaz4gaXMgdXNlZCB0byBzcGVjaWZ5IGFudGVubmEgbnVtYmVyIChpZg0KPiA+PiA+
-PiA+IGRlZmF1bHQgbnVtYmVyDQo+ID4+ID4+IGlzIHN1aXRhYmxlIGZvciB5b3UsIHRoZXJlIGlz
-IG5vIG5lZWQgdG8gdXNlIHRoaXMgcGFyYW1ldGVyKS4NCj4gPj4gPj4gPiA8bWFydmVsbCxwb3dl
-cnRhYmxlPiBzaG91bGQgbm90IGJlIHVzZWQgZm9yIGNoaXAgd2l0aCBkZXZpY2UNCj4gPj4gPj4g
-PiBwb3dlcg0KPiA+PiB0YWJsZS4NCj4gPj4gPj4gSW4gZmFjdCwgdGhpcyBwYXJhbWV0ZXIgc2hv
-dWxkIG5vdCBiZSB1c2VkIGFueSBtb3JlLg0KPiA+PiA+PiA+DQo+ID4+ID4+DQo+ID4+ID4+IERh
-dmlkLCBJIHRoaW5rIHlvdSdyZSBub3QgdW5kZXJzdGFuZGluZyB0aGUgY29tbWVudCwgb3IgYXQg
-bGVhc3QNCj4gPj4gPj4gdGhhdCdzIHdoYXQgaXQgbG9va3MgbGlrZSB0byBtZS4gWWVzLCB5b3Ug
-ZGlkIHJlcGx5IGFzIHRvIHRoZSBtZWFuaW5nLg0KPiA+PiA+PiBBbmQsIHlvdXIgcmVwbHksIHdo
-aWxlIGluZm9ybWF0aXZlLCBkaWRuJ3QgdGVsbCB1cyB5b3UgdW5kZXJzdG9vZA0KPiA+PiA+PiBh
-bmQgd2VyZSB3aWxsaW5nIHRvIGZpeCB0aGUgcHJvYmxlbS4gSSBkb3VidCB5b3UgbWVhbnQgaXQg
-dGhpcw0KPiA+PiA+PiB3YXksIGJ1dCBpdCBmZWVscyBkZWZlbnNpdmUgYW5kIGxpa2UgYSBicnVz
-aC1vZmYuDQo+ID4+ID4+DQo+ID4+ID4+IEZpcnN0IG9mZiwgeW91IHdpbGwgc3RpbGwgaGF2ZSB0
-byBkb2N1bWVudCBhbnkgRFQgYmluZGluZ3MgeW91J3JlDQo+ID4+ID4+IGFkZGluZy4gSnVzdCBi
-ZWNhdXNlIHlvdSBhbnN3ZXIgdGhlIHF1ZXN0aW9uIGluIHRoZSByZXZpZXcgZG9lc24ndA0KPiA+
-PiA+PiBtZWFuIHlvdSdyZSBub3QgcmVzcG9uc2libGUgZm9yIGRvaW5nIHNvLg0KPiA+PiA+Pg0K
-PiA+PiA+PiBBbmQgc2Vjb25kIG9mZiwgSSB0aGluayB0aGF0IFJhZmFsIChhbmQgc29ycnkgYWJv
-dXQgbXkgc3BlbGxpbmcsDQo+ID4+ID4+IGxvb2tzIGxpa2UgdGhlcmUncyBzb21lIHNvcnQgb2Yg
-YWNjZW50IG9uIHRoZSBsIHRoYXQgSSBkb24ndCBrbm93DQo+ID4+ID4+IGhvdyB0byBtYWtlIG15
-IGtleWJvYXJkIGRvKSBpcyBzYXlpbmc6IHRoZXJlJ3MgYWxyZWFkeSBzb21lDQo+ID4+ID4+IGdl
-bmVyaWMgYmluZGluZ3MgdGhhdCBjYW4gYmUgdXNlZCB0byBkaXNhYmxlIHRoZSAyZyBvciA1ZyBi
-YW5kcy4NCj4gPj4gPj4gR3JhbnRlZCB0aGV5J3JlIGV2ZW4gbmV3ZXIgdGhhbiB5b3VyIHBhdGNo
-LCBidXQgSSBkbyB0aGluayBpZiBzYWlkDQo+ID4+ID4+IGJpbmRpbmdzIGV4aXN0IGFuZA0KPiA+
-PiBhcmUgYXBwcm9wcmlhdGUsIHlvdSBzaG91bGQgdXNlIHRoZW0uDQo+ID4+ID4+DQo+ID4+ID4+
-IC0gU3RldmUNCj4gPj4gPg0KPiA+PiA+IFRoZXNlIHBhcmFtZXRlcnMgYXJlIG1hcnZlbGwgcHJv
-cHJpZXRhcnkgcGFyYW1ldGVycywgSSBkb24ndCB0aGluaw0KPiA+PiA+IGl0IHNob3VsZA0KPiA+
-PiBiZSBhZGRlZCB0byBEVCBiaW5kaW5ncy4NCj4gPj4NCj4gPj4gU3RldmUgaXMgY29ycmVjdC4N
-Cj4gPj4NCj4gPj4gWW91IGhhdmUgdG8gZG9jdW1lbnQgbmV3IHByb3BlcnRpZXMsIGp1c3QgYmVj
-YXVzZSB0aGV5IGFyZSBNYXJ2ZWxsDQo+ID4+IHNwZWNpZmljIGRvZXNuJ3QgY2hhbmdlIGFueXRo
-aW5nLiBZb3UganVzdCBkb2N1bWVudCB0aGVtIGluIGEgcHJvcGVyDQo+IHBsYWNlLg0KPiA+Pg0K
-PiA+DQo+ID4gQWxsIHJpZ2h0LiBJIHdpbGwgZG8gdGhhdC4NCj4gPg0KPiA+Pg0KPiA+PiA+IEJU
-VywgPG1hcnZlbGwsMmdoej4gYW5kIDxtYXJ2ZWxsLDVnaHo+IGFyZSBvbmx5IHVzZWQgZm9yIG13
-bHdpZmkgdG8NCj4gPj4gPiByZXBvcnQNCj4gPj4gc3VwcG9ydGVkIGJhbmRzLCBpdCBpcyBub3Qg
-cmVsYXRlZCB0byBsaW1pdGF0aW9uIG9mIGZyZXF1ZW5jeS4NCj4gPj4NCj4gPj4gSG93IHJlcG9y
-dGluZyBhIHNpbmdsZSBiYW5kIGRvZXNuJ3QgbGltaXQgcmVwb3J0ZWQgZnJlcXVlbmNpZXM/IFlv
-dQ0KPiA+PiBjYW4gYWNoaWV2ZSBleGFjdGx5IHRoZSBzYW1lIHVzaW5nIGdlbmVyaWMgcHJvcGVy
-dHksIHNvIHRoZXJlIGlzIG5vDQo+ID4+IHBsYWNlIGZvciBNYXJ2ZWxsIHNwZWNpZmljIG9uZXMu
-DQo+ID4+DQo+ID4+IEluIGZhY3QgdGhlcmUgd2VyZSBkcml2ZXJzIG9mIDMgdmVuZG9ycyByZXF1
-aXJpbmcgYmFuZC9mcmVxLXJlbGF0ZWQNCj4gPj4gZGVzY3JpcHRpb24gaW4gRFQ6IEJyb2FkY29t
-LCBNYXJ2ZWxsICYgTWVkaWF0ZWsuIFRoaXMgcHJvcGVydHkgd2FzDQo+ID4+IGRpc2N1c3NlZCAm
-IGRlc2lnbmVkIHRvIHN1cHBvcnQgYWxsIGxpbWl0YXRpb24gY2FzZXMgd2UgZm91bmQNCj4gPj4g
-cG9zc2libGUgdG8gbWFrZSBpdCB1c2FibGUgd2l0aA0KPiA+PiAoaG9wZWZ1bGx5KSBhbGwgZHJp
-dmVycy4NCj4gPj4NCj4gPg0KPiA+IEkgb25seSBuZWVkIHNpbXBsZSB3YXkgdG8gZGlzYWJsZSAy
-ZyBvciA1ZyBiYW5kLiBJIHdpbGwgZm9sbG93IHlvdXIgc3VnZ2VzdGlvbg0KPiB0byBkb2N1bWVu
-dCB0aGVzZSBtYXJ2ZWxsIHByb3ByaWV0YXJ5IHBhcmFtZXRlcnMuDQo+IA0KPiBTZXJpb3VzbHk/
-IFJlZnVzaW5nIHRvIHVzZSBnZW5lcmljIGJpbmRpbmcgYmVjYXVzZSB5b3UgdGhpbmsgbWFydmVs
-bCw1Z2h6OyBpcw0KPiBzaW1wbGVyIHRoYW4gaWVlZTgwMjExLWZyZXEtbGltaXQgPSA8MjQwMjAw
-MCAyNDgyMDAwPjsgKG5vdCB0byBtZW50aW9uIHlvdXINCj4gcHJvcGVydHkgc2VlbXMgcmV2ZXJz
-ZWQhKT8NCj4gDQo+IEkgZG9uJ3Qga25vdyBob3cgZWxzZSB0byBleHBsYWluIHRoaXMgdG8geW91
-LiBXZSBkb24ndCB3YW50IGR1cGxpY2F0ZWQNCj4gcHJvcGVydGllcyB3aGVyZSBvbmUgY2FuIHdv
-cmsuIEp1c3QgdXNlIGV4aXN0aW5nIG9uZS4gRG9uJ3QgYWRkIG5ldyBvbmUgZXZlbg0KPiBpZiBk
-b2N1bWVudGVkLg0KPiANCg0KQWxsIHJpZ2h0LiBJIHdpbGwgY2hlY2sgYW5kIGxldCBwYXRjaCB2
-MTAgdG8gdXNlIGl0LiBGb3IgcHJldmlvdXMgcGFyYW1ldGVycywgdGhleSB3aWxsIG9ubHkgYmUg
-dXNlZCBieSBwcmV2aW91cyBPcGVuV3J0IHByb2plY3RzLg0KDQpUaGFua3MsDQpEYXZpZA0KDQo+
-IC0tDQo+IFJhZmHFgg0K
+From: Ben Greear <greearb@candelatech.com>
+
+This allows proper rx-status reporting for packets received
+from the netlink api.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 10 ++++++++++
+ drivers/net/wireless/mac80211_hwsim.h | 18 ++++++++++++++++++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 853c7ae..8d494ac 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3068,6 +3068,16 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	rx_status.rate_idx = nla_get_u32(info->attrs[HWSIM_ATTR_RX_RATE]);
+ 	rx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
+ 
++	if (info->attrs[HWSIM_ATTR_RX_INFO]) {
++		struct hwsim_rx_info *r;
++		r = (struct hwsim_rx_info *)nla_data(
++			info->attrs[HWSIM_ATTR_RX_INFO]);
++		rx_status.flag = r->rx_flags;
++		rx_status.vht_flag = r->vht_flags;
++		rx_status.vht_nss = r->vht_nss;
++		rx_status.ampdu_reference = r->ampdu_reference;
++	}
++
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
+ 	data2->rx_pkts++;
+ 	data2->rx_bytes += skb->len;
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 480c0a7..d9dd2f8 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -130,6 +130,7 @@ enum {
+  * @HWSIM_ATTR_NO_VIF:  Do not create vif (wlanX) when creating radio.
+  * @HWSIM_ATTR_FREQ: Frequency at which packet is transmitted or received.
+  * @HWSIM_ATTR_TX_INFO2: hwsim_tx_rate2 array
++ * @HWSIM_ATTR_RX_INFO: hwsim_rx_info
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -157,6 +158,7 @@ enum {
+ 	HWSIM_ATTR_FREQ,
+ 	HWSIM_ATTR_PAD,
+ 	HWSIM_ATTR_TX_INFO2,
++	HWSIM_ATTR_RX_INFO,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+@@ -185,4 +187,20 @@ struct hwsim_tx_rate2 {
+ 	s16 power_level;
+ } __packed;
+ 
++/**
++ * This relates to the ieee80211_rx_status struct in mac80211.h
++ * @rx_flags: %RX_FLAG_* (see  mac80211_rx_flags)
++ * @vht_flags: %RX_VHT_FLAG_*
++ * @vht_nss: number of streams (VHT only)
++ * @ampdu_reference: A-MPDU reference number, must be a different value for
++ *	each A-MPDU but the same for each subframe within one A-MPDU
++ */
++struct hwsim_rx_info {
++	u32 rx_flags;
++	u8 vht_flags;
++	u8 vht_nss;
++	u16 unused_pad; /* pad to 32-bits, and space for growth */
++	u32 ampdu_reference;
++} __packed;
++
+ #endif /* __MAC80211_HWSIM_H */
+-- 
+2.4.11
