@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39406 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751654AbdBHQXK (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35738 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751292AbdBXWFa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 11:23:10 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  8 Feb 2017 17:51:48 +0200
-Message-Id: <20170208155149.1704-8-luca@coelho.fi> (sfid-20170208_172313_995409_1DF78C62)
-In-Reply-To: <20170208155149.1704-1-luca@coelho.fi>
-References: <20170208112322.29413-1-luca@coelho.fi>
- <20170208155149.1704-1-luca@coelho.fi>
-Subject: [PATCH 16/17] iwlwifi: mvm: Fix removal of IGTK
+        Fri, 24 Feb 2017 17:05:30 -0500
+Date: Fri, 24 Feb 2017 17:05:04 -0500
+From: Tahia Khan <tahia.khan@gmail.com>
+To: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 1/3] staging: wilc1000: Rename struct tstrRSSI to
+ rssi_history_buffer
+Message-ID: <da73d1aef379243ba94a5c1a4e1d6663160451fd.1487947616.git.tahia.khan@gmail.com> (sfid-20170224_230633_613621_D814709E)
+References: <cover.1487947616.git.tahia.khan@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1487947616.git.tahia.khan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Rename struct tstrRSSI to rssi_history_buffer for clarity 
+and to remove camel casing.
 
-When removing an IGTK, iwl_mvm_send_sta_igtk() was
-called before station ID was retrieved, so the function
-was invoked with an invalid station ID. Fix this by first
-getting the station ID.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=192411
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 1bad933b3ad4..c35fabdf85da 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -3047,6 +3047,11 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index cff1698..1c77529 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -70,7 +70,7 @@ enum connect_status {
+ 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
+ };
  
- 	/* Get the station from the mvm local station table */
- 	mvm_sta = iwl_mvm_get_key_sta(mvm, vif, sta);
-+	if (!mvm_sta) {
-+		IWL_ERR(mvm, "Failed to find station\n");
-+		return -EINVAL;
-+	}
-+	sta_id = mvm_sta->sta_id;
+-struct tstrRSSI {
++struct rssi_history_buffer {
+ 	u8 u8Full;
+ 	u8 u8Index;
+ 	s8 as8RSSI[NUM_RSSI];
+@@ -93,7 +93,7 @@ struct network_info {
+ 	u8 *ies;
+ 	u16 ies_len;
+ 	void *join_params;
+-	struct tstrRSSI str_rssi;
++	struct rssi_history_buffer str_rssi;
+ 	u64 tsf_hi;
+ };
  
- 	IWL_DEBUG_WEP(mvm, "mvm remove dynamic key: idx=%d sta=%d\n",
- 		      keyconf->keyidx, sta_id);
-@@ -3074,8 +3079,6 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
- 		return 0;
- 	}
- 
--	sta_id = mvm_sta->sta_id;
--
- 	ret = __iwl_mvm_remove_sta_key(mvm, sta_id, keyconf, mcast);
- 	if (ret)
- 		return ret;
 -- 
-2.11.0
+2.7.4
