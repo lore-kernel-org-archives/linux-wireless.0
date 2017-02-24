@@ -1,91 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33530 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751621AbdBUJsG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 04:48:06 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V3 2/2] brcmfmac: don't warn user about NVRAM if fallback to platform one succeeds
-Date: Tue, 21 Feb 2017 10:47:54 +0100
-Message-Id: <20170221094754.15406-2-zajec5@gmail.com> (sfid-20170221_104855_935464_C3963B27)
-In-Reply-To: <20170221094754.15406-1-zajec5@gmail.com>
-References: <20170216072636.7128-1-zajec5@gmail.com>
- <20170221094754.15406-1-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:42440 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750949AbdBXGmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Feb 2017 01:42:35 -0500
+Message-ID: <1487918553.2540.9.camel@sipsolutions.net> (sfid-20170224_074240_470028_BA473F7E)
+Subject: Re: [PATCH 161/306] mac80211-hwsim: Improve logging.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date: Fri, 24 Feb 2017 07:42:33 +0100
+In-Reply-To: <1487896109-23851-6-git-send-email-greearb@candelatech.com> (sfid-20170224_012924_068303_22EAD8CA)
+References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
+         <1487896109-23851-6-git-send-email-greearb@candelatech.com>
+         (sfid-20170224_012924_068303_22EAD8CA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
 
-Failing to load NVRAM file isn't critical if we manage to get platform
-one in the fallback path. It means warnings like:
-[   10.801506] brcmfmac 0000:01:00.0: Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error -2
-are unnecessary & disturbing for people with platform NVRAM. This is
-very common case for Broadcom home routers.
+> +		static unsigned int cnt = 0;
+> +		/* This is fairly common, and usually not a
+> bug.  So, print errors
+> +		   rarely. */
+> +		if (((cnt++ & 0x3FF) == 0x3FF) && net_ratelimit())
+> +			printk(KERN_DEBUG " hwsim rx-nl: radio %pM
+> idle: %d or not started: %d cnt: %d\n",
+> +			       dst, data2->idle, !data2->started,
+> cnt);
+>  		goto out;
+>  	}
 
-So instead of printing warning immediately with the firmware subsystem
-let's first try our fallback code. If that fails as well, then it's a
-right moment to print an error.
+You just added that in the previous patch...
 
-This should reduce amount of false reports from users seeing this
-warning while having wireless working perfectly fine.
+Please take a bit more care, or I'll eventually stop looking at your
+patches since things like that seem to happen over and over again. I
+don't get a feeling that you actually care about getting things
+upstream much anyway.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V2: Update commit message as it wasn't clear enough (thanks Andy) & add extra
-    messages to the firmware.c.
-V3: Set FW_OPT_UEVENT to don't change behavior
-
-Kalle, Arend: this patch is strictly related to the bigger 1/2. Could you ack
-this change as I expect this patchset to be picked by Ming, Luis or Greg?
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index c7c1e9906500..6dbcceff2529 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -462,8 +462,14 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 		raw_nvram = false;
- 	} else {
- 		data = bcm47xx_nvram_get_contents(&data_len);
--		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
--			goto fail;
-+		if (!data) {
-+			brcmf_dbg(TRACE, "Failed to get platform NVRAM\n");
-+			if (!(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL)) {
-+				brcmf_err("Loading NVRAM from %s and using platform one both failed\n",
-+					  fwctx->nvram_name);
-+				goto fail;
-+			}
-+		}
- 		raw_nvram = true;
- 	}
- 
-@@ -504,9 +510,10 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- 		return;
- 	}
- 	fwctx->code = fw;
--	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
--				      fwctx->dev, GFP_KERNEL, fwctx,
--				      brcmf_fw_request_nvram_done);
-+	ret = request_firmware_async(THIS_MODULE,
-+				     FW_OPT_UEVENT | FW_OPT_NO_WARN,
-+				     fwctx->nvram_name, fwctx->dev, GFP_KERNEL,
-+				     fwctx, brcmf_fw_request_nvram_done);
- 
- 	if (!ret)
- 		return;
--- 
-2.11.0
+johannes
