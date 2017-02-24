@@ -1,90 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49049 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753481AbdBHHaG (ORCPT
+Received: from mail-wr0-f176.google.com ([209.85.128.176]:34940 "EHLO
+        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751001AbdBXIIU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 02:30:06 -0500
-From: David Lin <dlin@marvell.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Steve deRosier <derosier@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Johannes Berg" <johannes@sipsolutions.net>,
-        Chor Teck Law <ctlaw@marvell.com>,
-        "James Lin" <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
-Date: Wed, 8 Feb 2017 07:28:41 +0000
-Message-ID: <8492870c897543a1b3c635a96f1066cb@SC-EXCH02.marvell.com> (sfid-20170208_083012_480009_46409A53)
-References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
- <CALLGbRLXa5m+eRhZpvWKyXkemB0qAkB=eoQKwns-vP29+izV+Q@mail.gmail.com>
- <CACna6rzKWAz_xxi=ehKijGtM4XEcioSjwmb=V0rq_vKioiS=Ew@mail.gmail.com>
- <3e57f30c29254db4a906e3e71ac36da5@SC-EXCH02.marvell.com>
- <CALLGbRJ9h5fvS+DLOBGTcejW8yiwFW-xey+TaubauH2rZuVWwQ@mail.gmail.com>
- <def0e631e44d4b44a87124a5b530d6ec@SC-EXCH02.marvell.com>
- <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
-In-Reply-To: <CACna6rz8chrPU+yZC0xakKVeLFm8fgpDoSFP_Vyo8mH1C+DCzQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 24 Feb 2017 03:08:20 -0500
+Received: by mail-wr0-f176.google.com with SMTP id g10so6180175wrg.2
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2017 00:08:19 -0800 (PST)
+Subject: Re: [RFC v2 2/2] cfg80211: support 4-way handshake offloading for
+ 802.1X
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170221123758.5339-1-johannes@sipsolutions.net>
+ <20170221123758.5339-2-johannes@sipsolutions.net>
+Cc: Avraham Stern <avraham.stern@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <177c53b2-cd5f-97a9-26b0-b590071785cb@broadcom.com> (sfid-20170224_090825_958868_6C9757BC)
+Date: Fri, 24 Feb 2017 09:08:12 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170221123758.5339-2-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBSYWZhxYIgTWnFgmVja2kgW21haWx0bzp6YWplYzVAZ21haWwuY29tXSB3b3J0ZToN
-Cj4gU2VudDogV2VkbmVzZGF5LCBGZWJydWFyeSAwOCwgMjAxNyAzOjI0IFBNDQo+IE9uIDggRmVi
-cnVhcnkgMjAxNyBhdCAwNzozMCwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPiB3cm90ZToN
-Cj4gPiBzdGV2ZS5kZXJvc2llckBnbWFpbC5jb20gW21haWx0bzpzdGV2ZS5kZXJvc2llckBnbWFp
-bC5jb21dIHdyb3RlOg0KPiA+PiBPbiBUdWUsIEZlYiA3LCAyMDE3IGF0IDEwOjE1IFBNLCBEYXZp
-ZCBMaW4gPGRsaW5AbWFydmVsbC5jb20+IHdyb3RlOg0KPiA+PiA+PiBSYWZhxYIgTWnFgmVja2kg
-W21haWx0bzp6YWplYzVAZ21haWwuY29tXSB3cm90ZToNCj4gPj4gPj4gUGxlYXNlIHVzZSBpZWVl
-ODAyMTEtZnJlcS1saW1pdDoNCj4gPj4gPj4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xp
-bnV4L2tlcm5lbC9naXQvZGF2ZW0vbmV0LW5leHQuZ2l0L2NvDQo+ID4+ID4+IG1taQ0KPiA+PiA+
-PiB0Lz9pZD1iMw0KPiA+PiA+PiAzMGIyNWVhYWJkYTAwZDc0ZTQ3NTY2ZDkyMDA5MDdkYTM4MTg5
-Ng0KPiA+PiA+Pg0KPiA+PiA+PiBNb3N0IGxpa2VseSB3aXRoIHdpcGh5X3JlYWRfb2ZfZnJlcV9s
-aW1pdHMgaGVscGVyOg0KPiA+PiA+PiBodHRwczovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgv
-a2VybmVsL2dpdC9kYXZlbS9uZXQtbmV4dC5naXQvY28NCj4gPj4gPj4gbW1pDQo+ID4+ID4+IHQv
-P2lkPWU2DQo+ID4+ID4+IDkxYWMyZjc1YjY5YmVlNzQzZjAzNzBkNzk0NTRiYTQ0MjliMTc1DQo+
-ID4+ID4NCj4gPj4gPiBJIGFscmVhZHkgcmVwbGllZCBtZWFuaW5nIG9mIHRoZXNlIHBhcmFtZXRl
-cnM6DQo+ID4+ID4gPG1hcnZlbGwsMmdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDJnIGJhbmQuDQo+
-ID4+ID4gPG1hcnZlbGwsNWdoej4gaXMgdXNlZCB0byBkaXNhYmxlIDVnIGJhbmQuDQo+ID4+ID4g
-PG1hcnZlbGwsIGNoYWlubWFzaz4gaXMgdXNlZCB0byBzcGVjaWZ5IGFudGVubmEgbnVtYmVyIChp
-ZiBkZWZhdWx0DQo+ID4+ID4gbnVtYmVyDQo+ID4+IGlzIHN1aXRhYmxlIGZvciB5b3UsIHRoZXJl
-IGlzIG5vIG5lZWQgdG8gdXNlIHRoaXMgcGFyYW1ldGVyKS4NCj4gPj4gPiA8bWFydmVsbCxwb3dl
-cnRhYmxlPiBzaG91bGQgbm90IGJlIHVzZWQgZm9yIGNoaXAgd2l0aCBkZXZpY2UgcG93ZXINCj4g
-dGFibGUuDQo+ID4+IEluIGZhY3QsIHRoaXMgcGFyYW1ldGVyIHNob3VsZCBub3QgYmUgdXNlZCBh
-bnkgbW9yZS4NCj4gPj4gPg0KPiA+Pg0KPiA+PiBEYXZpZCwgSSB0aGluayB5b3UncmUgbm90IHVu
-ZGVyc3RhbmRpbmcgdGhlIGNvbW1lbnQsIG9yIGF0IGxlYXN0DQo+ID4+IHRoYXQncyB3aGF0IGl0
-IGxvb2tzIGxpa2UgdG8gbWUuIFllcywgeW91IGRpZCByZXBseSBhcyB0byB0aGUgbWVhbmluZy4N
-Cj4gPj4gQW5kLCB5b3VyIHJlcGx5LCB3aGlsZSBpbmZvcm1hdGl2ZSwgZGlkbid0IHRlbGwgdXMg
-eW91IHVuZGVyc3Rvb2QgYW5kDQo+ID4+IHdlcmUgd2lsbGluZyB0byBmaXggdGhlIHByb2JsZW0u
-IEkgZG91YnQgeW91IG1lYW50IGl0IHRoaXMgd2F5LCBidXQNCj4gPj4gaXQgZmVlbHMgZGVmZW5z
-aXZlIGFuZCBsaWtlIGEgYnJ1c2gtb2ZmLg0KPiA+Pg0KPiA+PiBGaXJzdCBvZmYsIHlvdSB3aWxs
-IHN0aWxsIGhhdmUgdG8gZG9jdW1lbnQgYW55IERUIGJpbmRpbmdzIHlvdSdyZQ0KPiA+PiBhZGRp
-bmcuIEp1c3QgYmVjYXVzZSB5b3UgYW5zd2VyIHRoZSBxdWVzdGlvbiBpbiB0aGUgcmV2aWV3IGRv
-ZXNuJ3QNCj4gPj4gbWVhbiB5b3UncmUgbm90IHJlc3BvbnNpYmxlIGZvciBkb2luZyBzby4NCj4g
-Pj4NCj4gPj4gQW5kIHNlY29uZCBvZmYsIEkgdGhpbmsgdGhhdCBSYWZhbCAoYW5kIHNvcnJ5IGFi
-b3V0IG15IHNwZWxsaW5nLA0KPiA+PiBsb29rcyBsaWtlIHRoZXJlJ3Mgc29tZSBzb3J0IG9mIGFj
-Y2VudCBvbiB0aGUgbCB0aGF0IEkgZG9uJ3Qga25vdyBob3cNCj4gPj4gdG8gbWFrZSBteSBrZXli
-b2FyZCBkbykgaXMgc2F5aW5nOiB0aGVyZSdzIGFscmVhZHkgc29tZSBnZW5lcmljDQo+ID4+IGJp
-bmRpbmdzIHRoYXQgY2FuIGJlIHVzZWQgdG8gZGlzYWJsZSB0aGUgMmcgb3IgNWcgYmFuZHMuIEdy
-YW50ZWQNCj4gPj4gdGhleSdyZSBldmVuIG5ld2VyIHRoYW4geW91ciBwYXRjaCwgYnV0IEkgZG8g
-dGhpbmsgaWYgc2FpZCBiaW5kaW5ncyBleGlzdCBhbmQNCj4gYXJlIGFwcHJvcHJpYXRlLCB5b3Ug
-c2hvdWxkIHVzZSB0aGVtLg0KPiA+Pg0KPiA+PiAtIFN0ZXZlDQo+ID4NCj4gPiBUaGVzZSBwYXJh
-bWV0ZXJzIGFyZSBtYXJ2ZWxsIHByb3ByaWV0YXJ5IHBhcmFtZXRlcnMsIEkgZG9uJ3QgdGhpbmsg
-aXQgc2hvdWxkDQo+IGJlIGFkZGVkIHRvIERUIGJpbmRpbmdzLg0KPiANCj4gU3RldmUgaXMgY29y
-cmVjdC4NCj4gDQo+IFlvdSBoYXZlIHRvIGRvY3VtZW50IG5ldyBwcm9wZXJ0aWVzLCBqdXN0IGJl
-Y2F1c2UgdGhleSBhcmUgTWFydmVsbCBzcGVjaWZpYw0KPiBkb2Vzbid0IGNoYW5nZSBhbnl0aGlu
-Zy4gWW91IGp1c3QgZG9jdW1lbnQgdGhlbSBpbiBhIHByb3BlciBwbGFjZS4NCj4gDQoNCkFsbCBy
-aWdodC4gSSB3aWxsIGRvIHRoYXQuDQoNCj4gDQo+ID4gQlRXLCA8bWFydmVsbCwyZ2h6PiBhbmQg
-PG1hcnZlbGwsNWdoej4gYXJlIG9ubHkgdXNlZCBmb3IgbXdsd2lmaSB0byByZXBvcnQNCj4gc3Vw
-cG9ydGVkIGJhbmRzLCBpdCBpcyBub3QgcmVsYXRlZCB0byBsaW1pdGF0aW9uIG9mIGZyZXF1ZW5j
-eS4NCj4gDQo+IEhvdyByZXBvcnRpbmcgYSBzaW5nbGUgYmFuZCBkb2Vzbid0IGxpbWl0IHJlcG9y
-dGVkIGZyZXF1ZW5jaWVzPyBZb3UgY2FuDQo+IGFjaGlldmUgZXhhY3RseSB0aGUgc2FtZSB1c2lu
-ZyBnZW5lcmljIHByb3BlcnR5LCBzbyB0aGVyZSBpcyBubyBwbGFjZSBmb3INCj4gTWFydmVsbCBz
-cGVjaWZpYyBvbmVzLg0KPiANCj4gSW4gZmFjdCB0aGVyZSB3ZXJlIGRyaXZlcnMgb2YgMyB2ZW5k
-b3JzIHJlcXVpcmluZyBiYW5kL2ZyZXEtcmVsYXRlZCBkZXNjcmlwdGlvbg0KPiBpbiBEVDogQnJv
-YWRjb20sIE1hcnZlbGwgJiBNZWRpYXRlay4gVGhpcyBwcm9wZXJ0eSB3YXMgZGlzY3Vzc2VkICYg
-ZGVzaWduZWQNCj4gdG8gc3VwcG9ydCBhbGwgbGltaXRhdGlvbiBjYXNlcyB3ZSBmb3VuZCBwb3Nz
-aWJsZSB0byBtYWtlIGl0IHVzYWJsZSB3aXRoDQo+IChob3BlZnVsbHkpIGFsbCBkcml2ZXJzLg0K
-PiANCg0KSSBvbmx5IG5lZWQgc2ltcGxlIHdheSB0byBkaXNhYmxlIDJnIG9yIDVnIGJhbmQuIEkg
-d2lsbCBmb2xsb3cgeW91ciBzdWdnZXN0aW9uIHRvIGRvY3VtZW50IHRoZXNlIG1hcnZlbGwgcHJv
-cHJpZXRhcnkgcGFyYW1ldGVycy4NCg0KVGhhbmtzLA0KRGF2aWQNCg0KPiAtLQ0KPiBSYWZhxYIN
-Cg==
+
+
+On 21-2-2017 13:37, Johannes Berg wrote:
+> From: Avraham Stern <avraham.stern@intel.com>
+> 
+> Add API for setting the PMK to the driver. For FT support, allow
+> setting also the PMK-R0 Name.
+> 
+> This can be used by drivers that support 4-Way handshake offload
+> while IEEE802.1X authentication is managed by upper layers.
+> 
+> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  include/linux/ieee80211.h    |  3 ++
+>  include/net/cfg80211.h       | 27 ++++++++++++
+>  include/uapi/linux/nl80211.h | 24 ++++++++++-
+>  net/wireless/core.c          |  5 +++
+>  net/wireless/nl80211.c       | 99 ++++++++++++++++++++++++++++++++++++++++++++
+>  net/wireless/rdev-ops.h      | 25 +++++++++++
+>  net/wireless/trace.h         | 60 +++++++++++++++++++++++++++
+>  7 files changed, 241 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index 2049e983a994..fb1f533e75b3 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -2356,8 +2356,11 @@ enum ieee80211_sa_query_action {
+>  
+>  #define WLAN_MAX_KEY_LEN		32
+>  
+> +#define WLAN_PMK_NAME_LEN		16
+>  #define WLAN_PMKID_LEN			16
+> +#define WLAN_PMK_LEN_EAP_LEAP		16
+>  #define WLAN_PMK_LEN			32
+> +#define WLAN_PMK_LEN_SUITE_B_192	48
+>  
+>  #define WLAN_OUI_WFA			0x506f9a
+>  #define WLAN_OUI_TYPE_WFA_P2P		9
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 4ca968927d60..a68c6db6ac55 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -2507,6 +2507,23 @@ struct cfg80211_nan_func {
+>  };
+>  
+>  /**
+> + * struct cfg80211_pmk_conf - PMK configuration
+> + *
+> + * @aa: authenticator address
+> + * @pmk_len: PMK length in bytes.
+> + * @pmk: the PMK material
+> + * @pmk_r0_name: PMK-R0 Name. NULL if not applicable (i.e., the PMK
+> + *	is not PMK-R0). When pmk_r0_name is not NULL, the pmk field
+> + *	holds PMK-R0.
+> + */
+> +struct cfg80211_pmk_conf {
+> +	const u8 *aa;
+> +	u8 pmk_len;
+> +	const u8 *pmk;
+> +	const u8 *pmk_r0_name;
+> +};
+> +
+> +/**
+>   * struct cfg80211_ops - backend description for wireless configuration
+>   *
+>   * This struct is registered by fullmac card drivers and/or wireless stacks
+> @@ -2823,6 +2840,11 @@ struct cfg80211_nan_func {
+>   *	All other parameters must be ignored.
+>   *
+>   * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
+> + *
+> + * @set_pmk: configure the PMK to be used for offloaded 4-Way handshake.
+> + *	(invoked with the wireless_dev mutex held)
+> + * @del_pmk: delete the previously configured PMK for the given authenticator.
+> + *	(invoked with the wireless_dev mutex held)
+>   */
+>  struct cfg80211_ops {
+>  	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+> @@ -3111,6 +3133,11 @@ struct cfg80211_ops {
+>  	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
+>  					    struct net_device *dev,
+>  					    const bool enabled);
+> +
+> +	int	(*set_pmk)(struct wiphy *wiphy, struct net_device *dev,
+> +			   const struct cfg80211_pmk_conf *conf);
+> +	int	(*del_pmk)(struct wiphy *wiphy, struct net_device *dev,
+> +			   const u8 *aa);
+
+Minor nit, but prefer clr_pmk to clear the pmk.
+
+>  };
+>  
+>  /*
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index bb5e1904a107..89295fc2336b 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -901,6 +901,14 @@
+>   *	does not result in a change for the current association. Currently,
+>   *	only the %NL80211_ATTR_IE data is used and updated with this command.
+>   *
+> + * @NL80211_CMD_SET_PMK: For offloaded 4-Way handshake, set the PMK or PMK-R0
+> + *	for the given authenticator address (specified with &NL80211_ATTR_MAC).
+> + *	When &NL80211_ATTR_PMKR0_NAME is set, &NL80211_ATTR_PMK specifies the
+> + *	PMK-R0, otherwise it specifies the PMK.
+> + * @NL80211_CMD_DEL_PMK: For offloaded 4-Way handshake, delete the previously
+> + *	configured PMK for the authenticator address identified by
+> + *	&NL80211_ATTR_MAC.
+
+Maybe better to indicate it is for 802.1X. Here also preference for
+NL80211_CMD_CLR_PMK.
+
+> + *
+>   * @NL80211_CMD_MAX: highest used command number
+>   * @__NL80211_CMD_AFTER_LAST: internal use
+>   */
+> @@ -1100,6 +1108,9 @@ enum nl80211_commands {
+>  
+>  	NL80211_CMD_UPDATE_CONNECT_PARAMS,
+>  
+> +	NL80211_CMD_SET_PMK,
+> +	NL80211_CMD_DEL_PMK,
+> +
+>  	/* add new commands above here */
+>  
+>  	/* used to define NL80211_CMD_MAX below */
+> @@ -2012,8 +2023,12 @@ enum nl80211_commands {
+>   *	u32 attribute with an &enum nl80211_timeout_reason value. This is used,
+>   *	e.g., with %NL80211_CMD_CONNECT event.
+>   *
+> - * @NL80211_ATTR_PMK: PSK for offloaded 4-Way Handshake. Relevant only
+> - *	with %NL80211_CMD_CONNECT (for WPA/WPA2-PSK networks).
+> + * @NL80211_ATTR_PMK: PMK for offloaded 4-Way Handshake. Relevant with
+> + *	%NL80211_CMD_CONNECT (for WPA/WPA2-PSK networks) when PSK is used, or
+> + *	with %NL80211_CMD_SET_PMK when 802.1X authentication is used.
+> + *	When &NL80211_ATTR_PMKR0_NAME is specified, this attribute specifies
+> + *	the PMK-R0.
+> + * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
+>   *
+>   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+> @@ -2427,6 +2442,7 @@ enum nl80211_attrs {
+>  	NL80211_ATTR_TIMEOUT_REASON,
+>  
+>  	NL80211_ATTR_PMK,
+> +	NL80211_ATTR_PMKR0_NAME,
+>  
+>  	/* add attributes here, update the policy in nl80211.c */
+>  
+> @@ -4767,6 +4783,9 @@ enum nl80211_feature_flags {
+>   * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK: Device supports doing 4-way
+>   *	handshake with PSK in station mode (PSK is passed as part of the connect
+>   *	and associate commands).
+> + * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X: Device supports doing 4-way
+> + *	handshake with 802.1X in station mode (needs to pass EAP frames to
+> + *	the host and accept the set_pmk/del_pmk commands).
+>   *
+>   * @NUM_NL80211_EXT_FEATURES: number of extended features.
+>   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+> @@ -4787,6 +4806,7 @@ enum nl80211_ext_feature_index {
+>  	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
+>  	NL80211_EXT_FEATURE_CQM_RSSI_LIST,
+>  	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
+> +	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X,
+
+So do we need this flag. Is the fact that the driver implements the
+set_pmk and del_pmk (or clr_pmk) callbacks not sufficient provided they
+are listed in the "supported commands" message of wiphy dump (not in
+this patch). Which reminds me, is "supported commands" no longer
+preferred because that list does not seem complete?
+
+Regards,
+Arend
