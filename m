@@ -1,126 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:34277 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753744AbdBUQQ1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Feb 2017 11:16:27 -0500
-Received: by mail-lf0-f65.google.com with SMTP id h67so3752329lfg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2017 08:16:26 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 14/21] ath10k: htt: RX ring config HL support
-Date: Tue, 21 Feb 2017 17:15:34 +0100
-Message-Id: <1487693741-10042-15-git-send-email-erik.stromdahl@gmail.com> (sfid-20170221_172342_329379_FA66F24E)
-In-Reply-To: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from mout02.posteo.de ([185.67.36.142]:52423 "EHLO mout02.posteo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751082AbdBXK2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Feb 2017 05:28:44 -0500
+Message-ID: <1487932016.3812.10.camel@embedded.rocks> (sfid-20170224_112939_229809_177040B5)
+Subject: Re: brcmfmac: problem using WPS with wpa_supplicant on BCM43362
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Date: Fri, 24 Feb 2017 11:26:56 +0100
+In-Reply-To: <ce3bf3a5-2cd7-eb77-bb7d-57df8388e1ba@broadcom.com>
+References: <1487881302.20481.3.camel@embedded.rocks>
+         <dd241eff-7e0d-26c1-1758-b3f4d51bc359@broadcom.com>
+         <1487929408.3812.3.camel@embedded.rocks>
+         <ce3bf3a5-2cd7-eb77-bb7d-57df8388e1ba@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Special HTT RX ring config message used by high latency
-devices.
+Hi Arend,
 
-The main difference between HL and LL is that HL devices
-do not use shared memory between device and host and thus,
-no host paddr's are added to the RX config message.
+On Fri, 2017-02-24 at 10:58 +0100, Arend Van Spriel wrote:
+> On 24-2-2017 10:43, Jörg Krause wrote:
+> > Hi Arend,
+> > 
+> > On Fri, 2017-02-24 at 09:16 +0100, Arend Van Spriel wrote:
+> > > 
+> > > On 23-2-2017 21:21, Jörg Krause wrote:
+> > > > Hi,
+> > > > 
+> > > > I am using Linux Kernel v4.9.9 and wpa_supplicant 2.6. When
+> > > > running
+> > > > 'wpa_cli wps_pin any', the following messages are printed:
+> > > > 
+> > > > """
+> > > > > wps_pin any         
+> > > > 
+> > > > [ 4011.779108] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set
+> > > > error :
+> > > > -30
+> > > > [ 4011.786190] brcmfmac: brcmf_config_ap_mgmt_ie: Set Beacon IE
+> > > > Failed
+> > > > """
+> > > > 
+> > > > .. and nothing happens. The data sheet for the BCM43362 states
+> > > > that
+> > > > the
+> > > > module supports WPS.
+> > > 
+> > > Hi Jörg,
+> > > 
+> > > We have never tested WPS with brcmfmac. Most of it is in firmware
+> > > so
+> > > it
+> > > might work. We had some fixes related to setting management IE,
+> > > but
+> > > it
+> > > should be in 4.9. I did not check it (yet).
+> > 
+> > As it turns out, WPS does not work if a network configuration in
+> > wpa_supplicant has the flag `mode=2` (access point mode) set:
+> > 
+> > """
+> > ctrl_interface=/var/run/wpa_supplicant
+> > update_config=1
+> > 
+> > network={
+> > 	ssid="AP"
+> > 	key_mgmt=NONE
+> > 	mode=2
+> > 	id_str="ap"
+> > }
+> > """
+> > 
+> > Setting mode=2 for a network and having ap_scan=1 (default) means
+> > if no
+> > APs matching to the currently enabled networks are found, a new
+> > network
+> >  (IBSS or AP mode operation) may be initialized (if configured).
+> > 
+> > So, WPS does not work if the interface is operating in AP mode. I
+> > wonder, if this is a desired behavior? At least, wpa_supplicant
+> > does
+> > not complain, but prints "WPS-PBC-ACTIVE", but no messages are
+> > following, until "WPS-TIMEOUT".
+> 
+> So what do you expect exactly? Are you trying to connect with some
+> other
+> device to this AP interface?
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt.c    |  5 +++-
- drivers/net/wireless/ath/ath10k/htt.h    |  1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c | 51 ++++++++++++++++++++++++++++++++
- 3 files changed, 56 insertions(+), 1 deletion(-)
+Sorry, I got confused. The device operating in AP mode shall be
+connected to some other AP as a station. Of course, WPS cannot be used
+to do so as long as the interface is operation in AP mode, as the
+device should be the WPS enrollee and not the registrar. My bad! Thanks
+for pointing that out.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index cd160b1..29ed4af 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -258,7 +258,10 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 	if (status)
- 		return status;
- 
--	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
-+	if (ar->is_high_latency)
-+		status = ath10k_htt_send_rx_ring_cfg_hl(htt);
-+	else
-+		status = ath10k_htt_send_rx_ring_cfg_ll(htt);
- 	if (status) {
- 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
- 			    status);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 90c2f72..bdee2e7 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1797,6 +1797,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
- int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
- int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
- int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt);
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 86b427f..ca899e1 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -692,6 +692,57 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
- 	return 0;
- }
- 
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	struct sk_buff *skb;
-+	struct htt_cmd *cmd;
-+	struct htt_rx_ring_setup_ring *ring;
-+	const int num_rx_ring = 1;
-+	u16 flags;
-+	int len;
-+	int ret;
-+
-+	/*
-+	 * the HW expects the buffer to be an integral number of 4-byte
-+	 * "words"
-+	 */
-+	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
-+	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
-+
-+	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
-+	    + (sizeof(*ring) * num_rx_ring);
-+	skb = ath10k_htc_alloc_skb(ar, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_put(skb, len);
-+
-+	cmd = (struct htt_cmd *)skb->data;
-+	ring = &cmd->rx_setup.rings[0];
-+
-+	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
-+	cmd->rx_setup.hdr.num_rings = 1;
-+
-+	flags = 0;
-+	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
-+	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
-+	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
-+
-+	memset(ring, 0, sizeof(*ring));
-+	ring->rx_ring_len = __cpu_to_le16(HTT_RX_RING_SIZE_MIN);
-+	ring->rx_ring_bufsize = __cpu_to_le16(HTT_RX_BUF_SIZE);
-+	ring->flags = __cpu_to_le16(flags);
-+
-+	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
-+	if (ret) {
-+		dev_kfree_skb_any(skb);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu)
--- 
-2.7.4
+So, to use WPS for connecting the device to another AP I have to bring
+the interface into an non-AP mode first.
+
+So, I can confirm that using WPS works when the interface is
+unconfigured. However, if the in the interface is in AP mode and WPS is
+started the error messages pop up.
+
+Jörg
