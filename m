@@ -1,77 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35128 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752890AbdBIUSA (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:49382 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750949AbdBXGk1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Feb 2017 15:18:00 -0500
-Subject: Re: linux <=4.9.5, 4.10-rc7 ok, 4.9.6 - 4.9.8 nok with realtek wlan,
- atom
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        rupert THURNER <rupert.thurner@gmail.com>
-References: <CAJs9aZ9FqU-NCj2egBp6J06uD_Qp3Lje=mSSVbV4vNcYGKdumA@mail.gmail.com>
- <20170209194321.GC11905@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Fri, 24 Feb 2017 01:40:27 -0500
+Date: Fri, 24 Feb 2017 07:40:15 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Tahia Khan <tahia.khan@gmail.com>
+cc: outreachy-kernel@googlegroups.com, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
         linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <da188e74-3c2b-10ba-9c4e-21b691cc2b31@lwfinger.net> (sfid-20170209_211833_786874_33EDE60A)
-Date: Thu, 9 Feb 2017 14:09:21 -0600
+Subject: Re: [Outreachy kernel] [PATCH v3 2/3] staging: wilc1000: Rename
+ tstrRSSI members and change type of u8Full to bool
+In-Reply-To: <e4e0e4da09635d0cb7ef43223022490b6de739a8.1487912400.git.tahia.khan@gmail.com>
+Message-ID: <alpine.DEB.2.20.1702240739260.2095@hadrien> (sfid-20170224_074034_099749_6A6C4EEE)
+References: <cover.1487912400.git.tahia.khan@gmail.com> <e4e0e4da09635d0cb7ef43223022490b6de739a8.1487912400.git.tahia.khan@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170209194321.GC11905@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
-> [+cc rtl8192ce folks in case they've seen this]
->
-> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
->> hi,
->>
->> not technical expert enough, i just wanted to give a short user
->> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
->> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
->> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
->> hotspot is possible then drops, or connecting to wlan fails
->> alltogether.
->
-> Thanks very much for your report, and sorry for the inconvenience.
->
-> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
->
-> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
-> need to figure out why and make sure we fix the v4.9 stable series.
->
-> I can't tell yet whether this is PCI-related or not.  If it is,
-> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
-> appeared in v4.9.6, and there is a known issue with that.  The issue
-> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
-> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
-> the first thing to do would be to test v4.9.9.
->
-> If it's not fixed in v4.9.9, can you share the complete dmesg log
-> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
-> known working version) and v4.9.6 (first known broken version)?  On
-> v4.9.6, collect the dmesg output after the failure occurs.
->
->> 24: PCI 300.0: 0282 WLAN controller
->>   [Created at pci.366]
->>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
->>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
->>   Revision: 0x01
->>   Driver: "rtl8192ce"
->>   Driver Modules: "rtl8192ce"
->>   Device File: wlp3s0
->>   Features: WLAN
 
-It would be helpful if someone were to bisect this issue. The only issue that 
-comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce: Fix loading 
-of incorrect firmware") which is in 4.10-rc7 and will be backported to 4.9.
 
-The above issue is one that could not be reproduced on my hardware, thus it took 
-Jurij Smakov to find the fix. Without his bisection of the problem, who knows 
-how long it would have taken to find my edit mistake.
+On Fri, 24 Feb 2017, Tahia Khan wrote:
 
-Larry
+> Remove Hungarian notation and camel casing from all tstrRSSI members' names.
+> Additionally, change type of u8Full to bool since it only takes values 1 or 0.
+
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+
+Maybe the second line of the commit message is a little too long.  It is
+under 80 characters, but they come out a bit indented in the git log, so a
+little shorter is better.
+
+julia
+
+>
+> Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.h       |  6 +++---
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+>  2 files changed, 10 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+> index 1c77529..9712d89 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.h
+> +++ b/drivers/staging/wilc1000/coreconfigurator.h
+> @@ -71,9 +71,9 @@ enum connect_status {
+>  };
+>
+>  struct rssi_history_buffer {
+> -	u8 u8Full;
+> -	u8 u8Index;
+> -	s8 as8RSSI[NUM_RSSI];
+> +	bool full;
+> +	u8 index;
+> +	s8 samples[NUM_RSSI];
+>  };
+>
+>  struct network_info {
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index f7ce47c..9601ab8 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -205,11 +205,11 @@ static u32 get_rssi_avg(struct network_info *network_info)
+>  {
+>  	u8 i;
+>  	int rssi_v = 0;
+> -	u8 num_rssi = (network_info->str_rssi.u8Full) ?
+> -		       NUM_RSSI : (network_info->str_rssi.u8Index);
+> +	u8 num_rssi = (network_info->str_rssi.full) ?
+> +		       NUM_RSSI : (network_info->str_rssi.index);
+>
+>  	for (i = 0; i < num_rssi; i++)
+> -		rssi_v += network_info->str_rssi.as8RSSI[i];
+> +		rssi_v += network_info->str_rssi.samples[i];
+>
+>  	rssi_v /= num_rssi;
+>  	return rssi_v;
+> @@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+>  	} else {
+>  		ap_index = ap_found;
+>  	}
+> -	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
+> -	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
+> +	rssi_index = last_scanned_shadow[ap_index].str_rssi.index;
+> +	last_scanned_shadow[ap_index].str_rssi.samples[rssi_index++] = pstrNetworkInfo->rssi;
+>  	if (rssi_index == NUM_RSSI) {
+>  		rssi_index = 0;
+> -		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
+> +		last_scanned_shadow[ap_index].str_rssi.full = true;
+>  	}
+> -	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
+> +	last_scanned_shadow[ap_index].str_rssi.index = rssi_index;
+>  	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
+>  	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
+>  	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
+> --
+> 2.7.4
+>
+> --
+> You received this message because you are subscribed to the Google Groups "outreachy-kernel" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to outreachy-kernel+unsubscribe@googlegroups.com.
+> To post to this group, send email to outreachy-kernel@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/outreachy-kernel/e4e0e4da09635d0cb7ef43223022490b6de739a8.1487912400.git.tahia.khan%40gmail.com.
+> For more options, visit https://groups.google.com/d/optout.
+>
