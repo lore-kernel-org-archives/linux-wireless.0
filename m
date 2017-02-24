@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33915 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754065AbdBHOQ6 (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:46734 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751291AbdBXVvw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 09:16:58 -0500
-Received: by mail-wm0-f65.google.com with SMTP id c85so33460384wmi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2017 06:16:37 -0800 (PST)
-From: Iain Hunter <drhunter95@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@aurora.org, Iain Hunter <i-hunter1@ti.com>
-Subject: [PATCH v4] wlcore: disable multicast filter in AP mode
-Date: Wed,  8 Feb 2017 14:09:40 +0000
-Message-Id: <20170208140940.5638-1-i-hunter1@ti.com> (sfid-20170208_151853_269860_38F7C6CF)
-In-Reply-To: <20170131104840.10366-1-i-hunter1@ti.com>
-References: <20170131104840.10366-1-i-hunter1@ti.com>
+        Fri, 24 Feb 2017 16:51:52 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+Subject: Re: [PATCH] NFC: remove TI nfcwilink driver
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <CAL_JsqL1c9vU0R0m73UXi6wvPscqNT9ZAxX8FxhMmLFGMRAeVQ@mail.gmail.com>
+Date: Fri, 24 Feb 2017 13:43:02 -0800
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Ilan Elias <ilane@ti.com>
+Message-Id: <9E986B17-64EA-46E5-BEE3-76217E31B0D1@holtmann.org> (sfid-20170224_225218_811476_99BD2559)
+References: <20170125222307.3044-1-robh@kernel.org>
+ <3B67FD13-A482-4BEF-B619-DD9AF9CC129F@holtmann.org>
+ <CAL_JsqL1c9vU0R0m73UXi6wvPscqNT9ZAxX8FxhMmLFGMRAeVQ@mail.gmail.com>
+To: Rob Herring <robh@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable AP support for allmulticast for MDNS. It can be enabled by bringing
-up the interface with ip command with argument allmulticast on
+Hi Rob,
 
----
+>>> It appears that TI WiLink devices including NFC (WL185x/WL189x) never
+>>> shipped. The only information I found were announcements in Feb
+>>> 2012 about the parts. There's been no activity on this driver besided
+>>> common changes since initially added in Jan 2012. There's also no in
+>>> users that instantiate the platform device (nor DT bindings).
+>>> 
+>>> This is a first step in removing TI ST (shared transport) driver in
+>>> favor of extending the BT hci_ll driver to support WL183x chips.
+>> 
+>> since the firmware files TINfcInit_* also never made it into the linux-firmware tree, I have no idea who is using this driver. I am actually fine with removing it since it would be easy enough to bring back based on hci_ll driver once there is hardware to test this on.
+> 
+> Ping. Someone going to pick up this patch?
 
-PATCH v4: fixes space in signed-off, tabbing for comment and indentation of closing bracket
+if Samuel does not have anything pending for his tree, I can take it through bluetooth-next tree.
 
- drivers/net/wireless/ti/wlcore/main.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Regards
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 3241e9eba73..242111cd016 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3281,6 +3281,21 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
- 			if (ret < 0)
- 				goto out_sleep;
- 		}
-+
-+		/*
-+		 * If interface in AP mode and created with allmulticast then disable
-+		 * the firmware filters so that all multicast packets are passed
-+		 * This is mandatory for MDNS based discovery protocols 
-+		 */
-+ 		if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
-+ 			if (*total & FIF_ALLMULTI) {
-+				ret = wl1271_acx_group_address_tbl(wl, wlvif,
-+							false,
-+							NULL, 0);
-+				if (ret < 0)
-+					goto out_sleep;
-+				}
-+		}
- 	}
- 
- 	/*
--- 
-2.11.0
+Marcel
