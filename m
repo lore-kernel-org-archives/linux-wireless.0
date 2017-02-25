@@ -1,51 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53358 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbdBASFL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50523 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751246AbdBYNqI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Feb 2017 13:05:11 -0500
-Subject: Re: [PATCH v2] ath10k: add support for controlling tx power to a
- station
-To: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-References: <1485888165-23504-1-git-send-email-arnagara@qti.qualcomm.com>
- <cbb69298-391d-b3d5-5a84-5792fe170f95@candelatech.com>
- <0c8b88d40b3adc0f09ade2780ed1d994@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <28c201cb-5546-0537-f85c-4f1b84a8d3f0@candelatech.com> (sfid-20170201_190756_189077_6C748F90)
-Date: Wed, 1 Feb 2017 10:05:09 -0800
+        Sat, 25 Feb 2017 08:46:08 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHv2 4/4] mac80211: Add support to set/update btcoex priority value
+Date: Sat, 25 Feb 2017 19:07:53 +0530
+Message-ID: <1488029873-14600-5-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170225_145114_586289_CE86EED1)
+In-Reply-To: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
+References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <0c8b88d40b3adc0f09ade2780ed1d994@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2017 09:44 AM, Ashok Raj Nagarajan wrote:
-> On 2017-02-01 00:27, Ben Greear wrote:
->> On 01/31/2017 10:42 AM, Ashok Raj Nagarajan wrote:
->>> This patch will add the support to control the transmit power for traffic
->>> to a station associated with the AP. Userspace provide the transmit power
->>> value in mBm units and the allowed range is from 0 to 70. Underlying FW
->>
->> How did you come up with 70 mBm as the limit.  This is only 7dBm?
->>
->> I would expect it to match the range of normal tx-power which is likely up to
->> 30 dBm or so on some NICs (not counting regulatory limit).
->>
->
-> I think I will have to re-word the commit log a bit. ath10k driver would get the value in dBm only and the range is from 0 to 70 dBm. Looking at the db.txt, I
-> see a max value of 44 dm for a 60GHz channel. SO to be little future proof having a greater acceptable range from user. The final tx power will be calculated
-> based on this extra parameter the user passes on, including the regulatory limit for the channel.
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-Why not just accept any value that fits within the storage (u16, probably).  The regulatory logic
-and other constraints can already make sure that the tx-power is not out-of-bounds, so the user cannot
-really break something by attempting to set a large value.
+This patch add support to set or modify the btcoex priority value
+for the driver which has btcoex priority feature support.
 
-Thanks,
-Ben
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ include/net/mac80211.h    |    6 ++++--
+ net/mac80211/cfg.c        |    5 +++--
+ net/mac80211/driver-ops.h |    7 ++++---
+ net/mac80211/trace.h      |   12 +++++++++---
+ 4 files changed, 20 insertions(+), 10 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 57717f1..33890b4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3448,7 +3448,8 @@ enum ieee80211_reconfig_type {
+  *	ieee80211_nan_func_terminated() with
+  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
+  * @set_btcoex_: Called when BTCOEX is enabled/disabled, use
+- *     this callback to enable or disable btcoex.
++ *     this callback to enable or disable btcoex and use this callback to
++ *     set btcoex_priority. BTCOEX should be enabled to set this priority.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3730,7 +3731,8 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
+-	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled);
++	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled,
++			  int btcoex_priority);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7e17eff..c640e7d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3574,11 +3574,12 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
+-static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled)
++static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled,
++				int btcoex_priority)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 
+-	return drv_set_btcoex(local, enabled);
++	return drv_set_btcoex(local, enabled, btcoex_priority);
+ }
+ 
+ const struct cfg80211_ops mac80211_config_ops = {
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 16d9c98..3826202 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1249,13 +1249,14 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
+ }
+ 
+ static inline int drv_set_btcoex(struct ieee80211_local *local,
+-				 bool enabled)
++				 bool enabled, int btcoex_priority)
+ {
+ 	int ret = -EOPNOTSUPP;
+ 
+-	trace_drv_set_btcoex(local, enabled);
++	trace_drv_set_btcoex(local, enabled, btcoex_priority);
+ 	if (local->ops->set_btcoex)
+-		ret = local->ops->set_btcoex(&local->hw, enabled);
++		ret = local->ops->set_btcoex(&local->hw, enabled,
++					     btcoex_priority);
+ 
+ 	trace_drv_return_int(local, ret);
+ 
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0d9b5a0..c3efca9 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -743,17 +743,23 @@
+ );
+ 
+ TRACE_EVENT(drv_set_btcoex,
+-	TP_PROTO(struct ieee80211_local *local, bool enabled),
+-	TP_ARGS(local, enabled),
++	TP_PROTO(struct ieee80211_local *local, bool enabled,
++		 int btcoex_priority),
++	TP_ARGS(local, enabled, btcoex_priority),
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+ 		__field(bool, enabled)
++		__field(int, btcoex_priority)
+ 	),
+ 	TP_fast_assign(
+ 		LOCAL_ASSIGN;
+ 		__entry->enabled = enabled;
++		__entry->btcoex_priority = btcoex_priority;
+ 	),
+-	TP_printk(LOCAL_PR_FMT " enabled:%d", LOCAL_PR_ARG, __entry->enabled)
++	TP_printk(
++		LOCAL_PR_FMT " enabled:%d btcoex_priority :%d",
++		LOCAL_PR_ARG, __entry->enabled, __entry->btcoex_priority
++	)
+ );
+ 
+ TRACE_EVENT(drv_set_coverage_class,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
