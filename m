@@ -1,109 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:58805 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750776AbdBTFT6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24379 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751661AbdBYNwJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 00:19:58 -0500
-Reply-To: hs@denx.de
-Subject: Re: [PATCH] Make EN2 pin optional in the TRF7970A driver
-References: <1486444924-18444-1-git-send-email-hs@denx.de>
- <20170210155114.pvjahqqjqurw5jdc@rob-hp-laptop> <58A15454.4030602@denx.de>
- <CAL_JsqKM4fEcfPekYkt-+TVNXE3nMF1AEfSHWW+3wAgdYDMXEg@mail.gmail.com>
-Cc: Rob Herring <robh@kernel.org>, Guan Ben <ben.guan@cn.bosch.com>,
-        Mark Jonas <mark.jonas@de.bosch.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Mark Rutland <mark.rutland@arm.com>
-To: netdev <netdev@vger.kernel.org>
-From: Heiko Schocher <hs@denx.de>
-Message-ID: <58AA7C5D.60801@denx.de> (sfid-20170220_062039_129575_AF99180A)
-Date: Mon, 20 Feb 2017 06:19:25 +0100
+        Sat, 25 Feb 2017 08:52:09 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>, <ath10k@lists.infradead.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHv2 2/4] mac80211: Add support to enable or disable btcoex
+Date: Sat, 25 Feb 2017 19:07:51 +0530
+Message-ID: <1488029873-14600-3-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170225_145212_407602_25D263C3)
+In-Reply-To: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
+References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqKM4fEcfPekYkt-+TVNXE3nMF1AEfSHWW+3wAgdYDMXEg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-Am 13.02.2017 um 22:31 schrieb Rob Herring:
-> On Mon, Feb 13, 2017 at 12:38 AM, Heiko Schocher <hs@denx.de> wrote:
->> Hello Rob,
->>
->>
->> Am 10.02.2017 um 16:51 schrieb Rob Herring:
->>>
->>> On Tue, Feb 07, 2017 at 06:22:04AM +0100, Heiko Schocher wrote:
->>>>
->>>> From: Guan Ben <ben.guan@cn.bosch.com>
->>>>
->>>> Make the EN2 pin optional. This is useful for boards,
->>>> which have this pin fix wired, for example to ground.
->>>>
->>>> Signed-off-by: Guan Ben <ben.guan@cn.bosch.com>
->>>> Signed-off-by: Mark Jonas <mark.jonas@de.bosch.com>
->>>> Signed-off-by: Heiko Schocher <hs@denx.de>
->>>>
->>>> ---
->>>>
->>>>    .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
->>>>    drivers/nfc/trf7970a.c                             | 26
->>>> ++++++++++++----------
->>>>    2 files changed, 16 insertions(+), 14 deletions(-)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>>> b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>>> index 32b35a0..5889a3d 100644
->>>> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>>> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
->>>> @@ -5,8 +5,8 @@ Required properties:
->>>>    - spi-max-frequency: Maximum SPI frequency (<= 2000000).
->>>>    - interrupt-parent: phandle of parent interrupt handler.
->>>>    - interrupts: A single interrupt specifier.
->>>> -- ti,enable-gpios: Two GPIO entries used for 'EN' and 'EN2' pins on the
->>>> -  TRF7970A.
->>>> +- ti,enable-gpios: One or two GPIO entries used for 'EN' and 'EN2' pins
->>>> on the
->>>> +  TRF7970A. EN2 is optional.
->>>
->>>
->>> Could EN ever be optional/fixed? If so, perhaps deprecate this property
->>> and do 2 properties, one for each pin.
->>
->>
->> The hardware I have has the EN2 pin fix connected to ground. Looking
->> into http://www.ti.com/lit/ds/slos743k/slos743k.pdf page 19 table 6-3
->> and 6-4 the EN2 pin is a don;t core if EN = 1. If EN = 0 EN2 pin
->> selects between Power Down and Sleep Mode ... I see no reason why
->> this is not possible/allowed ...
->>
->> Hmm.. I do not like the idea of deprecating the "ti,enable-gpios"
->> property into 2 seperate properties ... but if this would be a reason
->> for not accepting this patch, I can do this ... How should I name
->> the 2 new properties?
->
-> I guess if this ever happens, then we just add "ti,enable2-gpios" and
-> ti,enable-gpios continues to point to EN. We don't need to deprecate
-> anything (or maybe just deprecate having both GPIOs on single
-> property).
->
-> In that case,
->
-> Acked-by: Rob Herring <robh@kernel.org>
+This patch introduces a new driver call back drv_set_btcoex
+This API will pass user space value to driver to
+enable or disabe btcoex.
 
-gentle ping.
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ include/net/mac80211.h    |    3 +++
+ net/mac80211/cfg.c        |    8 ++++++++
+ net/mac80211/driver-ops.h |   14 ++++++++++++++
+ net/mac80211/trace.h      |   14 ++++++++++++++
+ 4 files changed, 39 insertions(+)
 
-Are there any more comments to this patch? Is it acceptable as it
-is?
-
-Thanks!
-
-bye,
-Heiko
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b9a08cd..57717f1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3447,6 +3447,8 @@ enum ieee80211_reconfig_type {
+  * @del_nan_func: Remove a NAN function. The driver must call
+  *	ieee80211_nan_func_terminated() with
+  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
++ * @set_btcoex_: Called when BTCOEX is enabled/disabled, use
++ *     this callback to enable or disable btcoex.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3728,6 +3730,7 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ac879bb..7e17eff 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3574,6 +3574,13 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_btcoex(local, enabled);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3665,4 +3672,5 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	.add_nan_func = ieee80211_add_nan_func,
+ 	.del_nan_func = ieee80211_del_nan_func,
+ 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
++	.set_btcoex = ieee80211_set_btcoex,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 09f77e4..16d9c98 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1248,4 +1248,18 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int drv_set_btcoex(struct ieee80211_local *local,
++				 bool enabled)
++{
++	int ret = -EOPNOTSUPP;
++
++	trace_drv_set_btcoex(local, enabled);
++	if (local->ops->set_btcoex)
++		ret = local->ops->set_btcoex(&local->hw, enabled);
++
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0d645bc..0d9b5a0 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -742,6 +742,20 @@
+ 	TP_ARGS(local, value)
+ );
+ 
++TRACE_EVENT(drv_set_btcoex,
++	TP_PROTO(struct ieee80211_local *local, bool enabled),
++	TP_ARGS(local, enabled),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(bool, enabled)
++	),
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->enabled = enabled;
++	),
++	TP_printk(LOCAL_PR_FMT " enabled:%d", LOCAL_PR_ARG, __entry->enabled)
++);
++
+ TRACE_EVENT(drv_set_coverage_class,
+ 	TP_PROTO(struct ieee80211_local *local, s16 value),
+ 
 -- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+1.7.9.5
