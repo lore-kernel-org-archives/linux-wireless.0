@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34920 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934780AbdBQUxx (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:34267 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751214AbdBZTDc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Feb 2017 15:53:53 -0500
-Received: by mail-wm0-f65.google.com with SMTP id u63so4466500wmu.2
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2017 12:53:53 -0800 (PST)
-From: Doru <gucea.doru@gmail.com>
-To: linux-wireless@vger.kernel.org, andra.paraschiv7@gmail.com,
-        costin.raiciu@cs.pub.ro, dragos.niculescu@cs.pub.ro
-Cc: Doru Gucea <gucea.doru@gmail.com>
-Subject: [RFC-PATCH 1/2 v2] mac80211: Update the driver with beacon info constantly
-Date: Fri, 17 Feb 2017 22:53:45 +0200
-Message-Id: <1487364825-4616-1-git-send-email-gucea.doru@gmail.com> (sfid-20170217_215357_350364_26678BC0)
+        Sun, 26 Feb 2017 14:03:32 -0500
+Subject: Re: [PATCH][V2] rtlwifi: rtl8192de: ix spelling mistake: "althougth"
+ -> "though"
+To: Colin King <colin.king@canonical.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Oleg Drokin <green@linuxhacker.ru>,
+        Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+References: <20170226185246.28808-1-colin.king@canonical.com>
+Cc: linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <9ddfcfdc-42c6-e302-e12b-1f9660f20ad4@lwfinger.net> (sfid-20170226_200344_141614_775822C2)
+Date: Sun, 26 Feb 2017 13:01:31 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170226185246.28808-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Doru Gucea <gucea.doru@gmail.com>
+On 02/26/2017 12:52 PM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> trivial fix to spelling mistake in RT_TRACE message
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Once the mac80211 layer receives a beacon, it should send a notification
-to the driver. This will allow finer timining control in case of drivers
-that need a correct estimation for the arrival time of a beacon.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Changelog
+Thanks,
 
-v1:
-* fixed typo
+Larry
 
-Signed-off-by: Doru Gucea <gucea.doru@gmail.com>
----
- net/mac80211/mlme.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2398693..f5ebe27 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3548,6 +3548,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 			sdata->vif.bss_conf.sync_dtim_count = 0;
- 	}
- 
-+	/* trigger hardware timers adjustment
-+	 * this needs to be done before beacon filtering
-+	 */
-+	changed |= BSS_CHANGED_BEACON_INFO;
-+	ieee80211_bss_info_change_notify(sdata, changed);
-+
- 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
- 		return;
- 	ifmgd->beacon_crc = ncrc;
--- 
-1.9.1
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+> index de98d88..dcb5d83 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+> @@ -812,7 +812,7 @@ bool rtl92d_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+>  	 * pathA or mac1 has to set phy0&phy1 pathA */
+>  	if ((content == radiob_txt) && (rfpath == RF90_PATH_A)) {
+>  		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+> -			 " ===> althougth Path A, we load radiob.txt\n");
+> +			 " ===> though Path A, we load radiob.txt\n");
+>  		radioa_arraylen = radiob_arraylen;
+>  		radioa_array_table = radiob_array_table;
+>  	}
+>
