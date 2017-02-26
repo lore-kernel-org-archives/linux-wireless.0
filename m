@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39342 "EHLO sipsolutions.net"
+Received: from mga09.intel.com ([134.134.136.24]:4106 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752739AbdBHHAc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 02:00:32 -0500
-Message-ID: <1486537227.4603.2.camel@sipsolutions.net> (sfid-20170208_080051_692418_E95A8F81)
-Subject: Re: [PATCH v3 1/2] mac80211: fils_aead: Use crypto api CMAC shash
- rather than bare cipher
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-wireless@vger.kernel.org
-Cc: davem@davemloft.net, netdev@vger.kernel.org, jouni@qca.qualcomm.com
-Date: Wed, 08 Feb 2017 08:00:27 +0100
-In-Reply-To: <1486378168-31028-2-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170206_114945_027134_93100C60)
-References: <1486378168-31028-1-git-send-email-ard.biesheuvel@linaro.org>
-         <1486378168-31028-2-git-send-email-ard.biesheuvel@linaro.org>
-         (sfid-20170206_114945_027134_93100C60)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1750971AbdBZG5N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Feb 2017 01:57:13 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Jarek Kami?ski <Jarek@Freeside.be>,
+        linuxwifi <linuxwifi@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Regression with Intel 3160 AP: client not reconnecting
+Date: Sun, 26 Feb 2017 06:57:07 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3A8F538E7@hasmsx107.ger.corp.intel.com> (sfid-20170226_075719_767576_6F8F2C9D)
+References: <20170221213340.GA14974@Straylight.freeside.be>
+         (sfid-20170221_224221_697139_D71C5101)
+ <1487938414.2540.15.camel@sipsolutions.net>
+In-Reply-To: <1487938414.2540.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This looks strange to me:
-
-> +static int aes_s2v(struct crypto_shash *tfm,
->  		   size_t num_elem, const u8 *addr[], size_t len[],
-> u8 *v)
->  {
-> -	u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
-> +	u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE] = {};
-> +	SHASH_DESC_ON_STACK(desc, tfm);
-
-desc declared
-
-> 
-> +	crypto_shash_digest(desc, tmp, AES_BLOCK_SIZE, d);
-
-used here
- 
-> +	crypto_shash_init(desc);
-
-but initialized now?
-
-johannes
+PiANCj4gSGkgSmFyZWssDQo+IA0KPiBbc25pcF0NCj4gDQo+ID4gV2hhdCBtaWdodCBiZSB0aGUg
+Y2F1c2U/IElzIHRoZXJlIGFueXRoaW5nIEkgY2FuIGRvIHRvIGhlbHAgZGVidWcgb3INCj4gPiBm
+aXggdGhpcz8NCj4gDQo+IFRoYW5rcyBmb3IgdGhlIGRldGFpbGVkIGJ1ZyByZXBvcnQgYW5kIGFu
+YWx5c2lzISBJIGNhbid0IGFuYWx5c2UgdGhpcyBpbiBkZXB0aA0KPiByaWdodCBub3csIGNhbiB5
+b3UgcGxlYXNlIGZpbGUgYSBidWcgb24gYnVnemlsbGEua2VybmVsLm9yZz8NCg0KV2hlbiB5b3Ug
+ZG8gc28sIHBsZWFzZSBDQyBsaW51eHdpZmlAaW50ZWwuY29tIHRvIHRoZSBidWcuDQoNClRoYW5r
+IHlvdS4NCg==
