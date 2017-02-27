@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:34949 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750881AbdBTXXC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 18:23:02 -0500
-Received: by mail-it0-f54.google.com with SMTP id 203so87618997ith.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2017 15:23:02 -0800 (PST)
-MIME-Version: 1.0
-From: "Thomas d'Otreppe" <tdotreppe@gmail.com>
-Date: Mon, 20 Feb 2017 16:22:20 -0700
-Message-ID: <CALs6+XLDZLmc6JWMPun4sT+W_M4Cqh47LcK+HjiuZ8gKFLkbTA@mail.gmail.com> (sfid-20170221_002306_313869_E4D6D4DA)
-Subject: Monitor mode 'cook' flag meaning
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:37092 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751435AbdB0Ox4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Feb 2017 09:53:56 -0500
+Message-ID: <1488206078.28431.13.camel@sipsolutions.net> (sfid-20170227_155414_072442_A77D2BEC)
+Subject: Re: [PATCH 099/306] mac80211-hwsim: notify user-space about channel
+ change.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        linux-wireless@vger.kernel.org
+Date: Mon, 27 Feb 2017 15:34:38 +0100
+In-Reply-To: <e7500b9a-5020-0dcc-5d67-4a2d12704c33@candelatech.com>
+References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
+         <1487918197.2540.1.camel@sipsolutions.net>
+         <e7500b9a-5020-0dcc-5d67-4a2d12704c33@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been looking through the different flags for monitor mode in iw.
-Most of them are rather obvious (and well explained) but what is
-exactly 'cooked mode'?
+On Fri, 2017-02-24 at 07:39 -0800, Ben Greear wrote:
+> 
+> On 02/23/2017 10:36 PM, Johannes Berg wrote:
+> > 
+> > 
+> > > +	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
+> > > +			       HWSIM_CMD_NOTIFY);
+> > 
+> > I think you should use a more specific command name.
+> 
+> My idea was that other attributes could be added over time without
+> having to add a new cmd-id, so that is why I left it general.  If you
+> still want a different command, do you want it to be something like
+> 'HWSIM_CMD_CHANNEL_CHANGE' ?
 
-I looked up in Google and in the linux-wireless wiki (nothing in
-there) and I only found explanations in 2 patches (most likely still
-in the source code) which are still vague:
-- A monitor interface in "cooked" mode will see all frames that
-mac80211 has not used internally
-- report frames after processing. Overrides all other flags.
+We won't run out of command IDs any time soon, so I don't really see a
+problem with using a new one for all of those things if needed.
 
-Thinking about what the first one says, it doesn't seem any different
-than just fcsfail. I don't even see when control or otherbss should be
-needed since 'none' is already providing them.
+But having a general NOTIFY just means that the application will have
+to parse the attributes and understand what means what - that seems
+like a case of the cure being worse than the disease?
 
-Am I correct? Or is it related to transmitting frames? And in this case, how?
-
-Thanks in advance,
-
-Thomas
+johannes
