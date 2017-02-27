@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47710 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751249AbdBXPdi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 10:33:38 -0500
-Subject: Re: [PATCH 160/306] mac80211-hwsim: add rate-limited debugging for
- rx-netlink
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>
- <1487896109-23851-5-git-send-email-greearb@candelatech.com>
- <1487918388.2540.6.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <c014eb8c-7f93-3831-3375-07f6f6325a6a@candelatech.com> (sfid-20170224_163356_962734_34CF95D1)
-Date: Fri, 24 Feb 2017 07:27:29 -0800
-MIME-Version: 1.0
-In-Reply-To: <1487918388.2540.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:60194 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751454AbdB1AvI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Feb 2017 19:51:08 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v2 4/4] brcmfmac: Handle status == BRCMF_E_STATUS_ABORT in cfg80211_escan_handler
+Date: Mon, 27 Feb 2017 22:45:39 +0100
+Message-Id: <20170227214539.16422-4-hdegoede@redhat.com> (sfid-20170228_015111_626079_353F4CFA)
+In-Reply-To: <20170227214539.16422-1-hdegoede@redhat.com>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If a scan gets aborted BRCMF_SCAN_STATUS_BUSY gets cleared in
+cfg->scan_status and when we receive an abort event from the firmware
+the BRCMF_SCAN_STATUS_BUSY check in the cfg80211_escan_handler will
+trigger resulting in multiple errors getting logged.
 
+Check for a status of BRCMF_E_STATUS_ABORT and in this case simply
+cleanly exit the cfg80211_escan_handler. This also avoids a
+BRCMF_E_STATUS_ABORT event arriving after a new scan has been started
+causing the new scan to complete prematurely without any data.
 
-On 02/23/2017 10:39 PM, Johannes Berg wrote:
->
->> +	    !info->attrs[HWSIM_ATTR_SIGNAL]) {
->> +		if (net_ratelimit())
->> +			printk(KERN_DEBUG " hwsim rx-nl: Missing
->> required attribute\n");
->
-> I'm not convinced net_ratelimit() is a good idea, that's a global rate
-> limiter.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Is there a better rate-limiter w/out hand-crafting something?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index c0b7f69..4c740b74 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3105,6 +3105,9 @@ brcmf_cfg80211_escan_handler(struct brcmf_if *ifp,
+ 
+ 	status = e->status;
+ 
++	if (status == BRCMF_E_STATUS_ABORT)
++		goto exit;
++
+ 	if (!test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
+ 		brcmf_err("scan not ready, bsscfgidx=%d\n", ifp->bsscfgidx);
+ 		return -EPERM;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.9.3
