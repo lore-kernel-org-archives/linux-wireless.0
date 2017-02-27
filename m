@@ -1,93 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38072 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752286AbdBCOla (ORCPT
+Received: from mail-it0-f42.google.com ([209.85.214.42]:35533 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751378AbdB0Nvs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:41:30 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:38:07 +0200
-Message-Id: <20170203143812.7525-21-luca@coelho.fi> (sfid-20170203_154148_955275_A10F2A85)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 20/25] iwlwifi: mvm: cleanup iwl_mvm_tx_mpdu a bit
+        Mon, 27 Feb 2017 08:51:48 -0500
+Received: by mail-it0-f42.google.com with SMTP id 203so59800070ith.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 05:51:31 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev 2.1 update Feb 27
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>, lwn@lwn.net,
+        people@netdevconf.org, Brenda Butler <bjb@mojatatu.com>
+Message-ID: <f43e06f4-cd52-6d98-c585-8243f1a002be@mojatatu.com> (sfid-20170227_145157_086785_867DC890)
+Date: Mon, 27 Feb 2017 08:43:14 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+A few announcements:
 
-Unify code, remove redundant assignments.
+1) The CFP is now officially closed. Thanks to everyone who submitted.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+2) We are extending the early registration to March 5.
+
+Register early so we can plan better (and so you can save some $$).
+https://onlineregistrations.ca/netdev21/
+
+- hotel (If you can get the hotel cheaper online than conference
+rates please send us email, dont book ):
+https://www.netdevconf.org/2.1/hotel.html
+
+3) Tech committee would like to make two announcements:
+
+First, a talk by Hajime Tazaki titled "Playing BBR with a userspace 
+network stack"
+
+-----
+Linux kernel library (LKL) is aimed to run Linux kernel code upon
+different environment such as Linux userspace, Windows userspace,
+hypervisors, etc.  With the userspace deployments, an application can
+benefit new additional features such as TCP extensions without
+involving the update of host kernel.
+
+This characteristic of network stack personality is useful since we
+don't have to instantiate a virtual machine instance to use a new
+feature of network stack (e.g., a TCP extension).  Instead, we just
+need a single (userspace) process to introduce new features.
+
+One concern of userspace network stack in general, and addressed by
+David Miller in the last netdev conference (in Tokyo), is the achieved
+timing accuracy in userspace which the important network feature such
+as packet pacing and transport protocols requires.
+
+In this talk, we're going to present our performance studies on this
+timing accuracy concern of a userspace network stack. We present the
+result of netperf benchmarks with a couple of congestion control
+algorithm of TCP, BBR and cubic with the LKL-ed netperf and ordinal
+netperf with Linux kernel.
+We're trying to reveal that what is the obstacle of LKL (userspace
+network stack) and what can be fixed to reach the performance goal of
+LKL (i.e., x1 performance of the original kernel network stack).
+
+Second, our first workshop announcement on "IoT related MAC layers, header
+compression and routing protocols" chaired by Stefan Schmidt.
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 35 ++++++++++-------------------
- 1 file changed, 12 insertions(+), 23 deletions(-)
+This workshop aims to identify generic requirements for the networking
+subsystem for IoT and starting the process of addressing the gaps
+found. The workshop will encompass related MAC layers, networking
+protocols, adaptation layers, header compression, routing protocols
+and application layers.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index f82b765650d6..4ba639eda7a3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -907,6 +907,10 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 	spin_lock(&mvmsta->lock);
- 
-+	/* nullfunc frames should go to the MGMT queue regardless of QOS,
-+	 * the condition of !ieee80211_is_qos_nullfunc(fc) keeps the default
-+	 * assignment of MGMT TID
-+	 */
- 	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
- 		u8 *qc = NULL;
- 		qc = ieee80211_get_qos_ctl(hdr);
-@@ -919,27 +923,13 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
- 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
- 		is_ampdu = info->flags & IEEE80211_TX_CTL_AMPDU;
--	} else if (iwl_mvm_is_dqa_supported(mvm) &&
--		   (ieee80211_is_qos_nullfunc(fc) ||
--		    ieee80211_is_nullfunc(fc))) {
--		/*
--		 * nullfunc frames should go to the MGMT queue regardless of QOS
--		 */
--		tid = IWL_MAX_TID_COUNT;
-+		if (WARN_ON_ONCE(is_ampdu &&
-+				 mvmsta->tid_data[tid].state != IWL_AGG_ON))
-+			goto drop_unlock_sta;
- 	}
- 
--	if (iwl_mvm_is_dqa_supported(mvm)) {
-+	if (iwl_mvm_is_dqa_supported(mvm) || is_ampdu)
- 		txq_id = mvmsta->tid_data[tid].txq_id;
--
--		if (ieee80211_is_mgmt(fc))
--			tx_cmd->tid_tspec = IWL_TID_NON_QOS;
--	}
--
--	/* Copy MAC header from skb into command buffer */
--	memcpy(tx_cmd->hdr, hdr, hdrlen);
--
--	WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM);
--
- 	if (sta->tdls && !iwl_mvm_is_dqa_supported(mvm)) {
- 		/* default to TID 0 for non-QoS packets */
- 		u8 tdls_tid = tid == IWL_MAX_TID_COUNT ? 0 : tid;
-@@ -947,11 +937,10 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		txq_id = mvmsta->hw_queue[tid_to_mac80211_ac[tdls_tid]];
- 	}
- 
--	if (is_ampdu) {
--		if (WARN_ON_ONCE(mvmsta->tid_data[tid].state != IWL_AGG_ON))
--			goto drop_unlock_sta;
--		txq_id = mvmsta->tid_data[tid].txq_id;
--	}
-+	/* Copy MAC header from skb into command buffer */
-+	memcpy(tx_cmd->hdr, hdr, hdrlen);
-+
-+	WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM);
- 
- 	/* Check if TXQ needs to be allocated or re-activated */
- 	if (unlikely(txq_id == IEEE80211_INVAL_HW_QUEUE ||
--- 
-2.11.0
+As a starting point we will look at existing subsystems (Bluetooth,
+802.15.4, 6LoWPAN, etc) and discuss a way forward to  address the gaps
+posed. An overview of MAC layers and open IoT related specifications
+will help to identify things we should probably support in the future
+(LPWAN, SCHC, RPL, Thread, etc). Note: We emphasize only on open
+protocols and specifications as well as IPv6 instead of company grown
+networking layers.
+Additional user-space interfaces might be needed to cater for the
+requirements of application layer stacks (ZigBee, IoTivity, etc.).
+What kind of interfaces besides the normal socket API and existing
+netlink interfaces do they need?
+(header compression configuration, DTLS support in AF_KTLS, etc.)
+
+A primary goal of this workshop is initially to target Linux as a
+gateway or border router at the edge of IoT networks, be it industrial
+or home automation.
+
+A future scope, starting with discussions at the workshop, could be for
+Linux to replace RTOSes on leaf nodes which operate on very constrained
+hardware and power limits; such an effort would need a serious amount
+of work towards tinyfication in all parts of the kernel.
+
+We expect the workshop to ignite efforts on these topics and followup
+discussions on mailing lists and future netdevs to produce results that
+make it a possibility.
+----
+
+cheers,
+jamal
