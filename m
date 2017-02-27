@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59732 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:41310 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751291AbdBXVxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2017 16:53:02 -0500
+        id S1751478AbdB0WjN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Feb 2017 17:39:13 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v2 2/4] brcmfmac: p2p and normal ap access are not always possible at the same time
+Date: Mon, 27 Feb 2017 22:45:37 +0100
+Message-Id: <20170227214539.16422-2-hdegoede@redhat.com> (sfid-20170227_233950_775262_10BFA03C)
+In-Reply-To: <20170227214539.16422-1-hdegoede@redhat.com>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <9E986B17-64EA-46E5-BEE3-76217E31B0D1@holtmann.org>
-References: <20170125222307.3044-1-robh@kernel.org> <3B67FD13-A482-4BEF-B619-DD9AF9CC129F@holtmann.org>
- <CAL_JsqL1c9vU0R0m73UXi6wvPscqNT9ZAxX8FxhMmLFGMRAeVQ@mail.gmail.com> <9E986B17-64EA-46E5-BEE3-76217E31B0D1@holtmann.org>
-From: Rob Herring <robh@kernel.org>
-Date: Fri, 24 Feb 2017 15:52:37 -0600
-Message-ID: <CAL_JsqKqGcZ-T01wbH+pCM+NYaET2v-FRPtk_Rafojq179KiFw@mail.gmail.com> (sfid-20170224_225324_843458_A7853791)
-Subject: Re: [PATCH] NFC: remove TI nfcwilink driver
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Ilan Elias <ilane@ti.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 24, 2017 at 3:43 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Rob,
->
->>>> It appears that TI WiLink devices including NFC (WL185x/WL189x) never
->>>> shipped. The only information I found were announcements in Feb
->>>> 2012 about the parts. There's been no activity on this driver besided
->>>> common changes since initially added in Jan 2012. There's also no in
->>>> users that instantiate the platform device (nor DT bindings).
->>>>
->>>> This is a first step in removing TI ST (shared transport) driver in
->>>> favor of extending the BT hci_ll driver to support WL183x chips.
->>>
->>> since the firmware files TINfcInit_* also never made it into the linux-firmware tree, I have no idea who is using this driver. I am actually fine with removing it since it would be easy enough to bring back based on hci_ll driver once there is hardware to test this on.
->>
->> Ping. Someone going to pick up this patch?
->
-> if Samuel does not have anything pending for his tree, I can take it through bluetooth-next tree.
+The firmware responding with -EBUSY when trying to add an extra virtual-if
+is a normal thing, do not print an error for this.
 
->From the looks of -next, it doesn't appear so.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 ++++++++++----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5 ++++-
+ 2 files changed, 14 insertions(+), 5 deletions(-)
 
-Rob
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 7ffc4ab..c54e8b4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -688,11 +688,17 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	if (IS_ERR(wdev))
+-		brcmf_err("add iface %s type %d failed: err=%d\n",
+-			  name, type, (int)PTR_ERR(wdev));
+-	else
++	if (IS_ERR(wdev)) {
++		err = PTR_ERR(wdev);
++		if (err != -EBUSY)
++			brcmf_err("add iface %s type %d failed: err=%d\n",
++				  name, type, err);
++		else
++			brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
++				  name, type, err);
++	} else {
+ 		brcmf_cfg80211_update_proto_addr_mode(wdev);
++	}
+ 
+ 	return wdev;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index de19c7c..b5df0a0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2090,7 +2090,10 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+ 	/* Initialize P2P Discovery in the firmware */
+ 	err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
+ 	if (err < 0) {
+-		brcmf_err("set p2p_disc error\n");
++		if (err != -EBUSY)
++			brcmf_err("set p2p_disc error\n");
++		else
++			brcmf_dbg(INFO, "set p2p_disc error\n");
+ 		brcmf_fweh_p2pdev_setup(pri_ifp, false);
+ 		brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
+ 		goto fail;
+-- 
+2.9.3
