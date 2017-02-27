@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:37610 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751112AbdBWN3J (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32495 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751564AbdB0Kd5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Feb 2017 08:29:09 -0500
-Received: by mail-it0-f54.google.com with SMTP id 203so15862461ith.0
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2017 05:29:08 -0800 (PST)
-Date: Thu, 23 Feb 2017 07:01:42 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ryan Mounce <ryan@mounce.com.au>,
-        wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless-regdb: Update rules for Australia (AU) and add
- 60GHz rules
-Message-ID: <20170223130142.GA90803@ubuntu-hedt> (sfid-20170223_142912_969339_69E6BE8A)
-References: <20170218063515.16071-1-ryan@mounce.com.au>
- <20170222213057.GA33925@ubuntu-hedt>
- <CAN+fvRb8R_3QyrnFFp0gd8PCcFXwbitNyh8K=ONqbmsGTrBsHQ@mail.gmail.com>
- <1487829525.1956.2.camel@sipsolutions.net>
+        Mon, 27 Feb 2017 05:33:57 -0500
+From: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: RE: [PATCHv2 0/4] cfg80211: mac80211: BTCOEX feature support
+Date: Mon, 27 Feb 2017 10:33:50 +0000
+Message-ID: <97411eac047e4516b757d432c27cfacd@aphydexm01f.ap.qualcomm.com> (sfid-20170227_113407_681937_2D43D37A)
+References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
+ <d8f813bb-fd25-9957-360e-7aa4cd117822@broadcom.com>
+In-Reply-To: <d8f813bb-fd25-9957-360e-7aa4cd117822@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1487829525.1956.2.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 23, 2017 at 06:58:45AM +0100, Johannes Berg wrote:
-> 
-> > The frequency ranges have been "rounded down" to conform with the
-> > apparent convention of only including ranges used by standard 802.11
-> > channels, rather than using the actual frequency ranges as has been
-> > done for some countries (and most 60GHz rules). My preference is the
-> > latter so that there is a clear correlation between the regdb and
-> > relevant documentation, and so that the regdb may become useful
-> > beyond 802.11. With your blessing as maintainer I will also make this
-> > change to the patch.
-> 
-> I think that's just an artifact of the original database source and
-> would also prefer the documented ranges to be used.
+Hi Arend,
 
-Yes, I prefer the documented ranges as well.
+> >
+> > This patchset add support for BTCOEX feature to enable/disable and
+> > modifying btcoex priority value via nl80211
+> >
+> > Tamizh chelvam (4):
+> >   ath10k: Add support to enable or disable btcoex via nl80211
+> >   ath10k: Add support to update btcoex priority value via nl80211
+> >   dt: bindings: add new dt entry for BTCOEX feature in qcom,ath10k.txt
+> >   ath10k: Add support to read btcoex related data from DT
+>=20
+> This cover letter does not seem to reflect the other patches that were se=
+nt to
+> the wireless list as those are about cfg80211/mac80211; not ath10k?
 
-Thanks,
-Seth
+[Tamizh] ath10k patches are under progress, will send it soon.
+
+>=20
+> Regards,
+> Arend
+>=20
+> > v2 :
+> >   * Introduced NL80211_CMD_SET_BTCOEX to enable/disable btcoex and
+> >     to set/modify btcoex_priority.
+> >   * Added bool variable in wiphy structure to advertise btcoex_priority
+> >     feature and removed BITMAP calculation for btcoex_priority value.
+> >
+> >  .../bindings/net/wireless/qcom,ath10k.txt          |    4 +
+> >  drivers/net/wireless/ath/ath10k/core.c             |   44 ++++++++-
+> >  drivers/net/wireless/ath/ath10k/core.h             |    9 ++
+> >  drivers/net/wireless/ath/ath10k/debug.c            |   40 ++-------
+> >  drivers/net/wireless/ath/ath10k/mac.c              |   94
+> +++++++++++++++++++-
+> >  drivers/net/wireless/ath/ath10k/mac.h              |    1 +
+> >  drivers/net/wireless/ath/ath10k/wmi-ops.h          |   19 ++++
+> >  drivers/net/wireless/ath/ath10k/wmi.c              |   20 +++++
+> >  drivers/net/wireless/ath/ath10k/wmi.h              |   20 +++++
+> >  9 files changed, 215 insertions(+), 36 deletions(-)
+> >
