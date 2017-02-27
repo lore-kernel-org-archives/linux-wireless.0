@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57966 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754037AbdBHOaz (ORCPT
+Received: from outbound.smtp.vt.edu ([198.82.183.121]:46668 "EHLO
+        omr1.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751617AbdB0LKU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 09:30:55 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 00/17] iwlwifi: updates intended for v4.11 2017-02-08
-References: <20170208112322.29413-1-luca@coelho.fi>
-Date: Wed, 08 Feb 2017 16:29:47 +0200
-In-Reply-To: <20170208112322.29413-1-luca@coelho.fi> (Luca Coelho's message of
-        "Wed, 8 Feb 2017 13:23:05 +0200")
-Message-ID: <87vaskn4bo.fsf@kamboji.qca.qualcomm.com> (sfid-20170208_153110_999172_298BF143)
+        Mon, 27 Feb 2017 06:10:20 -0500
+Received: from mr6.cc.vt.edu (mr6.cc.vt.edu [IPv6:2607:b400:92:8500:0:af:2d00:4488])
+        by omr1.cc.vt.edu (8.14.4/8.14.4) with ESMTP id v1RB8rXm016164
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 06:08:53 -0500
+Received: from mail-qk0-f200.google.com (mail-qk0-f200.google.com [209.85.220.200])
+        by mr6.cc.vt.edu (8.14.7/8.14.7) with ESMTP id v1RB8m2i031201
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 06:08:53 -0500
+Received: by mail-qk0-f200.google.com with SMTP id a189so90237044qkc.4
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 03:08:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Gaurang Ramesh Naik <gaurang@vt.edu>
+Date: Mon, 27 Feb 2017 06:08:47 -0500
+Message-ID: <CAFc9h7vC4=0Onx66a19x2QXFFTNkEvnpcmxy0koLu3Z6bymtGw@mail.gmail.com> (sfid-20170227_121024_527490_22A5B2B7)
+Subject: Subcarrier nulling in ath9k
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Hi,
 
-> This is the third and final pull-request before 4.11's merge window.
-> This time I concentrated in bugfixes:
->
-> * Fix 802.11w, which was failing to due an IGTK bug;
-> * A few more bugzilla bug fixes;
-> * A channel-switch race condition fix;
-> * Some fixes related to suspend/resume with new HW;
-> * The RF-kill saga continues;
-> * And some other fixes here and there...
->
-> As usual, I'm pushing this to a pending branch, for kbuild bot, and
-> will send a pull-request later.
->
-> Please review.
+Is it possible to null specific subcarriers through the ath9k driver
+code or ath9k firmware? Or is it completely done at the hardware?
 
-I only see patches 1-8 in the mailing list or in my inbox, what happened
-to the rest?
+Any help is appreciated.
 
--- 
-Kalle Valo
+Thanks,
+GN
