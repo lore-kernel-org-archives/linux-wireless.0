@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17015 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750893AbdBSQeE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Feb 2017 11:34:04 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 0/8] ath10k sdio support
-Date: Sun, 19 Feb 2017 16:33:55 +0000
-Message-ID: <87tw7q2l8v.fsf@qca.qualcomm.com> (sfid-20170219_173408_196609_9E4C2395)
-References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
-        <87fujbhb29.fsf@kamboji.qca.qualcomm.com>
-        <1c87e0d1-1f14-08bb-2a69-650788fba8dc@gmail.com>
-        <877f4ngii5.fsf@kamboji.qca.qualcomm.com>
-        <8737fagu28.fsf@kamboji.qca.qualcomm.com>
-        <e8e1a379-129a-a8c3-9e1f-fb4c70fd0ab6@gmail.com>
-In-Reply-To: <e8e1a379-129a-a8c3-9e1f-fb4c70fd0ab6@gmail.com> (Erik
-        Stromdahl's message of "Sun, 19 Feb 2017 17:21:43 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:45004 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751688AbdB0L5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Feb 2017 06:57:34 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH 4/4] brcmfmac: Handle status == BRCMF_E_STATUS_ABORT in cfg80211_escan_handler
+Date: Mon, 27 Feb 2017 11:01:40 +0100
+Message-Id: <20170227100140.5190-5-hdegoede@redhat.com> (sfid-20170227_125758_537493_33D8C209)
+In-Reply-To: <20170227100140.5190-1-hdegoede@redhat.com>
+References: <20170227100140.5190-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+If a scan gets aborted BRCMF_SCAN_STATUS_BUSY gets cleared in
+cfg->scan_status and when we receive an abort event from the firmware
+the BRCMF_SCAN_STATUS_BUSY check in the cfg80211_escan_handler will
+trigger resulting in multiple errors getting logged.
 
-> Ok, I'll do another round of checkpatch before I submit anything.
-> I couldn't find the script you mentioned though (ath10k-check).
+Check for a status of BRCMF_E_STATUS_ABORT and in this case simply
+cleanly exit the cfg80211_escan_handler. This also avoids a
+BRCMF_E_STATUS_ABORT event arriving after a new scan has been started
+causing the new scan to complete prematurely without any data.
 
-Did you check the link I gave you:
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checki=
-ng_code
-
-> Is it some kind of checkpatch wrapper?
-
-It runs various tests (gcc, sparse, checkpatch), sets some checkpatch
-settings (like line length) and filters out warnings we don't care
-about.
-
-> Anyway, I have a few warnings related to 'line over 80 chars' that
-> is really hard to get rid of (without breaking indentation etc.) so
-> I won't do anything about those for now.
->
-> Then there are some other warnings about the BIT macro being preferred
-> over (1 << x). I have used (1 << x) in some files despite the checkpatch
-> warning in order to keep the patches consistent with the existing code.
-> I think the best approach is to have a separate round of cleanup-patches
-> replacing all (1 << x) with BIT(x).
-
-These are all disabled by ath10k-check. I think it's easiest that you
-forget ath10k-check for now and let me fix those in the next round.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index c0b7f69..4c740b74 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3105,6 +3105,9 @@ brcmf_cfg80211_escan_handler(struct brcmf_if *ifp,
+ 
+ 	status = e->status;
+ 
++	if (status == BRCMF_E_STATUS_ABORT)
++		goto exit;
++
+ 	if (!test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
+ 		brcmf_err("scan not ready, bsscfgidx=%d\n", ifp->bsscfgidx);
+ 		return -EPERM;
+-- 
+2.9.3
