@@ -1,225 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:36560 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbdBEPZa (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:36451 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751550AbdB0MOI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Feb 2017 10:25:30 -0500
-Received: by mail-wr0-f181.google.com with SMTP id k90so11228929wrc.3
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2017 07:25:29 -0800 (PST)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: johannes@sipsolutions.net, jouni@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, davem@davemloft.net,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH v2 1/2] mac80211: fils_aead: Use crypto api CMAC shash rather than bare cipher
-Date: Sun,  5 Feb 2017 15:23:27 +0000
-Message-Id: <1486308208-3252-2-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170205_162537_717346_D94BB1E3)
-In-Reply-To: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
-References: <1486308208-3252-1-git-send-email-ard.biesheuvel@linaro.org>
+        Mon, 27 Feb 2017 07:14:08 -0500
+Received: by mail-lf0-f66.google.com with SMTP id l6so1076072lfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 04:13:08 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 4.12] brcmfmac: get rid of brcmf_txflowblock helper function
+Date: Mon, 27 Feb 2017 13:06:06 +0100
+Message-Id: <20170227120606.15506-1-zajec5@gmail.com> (sfid-20170227_131452_521367_D53817E6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Switch the FILS AEAD code to use a cmac(aes) shash instantiated by the
-crypto API rather than reusing the open coded implementation in
-aes_cmac_vector(). This makes the code more understandable, and allows
-platforms to implement cmac(aes) in a more secure (*) and efficient way
-than is typically possible when using the AES cipher directly.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-So replace the crypto_cipher by a crypto_shash, and update the aes_s2v()
-routine to call the shash interface directly.
+This helper function is pretty trivial and we can easily do without it.
+What's important though it's one of FWS (Firmware Signalling)
+dependencies in core.c. The plan is to make FWS required by BCDC only so
+we don't have to use/compile it when using msgbuf.
 
-* In particular, the generic table based AES implementation is sensitive
-  to known-plaintext timing attacks on the key, to which AES based MAC
-  algorithms are especially vulnerable, given that their plaintext is not
-  usually secret. Time invariant alternatives are available (e.g., based
-  on SIMD algorithms), but may incur a setup cost that is prohibitive when
-  operating on a single block at a time, which is why they don't usually
-  expose the cipher API.
-
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- net/mac80211/Kconfig     |  1 +
- net/mac80211/aes_cmac.h  |  4 --
- net/mac80211/fils_aead.c | 74 +++++++++-----------
- 3 files changed, 35 insertions(+), 44 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 10 ----------
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h |  4 ++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     |  7 +++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c      |  7 +++++--
+ 4 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 3891cbd2adea..76e30f4797fb 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -6,6 +6,7 @@ config MAC80211
- 	select CRYPTO_AES
- 	select CRYPTO_CCM
- 	select CRYPTO_GCM
-+	select CRYPTO_CMAC
- 	select CRC32
- 	---help---
- 	  This option enables the hardware independent IEEE 802.11
-diff --git a/net/mac80211/aes_cmac.h b/net/mac80211/aes_cmac.h
-index c827e1d5de8b..3702041f44fd 100644
---- a/net/mac80211/aes_cmac.h
-+++ b/net/mac80211/aes_cmac.h
-@@ -11,10 +11,6 @@
- 
- #include <linux/crypto.h>
- 
--void gf_mulx(u8 *pad);
--void aes_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
--		     const u8 *addr[], const size_t *len, u8 *mac,
--		     size_t mac_len);
- struct crypto_cipher *ieee80211_aes_cmac_key_setup(const u8 key[],
- 						   size_t key_len);
- void ieee80211_aes_cmac(struct crypto_cipher *tfm, const u8 *aad,
-diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
-index ecfdd97758a3..a294a57e856d 100644
---- a/net/mac80211/fils_aead.c
-+++ b/net/mac80211/fils_aead.c
-@@ -9,66 +9,60 @@
- 
- #include <crypto/aes.h>
- #include <crypto/algapi.h>
-+#include <crypto/hash.h>
- #include <crypto/skcipher.h>
- 
- #include "ieee80211_i.h"
- #include "aes_cmac.h"
- #include "fils_aead.h"
- 
--static int aes_s2v(struct crypto_cipher *tfm,
-+static void gf_mulx(u8 *pad)
-+{
-+	u64 a = get_unaligned_be64(pad);
-+	u64 b = get_unaligned_be64(pad + 8);
-+
-+	put_unaligned_be64((a << 1) | (b >> 63), pad);
-+	put_unaligned_be64((b << 1) ^ ((a >> 63) ? 0x87 : 0), pad + 8);
-+}
-+
-+static int aes_s2v(struct crypto_shash *tfm,
- 		   size_t num_elem, const u8 *addr[], size_t len[], u8 *v)
- {
- 	u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
-+	struct shash_desc *desc;
-+	u8 buf[sizeof(*desc) + crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR;
- 	size_t i;
--	const u8 *data[2];
--	size_t data_len[2], data_elems;
-+
-+	desc = (struct shash_desc *)buf;
-+	desc->tfm = tfm;
- 
- 	/* D = AES-CMAC(K, <zero>) */
--	memset(tmp, 0, AES_BLOCK_SIZE);
--	data[0] = tmp;
--	data_len[0] = AES_BLOCK_SIZE;
--	aes_cmac_vector(tfm, 1, data, data_len, d, AES_BLOCK_SIZE);
-+	crypto_shash_digest(desc, (u8[AES_BLOCK_SIZE]){}, AES_BLOCK_SIZE, d);
- 
- 	for (i = 0; i < num_elem - 1; i++) {
- 		/* D = dbl(D) xor AES_CMAC(K, Si) */
- 		gf_mulx(d); /* dbl */
--		aes_cmac_vector(tfm, 1, &addr[i], &len[i], tmp,
--				AES_BLOCK_SIZE);
-+		crypto_shash_digest(desc, addr[i], len[i], tmp);
- 		crypto_xor(d, tmp, AES_BLOCK_SIZE);
- 	}
- 
-+	crypto_shash_init(desc);
-+
- 	if (len[i] >= AES_BLOCK_SIZE) {
- 		/* len(Sn) >= 128 */
--		size_t j;
--		const u8 *pos;
--
- 		/* T = Sn xorend D */
--
--		/* Use a temporary buffer to perform xorend on Sn (addr[i]) to
--		 * avoid modifying the const input argument.
--		 */
--		data[0] = addr[i];
--		data_len[0] = len[i] - AES_BLOCK_SIZE;
--		pos = addr[i] + data_len[0];
--		for (j = 0; j < AES_BLOCK_SIZE; j++)
--			tmp[j] = pos[j] ^ d[j];
--		data[1] = tmp;
--		data_len[1] = AES_BLOCK_SIZE;
--		data_elems = 2;
-+		crypto_shash_update(desc, addr[i], len[i] - AES_BLOCK_SIZE);
-+		crypto_xor(d, addr[i] + len[i] - AES_BLOCK_SIZE,
-+			   AES_BLOCK_SIZE);
- 	} else {
- 		/* len(Sn) < 128 */
- 		/* T = dbl(D) xor pad(Sn) */
- 		gf_mulx(d); /* dbl */
--		memset(tmp, 0, AES_BLOCK_SIZE);
--		memcpy(tmp, addr[i], len[i]);
--		tmp[len[i]] = 0x80;
--		crypto_xor(d, tmp, AES_BLOCK_SIZE);
--		data[0] = d;
--		data_len[0] = sizeof(d);
--		data_elems = 1;
-+		crypto_xor(d, addr[i], len[i]);
-+		d[len[i]] ^= 0x80;
- 	}
- 	/* V = AES-CMAC(K, T) */
--	aes_cmac_vector(tfm, data_elems, data, data_len, v, AES_BLOCK_SIZE);
-+	crypto_shash_finup(desc, d, AES_BLOCK_SIZE, v);
- 
- 	return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 2f2f3a5ad86a..59831dc446d6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -283,16 +283,6 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ 	spin_unlock_irqrestore(&ifp->netif_stop_lock, flags);
  }
-@@ -80,7 +74,7 @@ static int aes_siv_encrypt(const u8 *key, size_t key_len,
- 			   size_t len[], u8 *out)
+ 
+-void brcmf_txflowblock(struct device *dev, bool state)
+-{
+-	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_pub *drvr = bus_if->drvr;
+-
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	brcmf_fws_bus_blocked(drvr, state);
+-}
+-
+ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
  {
- 	u8 v[AES_BLOCK_SIZE];
--	struct crypto_cipher *tfm;
-+	struct crypto_shash *tfm;
- 	struct crypto_skcipher *tfm2;
- 	struct skcipher_request *req;
- 	int res;
-@@ -95,14 +89,14 @@ static int aes_siv_encrypt(const u8 *key, size_t key_len,
+ 	if (skb->pkt_type == PACKET_MULTICAST)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index 96df66073b2a..bb4591c4a14a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -18,6 +18,10 @@
+ #ifndef FWSIGNAL_H_
+ #define FWSIGNAL_H_
  
- 	/* S2V */
++struct brcmf_fws_info;
++struct brcmf_if;
++struct brcmf_pub;
++
+ int brcmf_fws_init(struct brcmf_pub *drvr);
+ void brcmf_fws_deinit(struct brcmf_pub *drvr);
+ bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index c5744b45ec8f..10522edc9750 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -44,6 +44,7 @@
+ #include "firmware.h"
+ #include "core.h"
+ #include "common.h"
++#include "fwsignal.h"
  
--	tfm = crypto_alloc_cipher("aes", 0, 0);
-+	tfm = crypto_alloc_shash("cmac(aes)", 0, 0);
- 	if (IS_ERR(tfm))
- 		return PTR_ERR(tfm);
- 	/* K1 for S2V */
--	res = crypto_cipher_setkey(tfm, key, key_len);
-+	res = crypto_shash_setkey(tfm, key, key_len);
- 	if (!res)
- 		res = aes_s2v(tfm, num_elem, addr, len, v);
--	crypto_free_cipher(tfm);
-+	crypto_free_shash(tfm);
- 	if (res)
- 		return res;
+ #define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
+ #define CTL_DONE_TIMEOUT	msecs_to_jiffies(2500)
+@@ -2272,6 +2273,7 @@ static int brcmf_sdio_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
  
-@@ -157,7 +151,7 @@ static int aes_siv_decrypt(const u8 *key, size_t key_len,
- 			   size_t num_elem, const u8 *addr[], size_t len[],
- 			   u8 *out)
+ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
  {
--	struct crypto_cipher *tfm;
-+	struct crypto_shash *tfm;
- 	struct crypto_skcipher *tfm2;
- 	struct skcipher_request *req;
- 	struct scatterlist src[1], dst[1];
-@@ -210,14 +204,14 @@ static int aes_siv_decrypt(const u8 *key, size_t key_len,
++	struct brcmf_pub *pub = bus->sdiodev->bus_if->drvr;
+ 	struct sk_buff *pkt;
+ 	struct sk_buff_head pktq;
+ 	u32 intstatus = 0;
+@@ -2328,7 +2330,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 	if ((bus->sdiodev->state == BRCMF_SDIOD_DATA) &&
+ 	    bus->txoff && (pktq_len(&bus->txq) < TXLOW)) {
+ 		bus->txoff = false;
+-		brcmf_txflowblock(bus->sdiodev->dev, false);
++		brcmf_fws_bus_blocked(pub, false);
+ 	}
  
- 	/* S2V */
+ 	return cnt;
+@@ -2723,6 +2725,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
++	struct brcmf_pub *pub = bus->sdiodev->bus_if->drvr;
  
--	tfm = crypto_alloc_cipher("aes", 0, 0);
-+	tfm = crypto_alloc_shash("cmac(aes)", 0, 0);
- 	if (IS_ERR(tfm))
- 		return PTR_ERR(tfm);
- 	/* K1 for S2V */
--	res = crypto_cipher_setkey(tfm, key, key_len);
-+	res = crypto_shash_setkey(tfm, key, key_len);
- 	if (!res)
- 		res = aes_s2v(tfm, num_elem, addr, len, check);
--	crypto_free_cipher(tfm);
-+	crypto_free_shash(tfm);
- 	if (res)
- 		return res;
- 	if (memcmp(check, frame_iv, AES_BLOCK_SIZE) != 0)
+ 	brcmf_dbg(TRACE, "Enter: pkt: data %p len %d\n", pkt->data, pkt->len);
+ 	if (sdiodev->state != BRCMF_SDIOD_DATA)
+@@ -2753,7 +2756,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 
+ 	if (pktq_len(&bus->txq) >= TXHI) {
+ 		bus->txoff = true;
+-		brcmf_txflowblock(dev, true);
++		brcmf_fws_bus_blocked(pub, true);
+ 	}
+ 	spin_unlock_bh(&bus->txq_lock);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index d93ebbdc7737..c527aa8a5f8f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -26,6 +26,7 @@
+ #include "bus.h"
+ #include "debug.h"
+ #include "firmware.h"
++#include "fwsignal.h"
+ #include "usb.h"
+ #include "core.h"
+ #include "common.h"
+@@ -476,6 +477,7 @@ static void brcmf_usb_tx_complete(struct urb *urb)
+ {
+ 	struct brcmf_usbreq *req = (struct brcmf_usbreq *)urb->context;
+ 	struct brcmf_usbdev_info *devinfo = req->devinfo;
++	struct brcmf_pub *pub = devinfo->bus_pub.bus->drvr;
+ 	unsigned long flags;
+ 
+ 	brcmf_dbg(USB, "Enter, urb->status=%d, skb=%p\n", urb->status,
+@@ -488,7 +490,7 @@ static void brcmf_usb_tx_complete(struct urb *urb)
+ 	spin_lock_irqsave(&devinfo->tx_flowblock_lock, flags);
+ 	if (devinfo->tx_freecount > devinfo->tx_high_watermark &&
+ 		devinfo->tx_flowblock) {
+-		brcmf_txflowblock(devinfo->dev, false);
++		brcmf_fws_bus_blocked(pub, false);
+ 		devinfo->tx_flowblock = false;
+ 	}
+ 	spin_unlock_irqrestore(&devinfo->tx_flowblock_lock, flags);
+@@ -598,6 +600,7 @@ brcmf_usb_state_change(struct brcmf_usbdev_info *devinfo, int state)
+ static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
+ {
+ 	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(dev);
++	struct brcmf_pub *pub = devinfo->bus_pub.bus->drvr;
+ 	struct brcmf_usbreq  *req;
+ 	int ret;
+ 	unsigned long flags;
+@@ -635,7 +638,7 @@ static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
+ 	spin_lock_irqsave(&devinfo->tx_flowblock_lock, flags);
+ 	if (devinfo->tx_freecount < devinfo->tx_low_watermark &&
+ 	    !devinfo->tx_flowblock) {
+-		brcmf_txflowblock(dev, true);
++		brcmf_fws_bus_blocked(pub, true);
+ 		devinfo->tx_flowblock = true;
+ 	}
+ 	spin_unlock_irqrestore(&devinfo->tx_flowblock_lock, flags);
 -- 
-2.7.4
+2.11.0
