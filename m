@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:34514 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbdBHTu3 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47302 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751555AbdB0RQh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 14:50:29 -0500
-Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h
- include
-To: Kalle Valo <kvalo@codeaurora.org>,
-        David Miller <davem@davemloft.net>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
- <20170208.110626.346978547122180233.davem@davemloft.net>
- <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
-Cc: netdev@vger.kernel.org, linux-mips@linux-mips.org,
-        linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        target-devel@vger.kernel.org, andrew@lunn.ch,
-        anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com,
-        felix.manlunas@caviumnetworks.com, bfields@fieldses.org,
-        jlayton@poochiereds.net, jirislaby@gmail.com,
-        mcgrof@do-not-panic.com, madalin.bucur@nxp.com,
-        UNGLinuxDriver@microchip.com, nab@linux-iscsi.org,
-        mickflemm@gmail.com, nicolas.ferre@atmel.com,
-        raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org,
-        satananda.burla@caviumnetworks.com,
-        thomas.petazzoni@free-electrons.com, timur@codeaurora.org,
-        trond.myklebust@primarydata.com,
-        vivien.didelot@savoirfairelinux.com, woojung.huh@microchip.com
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com> (sfid-20170208_205100_383758_E63C3188)
-Date: Wed, 8 Feb 2017 11:45:11 -0800
+        Mon, 27 Feb 2017 12:16:37 -0500
+Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in
+ NEW_RADIO/GET_RADIO
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
+ <20170223120211.22358-2-andrew.zaborowski@intel.com>
+ <1488202062.28431.7.camel@sipsolutions.net>
+ <CAOq732JzrGxFUa5BiuO=Sz7gscRV7PFxOOyy1xf6mtmQfUqkaA@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <2155efb0-1325-0089-fbb1-cc63cc289745@candelatech.com> (sfid-20170227_181705_859394_2696639F)
+Date: Mon, 27 Feb 2017 09:10:34 -0800
 MIME-Version: 1.0
-In-Reply-To: <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAOq732JzrGxFUa5BiuO=Sz7gscRV7PFxOOyy1xf6mtmQfUqkaA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2017 08:11 AM, Kalle Valo wrote:
-> David Miller <davem@davemloft.net> writes:
-> 
->> From: Florian Fainelli <f.fainelli@gmail.com>
->> Date: Tue,  7 Feb 2017 15:02:53 -0800
+
+
+On 02/27/2017 07:26 AM, Andrew Zaborowski wrote:
+> Hi,
+>
+> On 27 February 2017 at 14:27, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> Additionally I tried to add a HWSIM_ATTR_WIPHY to report the wiphy
+>>> index directly without users going through wiphy name to index
+>>> mapping, but get_wiphy_idx() is internal to cfg80211.  The index is
+>>> exposed to userspace and is more useful than the name so I wonder if
+>>> this function should be exported from cfg80211.
 >>
->>> I'm hoping this doesn't conflict with what's already in net-next...
->>>
->>> David, this should probably go via your tree considering the diffstat.
+>> Do you really need the address?
+>
+> As it turns out it can be read from /sys, but I do need it so I can
+> know what to put in HWSIM_ATTR_ADDR_RECEIVER based on the destination
+> addr in the frame or if I want to forward the frame to all radios.  Or
+> is there another way to know that?
+>
 >>
->> I think you need one more respin.  Are you doing an allmodconfig build?
+>> I'd actually prefer to *only* have the wiphy index, and I don't really
+>> see a problem with moving the wiphy_idx from struct
+>> cfg80211_registered_device to struct wiphy.
+>
+> Ok, I'll try that.  get_wiphy_idx can stay in place, not sure if I
+> should just drop it.
+>
+> By having *only* the wiphy index you don't mean dropping the radio
+> names altogether?  The don't seem useful but userspace may expect
+> them.
 
-I did not, instead tried to test each driver individually in different
-configurations...
+I find the name and addr more useful than an 'index', because if you remove/add
+a virtual phy, then the index will probably change, even if name and MAC addr may stay
+the same (and so probably be the same logical entitity).
 
->> If not, for something like this it's a must:
->>
->> drivers/net/wireless/ath/wil6210/cfg80211.c:24:30: error: expected ‘)’ before ‘bool’
->>  module_param(disable_ap_sme, bool, 0444);
->>                               ^
->> drivers/net/wireless/ath/wil6210/cfg80211.c:25:34: error: expected ‘)’ before string constant
->>  MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
->>                                   ^
->> Like like that file needs linux/module.h included.
-> 
-> Johannes already fixed a similar (or same) problem in my tree:
-> 
-> wil6210: include moduleparam.h
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=949c2d0096753d518ef6e0bd8418c8086747196b
-> 
-> I'm planning to send you a pull request tomorrow which contains that
-> one.
+Since phys can be renamed, you cannot assume that the phy will be called
+phyX where X is the device-id.
 
-Thanks Kalle!
+Thanks,
+Ben
 
-David, can you hold on this series until Kalle's pull request gets
-submitted? Past this error, allmodconfig builds fine with this patch
-series (just tested). Thanks!
 -- 
-Florian
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
