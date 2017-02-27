@@ -1,89 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37638 "EHLO
+Received: from mail2.candelatech.com ([208.74.158.173]:37270 "EHLO
         mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751525AbdBPBQh (ORCPT
+        with ESMTP id S1751344AbdB1Ece (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 20:16:37 -0500
+        Mon, 27 Feb 2017 23:32:34 -0500
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] mac80211:  allow overriding station bandwidth.
-Date: Wed, 15 Feb 2017 17:16:34 -0800
-Message-Id: <1487207794-19663-1-git-send-email-greearb@candelatech.com> (sfid-20170216_021641_438391_8E454871)
+Subject: [PATCH v2 4/4] mac80211-hwsim: add length checks before allocating skb.
+Date: Mon, 27 Feb 2017 13:56:33 -0800
+Message-Id: <1488232593-2552-4-git-send-email-greearb@candelatech.com> (sfid-20170228_053240_112558_3745F639)
+In-Reply-To: <1488232593-2552-1-git-send-email-greearb@candelatech.com>
+References: <1488232593-2552-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Ben Greear <greearb@candelatech.com>
 
-This allows one to disable VHT160 (or 80+80) on hardware
-that might otherwise try to use it.
+Modify the receive-from-user-space logic to do length
+and 'is-down' checks before trying to allocate an skb.
+
+And, if we are going to ignore the pkt due to radio idle,
+then do not return an error code to user-space.  User-space
+cannot reliably know exactly when a radio is idle or not.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-v2: Change description
 
- include/linux/ieee80211.h |  1 +
- net/mac80211/main.c       |  1 +
- net/mac80211/vht.c        | 23 +++++++++++++++++++++++
- 3 files changed, 25 insertions(+)
+v2:  Don't return success when radio is idle, but do return unique
+     error code (ENETDOWN) in hopes user-space can make a distinction.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index a80516f..e5dc3a8 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1542,6 +1542,7 @@ struct ieee80211_vht_operation {
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ		0x00000004
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ	0x00000008
- #define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK			0x0000000C
-+#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT			2
- #define IEEE80211_VHT_CAP_RXLDPC				0x00000010
- #define IEEE80211_VHT_CAP_SHORT_GI_80				0x00000020
- #define IEEE80211_VHT_CAP_SHORT_GI_160				0x00000040
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index ec5587d..1447b47 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -464,6 +464,7 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
- static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
- 	.vht_cap_info =
- 		cpu_to_le32(IEEE80211_VHT_CAP_RXLDPC |
-+			    IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK |
- 			    IEEE80211_VHT_CAP_SHORT_GI_80 |
- 			    IEEE80211_VHT_CAP_SHORT_GI_160 |
- 			    IEEE80211_VHT_CAP_RXSTBC_1 |
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 720c64c..5684e13 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -56,6 +56,29 @@ void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	__check_vhtcap_disable(sdata, vht_cap,
- 			       IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN);
+ drivers/net/wireless/mac80211_hwsim.c | 41 +++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index c259b99..73dc627 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3020,6 +3020,7 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	int frame_data_len;
+ 	void *frame_data;
+ 	struct sk_buff *skb = NULL;
++	int rv = -EINVAL;
  
-+	/* Allow disabling 160Mhz or 80+80 */
-+	if (sdata->u.mgd.vht_capa_mask.vht_cap_info &
-+	    cpu_to_le32(IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
-+		u32 cap, n;
-+
-+		n = le32_to_cpu(sdata->u.mgd.vht_capa.vht_cap_info) &
-+			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
-+		n >>= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
-+		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
-+		cap >>= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
-+
-+		if (n < cap) {
-+			vht_cap->cap &=
-+				~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
-+			vht_cap->cap |=
-+				n << IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_SHIFT;
-+
-+			/* Cannot do short GI 160 if we cannot do 160 or 80+80 */
-+			if (n == 0)
-+				vht_cap->cap &= ~IEEE80211_VHT_CAP_SHORT_GI_160;
-+		}
+ 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
+ 	    !info->attrs[HWSIM_ATTR_FRAME] ||
+@@ -3034,25 +3035,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
+ 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
+ 
+-	/* Allocate new skb here */
+-	skb = alloc_skb(frame_data_len, GFP_KERNEL);
+-	if (skb == NULL) {
+-		if (hwsim_ratelimit())
+-			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
+-			       frame_data_len);
+-		goto out;
+-	}
+-
+-	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
+-		if (hwsim_ratelimit())
+-			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
+-			       frame_data_len, IEEE80211_MAX_DATA_LEN);
+-		goto out;
+-	}
+-
+-	/* Copy the data */
+-	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
+-
+ 	data2 = get_hwsim_data_ref_from_addr(dst);
+ 
+ 	if (!data2) {
+@@ -3081,9 +3063,30 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 		if (((cnt++ & 0x3FF) == 0x3FF) && hwsim_ratelimit())
+ 			printk(KERN_DEBUG " hwsim rx-nl: radio %pM idle: %d or not started: %d cnt: %d\n",
+ 			       dst, data2->idle, !data2->started, cnt);
++		rv = -ENETDOWN;
+ 		goto out;
+ 	}
+ 
++	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
++		if (hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
++			       frame_data_len, IEEE80211_MAX_DATA_LEN);
++		goto out;
 +	}
 +
- 	/* Allow user to decrease AMPDU length exponent */
- 	if (sdata->u.mgd.vht_capa_mask.vht_cap_info &
- 	    cpu_to_le32(IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK)) {
++
++	/* Allocate new skb here */
++	skb = alloc_skb(frame_data_len, GFP_KERNEL);
++	if (skb == NULL) {
++		if (hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
++			       frame_data_len);
++		goto out;
++	}
++
++	/* Copy the data */
++	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
++
+ 	/* A frame is received from user space */
+ 	memset(&rx_status, 0, sizeof(rx_status));
+ 	if (info->attrs[HWSIM_ATTR_FREQ]) {
 -- 
 2.4.11
