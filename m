@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2224 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932121AbdBNRkp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 12:40:45 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v4] ath10k: fix napi crash during rmmod when probe firmware fails
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <148672748569.28126.12259592472689214081.stgit@potku.adurom.net>
-References: <148672748569.28126.12259592472689214081.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <ecab7adaed014dc1a51eb4c063c879aa@eusanexr01a.eu.qualcomm.com> (sfid-20170214_184054_544316_DB99DD26)
-Date: Tue, 14 Feb 2017 09:40:40 -0800
+Received: from s3.sipsolutions.net ([5.9.151.49]:36438 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751356AbdB0NYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Feb 2017 08:24:42 -0500
+Message-ID: <1488201862.28431.5.camel@sipsolutions.net> (sfid-20170227_142445_574059_E83A1207)
+Subject: Re: [PATCH 1/2] mac80211_hwsim: Make sure NEW_RADIO contains final
+ name
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+Date: Mon, 27 Feb 2017 14:24:22 +0100
+In-Reply-To: <CAOq732LiwZ13wVuB+wvk6nOCpY+oq=KWhcY1Au2zpcGSWsZ3uA@mail.gmail.com> (sfid-20170224_010957_854416_31DD49EC)
+References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
+         <CAOq732LiwZ13wVuB+wvk6nOCpY+oq=KWhcY1Au2zpcGSWsZ3uA@mail.gmail.com>
+         (sfid-20170224_010957_854416_31DD49EC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> This fixes the below crash when ath10k probe firmware fails, NAPI polling tries
-> to access a rx ring resource which was never allocated. An easy way to
-> reproduce this is easy to remove all the firmware files, load ath10k modules
-> and ath10k will crash when calling 'rmmod ath10k_pci'. The fix is to call
-> napi_enable() from ath10k_pci_hif_start() so that it matches with
-> napi_disable() being called from ath10k_pci_hif_stop().
+On Fri, 2017-02-24 at 01:08 +0100, Andrew Zaborowski wrote:
+> On 23 February 2017 at 13:02, Andrew Zaborowski
+> <andrew.zaborowski@intel.com> wrote:
+> > ieee80211_alloc_hw_nm will validate the requested name (if any)
+> > before
+> > creating the new device and may use a name different from the one
+> > requested rather than fail.  Make sure the HWSIM_CMD_NEW_RADIO
+> > event/response generated has the final name or userspace will
+> > receive
+> > the wrong name.  Note that mac80211_hwsim_new_radio may now modify
+> > params.
 > 
-> Big thanks to Mohammed Shafi Shajakhan who debugged this and provided first
-> version of the fix. In this patch I just fix the actual problem in pci.c
-> instead of having a workaround in core.c.
-> 
-> BUG: unable to handle kernel NULL pointer dereference at (null)
-> IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-> __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-> 
-> Call Trace:
-> 
-> [<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90
-> [ath10k_core]
-> [<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0
-> [ath10k_core]
-> [<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80
-> [<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150
-> [<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]
-> [<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]
-> [<ffffffff817863af>] net_rx_action+0x20f/0x370
-> 
-> Reported-by: Ben Greear <greearb@candelatech.com>
-> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Also related to this I find that the HWSIM_ATTR_RADIO_NAME attributes
+> emitted contain the name string and are exactly of the right length
+> while the HWSIM_ATTR_RADIO_NAME attributes received by the kernel are
+> assumed to be NUL-terminated.  
 
-Patch applied to ath-next branch of ath.git, thanks.
+I'll agree this is a bit strange - I guess it's too late to fix now
+though since userspace might assume "length/data" is the string, rather
+than "0-terminated" (especially if there's something like python
+userspace where strings can trivially contain NUL bytes).
 
-1427228d5869 ath10k: fix napi crash during rmmod when probe firmware fails
+nla_put_string() would have added the NUL byte.
 
--- 
-https://patchwork.kernel.org/patch/9566625/
+> Is there a guarantee that a 0-byte
+> follows an attribute, or should this be changed for consistency?
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+        [HWSIM_ATTR_RADIO_NAME] = { .type = NLA_STRING },
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+enforces that a NUL byte *must* be present when userspace gives us the
+information, so we're save - just asymmetric.
+
+Anyway, patch applied.
+
+johannes
