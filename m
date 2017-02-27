@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19922 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932559AbdBHRUM (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:37219 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751468AbdB1AQf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 12:20:12 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 27 Feb 2017 19:16:35 -0500
+From: Colin King <colin.king@canonical.com>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: ipw2200: remove redundant check of rc < 0
+Date: Mon, 27 Feb 2017 23:40:19 +0000
+Message-Id: <20170227234019.19081-1-colin.king@canonical.com> (sfid-20170228_011807_652278_3E80D0CC)
 MIME-Version: 1.0
-Subject: Re: ath10k: remove unneeded semicolon
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170202175342.26338-1-ext.waldemar.rymarkiewicz@tieto.com>
-References: <20170202175342.26338-1-ext.waldemar.rymarkiewicz@tieto.com>
-To: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-        Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <89b71a98539949e19cf155993b6d7320@eusanexr01a.eu.qualcomm.com> (sfid-20170208_182132_089063_094C2BAC)
-Date: Wed, 8 Feb 2017 07:01:13 -0800
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com> wrote:
-> Remove redundant semicolon after switch statement.
-> 
-> Signed-off-by: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+The check for rc < 0 is always false so the check is redundant
+and can be removed.
 
-dab55d1083db ath10k: remove unneeded semicolon
+Detected with CoverityScan, CID#101143 ("Logically dead code")
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index 5ef3c5c..bbc579b 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -3539,9 +3539,6 @@ static int ipw_load(struct ipw_priv *priv)
+ 	fw_img = &fw->data[le32_to_cpu(fw->boot_size) +
+ 			   le32_to_cpu(fw->ucode_size)];
+ 
+-	if (rc < 0)
+-		goto error;
+-
+ 	if (!priv->rxq)
+ 		priv->rxq = ipw_rx_queue_alloc(priv);
+ 	else
 -- 
-https://patchwork.kernel.org/patch/9552819/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.10.2
