@@ -1,98 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55146 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37998 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751077AbdBOJaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2017 04:30:21 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+        id S1751046AbdB0QRi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Feb 2017 11:17:38 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH v2 08/10] rt2800: status based rate flags for nomatch case
-Date: Wed, 15 Feb 2017 10:25:11 +0100
-Message-Id: <1487150713-3510-9-git-send-email-sgruszka@redhat.com> (sfid-20170215_103024_952079_95F50AEB)
-In-Reply-To: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
-References: <1487150713-3510-1-git-send-email-sgruszka@redhat.com>
+Cc: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211_hwsim: check HWSIM_ATTR_RADIO_NAME length
+Date: Mon, 27 Feb 2017 17:16:40 +0100
+Message-Id: <20170227161640.3874-1-johannes@sipsolutions.net> (sfid-20170227_171849_384843_20C034F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We use skb_desc->tx_rate_flags from entry as rate[].flags even if
-skb does not match status. Patch corrects flags and also fixes
-mcs for legacy rates.
+From: Johannes Berg <johannes.berg@intel.com>
 
-rt2800_rate_from_status() is based on Felix's mt76
-mt76x2_mac_process_tx_rate() function.
+Unfortunately, the nla policy was defined to have HWSIM_ATTR_RADIO_NAME
+as an NLA_STRING, rather than NLA_NUL_STRING, so we can't use it as a
+NUL-terminated string in the kernel.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Rather than break the API, kasprintf() the string to a new buffer to
+guarantee NUL termination.
+
+Reported-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800.h    |  2 ++
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 35 +++++++++++++++++++++++++-
- 2 files changed, 36 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 28 +++++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 0e7051d..480b086 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -1760,6 +1760,8 @@
- #define TX_STA_FIFO_WCID		FIELD32(0x0000ff00)
- #define TX_STA_FIFO_SUCCESS_RATE	FIELD32(0xffff0000)
- #define TX_STA_FIFO_MCS			FIELD32(0x007f0000)
-+#define TX_STA_FIFO_BW			FIELD32(0x00800000)
-+#define TX_STA_FIFO_SGI			FIELD32(0x01000000)
- #define TX_STA_FIFO_PHYMODE		FIELD32(0xc0000000)
- 
- /*
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 4a7bec7..8d00c59 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -852,6 +852,39 @@ void rt2800_process_rxwi(struct queue_entry *entry,
- }
- EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
- 
-+static void rt2800_rate_from_status(struct skb_frame_desc *skbdesc,
-+				    u32 status, enum nl80211_band band)
-+{
-+	u8 flags = 0;
-+	u8 idx = rt2x00_get_field32(status, TX_STA_FIFO_MCS);
-+
-+	switch (rt2x00_get_field32(status, TX_STA_FIFO_PHYMODE)) {
-+	case RATE_MODE_HT_GREENFIELD:
-+		flags |= IEEE80211_TX_RC_GREEN_FIELD;
-+		/* fall through */
-+	case RATE_MODE_HT_MIX:
-+		flags |= IEEE80211_TX_RC_MCS;
-+		break;
-+	case RATE_MODE_OFDM:
-+		if (band == NL80211_BAND_2GHZ)
-+			idx += 4;
-+		break;
-+	case RATE_MODE_CCK:
-+		if (idx >= 8)
-+			idx -= 8;
-+		break;
-+	}
-+
-+	if (rt2x00_get_field32(status, TX_STA_FIFO_BW))
-+		flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+
-+	if (rt2x00_get_field32(status, TX_STA_FIFO_SGI))
-+		flags |= IEEE80211_TX_RC_SHORT_GI;
-+
-+	skbdesc->tx_rate_idx = idx;
-+	skbdesc->tx_rate_flags = flags;
-+}
-+
- void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
- 			 bool match)
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 0889fc81ce9e..50c219fb1a52 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3056,6 +3056,7 @@ static int hwsim_register_received_nl(struct sk_buff *skb_2,
+ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
  {
-@@ -898,7 +931,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
- 	 * and provide retry count.
-  	 */
- 	if (unlikely((aggr == 1 && ampdu == 0 && real_mcs != mcs)) || !match) {
--		skbdesc->tx_rate_idx = real_mcs;
-+		rt2800_rate_from_status(skbdesc, status, rt2x00dev->curr_band);
- 		mcs = real_mcs;
+ 	struct hwsim_new_radio_params param = { 0 };
++	const char *hwname = NULL;
+ 
+ 	param.reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
+ 	param.p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
+@@ -3069,8 +3070,14 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	if (info->attrs[HWSIM_ATTR_NO_VIF])
+ 		param.no_vif = true;
+ 
+-	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
+-		param.hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
++	if (info->attrs[HWSIM_ATTR_RADIO_NAME]) {
++		hwname = kasprintf(GFP_KERNEL, "%.*s",
++				   nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
++				   (char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]));
++		if (!hwname)
++			return -ENOMEM;
++		param.hwname = hwname;
++	}
+ 
+ 	if (info->attrs[HWSIM_ATTR_USE_CHANCTX])
+ 		param.use_chanctx = true;
+@@ -3098,11 +3105,15 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	s64 idx = -1;
+ 	const char *hwname = NULL;
+ 
+-	if (info->attrs[HWSIM_ATTR_RADIO_ID])
++	if (info->attrs[HWSIM_ATTR_RADIO_ID]) {
+ 		idx = nla_get_u32(info->attrs[HWSIM_ATTR_RADIO_ID]);
+-	else if (info->attrs[HWSIM_ATTR_RADIO_NAME])
+-		hwname = (void *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
+-	else
++	} else if (info->attrs[HWSIM_ATTR_RADIO_NAME]) {
++		hwname = kasprintf(GFP_KERNEL, "%.*s",
++				   nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
++				   (char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]));
++		if (!hwname)
++			return -ENOMEM;
++	} else
+ 		return -EINVAL;
+ 
+ 	spin_lock_bh(&hwsim_radio_lock);
+@@ -3111,7 +3122,8 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 			if (data->idx != idx)
+ 				continue;
+ 		} else {
+-			if (strcmp(hwname, wiphy_name(data->hw->wiphy)))
++			if (!hwname ||
++			    strcmp(hwname, wiphy_name(data->hw->wiphy)))
+ 				continue;
+ 		}
+ 
+@@ -3122,10 +3134,12 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 		spin_unlock_bh(&hwsim_radio_lock);
+ 		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
+ 					 info);
++		kfree(hwname);
+ 		return 0;
  	}
+ 	spin_unlock_bh(&hwsim_radio_lock);
+ 
++	kfree(hwname);
+ 	return -ENODEV;
+ }
  
 -- 
-1.8.3.1
+2.11.0
