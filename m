@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37994 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753381AbdBCOkI (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:34282 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752193AbdB0PRn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Feb 2017 09:40:08 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  3 Feb 2017 16:37:59 +0200
-Message-Id: <20170203143812.7525-13-luca@coelho.fi> (sfid-20170203_154010_527980_A9A86517)
-In-Reply-To: <20170203143812.7525-1-luca@coelho.fi>
-References: <20170203143812.7525-1-luca@coelho.fi>
-Subject: [PATCH 12/25] iwlwifi: mvm: fix D3 replay counter value
+        Mon, 27 Feb 2017 10:17:43 -0500
+Received: by mail-io0-f195.google.com with SMTP id n76so4557664ioe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 07:16:31 -0800 (PST)
+Received: from mail-io0-f171.google.com (mail-io0-f171.google.com. [209.85.223.171])
+        by smtp.gmail.com with ESMTPSA id s90sm1817823ioe.12.2017.02.27.07.16.30
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 27 Feb 2017 07:16:30 -0800 (PST)
+Received: by mail-io0-f171.google.com with SMTP id g18so33271023ioe.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2017 07:16:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1488201862.28431.5.camel@sipsolutions.net>
+References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
+ <CAOq732LiwZ13wVuB+wvk6nOCpY+oq=KWhcY1Au2zpcGSWsZ3uA@mail.gmail.com> <1488201862.28431.5.camel@sipsolutions.net>
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Mon, 27 Feb 2017 16:16:29 +0100
+Message-ID: <CAOq732L0wT+HMouihfSYu4hwxy=fh6pieMY3r2DOO1tVXxqw1A@mail.gmail.com> (sfid-20170227_161819_569660_21712365)
+Subject: Re: [PATCH 1/2] mac80211_hwsim: Make sure NEW_RADIO contains final name
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-This fixes a long-standing bug that was introduced when this code
-was introduced: cfg80211 passes a pointer, but we treat it as if
-it was passing a value. The result is that we pass the pointer to
-the firmware, instead of the value. It's not clear how this could
-ever have worked, unless the firmware is ignoring this value.
+On 27 February 2017 at 14:24, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2017-02-24 at 01:08 +0100, Andrew Zaborowski wrote:
+>> Also related to this I find that the HWSIM_ATTR_RADIO_NAME attributes
+>> emitted contain the name string and are exactly of the right length
+>> while the HWSIM_ATTR_RADIO_NAME attributes received by the kernel are
+>> assumed to be NUL-terminated.
+>
+> I'll agree this is a bit strange - I guess it's too late to fix now
+> though since userspace might assume "length/data" is the string, rather
+> than "0-terminated" (especially if there's something like python
+> userspace where strings can trivially contain NUL bytes).
+>
+> nla_put_string() would have added the NUL byte.
+>
+>> Is there a guarantee that a 0-byte
+>> follows an attribute, or should this be changed for consistency?
+>
+>         [HWSIM_ATTR_RADIO_NAME] = { .type = NLA_STRING },
+>
+> enforces that a NUL byte *must* be present when userspace gives us the
+> information, so we're save - just asymmetric.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It seems that would be NLA_NUL_STRING, whlie for NLA_STRING it's
+optional, I know because I didn't add the NUL in my userspace and
+things still worked.  We can copy the received nla_data into a buffer
+and add the 0-byte there to support this as an option.  I don't have a
+problem with the asymmetric usage though.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index b02d7fc5116f..c7eb1983c4f9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -91,7 +91,7 @@ void iwl_mvm_set_rekey_data(struct ieee80211_hw *hw,
- 	memcpy(mvmvif->rekey_data.kek, data->kek, NL80211_KEK_LEN);
- 	memcpy(mvmvif->rekey_data.kck, data->kck, NL80211_KCK_LEN);
- 	mvmvif->rekey_data.replay_ctr =
--		cpu_to_le64(be64_to_cpup((__be64 *)&data->replay_ctr));
-+		cpu_to_le64(be64_to_cpup((__be64 *)data->replay_ctr));
- 	mvmvif->rekey_data.valid = true;
- 
- 	mutex_unlock(&mvm->mutex);
--- 
-2.11.0
+>
+> Anyway, patch applied.
+
+Thanks
+Best regards
