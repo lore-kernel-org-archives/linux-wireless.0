@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45040 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754286AbdBHMvS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 07:51:18 -0500
-Message-ID: <1486557177.24745.8.camel@sipsolutions.net> (sfid-20170208_135215_219750_E75BB426)
-Subject: Re: [PATCH v4 3/5] cfg80211: Accept multiple RSSI thresholds for CQM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 08 Feb 2017 13:32:57 +0100
-In-Reply-To: <CAOq732KyMG26f7X4NiOdChyF3Qq=X9YgvCunecai+UrQAByByA@mail.gmail.com> (sfid-20170208_122615_680060_2C19C18A)
-References: <20170125114344.8179-1-andrew.zaborowski@intel.com>
-         <20170125114344.8179-3-andrew.zaborowski@intel.com>
-         <1486547933.24745.2.camel@sipsolutions.net>
-         <CAOq732KyMG26f7X4NiOdChyF3Qq=X9YgvCunecai+UrQAByByA@mail.gmail.com>
-         (sfid-20170208_122615_680060_2C19C18A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f45.google.com ([209.85.214.45]:38012 "EHLO
+        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751396AbdB1Wdc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Feb 2017 17:33:32 -0500
+Received: by mail-it0-f45.google.com with SMTP id y135so19457501itc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 14:33:31 -0800 (PST)
+To: sara.sharon@intel.com
+Cc: linux-wireless@vger.kernel.org, luciano.coelho@intel.com,
+        liad.kaufman@intel.com
+From: Jens Axboe <axboe@kernel.dk>
+Subject: WARNING: CPU: 1 PID: 23668 at
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
+Message-ID: <c60e6859-f1ec-6656-2625-b5ce5f18059a@kernel.dk> (sfid-20170228_233335_716177_931FE2ED)
+Date: Tue, 28 Feb 2017 11:02:02 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-> > I think it would make sense to unconditionally apply the hysteresis
-> > to low/high, i.e. always set
-> >  low = low - hyst
-> >  high = high + hyst
-> > 
-> > so that you get "sticky" ranges once you're in them?
-> 
-> Yes, maybe that's better, I guess I want to avoid just adding a lag /
-> delay in reporting changes that are not due to measurement error or
-> temporary.  Could also do something in between, e.g. use "low - hyst"
-> if signal is close to low, otherwise just "low".
+I'm hitting this one a lot with current -git, which is this one:
 
-That's sort of what you had, but except for the precise definition of
-"close", no?
+if (iwl_mvm_is_dqa_supported(mvm)) {                            
+        iwl_mvm_disable_sta_queues(mvm, vif, mvm_sta);          
+        /*                                                      
+         * If pending_frames is set at this point - it must be  
+         * driver internal logic error, since queues are empty  
+         * and removed successuly.                              
+         * warn on it but set it to 0 anyway to avoid station   
+         * not being removed later in the function              
+         */                                                     
+        WARN_ON(atomic_xchg(&mvm->pending_frames[sta_id], 0));  
+}
 
-Actually, no, because you used "last - hyst" rather than "low - hyst"
-it's different. I think we can live with checking if it's close, say
-setting to "low - hyst" when it's within low + hyst - that avoids the
-problem I outlined above and gets a bit more responsiveness, I guess.
+It's hit 4 times over the last day. The bug is probably older than the
+commit that added this warning:
 
-> The question is how the current hysteresis parameter is defined, what
-> is expected of the firmware and how do driver authors decide whether
-> their firmware/hardware implements the same mechanism as expected by
-> the kernel.  Would the same thing happen with firmware
-> implementations if the hysteresis value is 3 and the rssi fluctuates
-> by +/- 2?  Or would it have to be +/- 3 or +/- 4 before this starts
-> to happen.  (If this isn't well specified then it makes more sense to
-> try to do it in one place for consistency.)
+commit 94c3e614df2117626fccfac8f821c66e30556384
+Author: Sara Sharon <sara.sharon@intel.com>
+Date:   Wed Dec 7 15:04:37 2016 +0200
 
-I'm not sure it's well-defined.
+    iwlwifi: mvm: fix pending frame counter calculation
 
-johannes
+but the pestering is new.
+
+-- 
+Jens Axboe
