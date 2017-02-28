@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41208 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753478AbdBHIbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2017 03:31:25 -0500
-Message-ID: <1486542683.4603.10.camel@sipsolutions.net> (sfid-20170208_093157_466416_C7A58831)
-Subject: Re: [PATCH v2 2/3] mac80211: Make mesh failure moving average
- configurable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
-Date: Wed, 08 Feb 2017 09:31:23 +0100
-In-Reply-To: <1485893272-6893-2-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1485893272-6893-1-git-send-email-rmanohar@qca.qualcomm.com>
-         <1485893272-6893-2-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:45252 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751497AbdB1LwS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Feb 2017 06:52:18 -0500
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: remove redundant error check
+Date: Tue, 28 Feb 2017 11:14:39 +0000
+Message-Id: <20170228111439.19546-1-colin.king@canonical.com> (sfid-20170228_125309_498658_93031159)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-01-31 at 12:07 -0800, Rajkumar Manoharan wrote:
-> Currently mesh moving fail average is calculated based on constant
-> weight factor. In worst case moving average reaches threshold by
-> considering 16 msdu tx ack status and deactivates mesh path. Having
-> a constant weight factor might not be suitable for all environments.
-> So make it tunable parameter and also lower default weight to 10 so
-> that mesh broken link calculation will consider more packet status
-> (32 msdus ack status) before dropping mesh path.
+From: Colin Ian King <colin.king@canonical.com>
 
-I don't think this makes a lot of sense, and with a conversion to the
-EWMA helpers it would probably not really be possible anyway.
+The check on ret for an error is redundant because it is already been
+checked for non-zero earlier on and ret is never non-zero at this point.
+Fix this by removing the redundant check and error message.
 
-johannes
+Detected by CoverityScan, CID#1357170 ("Logically Dead Code")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 6094372..52896c2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -970,12 +970,6 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 		}
+ 
+ 		remaining_bytes -= nbytes;
+-
+-		if (ret) {
+-			ath10k_warn(ar, "failed to read diag value at 0x%x: %d\n",
+-				    address, ret);
+-			break;
+-		}
+ 		memcpy(data, data_buf, nbytes);
+ 
+ 		address += nbytes;
+-- 
+2.10.2
