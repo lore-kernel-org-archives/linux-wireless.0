@@ -1,30 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:32949 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750842AbdBTGM7 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:45219 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751319AbdB1LsX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2017 01:12:59 -0500
-Received: by mail-wm0-f48.google.com with SMTP id t18so20102990wmt.0
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2017 22:12:59 -0800 (PST)
+        Tue, 28 Feb 2017 06:48:23 -0500
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: add check for kmalloc allocation failure.
+Date: Tue, 28 Feb 2017 11:47:33 +0000
+Message-Id: <20170228114733.20228-1-colin.king@canonical.com> (sfid-20170228_124910_376296_8FB7854E)
 MIME-Version: 1.0
-In-Reply-To: <1487567326-18346-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1487567326-18346-1-git-send-email-c_traja@qti.qualcomm.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Sun, 19 Feb 2017 22:12:57 -0800
-Message-ID: <CAJ-VmokOpQkTYiV7gHY=mCdHG0Eke2QsNi6xyLQZTCt4fGigzg@mail.gmail.com> (sfid-20170220_071303_661754_3917F4E8)
-Subject: Re: [PATCH] ath10k: Update available channel list for 5G radio
-To: c_traja@qti.qualcomm.com
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hiya,
+From: Colin Ian King <colin.king@canonical.com>
 
-we're working on something similar to this, but based on bmi-id.
+Add a sanity check that wid.val has been allocated, fixes a null
+pointer deference on stamac when calling ether_add_copy.
 
-Why'd you withdraw this patch for now?
+Detected by CoverityScan, CID#1369537 ("Dereference null return value")
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
--a
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c307cce..e83fa21 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1928,6 +1928,8 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 	wid.type = WID_STR;
+ 	wid.size = ETH_ALEN;
+ 	wid.val = kmalloc(wid.size, GFP_KERNEL);
++	if (!wid.val)
++		return -ENOMEM;
+ 
+ 	stamac = wid.val;
+ 	ether_addr_copy(stamac, strHostIfStaInactiveT->mac);
+-- 
+2.10.2
