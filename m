@@ -1,135 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:36054 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752110AbdBWECz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Feb 2017 23:02:55 -0500
-Date: Wed, 22 Feb 2017 22:54:00 -0500
-From: Tahia Khan <tahia.khan@gmail.com>
-To: arend.vanspriel@broadcom.com, outreachy-kernel@googlegroups.com,
-        aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-        devel@driverdev.osusl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] staging: wilc1000: renames struct tstrRSSI and its
- members u8Index, u8Full
-Message-ID: <20170223035400.GA9378@coolbox> (sfid-20170223_050322_649825_99BF5A7A)
-References: <20170222171403.GA20626@coolbox>
- <838d3e67-646d-b2d3-ef7d-5812675db6db@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <838d3e67-646d-b2d3-ef7d-5812675db6db@broadcom.com>
+Received: from mga07.intel.com ([134.134.136.100]:18598 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751431AbdB1OIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Feb 2017 09:08:14 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/2] NFC: pn544: Request GPIOs with proper connection IDs
+Date: Tue, 28 Feb 2017 16:08:08 +0200
+Message-Id: <20170228140809.84921-1-andriy.shevchenko@linux.intel.com> (sfid-20170228_150820_836321_FC97E4F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 22, 2017 at 08:50:31PM +0100, Arend Van Spriel wrote:
-> On 22-2-2017 18:14, Tahia Khan wrote:
-> > Fixes multiple camel case checks on struct tstrRSSI from checkpatch.pl:
-> > 
-> > Avoid CamelCase: <tstrRSSI>
-> > Avoid CamelCase: <u8Full>
-> > Avoid CamelCase: <u8Index>
-> 
-> Just a generic remark that may help you with other changes you will be
-> making in the linux kernel. Warnings from checkpatch.pl and other tools
-> are useful, but try to look further than just fixing a warning.
-> Understand what the code is doing is just as important.
-> 
-> > Signed-off-by: Tahia Khan <tahia.khan@gmail.com>
-> > ---
-> >  drivers/staging/wilc1000/coreconfigurator.h       |  8 ++++----
-> >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
-> >  2 files changed, 9 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-> > index cff1698..5b65c4f 100644
-> > --- a/drivers/staging/wilc1000/coreconfigurator.h
-> > +++ b/drivers/staging/wilc1000/coreconfigurator.h
-> > @@ -70,9 +70,9 @@ enum connect_status {
-> >  	CONNECT_STS_FORCE_16_BIT = 0xFFFF
-> >  };
-> >  
-> > -struct tstrRSSI {
-> > -	u8 u8Full;
-> > -	u8 u8Index;
-> > +struct tstr_RSSI {
-> > +	u8 full;
-> > +	u8 index;
-> >  	s8 as8RSSI[NUM_RSSI];
-> 
-> So you have a struct here with three members and you choose to only
-> change the first two. What do you think about the third one just by
-> looking at it. And what about the name of the struct. What does 'tstr' mean?
-> 
-> >  };
-> >  
-> > @@ -93,7 +93,7 @@ struct network_info {
-> >  	u8 *ies;
-> >  	u16 ies_len;
-> >  	void *join_params;
-> > -	struct tstrRSSI str_rssi;
-> > +	struct tstr_RSSI str_rssi;
-> >  	u64 tsf_hi;
-> >  };
-> >  
-> > diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > index f7ce47c..56f133e 100644
-> > --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > @@ -205,8 +205,8 @@ static u32 get_rssi_avg(struct network_info *network_info)
-> >  {
-> >  	u8 i;
-> >  	int rssi_v = 0;
-> > -	u8 num_rssi = (network_info->str_rssi.u8Full) ?
-> > -		       NUM_RSSI : (network_info->str_rssi.u8Index);
-> > +	u8 num_rssi = (network_info->str_rssi.full) ?
-> > +		       NUM_RSSI : (network_info->str_rssi.index);
-> 
-> so struct tstr_RSSI is really a rssi history buffer so maybe naming it
-> as such makes it clearer, ie. struct rssi_history_buffer.
-> 
-> >  	for (i = 0; i < num_rssi; i++)
-> >  		rssi_v += network_info->str_rssi.as8RSSI[i];
-> > @@ -346,13 +346,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
-> >  	} else {
-> >  		ap_index = ap_found;
-> >  	}
-> > -	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
-> > +	rssi_index = last_scanned_shadow[ap_index].str_rssi.index;
-> >  	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
-> >  	if (rssi_index == NUM_RSSI) {
-> >  		rssi_index = 0;
-> > -		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
-> > +		last_scanned_shadow[ap_index].str_rssi.full = 1;
-> 
-> So the 'full' member is actually a bool and you might type it as such.
-> 
-> Hope this helps.
-> 
-> Regards,
-> Arend
-> 
-> >  	}
-> > -	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
-> > +	last_scanned_shadow[ap_index].str_rssi.index = rssi_index;
-> >  	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
-> >  	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
-> >  	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
-> > 
+Since ACPI does support _DSD we might have a firmware that provides a
+GPIO mapping in DSDT. When GPIO is requested the core will check for
+property with given name. That's why we have to follow the standard
+names which are already in use in DT case.
 
-Thanks for the feedback Arend, I really appreciate it. I've decided to go with
-these changes in my follow-up patch request:
+Request GPIOs with proper connection IDs, i.e. use same names as used
+for DT case.
 
-- rename tstrRSSI to 'rssi_history_buffer' as Aren suggested since it makes the
-purpose of the struct clear
-- remove Hungarian notation from all tstrRSSI members' names
-- change type of u8Full to bool since it's only ever 1 or 0
-- change name of as8RSSI to 'samples' since this buffer is only ever used to 
-compute an average, and the "rssi" prefix is implied by the struct's name
-- rename str_rssi to rssi_history in the network_info struct for clarity
+In the future ACPI and DT cases might be unified.
 
-Since my reasoning for these changes deviates from just "renaming to 
-avoid camel casing" (as in the original checkpatch.pl warning), would it still 
-make sense to submit all this in a single patch? I know my commit message
-needs to change but I wonder if this is too much detail.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/pn544/i2c.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Tahia
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index f837c39a8017..2df3176205c4 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -881,8 +881,7 @@ static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 	struct device *dev = &client->dev;
+ 
+ 	/* Get EN GPIO from ACPI */
+-	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1,
+-					GPIOD_OUT_LOW);
++	gpiod_en = devm_gpiod_get_index(dev, "enable", 1, GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpiod_en)) {
+ 		nfc_err(dev, "Unable to get EN GPIO\n");
+ 		return -ENODEV;
+@@ -891,8 +890,7 @@ static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 	phy->gpio_en = desc_to_gpio(gpiod_en);
+ 
+ 	/* Get FW GPIO from ACPI */
+-	gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2,
+-					GPIOD_OUT_LOW);
++	gpiod_fw = devm_gpiod_get_index(dev, "firmware", 2, GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpiod_fw)) {
+ 		nfc_err(dev, "Unable to get FW GPIO\n");
+ 		return -ENODEV;
+-- 
+2.11.0
