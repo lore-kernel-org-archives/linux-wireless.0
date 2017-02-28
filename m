@@ -1,103 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:35809 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752997AbdBPJxG (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42284 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752437AbdB1Nxi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2017 04:53:06 -0500
-Received: by mail-wr0-f176.google.com with SMTP id c4so7767688wrd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2017 01:53:05 -0800 (PST)
-Subject: Re: drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c:58:6:
- error: redefinition of 'brcmf_debugfs_init'
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Randy Dunlap <rdunlap@infradead.org>
-References: <201702071839.Ej9MjmlI%fengguang.wu@intel.com>
- <ce7467a9-12d5-f64e-8b59-f9581db9f7c8@infradead.org>
- <87inoamqh6.fsf@kamboji.qca.qualcomm.com>
- <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
-Cc: kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <59013c13-af43-cf9f-8e3e-14d97e48f0dd@broadcom.com> (sfid-20170216_105332_502554_31C47FFB)
-Date: Thu, 16 Feb 2017 10:53:02 +0100
+        Tue, 28 Feb 2017 08:53:38 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1SDOfT2003655
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 05:24:56 -0800
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0b-0016f401.pphosted.com with ESMTP id 28uaamfs6r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 05:24:56 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] MAINTAINERS: update for mwifiex driver maintainers
+Date: Tue, 28 Feb 2017 18:54:31 +0530
+Message-ID: <1488288271-10731-1-git-send-email-akarwar@marvell.com> (sfid-20170228_145348_342272_68CF1340)
 MIME-Version: 1.0
-In-Reply-To: <e8c43505-1e7a-635c-dc27-45422acb25a6@milecki.pl>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16-2-2017 10:39, Rafał Miłecki wrote:
-> On 02/16/2017 10:31 AM, Kalle Valo wrote:
->> (Adding linux-wireless)
->>
->> Randy Dunlap <rdunlap@infradead.org> writes:
->>
->>> On 02/07/17 02:02, kbuild test robot wrote:
->>>> Hi Kalle,
->>>>
->>>> FYI, the error/warning still remains.
->>>>
->>>> tree:  
->>>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
->>>> master
->>>> head:   8b1b41ee74f9712c355d66dc105bbea663ae0afd
->>>> commit: 05491d2ccf20b20a1375303441fbbfbd12b24a4f brcm80211: move
->>>> under broadcom vendor directory
->>>> date:   1 year, 3 months ago
->>>> config: mips-allyesconfig (attached as .config)
->>>> compiler: mips-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
->>>> reproduce:
->>>>         wget
->>>> https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross
->>>>
->>>> -O ~/bin/make.cross
->>>>         chmod +x ~/bin/make.cross
->>>>         git checkout 05491d2ccf20b20a1375303441fbbfbd12b24a4f
->>>>         # save the attached .config to linux build tree
->>>>         make.cross ARCH=mips
->>>>
->>>> All errors (new ones prefixed by >>):
->>>
->>> when both:
->>>
->>> CONFIG_BRCM_TRACING=y
->>> CONFIG_BRCMDBG=y
->>>
->>> but DEBUG is not defined.
->>>
->>> I think it would help if CONFIG_BRCMDBG set DEBUG
->>> or if some of the tests for DEBUG used CONFIG_BRCMDBG instead.
->>
->> Arend or Rafał, would you be able to look at this build problem? Kbuild
->> found the build errors below, apparently a very old issue. It just
->> blames me now because I moved the driver to a new directory :)
+Ganapathi & Xinming are starting to take a more active role in the
+mwifiex driver maintainership here onwards on account of organizational
+changes.
 
-It is a very old issue. The thing is that the issue can not really occur
-because we have this:
+CC: Xinming Hu <huxm@marvell.com>
+CC: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ MAINTAINERS | 2 ++
+ 1 file changed, 2 insertions(+)
 
-# common flags
-subdir-ccflags-$(CONFIG_BRCMDBG)        += -DDEBUG
-
-in drivers/net/wireless/broadcom/brcm80211/Makefile. So no clue what
-happens in the "kbuild test robot" scenario.
-
-Regards,
-Arend
-
-> Something like this maybe? Note I didn't test it with above config.
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> index 6687812770cc..8c7695fde482 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> @@ -108,7 +108,7 @@ do {                                    \
->  extern int brcmf_msg_level;
-> 
->  struct brcmf_pub;
-> -#ifdef DEBUG
-> +#ifdef CONFIG_BRCMDBG
->  void brcmf_debugfs_init(void);
->  void brcmf_debugfs_exit(void);
->  int brcmf_debug_attach(struct brcmf_pub *drvr);
-> 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d8f71f2..9252718 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7772,6 +7772,8 @@ F:	drivers/net/ethernet/marvell/mvneta.*
+ MARVELL MWIFIEX WIRELESS DRIVER
+ M:	Amitkumar Karwar <akarwar@marvell.com>
+ M:	Nishant Sarmukadam <nishants@marvell.com>
++M:	Ganapathi Bhat <gbhat@marvell.com>
++M:	Xinming Hu <huxm@marvell.com>
+ L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ F:	drivers/net/wireless/marvell/mwifiex/
+-- 
+1.9.1
