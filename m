@@ -1,44 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:62109 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753767AbdBNPGH (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:33523 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751726AbdB1NbY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Feb 2017 10:06:07 -0500
-Received: from localhost ([87.171.2.79]) by mrelayeu.kundenserver.de (mreue102
- [212.227.15.183]) with ESMTPSA (Nemesis) id 0LopTv-1cALWy2wyx-00gnO6 for
- <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2017 16:06:03 +0100
-Date: Tue, 14 Feb 2017 16:05:04 +0100
-From: Bastian Bittorf <bb@npl.de>
-To: linux-wireless@vger.kernel.org
-Subject: bad values in output of 'iw event'
-Message-ID: <20170214150504.GA10920@medion.lan> (sfid-20170214_160609_638897_7C8E4D86)
+        Tue, 28 Feb 2017 08:31:24 -0500
+Received: by mail-it0-f66.google.com with SMTP id 68so1477974itg.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 05:31:18 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev 2.1 update Feb 28
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>, lwn@lwn.net,
+        people@netdevconf.org, Brenda Butler <bjb@mojatatu.com>
+Message-ID: <533a66f4-61d5-553c-0396-deb27d8bbe76@mojatatu.com> (sfid-20170228_143212_921331_9B6E4B59)
+Date: Tue, 28 Feb 2017 08:24:21 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the former patch about rate-report/unfilled values
-reminded me, that i can see with recent 'wireless-testing'
-strange values when watching the output of 'iw event'.
-maybe something similar...:
+A few announcements:
 
-Mon Feb 13 11:18:52 CET 2017 DEBUG: wlan1-1 (phy #1): unknown event 60
-Mon Feb 13 11:18:52 CET 2017 DEBUG: wlan0: del station 64:09:80:7f:48:86
-Mon Feb 13 11:18:52 CET 2017 DEBUG: wlan1: del station b0:48:7a:a5:96:2e
-Mon Feb 13 11:18:52 CET 2017 DEBUG: wlan1: del station f4:ec:38:fd:74:b4
-Mon Feb 13 11:18:52 CET 2017 DEBUG: wlan1: del station f4:ec:38:9d:86:36
-Mon Feb 13 11:18:52 CET 2017 DEBUG: ���T (phy #0): unknown event 8
-Mon Feb 13 11:18:52 CET 2017 DEBUG: ���T (phy #1): unknown event 8
-Mon Feb 13 11:18:52 CET 2017 DEBUG: ���T (phy #1): unknown event 8
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan0 (phy #0): unknown event 7
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan0 (phy #0): unknown event 43
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan0: new station 64:09:80:7f:48:86
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan1 (phy #1): unknown event 7
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan1-1 (phy #1): unknown event 7
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan1 (phy #1): unknown event 43
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan1: new station f4:ec:38:fd:74:b4
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan1: new station f4:ec:38:9d:86:36
-Mon Feb 13 11:18:53 CET 2017 DEBUG: wlan1: new station b0:48:7a:a5:96:2e
-Mon Feb 13 11:18:54 CET 2017 DEBUG: wlan1-1 (phy #1): unknown event 60
 
-thanks & bye, bastian
+1) Going forward we are going to be sending more frequent
+announcements to the conference discussion/announcement list:
+people@netdevconf.org
+
+You can subscribe via mailman here:
+https://lists.netdevconf.org/cgi-bin/mailman/listinfo/people
+
+We urge people to subscribe to that list to get more up to date
+information and conference discussions. We will still be sending
+weekly summaries and announcements on the netdev list.
+
+If you have already registered for the conference we will
+very likely have registered you already.
+
+2) Reminder: Early registration was extended to March 5.
+
+Register early so we can plan better (and so you can save some $$).
+https://onlineregistrations.ca/netdev21/
+
+- hotel (If you can get the hotel cheaper online than conference
+rates please send us email, dont book ):
+https://www.netdevconf.org/2.1/hotel.html
+
+3) Tech committee has accepted another exciting talk. This
+time from Gilberto Bertin on how Cloudfare is integrating XDP in
+their DDoS mitigation approach. More description:
+
+----
+This talk provides an introduction to how we are planning to integrate
+XDP into our DDoS mitigation pipeline at Cloudflare, which every day
+helps defend our infrastructure from thousands of different attacks,
+in the range of 50-150 Gbps (with peaks of 500 Gbps).
+
+The main points of the presentation are:
+* introduction to the current architecture: from how attack traffic
+is sampled, to attack detection and mitigation, to how BPF fits in
+the current pipeline
+* architecture changes we are expecting, and new tools required
+after we move from our current network kernel bypass setup to XDP
+* issues and questions regarding the current state of XDP
+-----------
+
+cheers,
+jamal
