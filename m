@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:38713 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751038AbdBFKtm (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34652 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751468AbdB1B60 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Feb 2017 05:49:42 -0500
-Received: by mail-wm0-f46.google.com with SMTP id r141so108339714wmg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2017 02:49:41 -0800 (PST)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-        jouni@qca.qualcomm.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH v3 0/2] mac80211: use crypto shash for AES cmac
-Date: Mon,  6 Feb 2017 10:49:26 +0000
-Message-Id: <1486378168-31028-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20170206_114945_875316_098ED205)
+        Mon, 27 Feb 2017 20:58:26 -0500
+Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in
+ NEW_RADIO/GET_RADIO
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>
+References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
+ <20170223120211.22358-2-andrew.zaborowski@intel.com>
+ <1488202062.28431.7.camel@sipsolutions.net>
+ <CAOq732JzrGxFUa5BiuO=Sz7gscRV7PFxOOyy1xf6mtmQfUqkaA@mail.gmail.com>
+ <2155efb0-1325-0089-fbb1-cc63cc289745@candelatech.com>
+ <CAOq732+MZt=mytXrZko0uw=EsBWvQpZ49wg3CxFPVn0uGGNyog@mail.gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <4549b209-df6c-0eaa-65e6-72562c61bf4b@candelatech.com> (sfid-20170228_025909_000034_B8153D6C)
+Date: Mon, 27 Feb 2017 17:57:34 -0800
+MIME-Version: 1.0
+In-Reply-To: <CAOq732+MZt=mytXrZko0uw=EsBWvQpZ49wg3CxFPVn0uGGNyog@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is something I spotted while working on AES in various modes for
-ARM and arm64.
 
-The mac80211 aes_cmac code reimplements the CMAC algorithm based on the
-core AES cipher, which is rather restrictive in how platforms can satisfy
-the dependency on this algorithm. For instance, SIMD implementations may
-have a considerable setup time, which cannot be amortized over the entire
-input when calling into the crypto API one block at a time. Also, it prevents
-the use of more secure fixed time implementations, since not all AES drivers
-expose the cipher interface.
 
-So switch aes_cmac to use a cmac(aes) shash. Before updating the aes_cmac code
-in patch #2, the FILS AEAD code is moved to using a cmac(aes) shash supplied by
-the crypto API so that we can remove the open coded version entirely in the
-second patch.
+On 02/27/2017 05:23 PM, Andrew Zaborowski wrote:
+> Hi,
+>
+> On 27 February 2017 at 18:10, Ben Greear <greearb@candelatech.com> wrote:
+>> On 02/27/2017 07:26 AM, Andrew Zaborowski wrote:
+>>> As it turns out it can be read from /sys, but I do need it so I can
+>>> know what to put in HWSIM_ATTR_ADDR_RECEIVER based on the destination
+>>> addr in the frame or if I want to forward the frame to all radios.  Or
+>>> is there another way to know that?
+>>>
+>>>>
+>>>> I'd actually prefer to *only* have the wiphy index, and I don't really
+>>>> see a problem with moving the wiphy_idx from struct
+>>>> cfg80211_registered_device to struct wiphy.
+>>>
+>>>
+>>> Ok, I'll try that.  get_wiphy_idx can stay in place, not sure if I
+>>> should just drop it.
+>>>
+>>> By having *only* the wiphy index you don't mean dropping the radio
+>>> names altogether?  The don't seem useful but userspace may expect
+>>> them.
+>>
+>>
+>> I find the name and addr more useful than an 'index', because if you
+>> remove/add
+>> a virtual phy, then the index will probably change, even if name and MAC
+>
+> I don't think you can remove/add a phy without removing the hwsim
+> radio.  A hwsim radio is tied to some wiphy at all times.
 
-v3: - use more idiomatic SHASH_DESC_ON_STACK to allocate the shash descriptors
-    - replace compound literal zero vectors with explicitly defined ones
-    - drop a redundant memcpy() in #2
+You can specify the MAC address and name (ie, wiphy0) when creating a hwsim radio.
+You cannot specify the index.  So, from a user-space perspective,
+I think the name and MAC is more important than the index.
 
-Ard Biesheuvel (2):
-  mac80211: fils_aead: Use crypto api CMAC shash rather than bare cipher
-  mac80211: aes-cmac: switch to shash CMAC driver
+Anyway, I think you are correct to pay attention to the MAC address and use
+that as the identifying key.
 
- net/mac80211/Kconfig     |   1 +
- net/mac80211/aes_cmac.c  | 126 ++++----------------
- net/mac80211/aes_cmac.h  |  15 +--
- net/mac80211/fils_aead.c |  74 +++++-------
- net/mac80211/key.h       |   2 +-
- 5 files changed, 66 insertions(+), 152 deletions(-)
+Thanks,
+Ben
+
 
 -- 
-2.7.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
