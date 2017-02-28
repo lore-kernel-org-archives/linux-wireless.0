@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:38012 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751396AbdB1Wdc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 17:33:32 -0500
-Received: by mail-it0-f45.google.com with SMTP id y135so19457501itc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 14:33:31 -0800 (PST)
-To: sara.sharon@intel.com
-Cc: linux-wireless@vger.kernel.org, luciano.coelho@intel.com,
-        liad.kaufman@intel.com
-From: Jens Axboe <axboe@kernel.dk>
-Subject: WARNING: CPU: 1 PID: 23668 at
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
-Message-ID: <c60e6859-f1ec-6656-2625-b5ce5f18059a@kernel.dk> (sfid-20170228_233335_716177_931FE2ED)
-Date: Tue, 28 Feb 2017 11:02:02 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:46598 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752070AbdB1Juk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Feb 2017 04:50:40 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-02-28
+Date: Tue, 28 Feb 2017 10:50:18 +0100
+Message-Id: <20170228095019.10637-1-johannes@sipsolutions.net> (sfid-20170228_105424_763132_F7AB3CC9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Dave,
 
-I'm hitting this one a lot with current -git, which is this one:
+First round of fixes - we actually have quite a few.
 
-if (iwl_mvm_is_dqa_supported(mvm)) {                            
-        iwl_mvm_disable_sta_queues(mvm, vif, mvm_sta);          
-        /*                                                      
-         * If pending_frames is set at this point - it must be  
-         * driver internal logic error, since queues are empty  
-         * and removed successuly.                              
-         * warn on it but set it to 0 anyway to avoid station   
-         * not being removed later in the function              
-         */                                                     
-        WARN_ON(atomic_xchg(&mvm->pending_frames[sta_id], 0));  
-}
+Please pull and let me know if there's any problem.
 
-It's hit 4 times over the last day. The bug is probably older than the
-commit that added this warning:
+I had another question - I have this average.h API change pending
+(you saw it before). It seems it might be a good time to get it in
+now, since no new users should be showing up. If I put it in only
+with the next merge window, new users might show up and break.
 
-commit 94c3e614df2117626fccfac8f821c66e30556384
-Author: Sara Sharon <sara.sharon@intel.com>
-Date:   Wed Dec 7 15:04:37 2016 +0200
+Thoughts?
 
-    iwlwifi: mvm: fix pending frame counter calculation
+Thanks,
+johannes
 
-but the pestering is new.
 
--- 
-Jens Axboe
+
+The following changes since commit 51fb60eb162ab84c5edf2ae9c63cf0b878e5547e:
+
+  l2tp: avoid use-after-free caused by l2tp_ip_backlog_recv (2017-02-26 22:57:17 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-02-28
+
+for you to fetch changes up to 19d19e960598161be92a7e4828eb7706c6410ce6:
+
+  mac80211: use driver-indicated transmitter STA only for data frames (2017-02-28 07:42:05 +0100)
+
+----------------------------------------------------------------
+First round of fixes - details in the commits:
+ * use a valid hrtimer clock ID in mac80211_hwsim
+ * don't reorder frames prior to BA session
+ * flush a delayed work at suspend so the state is all valid before
+   suspend/resume
+ * fix packet statistics in fast-RX, the RX packets
+   counter increment was simply missing
+ * don't try to re-transmit filtered frames in an aggregation session
+ * shorten (for tracing) a debug message
+ * typo fix in another debug message
+ * fix nul-termination with HWSIM_ATTR_RADIO_NAME in hwsim
+ * fix mgmt RX processing when station is looked up by driver/device
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      mac80211: fix power saving clients handling in iwlwifi
+
+Felix Fietkau (1):
+      mac80211: don't handle filtered frames within a BA session
+
+Johannes Berg (3):
+      mac80211: fix packet statistics for fast-RX
+      mac80211_hwsim: check HWSIM_ATTR_RADIO_NAME length
+      mac80211: use driver-indicated transmitter STA only for data frames
+
+Matt Chen (1):
+      mac80211: flush delayed work when entering suspend
+
+Sara Sharon (3):
+      mac80211: don't reorder frames with SN smaller than SSN
+      mac80211: shorten debug message
+      mac80211: fix typo in debug print
+
+Thomas Gleixner (1):
+      mac80211_hwsim: Replace bogus hrtimer clockid
+
+ drivers/net/wireless/mac80211_hwsim.c | 30 ++++++++++++++++++++++--------
+ net/mac80211/agg-rx.c                 |  3 ++-
+ net/mac80211/pm.c                     |  1 +
+ net/mac80211/rx.c                     | 31 +++++++++++++++++++++++--------
+ net/mac80211/sta_info.c               |  4 ++--
+ net/mac80211/sta_info.h               |  6 ++++--
+ net/mac80211/status.c                 |  3 ++-
+ 7 files changed, 56 insertions(+), 22 deletions(-)
