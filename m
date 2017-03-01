@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:42942 "EHLO
+Received: from shards.monkeyblade.net ([184.105.139.130]:55970 "EHLO
         shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965566AbdCVSol (ORCPT
+        with ESMTP id S1753587AbdCBDYV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 14:44:41 -0400
-Date: Wed, 22 Mar 2017 11:44:39 -0700 (PDT)
-Message-Id: <20170322.114439.679826829857326050.davem@davemloft.net> (sfid-20170322_194658_872682_0014AD11)
-To: bjorn.andersson@linaro.org
-Cc: marcel@holtmann.org, gustavo@padovan.org, johan.hedberg@gmail.com,
-        k.eugene.e@gmail.com, kvalo@codeaurora.org, andy.gross@linaro.org,
-        david.brown@linaro.org, arnd@arndb.de,
-        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-soc@vger.kernel.org
-Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd
- to rpmsg
+        Wed, 1 Mar 2017 22:24:21 -0500
+Date: Wed, 01 Mar 2017 15:09:39 -0800 (PST)
+Message-Id: <20170301.150939.1418366532271934812.davem@davemloft.net> (sfid-20170302_042425_780957_D1E16253)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2017-02-28
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170320233544.1656-1-bjorn.andersson@linaro.org>
-References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
+In-Reply-To: <20170228095019.10637-1-johannes@sipsolutions.net>
+References: <20170228095019.10637-1-johannes@sipsolutions.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Date: Mon, 20 Mar 2017 16:35:42 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 28 Feb 2017 10:50:18 +0100
 
-> By moving these client drivers to use RPMSG instead of the direct SMD
-> API we can reuse them ontop of the newly added GLINK wire-protocol
-> support found in the 820 and 835 Qualcomm platforms.
+> First round of fixes - we actually have quite a few.
 > 
-> As the new (RPMSG-based) and old SMD implementations are mutually
-> exclusive we have to change all client drivers in one commit, to make
-> sure we have a working system before and after this transition.
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
-> 
-> Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
-> (https://lkml.org/lkml/2017/3/20/1038).
+> Please pull and let me know if there's any problem.
 
-Just some questions since I'm supposed to merge this into my net-next
-tree.
+Pulled, thanks Johannes.
 
-What is the status of the Kconfig dependency fix and how will I be
-getting it?
+> I had another question - I have this average.h API change pending
+> (you saw it before). It seems it might be a good time to get it in
+> now, since no new users should be showing up. If I put it in only
+> with the next merge window, new users might show up and break.
 
-Second, should I merge all three of these patches to net-next or just
-this one?
-
-Thanks.
+Ok, you can feel free to send this now for 'net' if you like.
