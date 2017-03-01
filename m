@@ -1,97 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:33682 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751574AbdC0QLu (ORCPT
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:33208 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752476AbdCAKiJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Mar 2017 12:11:50 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alban <albeu@free.fr>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        John Crispin <john@phrozen.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        m@kresin.me
-Subject: Re: [PATCH 1/7] Documentation: dt: net: Update the ath9k binding for SoC devices
-Date: Mon, 27 Mar 2017 18:11:15 +0200
-Message-ID: <1897671.fKa4XTnU1K@debian64> (sfid-20170327_181609_860067_395AEC14)
-In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
-References: <1489439116-4233-1-git-send-email-albeu@free.fr>
+        Wed, 1 Mar 2017 05:38:09 -0500
+Received: by mail-qk0-f179.google.com with SMTP id n127so63087881qkf.0
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Mar 2017 02:37:28 -0800 (PST)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Gery Kahn <gery.kahn@broadcom.com>, Jouni Malinen <j@w1.fi>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: FILS offloading
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Message-ID: <d4fb8ca8-9632-3154-488e-5d7232601ed6@broadcom.com> (sfid-20170301_113922_671761_13E99A85)
+Date: Wed, 1 Mar 2017 11:28:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, March 13, 2017 10:05:09 PM CEST Alban wrote:
-> The current binding only cover PCI devices so extend it for SoC devices.
-> 
-> Most SoC platforms use an MTD partition for the calibration data
-> instead of an EEPROM. The qca,no-eeprom property was added to allow
-> loading the EEPROM content using firmware loading. This new binding
-> replace this hack with NVMEM cells, so we also mark the qca,no-eeprom
-> property as deprecated in case anyone ever used it.
+Hoi Jouni,
 
-Please don't mark "qca,no-eeprom" as deprecated then.
-If some devices geniously need to rely on userspace for extracting 
-and processing the calibration data, it should be stay a
-optional properties.
+Not sure which email address to use ;-) I noticed a while ago that FILS
+offloading was on the agenda of wireless workshop in Santa Fe. Recently,
+looked at the FILS patches that were applied upstream and noticed:
 
-For example: A device that can't do easily without "qca,no-eeprom" is
-the AVM FRITZ!WLAN Repeater 300E. For this device, the caldata 
-is stored in the flash, however for whatever reason the vendor
-choose to "reverse" it. (like completely back to front, not byteswapped
-or something). So an extra "unreversing step" is required. So, it would
-require some sort of a special nvmem-provider-processor as an 
-alternative.
+static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
+				    enum nl80211_auth_type auth_type,
+				    enum nl80211_commands cmd)
+{
+	...
+	switch (cmd) {
+	...
+	case NL80211_CMD_CONNECT:
+	case NL80211_CMD_START_AP:
+		/* SAE not supported yet */
+		if (auth_type == NL80211_AUTHTYPE_SAE)
+			return false;
+		/* FILS not supported yet */
+		if (auth_type == NL80211_AUTHTYPE_FILS_SK ||
+		    auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
+		    auth_type == NL80211_AUTHTYPE_FILS_PK)
+			return false;
+		return true;
+	default:
+		return false;
+	}
+}
 
-> Signed-off-by: Alban <albeu@free.fr>
-> ---
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> index b7396c8..61f5f6d 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> @@ -27,16 +27,34 @@ Required properties:
->  			- 0034 for AR9462
->  			- 0036 for AR9565
->  			- 0037 for AR9485
-> +		For SoC devices the compatible should be "qca,<soctype>-wmac"
-> +		and one of the following fallbacks:
-> +			- "qca,ar9100-wmac"
-> +			- "qca,ar9330-wmac"
-> +			- "qca,ar9340-wmac"
-> +			- "qca,qca9550-wmac"
-> +			- "qca,qca9530-wmac"
->  - reg: Address and length of the register set for the device.
->  
-> +Required properties for SoC devices:
-> +- interrupt-parent: phandle of the parent interrupt controller.
-> +- interrupts: Interrupt specifier for the controllers interrupt.
-> +
->  Optional properties:
-> +- mac-address: See ethernet.txt in the parent directory
-> +- local-mac-address: See ethernet.txt in the parent directory
-> +- clock-names: has to be "ref"
-> +- clocks: phandle of the reference clock
-> +- resets: phandle of the reset line
-> +- nvmem-cell-names: has to be "eeprom" and/or "address"
-> +- nvmem-cells: phandle to the eeprom nvmem cell and/or to the mac address
-> +		nvmem cell.
-> +
-> +Deprecated properties:
->  - qca,no-eeprom: Indicates that there is no physical EEPROM connected to the
->  			ath9k wireless chip (in this case the calibration /
->  			EEPROM data will be loaded from userspace using the
->  			kernel firmware loader).
-> -- mac-address: See ethernet.txt in the parent directory
-> -- local-mac-address: See ethernet.txt in the parent directory
-> -
-It sounds like you want to deprecate mac-address and local-mac-address as well.
-If so you sould add this to the commit as well. From my point of view, people
-mostly flat-out patched the eeprom-image if they wanted to set the mac-address.
-However, this was an extra step, if nvmem does away with it, I'm completely
-fine with deprecating these properties.
+Are there any plans on QCA side to add FILS support for fullmac devices,
+ie. supporting CONNECT command.
 
-Thanks,
-Christian
+Regards,
+Arend
