@@ -1,73 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33984 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751081AbdCQAzs (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:39386 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751135AbdCBWwb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 20:55:48 -0400
-Received: by mail-qk0-f196.google.com with SMTP id v127so8151183qkb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 17:54:50 -0700 (PDT)
-Date: Thu, 16 Mar 2017 20:54:47 -0400
-From: Dylan Leggio <dleggio1@binghamton.edu>
-To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driver.dev.osuosl.org,
+        Thu, 2 Mar 2017 17:52:31 -0500
+Date: Thu, 02 Mar 2017 14:39:06 -0800 (PST)
+Message-Id: <20170302.143906.1989433792603122506.davem@davemloft.net> (sfid-20170302_235330_818898_5D7B1A54)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] Staging: wilc1000: fix two typos in #define's
-Message-ID: <20170317005447.GA1570@legs> (sfid-20170317_015616_107730_A82E9BDC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: pull-request: wireless-drivers 2017-03-02
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87r32g9gzl.fsf@kamboji.qca.qualcomm.com>
+References: <87r32g9gzl.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-GAS_INTIAL_REQ should be GAS_INITIAL_REQ.
-GAS_INTIAL_RSP should be GAS_INITIAL_RSP.
-Improves readability of code.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 02 Mar 2017 11:15:42 +0200
 
-Signed-off-by: Dylan Leggio <dleggio1@binghamton.edu>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+> only one patch this time, the new version of ath10k patch we reverted
+> earlier. I was supposed to send you this earlier but it got delayed
+> because I'm on vacation, so sorry about that. I'm hoping this is ok to
+> take also even the merge window is closed as the changes to the first
+> version of the patch are minimal.
+> 
+> Please let me know if there are any problems.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index a37896fcd683..1bb63702c623 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -29,8 +29,8 @@
- #define P2P_INV_REQ			0x03
- #define P2P_INV_RSP			0x04
- #define PUBLIC_ACT_VENDORSPEC		0x09
--#define GAS_INTIAL_REQ			0x0a
--#define GAS_INTIAL_RSP			0x0b
-+#define GAS_INITIAL_REQ			0x0a
-+#define GAS_INITIAL_RSP			0x0b
- 
- #define INVALID_CHANNEL			0
- 
-@@ -1477,10 +1477,10 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
- 			}
- 			if (buff[ACTION_CAT_ID] == PUB_ACTION_ATTR_ID) {
- 				switch (buff[ACTION_SUBTYPE_ID]) {
--				case GAS_INTIAL_REQ:
-+				case GAS_INITIAL_REQ:
- 					break;
- 
--				case GAS_INTIAL_RSP:
-+				case GAS_INITIAL_RSP:
- 					break;
- 
- 				case PUBLIC_ACT_VENDORSPEC:
-@@ -1666,10 +1666,10 @@ static int mgmt_tx(struct wiphy *wiphy,
- 					curr_channel = chan->hw_value;
- 				}
- 				switch (buf[ACTION_SUBTYPE_ID])	{
--				case GAS_INTIAL_REQ:
-+				case GAS_INITIAL_REQ:
- 					break;
- 
--				case GAS_INTIAL_RSP:
-+				case GAS_INITIAL_RSP:
- 					break;
- 
- 				case PUBLIC_ACT_VENDORSPEC:
--- 
-2.12.0
+Pulled, thanks.
