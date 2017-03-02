@@ -1,338 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:35967 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932819AbdCUOs4 (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:62338 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753100AbdCBRLM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 10:48:56 -0400
-Received: by mail-lf0-f68.google.com with SMTP id g70so13214888lfh.3
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Mar 2017 07:48:54 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
+        Thu, 2 Mar 2017 12:11:12 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
         linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] brcmfmac: make PCIe bus support a separated module
-Date: Tue, 21 Mar 2017 15:48:41 +0100
-Message-Id: <20170321144841.3537-1-zajec5@gmail.com> (sfid-20170321_154917_776645_C3CC58F3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 12/26] wl3501_cs: reduce stack size for KASAN
+Date: Thu,  2 Mar 2017 17:38:20 +0100
+Message-Id: <20170302163834.2273519-13-arnd@arndb.de> (sfid-20170302_181552_358205_CFF4B302)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Inlining functions with local variables can lead to excessive stack usage
+with KASAN:
 
-Right now whole brcmfmac is a single module. Enabling one bus support
-increases brcmfmac.ko size which may be unwanted for some embedded
-devices like home routers. With this change brcmfmac gets modularized.
-It's possible to build brcmfmac without PCIe support and when required
-just install/load a proper module.
+drivers/net/wireless/wl3501_cs.c: In function 'wl3501_rx_interrupt':
+drivers/net/wireless/wl3501_cs.c:1103:1: error: the frame size of 2232 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
 
-A similar modification of SDIO and USB support should follow.
+Marking a few functions as noinline_for_kasan avoids the problem
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/broadcom/brcm80211/Kconfig               |  2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile     |  6 ++++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       |  5 +++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     |  5 +++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c |  2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c       | 10 +++-------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c   |  3 +++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c     |  1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 11 +++++++++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h       |  5 -----
- 10 files changed, 33 insertions(+), 17 deletions(-)
+ drivers/net/wireless/wl3501_cs.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
-index ab42b1fea03c..d93561f6ef97 100644
---- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
-+++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
-@@ -57,7 +57,7 @@ config BRCMFMAC_USB
- 	  use the driver for an USB wireless card.
- 
- config BRCMFMAC_PCIE
--	bool "PCIE bus interface support for FullMAC driver"
-+	tristate "Broadcom FullMAC WLAN support for PCIE bus"
- 	depends on BRCMFMAC
- 	depends on PCI
- 	depends on HAS_DMA
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-index 0383ba559edc..f60e6a9a9a77 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-@@ -46,11 +46,13 @@ brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
- 		bcmsdh.o
- brcmfmac-$(CONFIG_BRCMFMAC_USB) += \
- 		usb.o
--brcmfmac-$(CONFIG_BRCMFMAC_PCIE) += \
--		pcie.o
- brcmfmac-$(CONFIG_BRCMDBG) += \
- 		debug.o
- brcmfmac-$(CONFIG_BRCM_TRACING) += \
- 		tracepoint.o
- brcmfmac-$(CONFIG_OF) += \
- 		of.o
-+
-+obj-$(CONFIG_BRCMFMAC_PCIE) += brcmfmac-pcie.o
-+brcmfmac-pcie-objs += \
-+		pcie.o
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 05f22ff81d60..536df11f376c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -1095,6 +1095,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 	brcmf_chip_detach(&chip->pub);
- 	return ERR_PTR(err);
- }
-+EXPORT_SYMBOL_GPL(brcmf_chip_attach);
- 
- void brcmf_chip_detach(struct brcmf_chip *pub)
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index acec0d9ec422..15dd8e31d373 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -242,8 +242,8 @@ static int wl3501_get_flash_mac_addr(struct wl3501_card *this)
+  *
+  * Move 'size' bytes from PC to card. (Shouldn't be interrupted)
+  */
+-static void wl3501_set_to_wla(struct wl3501_card *this, u16 dest, void *src,
+-			      int size)
++static noinline_for_kasan void wl3501_set_to_wla(struct wl3501_card *this,
++						 u16 dest, void *src, int size)
  {
-@@ -1109,6 +1110,7 @@ void brcmf_chip_detach(struct brcmf_chip *pub)
- 	}
- 	kfree(chip);
- }
-+EXPORT_SYMBOL_GPL(brcmf_chip_detach);
- 
- struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *pub, u16 coreid)
+ 	/* switch to SRAM Page 0 */
+ 	wl3501_switch_page(this, (dest & 0x8000) ? WL3501_BSS_SPAGE1 :
+@@ -264,8 +264,8 @@ static void wl3501_set_to_wla(struct wl3501_card *this, u16 dest, void *src,
+  *
+  * Move 'size' bytes from card to PC. (Shouldn't be interrupted)
+  */
+-static void wl3501_get_from_wla(struct wl3501_card *this, u16 src, void *dest,
+-				int size)
++static noinline_for_kasan void wl3501_get_from_wla(struct wl3501_card *this,
++						u16 src, void *dest, int size)
  {
-@@ -1122,6 +1124,7 @@ struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *pub, u16 coreid)
- 
- 	return NULL;
+ 	/* switch to SRAM Page 0 */
+ 	wl3501_switch_page(this, (src & 0x8000) ? WL3501_BSS_SPAGE1 :
+@@ -1037,7 +1037,7 @@ static inline void wl3501_auth_confirm_interrupt(struct wl3501_card *this,
+ 		wl3501_mgmt_resync(this);
  }
-+EXPORT_SYMBOL_GPL(brcmf_chip_get_core);
  
- struct brcmf_core *brcmf_chip_get_chipcommon(struct brcmf_chip *pub)
+-static inline void wl3501_rx_interrupt(struct net_device *dev)
++static noinline_for_kasan void wl3501_rx_interrupt(struct net_device *dev)
  {
-@@ -1176,6 +1179,7 @@ void brcmf_chip_resetcore(struct brcmf_core *pub, u32 prereset, u32 reset,
- 	core = container_of(pub, struct brcmf_core_priv, pub);
- 	core->chip->resetcore(core, prereset, reset, postreset);
- }
-+EXPORT_SYMBOL_GPL(brcmf_chip_resetcore);
- 
- static void
- brcmf_chip_cm3_set_passive(struct brcmf_chip_priv *chip)
-@@ -1317,6 +1321,7 @@ bool brcmf_chip_set_active(struct brcmf_chip *pub, u32 rstvec)
- 
- 	return false;
- }
-+EXPORT_SYMBOL_GPL(brcmf_chip_set_active);
- 
- bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
- {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 7a2b49587b4d..cfe2ee0947b6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -51,6 +51,7 @@ MODULE_PARM_DESC(txglomsz, "Maximum tx packet chain size [SDIO]");
- int brcmf_msg_level;
- module_param_named(debug, brcmf_msg_level, int, S_IRUSR | S_IWUSR);
- MODULE_PARM_DESC(debug, "Level of debug output");
-+EXPORT_SYMBOL_GPL(brcmf_msg_level);
- 
- static int brcmf_p2p_enable;
- module_param_named(p2pon, brcmf_p2p_enable, int, 0);
-@@ -232,6 +233,7 @@ void __brcmf_err(const char *func, const char *fmt, ...)
- 
- 	va_end(args);
- }
-+EXPORT_SYMBOL_GPL(__brcmf_err);
- #endif
- 
- #if defined(CONFIG_BRCM_TRACING) || defined(CONFIG_BRCMDBG)
-@@ -249,6 +251,7 @@ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...)
- 	trace_brcmf_dbg(level, func, &vaf);
- 	va_end(args);
- }
-+EXPORT_SYMBOL_GPL(__brcmf_dbg);
- #endif
- 
- static void brcmf_mp_attach(void)
-@@ -321,11 +324,13 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
- 	}
- 	return settings;
- }
-+EXPORT_SYMBOL_GPL(brcmf_get_module_param);
- 
- void brcmf_release_module_param(struct brcmf_mp_device *module_param)
- {
- 	kfree(module_param);
- }
-+EXPORT_SYMBOL_GPL(brcmf_release_module_param);
- 
- static int __init brcmf_common_pd_probe(struct platform_device *pdev)
- {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c
-index 7b0e52195a85..b83f169869d5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c
-@@ -36,6 +36,7 @@ void brcmf_commonring_register_cb(struct brcmf_commonring *commonring,
- 	commonring->cr_write_wptr = cr_write_wptr;
- 	commonring->cr_ctx = ctx;
- }
-+EXPORT_SYMBOL_GPL(brcmf_commonring_register_cb);
- 
- 
- void brcmf_commonring_config(struct brcmf_commonring *commonring, u16 depth,
-@@ -56,6 +57,7 @@ void brcmf_commonring_config(struct brcmf_commonring *commonring, u16 depth,
- 		commonring->cr_write_wptr(commonring->cr_ctx);
- 	commonring->f_ptr = 0;
- }
-+EXPORT_SYMBOL_GPL(brcmf_commonring_config);
- 
- 
- void brcmf_commonring_lock(struct brcmf_commonring *commonring)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index d2be20627b5c..bf3f5980e31b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -34,7 +34,6 @@
- #include "fwil.h"
- #include "feature.h"
- #include "proto.h"
--#include "pcie.h"
- #include "common.h"
- 
- #define MAX_WAIT_FOR_8021X_TX			msecs_to_jiffies(950)
-@@ -920,6 +919,7 @@ int brcmf_attach(struct device *dev, struct brcmf_mp_device *settings)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(brcmf_attach);
- 
- static int brcmf_revinfo_read(struct seq_file *s, void *data)
- {
-@@ -1047,6 +1047,7 @@ int brcmf_bus_started(struct device *dev)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(brcmf_bus_started);
- 
- void brcmf_bus_add_txhdrlen(struct device *dev, uint len)
- {
-@@ -1112,6 +1113,7 @@ void brcmf_detach(struct device *dev)
- 	bus_if->drvr = NULL;
- 	kfree(drvr);
- }
-+EXPORT_SYMBOL_GPL(brcmf_detach);
- 
- s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len)
- {
-@@ -1169,9 +1171,6 @@ static void brcmf_driver_register(struct work_struct *work)
- #ifdef CONFIG_BRCMFMAC_USB
- 	brcmf_usb_register();
- #endif
--#ifdef CONFIG_BRCMFMAC_PCIE
--	brcmf_pcie_register();
--#endif
- }
- static DECLARE_WORK(brcmf_driver_work, brcmf_driver_register);
- 
-@@ -1193,8 +1192,5 @@ void __exit brcmf_core_exit(void)
- #ifdef CONFIG_BRCMFMAC_USB
- 	brcmf_usb_exit();
- #endif
--#ifdef CONFIG_BRCMFMAC_PCIE
--	brcmf_pcie_exit();
--#endif
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index c7c1e9906500..dd26cf4e1ab7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -434,6 +434,7 @@ void brcmf_fw_nvram_free(void *nvram)
- {
- 	kfree(nvram);
- }
-+EXPORT_SYMBOL_GPL(brcmf_fw_nvram_free);
- 
- struct brcmf_fw {
- 	struct device *dev;
-@@ -562,6 +563,7 @@ int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
- 	return brcmf_fw_get_firmwares_pcie(dev, flags, code, nvram, fw_cb, 0,
- 					   0);
- }
-+EXPORT_SYMBOL_GPL(brcmf_fw_get_firmwares_pcie);
- 
- int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 			      struct brcmf_firmware_mapping mapping_table[],
-@@ -604,4 +606,5 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(brcmf_fw_map_chip_to_name);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index d2c834c3b2fc..06a8fd60d78a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -1317,6 +1317,7 @@ int brcmf_proto_msgbuf_rx_trigger(struct device *dev)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(brcmf_proto_msgbuf_rx_trigger);
- 
- 
- void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 6fae4cf3f6ab..1c133c0a77d0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -40,6 +40,8 @@
- #include "core.h"
- #include "common.h"
- 
-+MODULE_AUTHOR("Broadcom Corporation");
-+MODULE_LICENSE("Dual BSD/GPL");
- 
- enum brcmf_pcie_state {
- 	BRCMFMAC_PCIE_STATE_DOWN,
-@@ -1981,7 +1983,7 @@ static struct pci_driver brcmf_pciedrvr = {
- };
- 
- 
--void brcmf_pcie_register(void)
-+static int __init brcmf_pcie_init(void)
- {
- 	int err;
- 
-@@ -1989,11 +1991,16 @@ void brcmf_pcie_register(void)
- 	err = pci_register_driver(&brcmf_pciedrvr);
- 	if (err)
- 		brcmf_err("PCIE driver registration failed, err=%d\n", err);
-+
-+	return err;
- }
- 
- 
--void brcmf_pcie_exit(void)
-+static void __exit brcmf_pcie_exit(void)
- {
- 	brcmf_dbg(PCIE, "Enter\n");
- 	pci_unregister_driver(&brcmf_pciedrvr);
- }
-+
-+module_init(brcmf_pcie_init);
-+module_exit(brcmf_pcie_exit);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h
-index 6edaaf8ef5ce..e259c32fd6bf 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h
-@@ -21,9 +21,4 @@ struct brcmf_pciedev {
- 	struct brcmf_pciedev_info *devinfo;
- };
- 
--
--void brcmf_pcie_exit(void);
--void brcmf_pcie_register(void);
--
--
- #endif /* BRCMFMAC_PCIE_H */
+ 	int morepkts;
+ 	u16 addr;
 -- 
-2.11.0
+2.9.0
