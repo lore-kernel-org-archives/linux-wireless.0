@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm.newmedia-net.de ([217.113.179.122]:45397 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750930AbdCNXP6 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35310 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754066AbdCBOkM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 19:15:58 -0400
-To: Daniel Drake <drake@endlessm.com>, qca_merez@qca.qualcomm.com,
-        wil6210@qca.qualcomm.com
-References: <CAD8Lp45k01+rN8RXdvPthEDeJj7p-a-Lk5A1AQWXJBGezxQpaA@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Chris Chiu <chiu@endlessm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <0651bd85-656c-1156-b2e6-655f7649b8fe@dd-wrt.com> (sfid-20170315_001601_893509_E7704B90)
-Date: Wed, 15 Mar 2017 00:15:53 +0100
+        Thu, 2 Mar 2017 09:40:12 -0500
+Message-ID: <58B82B8F.2020603@candelatech.com> (sfid-20170302_154027_613466_9B9DB94E)
+Date: Thu, 02 Mar 2017 06:26:23 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp45k01+rN8RXdvPthEDeJj7p-a-Lk5A1AQWXJBGezxQpaA@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 099/306] mac80211-hwsim: notify user-space about channel
+ change.
+References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>  <1487918197.2540.1.camel@sipsolutions.net>      <03ca5a0f-0ab0-76a4-06f3-ead61ab73c94@candelatech.com> <1488443884.8390.4.camel@sipsolutions.net>
+In-Reply-To: <1488443884.8390.4.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: Where is wil6210.fw / wil6210.brd?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 14.03.2017 um 22:55 schrieb Daniel Drake:
-> Hi,
+On 03/02/2017 12:38 AM, Johannes Berg wrote:
+> On Mon, 2017-02-27 at 12:48 -0800, Ben Greear wrote:
+>> On 02/23/2017 10:36 PM, Johannes Berg wrote:
+>>>
+>>>
+>>>> +	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
+>>>> +			       HWSIM_CMD_NOTIFY);
+>>>
+>>> I think you should use a more specific command name.
+>>>
+>>>> +	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER,
+>>>> +		    ETH_ALEN, data->addresses[1].addr))
+>>>> +		goto nla_put_failure;
+>>>
+>>> and at least also add a more specific identifier like the radio ID.
+>>>
+>>>> +	if (data->channel)
+>>>> +		center_freq = data->channel->center_freq;
+>>>> +
+>>>> +	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, center_freq))
+>>>> +		goto nla_put_failure;
+>>>
+>>> and have the full channel definition
+>>
+>> You want chandef.center_freq1,
+>> 	 chandef.center_freq2,
+>> 	 chandef.width?
+>>
+>>
+>> Anything else?
 >
-> We are working with a new consumer laptop model that includes a
-> wil6210 wireless adapter.
+> The control channel center_freq is already there so that should be the
+> full chandef. I guess center_freq2 should be conditional on being non-
+> zero.
+
+I posted a new patch series a day or two ago...please let me know
+if that looks right to you.  I un-conditionally included freq2, but
+I think that is cleaner code all around.  Still, I'll make it conditional
+if that is important to you.
+
+Thanks,
+Ben
+
 >
-> It is not usable on current Linux distros because the firmware is not
-> present. It's not in linux-firmware and we can't even find any
-> download links when searching the web.
->
-> Could you please send a copy of the required firmware to linux-firmware?
-> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-die firmware is only available from qca direct. but i could give you a 
-hint. download the gpl source of the netgear r9000 model. it includes 
-this firmware files
-for anything else you need a sla/nda with qca
->
-> Thanks
-> Daniel
+> johannes
 >
 
 
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
