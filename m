@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:34332 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750977AbdCQF5R (ORCPT
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:33073 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752324AbdCBEL0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 01:57:17 -0400
-Received: by mail-pf0-f178.google.com with SMTP id p189so11774445pfp.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 22:56:41 -0700 (PDT)
-Subject: Re: [PATCH 2/2] mac80211: Drop new node with weak power
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com>
- <1489629438-7087-2-git-send-email-masashi.honma@gmail.com>
- <1489658630.2370.4.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <d0eb6984-6ae7-d984-b61a-0c98603294ae@gmail.com> (sfid-20170317_065805_925960_AA88AB2A)
-Date: Fri, 17 Mar 2017 14:56:38 +0900
+        Wed, 1 Mar 2017 23:11:26 -0500
+Received: by mail-pg0-f45.google.com with SMTP id 25so27559400pgy.0
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Mar 2017 20:10:51 -0800 (PST)
+Subject: Re: WARNING: CPU: 1 PID: 23668 at
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
+To: Luca Coelho <luca@coelho.fi>
+References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
+Cc: luciano.coelho@intel.com, sara.sharon@intel.com,
+        liad.kaufman@intel.com, linux-wireless@vger.kernel.org
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk> (sfid-20170302_051218_828025_01C2A1BA)
+Date: Wed, 1 Mar 2017 21:10:47 -0700
 MIME-Version: 1.0
-In-Reply-To: <1489658630.2370.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017/03/16 19:03, Johannes Berg wrote:
-> I'm not really sure this is the right solution?
->
-> It seems to me that it should be a function of the path selection to
-> take this into account, not prohibiting the longer path entirely?
+On 03/01/2017 08:33 PM, Luca Coelho wrote:
+> Hi Jens,
+> 
+> On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
+> 
+>     Not that folks have been jumping all over this, but in case someone is
+>     curious, it triggered twice here today. For those two times, the value
+>     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
+> 
+> Sorry for the delay, I'm on vacation now with limited internet access.
+> But we'll take a look into this early next week at the latest.
+> 
+> Thanks a lot for the detailed report!
 
-Right. To calculate metric with RSSI level is better solution than
-this solution.
+No worries, thanks for responding. I just wanted to ensure this wasn't
+dropped on the floor.
 
-> It seems that this is really what the meshcfg.rssi_threshold was
-> intended for, and the plink code *does* take it into account. Can you
-> explain where that's breaking down?
+BTW, a few more values of ->pending_frames[sta_id]:
 
-Indeed meshcfg.rssi_threshold is already referred by some codes. But
-when booting mesh node with user_mpm=1, the codes is not called.
-So we need to add another code.
+$ dmesg | grep "ret="
+[ 2334.308254] ret=39
+[ 7915.311828] ret=80
+[31602.317204] ret=41
+[32139.510993] ret=54
+[33292.917759] ret=96
 
-I will update commit log because this patch just enables
-meshcfg.rssi_threshold with user_mpm=1.
+it seems to often happen around resume.
 
-Masashi Honma.
+-- 
+Jens Axboe
