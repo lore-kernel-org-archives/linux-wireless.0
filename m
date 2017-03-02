@@ -1,99 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:33026 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751468AbdCCM5l (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:59055 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752757AbdCBRLM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 07:57:41 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAG_fn=UVcLhP8mH6tvzqZUn4u9T4pnQw8bMf=qccNro59VcABw@mail.gmail.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <CAG_fn=UVcLhP8mH6tvzqZUn4u9T4pnQw8bMf=qccNro59VcABw@mail.gmail.com>
+        Thu, 2 Mar 2017 12:11:12 -0500
 From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 3 Mar 2017 13:54:00 +0100
-Message-ID: <CAK8P3a1tek+4zWwHJtXO=r7Zqe7atwrPk70hWcM_Qp_Ekv9KHw@mail.gmail.com> (sfid-20170303_135835_953131_85D3E215)
-Subject: Re: [PATCH 00/26] bring back stack frame warning with KASAN
-To: Alexander Potapenko <glider@google.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
         kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 03/26] typecheck.h: avoid local variables in typecheck() macro
+Date: Thu,  2 Mar 2017 17:38:11 +0100
+Message-Id: <20170302163834.2273519-4-arnd@arndb.de> (sfid-20170302_181542_933463_C252D5FD)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 1:25 PM, Alexander Potapenko <glider@google.com> wrote:
-> On Thu, Mar 2, 2017 at 5:38 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> It took a long while to get this done, but I'm finally ready
->> to send the first half of the KASAN stack size patches that
->> I did in response to the kernelci.org warnings.
->>
->> As before, it's worth mentioning that things are generally worse
->> with gcc-7.0.1 because of the addition of -fsanitize-address-use-after-scope
->> that are not present on kernelci, so my randconfig testing found
->> a lot more than kernelci did.
->>
->> The main areas are:
->>
->> - READ_ONCE/WRITE_ONCE cause problems in lots of code
->> - typecheck() causes huge problems in a few places
->> - I'm introducing "noinline_for_kasan" and use it in a lot
->>   of places that suffer from inline functions with local variables
->>   - netlink, as used in various parts of the kernel
->>   - a number of drivers/media drivers
->>   - a handful of wireless network drivers
->> - kmemcheck conflicts with -fsanitize-address-use-after-scope
->>
->> This series lets us add back a stack frame warning for 3072 bytes
->> with -fsanitize-address-use-after-scope, or 2048 bytes without it.
->>
->> I have a follow-up series that further reduces the stack frame
->> warning limit to 1280 bytes for all 64-bit architectures, and
->> 1536 bytes with basic KASAN support (no -fsanitize-address-use-after-scope).
->> For now, I'm only posting the first half, in order to keep
->> it (barely) reviewable.
->
-> Can you please elaborate on why do you need this? Are you trying to
-> squeeze KASAN into some embedded device?
-> Noinlines sprayed over the codebase are hard to maintain, and certain
-> compiler changes may cause bloated stack frames in other places.
-> Maybe it should be enough to just increase the stack frame limit in
-> KASAN builds, as Dmitry suggested previously?
+With KASAN enabled, the typecheck macro leads to some serious stack memory,
+as seen in the rt2xxx drivers:
 
-The current state of mainline has doubled the kernel stack size with
-KASAN, and completely turned off the warning for per-function
-stack frames. In some cases, this is completely broken as we have
-functions that exceed even the 32kb per-thread stacks by themselves,
-so I want to turn on the warning again and fix all the outliers.
+drivers/net/wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_init_registers':
+drivers/net/wireless/ralink/rt2x00/rt2800lib.c:5068:1: error: the frame size of 23768 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
+drivers/net/wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_config_txpower_rt3593.isra.1':
+drivers/net/wireless/ralink/rt2x00/rt2800lib.c:4126:1: error: the frame size of 14184 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
+drivers/net/wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_config_channel_rf3053.isra.5':
+drivers/net/wireless/ralink/rt2x00/rt2800lib.c:2585:1: error: the frame size of 7632 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
 
-The hard part is deciding what size is reasonable for a given function,
-as smaller limits cause more harmless warnings while larger limits
-can hide more actual problems. Before running into the KASAN
-problem, I had already determined that we can lower the warning
-limit for 64-bit architectures from 2048 bytes to 1280 with just
-a handful of patches that are generally a good cleanup anyway.
+If we express the macro in a way that avoids the local variables, this goes
+away and the stacks are comparable to building without KASAN.
 
-This led me to picking three separate warning limits, based on
-what I found reasonable to work around in the code:
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ include/linux/typecheck.h | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-3072 bytes with -fsanitize-address-use-after-scope
-1536 bytes with KASAN but without -fsanitize-address-use-after-scope
-1280 bytes on 64-bit without KASAN
-1024 bytes on 32-bit architectures
-
-If we use higher limits, the patch series will get a bit shorter. For
-the limits above, I needed a total of 51 patches, while this shorter
-series of 26 patches has slightly laxer limits:
-
-3072 bytes with -fsanitize-address-use-after-scope
-2048 bytes on 64-bit architectures with or without KASAN, but
-          without  -fsanitize-address-use-after-scope
-1024 bytes on 32-bit architectures
-
-The individual patches should list the highest frame size I ran
-into, so I can try to reduce the number of patches if you have
-a suggestion for a different set of limits.
-
-       Arnd
+diff --git a/include/linux/typecheck.h b/include/linux/typecheck.h
+index eb5b74a575be..adb1579fa5f0 100644
+--- a/include/linux/typecheck.h
++++ b/include/linux/typecheck.h
+@@ -5,12 +5,7 @@
+  * Check at compile time that something is of a particular type.
+  * Always evaluates to 1 so you may use it easily in comparisons.
+  */
+-#define typecheck(type,x) \
+-({	type __dummy; \
+-	typeof(x) __dummy2; \
+-	(void)(&__dummy == &__dummy2); \
+-	1; \
+-})
++#define typecheck(type,x) ({(void)((typeof(type) *)NULL == (typeof(x) *)NULL); 1;})
+ 
+ /*
+  * Check at compile time that 'function' is a certain type, or is a pointer
+-- 
+2.9.0
