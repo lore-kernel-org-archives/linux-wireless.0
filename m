@@ -1,83 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33274 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753174AbdC2QV7 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:32931 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754066AbdCBQsd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 12:21:59 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Vincent Cuissard <cuissard@marvell.com>
-Subject: [PATCH 5/7] NFC: nfcmrvl: fix firmware-management initialisation
-Date: Wed, 29 Mar 2017 18:21:10 +0200
-Message-Id: <20170329162112.18121-6-johan@kernel.org> (sfid-20170329_182343_304373_66F3C963)
-In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
-References: <20170329162112.18121-1-johan@kernel.org>
+        Thu, 2 Mar 2017 11:48:33 -0500
+From: Georgios Emmanouil <geo.emmnl@gmail.com>
+To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] Staging:wilc1000:wilc_sdio: Modified comment style to preferred kernel comment style
+Date: Thu,  2 Mar 2017 18:41:16 +0200
+Message-Id: <1488472876-12828-1-git-send-email-geo.emmnl@gmail.com> (sfid-20170302_175002_661777_1893AD4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nci-device was never deregistered in the event that
-fw-initialisation failed.
+Modified comment style to preferred kernel comment style.
 
-Fix this by moving the firmware initialisation before device
-registration since the firmware work queue should be available before
-registering.
-
-Note that this depends on a recent fix that moved device-name
-initialisation back to to nci_allocate_device() as the
-firmware-workqueue name is now derived from the nfc-device name.
-
-Fixes: 3194c6870158 ("NFC: nfcmrvl: add firmware download support")
-Cc: stable <stable@vger.kernel.org>     # 4.4
-Cc: Vincent Cuissard <cuissard@marvell.com>
-Signed-off-by: Johan Hovold <johan@kernel.org>
+Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
 ---
- drivers/nfc/nfcmrvl/main.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/wilc_sdio.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/nfc/nfcmrvl/main.c b/drivers/nfc/nfcmrvl/main.c
-index 8d4294fc3005..f20220bab6b6 100644
---- a/drivers/nfc/nfcmrvl/main.c
-+++ b/drivers/nfc/nfcmrvl/main.c
-@@ -156,26 +156,28 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
- 		goto error;
- 	}
- 
-+	rc = nfcmrvl_fw_dnld_init(priv);
-+	if (rc) {
-+		nfc_err(dev, "failed to initialize FW download %d\n", rc);
-+		goto error_free_dev;
-+	}
-+
- 	nci_set_drvdata(priv->ndev, priv);
- 
- 	rc = nci_register_device(priv->ndev);
- 	if (rc) {
- 		nfc_err(dev, "nci_register_device failed %d\n", rc);
--		goto error_free_dev;
-+		goto error_fw_dnld_deinit;
- 	}
- 
- 	/* Ensure that controller is powered off */
- 	nfcmrvl_chip_halt(priv);
- 
--	rc = nfcmrvl_fw_dnld_init(priv);
--	if (rc) {
--		nfc_err(dev, "failed to initialize FW download %d\n", rc);
--		goto error_free_dev;
--	}
--
- 	nfc_info(dev, "registered with nci successfully\n");
- 	return priv;
- 
-+error_fw_dnld_deinit:
-+	nfcmrvl_fw_dnld_deinit(priv);
- error_free_dev:
- 	nci_free_device(priv->ndev);
- error:
--- 
-2.12.2
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index cd6b8ba..ad4eb0f 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -1,11 +1,8 @@
+-/* ////////////////////////////////////////////////////////////////////////// */
+-/*  */
+-/* Copyright (c) Atmel Corporation.  All rights reserved. */
+-/*  */
+-/* Module Name:  wilc_sdio.c */
+-/*  */
+-/*  */
+-/* //////////////////////////////////////////////////////////////////////////// */
++/*
++ * Copyright (c) Atmel Corporation.  All rights reserved.
++ *
++ * Module Name:  wilc_sdio.c
++ */
+
+ #include <linux/string.h>
+ #include "wilc_wlan_if.h"
+--
+2.1.4
