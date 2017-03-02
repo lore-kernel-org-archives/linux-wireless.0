@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42744 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751990AbdC2ImG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 04:42:06 -0400
-Message-ID: <1490776922.7948.9.camel@sipsolutions.net> (sfid-20170329_104237_571645_9DC44AF1)
-Subject: Re: [PATCH v3 1/4] mac80211-hwsim: notify user-space about channel
- change.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Wed, 29 Mar 2017 10:42:02 +0200
-In-Reply-To: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
-References: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.kundenserver.de ([212.227.126.187]:61642 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753337AbdCBQsW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 11:48:22 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 19/26] [media] r820t: mark register functions as noinline_for_kasan
+Date: Thu,  2 Mar 2017 17:38:27 +0100
+Message-Id: <20170302163834.2273519-20-arnd@arndb.de> (sfid-20170302_175429_189604_7E113078)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+With KASAN, we get an overly long stack frame due to inlining
+the register access function:
 
-> +	if (data->center_freq2)
-> +		if (nla_put_u32(skb, HWSIM_ATTR_CENTER_FREQ2, data-
-> >center_freq2))
-> +			goto nla_put_failure;
-> 
+drivers/media/tuners/r820t.c: In function 'generic_set_freq.isra.7':
+drivers/media/tuners/r820t.c:1334:1: error: the frame size of 2880 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
 
-That could be simplified (but isn't really interesting)
+An earlier patch I tried used an open-coded r820t_write_reg()
+implementation that may have been more efficent, while this
+version simply adds the annotation, which has a lower risk for
+regressions.
 
-> + * @HWSIM_ATTR_CENTER_FREQ2: Configured center-freq-2.  Not reported
-> if value is zero.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/media/tuners/r820t.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-The value 0 really just means "unused" - so this should say "if used"
-or so.
-
-> + * @HWSIM_ATTR_CH_WIDTH: Configured channel width.
-
-That should point to &enum nl80211_chan_width I guess.
-
-Anyway, all of that is minor. The biggest problem I have with this
-patch upon close review is that it only handles one case, and actually
-ties that case to the nl80211 API.
-
-hwsim also can deal with channel contexts already, is there much point
-in making the userspace API ignorant of that?
-
-johannes
+diff --git a/drivers/media/tuners/r820t.c b/drivers/media/tuners/r820t.c
+index ba80376a3b86..0fbfa6416e38 100644
+--- a/drivers/media/tuners/r820t.c
++++ b/drivers/media/tuners/r820t.c
+@@ -396,7 +396,7 @@ static int r820t_write(struct r820t_priv *priv, u8 reg, const u8 *val,
+ 	return 0;
+ }
+ 
+-static int r820t_write_reg(struct r820t_priv *priv, u8 reg, u8 val)
++static noinline_for_kasan int r820t_write_reg(struct r820t_priv *priv, u8 reg, u8 val)
+ {
+ 	return r820t_write(priv, reg, &val, 1);
+ }
+@@ -411,7 +411,7 @@ static int r820t_read_cache_reg(struct r820t_priv *priv, int reg)
+ 		return -EINVAL;
+ }
+ 
+-static int r820t_write_reg_mask(struct r820t_priv *priv, u8 reg, u8 val,
++static noinline_for_kasan int r820t_write_reg_mask(struct r820t_priv *priv, u8 reg, u8 val,
+ 				u8 bit_mask)
+ {
+ 	int rc = r820t_read_cache_reg(priv, reg);
+-- 
+2.9.0
