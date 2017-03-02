@@ -1,42 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:38711 "EHLO
-        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755446AbdCGNUB (ORCPT
+Received: from smtprelay0098.hostedemail.com ([216.40.44.98]:54157 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750910AbdCBX7N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 08:20:01 -0500
-Received: by mail-it0-f43.google.com with SMTP id m27so3002516iti.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 05:19:55 -0800 (PST)
-Date: Tue, 7 Mar 2017 07:11:56 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Ryan Mounce <ryan@mounce.com.au>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] wireless-regdb: Update rules for Australia (AU) and
- add 60GHz rules
-Message-ID: <20170307131156.GB5500@ubuntu-hedt> (sfid-20170307_142041_308436_9135524C)
-References: <20170224145519.GD3479@ubuntu-hedt>
- <20170225031027.7871-1-ryan@mounce.com.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170225031027.7871-1-ryan@mounce.com.au>
+        Thu, 2 Mar 2017 18:59:13 -0500
+Message-ID: <1488499097.2179.27.camel@perches.com> (sfid-20170303_010026_817535_09647AC8)
+Subject: Re: [PATCH 24/26] ocfs2: reduce stack size with KASAN
+From: Joe Perches <joe@perches.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Date: Thu, 02 Mar 2017 15:58:17 -0800
+In-Reply-To: <CAK8P3a2ZQR8ukt6Aky7onD2Y=b+Cz+pp+C0+Svb2EyK2474j-g@mail.gmail.com>
+References: <20170302163834.2273519-1-arnd@arndb.de>
+         <20170302163834.2273519-25-arnd@arndb.de>
+         <1488476770.2179.6.camel@perches.com>
+         <CAK8P3a1gW9UqMKD2ijzxMH4rv1zAji0GUoz+bLY_oi0yvLU1cw@mail.gmail.com>
+         <1488494428.2179.23.camel@perches.com>
+         <CAK8P3a2ZQR8ukt6Aky7onD2Y=b+Cz+pp+C0+Svb2EyK2474j-g@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 25, 2017 at 01:40:27PM +1030, Ryan Mounce wrote:
-> Sourced from the current legislation at
-> https://www.legislation.gov.au/Details/F2016C00432
+On Thu, 2017-03-02 at 23:59 +0100, Arnd Bergmann wrote:
+> KASAN decides that passing a pointer to _m into an extern function
+> (_mlog_printk) is potentially dangerous, as that function might
+> keep a reference to that pointer after it goes out of scope,
+> or it might not know the correct length of the stack object pointed to.
 > 
-> The current rules exceed legal limits between 5250-5330MHz, and permit
-> illegal operation in 5600-5650MHz (disallowed regardless of DFS).
-> 
-> Frequency ranges and EIRP limits for all ranges have been updated to
-> match items 59-63, 65 in the linked document. As the rules for AU have
-> never previously mirrored local regulations, changes include a
-> significant increase in the allowable 2.4GHz EIRP and smaller increases
-> in most other bands.
-> 
-> In order to allow 80MHz operation between 5650-5730MHz (bordering two
-> bands) the lower, more restrictive band has been rounded up by 5MHz.
-> 
-> Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
+> We can see from looking at the __mlog_printk() function definition
+> that it's actually safe, but the compiler cannot see that when looking
+> at another source file.
 
-Applied, thanks.
+OK, thanks.
+
+btw:
+
+changing __mlog_printk can save ~11% (90+KB) of object text size
+by removing __func__ and __LINE__ and using vsprintf pointer extension
+%pS, __builtin_return_address(0) as it is already used in dlmmaster.
+
+(defconfig x86-64, with ocfs2)
+
+$ size fs/ocfs2/built-in.o*
+   text	   data	    bss	    dec	    hex	filename
+ 759791	 111373	 105688	 976852	  ee7d4	fs/ocfs2/built-in.o.new
+ 852959	 111373	 105688	1070020	 1053c4	fs/ocfs2/built-in.o.old
+
+It's nearly the same output.
+
+---
+
+ fs/ocfs2/cluster/masklog.c | 8 ++++----
+ fs/ocfs2/cluster/masklog.h | 8 +++-----
+ 2 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/fs/ocfs2/cluster/masklog.c b/fs/ocfs2/cluster/masklog.c
+index d331c2386b94..a3f080f37108 100644
+--- a/fs/ocfs2/cluster/masklog.c
++++ b/fs/ocfs2/cluster/masklog.c
+@@ -64,8 +64,7 @@ static ssize_t mlog_mask_store(u64 mask, const char *buf, size_t count)
+ 	return count;
+ }
+ 
+-void __mlog_printk(const u64 *mask, const char *func, int line,
+-		   const char *fmt, ...)
++void __mlog_printk(const u64 *mask, const char *fmt, ...)
+ {
+ 	struct va_format vaf;
+ 	va_list args;
+@@ -90,9 +89,10 @@ void __mlog_printk(const u64 *mask, const char *func, int line,
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	printk("%s(%s,%u,%u):%s:%d %s%pV",
++	printk("%s(%s,%u,%u):%pS %s%pV",
+ 	       level, current->comm, task_pid_nr(current),
+-	       raw_smp_processor_id(), func, line, prefix, &vaf);
++	       raw_smp_processor_id(), __builtin_return_address(0),
++	       prefix, &vaf);
+ 
+ 	va_end(args);
+ }
+diff --git a/fs/ocfs2/cluster/masklog.h b/fs/ocfs2/cluster/masklog.h
+index 3c16da69605d..56ba5baf625b 100644
+--- a/fs/ocfs2/cluster/masklog.h
++++ b/fs/ocfs2/cluster/masklog.h
+@@ -162,9 +162,8 @@ extern struct mlog_bits mlog_and_bits, mlog_not_bits;
+ 
+ #endif
+ 
+-__printf(4, 5) __nocapture(2)
+-void __mlog_printk(const u64 *m, const char *func, int line,
+-		   const char *fmt, ...);
++__printf(2, 3) __nocapture(2)
++void __mlog_printk(const u64 *m, const char *fmt, ...);
+ 
+ /*
+  * Testing before the __mlog_printk call lets the compiler eliminate the
+@@ -174,8 +173,7 @@ void __mlog_printk(const u64 *m, const char *func, int line,
+ do {									\
+ 	u64 _m = MLOG_MASK_PREFIX | (mask);				\
+ 	if (_m & ML_ALLOWED_BITS)					\
+-		__mlog_printk(&_m, __func__, __LINE__, fmt,		\
+-			      ##__VA_ARGS__);				\
++		__mlog_printk(&_m, fmt, ##__VA_ARGS__);			\
+ } while (0)
+ 
+ #define mlog_errno(st) ({						\
