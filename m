@@ -1,174 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2490 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754135AbdCOPp7 (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:33982 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752680AbdCBSNW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 11:45:59 -0400
-Subject: [PATCH v6 05/10] ath10k: various sdio related definitions
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 15 Mar 2017 17:45:48 +0200
-Message-ID: <148959274833.31432.12226962233912165365.stgit@potku.adurom.net> (sfid-20170315_164612_215900_6F08001D)
-In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Thu, 2 Mar 2017 13:13:22 -0500
+From: Georgios Emmanouil <geo.emmnl@gmail.com>
+To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] Staging:wilc1000:wilc_spi: Fixed spelling error
+Date: Thu,  2 Mar 2017 19:06:19 +0200
+Message-Id: <1488474379-16101-1-git-send-email-geo.emmnl@gmail.com> (sfid-20170302_191400_069218_5075E616)
+In-Reply-To: <1488474328-15992-1-git-send-email-geo.emmnl@gmail.com>
+References: <1488474328-15992-1-git-send-email-geo.emmnl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Fixed spelling error. 'unkmown' to 'unknown'.
 
-Debug masks for SDIO HIF layer.
-Address definitions for SDIO/mbox based chipsets.
-Augmented struct host_interest with more members.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h      |    3 ++
- drivers/net/wireless/ath/ath10k/debug.h     |    2 +
- drivers/net/wireless/ath/ath10k/hw.h        |   53 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 ++++++++++++
- 4 files changed, 82 insertions(+)
+ drivers/staging/wilc1000/wilc_spi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 88d14be7fcce..5965d181e6ba 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -91,6 +91,7 @@ struct ath10k;
- enum ath10k_bus {
- 	ATH10K_BUS_PCI,
- 	ATH10K_BUS_AHB,
-+	ATH10K_BUS_SDIO,
- };
- 
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
-@@ -100,6 +101,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- 		return "pci";
- 	case ATH10K_BUS_AHB:
- 		return "ahb";
-+	case ATH10K_BUS_SDIO:
-+		return "sdio";
- 	}
- 
- 	return "unknown";
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 2368f47314ae..257d10985c6e 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -38,6 +38,8 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
- 	ATH10K_DBG_PCI_PS	= 0x00004000,
- 	ATH10K_DBG_AHB		= 0x00008000,
-+	ATH10K_DBG_SDIO		= 0x00010000,
-+	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index d370b573e0f9..405514455191 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -856,6 +856,59 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
- #define QCA9887_EEPROM_ADDR_LO_MASK		0x00ff0000
- #define QCA9887_EEPROM_ADDR_LO_LSB		16
- 
-+#define MBOX_RESET_CONTROL_ADDRESS		0x00000000
-+#define MBOX_HOST_INT_STATUS_ADDRESS		0x00000800
-+#define MBOX_HOST_INT_STATUS_ERROR_LSB		7
-+#define MBOX_HOST_INT_STATUS_ERROR_MASK		0x00000080
-+#define MBOX_HOST_INT_STATUS_CPU_LSB		6
-+#define MBOX_HOST_INT_STATUS_CPU_MASK		0x00000040
-+#define MBOX_HOST_INT_STATUS_COUNTER_LSB	4
-+#define MBOX_HOST_INT_STATUS_COUNTER_MASK	0x00000010
-+#define MBOX_CPU_INT_STATUS_ADDRESS		0x00000801
-+#define MBOX_ERROR_INT_STATUS_ADDRESS		0x00000802
-+#define MBOX_ERROR_INT_STATUS_WAKEUP_LSB	2
-+#define MBOX_ERROR_INT_STATUS_WAKEUP_MASK	0x00000004
-+#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_LSB	1
-+#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_MASK	0x00000002
-+#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_LSB	0
-+#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_MASK	0x00000001
-+#define MBOX_COUNTER_INT_STATUS_ADDRESS		0x00000803
-+#define MBOX_COUNTER_INT_STATUS_COUNTER_LSB	0
-+#define MBOX_COUNTER_INT_STATUS_COUNTER_MASK	0x000000ff
-+#define MBOX_RX_LOOKAHEAD_VALID_ADDRESS		0x00000805
-+#define MBOX_INT_STATUS_ENABLE_ADDRESS		0x00000828
-+#define MBOX_INT_STATUS_ENABLE_ERROR_LSB	7
-+#define MBOX_INT_STATUS_ENABLE_ERROR_MASK	0x00000080
-+#define MBOX_INT_STATUS_ENABLE_CPU_LSB		6
-+#define MBOX_INT_STATUS_ENABLE_CPU_MASK		0x00000040
-+#define MBOX_INT_STATUS_ENABLE_INT_LSB		5
-+#define MBOX_INT_STATUS_ENABLE_INT_MASK		0x00000020
-+#define MBOX_INT_STATUS_ENABLE_COUNTER_LSB	4
-+#define MBOX_INT_STATUS_ENABLE_COUNTER_MASK	0x00000010
-+#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_LSB	0
-+#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_MASK	0x0000000f
-+#define MBOX_CPU_INT_STATUS_ENABLE_ADDRESS	0x00000819
-+#define MBOX_CPU_INT_STATUS_ENABLE_BIT_LSB	0
-+#define MBOX_CPU_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
-+#define MBOX_ERROR_STATUS_ENABLE_ADDRESS	0x0000081a
-+#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_LSB  1
-+#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_MASK 0x00000002
-+#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_LSB   0
-+#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_MASK  0x00000001
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_ADDRESS	0x0000081b
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_LSB	0
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
-+#define MBOX_COUNT_ADDRESS			0x00000820
-+#define MBOX_COUNT_DEC_ADDRESS			0x00000840
-+#define MBOX_WINDOW_DATA_ADDRESS		0x00000874
-+#define MBOX_WINDOW_WRITE_ADDR_ADDRESS		0x00000878
-+#define MBOX_WINDOW_READ_ADDR_ADDRESS		0x0000087c
-+#define MBOX_CPU_DBG_SEL_ADDRESS		0x00000883
-+#define MBOX_CPU_DBG_ADDRESS			0x00000884
-+#define MBOX_RTC_BASE_ADDRESS			0x00000000
-+#define MBOX_GPIO_BASE_ADDRESS			0x00005000
-+#define MBOX_MBOX_BASE_ADDRESS			0x00008000
-+
- #define RTC_STATE_V_GET(x) (((x) & RTC_STATE_V_MASK) >> RTC_STATE_V_LSB)
- 
- /* Register definitions for first generation ath10k cards. These cards include
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index a47cab44d9c8..58e0541da4b5 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -205,6 +205,24 @@ struct host_interest {
- 	 */
- 	/* Bit 1 - unused */
- 	u32 hi_fw_swap;					/* 0x104 */
-+
-+	/* global arenas pointer address, used by host driver debug */
-+	u32 hi_dynamic_mem_arenas_addr;			/* 0x108 */
-+
-+	/* allocated bytes of DRAM use by allocated */
-+	u32 hi_dynamic_mem_allocated;			/* 0x10C */
-+
-+	/* remaining bytes of DRAM */
-+	u32 hi_dynamic_mem_remaining;			/* 0x110 */
-+
-+	/* memory track count, configured by host */
-+	u32 hi_dynamic_mem_track_max;			/* 0x114 */
-+
-+	/* minidump buffer */
-+	u32 hi_minidump;				/* 0x118 */
-+
-+	/* bdata's sig and key addr */
-+	u32 hi_bd_sig_key;				/* 0x11c */
- } __packed;
- 
- #define HI_ITEM(item)  offsetof(struct host_interest, item)
-@@ -319,6 +337,12 @@ Fw Mode/SubMode Mask
- #define HI_ACS_FLAGS_USE_WWAN       (1 << 1)
- /* Use test VAP */
- #define HI_ACS_FLAGS_TEST_VAP       (1 << 2)
-+/* SDIO/mailbox ACS flag definitions */
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_SET       (1 << 0)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET    (1 << 1)
-+#define HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE        (1 << 2)
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_FW_ACK    (1 << 16)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_FW_ACK (1 << 17)
- 
- /*
-  * CONSOLE FLAGS
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index b48cb1c8..4f38922 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -963,12 +963,12 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+ 				}
+
+ 				{
+-					u32 unkmown_mask;
++					u32 unknown_mask;
+
+-					unkmown_mask = ~((1ul << g_spi.nint) - 1);
++					unknown_mask = ~((1ul << g_spi.nint) - 1);
+
+-					if ((tmp >> IRG_FLAGS_OFFSET) & unkmown_mask) {
+-						dev_err(&spi->dev, "Unexpected interrupt (2): j=%d, tmp=%x, mask=%x\n", j, tmp, unkmown_mask);
++					if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
++						dev_err(&spi->dev, "Unexpected interrupt (2): j=%d, tmp=%x, mask=%x\n", j, tmp, unknown_mask);
+ 						happended = 1;
+ 					}
+ 				}
+--
+2.1.4
