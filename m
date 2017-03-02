@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:53352 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753152AbdCWNay (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2017 09:30:54 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH v2 0/3] Channels in licensed bands, noise floor override
-Date: Thu, 23 Mar 2017 14:30:45 +0100
-Message-Id: <20170323133048.30062-1-sw@simonwunderlich.de> (sfid-20170323_143058_959110_90F07D67)
+Received: from s3.sipsolutions.net ([5.9.151.49]:48858 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750703AbdCBLA4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 06:00:56 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-03-02
+Date: Thu,  2 Mar 2017 11:34:42 +0100
+Message-Id: <20170302103443.18251-1-johannes@sipsolutions.net> (sfid-20170302_120119_721499_38C8F8B0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the revised series for adding channels in licensed bands and the
-noise floor override. Thanks for the previous discussions, I've adopted
-suggestions from Zefir and Sebastian accordingly and rebased the series.
+Hi Dave,
 
-For more background info, please check the v1 series:
+As I mentioned in my other pull request, here's the change
+for the average.h to make the precision easier to use.
 
-https://www.spinics.net/lists/linux-wireless/msg160266.html
+Please pull and let me know if there's any problem.
 
-Cheers,
-     Simon
- 
-Ben Greear (1):
-  ath9k: Support channels in licensed bands
+Thanks,
+johannes
 
-Simon Wunderlich (2):
-  ath10k: add support for channels in licensed bands
-  ath9k: add noise floor override option
 
- drivers/net/wireless/ath/ath10k/Kconfig      | 20 +++++++++
- drivers/net/wireless/ath/ath10k/core.h       |  4 ++
- drivers/net/wireless/ath/ath10k/mac.c        | 10 +++++
- drivers/net/wireless/ath/ath10k/wmi.c        | 53 +++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/Kconfig       | 20 +++++++++
- drivers/net/wireless/ath/ath9k/calib.c       |  5 ++-
- drivers/net/wireless/ath/ath9k/common-init.c | 15 +++++++
- drivers/net/wireless/ath/ath9k/debug.c       | 62 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h          |  5 +++
- 9 files changed, 177 insertions(+), 17 deletions(-)
 
--- 
-2.11.0
+The following changes since commit 48cac18ecf1de82f76259a54402c3adb7839ad01:
+
+  ipv6: orphan skbs in reassembly unit (2017-03-01 20:55:57 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-03-02
+
+for you to fetch changes up to eb1e011a14748a1d9df9a7d7df9a5711721a1bdb:
+
+  average: change to declare precision, not factor (2017-03-02 08:32:46 +0100)
+
+----------------------------------------------------------------
+This contains just the average.h change in order to get it
+into the tree before adding new users through -next trees.
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      average: change to declare precision, not factor
+
+ drivers/net/virtio_net.c                    |  2 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h      |  2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h |  2 +-
+ include/linux/average.h                     | 61 +++++++++++++++++++----------
+ net/batman-adv/types.h                      |  2 +-
+ net/mac80211/ieee80211_i.h                  |  2 +-
+ net/mac80211/sta_info.h                     |  2 +-
+ 7 files changed, 47 insertions(+), 26 deletions(-)
