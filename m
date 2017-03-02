@@ -1,58 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36550 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751070AbdCNMLm (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:41238 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbdCCBqH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 08:11:42 -0400
-Received: by mail-io0-f196.google.com with SMTP id 68so16153205ioh.3
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2017 05:11:36 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: New talk accepted on Netesto tool suite
-To: people@netdevconf.org
-Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
-        Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Heri Muhero <hmuhero@gmail.com>
-Message-ID: <f3f5ac35-b685-a2f6-ed89-277996dc3c17@mojatatu.com> (sfid-20170314_131149_595075_BCBAC321)
-Date: Tue, 14 Mar 2017 08:11:34 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 2 Mar 2017 20:46:07 -0500
+Date: Thu, 02 Mar 2017 14:39:56 -0800 (PST)
+Message-Id: <20170302.143956.1485574713232738070.davem@davemloft.net> (sfid-20170303_024611_239735_24EC7E84)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2017-03-02
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170302103443.18251-1-johannes@sipsolutions.net>
+References: <20170302103443.18251-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tech committee would like to announce a new accepted talk.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu,  2 Mar 2017 11:34:42 +0100
 
-Lawrence Brakmo  will talk about Netesto tool suite
+> As I mentioned in my other pull request, here's the change
+> for the average.h to make the precision easier to use.
+> 
+> Please pull and let me know if there's any problem.
 
-Details are as follows:
------
-Netesto (NEtwork TESting TOolkit) is a suite of tools for running 
-multi-host network experiments that supports the collection and display 
-of relevant data and statistics. It currently supports TCP RPC and 
-STREAM transfers through netperf. Although the framework itself can 
-easily be expanded to support other protocols and transfer programs. It 
-has some similarities to Flent (The Flexible Network Tester) in that it 
-is based on Python, but unlike Flent, Netesto supports:
-
-Multiple senders and receivers
-Detailed flow information: RTTs, cwnds, etc.
-Per host statistics and state
-Creation of csv file with results
-Creation of html file with results in table plus detailed results 
-including graphs of cwnds, RTTs, goodput
-Support for creating complex scenarios through macros
-Support for adding delays with netem
-Netesto can run complex scenarios consisting of multiple individual 
-tests with just a few commands due to the use of macros and libraries. 
-The end result is an HTML page consisting of a table with one or more 
-lines per test, plus links to pages for individual results which contain 
-graphs showing goodputs, RTTs and cwnds. Netesto has proved very 
-valuable for comparing the performance of different TCP variants (such 
-as Cubic, Reno, BBR, NV). For example, it was used to evaluate BBR and 
-compare its performance to Cubic 
-(https://drive.google.com/file/d/0B4YZ_0yTgbJEa21CbUVLWFdrX2c/view)
-----
-
-cheers,
-jamal
+Pulled, thanks Johannes.
