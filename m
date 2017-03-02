@@ -1,7 +1,7 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:59055 "EHLO
+Received: from mout.kundenserver.de ([212.227.126.133]:55700 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752757AbdCBRLM (ORCPT
+        with ESMTP id S1753158AbdCBRLM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 2 Mar 2017 12:11:12 -0500
 From: Arnd Bergmann <arnd@arndb.de>
@@ -14,49 +14,43 @@ Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
         kernel-build-reports@lists.linaro.org,
         "David S . Miller" <davem@davemloft.net>,
         Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 03/26] typecheck.h: avoid local variables in typecheck() macro
-Date: Thu,  2 Mar 2017 17:38:11 +0100
-Message-Id: <20170302163834.2273519-4-arnd@arndb.de> (sfid-20170302_181542_933463_C252D5FD)
+Subject: [PATCH 16/26] [media] i2c: adv7604: mark register access as noinline_for_kasan
+Date: Thu,  2 Mar 2017 17:38:24 +0100
+Message-Id: <20170302163834.2273519-17-arnd@arndb.de> (sfid-20170302_181844_759794_BBCE2445)
 In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
 References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With KASAN enabled, the typecheck macro leads to some serious stack memory,
-as seen in the rt2xxx drivers:
+When building with KASAN, we get a stack frame size warning about a function
+that could potentially cause a stack overflow:
 
-drivers/net/wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_init_registers':
-drivers/net/wireless/ralink/rt2x00/rt2800lib.c:5068:1: error: the frame size of 23768 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-drivers/net/wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_config_txpower_rt3593.isra.1':
-drivers/net/wireless/ralink/rt2x00/rt2800lib.c:4126:1: error: the frame size of 14184 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-drivers/net/wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_config_channel_rf3053.isra.5':
-drivers/net/wireless/ralink/rt2x00/rt2800lib.c:2585:1: error: the frame size of 7632 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
+drivers/media/i2c/adv7604.c: In function 'adv76xx_log_status':
+drivers/media/i2c/adv7604.c:2615:1: error: the frame size of 3248 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
 
-If we express the macro in a way that avoids the local variables, this goes
-away and the stacks are comparable to building without KASAN.
+This is caused by adv76xx_read_check() being inlined repeatedly, and
+marking this function as noinline_for_kasan solves the problem
+completely.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- include/linux/typecheck.h | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/media/i2c/adv7604.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/typecheck.h b/include/linux/typecheck.h
-index eb5b74a575be..adb1579fa5f0 100644
---- a/include/linux/typecheck.h
-+++ b/include/linux/typecheck.h
-@@ -5,12 +5,7 @@
-  * Check at compile time that something is of a particular type.
-  * Always evaluates to 1 so you may use it easily in comparisons.
-  */
--#define typecheck(type,x) \
--({	type __dummy; \
--	typeof(x) __dummy2; \
--	(void)(&__dummy == &__dummy2); \
--	1; \
--})
-+#define typecheck(type,x) ({(void)((typeof(type) *)NULL == (typeof(x) *)NULL); 1;})
+diff --git a/drivers/media/i2c/adv7604.c b/drivers/media/i2c/adv7604.c
+index d8bf435db86d..176f46ac85fd 100644
+--- a/drivers/media/i2c/adv7604.c
++++ b/drivers/media/i2c/adv7604.c
+@@ -339,8 +339,8 @@ static inline unsigned vtotal(const struct v4l2_bt_timings *t)
  
- /*
-  * Check at compile time that 'function' is a certain type, or is a pointer
+ /* ----------------------------------------------------------------------- */
+ 
+-static int adv76xx_read_check(struct adv76xx_state *state,
+-			     int client_page, u8 reg)
++static noinline_for_kasan int adv76xx_read_check(struct adv76xx_state *state,
++						 int client_page, u8 reg)
+ {
+ 	struct i2c_client *client = state->i2c_clients[client_page];
+ 	int err;
 -- 
 2.9.0
