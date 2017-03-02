@@ -1,137 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63575 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:47712 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754440AbdC1JiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 05:38:15 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 5/5] NFC: pn544: Get rid of code duplication in ->probe()
-Date: Tue, 28 Mar 2017 12:36:39 +0300
-Message-Id: <20170328093639.53481-5-andriy.shevchenko@linux.intel.com> (sfid-20170328_113943_762750_B340CCA0)
-In-Reply-To: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
-References: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
+        id S1754158AbdCBJBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 04:01:35 -0500
+Message-ID: <1488442991.8390.1.camel@sipsolutions.net> (sfid-20170302_100223_948379_58B1B22E)
+Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in
+ NEW_RADIO/GET_RADIO
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        Ben Greear <greearb@candelatech.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 02 Mar 2017 09:23:11 +0100
+In-Reply-To: <60000eb2-f404-aab7-5493-9b952adb1dde@uni-rostock.de>
+References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
+         <20170223120211.22358-2-andrew.zaborowski@intel.com>
+         <1488202062.28431.7.camel@sipsolutions.net>
+         <CAOq732JzrGxFUa5BiuO=Sz7gscRV7PFxOOyy1xf6mtmQfUqkaA@mail.gmail.com>
+         <2155efb0-1325-0089-fbb1-cc63cc289745@candelatech.com>
+         <CAOq732+MZt=mytXrZko0uw=EsBWvQpZ49wg3CxFPVn0uGGNyog@mail.gmail.com>
+         <4549b209-df6c-0eaa-65e6-72562c61bf4b@candelatech.com>
+         <4efcd470-86ee-2f3d-bbe2-1d82874edffd@uni-rostock.de>
+         <4d3505b9-9714-8ad0-5159-794cb566dc3b@candelatech.com>
+         <60000eb2-f404-aab7-5493-9b952adb1dde@uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since OF and ACPI case almost the same get rid of code duplication
-by moving gpiod_get() calls directly to ->probe().
+On Wed, 2017-03-01 at 18:04 +0100, Benjamin Beichler wrote:
+> Am 01.03.2017 um 16:35 schrieb Ben Greear:
+> > That is actually not possible. The permanent MAC-Addresses of hwsim
+> > 
+> > > radios are directly created by there internal ID, which is only
+> > > increased for new radios and definitely not reassigned.
+> > > 
+> > > But I would be happy, if this were possible, since it would make
+> > > some
+> > > simulation related stuff easier (currently we need to unload and
+> > > load
+> > > the hwsim module over and over again for every run).
+> > 
+> > Ahh, you are right.  But you can specify the wiphy name, and then
+> > you
+> > can use that to query the debugfs to find the MAC addr, and then
+> > sync
+> > your user-space with that info.
+> > 
+> > It should also be easy enough to specify the MAC address when
+> > creating
+> > the radio.
+> > 
+> > And, you should be able to create virtual STA, AP, etc, with any
+> > specified
+> > MAC address, so the MAC of the radio really should not matter much?
+> > 
+> 
+> That is another problem ... this won't work currently, since the
+> frame
+> delivery compares the receiver address with the permanent MAC
+> addresses
+> of all hwsim phys. I work as an idle task on patch, which makes this
+> lookup (currently implemented as linear search) as a hashmap mapping
+> an
+> MAC to a wiphy struct , including scenarios with differing MAC
+> addresses
+> of vifs.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- v3: use dev_dbg() instead of nfc_dbg()
+That's probably something we really ought to fix :)
 
- drivers/nfc/pn544/i2c.c | 84 ++++++++++---------------------------------------
- 1 file changed, 17 insertions(+), 67 deletions(-)
-
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 6226d220f1d0..7a2910f12aab 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -879,58 +879,10 @@ static const struct acpi_gpio_mapping acpi_pn544_gpios[] = {
- 	{ },
- };
- 
--static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
--{
--	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--	int ret;
--
--	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
--	if (ret)
--		return ret;
--
--	/* Get EN GPIO from ACPI */
--	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_en)) {
--		nfc_err(dev, "Unable to get EN GPIO\n");
--		return PTR_ERR(phy->gpiod_en);
--	}
--
--	/* Get FW GPIO from ACPI */
--	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_fw)) {
--		nfc_err(dev, "Unable to get FW GPIO\n");
--		return PTR_ERR(phy->gpiod_fw);
--	}
--
--	return 0;
--}
--
--static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
--{
--	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--
--	/* Obtaining EN GPIO from device tree */
--	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_en)) {
--		nfc_err(dev, "Failed to get EN gpio\n");
--		return PTR_ERR(phy->gpiod_en);
--	}
--
--	/* Obtaining FW GPIO from device tree */
--	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_fw)) {
--		nfc_err(dev, "Failed to get FW gpio\n");
--		return PTR_ERR(phy->gpiod_fw);
--	}
--
--	return 0;
--}
--
- static int pn544_hci_i2c_probe(struct i2c_client *client,
- 			       const struct i2c_device_id *id)
- {
-+	struct device *dev = &client->dev;
- 	struct pn544_i2c_phy *phy;
- 	int r = 0;
- 
-@@ -953,24 +905,22 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
- 	phy->i2c_dev = client;
- 	i2c_set_clientdata(client, phy);
- 
--	/* No platform data, using device tree. */
--	if (client->dev.of_node) {
--		r = pn544_hci_i2c_of_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev, "No DT data\n");
--			return r;
--		}
--	/* Using ACPI */
--	} else if (ACPI_HANDLE(&client->dev)) {
--		r = pn544_hci_i2c_acpi_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev,
--				"Cannot get ACPI data\n");
--			return r;
--		}
--	} else {
--		nfc_err(&client->dev, "No platform data\n");
--		return -EINVAL;
-+	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
-+	if (r)
-+		dev_dbg(dev, "Unable to add GPIO mapping table\n");
-+
-+	/* Get EN GPIO */
-+	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
-+	if (IS_ERR(phy->gpiod_en)) {
-+		nfc_err(dev, "Unable to get EN GPIO\n");
-+		return PTR_ERR(phy->gpiod_en);
-+	}
-+
-+	/* Get FW GPIO */
-+	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
-+	if (IS_ERR(phy->gpiod_fw)) {
-+		nfc_err(dev, "Unable to get FW GPIO\n");
-+		return PTR_ERR(phy->gpiod_fw);
- 	}
- 
- 	pn544_hci_i2c_platform_init(phy);
--- 
-2.11.0
+johannes
