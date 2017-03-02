@@ -1,33 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42314 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754544AbdC2IYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 04:24:10 -0400
-Message-ID: <1490775841.7948.5.camel@sipsolutions.net> (sfid-20170329_102506_664872_496E4437)
-Subject: Re: [PATCH v2] mac80211: mesh - always do every discovery retry
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-        Jesse Jones <jjones@uniumwifi.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Alexis Green <agreen@cococorp.com>,
-        Alexis Green <agreen@uniumwifi.com>
-Date: Wed, 29 Mar 2017 10:24:01 +0200
-In-Reply-To: <CAEFj984B=6C_AvzHqKnLLS5-h3cKMDmasXANQF1UZT64JSfW8g@mail.gmail.com> (sfid-20170307_040923_027768_9F7300BC)
-References: <CAEFj984umxKZgMqzgbQvX+VgPjqCW98E17bfED9+Yg3XGzatOw@mail.gmail.com>
-         <b285e11810b612a6a156693f34e232ac@mail.gmail.com>
-         <CAEFj9874ynLcjn7AhpB-ajre3twpwHM4iEVN2ozYEGDPGErs0Q@mail.gmail.com>
-         <39c846a5bcfa1fff26f69a082466e414@mail.gmail.com>
-         <CAEFj987m=5a6pWZLMtTcVshmVfOmwwbb-+s0FR_+Dz6_xx7Dtw@mail.gmail.com>
-         <CAEFj9868zDVomdjQhrzNKs9ANaRF85wdA49vKwVZJ2dUiTpoVg@mail.gmail.com>
-         <faafc817ee74ba39171199985756b87b@mail.gmail.com>
-         <CAEFj984B=6C_AvzHqKnLLS5-h3cKMDmasXANQF1UZT64JSfW8g@mail.gmail.com>
-         (sfid-20170307_040923_027768_9F7300BC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33024 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751035AbdCBXC0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 18:02:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <1488494428.2179.23.camel@perches.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-25-arnd@arndb.de>
+ <1488476770.2179.6.camel@perches.com> <CAK8P3a1gW9UqMKD2ijzxMH4rv1zAji0GUoz+bLY_oi0yvLU1cw@mail.gmail.com>
+ <1488494428.2179.23.camel@perches.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 2 Mar 2017 23:59:22 +0100
+Message-ID: <CAK8P3a2ZQR8ukt6Aky7onD2Y=b+Cz+pp+C0+Svb2EyK2474j-g@mail.gmail.com> (sfid-20170303_000335_208810_C8320A4E)
+Subject: Re: [PATCH 24/26] ocfs2: reduce stack size with KASAN
+To: Joe Perches <joe@perches.com>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What's the outcome of this? I'm tempted to apply the patch since it's
-optional anyway ...
+On Thu, Mar 2, 2017 at 11:40 PM, Joe Perches <joe@perches.com> wrote:
+> On Thu, 2017-03-02 at 23:22 +0100, Arnd Bergmann wrote:
+>> On Thu, Mar 2, 2017 at 6:46 PM, Joe Perches <joe@perches.com> wrote:
+>> > On Thu, 2017-03-02 at 17:38 +0100, Arnd Bergmann wrote:
+>> > > The internal logging infrastructure in ocfs2 causes special warning code to be
+>> > > used with KASAN, which produces rather large stack frames:
+>> > > fs/ocfs2/super.c: In function 'ocfs2_fill_super':
+>> > > fs/ocfs2/super.c:1219:1: error: the frame size of 3264 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
+>> >
+>> > At least by default it doesn't seem to.
+>> >
+>> > gcc 6.2 allyesconfig, CONFIG_KASAN=y
+>> > with either CONFIG_KASAN_INLINE or CONFIG_KASAN_OUTLINE
+>> >
+>> > gcc doesn't emit a stack warning
+>>
+>> The warning is disabled until patch 26/26. which picks the 3072 default.
+>> The 3264 number was with gcc-7, which is worse than gcc-6 since it enables
+>> an extra check.
+>>
+>> > > By simply passing the mask by value instead of reference, we can avoid the
+>> > > problem completely.
+>> >
+>> > Any idea why that's so?
+>>
+>> With KASAN, every time we inline the function, the compiler has to allocate
+>> space for another copy of the variable plus a redzone to detect whether
+>> passing it by reference into another function causes an overflow at runtime.
+>
+> These logging functions aren't inlined.
 
-johannes
+Sorry, my mistake. In this case mlog() is a macro, not an inline functions.
+The effect is the same though.
+
+> You're referring to the stack frame?
+
+The stack frame of the function that calls mlog(), yes.
+>
+> Still doesn't make sense to me.
+>
+> None of the logging functions are inlined as they are all
+> EXPORT_SYMBOL.
+
+mlog() is placed in the calling function.
+
+> This just changes a pointer to a u64, which is the same
+> size on x86-64 (and is of course larger on x86-32).
+
+KASAN decides that passing a pointer to _m into an extern function
+(_mlog_printk) is potentially dangerous, as that function might
+keep a reference to that pointer after it goes out of scope,
+or it might not know the correct length of the stack object pointed to.
+
+We can see from looking at the __mlog_printk() function definition
+that it's actually safe, but the compiler cannot see that when looking
+at another source file.
+
+> Perhaps KASAN has the odd behavior and working around
+> KASAN's behavior may not be the proper thing to do.
+
+Turning off KASAN fixes the problem, but the entire purpose of
+KASAN is to identify code that is potentially dangerous.
+
+> Maybe if CONFIG_KASAN is set, the minimum stack should
+> be increased via THREAD_SIZE_ORDER or some such.
+
+This is what happened in 3f181b4d8652 ("lib/Kconfig.debug:
+disable -Wframe-larger-than warnings with KASAN=y").
+
+I'm trying to revert that patch so we actually get warnings
+again about functions that are still dangerous. I picked 3072
+as an arbitrary limit, as there are only a handful of files
+that use larger stack frames in the worst case, but we can
+only use that limit after fixing up all the warnings it shows.
+
+       Arnd
