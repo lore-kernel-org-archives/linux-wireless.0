@@ -1,142 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63081 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754722AbdC1I63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 04:58:29 -0400
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
-        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
-        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
-        matanb@mellanox.com, leonro@mellanox.com,
-        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
-        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 06/16] drivers, net, mlx5: convert mlx5_cq.refcount from atomic_t to refcount_t
-Date: Tue, 28 Mar 2017 11:56:33 +0300
-Message-Id: <1490691403-4016-7-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112613_787673_D2534E29)
-In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36435 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752542AbdCBQPC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 11:15:02 -0500
+From: Georgios Emmanouil <geo.emmnl@gmail.com>
+To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] Staging:wilc1000:linux_wlan: Modified the 'if-else' statement
+Date: Thu,  2 Mar 2017 18:14:07 +0200
+Message-Id: <1488471247-11820-1-git-send-email-geo.emmnl@gmail.com> (sfid-20170302_171722_976646_280D6E48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+Modified the 'if-else' statement to make it more readable.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
+Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
 ---
- drivers/net/ethernet/mellanox/mlx5/core/cq.c | 16 ++++++++--------
- include/linux/mlx5/cq.h                      |  4 ++--
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/cq.c b/drivers/net/ethernet/mellanox/mlx5/core/cq.c
-index 336d473..1016e05 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/cq.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/cq.c
-@@ -58,7 +58,7 @@ void mlx5_cq_tasklet_cb(unsigned long data)
- 				 tasklet_ctx.list) {
- 		list_del_init(&mcq->tasklet_ctx.list);
- 		mcq->tasklet_ctx.comp(mcq);
--		if (atomic_dec_and_test(&mcq->refcount))
-+		if (refcount_dec_and_test(&mcq->refcount))
- 			complete(&mcq->free);
- 		if (time_after(jiffies, end))
- 			break;
-@@ -80,7 +80,7 @@ static void mlx5_add_cq_to_tasklet(struct mlx5_core_cq *cq)
- 	 * still arrive.
- 	 */
- 	if (list_empty_careful(&cq->tasklet_ctx.list)) {
--		atomic_inc(&cq->refcount);
-+		refcount_inc(&cq->refcount);
- 		list_add_tail(&cq->tasklet_ctx.list, &tasklet_ctx->list);
- 	}
- 	spin_unlock_irqrestore(&tasklet_ctx->lock, flags);
-@@ -94,7 +94,7 @@ void mlx5_cq_completion(struct mlx5_core_dev *dev, u32 cqn)
- 	spin_lock(&table->lock);
- 	cq = radix_tree_lookup(&table->tree, cqn);
- 	if (likely(cq))
--		atomic_inc(&cq->refcount);
-+		refcount_inc(&cq->refcount);
- 	spin_unlock(&table->lock);
- 
- 	if (!cq) {
-@@ -106,7 +106,7 @@ void mlx5_cq_completion(struct mlx5_core_dev *dev, u32 cqn)
- 
- 	cq->comp(cq);
- 
--	if (atomic_dec_and_test(&cq->refcount))
-+	if (refcount_dec_and_test(&cq->refcount))
- 		complete(&cq->free);
- }
- 
-@@ -119,7 +119,7 @@ void mlx5_cq_event(struct mlx5_core_dev *dev, u32 cqn, int event_type)
- 
- 	cq = radix_tree_lookup(&table->tree, cqn);
- 	if (cq)
--		atomic_inc(&cq->refcount);
-+		refcount_inc(&cq->refcount);
- 
- 	spin_unlock(&table->lock);
- 
-@@ -130,7 +130,7 @@ void mlx5_cq_event(struct mlx5_core_dev *dev, u32 cqn, int event_type)
- 
- 	cq->event(cq, event_type);
- 
--	if (atomic_dec_and_test(&cq->refcount))
-+	if (refcount_dec_and_test(&cq->refcount))
- 		complete(&cq->free);
- }
- 
-@@ -159,7 +159,7 @@ int mlx5_core_create_cq(struct mlx5_core_dev *dev, struct mlx5_core_cq *cq,
- 	cq->cqn = MLX5_GET(create_cq_out, out, cqn);
- 	cq->cons_index = 0;
- 	cq->arm_sn     = 0;
--	atomic_set(&cq->refcount, 1);
-+	refcount_set(&cq->refcount, 1);
- 	init_completion(&cq->free);
- 	if (!cq->comp)
- 		cq->comp = mlx5_add_cq_to_tasklet;
-@@ -222,7 +222,7 @@ int mlx5_core_destroy_cq(struct mlx5_core_dev *dev, struct mlx5_core_cq *cq)
- 	synchronize_irq(cq->irqn);
- 
- 	mlx5_debug_cq_remove(dev, cq);
--	if (atomic_dec_and_test(&cq->refcount))
-+	if (refcount_dec_and_test(&cq->refcount))
- 		complete(&cq->free);
- 	wait_for_completion(&cq->free);
- 
-diff --git a/include/linux/mlx5/cq.h b/include/linux/mlx5/cq.h
-index 9589884..6a57ec2 100644
---- a/include/linux/mlx5/cq.h
-+++ b/include/linux/mlx5/cq.h
-@@ -35,7 +35,7 @@
- 
- #include <rdma/ib_verbs.h>
- #include <linux/mlx5/driver.h>
--
-+#include <linux/refcount.h>
- 
- struct mlx5_core_cq {
- 	u32			cqn;
-@@ -43,7 +43,7 @@ struct mlx5_core_cq {
- 	__be32		       *set_ci_db;
- 	__be32		       *arm_db;
- 	struct mlx5_uars_page  *uar;
--	atomic_t		refcount;
-+	refcount_t		refcount;
- 	struct completion	free;
- 	unsigned		vector;
- 	unsigned int		irqn;
--- 
-2.7.4
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2eebc62..d82f0ff 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -867,15 +867,10 @@ static int wilc_mac_open(struct net_device *ndev)
+ 							 wilc_get_vif_idx(vif),
+ 							 wl->open_ifcs);
+ 			} else {
+-				if (memcmp(wl->vif[i ^ 1]->bssid,
+-					   wl->vif[i ^ 1]->src_addr, 6))
+-					wilc_set_wfi_drv_handler(vif,
+-							 wilc_get_vif_idx(vif),
+-							 0);
++				if (memcmp(wl->vif[i ^ 1]->bssid, wl->vif[i ^ 1]->src_addr, 6))
++					wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif), 0);
+ 				else
+-					wilc_set_wfi_drv_handler(vif,
+-							 wilc_get_vif_idx(vif),
+-							 1);
++					wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif), 1);
+ 			}
+ 			wilc_set_operation_mode(vif, vif->iftype);
+
+--
+2.1.4
