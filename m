@@ -1,22 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47038 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753307AbdCFMys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 07:54:48 -0500
-Message-ID: <1488804882.27057.5.camel@sipsolutions.net> (sfid-20170306_135645_686844_1B64E4CD)
-Subject: Re: [PATCH V2 0/3] Pre-CAC and sharing DFS state across multiple
- radios
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 06 Mar 2017 13:54:42 +0100
-In-Reply-To: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
-Content-Type: text/plain
-Mime-Version: 1.0
+Received: from snt004-omc2s44.hotmail.com ([65.54.61.95]:53393 "EHLO
+        SNT004-OMC2S44.hotmail.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754881AbdCBSHd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 13:07:33 -0500
+From: =?utf-8?B?VGltIEzDtnBtZWllcg==?= <t.loep@outlook.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Problem regarding wifi device with network namespaces
+Date: Thu, 2 Mar 2017 17:18:09 +0000
+Message-ID: <HE1PR10MB06838163600A791BA701FB3EF0280@HE1PR10MB0683.EURPRD10.PROD.OUTLOOK.COM> (sfid-20170302_190948_027494_7A2819E4)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All three applied.
-
-johannes
+SGksDQoNCkknbSBmYWNpbmcgc29tZSBwcm9ibGVtcyB3aXRoIG5ldHdvcmsgbmFtZXNwYWNlcyBh
+bmQgd2lyZWxlc3MgZGV2aWNlcy4gDQpJZiBJIG1vdmUgYSBuZXR3b3JrIHBoeXNpY2FsIGRldmlj
+ZSBpbnRvIGEgbmV0d29yayBuYW1lc3BhY2UgYW5kIHRoZW4gDQp0cnkgdG8gZG8gYW55IG9wZXJh
+dGlvbiBvbiB0aGUgcGh5LCBpdCB3aWxsIGFsd2F5cyByZXN1bHQgaW50byAiY29tbWFuZCANCmZh
+aWxlZDogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeSAoLTIpIiBvY2N1cmVzLiBGb3IgYWRkaXRp
+b25hbCANCmluZm9ybWF0aW9ucyBzZWUgYmVsb3cuDQoNCkkgdGhpbmsgdGhpcyBpcyBhIGJ1Zywg
+YnV0IG1heWJlIHRoZXJlIGlzIGEgZ29vZCByZWFzb24gZm9yIHRoaXMuIElmIA0KaXQncyBub3Qg
+YSBidWcsIGRvIHlvdSBoYXZlIGFueSBpZGVhIGZvciBhIHdvcmthcm91bmQ/IEkgbmVlZCBhIHdv
+cmtpbmcgDQogPml3PCBpbnNpZGUgYSBuZXR3b3JrIG5hbWVzcGFjZSAoZS5nLiBzc2hkIGluIGEg
+ZG9ja2VyLWNvbnRhaW5lcikuDQoNClRoYW5rcyBpbiBhZHZhbmNlLA0KVGltDQoNClBTOiBQbGVh
+c2Uga2VlcCBtZSBpbiBDQyBvciBzZW5kIG1lIGEgcXVpY2sgbWVzc2FnZSBpZiBJIG5lZWQgdG8g
+DQpzdWJzY3JpYmUgdG8gdGhlIG1haWxpbmdsaXN0IHRvIGZvbGxvdyB0aGUgdGhyZWFkLg0KDQoN
+Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCkhvdyB0byByZXBy
+b2R1Y2U/DQoNCiNGaXJzdCB1bnNoYXJlIGEgcHJvY2VzcywgZS5nLiBhIGJhc2gNCiA+IHVuc2hh
+cmUgLW4gYmFzaA0KI0dldCBpdCdzIHByb2Nlc3MgaWQNCiA+IGVjaG8gJCQNCg0KI2luIGFuIG90
+aGVyIHRlcm1pbmFsDQojTW92ZSBwaHkgdG8gcHJvY2VzcyBuZXR3b3JrIG5hbWVzcGFjZQ0KID4g
+aXcgcGh5IHBoeTAgc2V0IG5ldG5zICVQUk9DRVNTSUQlDQoNCiNpbiBmaXJzdCB0ZXJtaW5hbCAo
+dW5zaGFyZWQgYmFzaCkNCiNkbyBhbnkgcGh5IG9wZXJhdGlvbg0KID4gaXcgcGh5IHBoeTAgaW5m
+bw0KI0xlYWRzIHRvOiBjb21tYW5kIGZhaWxlZDogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeSAo
+LTIpDQojYW55IGRldmljZSByZWxhdGVkIGNvbW1hbmRzIHN0aWxsIHdvcmsNCiA+IGl3IGRldiB3
+bGFuMCBpbmZvDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoN
+CkFkZGl0aW9uYWwgaW5mb3JtYXRpb246DQoNCklmIEkgdXNlIGlwIG5ldG5zIGV4ZWMgaXQncyB3
+b3JraW5nOg0KDQojbmV0bnMgaXMgb25seSB3b3JraW5nIHdpdGggbmFtZWQgbmV0d29ya3Mgc28g
+bGV0J3MgY3JlYXRlIG9uZQ0KID4gbG4gLXNmIC9wcm9jLyVQUk9DRVNTSUQlL25zL25ldCAvdmFy
+L3J1bi9uZXRucy90ZXN0DQogPiBpdyBwaHkgcGh5MCBzZXQgbmV0bnMgJVBST0NFU1NJRCUNCiN3
+b3Jrcw0KID4gaXAgbmV0bnMgZXhlYyB0ZXN0IGl3IHBoeSBwaHkwIGluZm8NCiNTdGlsbCBkb2Vz
+bid0IHdvcmssIGNhbiBhbHNvIGJlIGNhbGxlZCBpbiB1bnNoYXJlZCBiYXNoIHRlcm1pbmFsDQog
+PiBuc2VudGVyIC10ICVQUk9DRVNTSUQlIC1uIGl3IHBoeSBwaHkwIGluZm8NCg0KTWF5YmUgaGVs
+cGZ1bDoNCg0KID4gaXAgbmV0bnMgZXhlYyB0ZXN0IGZpbmQgL3N5cy9jbGFzcy9pZWVlODAyMTEv
+IHwgZ3JlcCBwaHkwDQojZmluZHMgL3N5cy9jbGFzcy9pZWVlODAyMTEvcGh5MA0KDQogPiBuc2Vu
+dGVyIC10ICVQUk9DRVNTSUQlIC1uIGZpbmQgL3N5cy9jbGFzcy9pZWVlODAyMTEvIHwgZ3JlcCBw
+aHkwDQojbm8gcmVzdWx0DQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tDQoNCktlcm5lbCB2ZXJzaW9uIGV0YzoNCg0KVGhpcyBwcm9ibGVtIG9jY3VycyB3aXRoIHZh
+bmlsbGEga2VybmVsIDQuMTAuMSB4ODZfNjQgKHN0YWJsZSksIGl3IA0KdmVyc2lvbiA0LjkgYW5k
+IHZhcmlvdXMgd2lmaSBkZXZpY2VzIChJbnRlbCA3MjYwLCBtYWM4MDIxMV9od3NpbSwgDQpBdGhl
+cm9zIEFSNTQxMykuIEkgYWxzbyB0cmllZCBvbGRlciBkaXN0cm8ga2VybmVscy4NCg0K
