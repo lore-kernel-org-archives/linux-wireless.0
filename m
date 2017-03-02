@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:32809 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752768AbdCFMfO (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.134]:58019 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753220AbdCBRLM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 07:35:14 -0500
-Subject: Re: [PATCH] mac80211: Use setup_timer instead of init_timer
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <20170303124535.30125-1-jslaby@suse.cz>
- <1488803104.5761.6.camel@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org,
-        =?UTF-8?Q?Ond=c5=99ej_Lyson=c4=9bk?= <ondrej.lysonek@seznam.cz>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-From: Jiri Slaby <jslaby@suse.cz>
-Message-ID: <7545a8ad-ec74-ed01-d84d-9ef4528b21df@suse.cz> (sfid-20170306_133554_318107_A5CA214A)
-Date: Mon, 6 Mar 2017 13:35:10 +0100
-MIME-Version: 1.0
-In-Reply-To: <1488803104.5761.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Thu, 2 Mar 2017 12:11:12 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 04/26] tty: kbd: reduce stack size with KASAN
+Date: Thu,  2 Mar 2017 17:38:12 +0100
+Message-Id: <20170302163834.2273519-5-arnd@arndb.de> (sfid-20170302_181845_311800_56361F0B)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2017, 01:25 PM, Johannes Berg wrote:
-> On Fri, 2017-03-03 at 13:45 +0100, Jiri Slaby wrote:
->> From: Ondřej Lysoněk <ondrej.lysonek@seznam.cz>
->>
->> Use setup_timer() and setup_deferrable_timer() to set the data and
->> function timer fields. It makes the code cleaner and will allow for
->> easier change of the timer struct internals.
-> 
-> Btw, I suspect you generated this with coccinelle and didn't put enough
-> "..." there, because you missed one in mesh_path_new() :)
+As reported by kernelci, some functions in the VT code use significant
+amounts of kernel stack when local variables get inlined into the caller
+multiple times:
 
-Not really. This is one of assignments for students I lead, so this is
-done by hand every end of winter semester (Note the From line.)
+drivers/tty/vt/keyboard.c: In function 'kbd_keycode':
+drivers/tty/vt/keyboard.c:1452:1: error: the frame size of 2240 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
 
-> Care to send a patch for that one too?
+Annotating those functions as noinline_for_kasan prevents the inlining
+and reduces the overall stack usage in this driver.
 
-I am just a forwarder, he received this request too, so you can try to
-persuade him :).
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/tty/vt/keyboard.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-thanks,
+diff --git a/drivers/tty/vt/keyboard.c b/drivers/tty/vt/keyboard.c
+index 397e1509fe51..f8a183c1639f 100644
+--- a/drivers/tty/vt/keyboard.c
++++ b/drivers/tty/vt/keyboard.c
+@@ -300,13 +300,13 @@ int kbd_rate(struct kbd_repeat *rpt)
+ /*
+  * Helper Functions.
+  */
+-static void put_queue(struct vc_data *vc, int ch)
++static noinline_for_kasan void put_queue(struct vc_data *vc, int ch)
+ {
+ 	tty_insert_flip_char(&vc->port, ch, 0);
+ 	tty_schedule_flip(&vc->port);
+ }
+ 
+-static void puts_queue(struct vc_data *vc, char *cp)
++static noinline_for_kasan void puts_queue(struct vc_data *vc, char *cp)
+ {
+ 	while (*cp) {
+ 		tty_insert_flip_char(&vc->port, *cp, 0);
+@@ -554,7 +554,7 @@ static void fn_inc_console(struct vc_data *vc)
+ 	set_console(i);
+ }
+ 
+-static void fn_send_intr(struct vc_data *vc)
++static noinline_for_kasan void fn_send_intr(struct vc_data *vc)
+ {
+ 	tty_insert_flip_char(&vc->port, 0, TTY_BREAK);
+ 	tty_schedule_flip(&vc->port);
 -- 
-js
-suse labs
+2.9.0
