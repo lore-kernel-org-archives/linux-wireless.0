@@ -1,121 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36266 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933272AbdCaQsK (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35916 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751973AbdCBVpa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 12:48:10 -0400
-Received: by mail-oi0-f68.google.com with SMTP id b187so9912520oif.3
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 09:48:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 05/12] rtlwifi: btcoex: 23b 2ant: monitor wifi counter for allocate tdma time
-Date: Fri, 31 Mar 2017 11:47:35 -0500
-Message-Id: <20170331164742.22374-6-Larry.Finger@lwfinger.net> (sfid-20170331_184818_718201_E975891B)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+        Thu, 2 Mar 2017 16:45:30 -0500
+MIME-Version: 1.0
+In-Reply-To: <2adc6ff4-5dc5-8f1d-cce1-47f3124a528f@de.ibm.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-3-arnd@arndb.de>
+ <76790664-a7a9-193c-2e30-edaee1308cb0@de.ibm.com> <CAK8P3a082Bi6Vf5gEFLAJtJvUm=7MtddBzcCOqagQyfJPFTu_g@mail.gmail.com>
+ <2adc6ff4-5dc5-8f1d-cce1-47f3124a528f@de.ibm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 2 Mar 2017 22:45:23 +0100
+Message-ID: <CAK8P3a2mepCjPfM9Ychk7CHFHi0UW8RBzK4skJKMSOjw3gKoYg@mail.gmail.com> (sfid-20170302_224835_570906_B3024B48)
+Subject: Re: [PATCH 02/26] rewrite READ_ONCE/WRITE_ONCE
+To: Christian Borntraeger <borntraeger@de.ibm.com>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Paul McKenney <paulmck@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Thu, Mar 2, 2017 at 8:00 PM, Christian Borntraeger
+<borntraeger@de.ibm.com> wrote:
+> On 03/02/2017 06:55 PM, Arnd Bergmann wrote:
+>> On Thu, Mar 2, 2017 at 5:51 PM, Christian Borntraeger
+>> <borntraeger@de.ibm.com> wrote:
+>>> On 03/02/2017 05:38 PM, Arnd Bergmann wrote:
+>>>>
+>>>> This attempts a rewrite of the two macros, using a simpler implementation
+>>>> for the most common case of having a naturally aligned 1, 2, 4, or (on
+>>>> 64-bit architectures) 8  byte object that can be accessed with a single
+>>>> instruction.  For these, we go back to a volatile pointer dereference
+>>>> that we had with the ACCESS_ONCE macro.
+>>>
+>>> We had changed that back then because gcc 4.6 and 4.7 had a bug that could
+>>> removed the volatile statement on aggregate types like the following one
+>>>
+>>> union ipte_control {
+>>>         unsigned long val;
+>>>         struct {
+>>>                 unsigned long k  : 1;
+>>>                 unsigned long kh : 31;
+>>>                 unsigned long kg : 32;
+>>>         };
+>>> };
+>>>
+>>> See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58145
+>>>
+>>> If I see that right, your __ALIGNED_WORD(x)
+>>> macro would say that for above structure  sizeof(x) == sizeof(long)) is true,
+>>> so it would fall back to the old volatile cast and might reintroduce the
+>>> old compiler bug?
+>
+> Oh dear, I should double check my sentences in emails before sending...anyway
+> the full story is referenced in
+>
+> commit 60815cf2e05057db5b78e398d9734c493560b11e
+>     Merge tag 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/borntraeger/linux
+> which has a pointer to
+> http://marc.info/?i=54611D86.4040306%40de.ibm.com
+> which contains the full story.
 
-If there are too many CRC error packets, it means the wifi is operating
-under low quality circumstances. If so, we need to reallocate the
-resources of wifi and bt
+Ok, got it. So I guess the behavior of forcing aligned accesses on aligned
+data is accidental, and allowing non-power-of-two arguments is also not
+the main purpose. Maybe we could just bail out on new compilers if we get
+either of those? That might catch code that accidentally does something
+that is inherently non-atomic or that causes a trap when the intention was
+to have a simple atomic access.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 40 ++++++++++++++++++++++
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    | 10 ++++++
- 2 files changed, 50 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 1361788..16759b0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -309,6 +309,43 @@ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
- 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
- }
- 
-+static void btc8723b2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
-+{
-+	if (coex_sta->under_ips) {
-+		coex_sta->crc_ok_cck = 0;
-+		coex_sta->crc_ok_11g = 0;
-+		coex_sta->crc_ok_11n = 0;
-+		coex_sta->crc_ok_11n_agg = 0;
-+
-+		coex_sta->crc_err_cck = 0;
-+		coex_sta->crc_err_11g = 0;
-+		coex_sta->crc_err_11n = 0;
-+		coex_sta->crc_err_11n_agg = 0;
-+	} else {
-+		coex_sta->crc_ok_cck =
-+			btcoexist->btc_read_4byte(btcoexist, 0xf88);
-+		coex_sta->crc_ok_11g =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf94);
-+		coex_sta->crc_ok_11n =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf90);
-+		coex_sta->crc_ok_11n_agg =
-+			btcoexist->btc_read_2byte(btcoexist, 0xfb8);
-+
-+		coex_sta->crc_err_cck =
-+			btcoexist->btc_read_4byte(btcoexist, 0xf84);
-+		coex_sta->crc_err_11g =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf96);
-+		coex_sta->crc_err_11n =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf92);
-+		coex_sta->crc_err_11n_agg =
-+			btcoexist->btc_read_2byte(btcoexist, 0xfba);
-+	}
-+
-+	/* reset counter */
-+	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x1);
-+	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x0);
-+}
-+
- static void btc8723b2ant_query_bt_info(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -2875,6 +2912,9 @@ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
- #if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 0)
- 	btc8723b2ant_query_bt_info(btcoexist);
- #else
-+	btc8723b2ant_monitor_bt_ctr(btcoexist);
-+	btc8723b2ant_monitor_wifi_ctr(btcoexist);
-+
- 	if (btc8723b2ant_is_wifi_status_changed(btcoexist) ||
- 	    coex_dm->auto_tdma_adjust)
- 		btc8723b2ant_run_coexist_mechanism(btcoexist);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-index d787ae3..d1bfdbe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-@@ -149,6 +149,16 @@ struct coex_sta_8723b_2ant {
- 	u8 bt_retry_cnt;
- 	u8 bt_info_ext;
- 	u32 pop_event_cnt;
-+
-+	u32 crc_ok_cck;
-+	u32 crc_ok_11g;
-+	u32 crc_ok_11n;
-+	u32 crc_ok_11n_agg;
-+
-+	u32 crc_err_cck;
-+	u32 crc_err_11g;
-+	u32 crc_err_11n;
-+	u32 crc_err_11n_agg;
- };
- 
- /*********************************************************************
--- 
-2.10.2
+     Arnd
