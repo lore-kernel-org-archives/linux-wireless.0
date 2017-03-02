@@ -1,93 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33586 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751930AbdC0I07 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Mar 2017 04:26:59 -0400
-MIME-Version: 1.0
-From: Nathan Royce <nroycea+kernel@gmail.com>
-Date: Mon, 27 Mar 2017 03:26:38 -0500
-Message-ID: <CALaQ_hrEk5_iHQ7TPXe3+6LKDfuqXVfmYNGW3Jb0hqwnL4up-A@mail.gmail.com> (sfid-20170327_102742_647554_E84FFA91)
-Subject: ath: firmware panic! exccause: 0x0000000d
-To: linux-kernel@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:54610 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753634AbdCBPCI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:02:08 -0500
+Message-ID: <1488462198.8390.16.camel@sipsolutions.net> (sfid-20170302_160239_878973_64533F58)
+Subject: Re: [PATCHv2 3/4] cfg80211: Add Support set btcoex priority value
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Date: Thu, 02 Mar 2017 14:43:18 +0100
+In-Reply-To: <b461827bad634932a8f0f3b3bfe5e6b4@aphydexm01f.ap.qualcomm.com>
+References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
+         <1488029873-14600-4-git-send-email-c_traja@qti.qualcomm.com>
+         <1488444659.8390.8.camel@sipsolutions.net>
+         <b55e902d1a5445feb3058cee1118ae39@aphydexm01f.ap.qualcomm.com>
+         <1488456958.8390.15.camel@sipsolutions.net>
+         <b461827bad634932a8f0f3b3bfe5e6b4@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that every time all of the cpu cores are being used, when
-compiling the kernel source for example, I end up losing my wireless
-adapter.
-It seems to be an old issue: https://bbs.archlinux.org/viewtopic.php?id=182173
 
-ARM ODroid XU4
+> 
+> [Tamizh] I'm planning to do this check in iw itself and converting
+> into a value, 
+> 
+> iw command will looks like below
+> 
+> iw btcoex enable [<be> <bk> <vo> <vi> <mgmt><beacon>]
+> 
+> If anything other than this given by user will be rejected and will
+> not forward to cfg80211.
+> Do you have any concern on this?
 
-$ uname -a
-Linux server 4.11.0-rc1-00315-g106e4da60209-dirty #1 SMP Sun Mar 12
-16:44:41 CDT 2017 armv7l GNU/Linux
+Yes, you really need to check it in cfg80211 and define the bits that
+are valid in nl80211.
 
-$ lsusb
-...
-Bus 003 Device 009: ID 0cf3:7015 Qualcomm Atheros Communications
-TP-Link TL-WN821N v3 / TL-WN822N v2 802.11n [Atheros A
-R7010+AR9287]
-...
-
-*****
-Mar 27 02:48:49 server kernel: usb 3-1.2.4: ath: firmware panic!
-exccause: 0x0000000d; pc: 0x0090ae81; badvaddr: 0x10ff4038
-Mar 27 02:48:49 server kernel: usb 3-1.2.4: USB disconnect, device number 7
-Mar 27 02:48:49 server kernel: ath: phy0: Chip reset failed
-Mar 27 02:48:49 server kernel: ath: phy0: Unable to reset channel
-(2442 Mhz) reset status -22
-Mar 27 02:48:49 server kernel: ath: phy0: Unable to set channel
-Mar 27 02:48:49 server kernel: ath: phy0: RX failed to go idle in 10
-ms RXSM=0x4ceb
-Mar 27 02:48:49 server kernel: ath: phy0: Failed to wakeup in 500us
-Mar 27 02:48:49 server kernel: ath: phy0: RX failed to go idle in 10
-ms RXSM=0x4ceb
-Mar 27 02:48:49 server kernel: ath: phy0: Failed to wakeup in 500us
-Mar 27 02:48:50 server kernel: br0: port 2(custom_wlan0) entered disabled state
-Mar 27 02:48:50 server audit: ANOM_PROMISCUOUS dev=custom_wlan0 prom=0
-old_prom=256 auid=4294967295 uid=0 gid=0 ses=4294967
-Mar 27 02:48:50 server kernel: device custom_wlan0 left promiscuous mode
-Mar 27 02:48:50 server kernel: br0: port 2(custom_wlan0) entered disabled state
-Mar 27 02:48:50 server hostapd[422]: custom_wlan0: AP-STA-DISCONNECTED
-<sanitized>
-Mar 27 02:48:50 server systemd-networkd[414]: custom_wlan0: Lost carrier
-Mar 27 02:48:50 server hostapd[422]: Failed to set beacon parameters
-Mar 27 02:48:50 server hostapd[422]: custom_wlan0: INTERFACE-DISABLED
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: ath9k_htc: USB layer deinitialized
-Mar 27 02:48:50 server systemd[1]: Starting Load/Save RF Kill Switch Status...
--- Subject: Unit systemd-rfkill.service has begun start-up
--- Defined-By: systemd
--- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
---
--- Unit systemd-rfkill.service has begun starting up.
-Mar 27 02:48:50 server systemd[1]: Started Load/Save RF Kill Switch Status.
--- Subject: Unit systemd-rfkill.service has finished start-up
--- Defined-By: systemd
--- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
---
--- Unit systemd-rfkill.service has finished starting up.
---
--- The start-up result is done.
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: new high-speed USB device
-number 9 using xhci-hcd
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: New USB device found,
-idVendor=0cf3, idProduct=7015
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: New USB device strings:
-Mfr=16, Product=32, SerialNumber=48
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: Product: USB WLAN
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: Manufacturer: ATHEROS
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: SerialNumber: 12345
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: ath9k_htc: Firmware
-ath9k_htc/htc_7010-1.4.0.fw requested
-Mar 27 02:48:50 server kernel: usb 3-1.2.4: ath9k_htc: Transferred FW:
-ath9k_htc/htc_7010-1.4.0.fw, size: 72812
-Mar 27 02:48:50 server kernel: ath9k_htc 3-1.2.4:1.0: ath9k_htc: HTC
-initialized with 45 credits
-Mar 27 02:48:50 server kernel: ath9k_htc 3-1.2.4:1.0: ath9k_htc: FW Version: 1.4
-...
-*****
+johannes
