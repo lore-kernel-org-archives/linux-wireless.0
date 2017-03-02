@@ -1,120 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:46007 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933598AbdCJVR0 (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.133]:58614 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753190AbdCBRLM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 16:17:26 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 3/5] brcmfmac: wrap brcmf_fws_add_interface into bcdc layer
-Date: Fri, 10 Mar 2017 21:17:04 +0000
-Message-Id: <1489180626-6722-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170310_221741_606032_E5604ECA)
-In-Reply-To: <1489180626-6722-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1489180626-6722-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 2 Mar 2017 12:11:12 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Subject: [PATCH 00/26] bring back stack frame warning with KASAN
+Date: Thu,  2 Mar 2017 17:38:08 +0100
+Message-Id: <20170302163834.2273519-1-arnd@arndb.de> (sfid-20170302_181357_837308_FBE0C404)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
+It took a long while to get this done, but I'm finally ready
+to send the first half of the KASAN stack size patches that
+I did in response to the kernelci.org warnings.
 
-fwsignal is only used by bcdc. Create a new protocol interface function
-brcmf_proto_add_if for core module to notify protocol layer upon a new
-interface is created.
+As before, it's worth mentioning that things are generally worse
+with gcc-7.0.1 because of the addition of -fsanitize-address-use-after-scope
+that are not present on kernelci, so my randconfig testing found
+a lot more than kernelci did.
 
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c  | 7 +++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c  | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c  | 3 ++-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h | 9 +++++++++
- 4 files changed, 19 insertions(+), 2 deletions(-)
+The main areas are:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-index bee70f3..2e678a3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-@@ -399,6 +399,12 @@ static void brcmf_proto_bcdc_rxreorder(struct brcmf_if *ifp,
- 	brcmf_fws_rxreorder(ifp, skb);
- }
- 
-+static void
-+brcmf_proto_bcdc_add_if(struct brcmf_if *ifp)
-+{
-+	brcmf_fws_add_interface(ifp);
-+}
-+
- int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
- {
- 	struct brcmf_bcdc *bcdc;
-@@ -422,6 +428,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
- 	drvr->proto->delete_peer = brcmf_proto_bcdc_delete_peer;
- 	drvr->proto->add_tdls_peer = brcmf_proto_bcdc_add_tdls_peer;
- 	drvr->proto->rxreorder = brcmf_proto_bcdc_rxreorder;
-+	drvr->proto->add_if = brcmf_proto_bcdc_add_if;
- 	drvr->proto->pd = bcdc;
- 
- 	drvr->hdrlen += BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTES;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index a68e1af..794a9f6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -968,7 +968,7 @@ int brcmf_bus_started(struct device *dev)
- 	if (ret < 0)
- 		goto fail;
- 
--	brcmf_fws_add_interface(ifp);
-+	brcmf_proto_add_if(drvr, ifp);
- 
- 	drvr->config = brcmf_cfg80211_attach(drvr, bus_if->dev,
- 					     drvr->settings->p2p_enable);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index c79306b..f63f36f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -25,6 +25,7 @@
- #include "fwsignal.h"
- #include "fweh.h"
- #include "fwil.h"
-+#include "proto.h"
- 
- /**
-  * struct brcmf_fweh_queue_item - event item on event queue.
-@@ -172,7 +173,7 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 		if (IS_ERR(ifp))
- 			return;
- 		if (!is_p2pdev)
--			brcmf_fws_add_interface(ifp);
-+			brcmf_proto_add_if(drvr, ifp);
- 		if (!drvr->fweh.evt_handler[BRCMF_E_IF])
- 			if (brcmf_net_attach(ifp, false) < 0)
- 				return;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-index 34b59fe..3d001f3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-@@ -44,6 +44,7 @@ struct brcmf_proto {
- 	void (*add_tdls_peer)(struct brcmf_pub *drvr, int ifidx,
- 			      u8 peer[ETH_ALEN]);
- 	void (*rxreorder)(struct brcmf_if *ifp, struct sk_buff *skb);
-+	void (*add_if)(struct brcmf_if *ifp);
- 	void *pd;
- };
- 
-@@ -118,4 +119,12 @@ static inline bool brcmf_proto_is_reorder_skb(struct sk_buff *skb)
- 	ifp->drvr->proto->rxreorder(ifp, skb);
- }
- 
-+static inline void
-+brcmf_proto_add_if(struct brcmf_pub *drvr, struct brcmf_if *ifp)
-+{
-+	if (!drvr->proto->add_if)
-+		return;
-+	drvr->proto->add_if(ifp);
-+}
-+
- #endif /* BRCMFMAC_PROTO_H */
--- 
-1.9.1
+- READ_ONCE/WRITE_ONCE cause problems in lots of code
+- typecheck() causes huge problems in a few places
+- I'm introducing "noinline_for_kasan" and use it in a lot
+  of places that suffer from inline functions with local variables
+  - netlink, as used in various parts of the kernel
+  - a number of drivers/media drivers
+  - a handful of wireless network drivers
+- kmemcheck conflicts with -fsanitize-address-use-after-scope
+
+This series lets us add back a stack frame warning for 3072 bytes
+with -fsanitize-address-use-after-scope, or 2048 bytes without it.
+
+I have a follow-up series that further reduces the stack frame
+warning limit to 1280 bytes for all 64-bit architectures, and
+1536 bytes with basic KASAN support (no -fsanitize-address-use-after-scope).
+For now, I'm only posting the first half, in order to keep
+it (barely) reviewable.
+
+Both series are tested with many hundred randconfig builds on both
+x86 and arm64, which are the only architectures supporting KASAN.
+
+	Arnd 
+
+ [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
+ [PATCH 02/26] rewrite READ_ONCE/WRITE_ONCE
+ [PATCH 03/26] typecheck.h: avoid local variables in typecheck() macro
+ [PATCH 04/26] tty: kbd: reduce stack size with KASAN
+ [PATCH 05/26] netlink: mark nla_put_{u8,u16,u32} noinline_for_kasan
+ [PATCH 06/26] rocker: mark rocker_tlv_put_* functions as
+ [PATCH 07/26] brcmsmac: reduce stack size with KASAN
+ [PATCH 08/26] brcmsmac: make some local variables 'static const' to
+ [PATCH 09/26] brcmsmac: split up wlc_phy_workarounds_nphy
+ [PATCH 10/26] brcmsmac: reindent split functions
+ [PATCH 11/26] rtlwifi: reduce stack usage for KASAN
+ [PATCH 12/26] wl3501_cs: reduce stack size for KASAN
+ [PATCH 13/26] rtl8180: reduce stack size for KASAN
+ [PATCH 14/26] [media] dvb-frontends: reduce stack size in i2c access
+ [PATCH 15/26] [media] tuners: i2c: reduce stack usage for
+ [PATCH 16/26] [media] i2c: adv7604: mark register access as
+ [PATCH 17/26] [media] i2c: ks0127: reduce stack frame size for KASAN
+ [PATCH 18/26] [media] i2c: cx25840: avoid stack overflow with KASAN
+ [PATCH 19/26] [media] r820t: mark register functions as
+ [PATCH 20/26] [media] em28xx: split up em28xx_dvb_init to reduce
+ [PATCH 21/26] drm/bridge: ps8622: reduce stack size for KASAN
+ [PATCH 22/26] drm/i915/gvt: don't overflow the kernel stack with
+ [PATCH 23/26] mtd: cfi: reduce stack size with KASAN
+ [PATCH 24/26] ocfs2: reduce stack size with KASAN
+ [PATCH 25/26] isdn: eicon: mark divascapi incompatible with kasan
+ [PATCH 26/26] kasan: rework Kconfig settings
+
+ arch/x86/include/asm/switch_to.h                                 |    2 +-
+ drivers/gpu/drm/bridge/parade-ps8622.c                           |    2 +-
+ drivers/gpu/drm/i915/gvt/mmio.h                                  |   17 +-
+ drivers/isdn/hardware/eicon/Kconfig                              |    1 +
+ drivers/media/dvb-frontends/ascot2e.c                            |    3 +-
+ drivers/media/dvb-frontends/cxd2841er.c                          |    4 +-
+ drivers/media/dvb-frontends/drx39xyj/drxj.c                      |   14 +-
+ drivers/media/dvb-frontends/helene.c                             |    4 +-
+ drivers/media/dvb-frontends/horus3a.c                            |    2 +-
+ drivers/media/dvb-frontends/itd1000.c                            |    2 +-
+ drivers/media/dvb-frontends/mt312.c                              |    2 +-
+ drivers/media/dvb-frontends/si2165.c                             |   14 +-
+ drivers/media/dvb-frontends/stb0899_drv.c                        |    2 +-
+ drivers/media/dvb-frontends/stb6100.c                            |    2 +-
+ drivers/media/dvb-frontends/stv0367.c                            |    2 +-
+ drivers/media/dvb-frontends/stv090x.c                            |    2 +-
+ drivers/media/dvb-frontends/stv6110.c                            |    2 +-
+ drivers/media/dvb-frontends/stv6110x.c                           |    2 +-
+ drivers/media/dvb-frontends/tda8083.c                            |    2 +-
+ drivers/media/dvb-frontends/zl10039.c                            |    2 +-
+ drivers/media/i2c/adv7604.c                                      |    4 +-
+ drivers/media/i2c/cx25840/cx25840-core.c                         |    4 +-
+ drivers/media/i2c/ks0127.c                                       |    2 +-
+ drivers/media/tuners/r820t.c                                     |    4 +-
+ drivers/media/tuners/tuner-i2c.h                                 |   15 +-
+ drivers/media/usb/em28xx/em28xx-dvb.c                            |  947 +++++++++++++++++++++------------------
+ drivers/mtd/chips/cfi_cmdset_0020.c                              |    8 +-
+ drivers/net/ethernet/rocker/rocker_tlv.h                         |   24 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c     | 1860 +++++++++++++++++++++++++++++++++++++----------------------------------------
+ drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c         |    4 +-
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c |   41 +-
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c |   26 +-
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c |   34 +-
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c |   36 +-
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c |   38 +-
+ drivers/net/wireless/wl3501_cs.c                                 |   10 +-
+ drivers/tty/vt/keyboard.c                                        |    6 +-
+ fs/ocfs2/cluster/masklog.c                                       |   10 +-
+ fs/ocfs2/cluster/masklog.h                                       |    4 +-
+ fs/overlayfs/util.c                                              |    6 +-
+ include/linux/compiler.h                                         |   58 ++-
+ include/linux/mtd/map.h                                          |    8 +-
+ include/linux/typecheck.h                                        |    7 +-
+ include/net/netlink.h                                            |   36 +-
+ lib/Kconfig.debug                                                |    9 +-
+ lib/Kconfig.kasan                                                |   11 +-
+ lib/Kconfig.kmemcheck                                            |    1 +
+ scripts/Makefile.kasan                                           |    3 +
+ 48 files changed, 1670 insertions(+), 1629 deletions(-)
