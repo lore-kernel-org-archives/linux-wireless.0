@@ -1,117 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5-g21.free.fr ([212.27.42.5]:64999 "EHLO smtp5-g21.free.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751374AbdCMVGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2017 17:06:08 -0400
-From: Alban <albeu@free.fr>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: John Crispin <john@phrozen.org>, Alban <albeu@free.fr>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/7] ath9k: ahb: Add OF support
-Date: Mon, 13 Mar 2017 22:05:10 +0100
-Message-Id: <1489439116-4233-2-git-send-email-albeu@free.fr> (sfid-20170313_220736_753155_15DE61F0)
-In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
-References: <1489439116-4233-1-git-send-email-albeu@free.fr>
+Received: from mout.kundenserver.de ([212.227.126.135]:65022 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751495AbdCBTC4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 14:02:56 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>, Joe Perches <joe@perches.com>
+Subject: [PATCH 24/26] ocfs2: reduce stack size with KASAN
+Date: Thu,  2 Mar 2017 17:38:32 +0100
+Message-Id: <20170302163834.2273519-25-arnd@arndb.de> (sfid-20170302_200416_739472_EAE2EF65)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow registering ath9k AHB devices defined in DT. This just add the
-compatible strings to allow matching the driver and setting the proper
-device ID.
+The internal logging infrastructure in ocfs2 causes special warning code to be
+used with KASAN, which produces rather large stack frames:
 
-Signed-off-by: Alban <albeu@free.fr>
+fs/ocfs2/super.c: In function 'ocfs2_fill_super':
+fs/ocfs2/super.c:1219:1: error: the frame size of 3264 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
+
+By simply passing the mask by value instead of reference, we can avoid the
+problem completely. On 64-bit architectures, this is also more efficient,
+while on the less common (at least among ocfs2 users) 32-bit architectures,
+I'm guessing that the resulting code is comparable to what it was before.
+
+The current version was introduced by Joe Perches as an optimization, maybe
+he can see if my change regresses compared to his.
+
+Cc: Joe Perches <joe@perches.com>
+Fixes: 7c2bd2f930ae ("ocfs2: reduce object size of mlog uses")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c | 47 +++++++++++++++++++++++++++++++++---
- 1 file changed, 43 insertions(+), 4 deletions(-)
+ fs/ocfs2/cluster/masklog.c | 10 +++++-----
+ fs/ocfs2/cluster/masklog.h |  4 ++--
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 2bd982c..36a2645 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -18,6 +18,7 @@
+diff --git a/fs/ocfs2/cluster/masklog.c b/fs/ocfs2/cluster/masklog.c
+index d331c2386b94..9720c5443e4d 100644
+--- a/fs/ocfs2/cluster/masklog.c
++++ b/fs/ocfs2/cluster/masklog.c
+@@ -64,7 +64,7 @@ static ssize_t mlog_mask_store(u64 mask, const char *buf, size_t count)
+ 	return count;
+ }
  
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
-+#include <linux/of_device.h>
- #include <linux/module.h>
- #include "ath9k.h"
- 
-@@ -49,6 +50,33 @@ static const struct platform_device_id ath9k_platform_id_table[] = {
- 	{},
- };
- 
-+#ifdef CONFIG_OF
-+static const struct of_device_id ath_ahb_of_match[] = {
-+	{
-+		.compatible = "qca,ar9100-wmac",
-+		.data = (void *)AR5416_AR9100_DEVID
-+	},
-+	{
-+		.compatible = "qca,ar9330-wmac",
-+		.data = (void *)AR9300_DEVID_AR9330
-+	},
-+	{
-+		.compatible = "qca,ar9340-wmac",
-+		.data = (void *)AR9300_DEVID_AR9340
-+	},
-+	{
-+		.compatible = "qca,qca9550-wmac",
-+		.data = (void *)AR9300_DEVID_QCA955X
-+	},
-+	{
-+		.compatible = "qca,qca9530-wmac",
-+		.data = (void *)AR9300_DEVID_AR953X
-+	},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, ath_ahb_of_match);
-+#endif
-+
- /* return bus cachesize in 4B word units */
- static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
+-void __mlog_printk(const u64 *mask, const char *func, int line,
++void __mlog_printk(const u64 mask, const char *func, int line,
+ 		   const char *fmt, ...)
  {
-@@ -79,10 +107,20 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	int ret = 0;
- 	struct ath_hw *ah;
- 	char hw_name[64];
-+	u16 devid;
+ 	struct va_format vaf;
+@@ -72,14 +72,14 @@ void __mlog_printk(const u64 *mask, const char *func, int line,
+ 	const char *level;
+ 	const char *prefix = "";
  
--	if (!dev_get_platdata(&pdev->dev)) {
--		dev_err(&pdev->dev, "no platform data specified\n");
--		return -EINVAL;
-+	if (id) {
-+		devid = id->driver_data;
-+	} else {
-+		const struct of_device_id *match;
-+
-+		match = of_match_device(ath_ahb_of_match, &pdev->dev);
-+		if (!match) {
-+			dev_err(&pdev->dev, "no device match found\n");
-+			return -EINVAL;
-+		}
-+
-+		devid = (u16)(unsigned long)match->data;
- 	}
+-	if (!__mlog_test_u64(*mask, mlog_and_bits) ||
+-	    __mlog_test_u64(*mask, mlog_not_bits))
++	if (!__mlog_test_u64(mask, mlog_and_bits) ||
++	    __mlog_test_u64(mask, mlog_not_bits))
+ 		return;
  
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-@@ -127,7 +165,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 		goto err_free_hw;
- 	}
+-	if (*mask & ML_ERROR) {
++	if (mask & ML_ERROR) {
+ 		level = KERN_ERR;
+ 		prefix = "ERROR: ";
+-	} else if (*mask & ML_NOTICE) {
++	} else if (mask & ML_NOTICE) {
+ 		level = KERN_NOTICE;
+ 	} else {
+ 		level = KERN_INFO;
+diff --git a/fs/ocfs2/cluster/masklog.h b/fs/ocfs2/cluster/masklog.h
+index 308ea0eb35fd..0d0f4bf2c3d8 100644
+--- a/fs/ocfs2/cluster/masklog.h
++++ b/fs/ocfs2/cluster/masklog.h
+@@ -163,7 +163,7 @@ extern struct mlog_bits mlog_and_bits, mlog_not_bits;
+ #endif
  
--	ret = ath9k_init_device(id->driver_data, sc, &ath_ahb_bus_ops);
-+	ret = ath9k_init_device(devid, sc, &ath_ahb_bus_ops);
- 	if (ret) {
- 		dev_err(&pdev->dev, "failed to initialize device\n");
- 		goto err_irq;
-@@ -167,6 +205,7 @@ static struct platform_driver ath_ahb_driver = {
- 	.remove     = ath_ahb_remove,
- 	.driver		= {
- 		.name	= "ath9k",
-+		.of_match_table = of_match_ptr(ath_ahb_of_match),
- 	},
- 	.id_table    = ath9k_platform_id_table,
- };
+ __printf(4, 5)
+-void __mlog_printk(const u64 *m, const char *func, int line,
++void __mlog_printk(const u64 m, const char *func, int line,
+ 		   const char *fmt, ...);
+ 
+ /*
+@@ -174,7 +174,7 @@ void __mlog_printk(const u64 *m, const char *func, int line,
+ do {									\
+ 	u64 _m = MLOG_MASK_PREFIX | (mask);				\
+ 	if (_m & ML_ALLOWED_BITS)					\
+-		__mlog_printk(&_m, __func__, __LINE__, fmt,		\
++		__mlog_printk(_m, __func__, __LINE__, fmt,		\
+ 			      ##__VA_ARGS__);				\
+ } while (0)
+ 
 -- 
-2.7.4
+2.9.0
