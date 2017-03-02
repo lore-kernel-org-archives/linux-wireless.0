@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:36496 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932989AbdC3KQE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18232 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751027AbdCBLtE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 06:16:04 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Vincent Cuissard <cuissard@marvell.com>
-Subject: [PATCH v2 2/8] NFC: nfcmrvl_uart: add missing tty-device sanity check
-Date: Thu, 30 Mar 2017 12:15:36 +0200
-Message-Id: <20170330101542.15384-3-johan@kernel.org> (sfid-20170330_122347_913926_7AA77AB0)
-In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
-References: <20170330101542.15384-1-johan@kernel.org>
+        Thu, 2 Mar 2017 06:49:04 -0500
+From: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: RE: [PATCHv2 3/4] cfg80211: Add Support set btcoex priority value
+Date: Thu, 2 Mar 2017 11:48:48 +0000
+Message-ID: <b55e902d1a5445feb3058cee1118ae39@aphydexm01f.ap.qualcomm.com> (sfid-20170302_124908_604043_883BC4DC)
+References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
+         <1488029873-14600-4-git-send-email-c_traja@qti.qualcomm.com>
+ <1488444659.8390.8.camel@sipsolutions.net>
+In-Reply-To: <1488444659.8390.8.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure to check the tty-device pointer before trying to access the
-parent device to avoid dereferencing a NULL-pointer when the tty is one
-end of a Unix98 pty.
-
-Fixes: e097dc624f78 ("NFC: nfcmrvl: add UART driver")
-Cc: stable <stable@vger.kernel.org>     # 4.2
-Cc: Vincent Cuissard <cuissard@marvell.com>
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- drivers/nfc/nfcmrvl/uart.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/nfc/nfcmrvl/uart.c b/drivers/nfc/nfcmrvl/uart.c
-index 83a99e38e7bd..6c0c301611c4 100644
---- a/drivers/nfc/nfcmrvl/uart.c
-+++ b/drivers/nfc/nfcmrvl/uart.c
-@@ -109,6 +109,7 @@ static int nfcmrvl_nci_uart_open(struct nci_uart *nu)
- 	struct nfcmrvl_private *priv;
- 	struct nfcmrvl_platform_data *pdata = NULL;
- 	struct nfcmrvl_platform_data config;
-+	struct device *dev = nu->tty->dev;
- 
- 	/*
- 	 * Platform data cannot be used here since usually it is already used
-@@ -116,9 +117,8 @@ static int nfcmrvl_nci_uart_open(struct nci_uart *nu)
- 	 * and check if DT entries were added.
- 	 */
- 
--	if (nu->tty->dev->parent && nu->tty->dev->parent->of_node)
--		if (nfcmrvl_uart_parse_dt(nu->tty->dev->parent->of_node,
--					  &config) == 0)
-+	if (dev && dev->parent && dev->parent->of_node)
-+		if (nfcmrvl_uart_parse_dt(dev->parent->of_node, &config) == 0)
- 			pdata = &config;
- 
- 	if (!pdata) {
-@@ -131,7 +131,7 @@ static int nfcmrvl_nci_uart_open(struct nci_uart *nu)
- 	}
- 
- 	priv = nfcmrvl_nci_register_dev(NFCMRVL_PHY_UART, nu, &uart_ops,
--					nu->tty->dev, pdata);
-+					dev, pdata);
- 	if (IS_ERR(priv))
- 		return PTR_ERR(priv);
- 
--- 
-2.12.2
+PiBJcyB0aGVyZSBtdWNoIHBvaW50IGluIGhhdmluZyA0IHJhdGhlciB0aGFuIGp1c3QgMiBwYXRj
+aGVzPw0KPg0KW1RhbWl6aF0gWWVzLCBJIGFncmVlIHRvIGl0LiANCj4gDQo+ID4gKwlpbnTCoMKg
+wqDCoMKgKCpzZXRfYnRjb2V4KShzdHJ1Y3Qgd2lwaHkgKndpcGh5LCBib29sIGVuYWJsZWQsDQo+
+ID4gKwkJCcKgwqDCoMKgwqDCoGludCBidGNvZXhfcHJpb3JpdHkpOw0KPiANCj4gU2hvdWxkbid0
+IHRoYXQgYmUgdTMyIGFzIGEgYml0bWFwPw0KPiANCltUYW1pemhdIFllcy4NCg0KPiA+ICsJYm9v
+bCBidGNvZXhfcHJpb3JpdHlfc3VwcG9ydDsNCj4gDQo+IFdoeSBub3QgdXNlIGFuIGV4dGVuZGVk
+IG5sODAyMTEgZmVhdHVyZSBmbGFnIGRpcmVjdGx5Pw0KPiANCltUYW1pemhdIE9rIHN1cmUuIEkn
+bGwgdXNlIGV4dGVuZGVkIG5sODAyMTEgZmVhdHVyZSBmbGFnLg0KDQo+ID4gKyAqIEBOTDgwMjEx
+X0FUVFJfQlRDT0VYX1BSSU9SSVRZOiBUaGlzIGlzIGZvciB0aGUgZHJpdmVyIHdoaWNoDQo+ID4g
+KyAqwqDCoMKgwqDCoHN1cHBvcnQgYnRjb2V4IHByaW9yaXR5IGZlYXR1cmUuIEl0IHVzZWQgd2l0
+aA0KPiA+ICVOTDgwMjExX0NNRF9TRVRfQlRDT0VYLg0KPiA+ICsgKsKgwqDCoMKgwqBUaGlzIHdp
+bGwgaGF2ZSB1MzIgQklUTUFQIHZhbHVlIHdoaWNoIHJlcHJlc2VudHMNCj4gPiArICrCoMKgwqDC
+oMKgZnJhbWUoYmssIGJlLCB2aSwgdm8sIG1nbXQsIGJlYWNvbikgdHlwZSBhbmQgdGhhdCB3aWxs
+IGhhdmUNCj4gPiBtb3JlDQo+ID4gKyAqwqDCoMKgwqDCoHByaW9yaXR5IHRoYW4gYSBCVCB0cmFm
+ZmljLg0KPiANCj4gSSB0aGluayB5b3UgbmVlZCB0byBkZWZpbmUgdGhlIGJpdHMgc29tZXdoZXJl
+IGluIGFuIGVudW0gLSBpLmUuIHdoaWNoIG9uZSBpcyBWTywNCj4gVkksIC4uLg0KPg0KW1RhbWl6
+aF0gb2sgc3VyZS4gSXMgdGhpcyBmb3IgZG9jdW1lbnRhdGlvbiBwdXJwb3NlIG9yIGRvIHlvdSB3
+YW50IG1lIHRvIHVzZSB0aGF0IA0KZW51bSBmb3Igc29tZXRoaW5nIGVsc2U/DQogDQo+ID4gKwlp
+bnQgYnRjb2V4X3ByaW9yaXR5ID0gLTE7DQo+IA0KPiBUaGF0IC0xIGlzIHByZXR0eSB1c2VsZXNz
+LCBpZiB0aGUgZHJpdmVyIGRvZXNuJ3Qgc3VwcG9ydCBpdCwgaG9wZWZ1bGx5IGl0IHdvbid0IGxv
+b2sNCj4gYXQgdGhlIHZhbHVlIGF0IGFsbD8NCj4gDQpbVGFtaXpoXSBPayBzdXJlDQo=
