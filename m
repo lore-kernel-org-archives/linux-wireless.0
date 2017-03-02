@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:35408 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbdCEG2w (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48150 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754210AbdCBJAC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Mar 2017 01:28:52 -0500
-Received: by mail-io0-f194.google.com with SMTP id f103so10776249ioi.2
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Mar 2017 22:28:51 -0800 (PST)
+        Thu, 2 Mar 2017 04:00:02 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: GaoQiang <forgaoqiang@gmail.com>
-Date: Sun, 5 Mar 2017 14:28:30 +0800
-Message-ID: <CAFnTB9zLT7HCFqiMW=672o0+mmUK39G6wiv-e9q_aDJkvpAbTQ@mail.gmail.com> (sfid-20170305_072902_995714_4B578288)
-Subject: atheros superchannel can not work in ap mode
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v4] ath10k: search SMBIOS for OEM board file extension
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170224223003.32156-1-ext.waldemar.rymarkiewicz@tieto.com>
+References: <20170224223003.32156-1-ext.waldemar.rymarkiewicz@tieto.com>
+To: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+        jouni@qca.qualcomm.com,
+        Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+Message-Id: <20170302085318.3FA5760D5B@smtp.codeaurora.org> (sfid-20170302_100023_146078_3BAEF815)
+Date: Thu,  2 Mar 2017 08:53:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Atheros 802.11 wifi chip can support superchannel.I can success use
-2576mhz in monitor mode. I have success inject and catch packets from
-mikrotik which support superchannel too.
+Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com> wrote:
+> Board Data File (BDF) is loaded upon driver boot-up procedure. The right
+> board data file is identified, among others, by device and sybsystem ids.
+> 
+> The problem, however, can occur when the (default) board data file cannot
+> fulfill with the vendor requirements and it is necessary to use a different
+> board data file.
+> 
+> To solve the issue QCA uses SMBIOS type 0xF8 to store Board Data File Name
+> Extension to specify the extension/variant name. The driver will take the
+> extension suffix into consideration and will load the right (non-default)
+> board data file if necessary.
+> 
+> If it is unnecessary to use extension board data file, please leave the
+> SMBIOS field blank and default configuration will be used.
+> 
+> Example:
+> If a default board data file for a specific board is identified by a string
+>       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
+>        subsystem-device=0310"
+> then the OEM specific data file, if used, could be identified by variant
+> suffix:
+>       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
+>        subsystem-device=0310,variant=DE_1AB"
+> 
+> If board data file name extension is set but board-2.bin does not contain
+> board data file for the variant, the driver will fallback to the default
+> board data file not to break backward compatibility.
+> 
+> This was first applied in commit f2593cb1b291 ("ath10k: Search SMBIOS for OEM
+> board file extension") but later reverted in commit 005c3490e9db ("Revert
+> "ath10k: Search SMBIOS for OEM board file extension"") due to a regression.
+> This patch is now otherwise the same as commit f2593cb1b291 except the
+> regression fixed.
+> 
+> Signed-off-by: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
 
-But when use hostapd in ap mode. ath9k debug report:
+Patch applied to wireless-drivers.git, thanks.
 
- ath: phy0: Enabled BB Watchdog timeout (85 ms)
- ath: phy0: missed 1 consecutive beacons
- ath: phy0: missed 2 consecutive beacons
- ath: phy0: missed 3 consecutive beacons
- ath: phy0: missed 4 consecutive beacons
- ath: phy0: missed 5 consecutive beacons
- ath: phy0: missed 7 consecutive beacons
- ath: phy0: missed 8 consecutive beacons
- ath: phy0: beacon is officially stuck
+1657b8f84ed9 ath10k: search SMBIOS for OEM board file extension
 
-The log comes from function:
+-- 
+https://patchwork.kernel.org/patch/9591335/
 
-void ath9k_beacon_tasklet(unsigned long data)
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-and then will call ath_reset.
-
-I think freq is right in ar9003_hw_set_channel although i can not find
-register description in the datasheet.
-
-My chip is ar9330 macRev 1. In atheros datasheet, i cannot find wlan
-related register. ar9330 is  AR9003 hardware familiy chip in ar9003_hw.c.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
