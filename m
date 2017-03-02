@@ -1,246 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45774 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752298AbdCMNOj (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:65343 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751029AbdCBW1g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2017 09:14:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: axboe@kernel.dk, linux-wireless@vger.kernel.org
-Cc: torvalds@linux-foundation.org, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-        sara.sharon@intel.com, liad.kaufman@intel.com,
-        luciano.coelho@intel.com
-Date: Mon, 13 Mar 2017 15:14:27 +0200
-Message-Id: <20170313131427.17147-1-luca@coelho.fi> (sfid-20170313_141524_567593_9AF816A1)
-In-Reply-To: <1489410030.22435.34.camel@coelho.fi>
-References: <1489410030.22435.34.camel@coelho.fi>
-Subject: [PATCH] iwlwifi: mvm: cleanup pending frames in DQA mode
+        Thu, 2 Mar 2017 17:27:36 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 18/26] [media] i2c: cx25840: avoid stack overflow with KASAN
+Date: Thu,  2 Mar 2017 17:38:26 +0100
+Message-Id: <20170302163834.2273519-19-arnd@arndb.de> (sfid-20170302_232809_079716_1F25A9CC)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+With CONFIG_KASAN, this driver has shown a ridiculously large stack frame
+in one configuration:
 
-When a station is asleep, the fw will set it as "asleep".
-All queues that are used only by one station will be stopped by
-the fw.
+drivers/media/i2c/cx25840/cx25840-core.c:4960:1: error: the frame size of 94000 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
 
-In pre-DQA mode this was relevant for aggregation queues. However,
-in DQA mode a queue is owned by one station only, so all queues
-will be stopped.
-As a result, we don't expect to get filtered frames back to
-mac80211 and don't have to maintain the entire pending_frames
-state logic, the same way as we do in aggregations.
+In most builds, it's only about 3300 bytes, but that's still large anough to
+risk a kernel stack overflow.
 
-The correct behavior is to align DQA behavior with the aggregation
-queue behaviour pre-DQA:
-- Don't count pending frames.
-- Let mac80211 know we have frames in these queues so that it can
-properly handle trigger frames.
+Marking the two register access functions as noinline_for_kasan avoids
+the problem and brings the largest stack frame size down to 232 bytes.
 
-When a trigger frame is received, mac80211 tells the driver to send
-frames from the queues using release_buffered_frames.
-The driver will tell the fw to let frames out even if the station
-is asleep. This is done by iwl_mvm_sta_modify_sleep_tx_count.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  5 +--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 11 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h      |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 41 ++++++++++-------------
- 4 files changed, 28 insertions(+), 31 deletions(-)
+ drivers/media/i2c/cx25840/cx25840-core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d37b1695c64e..6927caecd48e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2319,7 +2319,7 @@ iwl_mvm_mac_release_buffered_frames(struct ieee80211_hw *hw,
+diff --git a/drivers/media/i2c/cx25840/cx25840-core.c b/drivers/media/i2c/cx25840/cx25840-core.c
+index b8d3c070bfc1..fd72e5a11cb9 100644
+--- a/drivers/media/i2c/cx25840/cx25840-core.c
++++ b/drivers/media/i2c/cx25840/cx25840-core.c
+@@ -81,7 +81,7 @@ MODULE_PARM_DESC(debug, "Debugging messages [0=Off (default) 1=On]");
+ /* ----------------------------------------------------------------------- */
+ static void cx23888_std_setup(struct i2c_client *client);
+ 
+-int cx25840_write(struct i2c_client *client, u16 addr, u8 value)
++noinline_for_kasan int cx25840_write(struct i2c_client *client, u16 addr, u8 value)
  {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 
--	/* Called when we need to transmit (a) frame(s) from agg queue */
-+	/* Called when we need to transmit (a) frame(s) from agg or dqa queue */
- 
- 	iwl_mvm_sta_modify_sleep_tx_count(mvm, sta, reason, num_frames,
- 					  tids, more_data, true);
-@@ -2338,7 +2338,8 @@ static void __iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
- 	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++) {
- 		struct iwl_mvm_tid_data *tid_data = &mvmsta->tid_data[tid];
- 
--		if (tid_data->state != IWL_AGG_ON &&
-+		if (!iwl_mvm_is_dqa_supported(mvm) &&
-+		    tid_data->state != IWL_AGG_ON &&
- 		    tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA)
- 			continue;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index bd1dcc863d8f..b51a2853cc80 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -3135,7 +3135,7 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 				       struct ieee80211_sta *sta,
- 				       enum ieee80211_frame_release_type reason,
- 				       u16 cnt, u16 tids, bool more_data,
--				       bool agg)
-+				       bool single_sta_queue)
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct iwl_mvm_add_sta_cmd cmd = {
-@@ -3155,14 +3155,14 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 	for_each_set_bit(tid, &_tids, IWL_MAX_TID_COUNT)
- 		cmd.awake_acs |= BIT(tid_to_ucode_ac[tid]);
- 
--	/* If we're releasing frames from aggregation queues then check if the
--	 * all queues combined that we're releasing frames from have
-+	/* If we're releasing frames from aggregation or dqa queues then check
-+	 * if all the queues that we're releasing frames from, combined, have:
- 	 *  - more frames than the service period, in which case more_data
- 	 *    needs to be set
- 	 *  - fewer than 'cnt' frames, in which case we need to adjust the
- 	 *    firmware command (but do that unconditionally)
- 	 */
--	if (agg) {
-+	if (single_sta_queue) {
- 		int remaining = cnt;
- 		int sleep_tx_count;
- 
-@@ -3172,7 +3172,8 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 			u16 n_queued;
- 
- 			tid_data = &mvmsta->tid_data[tid];
--			if (WARN(tid_data->state != IWL_AGG_ON &&
-+			if (WARN(!iwl_mvm_is_dqa_supported(mvm) &&
-+				 tid_data->state != IWL_AGG_ON &&
- 				 tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA,
- 				 "TID %d state is %d\n",
- 				 tid, tid_data->state)) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 4be34f902278..1927ce607798 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -547,7 +547,7 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 				       struct ieee80211_sta *sta,
- 				       enum ieee80211_frame_release_type reason,
- 				       u16 cnt, u16 tids, bool more_data,
--				       bool agg);
-+				       bool single_sta_queue);
- int iwl_mvm_drain_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 		      bool drain);
- void iwl_mvm_sta_modify_disable_tx(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index dd2b4a300819..3f37075f4cde 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -34,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -628,8 +629,10 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 	 * values.
- 	 * Note that we don't need to make sure it isn't agg'd, since we're
- 	 * TXing non-sta
-+	 * For DQA mode - we shouldn't increase it though
- 	 */
--	atomic_inc(&mvm->pending_frames[sta_id]);
-+	if (!iwl_mvm_is_dqa_supported(mvm))
-+		atomic_inc(&mvm->pending_frames[sta_id]);
- 
- 	return 0;
+ 	u8 buffer[3];
+ 	buffer[0] = addr >> 8;
+@@ -90,7 +90,7 @@ int cx25840_write(struct i2c_client *client, u16 addr, u8 value)
+ 	return i2c_master_send(client, buffer, 3);
  }
-@@ -1005,11 +1008,8 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
  
- 	spin_unlock(&mvmsta->lock);
- 
--	/* Increase pending frames count if this isn't AMPDU */
--	if ((iwl_mvm_is_dqa_supported(mvm) &&
--	     mvmsta->tid_data[tx_cmd->tid_tspec].state != IWL_AGG_ON &&
--	     mvmsta->tid_data[tx_cmd->tid_tspec].state != IWL_AGG_STARTING) ||
--	    (!iwl_mvm_is_dqa_supported(mvm) && !is_ampdu))
-+	/* Increase pending frames count if this isn't AMPDU or DQA queue */
-+	if (!iwl_mvm_is_dqa_supported(mvm) && !is_ampdu)
- 		atomic_inc(&mvm->pending_frames[mvmsta->sta_id]);
- 
- 	return 0;
-@@ -1079,12 +1079,13 @@ static void iwl_mvm_check_ratid_empty(struct iwl_mvm *mvm,
- 	lockdep_assert_held(&mvmsta->lock);
- 
- 	if ((tid_data->state == IWL_AGG_ON ||
--	     tid_data->state == IWL_EMPTYING_HW_QUEUE_DELBA) &&
-+	     tid_data->state == IWL_EMPTYING_HW_QUEUE_DELBA ||
-+	     iwl_mvm_is_dqa_supported(mvm)) &&
- 	    iwl_mvm_tid_queued(tid_data) == 0) {
- 		/*
--		 * Now that this aggregation queue is empty tell mac80211 so it
--		 * knows we no longer have frames buffered for the station on
--		 * this TID (for the TIM bitmap calculation.)
-+		 * Now that this aggregation or DQA queue is empty tell
-+		 * mac80211 so it knows we no longer have frames buffered for
-+		 * the station on this TID (for the TIM bitmap calculation.)
- 		 */
- 		ieee80211_sta_set_buffered(sta, tid, false);
- 	}
-@@ -1257,7 +1258,6 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	u8 skb_freed = 0;
- 	u16 next_reclaimed, seq_ctl;
- 	bool is_ndp = false;
--	bool txq_agg = false; /* Is this TXQ aggregated */
- 
- 	__skb_queue_head_init(&skbs);
- 
-@@ -1283,6 +1283,10 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			info->flags |= IEEE80211_TX_STAT_ACK;
- 			break;
- 		case TX_STATUS_FAIL_DEST_PS:
-+			/* In DQA, the FW should have stopped the queue and not
-+			 * return this status
-+			 */
-+			WARN_ON(iwl_mvm_is_dqa_supported(mvm));
- 			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 			break;
- 		default:
-@@ -1387,15 +1391,6 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			bool send_eosp_ndp = false;
- 
- 			spin_lock_bh(&mvmsta->lock);
--			if (iwl_mvm_is_dqa_supported(mvm)) {
--				enum iwl_mvm_agg_state state;
--
--				state = mvmsta->tid_data[tid].state;
--				txq_agg = (state == IWL_AGG_ON ||
--					state == IWL_EMPTYING_HW_QUEUE_DELBA);
--			} else {
--				txq_agg = txq_id >= mvm->first_agg_queue;
--			}
- 
- 			if (!is_ndp) {
- 				tid_data->next_reclaimed = next_reclaimed;
-@@ -1452,11 +1447,11 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	 * If the txq is not an AMPDU queue, there is no chance we freed
- 	 * several skbs. Check that out...
- 	 */
--	if (txq_agg)
-+	if (iwl_mvm_is_dqa_supported(mvm) || txq_id >= mvm->first_agg_queue)
- 		goto out;
- 
- 	/* We can't free more than one frame at once on a shared queue */
--	WARN_ON(!iwl_mvm_is_dqa_supported(mvm) && (skb_freed > 1));
-+	WARN_ON(skb_freed > 1);
- 
- 	/* If we have still frames for this STA nothing to do here */
- 	if (!atomic_sub_and_test(skb_freed, &mvm->pending_frames[sta_id]))
+-int cx25840_write4(struct i2c_client *client, u16 addr, u32 value)
++noinline_for_kasan int cx25840_write4(struct i2c_client *client, u16 addr, u32 value)
+ {
+ 	u8 buffer[6];
+ 	buffer[0] = addr >> 8;
 -- 
-2.11.0
+2.9.0
