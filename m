@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:35997 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754941AbdCGJ5h (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36016 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753907AbdCBQsW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 04:57:37 -0500
-Received: by mail-qk0-f178.google.com with SMTP id 1so198557966qkl.3
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 01:57:12 -0800 (PST)
-Subject: Re: [PATCH] mac80211: ignore VHT membership selector when parsing
- rates
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20170306220113.4666-1-johannes@sipsolutions.net>
- <220e1799-9fba-c113-805d-3589421cdecd@broadcom.com>
- <1488876157.2366.0.camel@sipsolutions.net>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <188f17a6-4814-9c3c-003b-685e9cbdcbca@broadcom.com> (sfid-20170307_110019_205922_02812E8F)
-Date: Tue, 7 Mar 2017 10:49:05 +0100
-MIME-Version: 1.0
-In-Reply-To: <1488876157.2366.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Thu, 2 Mar 2017 11:48:22 -0500
+From: Georgios Emmanouil <geo.emmnl@gmail.com>
+To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] Staging:wilc1000:host_interface: Integrated two 'if' statements to a single 'if' statement
+Date: Thu,  2 Mar 2017 17:38:05 +0200
+Message-Id: <1488469085-9033-1-git-send-email-geo.emmnl@gmail.com> (sfid-20170302_175525_679901_17AC220A)
+In-Reply-To: <1488469029-8918-1-git-send-email-geo.emmnl@gmail.com>
+References: <1488469029-8918-1-git-send-email-geo.emmnl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Removed unnecessary 'if' statement and integrated the condition to the
+previous 'if' statement.
 
+Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-On 7-3-2017 9:42, Johannes Berg wrote:
-> 
->>>  
->>>  		/*
->>> -		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in
->>> 802.11n-2009
->>> -		 * 7.3.2.2 as a magic value instead of a rate.
->>> Hence, skip it.
->>> +		 * Skip HT and VHT BSS membership selectors since
->>> they're not
->>> +		 * rates.
->>>  		 *
->>>  		 * Note: Even through the membership selector and
->>> the basic
->>
->> typo: through -> though.
-> 
-> That's just existing context ;-)
-> 
-> Will fix here.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bbe1a09..4936e80 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1355,13 +1355,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 					} else {
+ 						strConnectInfo.status = pstrConnectRespInfo->status;
 
-I noticed and indeed could create a patch for it, but this is easier
-(for me :-p ).
+-						if (strConnectInfo.status == SUCCESSFUL_STATUSCODE) {
+-							if (pstrConnectRespInfo->ies) {
+-								strConnectInfo.resp_ies_len = pstrConnectRespInfo->ies_len;
+-								strConnectInfo.resp_ies = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
+-								memcpy(strConnectInfo.resp_ies, pstrConnectRespInfo->ies,
+-								       pstrConnectRespInfo->ies_len);
+-							}
++						if (strConnectInfo.status == SUCCESSFUL_STATUSCODE && pstrConnectRespInfo->ies) {
++							strConnectInfo.resp_ies_len = pstrConnectRespInfo->ies_len;
++							strConnectInfo.resp_ies = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
++							memcpy(strConnectInfo.resp_ies, pstrConnectRespInfo->ies,
++							       pstrConnectRespInfo->ies_len);
+ 						}
 
-Gr. AvS
+ 						if (pstrConnectRespInfo) {
+--
+2.1.4
