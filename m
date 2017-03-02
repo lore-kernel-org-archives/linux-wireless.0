@@ -1,43 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53512 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750926AbdCQIGz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 04:06:55 -0400
-Message-ID: <1489737957.2544.1.camel@sipsolutions.net> (sfid-20170317_090709_711736_6C6ABB14)
-Subject: Re: pull-request: mac80211 2017-03-16
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Fri, 17 Mar 2017 09:05:57 +0100
-In-Reply-To: <20170316.111819.199681647414354942.davem@davemloft.net>
-References: <20170316095156.31253-1-johannes@sipsolutions.net>
-         <20170316.111819.199681647414354942.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.kundenserver.de ([212.227.126.134]:64120 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753967AbdCBRLM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 12:11:12 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 06/26] rocker: mark rocker_tlv_put_* functions as noinline_for_kasan
+Date: Thu,  2 Mar 2017 17:38:14 +0100
+Message-Id: <20170302163834.2273519-7-arnd@arndb.de> (sfid-20170302_183055_711673_BB6B3017)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-03-16 at 11:18 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Thu, 16 Mar 2017 10:51:55 +0100
-> 
-> > Here's the pull request you were waiting for. I went through all my
-> > pending patches but only this one is applicable for net.git at this
-> > time, so it's just a single one.
-> > 
-> > Since I didn't have a current base, I forwarded to net.git first
-> > and re-validated the patch there, but you might might have to be
-> > careful if you merge to not fast-fwd on your side (though, even
-> > if you do that, I don't think it matters much).
-> > 
-> > Please pull and let me know if there's any problem.
-> 
-> I was able to fast-forward pull this, so it should be fine.
+Inlining these functions creates lots of stack variables when KASAN is
+enabled, leading to this warning about potential stack overflow:
 
-Great, thanks. I somehow thought that you might _not_ want the fast
-forward, to preserve where the patch came from, but personally I don't
-care.
+drivers/net/ethernet/rocker/rocker_ofdpa.c: In function 'ofdpa_cmd_flow_tbl_add':
+drivers/net/ethernet/rocker/rocker_ofdpa.c:621:1: error: the frame size of 2752 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
 
-Thanks for merging it so quickly!
+This marks all of them noinline_for_kasan, which solves the problem by
+keeping the redzone inside of the separate stack frames.
 
-johannes
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/ethernet/rocker/rocker_tlv.h | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/ethernet/rocker/rocker_tlv.h b/drivers/net/ethernet/rocker/rocker_tlv.h
+index a63ef82e7c72..3a9573fe0191 100644
+--- a/drivers/net/ethernet/rocker/rocker_tlv.h
++++ b/drivers/net/ethernet/rocker/rocker_tlv.h
+@@ -139,38 +139,38 @@ rocker_tlv_start(struct rocker_desc_info *desc_info)
+ int rocker_tlv_put(struct rocker_desc_info *desc_info,
+ 		   int attrtype, int attrlen, const void *data);
+ 
+-static inline int rocker_tlv_put_u8(struct rocker_desc_info *desc_info,
+-				    int attrtype, u8 value)
++static noinline_for_kasan int
++rocker_tlv_put_u8(struct rocker_desc_info *desc_info, int attrtype, u8 value)
+ {
+ 	return rocker_tlv_put(desc_info, attrtype, sizeof(u8), &value);
+ }
+ 
+-static inline int rocker_tlv_put_u16(struct rocker_desc_info *desc_info,
+-				     int attrtype, u16 value)
++static noinline_for_kasan int
++rocker_tlv_put_u16(struct rocker_desc_info *desc_info, int attrtype, u16 value)
+ {
+ 	return rocker_tlv_put(desc_info, attrtype, sizeof(u16), &value);
+ }
+ 
+-static inline int rocker_tlv_put_be16(struct rocker_desc_info *desc_info,
+-				      int attrtype, __be16 value)
++static noinline_for_kasan int
++rocker_tlv_put_be16(struct rocker_desc_info *desc_info, int attrtype, __be16 value)
+ {
+ 	return rocker_tlv_put(desc_info, attrtype, sizeof(__be16), &value);
+ }
+ 
+-static inline int rocker_tlv_put_u32(struct rocker_desc_info *desc_info,
+-				     int attrtype, u32 value)
++static noinline_for_kasan int
++rocker_tlv_put_u32(struct rocker_desc_info *desc_info, int attrtype, u32 value)
+ {
+ 	return rocker_tlv_put(desc_info, attrtype, sizeof(u32), &value);
+ }
+ 
+-static inline int rocker_tlv_put_be32(struct rocker_desc_info *desc_info,
+-				      int attrtype, __be32 value)
++static noinline_for_kasan int
++rocker_tlv_put_be32(struct rocker_desc_info *desc_info, int attrtype, __be32 value)
+ {
+ 	return rocker_tlv_put(desc_info, attrtype, sizeof(__be32), &value);
+ }
+ 
+-static inline int rocker_tlv_put_u64(struct rocker_desc_info *desc_info,
+-				     int attrtype, u64 value)
++static noinline_for_kasan int
++rocker_tlv_put_u64(struct rocker_desc_info *desc_info, int attrtype, u64 value)
+ {
+ 	return rocker_tlv_put(desc_info, attrtype, sizeof(u64), &value);
+ }
+-- 
+2.9.0
