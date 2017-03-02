@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:62338 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753100AbdCBRLM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 12:11:12 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 12/26] wl3501_cs: reduce stack size for KASAN
-Date: Thu,  2 Mar 2017 17:38:20 +0100
-Message-Id: <20170302163834.2273519-13-arnd@arndb.de> (sfid-20170302_181552_358205_CFF4B302)
-In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59342 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752209AbdCBTbC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Mar 2017 14:31:02 -0500
+Message-ID: <1488479939.23555.1.camel@sipsolutions.net> (sfid-20170302_203233_237992_CFE843B6)
+Subject: Re: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to
+ suspend async: error -16)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Oliver Freyermuth <o.freyermuth@googlemail.com>,
+        linux-wireless@vger.kernel.org
+Date: Thu, 02 Mar 2017 19:38:59 +0100
+In-Reply-To: <0cd984fd-3d26-15b2-03ce-69cdb7c0e434@googlemail.com> (sfid-20170302_192039_705080_F5833A6D)
+References: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com>
+         <1487938277.2540.13.camel@sipsolutions.net>
+         <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com>
+         <1487965047.30601.2.camel@sipsolutions.net>
+         <6337fa40-adcc-b889-1842-16e0f316ea3e@googlemail.com>
+         <1488444909.8390.11.camel@sipsolutions.net>
+         <0cd984fd-3d26-15b2-03ce-69cdb7c0e434@googlemail.com>
+         (sfid-20170302_192039_705080_F5833A6D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inlining functions with local variables can lead to excessive stack usage
-with KASAN:
 
-drivers/net/wireless/wl3501_cs.c: In function 'wl3501_rx_interrupt':
-drivers/net/wireless/wl3501_cs.c:1103:1: error: the frame size of 2232 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+> > Yes. Does it print something to that effect at resume time? I think
+> > it should.
+> 
+> Oh yes - I totally missed that since it came quite late in the resume
+> cycle:
+> 
+> [12386.085899] iwlwifi 0000:0a:00.0: System wakeup disabled by ACPI
+> [12386.088449] iwlwifi 0000:0a:00.0: Device was reset during suspend
+> 
+> I guess the "Device was reset during suspend" means my firmware did
+> something uncool like cutting the power to it (it's a laptop, but I
+> suspended with power supply staying connected). 
 
-Marking a few functions as noinline_for_kasan avoids the problem
+Yes.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/wl3501_cs.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+> UEFI options are very limited, so I guess I'm just out of luck with
+> this hardware. 
 
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index acec0d9ec422..15dd8e31d373 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -242,8 +242,8 @@ static int wl3501_get_flash_mac_addr(struct wl3501_card *this)
-  *
-  * Move 'size' bytes from PC to card. (Shouldn't be interrupted)
-  */
--static void wl3501_set_to_wla(struct wl3501_card *this, u16 dest, void *src,
--			      int size)
-+static noinline_for_kasan void wl3501_set_to_wla(struct wl3501_card *this,
-+						 u16 dest, void *src, int size)
- {
- 	/* switch to SRAM Page 0 */
- 	wl3501_switch_page(this, (dest & 0x8000) ? WL3501_BSS_SPAGE1 :
-@@ -264,8 +264,8 @@ static void wl3501_set_to_wla(struct wl3501_card *this, u16 dest, void *src,
-  *
-  * Move 'size' bytes from card to PC. (Shouldn't be interrupted)
-  */
--static void wl3501_get_from_wla(struct wl3501_card *this, u16 src, void *dest,
--				int size)
-+static noinline_for_kasan void wl3501_get_from_wla(struct wl3501_card *this,
-+						u16 src, void *dest, int size)
- {
- 	/* switch to SRAM Page 0 */
- 	wl3501_switch_page(this, (src & 0x8000) ? WL3501_BSS_SPAGE1 :
-@@ -1037,7 +1037,7 @@ static inline void wl3501_auth_confirm_interrupt(struct wl3501_card *this,
- 		wl3501_mgmt_resync(this);
- }
- 
--static inline void wl3501_rx_interrupt(struct net_device *dev)
-+static noinline_for_kasan void wl3501_rx_interrupt(struct net_device *dev)
- {
- 	int morepkts;
- 	u16 addr;
--- 
-2.9.0
+Yeah, most likely.
+
+> I have another laptop with the same iwlwifi card (but newer HW
+> revision), a comparable Gentoo 
+> installation but with an unlocked UEFI. 
+> I'll play with it on the weekend and report back in case I find
+> anything different there. 
+
+Ok. I *have* gotten this to work on some (old) laptops, but not
+generally.
+
+johannes
