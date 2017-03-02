@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33314 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750717AbdCTGjG (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.130]:57083 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752574AbdCBQsW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 02:39:06 -0400
-Received: by mail-pf0-f193.google.com with SMTP id p189so10225574pfp.0
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Mar 2017 23:39:05 -0700 (PDT)
-Subject: Re: [PATCH 2/2] mac80211: Drop new node with weak power
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com>
- <1489629438-7087-2-git-send-email-masashi.honma@gmail.com>
- <1489658630.2370.4.camel@sipsolutions.net>
- <d0eb6984-6ae7-d984-b61a-0c98603294ae@gmail.com>
- <1489753692.2544.9.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <c95cce88-d02f-8ef3-a848-0a8a3de6296b@gmail.com> (sfid-20170320_073909_517832_63D5F8DD)
-Date: Mon, 20 Mar 2017 15:39:02 +0900
-MIME-Version: 1.0
-In-Reply-To: <1489753692.2544.9.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 2 Mar 2017 11:48:22 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 13/26] rtl8180: reduce stack size for KASAN
+Date: Thu,  2 Mar 2017 17:38:21 +0100
+Message-Id: <20170302163834.2273519-14-arnd@arndb.de> (sfid-20170302_175004_007376_E94D44B2)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017/03/17 21:28, Johannes Berg wrote:
-> Hmm. If path selection isn't done by mac80211 in this case, wouldn't it
-> be more appropriate to put this logic into the (userspace) component
-> that does path selection?
+When CONFIG_KASAN is set, we see overly large stack frames from inlining
+functions with local variables:
 
-Currently, userspace application(wpa_supplicant) does not have mesh
-path selection functionality.
+drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c: In function 'rtl8225se_rf_init':
+drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c:431:1: warning: the frame size of 4384 bytes is larger than 3072 bytes [-Wframe-larger-than=]
 
-> IOW, I'm not convinced that outright not adding the *peer* is a good
-> idea either way - it seems much better to me to not use the *path*.
+This marks them noinline_for_kasan.
 
-We have already had the code to calculate mesh path metric with RSSI.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-But we still needs this patch for a special case on SAE. Some hardware
-can use hardware encryption for mesh SAE. Then the hardware has a
-limitation of key registration. For example, some hardware could only
-save keys for 8 stations. So we need to drop stations itself with weak
-signal instead of the pathes to its.
-
-Masashi Honma.
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
+index fde89866fa8d..1efa098a2e32 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
+@@ -174,14 +174,14 @@ static void rtl8187se_three_wire_io(struct ieee80211_hw *dev, u8 *data,
+ 	} while (0);
+ }
+ 
+-static u32 rtl8187se_rf_readreg(struct ieee80211_hw *dev, u8 addr)
++static noinline_for_kasan u32 rtl8187se_rf_readreg(struct ieee80211_hw *dev, u8 addr)
+ {
+ 	u32 dataread = addr & 0x0F;
+ 	rtl8187se_three_wire_io(dev, (u8 *)&dataread, 16, 0);
+ 	return dataread;
+ }
+ 
+-static void rtl8187se_rf_writereg(struct ieee80211_hw *dev, u8 addr, u32 data)
++static noinline_for_kasan void rtl8187se_rf_writereg(struct ieee80211_hw *dev, u8 addr, u32 data)
+ {
+ 	u32 outdata = (data << 4) | (u32)(addr & 0x0F);
+ 	rtl8187se_three_wire_io(dev, (u8 *)&outdata, 16, 1);
+-- 
+2.9.0
