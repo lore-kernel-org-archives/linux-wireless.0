@@ -1,70 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35749 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933153AbdCaRTT (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:58845 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752664AbdCBRLQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 13:19:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com>
-References: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Fri, 31 Mar 2017 10:19:16 -0700
-Message-ID: <CALLGbR+szcYFdbdh_0qBS4B_X6YQvU6CDFpR-XZvc7p3zA+ZdQ@mail.gmail.com> (sfid-20170331_191959_899314_21146FC1)
-Subject: Re: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
-To: Joe Perches <joe@perches.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Thu, 2 Mar 2017 12:11:16 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: kasan-dev@googlegroups.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 15/26] [media] tuners: i2c: reduce stack usage for tuner_i2c_xfer_*
+Date: Thu,  2 Mar 2017 17:38:23 +0100
+Message-Id: <20170302163834.2273519-16-arnd@arndb.de> (sfid-20170302_181353_652202_E01498E3)
+In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
+References: <20170302163834.2273519-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 30, 2017 at 3:57 PM, Joe Perches <joe@perches.com> wrote:
-> Fix fallout too.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/debug.h    | 2 ++
->  drivers/net/wireless/ath/ath6kl/htc_pipe.c | 2 +-
->  drivers/net/wireless/ath/ath6kl/wmi.c      | 2 +-
->  3 files changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-> index 0614393dd7ae..94297572914f 100644
-> --- a/drivers/net/wireless/ath/ath6kl/debug.h
-> +++ b/drivers/net/wireless/ath/ath6kl/debug.h
-> @@ -63,6 +63,7 @@ int ath6kl_read_tgt_stats(struct ath6kl *ar, struct ath6kl_vif *vif);
->
->  #ifdef CONFIG_ATH6KL_DEBUG
->
-> +__printf(2, 3)
->  void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
->  void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
->                      const char *msg, const char *prefix,
-> @@ -83,6 +84,7 @@ int ath6kl_debug_init_fs(struct ath6kl *ar);
->  void ath6kl_debug_cleanup(struct ath6kl *ar);
->
->  #else
-> +__printf(2, 3)
->  static inline void ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
->                               const char *fmt, ...)
->  {
+When CONFIG_KASAN is enabled, we see very large stack usage in some
+functions, e.g.:
 
-My only question is why bother doing a format check on something
-that's going to be compiled out anyway? I suppose the only harm is a
-tiny extra bit of compile time due to the check and I'm sure that's
-measured in micro-seconds on full development systems, but if we do it
-everywhere those tiny bits of time would eventually add up.
+drivers/media/tuners/tda8290.c: In function 'tda8290_set_params':
+drivers/media/tuners/tda8290.c:310:1: warning: the frame size of 3184 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+drivers/media/tuners/tda8290.c: In function 'tda829x_probe':
+drivers/media/tuners/tda8290.c:878:1: warning: the frame size of 1088 bytes is larger than 1024 bytes [-Wframe-larger-than=]
 
-Admittedly it's a comment that probably isn't worth redoing the commit
-over.  I guess I'm bringing up the point more discuss the question:
-"Should we add the printf format verification on the clauses that get
-compiled out?"
+By annotating the helpers as noinline_for_kasan, we can easily avoid this.
 
-So, it looks good to me as is, or if you feel like making the change
-I'm suggesting, that's fine too.  And it builds and runs on my
-platforms.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/media/tuners/tuner-i2c.h | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-Reviewed-by: Steve deRosier <derosier@gmail.com>
-
-- Steve
+diff --git a/drivers/media/tuners/tuner-i2c.h b/drivers/media/tuners/tuner-i2c.h
+index bda67a5a76f2..c8970299799c 100644
+--- a/drivers/media/tuners/tuner-i2c.h
++++ b/drivers/media/tuners/tuner-i2c.h
+@@ -33,8 +33,8 @@ struct tuner_i2c_props {
+ 	char *name;
+ };
+ 
+-static inline int tuner_i2c_xfer_send(struct tuner_i2c_props *props,
+-				      unsigned char *buf, int len)
++static noinline_for_kasan int
++tuner_i2c_xfer_send(struct tuner_i2c_props *props, unsigned char *buf, int len)
+ {
+ 	struct i2c_msg msg = { .addr = props->addr, .flags = 0,
+ 			       .buf = buf, .len = len };
+@@ -43,8 +43,8 @@ static inline int tuner_i2c_xfer_send(struct tuner_i2c_props *props,
+ 	return (ret == 1) ? len : ret;
+ }
+ 
+-static inline int tuner_i2c_xfer_recv(struct tuner_i2c_props *props,
+-				      unsigned char *buf, int len)
++static noinline_for_kasan int
++tuner_i2c_xfer_recv(struct tuner_i2c_props *props, unsigned char *buf, int len)
+ {
+ 	struct i2c_msg msg = { .addr = props->addr, .flags = I2C_M_RD,
+ 			       .buf = buf, .len = len };
+@@ -53,9 +53,10 @@ static inline int tuner_i2c_xfer_recv(struct tuner_i2c_props *props,
+ 	return (ret == 1) ? len : ret;
+ }
+ 
+-static inline int tuner_i2c_xfer_send_recv(struct tuner_i2c_props *props,
+-					   unsigned char *obuf, int olen,
+-					   unsigned char *ibuf, int ilen)
++static noinline_for_kasan int
++tuner_i2c_xfer_send_recv(struct tuner_i2c_props *props,
++			 unsigned char *obuf, int olen,
++			 unsigned char *ibuf, int ilen)
+ {
+ 	struct i2c_msg msg[2] = { { .addr = props->addr, .flags = 0,
+ 				    .buf = obuf, .len = olen },
+-- 
+2.9.0
