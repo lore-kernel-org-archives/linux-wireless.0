@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39658 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751635AbdCNOEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 10:04:37 -0400
-Message-ID: <1489500275.10872.9.camel@sipsolutions.net> (sfid-20170314_150447_567535_2E6EB0A5)
-Subject: Re: Beacon interval for Mesh/AP in single interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 14 Mar 2017 15:04:35 +0100
-In-Reply-To: <CAEFj985oo-Dv3dXN7rTTph74mkw_jW=7QrCfEXSjP=OGoexuYg@mail.gmail.com> (sfid-20170309_052218_154549_E223479F)
-References: <CAEFj985oo-Dv3dXN7rTTph74mkw_jW=7QrCfEXSjP=OGoexuYg@mail.gmail.com>
-         (sfid-20170309_052218_154549_E223479F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:35647 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751593AbdCCOwL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Mar 2017 09:52:11 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAG_fn=X3PDDpX_K8Dhk-yCviC87ycRaX4X1d+rJENPZJK_rFmw@mail.gmail.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-2-arnd@arndb.de>
+ <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com> <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com>
+ <CAK8P3a3+8wxsUntUnOteOv8_p=yBZLk-4Uu-HGM17o9n9OqteQ@mail.gmail.com> <CAG_fn=X3PDDpX_K8Dhk-yCviC87ycRaX4X1d+rJENPZJK_rFmw@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 3 Mar 2017 15:51:41 +0100
+Message-ID: <CAK8P3a1r9LbZ3f_AcBG6LCmmL9KhzUSUMJuhtVKTkUwYjrexmg@mail.gmail.com> (sfid-20170303_161100_833566_52B0660E)
+Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
+To: Alexander Potapenko <glider@google.com>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        kasan-dev <kasan-dev@googlegroups.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Mar 3, 2017 at 3:33 PM, Alexander Potapenko <glider@google.com> wrote:
+> On Fri, Mar 3, 2017 at 3:30 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Fri, Mar 3, 2017 at 2:55 PM, Alexander Potapenko <glider@google.com> wrote:
+>>
+>> Would KMSAN also force local variables to be non-overlapping the way that
+>> asan-stack=1 and -fsanitize-address-use-after-scope do? As I understood it,
+>> KMSAN would add extra code for maintaining the uninit bits, but in an example
+>> like this
+> The thing is that KMSAN (and other tools that insert heavyweight
+> instrumentation) may cause heavy register spilling which will also
+> blow up the stack frames.
 
-> The introduction of the following patches doesn't allow the AP and
-> mesh mode to simultaneously run on a single radio interface due to
-> beacon interval for both interfaces by default is different.
-> [PATCH] cfg80211: disallow beacon_int_min_gcd with IBSS
-> [PATCH] cfg80211: support virtual interfaces with different beacon
-> intervals
-> [PATCH] cfg80211: validate beacon int as part of iface combinations
-> 
-> Any suggestion that we could solve this.
+In that case, I would expect a mostly distinct set of functions to have large
+stack frames with KMSAN, compared to the ones that need
+noinline_for_kasan. In most cases I patched, the called inline function is
+actually trivial, but invoked many times from the same caller.
 
-Interesting. Did hardware actually support this, and if so, what did it
-do?
-
-If that worked, then it'd be reasonable to add the appropriate value to
-the interface combinations to let it work as before.
-
-If it didn't really work properly, then we can just fix the defaults to
-be compatible?
-
-johannes
+     Arnd
