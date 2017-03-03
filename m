@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48760 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758814AbdCVPQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 11:16:29 -0400
-Date: Wed, 22 Mar 2017 16:15:26 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [BUG] with a 4.10.x kernel it's impossible to apply country
- regulatory rules
-Message-ID: <20170322151525.GA12702@redhat.com> (sfid-20170322_161632_885079_2FB127AF)
-References: <09a819fc-c936-6838-654b-e349c58a09ec@gmail.com>
- <8c844f92-6148-2ad7-068c-a919891c7a90@lwfinger.net>
- <1489866302.13995.3.camel@sipsolutions.net>
- <45449c16-5a51-5cec-3254-6f3ce0b71b8a@lwfinger.net>
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36408 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751673AbdCCKel (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Mar 2017 05:34:41 -0500
+Received: by mail-lf0-f67.google.com with SMTP id g70so6712972lfh.3
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 02:34:23 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 4.12 1/2] bcma: use helper function to set core dev's parent
+Date: Fri,  3 Mar 2017 11:34:14 +0100
+Message-Id: <20170303103415.5188-1-zajec5@gmail.com> (sfid-20170303_113739_161065_3828EE56)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45449c16-5a51-5cec-3254-6f3ce0b71b8a@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 18, 2017 at 04:30:04PM -0500, Larry Finger wrote:
-> On 03/18/2017 02:45 PM, Johannes Berg wrote:
-> >On Sat, 2017-03-18 at 12:41 -0500, Larry Finger wrote:
-> >>
-> >>I have duplicated your bug and I have bisected it to
-> >>
-> >>commit 2ae0f17df1cd52aafd1ab0415ea1f1dd56dc0e2a
-> >>Author: Johannes Berg <johannes.berg@intel.com>
-> >>Date:   Mon Oct 24 14:40:04 2016 +0200
-> >>
-> >>     genetlink: use idr to track families
-> >>
-> >>This patch is quite extensive and I have no idea which part is
-> >>failing, thus all I can do is report this confirmation.
-> >
-> >I don't think that makes any sense - have you verified that reverting
-> >that makes it go away?
-> 
-> Due to conflicts, I cannot simply revert it; however if I check out
-> the previous commit 489111e5c25b93be80340c3113d71903d7c82136
-> ("genetlink: statically initialize families"), then the kernel is
-> OK.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-I just posted a patch which most likely fixes this problem. I have some
-other issue on my setup, but seems this issue is also caused by the
-same bug in 2ae0f17df1cd52aafd1ab0415ea1f1dd56dc0e2a.
+A tiny code deduplication thanks to the bcma_bus_get_host_dev.
 
-Stanislaw
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/bcma/main.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 12da68ec48ba..4f88821c1b2a 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -242,17 +242,16 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
+ 	core->dev.release = bcma_release_core_dev;
+ 	core->dev.bus = &bcma_bus_type;
+ 	dev_set_name(&core->dev, "bcma%d:%d", bus->num, core->core_index);
++	core->dev.parent = bcma_bus_get_host_dev(bus);
+ 
+ 	switch (bus->hosttype) {
+ 	case BCMA_HOSTTYPE_PCI:
+-		core->dev.parent = &bus->host_pci->dev;
+ 		core->dma_dev = &bus->host_pci->dev;
+ 		core->irq = bus->host_pci->irq;
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+ 		if (IS_ENABLED(CONFIG_OF) && bus->host_pdev) {
+ 			core->dma_dev = &bus->host_pdev->dev;
+-			core->dev.parent = &bus->host_pdev->dev;
+ 			if (core->dev.parent)
+ 				bcma_of_fill_device(core->dev.parent, core);
+ 		} else {
+-- 
+2.11.0
