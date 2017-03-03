@@ -1,80 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15232 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752249AbdCPVNZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 17:13:25 -0400
-From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v6 09/10] ath10k: different fw file names for usb and sdio
-Date: Thu, 16 Mar 2017 21:08:20 +0000
-Message-ID: <e25f7672-0114-7928-7f4a-cf64638dc900@qca.qualcomm.com> (sfid-20170316_221331_224648_557A23F2)
-References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
- <148959280431.31432.16087997710973721077.stgit@potku.adurom.net>
-In-Reply-To: <148959280431.31432.16087997710973721077.stgit@potku.adurom.net>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mx2.suse.de ([195.135.220.15]:60056 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751518AbdCCMps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Mar 2017 07:45:48 -0500
+From: Jiri Slaby <jslaby@suse.cz>
+To: johannes@sipsolutions.net
+Cc: linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Ond=C5=99ej=20Lyson=C4=9Bk?= <ondrej.lysonek@seznam.cz>,
+        Jiri Slaby <jslaby@suse.cz>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] mac80211: Use setup_timer instead of init_timer
+Date: Fri,  3 Mar 2017 13:45:35 +0100
+Message-Id: <20170303124535.30125-1-jslaby@suse.cz> (sfid-20170303_134658_050256_8BEBE346)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2017 08:46 AM, Kalle Valo wrote:
+From: Ondřej Lysoněk <ondrej.lysonek@seznam.cz>
 
-> From: Erik Stromdahl <erik.stromdahl@gmail.com>
->
-> Since both SDIO and USB based chipsets will use different
+Use setup_timer() and setup_deferrable_timer() to set the data and
+function timer fields. It makes the code cleaner and will allow for
+easier change of the timer struct internals.
 
-nitpick, since the patch is separating the USB and SDIO support now, maybe =
-you want to remove the "USB" from the patch title?
+Signed-off-by: Ondřej Lysoněk <ondrej.lysonek@seznam.cz>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <netdev@vger.kernel.org>
+---
+ net/mac80211/agg-rx.c | 12 ++++++------
+ net/mac80211/agg-tx.c | 12 ++++++------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-> firmware from the PCIe and AHB chipsets, the fw file name
-> must be different depending on bus type.
->
-> The new firmware names are:
->
-> For PCIe and AHB:
-> firmware-<api_version>.bin (same as before)
->
-> For SDIO:
-> firmware-sdio-<api_version>.bin
->
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c |   13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireles=
-s/ath/ath10k/core.c
-> index d7fb11107df4..d2648d09a772 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -1398,7 +1398,18 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k=
- *ar, const char *name,
->  static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
->  				    size_t fw_name_len, int fw_api)
->  {
-> -	scnprintf(fw_name, fw_name_len, "%s-%d.bin", ATH10K_FW_FILE_BASE, fw_ap=
-i);
-> +	switch (ar->hif.bus) {
-> +	case ATH10K_BUS_SDIO:
-> +		scnprintf(fw_name, fw_name_len, "%s-%s-%d.bin",
-> +			  ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
-> +			  fw_api);
-> +		break;
-> +	case ATH10K_BUS_PCI:
-> +	case ATH10K_BUS_AHB:
-> +		scnprintf(fw_name, fw_name_len, "%s-%d.bin",
-> +			  ATH10K_FW_FILE_BASE, fw_api);
-> +		break;
-> +	}
->  }
-> =20
->  static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
->
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 4456559cb056..1b7a4daf283c 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -357,14 +357,14 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	spin_lock_init(&tid_agg_rx->reorder_lock);
+ 
+ 	/* rx timer */
+-	tid_agg_rx->session_timer.function = sta_rx_agg_session_timer_expired;
+-	tid_agg_rx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+-	init_timer_deferrable(&tid_agg_rx->session_timer);
++	setup_deferrable_timer(&tid_agg_rx->session_timer,
++			       sta_rx_agg_session_timer_expired,
++			       (unsigned long)&sta->timer_to_tid[tid]);
+ 
+ 	/* rx reorder timer */
+-	tid_agg_rx->reorder_timer.function = sta_rx_agg_reorder_timer_expired;
+-	tid_agg_rx->reorder_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+-	init_timer(&tid_agg_rx->reorder_timer);
++	setup_timer(&tid_agg_rx->reorder_timer,
++		    sta_rx_agg_reorder_timer_expired,
++		    (unsigned long)&sta->timer_to_tid[tid]);
+ 
+ 	/* prepare reordering buffer */
+ 	tid_agg_rx->reorder_buf =
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 45319cc01121..60e2a62f7bef 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -670,14 +670,14 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	tid_tx->timeout = timeout;
+ 
+ 	/* response timer */
+-	tid_tx->addba_resp_timer.function = sta_addba_resp_timer_expired;
+-	tid_tx->addba_resp_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+-	init_timer(&tid_tx->addba_resp_timer);
++	setup_timer(&tid_tx->addba_resp_timer,
++		    sta_addba_resp_timer_expired,
++		    (unsigned long)&sta->timer_to_tid[tid]);
+ 
+ 	/* tx timer */
+-	tid_tx->session_timer.function = sta_tx_agg_session_timer_expired;
+-	tid_tx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+-	init_timer_deferrable(&tid_tx->session_timer);
++	setup_deferrable_timer(&tid_tx->session_timer,
++			       sta_tx_agg_session_timer_expired,
++			       (unsigned long)&sta->timer_to_tid[tid]);
+ 
+ 	/* assign a dialog token */
+ 	sta->ampdu_mlme.dialog_token_allocator++;
+-- 
+2.12.0
