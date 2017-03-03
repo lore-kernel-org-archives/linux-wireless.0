@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41334 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754572AbdC1Knr (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33090 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751637AbdCCKlq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 06:43:47 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 0/5] brcmfmac: network namespace support
-Date: Tue, 28 Mar 2017 11:43:23 +0100
-Message-Id: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_124743_086951_1B1D6207)
+        Fri, 3 Mar 2017 05:41:46 -0500
+Received: by mail-lf0-f67.google.com with SMTP id r36so7742404lfi.0
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 02:41:33 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 4.12] bcma: drop unneeded check for CONFIG_OF_IRQ
+Date: Fri,  3 Mar 2017 11:33:30 +0100
+Message-Id: <20170303103330.4914-1-zajec5@gmail.com> (sfid-20170303_114410_127151_31FE51A7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series intended for 4.12 includes:
-- support for network namespace
-- rework fwsignal module
-- small fix for suspend error code path
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Arend van Spriel (3):
-  brcmfmac: add support to move wiphy instance into network namespace
-  brcmfmac: restore bus state when enter_D3 fails
-  brcmfmac: no need for d11inf instance in brcmf_pno_start_sched_scan()
+We already have the same check in bcma_of_get_irq which really calls
+symbols available with CONFIG_OF_IRQ only. It appears this duplicated
+check was accidentally added in commit c58d900cc96a ("bcma: fix building
+without OF_IRQ"). The rest of code in bcma_of_fill_device should work
+fine without CONFIG_OF_IRQ.
 
-Franky Lin (2):
-  brcmfmac: wrap brcmf_fws_init into bcdc layer
-  brcmfmac: move brcmf_fws_deinit to bcdc layer
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Cc: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/bcma/main.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c     |  8 ++++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c |  3 ++-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 12 +++---------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c     |  1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c      |  2 --
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h    |  9 +++++++++
- 6 files changed, 23 insertions(+), 12 deletions(-)
-
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 2da7fe1d20a7..e6986c7608f1 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -201,9 +201,6 @@ static void bcma_of_fill_device(struct device *parent,
+ {
+ 	struct device_node *node;
+ 
+-	if (!IS_ENABLED(CONFIG_OF_IRQ))
+-		return;
+-
+ 	node = bcma_of_find_child_device(parent, core);
+ 	if (node)
+ 		core->dev.of_node = node;
 -- 
-1.9.1
+2.11.0
