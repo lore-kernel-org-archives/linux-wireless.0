@@ -1,25 +1,638 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41764 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751428AbdCPJzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 05:55:22 -0400
-Message-ID: <1489658101.2370.2.camel@sipsolutions.net> (sfid-20170316_105538_454597_AFEDC44E)
-Subject: Re: [PATCH 1/2] nl80211: Use signed function for a signed variable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 16 Mar 2017 10:55:01 +0100
-In-Reply-To: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com> (sfid-20170316_025739_682372_2431ED63)
-References: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com>
-         (sfid-20170316_025739_682372_2431ED63)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16505 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbdCCLlU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Mar 2017 06:41:20 -0500
+From: <mpubbise@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap offload
+Date: Fri, 3 Mar 2017 17:03:27 +0530
+Message-ID: <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170303_124246_198247_64FBF9E6)
+In-Reply-To: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-03-16 at 10:57 +0900, Masashi Honma wrote:
-> The rssi_threshold is defined as s32.
-> 
-Doesn't really matter much, but does seem nicer - applied.
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-johannes
+Driver (or hw) supporting 802.11 encapsulation offload
+for data frames can make use of this new xmit path.
+
+This patch defines new ndo_ops, all these callbacks are same as
+ieee80211_dataif_ops other than ndo_start_xmit() which does
+minimal processing leaving 802.11 encap related to driver.
+
+This patch makes netdev_ops registration based on the
+driver/hardware capability for 802.11 encap offload and interface type.
+
+There is a field, no_80211_encap, added to ieee80211_tx_info:control
+to mark if the 802.11 encapsulation is offloaded to driver.
+There is also a new callback for tx completion status indication
+to handle data frames using 802.11 encap offload.
+
+Currently ath10k fw is capable of doing 802.11 encapsulation offload
+and with the corresponding driver changes, 802.11 encap offload
+might improve performance.
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+---
+ include/net/mac80211.h     |   26 +++++-
+ net/mac80211/cfg.c         |    9 ++
+ net/mac80211/ieee80211_i.h |   11 +++
+ net/mac80211/iface.c       |   72 +++++++++++++++
+ net/mac80211/key.c         |    3 +
+ net/mac80211/status.c      |   82 ++++++++++++++++++
+ net/mac80211/tx.c          |  207 +++++++++++++++++++++++++++++++++++++++++++-
+ 7 files changed, 405 insertions(+), 5 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0239b7d..b9e74b3 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -921,7 +921,12 @@ struct ieee80211_tx_info {
+ 			};
+ 			struct ieee80211_key_conf *hw_key;
+ 			u32 flags;
+-			/* 4 bytes free */
++			/* XXX: This frame is not encapsulated with 802.11
++			 * header. Should this be added to %IEEE80211_TX_CTRL_*
++			 * flags?.
++			 */
++			bool no_80211_encap;
++			/* 3 bytes free */
+ 		} control;
+ 		struct {
+ 			u64 cookie;
+@@ -4265,6 +4270,25 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+ 				 struct sk_buff *skb);
+ 
+ /**
++ * ieee80211_tx_status_8023 - transmit status callback for 802.3 frame format
++ *
++ * Call this function for all transmitted data frames after their transmit
++ * completion. This callback should only be called for data frames which
++ * are are using driver's (or hardware's) offload capability of encap/decap
++ * 802.11 frames.
++ *
++ * This function may not be called in IRQ context. Calls to this function
++ * for a single hardware must be synchronized against each other.
++ *
++ * @hw: the hardware the frame was transmitted by
++ * @vif: the interface for which the frame was transmitted
++ * @skb: the frame that was transmitted, owned by mac80211 after this call
++ */
++void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct sk_buff *skb);
++
++/**
+  * ieee80211_report_low_ack - report non-responding station
+  *
+  * When operating in AP-mode, call this function to report a non-responding
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9c7490c..e1c6f3e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -129,6 +129,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 		}
+ 	}
+ 
++	if (!ieee80211_sdata_running(sdata))
++		ieee80211_if_check_80211_encap_offl(sdata);
++
+ 	return 0;
+ }
+ 
+@@ -2273,6 +2276,12 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
+ 		ieee80211_check_fast_xmit_all(local);
+ 
++		if (ieee80211_iface_uses_80211_encap_offl(local))
++			return -EINVAL;
++
++		if (!local->ops->set_frag_threshold)
++			return -EINVAL;
++
+ 		err = drv_set_frag_threshold(local, wiphy->frag_threshold);
+ 
+ 		if (err) {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0e71843..1618806 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -966,6 +966,8 @@ struct ieee80211_sub_if_data {
+ 	} debugfs;
+ #endif
+ 
++	bool data_80211_encap_offloaded;
++
+ 	/* must be last, dynamically sized area in this! */
+ 	struct ieee80211_vif vif;
+ };
+@@ -1696,6 +1698,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct vif_params *params);
+ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+ 			     enum nl80211_iftype type);
++void ieee80211_if_check_80211_encap_offl(struct ieee80211_sub_if_data *sdata);
++bool ieee80211_iface_uses_80211_encap_offl(struct ieee80211_local *local);
+ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ u32 ieee80211_idle_off(struct ieee80211_local *local);
+@@ -1723,6 +1727,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 					 struct net_device *dev);
+ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				       struct net_device *dev);
++netdev_tx_t ieee80211_subif_8023_start_xmit(struct sk_buff *skb,
++					    struct net_device *dev);
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags);
+@@ -1877,6 +1883,11 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 				 struct sk_buff *skb, int tid,
+ 				 enum nl80211_band band);
+ 
++/* sta_out needs to be checked for ERR_PTR() before using */
++int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
++			    struct sk_buff *skb,
++			    struct sta_info **sta_out);
++
+ static inline void
+ ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 			  struct sk_buff *skb, int tid,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 40813dd..d8cabfa 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1161,6 +1161,17 @@ static u16 ieee80211_netdev_select_queue(struct net_device *dev,
+ 	.ndo_get_stats64	= ieee80211_get_stats64,
+ };
+ 
++static const struct net_device_ops ieee80211_dataif_8023_ops = {
++	.ndo_open		= ieee80211_open,
++	.ndo_stop		= ieee80211_stop,
++	.ndo_uninit		= ieee80211_uninit,
++	.ndo_start_xmit		= ieee80211_subif_8023_start_xmit,
++	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
++	.ndo_set_mac_address	= ieee80211_change_mac,
++	.ndo_select_queue	= ieee80211_netdev_select_queue,
++	.ndo_get_stats64	= ieee80211_get_stats64,
++};
++
+ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
+ 					  struct sk_buff *skb,
+ 					  void *accel_priv,
+@@ -1194,6 +1205,63 @@ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
+ 	.ndo_get_stats64	= ieee80211_get_stats64,
+ };
+ 
++static bool
++ieee80211_if_encap_offl_supported(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_80211_ENCAP))
++		return false;
++
++	if (local->hw.wiphy->frag_threshold != (u32)-1 &&
++	    !local->ops->set_frag_threshold)
++		return false;
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++		return true;
++	case NL80211_IFTYPE_STATION:
++		if (sdata->u.mgd.use_4addr)
++			return false;
++		return true;
++	case NL80211_IFTYPE_AP_VLAN:
++		if (sdata->wdev.use_4addr)
++			return false;
++		return true;
++	default:
++		return false;
++	}
++}
++
++void ieee80211_if_check_80211_encap_offl(struct ieee80211_sub_if_data *sdata)
++{
++	if (!sdata->dev)
++		return;
++
++	if (!ieee80211_if_encap_offl_supported(sdata))
++		return;
++
++	sdata->dev->netdev_ops = &ieee80211_dataif_8023_ops;
++	sdata->data_80211_encap_offloaded = true;
++}
++
++bool ieee80211_iface_uses_80211_encap_offl(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	bool offloaded = false;
++
++	mutex_lock(&local->iflist_mtx);
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (sdata->data_80211_encap_offloaded) {
++			offloaded = true;
++			break;
++		}
++	}
++	mutex_unlock(&local->iflist_mtx);
++
++	return offloaded;
++}
++
+ static void ieee80211_if_free(struct net_device *dev)
+ {
+ 	free_percpu(dev->tstats);
+@@ -1425,6 +1493,8 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->noack_map = 0;
+ 
++	sdata->data_80211_encap_offloaded = false;
++
+ 	/* only monitor/p2p-device differ */
+ 	if (sdata->dev) {
+ 		sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+@@ -1907,6 +1977,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	list_add_tail_rcu(&sdata->list, &local->interfaces);
+ 	mutex_unlock(&local->iflist_mtx);
+ 
++	ieee80211_if_check_80211_encap_offl(sdata);
++
+ 	if (new_wdev)
+ 		*new_wdev = &sdata->wdev;
+ 
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index a98fc2b..960eed1 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -193,6 +193,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 			  key->conf.keyidx,
+ 			  sta ? sta->sta.addr : bcast_addr, ret);
+ 
++	if (sdata->data_80211_encap_offloaded)
++		return -EINVAL;
++
+  out_unsupported:
+ 	switch (key->conf.cipher) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index a3af6e1..620a826 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -952,6 +952,88 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ieee80211_tx_status);
+ 
++/* TODO: Check the possibility to use ieee80211_tx_status for reporting the tx status
++ * of 802.11 encap offloaded frames.
++ */
++void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct sk_buff *skb)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct sta_info *sta;
++	int retry_count;
++	int rates_idx;
++	bool acked;
++
++	if (WARN_ON(!ieee80211_hw_check(hw, SUPPORTS_80211_ENCAP)))
++		goto skip_stats_update;
++
++	sdata = vif_to_sdata(info->control.vif);
++
++	acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
++	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
++
++	rcu_read_lock();
++
++	if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
++		rcu_read_unlock();
++		goto counters_update;
++	}
++
++	if (!sta || IS_ERR(sta)) {
++		rcu_read_unlock();
++		goto counters_update;
++	}
++
++	if (!acked)
++		sta->status_stats.retry_failed++;
++
++	if (rates_idx != -1)
++		sta->tx_stats.last_rate = info->status.rates[rates_idx];
++
++	sta->status_stats.retry_count += retry_count;
++
++	if (ieee80211_hw_check(hw, REPORTS_TX_ACK_STATUS)) {
++		if (acked && vif->type == NL80211_IFTYPE_STATION)
++			ieee80211_sta_reset_conn_monitor(sdata);
++
++		sta->status_stats.last_ack = jiffies;
++		if (info->flags & IEEE80211_TX_STAT_ACK) {
++			if (sta->status_stats.lost_packets)
++				sta->status_stats.lost_packets = 0;
++
++			if (test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH))
++				sta->status_stats.last_tdls_pkt_time = jiffies;
++		} else {
++			ieee80211_lost_packet(sta, info);
++		}
++	}
++
++	rcu_read_unlock();
++
++counters_update:
++	ieee80211_led_tx(local);
++
++	if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
++	    !(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED))
++		goto skip_stats_update;
++
++	I802_DEBUG_INC(local->dot11TransmittedFrameCount);
++	if (is_multicast_ether_addr(skb->data))
++		I802_DEBUG_INC(local->dot11MulticastTransmittedFrameCount);
++	if (retry_count > 0)
++		I802_DEBUG_INC(local->dot11RetryCount);
++	if (retry_count > 1)
++		I802_DEBUG_INC(local->dot11MultipleRetryCount);
++
++skip_stats_update:
++	ieee80211_report_used_skb(local, skb, false);
++	dev_kfree_skb(skb);
++}
++EXPORT_SYMBOL(ieee80211_tx_status_8023);
++
+ void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ba8d7db..1d7844e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1250,12 +1250,18 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_txq *txq = NULL;
++	bool is_data;
+ 
+ 	if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+ 		return NULL;
+ 
+-	if (!ieee80211_is_data(hdr->frame_control))
++	if (!info->control.no_80211_encap)
++		is_data = ieee80211_is_data(hdr->frame_control);
++	else
++		is_data = true;
++
++	if (!is_data)
+ 		return NULL;
+ 
+ 	if (sta) {
+@@ -1427,6 +1433,7 @@ void ieee80211_txq_purge(struct ieee80211_local *local,
+ {
+ 	struct fq *fq = &local->fq;
+ 	struct fq_tin *tin = &txqi->tin;
++	struct ieee80211_tx_info *info;
+ 
+ 	fq_tin_reset(fq, tin, fq_skb_free_func);
+ 	ieee80211_purge_tx_queue(&local->hw, &txqi->frags);
+@@ -2262,9 +2269,9 @@ static inline bool ieee80211_is_tdls_setup(struct sk_buff *skb)
+ 	       skb->data[14] == WLAN_TDLS_SNAP_RFTYPE;
+ }
+ 
+-static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+-				   struct sk_buff *skb,
+-				   struct sta_info **sta_out)
++int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
++			    struct sk_buff *skb,
++			    struct sta_info **sta_out)
+ {
+ 	struct sta_info *sta;
+ 
+@@ -3432,6 +3439,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	info = IEEE80211_SKB_CB(skb);
+ 
++	if (info->control.no_80211_encap)
++		goto out;
++
+ 	memset(&tx, 0, sizeof(tx));
+ 	__skb_queue_head_init(&tx.skbs);
+ 	tx.local = local;
+@@ -3705,6 +3715,185 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	return NETDEV_TX_OK;
+ }
+ 
++static bool ieee80211_tx_8023(struct ieee80211_sub_if_data *sdata,
++			      struct sk_buff *skb, int led_len,
++			      struct sta_info *sta,
++			      bool txpending)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_tx_control control = {};
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_sta *pubsta = NULL;
++	unsigned long flags;
++	int q = info->hw_queue;
++
++	if (ieee80211_queue_skb(local, sdata, sta, skb))
++		return true;
++
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
++	if (local->queue_stop_reasons[q] ||
++	    (!txpending && !skb_queue_empty(&local->pending[q]))) {
++		if (txpending)
++			skb_queue_head(&local->pending[q], skb);
++		else
++			skb_queue_tail(&local->pending[q], skb);
++
++		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++
++		return false;
++	}
++
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++
++
++	if (sta && sta->uploaded)
++		pubsta = &sta->sta;
++
++	control.sta = pubsta;
++
++	drv_tx(local, &control, skb);
++
++	/* TODO: Update throughput led trigger with the number of tx bytes */
++
++	return true;
++}
++
++static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
++				struct net_device *dev, struct sta_info *sta,
++				struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
++	struct ieee80211_local *local = sdata->local;
++	bool authorized = false;
++	bool multicast;
++	bool tdls_peer;
++	unsigned char *ra = NULL;
++
++	if (IS_ERR(sta) || (sta && !sta->uploaded))
++		sta = NULL;
++
++	/* XXX: Add a generic helper for this */
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		ra = ehdr->h_dest;
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++		tdls_peer = test_sta_flag(sta, WLAN_STA_TDLS_PEER);
++		if (tdls_peer)
++			ra = skb->data;
++		else
++			ra = sdata->u.mgd.bssid;
++	}
++
++	if (!ra)
++		goto out_free;
++
++	multicast = is_multicast_ether_addr(ra);
++
++	if (sta)
++		authorized = test_sta_flag(sta, WLAN_STA_AUTHORIZED);
++
++	/* XXX: Should we add new txrx stats for 802.3 to update stats
++	 * like if the frame is dropped due to unathourized port,
++	 * just like the ones available in tx_handlers?.
++	 */
++
++	if (!multicast && !authorized &&
++	    ((ehdr->h_proto != sdata->control_port_protocol) ||
++	    !ether_addr_equal(sdata->vif.addr, ehdr->h_source)))
++		goto out_free;
++
++	if (multicast && sdata->vif.type == NL80211_IFTYPE_AP &&
++	    !atomic_read(&sdata->u.ap.num_mcast_sta))
++		goto out_free;
++
++	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
++	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
++		goto out_free;
++
++	/* TODO: Handle frames requiring wifi tx status to be notified */
++
++	memset(info, 0, sizeof(*info));
++
++	if (unlikely(sdata->control_port_protocol == ehdr->h_proto)) {
++		if (sdata->control_port_no_encrypt)
++			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
++	}
++
++	if (multicast)
++		info->flags |= IEEE80211_TX_CTL_NO_ACK;
++
++	info->hw_queue = sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
++
++	ieee80211_tx_stats(dev, skb->len);
++
++	if (sta) {
++		sta->tx_stats.bytes[skb_get_queue_mapping(skb)] += skb->len;
++		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
++	}
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		sdata = container_of(sdata->bss,
++				     struct ieee80211_sub_if_data, u.ap);
++
++	info->control.no_80211_encap = true;
++
++	info->control.vif = &sdata->vif;
++
++	ieee80211_tx_8023(sdata, skb, skb->len, sta, false);
++
++	return;
++
++out_free:
++	kfree_skb(skb);
++}
++
++netdev_tx_t ieee80211_subif_8023_start_xmit(struct sk_buff *skb,
++					    struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++
++	if (WARN_ON(unlikely(!sdata->data_80211_encap_offloaded))) {
++		kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	if (unlikely(skb->len < ETH_HLEN)) {
++		kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	/* TODO: Extend it for Adhoc interface type */
++	if (WARN_ON(dev->ieee80211_ptr->use_4addr ||
++		    (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		     sdata->vif.type != NL80211_IFTYPE_AP &&
++		     sdata->vif.type != NL80211_IFTYPE_AP_VLAN))) {
++		kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	rcu_read_lock();
++
++	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
++		goto out_free;
++
++	ieee80211_8023_xmit(sdata, dev, sta, skb);
++
++	goto out;
++
++ out_free:
++	kfree_skb(skb);
++ out:
++	rcu_read_unlock();
++
++	return NETDEV_TX_OK;
++}
++
+ struct sk_buff *
+ ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
+ 			      struct sk_buff *skb, u32 info_flags)
+@@ -3783,6 +3972,16 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
+ 		}
+ 		info->band = chanctx_conf->def.chan->band;
+ 		result = ieee80211_tx(sdata, NULL, skb, true);
++	} else if (info->control.no_80211_encap) {
++		if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
++			dev_kfree_skb(skb);
++			return true;
++		}
++
++		if (IS_ERR(sta) || (sta && !sta->uploaded))
++			sta = NULL;
++
++		result = ieee80211_tx_8023(sdata, skb, skb->len, sta, true);
+ 	} else {
+ 		struct sk_buff_head skbs;
+ 
+-- 
+1.7.9.5
