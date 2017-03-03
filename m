@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:34914 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753048AbdCBPqj (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36504 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751050AbdCCPIY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 10:46:39 -0500
-From: Georgios Emmanouil <geo.emmnl@gmail.com>
-To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] Staging:wilc1000:host_interface: Fixed alignment to match open parenthesis
-Date: Thu,  2 Mar 2017 17:37:09 +0200
-Message-Id: <1488469029-8918-1-git-send-email-geo.emmnl@gmail.com> (sfid-20170302_165323_577911_E6D9AB7F)
-In-Reply-To: <1488468905-8686-1-git-send-email-geo.emmnl@gmail.com>
-References: <1488468905-8686-1-git-send-email-geo.emmnl@gmail.com>
+        Fri, 3 Mar 2017 10:08:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <6ada42bd-4cc7-4985-3e3b-705cba6e157d@virtuozzo.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-26-arnd@arndb.de>
+ <6ada42bd-4cc7-4985-3e3b-705cba6e157d@virtuozzo.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 3 Mar 2017 15:54:04 +0100
+Message-ID: <CAK8P3a1AT+x9TiCyC56m6DoiZnxCYcMm6ZtLKXa7nfq=f8kWvw@mail.gmail.com> (sfid-20170303_161015_124229_8E39CACC)
+Subject: Re: [PATCH 25/26] isdn: eicon: mark divascapi incompatible with kasan
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed alignment to match open parenthesis.
+On Fri, Mar 3, 2017 at 3:20 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+>
+>
+> On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
+>> When CONFIG_KASAN is enabled, we have several functions that use rather
+>> large kernel stacks, e.g.
+>>
+>> drivers/isdn/hardware/eicon/message.c: In function 'group_optimization':
+>> drivers/isdn/hardware/eicon/message.c:14841:1: warning: the frame size of 864 bytes is larger than 500 bytes [-Wframe-larger-than=]
+>> drivers/isdn/hardware/eicon/message.c: In function 'add_b1':
+>> drivers/isdn/hardware/eicon/message.c:7925:1: warning: the frame size of 1008 bytes is larger than 500 bytes [-Wframe-larger-than=]
+>> drivers/isdn/hardware/eicon/message.c: In function 'add_b23':
+>> drivers/isdn/hardware/eicon/message.c:8551:1: warning: the frame size of 928 bytes is larger than 500 bytes [-Wframe-larger-than=]
+>> drivers/isdn/hardware/eicon/message.c: In function 'sig_ind':
+>> drivers/isdn/hardware/eicon/message.c:6113:1: warning: the frame size of 2112 bytes is larger than 500 bytes [-Wframe-larger-than=]
+>>
+>> To be on the safe side, and to enable a lower frame size warning limit, let's
+>> just mark this driver as broken when KASAN is in use. I have tried to reduce
+>> the stack size as I did with dozens of other drivers, but failed to come up
+>> with a good solution for this one.
+>>
+>
+> This is kinda radical solution.
+> Wouldn't be better to just increase -Wframe-larger-than for this driver through Makefile?
 
-Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I thought about it too, and decided for disabling the driver entirely
+since I suspected that
+not only the per-function stack frame is overly large here but also
+depth of the call chain,
+which would then lead us to hiding an actual stack overflow.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 090fd43..bbe1a09 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1349,7 +1349,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+Note that this driver is almost certainly broken, it hasn't seen any
+updates other than
+style and compile-warning fixes in 10 years and doesn't support any of
+the hardware
+introduced since 2002 (the company still makes PCIe ISDN adapters, but
+the driver
+only supports legacy PCI versions and older buses).
 
- 				if (u32RcvdAssocRespInfoLen != 0) {
- 					s32Err = wilc_parse_assoc_resp_info(rcv_assoc_resp, u32RcvdAssocRespInfoLen,
--								    &pstrConnectRespInfo);
-+									    &pstrConnectRespInfo);
- 					if (s32Err) {
- 						netdev_err(vif->ndev, "wilc_parse_assoc_resp_info() returned error %d\n", s32Err);
- 					} else {
---
-2.1.4
+    Arnd
