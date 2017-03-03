@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:50276 "EHLO mail.us.es"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756398AbdCTTy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 15:54:57 -0400
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-        by mail.us.es (Postfix) with ESMTP id 9C857E976F
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 20:54:38 +0100 (CET)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 8D03DDA804
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 20:54:38 +0100 (CET)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id B0024DA86D
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 20:54:35 +0100 (CET)
-Date: Mon, 20 Mar 2017 20:54:36 +0100
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Jamal Hadi Salim <jhs@mojatatu.com>,
-        tech-committee <tech-committee@netdevconf.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Heri Muhero <hmuhero@gmail.com>,
-        people <people@netdevconf.org>,
-        netfilter <netfilter@vger.kernel.org>,
-        netfilter-devel <netfilter-devel@vger.kernel.org>
-Subject: Re: [NetDev-tech] [NetDev] [Netdev ANNOUNCE]: New tc workshop
- accepted
-Message-ID: <20170320195436.GA3412@salvia> (sfid-20170320_205553_892877_953AC5B4)
-References: <63339d3a-dcac-0639-2de0-204a773567dd@mojatatu.com>
- <747959804.19467.1490036204772.JavaMail.zimbra@efficios.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63413 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751278AbdCCMPK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Mar 2017 07:15:10 -0500
+From: <mpubbise@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [RFCv2 1/2] mac80211: Add provision for 802.11 encap offload
+Date: Fri, 3 Mar 2017 17:03:26 +0530
+Message-ID: <1488540807-27415-2-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170303_131617_155944_76B851FD)
+In-Reply-To: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <747959804.19467.1490036204772.JavaMail.zimbra@efficios.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 20, 2017 at 06:56:44PM +0000, Mathieu Desnoyers wrote:
-> Hi Jamal,
-> 
-> So, the interesting thing is that I've been automatically
-> re-subscribed to people@netdevconf.org about 1 day after
-> I explicitly unsubscribed. What do I need to do to stop
-> receiving those unsolicited emails ?
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-That is my fault, sorry.
+Drivers can have the capability to offload 802.11 encap
+to firmware or hardware for data frames. This patch adds a new
+hw_flag for driver to advertise the offload support.
+Transmit path offloading 802.11 header (including cipher headers)
+encap for data frames will be implemented in a separate patch.
 
-I have received the full list of people, including people that were
-already subscribed previously. So I placed them in the same batch when
-doing the mailing list subscription, that is why you got accidentally
-re-subscribed. My apologies.
+Drivers advertising this capability should also implement other
+functionalities which deal with 802.11 frame format like below
 
-Jamal, moving forward, please send me new registrations only. Thanks!
+        - Hardware encryption
+        - Aggregation of A-MSDU offload
+        - Fragmentation offload
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+---
+ include/net/mac80211.h |    4 ++++
+ net/mac80211/debugfs.c |    1 +
+ 2 files changed, 5 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3edb469..0239b7d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2049,6 +2049,9 @@ struct ieee80211_txq {
+  *	The stack will not do fragmentation.
+  *	The callback for @set_frag_threshold should be set as well.
+  *
++ * @IEEE80211_HW_SUPPORTS_80211_ENCAP: Hardware/driver supports 802.11
++ *	encap for data frames.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2091,6 +2094,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TX_FRAG_LIST,
+ 	IEEE80211_HW_REPORTS_LOW_ACK,
+ 	IEEE80211_HW_SUPPORTS_TX_FRAG,
++	IEEE80211_HW_SUPPORTS_80211_ENCAP,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 5fae001..b97ffb4 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -211,6 +211,7 @@ static ssize_t reset_write(struct file *file, const char __user *user_buf,
+ 	FLAG(TX_FRAG_LIST),
+ 	FLAG(REPORTS_LOW_ACK),
+ 	FLAG(SUPPORTS_TX_FRAG),
++	FLAG(SUPPORTS_80211_ENCAP),
+ #undef FLAG
+ };
+ 
+-- 
+1.7.9.5
