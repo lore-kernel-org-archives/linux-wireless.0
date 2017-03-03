@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41700 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751763AbdCPJwD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 05:52:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-03-16
-Date: Thu, 16 Mar 2017 10:51:55 +0100
-Message-Id: <20170316095156.31253-1-johannes@sipsolutions.net> (sfid-20170316_105222_973062_0C7E74F7)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37332 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751278AbdCCLjG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Mar 2017 06:39:06 -0500
+From: <mpubbise@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Subject: [RFCv2 0/2] Add new transmit data path for ethernet frame format
+Date: Fri, 3 Mar 2017 17:03:25 +0530
+Message-ID: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170303_123946_457729_1DC9A892)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-Here's the pull request you were waiting for. I went through all my
-pending patches but only this one is applicable for net.git at this
-time, so it's just a single one.
+This patch set adds a new transmit data path to offload 802.11 header
+encap to driver/hardware. Drivers having support for ieee80211
+header encap and other offload functionalities which can't be done
+before encap can make use of this new data path. Currently it is
+implemented for STA and AP interface type, this can be extend other
+interface types like adhoc.
 
-Since I didn't have a current base, I forwarded to net.git first
-and re-validated the patch there, but you might might have to be
-careful if you merge to not fast-fwd on your side (though, even
-if you do that, I don't think it matters much).
+This patchset only adds support for tx in ethernet frame format
+and receive can happen in 802.11 format with existing rx framework.
 
-Please pull and let me know if there's any problem.
+With ath10k driver changes using this new Tx/Rx path, 10 - 15%
+CPU usage and upto ~20Mbps TCP performance improvements are
+observed with this ethernet data path.
 
-Thanks,
-johannes
+Vasanthakumar Thiagarajan (2):
+  mac80211: Add provision for 802.11 encap offload
+  mac80211: Implement data xmit for 802.11 encap offload
 
+V2:
+ * 802.11 decap offload is removed from the patchset
+ * Code changes as per review comments of v1.
 
+ include/net/mac80211.h     |   30 ++++++-
+ net/mac80211/cfg.c         |    9 ++
+ net/mac80211/debugfs.c     |    1 +
+ net/mac80211/ieee80211_i.h |   10 +++
+ net/mac80211/iface.c       |   72 +++++++++++++++
+ net/mac80211/key.c         |    3 +
+ net/mac80211/status.c      |   79 +++++++++++++++++
+ net/mac80211/tx.c          |  207 +++++++++++++++++++++++++++++++++++++++++++-
+ 8 files changed, 406 insertions(+), 5 deletions(-)
 
-The following changes since commit 22a0e18eac7a9e986fec76c60fa4a2926d1291e2:
-
-  net: properly release sk_frag.page (2017-03-15 15:37:45 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-03-16
-
-for you to fetch changes up to ea90e0dc8cecba6359b481e24d9c37160f6f524f:
-
-  nl80211: fix dumpit error path RTNL deadlocks (2017-03-16 10:30:03 +0100)
-
-----------------------------------------------------------------
-Just a single fix, for the RTNL locking issues.
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      nl80211: fix dumpit error path RTNL deadlocks
-
- net/wireless/nl80211.c | 127 ++++++++++++++++++++++---------------------------
- 1 file changed, 56 insertions(+), 71 deletions(-)
+-- 
+1.7.9.5
