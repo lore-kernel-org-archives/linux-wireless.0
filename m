@@ -1,84 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49476 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751135AbdCCAXv (ORCPT
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:36380 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751333AbdCCN4J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 19:23:51 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v22Gi5M0130279
-        for <linux-wireless@vger.kernel.org>; Thu, 2 Mar 2017 11:51:21 -0500
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28xpbpk8dx-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Mar 2017 11:51:21 -0500
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <borntraeger@de.ibm.com>;
-        Thu, 2 Mar 2017 11:51:20 -0500
-Subject: Re: [PATCH 02/26] rewrite READ_ONCE/WRITE_ONCE
-To: Arnd Bergmann <arnd@arndb.de>, kasan-dev@googlegroups.com
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-3-arnd@arndb.de>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
+        Fri, 3 Mar 2017 08:56:09 -0500
+Received: by mail-qk0-f169.google.com with SMTP id 1so57147387qkl.3
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 05:55:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-2-arnd@arndb.de>
+ <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com>
+From: Alexander Potapenko <glider@google.com>
+Date: Fri, 3 Mar 2017 14:55:35 +0100
+Message-ID: <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com> (sfid-20170303_145840_920102_B53C2F5F)
+Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        kasan-dev <kasan-dev@googlegroups.com>,
         Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
         linux-wireless@vger.kernel.org,
         kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Paul McKenney <paulmck@linux.vnet.ibm.com>
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-Date: Thu, 2 Mar 2017 17:51:14 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170302163834.2273519-3-arnd@arndb.de>
-Content-Type: text/plain; charset=US-ASCII
-Message-Id: <76790664-a7a9-193c-2e30-edaee1308cb0@de.ibm.com> (sfid-20170303_012401_313052_E7864C46)
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/02/2017 05:38 PM, Arnd Bergmann wrote:
-> When CONFIG_KASAN is enabled, the READ_ONCE/WRITE_ONCE macros cause
-> rather large kernel stacks, e.g.:
-> 
-> mm/vmscan.c: In function 'shrink_page_list':
-> mm/vmscan.c:1333:1: error: the frame size of 3456 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-> block/cfq-iosched.c: In function 'cfqg_stats_add_aux':
-> block/cfq-iosched.c:750:1: error: the frame size of 4048 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-> fs/btrfs/disk-io.c: In function 'open_ctree':
-> fs/btrfs/disk-io.c:3314:1: error: the frame size of 3136 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-> fs/btrfs/relocation.c: In function 'build_backref_tree':
-> fs/btrfs/relocation.c:1193:1: error: the frame size of 4336 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-> fs/fscache/stats.c: In function 'fscache_stats_show':
-> fs/fscache/stats.c:287:1: error: the frame size of 6512 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-> fs/jbd2/commit.c: In function 'jbd2_journal_commit_transaction':
-> fs/jbd2/commit.c:1139:1: error: the frame size of 3760 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-> 
-> This attempts a rewrite of the two macros, using a simpler implementation
-> for the most common case of having a naturally aligned 1, 2, 4, or (on
-> 64-bit architectures) 8  byte object that can be accessed with a single
-> instruction.  For these, we go back to a volatile pointer dereference
-> that we had with the ACCESS_ONCE macro.
+On Fri, Mar 3, 2017 at 2:50 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> w=
+rote:
+>
+>
+> On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
+>> When CONFIG_KASAN is set, we can run into some code that uses incredible
+>> amounts of kernel stack:
+>>
+>> drivers/staging/dgnc/dgnc_neo.c:1056:1: error: the frame size of 11112 b=
+ytes is larger than 2048 bytes [-Werror=3Dframe-larger-than=3D]
+>> drivers/media/i2c/cx25840/cx25840-core.c:4960:1: error: the frame size o=
+f 94000 bytes is larger than 2048 bytes [-Werror=3Dframe-larger-than=3D]
+>> drivers/media/dvb-frontends/stv090x.c:3430:1: error: the frame size of 5=
+312 bytes is larger than 3072 bytes [-Werror=3Dframe-larger-than=3D]
+>>
+>> This happens when a sanitizer uses stack memory each time an inline func=
+tion
+>> gets called. This introduces a new annotation for those functions to mak=
+e
+>> them either 'inline' or 'noinline' dependning on the CONFIG_KASAN symbol=
+.
+>>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> ---
+>>  include/linux/compiler.h | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
+>>
+>> diff --git a/include/linux/compiler.h b/include/linux/compiler.h
+>> index f8110051188f..56b90897a459 100644
+>> --- a/include/linux/compiler.h
+>> +++ b/include/linux/compiler.h
+>> @@ -416,6 +416,17 @@ static __always_inline void __write_once_size(volat=
+ile void *p, void *res, int s
+>>   */
+>>  #define noinline_for_stack noinline
+>>
+>> +/*
+>> + * CONFIG_KASAN can lead to extreme stack usage with certain patterns w=
+hen
+>> + * one function gets inlined many times and each instance requires a st=
+ack
+>> + * ckeck.
+>> + */
+>> +#ifdef CONFIG_KASAN
+>> +#define noinline_for_kasan noinline __maybe_unused
+>
+>
+> noinline_iff_kasan might be a better name.  noinline_for_kasan gives the =
+impression
+> that we always noinline function for the sake of kasan, while noinline_if=
+f_kasan
+> clearly indicates that function is noinline only if kasan is used.
+FWIW we may be facing the same problem with other compiler-based
+tools, e.g. KMSAN (which isn't there yet).
+So it might be better to choose a macro name that doesn't use the name "KAS=
+AN".
+E.g. noinline_iff_memtool (or noinline_iff_memory_tool if that's not too lo=
+ng).
+WDYT?
+>> +#else
+>> +#define noinline_for_kasan inline
+>> +#endif
+>> +
+>>  #ifndef __always_inline
+>>  #define __always_inline inline
+>>  #endif
+>>
+>
+> --
+> You received this message because you are subscribed to the Google Groups=
+ "kasan-dev" group.
+> To unsubscribe from this group and stop receiving emails from it, send an=
+ email to kasan-dev+unsubscribe@googlegroups.com.
+> To post to this group, send email to kasan-dev@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgi=
+d/kasan-dev/7e7a62de-3b79-6044-72fa-4ade418953d1%40virtuozzo.com.
+> For more options, visit https://groups.google.com/d/optout.
 
-We had changed that back then because gcc 4.6 and 4.7 had a bug that could
-removed the volatile statement on aggregate types like the following one
 
-union ipte_control {
-        unsigned long val;
-        struct {
-                unsigned long k  : 1;
-                unsigned long kh : 31;
-                unsigned long kg : 32;
-        };
-};
 
-See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58145
+--=20
+Alexander Potapenko
+Software Engineer
 
-If I see that right, your __ALIGNED_WORD(x)
-macro would say that for above structure  sizeof(x) == sizeof(long)) is true,
-so it would fall back to the old volatile cast and might reintroduce the 
-old compiler bug?
+Google Germany GmbH
+Erika-Mann-Stra=C3=9Fe, 33
+80636 M=C3=BCnchen
 
-Could you maybe you fence your simple macro for anything older than 4.9? After
-all there was no kasan support anyway on these older gcc version.
-
-Christian
+Gesch=C3=A4ftsf=C3=BChrer: Matthew Scott Sucherman, Paul Terence Manicle
+Registergericht und -nummer: Hamburg, HRB 86891
+Sitz der Gesellschaft: Hamburg
