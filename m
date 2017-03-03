@@ -1,37 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41900 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753716AbdC2HtY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 03:49:24 -0400
-Message-ID: <1490773761.7948.3.camel@sipsolutions.net> (sfid-20170329_095002_716253_BC51FE5F)
-Subject: Re: [REGRESSION] mac80211: IBSS vif queue stopped when started
- after 11s vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Date: Wed, 29 Mar 2017 09:49:21 +0200
-In-Reply-To: <1978424.XTv2Qph05K@bentobox> (sfid-20170322_101600_364232_CA0A885F)
-References: <1978424.XTv2Qph05K@bentobox>
-         (sfid-20170322_101600_364232_CA0A885F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ve1eur01on0128.outbound.protection.outlook.com ([104.47.1.128]:50656
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751310AbdCCP2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Mar 2017 10:28:49 -0500
+Subject: Re: [PATCH 26/26] kasan: rework Kconfig settings
+To: Arnd Bergmann <arnd@arndb.de>, <kasan-dev@googlegroups.com>
+References: <20170302163834.2273519-1-arnd@arndb.de>
+ <20170302163834.2273519-27-arnd@arndb.de>
+CC: Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>,
+        <kernel-build-reports@lists.linaro.org>,
+        "David S . Miller" <davem@davemloft.net>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Message-ID: <125a8ea6-35d7-9d37-3841-eebb37fce515@virtuozzo.com> (sfid-20170303_162853_802405_47D88E1F)
+Date: Fri, 3 Mar 2017 17:51:37 +0300
+MIME-Version: 1.0
+In-Reply-To: <20170302163834.2273519-27-arnd@arndb.de>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sven,
 
 
-> But I could be completely wrong about it. It would therefore be
-> interesting for me to know who would be responsible to start the
-> queues when ieee80211_do_open rejected it for IBSS.
+On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
 
-Well, once ieee80211_offchannel_return() is called, that should do the
-needful and end up in ieee80211_propagate_queue_wake().
+> 
+> diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+> index 97d62c2da6c2..27c838c40a36 100644
+> --- a/lib/Kconfig.debug
+> +++ b/lib/Kconfig.debug
+> @@ -216,10 +216,9 @@ config ENABLE_MUST_CHECK
+>  config FRAME_WARN
+>  	int "Warn for stack frames larger than (needs gcc 4.4)"
+>  	range 0 8192
+> -	default 0 if KASAN
+> -	default 2048 if GCC_PLUGIN_LATENT_ENTROPY
+> +	default 3072 if KASAN_EXTRA
+>  	default 1024 if !64BIT
+> -	default 2048 if 64BIT
+> +	default 1280 if 64BIT
 
-Can you check what the IBSS vif's queues are (vif->hw_queue[...])?
+This looks unrelated. Also, it means that now we have 1280 with KASAN=y && KASAN_EXTRA=n.
+Judging from changelog I assume that this hunk slipped here from the follow up series.
 
-However, I also don't understand the difference between encrypted and
-unencrypted here.
+>  	help
+>  	  Tell gcc to warn at build time for stack frames larger than this.
+>  	  Setting this too low will cause a lot of warnings.
+> @@ -499,7 +498,7 @@ config DEBUG_OBJECTS_ENABLE_DEFAULT
+>  
+>  config DEBUG_SLAB
+>  	bool "Debug slab memory allocations"
+> -	depends on DEBUG_KERNEL && SLAB && !KMEMCHECK
+> +	depends on DEBUG_KERNEL && SLAB && !KMEMCHECK && !KASAN
+>  	help
+>  	  Say Y here to have the kernel do limited verification on memory
+>  	  allocation as well as poisoning memory on free to catch use of freed
+> @@ -511,7 +510,7 @@ config DEBUG_SLAB_LEAK
+>  
+>  config SLUB_DEBUG_ON
+>  	bool "SLUB debugging on by default"
+> -	depends on SLUB && SLUB_DEBUG && !KMEMCHECK
+> +	depends on SLUB && SLUB_DEBUG && !KMEMCHECK && !KASAN
 
-johannes
+Why? SLUB_DEBUG_ON works with KASAN.
+
+>  	default n
+>  	help
+>  	  Boot with debugging on by default. SLUB boots by default with
