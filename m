@@ -1,66 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43550 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757046AbdCURcI (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34699 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752371AbdCCOay (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 13:32:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
-Subject: Re: [PATCH] rtlwifi: Fix scheduling while atomic splat
-References: <20170321142411.24044-1-Larry.Finger@lwfinger.net>
-Date: Tue, 21 Mar 2017 19:32:02 +0200
-In-Reply-To: <20170321142411.24044-1-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Tue, 21 Mar 2017 09:24:11 -0500")
-Message-ID: <87fui65yel.fsf@kamboji.qca.qualcomm.com> (sfid-20170321_183344_550801_DD524F7E)
+        Fri, 3 Mar 2017 09:30:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-2-arnd@arndb.de>
+ <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com> <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 3 Mar 2017 15:30:37 +0100
+Message-ID: <CAK8P3a3+8wxsUntUnOteOv8_p=yBZLk-4Uu-HGM17o9n9OqteQ@mail.gmail.com> (sfid-20170303_153117_139590_55DCA162)
+Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
+To: Alexander Potapenko <glider@google.com>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        kasan-dev <kasan-dev@googlegroups.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Fri, Mar 3, 2017 at 2:55 PM, Alexander Potapenko <glider@google.com> wrote:
+> On Fri, Mar 3, 2017 at 2:50 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
 
-> Following commit cceb0a597320 ("rtlwifi: Add work queue for c2h cmd."),
-> the following BUG is reported when rtl8723be is used:
->
-> BUG: sleeping function called from invalid context at mm/slab.h:432
-> in_atomic(): 1, irqs_disabled(): 1, pid: 0, name: swapper/0
-> CPU: 0 PID: 0 Comm: swapper/0 Tainted: G        W  O    4.11.0-rc3-wl+ #276
-> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.50   09/29/2014
-> Call Trace:
->  <IRQ>
->  dump_stack+0x63/0x89
->  ___might_sleep+0xe9/0x130
->  __might_sleep+0x4a/0x90
->  kmem_cache_alloc_trace+0x19f/0x200
->  ? rtl_c2hcmd_enqueue+0x3e/0x110 [rtlwifi]
->  rtl_c2hcmd_enqueue+0x3e/0x110 [rtlwifi]
->  rtl8723be_c2h_packet_handler+0xac/0xc0 [rtl8723be]
->  rtl8723be_rx_command_packet+0x37/0x5c [rtl8723be]
->  _rtl_pci_rx_interrupt+0x200/0x6b0 [rtl_pci]
->  _rtl_pci_interrupt+0x20c/0x5d0 [rtl_pci]
->  __handle_irq_event_percpu+0x3f/0x1d0
->  handle_irq_event_percpu+0x23/0x60
->  handle_irq_event+0x3c/0x60
->  handle_fasteoi_irq+0xa2/0x170
->  handle_irq+0x20/0x30
->  do_IRQ+0x48/0xd0
->  common_interrupt+0x89/0x89
-> ...
->
-> Although commit cceb0a597320 converted most c2h commands to use a work
-> queue, the Bluetooth coexistence routines can be in atomic mode when
-> they execute such a call.
->
-> Fixes: cceb0a597320 ("rtlwifi: Add work queue for c2h cmd.")
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
-> ---
-> Kalle,
->
-> This patch should be applied to kernel 4.11.
+>>> @@ -416,6 +416,17 @@ static __always_inline void __write_once_size(volatile void *p, void *res, int s
+>>>   */
+>>>  #define noinline_for_stack noinline
+>>>
+>>> +/*
+>>> + * CONFIG_KASAN can lead to extreme stack usage with certain patterns when
+>>> + * one function gets inlined many times and each instance requires a stack
+>>> + * ckeck.
+>>> + */
+>>> +#ifdef CONFIG_KASAN
+>>> +#define noinline_for_kasan noinline __maybe_unused
+>>
+>>
+>> noinline_iff_kasan might be a better name.  noinline_for_kasan gives the impression
+>> that we always noinline function for the sake of kasan, while noinline_iff_kasan
+>> clearly indicates that function is noinline only if kasan is used.
 
-Ok, I'll queue this for 4.11.
+Fine with me. I actually tried to come up with a name that implies that the
+symbol is actually "inline" (or even __always_inline_ without KASAN, but
+couldn't think of any good name for it.
 
--- 
-Kalle Valo
+> FWIW we may be facing the same problem with other compiler-based
+> tools, e.g. KMSAN (which isn't there yet).
+> So it might be better to choose a macro name that doesn't use the name "KASAN".
+> E.g. noinline_iff_memtool (or noinline_iff_memory_tool if that's not too long).
+> WDYT?
+
+Would KMSAN also force local variables to be non-overlapping the way that
+asan-stack=1 and -fsanitize-address-use-after-scope do? As I understood it,
+KMSAN would add extra code for maintaining the uninit bits, but in an example
+like this
+
+int f(int *);
+static inline __attribute__((always_inline)) int g(void)
+{
+    int i;
+    f(&i);
+    return i;
+}
+int f(void)
+{
+     return g()+g()+g()+g();
+}
+
+each of the four copies of 'i' could have the same location on the stack
+and get marked uninitialized again before calling f(). We only need
+noinline_for_kasan (whatever we end up calling that) for compiler
+features that force each instance of 'i' to have its own stack redzone.
+
+     Arnd
