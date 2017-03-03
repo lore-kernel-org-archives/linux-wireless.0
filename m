@@ -1,46 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46851 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752135AbdCHOeO (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36363 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751074AbdCCKwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 09:34:14 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH] ath10k: QCA6174 hw3.0: update board-2.bin
-Date: Wed, 8 Mar 2017 16:32:16 +0200
-Message-ID: <1488983536-28364-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170308_153508_056142_9974BDED)
+        Fri, 3 Mar 2017 05:52:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <f86cf852-3960-0dcf-5917-509080ca7bf5@de.ibm.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-3-arnd@arndb.de>
+ <76790664-a7a9-193c-2e30-edaee1308cb0@de.ibm.com> <CAK8P3a082Bi6Vf5gEFLAJtJvUm=7MtddBzcCOqagQyfJPFTu_g@mail.gmail.com>
+ <2adc6ff4-5dc5-8f1d-cce1-47f3124a528f@de.ibm.com> <CAK8P3a2mepCjPfM9Ychk7CHFHi0UW8RBzK4skJKMSOjw3gKoYg@mail.gmail.com>
+ <f86cf852-3960-0dcf-5917-509080ca7bf5@de.ibm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 3 Mar 2017 10:54:07 +0100
+Message-ID: <CAK8P3a0M6KAiLj9HM8UYykL-CtZNEsDcD0L1kZ1usPCx4=vq+g@mail.gmail.com> (sfid-20170303_115247_304115_32AA6DBB)
+Subject: Re: [PATCH 02/26] rewrite READ_ONCE/WRITE_ONCE
+To: Christian Borntraeger <borntraeger@de.ibm.com>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Paul McKenney <paulmck@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new board images:
+On Fri, Mar 3, 2017 at 9:26 AM, Christian Borntraeger
+<borntraeger@de.ibm.com> wrote:
+> On 03/02/2017 10:45 PM, Arnd Bergmann wrote:
+>> Ok, got it. So I guess the behavior of forcing aligned accesses on aligned
+>> data is accidental, and allowing non-power-of-two arguments is also not
+>> the main purpose.
+>
+>
+> Right. The main purpose is to read/write _ONCE_. You can assume a somewhat
+> atomic access for sizes <= word size. And there are certainly places that
+> rely on that. But the *ONCE thing is mostly used for things where we used
+> barrier() 10 years ago.
 
-bus=pci,vendor=168c,device=003e,subsystem-vendor=1a56,subsystem-device=1535,variant=RV_0520
-bus=pci,vendor=168c,device=003e,subsystem-vendor=1a56,subsystem-device=1535,variant=RV_0519
-bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,subsystem-device=0310,variant=RV_0519
+Ok
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- ath10k/QCA6174/hw3.0/board-2.bin | Bin 337204 -> 361924 bytes
- 1 file changed, 0 insertions(+), 0 deletions(-)
+>
+>  Maybe we could just bail out on new compilers if we get
+>> either of those? That might catch code that accidentally does something
+>> that is inherently non-atomic or that causes a trap when the intention was
+>> to have a simple atomic access.
+>
+> I think Linus stated that its ok to assume that the compiler is smart enough
+> to uses a single instruction to access aligned and properly sized scalar types
+> for *ONCE.
+>
+> Back then when I changed ACCESS_ONCE there were many places that did use it
+> for non-atomic, > word size accesses. For example on some architectures a pmd_t
+> is a typedef to an array, for which there is no way to read that atomically.
+> So the focus must be on the "ONCE" part.
+>
+> If some code uses a properly aligned, word sized object we can also assume
+> atomic access. If the access is not properly sized/aligned we do not get
+> atomicity, but we do get the "ONCE".
+> But adding a check for alignment/size would break the compilation of some
+> code.
 
-diff --git a/ath10k/QCA6174/hw3.0/board-2.bin b/ath10k/QCA6174/hw3.0/board-2.bin
-index 8e7b8c0b0cae7f7ac15ef5ca42fa5bcca6ad66c2..ea18004951fed49aa9214093fa900427e4960a5d 100644
-GIT binary patch
-delta 572
-zcmdmTO5{klSVIeA3sVbo3(FQ(6V=HMDlD8D3JhQnJ)Q9>i=T{6Sz=LUVqS@DP*}Wy
-zsi9>qBT#maJO~$V{@tL>A-Q}_K`96?T2s|Bc@ctMK6yWfu7qNen23CW1haf%Bx87D
-zFcXa4{^TvoUq0QQ30rpTJ$Tj!O8bSS^-Wv1|9DW+q(z$!GccfvPtS{CN!I6&;**k$
-zl8EAs;+B$#5*Ln?;D`(rj^q~Pk(3l*V1SA9M~ZMn1`0%Mc9>bgj^wL@3mN@n@%Soq
-z!{$2)S{x#sK(9bB&|5P=Y#_ah!$?9gF;QMVF;P}NAwf1IAwdX6Z%)Z%=I1=?6O#e*
-z)7i-d6{5^QuTAc#$kdOEi<1T7C?J*r(Nb};VsVmk5fYKHu@OKw17#wm5#pN_DhavS
-z$N(uOww(dGS)XHi_8Df!%|4k@{2IU@1-s+mS--fnY3sHj1u2U7<i3hjodnsqq@<{%
-exC9vxtrVA#kRYiPB_XMx0CF3u_-6UaQg#61GR2|*
+So what should be the expected behavior for objects that have a smaller
+alignment? E.g. this structure
 
-delta 19
-acmX@oEw<&9NJ9%_3sVbo3(FQ(6IB3C%Lb$X
+struct fourbytes {
+   char bytes[4];
+} __packed;
 
--- 
-2.7.4
+when passed into the current READ_ONCE() will be accessed with
+a 32-bit load, while reading it with
+
+struct fourbytes local = *(volatile struct fourbytes *)voidpointer;
+
+on architectures like ARMv5 or lower will turn into four single-byte
+reads to avoid an alignment trap when the pointer is actually
+unaligned.
+
+I can see arguments for and against either behavior, but what should
+I do when modifying it for newer compilers? The possible options
+that I see are
+
+- keep assuming that the pointer will be aligned at runtime
+  and doesn't trap
+- use the regular gcc behavior and do byte-accesses on those
+  architectures that otherwise might trap
+- add a runtime alignment check to do atomic accesses whenever
+  possible, but never trap
+- fail the build
+
+     Arnd
