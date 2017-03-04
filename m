@@ -1,95 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:64120 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753967AbdCBRLM (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:55590 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751820AbdCDJLI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 12:11:12 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 06/26] rocker: mark rocker_tlv_put_* functions as noinline_for_kasan
-Date: Thu,  2 Mar 2017 17:38:14 +0100
-Message-Id: <20170302163834.2273519-7-arnd@arndb.de> (sfid-20170302_183055_711673_BB6B3017)
-In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
+        Sat, 4 Mar 2017 04:11:08 -0500
+Date: Sat, 4 Mar 2017 11:10:36 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC] mac80211_hwsim: report survey data for scanned channels
+Message-ID: <20170304091036.GA5388@w1.fi> (sfid-20170304_101114_564352_521720F6)
+References: <20170221103118.18441-1-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170221103118.18441-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inlining these functions creates lots of stack variables when KASAN is
-enabled, leading to this warning about potential stack overflow:
+On Tue, Feb 21, 2017 at 11:31:18AM +0100, Johannes Berg wrote:
+> Currently, hwsim is reporting survey data (only a fake noise floor)
+> for the current channel. This breaks when the multi-channel support
+> is enabled since then there's no current channel.
+> 
+> Make the dummy implementation closer to a real one and only report
+> data while scanning, for all the scanned channels. At other times,
+> no survey data might be available (in real hardware) due to power-
+> save for example.
 
-drivers/net/ethernet/rocker/rocker_ofdpa.c: In function 'ofdpa_cmd_flow_tbl_add':
-drivers/net/ethernet/rocker/rocker_ofdpa.c:621:1: error: the frame size of 2752 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+> Had this lying around - is it useful for anyone?
 
-This marks all of them noinline_for_kasan, which solves the problem by
-keeping the redzone inside of the separate stack frames.
+Yes, it seems to make the ap_acs hwsim test cases in hostap.git quite a
+bit more useful in hitting proper acs.c coverage in hostapd.. And also
+allow having to have hacks to force previous AP instance on the same
+band just to be able to hit any of this code.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/ethernet/rocker/rocker_tlv.h | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+> -	survey->filled = SURVEY_INFO_NOISE_DBM;
+> +	survey->filled = SURVEY_INFO_NOISE_DBM |
+> +			 SURVEY_INFO_CHANNEL_TIME |
+> +			 SURVEY_INFO_CHANNEL_TIME_BUSY;
 
-diff --git a/drivers/net/ethernet/rocker/rocker_tlv.h b/drivers/net/ethernet/rocker/rocker_tlv.h
-index a63ef82e7c72..3a9573fe0191 100644
---- a/drivers/net/ethernet/rocker/rocker_tlv.h
-+++ b/drivers/net/ethernet/rocker/rocker_tlv.h
-@@ -139,38 +139,38 @@ rocker_tlv_start(struct rocker_desc_info *desc_info)
- int rocker_tlv_put(struct rocker_desc_info *desc_info,
- 		   int attrtype, int attrlen, const void *data);
- 
--static inline int rocker_tlv_put_u8(struct rocker_desc_info *desc_info,
--				    int attrtype, u8 value)
-+static noinline_for_kasan int
-+rocker_tlv_put_u8(struct rocker_desc_info *desc_info, int attrtype, u8 value)
- {
- 	return rocker_tlv_put(desc_info, attrtype, sizeof(u8), &value);
- }
- 
--static inline int rocker_tlv_put_u16(struct rocker_desc_info *desc_info,
--				     int attrtype, u16 value)
-+static noinline_for_kasan int
-+rocker_tlv_put_u16(struct rocker_desc_info *desc_info, int attrtype, u16 value)
- {
- 	return rocker_tlv_put(desc_info, attrtype, sizeof(u16), &value);
- }
- 
--static inline int rocker_tlv_put_be16(struct rocker_desc_info *desc_info,
--				      int attrtype, __be16 value)
-+static noinline_for_kasan int
-+rocker_tlv_put_be16(struct rocker_desc_info *desc_info, int attrtype, __be16 value)
- {
- 	return rocker_tlv_put(desc_info, attrtype, sizeof(__be16), &value);
- }
- 
--static inline int rocker_tlv_put_u32(struct rocker_desc_info *desc_info,
--				     int attrtype, u32 value)
-+static noinline_for_kasan int
-+rocker_tlv_put_u32(struct rocker_desc_info *desc_info, int attrtype, u32 value)
- {
- 	return rocker_tlv_put(desc_info, attrtype, sizeof(u32), &value);
- }
- 
--static inline int rocker_tlv_put_be32(struct rocker_desc_info *desc_info,
--				      int attrtype, __be32 value)
-+static noinline_for_kasan int
-+rocker_tlv_put_be32(struct rocker_desc_info *desc_info, int attrtype, __be32 value)
- {
- 	return rocker_tlv_put(desc_info, attrtype, sizeof(__be32), &value);
- }
- 
--static inline int rocker_tlv_put_u64(struct rocker_desc_info *desc_info,
--				     int attrtype, u64 value)
-+static noinline_for_kasan int
-+rocker_tlv_put_u64(struct rocker_desc_info *desc_info, int attrtype, u64 value)
- {
- 	return rocker_tlv_put(desc_info, attrtype, sizeof(u64), &value);
- }
+This is pretty old, though.. :)  Had to remove the "CHANNEL_" part
+here..
+
+> +	survey->channel_time =
+> +	survey->channel_time_busy = survey->channel_time/8;
+
+.. and "channel_" in these to make this compile. Anyway, with those
+trivial changes, the hwsim test cases did start looking more
+interesting, so it would seem reasonable to get this applied.
+
 -- 
-2.9.0
+Jouni Malinen                                            PGP id EFC895FA
