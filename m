@@ -1,91 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29824 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752990AbdCHMbv (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:35289 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752321AbdCDP6P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 07:31:51 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix fetching channel during potential radar detection
-Date: Wed, 8 Mar 2017 18:03:32 +0530
-Message-ID: <1488976412-8970-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170308_133203_003862_805536F4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 4 Mar 2017 10:58:15 -0500
+From: Arushi Singhal <arushisinghal19971997@gmail.com>
+To: w.d.hubbs@gmail.com
+Cc: chris@the-brannons.com, outreachy-kernel@googlegroups.com,
+        kirk@reisers.ca, samuel.thibault@ens-lyon.org,
+        gregkh@linuxfoundation.org, speakup@linux-speakup.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        linux-wireless@vger.kernel.org,
+        Arushi Singhal <arushisinghal19971997@gmail.com>
+Subject: [PATCH 2/6] staging: speakup: Avoid multiple assignments on same line
+Date: Sat,  4 Mar 2017 21:27:36 +0530
+Message-Id: <20170304155740.26105-3-arushisinghal19971997@gmail.com> (sfid-20170304_165923_578483_7CFB28B6)
+In-Reply-To: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
+References: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+This patch fixes the checkpatch.pl warning "multiple assignments
+should be avoided."
 
-Fetch target operating channel during potential radar detection when
-the interface is just brought up, but no channel is assigned from
-userspace. In this scenario rx_channel may not be having a valid pointer
-hence fetch the target operating channel to avoid warnings as below
-which can be triggered by the commands with DFS testing over longer run
-
-comamnds:
-iw wlan1 set type mesh
-ifconfig wlan1 up (valid tgt_oper_chan only)
-iw wlan1 cac trigger freq 5260 HT20 (valid rx_channel, tgt_oper_chan)
-iw wlan1 cac trigger freq 5280 HT20
-iw wlan1 cac trigger freq 5300 HT20
-
-Once the CAC expires, current channel context will be removed and
-we are only left with the fallback option of using 'target operating
-channel'
-
-Firmware and driver log:
-ath: phy1: DFS: radar found on freq=5300: id=1, pri=1125, count=5,
-count_false=4
-ath: phy1: DFS: radar found on freq=5260: id=5, pri=3151, count=6,
-count_false=11
-ath: phy1: DFS: radar found on freq=5280: id=1, pri=1351, count=6,
-count_false=4
-ath: phy1: DFS: radar found on freq=5300: id=1, pri=1125, count=5,
-count_false=4
-ath10k_pci 0001:01:00.0: failed to derive channel for radar pulse,
-treating as radar
-ath10k_pci 0001:01:00.0: failed to derive channel for radar pulse,
-treating as radar
-
-Call trace:
-
-WARNING: CPU: 1 PID: 2145 at
-backports-20161201-3.14.77-9ab3068/net/wireless/chan.c:265
-cfg80211_set_dfs_state+0x3c/0x88 [cfg80211]()
-
- Workqueue: phy1 ieee80211_dfs_radar_detected_work
-[mac80211]
-[<c0320770>] (warn_slowpath_null) from [<bf79b90c>]
-(cfg80211_set_dfs_state+0x3c/0x88 [cfg80211])
-[<bf79b90c>] (cfg80211_set_dfs_state [cfg80211]) from
-[<bf79697c>] (cfg80211_radar_event+0xc4/0x140 [cfg80211])
-[<bf79697c>] (cfg80211_radar_event [cfg80211]) from
-[<bf83c058>] (ieee80211_dfs_radar_detected_work+0xa8/0xb4 [mac80211])
-[<bf83c058>] (ieee80211_dfs_radar_detected_work
-[mac80211]) from [<c0339518>] (process_one_work+0x298/0x4a4)
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Arushi Singhal <arushisinghal19971997@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/staging/speakup/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2f1743e..1f83276 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3643,6 +3643,11 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
- 
- 	spin_lock_bh(&ar->data_lock);
- 	ch = ar->rx_channel;
-+
-+	/* fetch target operating channel during channel change */
-+	if (!ch)
-+		ch = ar->tgt_oper_chan;
-+
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	if (!ch) {
+diff --git a/drivers/staging/speakup/main.c b/drivers/staging/speakup/main.c
+index 47cea629ba0b..604335390b87 100644
+--- a/drivers/staging/speakup/main.c
++++ b/drivers/staging/speakup/main.c
+@@ -2091,7 +2091,8 @@ speakup_key(struct vc_data *vc, int shift_state, int keycode, u_short keysym,
+ 			spk_keydown = 0;
+ 			goto out;
+ 		}
+-		value = spk_lastkey = pad_chars[value];
++		value = pad_chars[value];
++		spk_lastkey = value;
+ 		spk_keydown++;
+ 		spk_parked &= 0xfe;
+ 		goto no_map;
 -- 
-1.9.1
+2.11.0
