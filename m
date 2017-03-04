@@ -1,71 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0036.hostedemail.com ([216.40.44.36]:41119 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933327AbdCaRpP (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33723 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752112AbdCDP6P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 13:45:15 -0400
-Message-ID: <1490982307.27353.14.camel@perches.com> (sfid-20170331_194611_000671_E3FA51A2)
-Subject: Re: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
-From: Joe Perches <joe@perches.com>
-To: Steve deRosier <derosier@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Fri, 31 Mar 2017 10:45:07 -0700
-In-Reply-To: <CALLGbRJRstmGL-o2ds4SQ5hDNVBcfP23JnRt5qRrVg-ix-8Hiw@mail.gmail.com>
-References: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com>
-         <CALLGbR+szcYFdbdh_0qBS4B_X6YQvU6CDFpR-XZvc7p3zA+ZdQ@mail.gmail.com>
-         <1490981039.27353.12.camel@perches.com>
-         <CALLGbRJRstmGL-o2ds4SQ5hDNVBcfP23JnRt5qRrVg-ix-8Hiw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Sat, 4 Mar 2017 10:58:15 -0500
+From: Arushi Singhal <arushisinghal19971997@gmail.com>
+To: w.d.hubbs@gmail.com
+Cc: chris@the-brannons.com, outreachy-kernel@googlegroups.com,
+        kirk@reisers.ca, samuel.thibault@ens-lyon.org,
+        gregkh@linuxfoundation.org, speakup@linux-speakup.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        linux-wireless@vger.kernel.org,
+        Arushi Singhal <arushisinghal19971997@gmail.com>
+Subject: [PATCH 1/6] staging: speakup: fixes braces {} should be used on all arms of this statement
+Date: Sat,  4 Mar 2017 21:27:35 +0530
+Message-Id: <20170304155740.26105-2-arushisinghal19971997@gmail.com> (sfid-20170304_165908_919554_9383F7B0)
+In-Reply-To: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
+References: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-31 at 10:34 -0700, Steve deRosier wrote:
-> On Fri, Mar 31, 2017 at 10:23 AM, Joe Perches <joe@perches.com> wrote:
-> > On Fri, 2017-03-31 at 10:19 -0700, Steve deRosier wrote:
-> > > On Thu, Mar 30, 2017 at 3:57 PM, Joe Perches <joe@perches.com> wrote:
-> > > > Fix fallout too.
-> > 
-> > []
-> > > My only question is why bother doing a format check on something
-> > > that's going to be compiled out anyway?
-> > 
-> > To avoid introducing defects when writing new code
-> > and not using the debugging code path.
-> > 
-> 
-> Fair enough. And I totally agree with the defensive programming here
-> in that case and feel it's worth the tradeoff (if indeed there really
-> is any cost, I'm unsure what gcc actually does in this instance).
-> 
-> For sake of discussion though - shouldn't anything not using the debug
-> code path in this case always be of the form that compiles out? ie
-> would be empty functions intended here just to make compilation work
-> and the code that depends on it simpler? Thus, there really should
-> never be a risk of introducing said defects. If any "real" code were
-> put in that else clause, that'd be a big red-flag in the review of
-> said hypothetical patch.
+This patch fixes the checks reported by checkpatch.pl
+for braces {} should be used on all arms of this statement.
 
-Generically, all debugging forms should strive to avoid side-effects.
+Signed-off-by: Arushi Singhal <arushisinghal19971997@gmail.com>
+---
+ drivers/staging/speakup/main.c           |  3 ++-
+ drivers/staging/speakup/speakup_decext.c |  6 +++---
+ drivers/staging/speakup/speakup_decpc.c  |  6 +++---
+ drivers/staging/speakup/speakup_dectlk.c |  6 +++---
+ drivers/staging/speakup/varhandlers.c    | 12 +++++++-----
+ 5 files changed, 18 insertions(+), 15 deletions(-)
 
-For instance, look at no_printk/pr_debug in the #ifndef DEBUG paths.
-
-It uses if (0) to avoid compilation of arguments that might be
-function calls or volatile accesses and so might have side-effects
-altogether.
-
-include/linux/printk.h-/*
-include/linux/printk.h- * Dummy printk for disabled debugging statements to use whilst maintaining
-include/linux/printk.h- * gcc's format checking.
-include/linux/printk.h- */
-include/linux/printk.h:#define no_printk(fmt, ...)                              \
-include/linux/printk.h-({                                                       \
-include/linux/printk.h- do {                                            \
-include/linux/printk.h-         if (0)                                  \
-include/linux/printk.h-                 printk(fmt, ##__VA_ARGS__);     \
-include/linux/printk.h- } while (0);                                    \
-include/linux/printk.h- 0;                                              \
-include/linux/printk.h-})
-i
+diff --git a/drivers/staging/speakup/main.c b/drivers/staging/speakup/main.c
+index a3daf4ae5c0a..47cea629ba0b 100644
+--- a/drivers/staging/speakup/main.c
++++ b/drivers/staging/speakup/main.c
+@@ -408,8 +408,9 @@ static void say_attributes(struct vc_data *vc)
+ 	if (bg > 7) {
+ 		synth_printf(" %s ", spk_msg_get(MSG_ON_BLINKING));
+ 		bg -= 8;
+-	} else
++	} else {
+ 		synth_printf(" %s ", spk_msg_get(MSG_ON));
++	}
+ 	synth_printf("%s\n", spk_msg_get(MSG_COLORS_START + bg));
+ }
+ 
+diff --git a/drivers/staging/speakup/speakup_decext.c b/drivers/staging/speakup/speakup_decext.c
+index 5f9f3a7543db..6ebd56e07e71 100644
+--- a/drivers/staging/speakup/speakup_decext.c
++++ b/drivers/staging/speakup/speakup_decext.c
+@@ -193,11 +193,11 @@ static void do_catch_up(struct spk_synth *synth)
+ 		spin_lock_irqsave(&speakup_info.spinlock, flags);
+ 		synth_buffer_getc();
+ 		spin_unlock_irqrestore(&speakup_info.spinlock, flags);
+-		if (ch == '[')
++		if (ch == '[') {
+ 			in_escape = 1;
+-		else if (ch == ']')
++		} else if (ch == ']') {
+ 			in_escape = 0;
+-		else if (ch <= SPACE) {
++		} else if (ch <= SPACE) {
+ 			if (!in_escape && strchr(",.!?;:", last))
+ 				spk_serial_out(PROCSPEECH);
+ 			if (time_after_eq(jiffies, jiff_max)) {
+diff --git a/drivers/staging/speakup/speakup_decpc.c b/drivers/staging/speakup/speakup_decpc.c
+index 600eb057f830..dc860c4b8279 100644
+--- a/drivers/staging/speakup/speakup_decpc.c
++++ b/drivers/staging/speakup/speakup_decpc.c
+@@ -410,11 +410,11 @@ static void do_catch_up(struct spk_synth *synth)
+ 		spin_lock_irqsave(&speakup_info.spinlock, flags);
+ 		synth_buffer_getc();
+ 		spin_unlock_irqrestore(&speakup_info.spinlock, flags);
+-		if (ch == '[')
++		if (ch == '[') {
+ 			in_escape = 1;
+-		else if (ch == ']')
++		} else if (ch == ']') {
+ 			in_escape = 0;
+-		else if (ch <= SPACE) {
++		} else if (ch <= SPACE) {
+ 			if (!in_escape && strchr(",.!?;:", last))
+ 				dt_sendchar(PROCSPEECH);
+ 			if (time_after_eq(jiffies, jiff_max)) {
+diff --git a/drivers/staging/speakup/speakup_dectlk.c b/drivers/staging/speakup/speakup_dectlk.c
+index 26036050cdb2..2429232ee649 100644
+--- a/drivers/staging/speakup/speakup_dectlk.c
++++ b/drivers/staging/speakup/speakup_dectlk.c
+@@ -258,11 +258,11 @@ static void do_catch_up(struct spk_synth *synth)
+ 		spin_lock_irqsave(&speakup_info.spinlock, flags);
+ 		synth_buffer_getc();
+ 		spin_unlock_irqrestore(&speakup_info.spinlock, flags);
+-		if (ch == '[')
++		if (ch == '[') {
+ 			in_escape = 1;
+-		else if (ch == ']')
++		} else if (ch == ']') {
+ 			in_escape = 0;
+-		else if (ch <= SPACE) {
++		} else if (ch <= SPACE) {
+ 			if (!in_escape && strchr(",.!?;:", last))
+ 				spk_serial_out(PROCSPEECH);
+ 			if (time_after_eq(jiffies, jiff_max)) {
+diff --git a/drivers/staging/speakup/varhandlers.c b/drivers/staging/speakup/varhandlers.c
+index 5910fe0b1365..d37d24e26641 100644
+--- a/drivers/staging/speakup/varhandlers.c
++++ b/drivers/staging/speakup/varhandlers.c
+@@ -258,10 +258,11 @@ int spk_set_string_var(const char *page, struct st_var_header *var, int len)
+ 		if (var->p_val != var_data->u.s.default_val)
+ 			strcpy((char *)var->p_val, var_data->u.s.default_val);
+ 		return -ERESTART;
+-	} else if (var->p_val)
++	} else if (var->p_val) {
+ 		strcpy((char *)var->p_val, page);
+-	else
++	} else {
+ 		return -E2BIG;
++	}
+ 	return 0;
+ }
+ 
+@@ -281,17 +282,18 @@ int spk_set_mask_bits(const char *input, const int which, const int how)
+ 			spk_chartab[*cp] &= ~mask;
+ 	}
+ 	cp = (u_char *)input;
+-	if (!cp)
++	if (!cp) {
+ 		cp = spk_punc_info[which].value;
+-	else {
++	} else {
+ 		for (; *cp; cp++) {
+ 			if (*cp < SPACE)
+ 				break;
+ 			if (mask < PUNC) {
+ 				if (!(spk_chartab[*cp] & PUNC))
+ 					break;
+-			} else if (spk_chartab[*cp] & B_NUM)
++			} else if (spk_chartab[*cp] & B_NUM) {
+ 				break;
++			}
+ 		}
+ 		if (*cp)
+ 			return -EINVAL;
+-- 
+2.11.0
