@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34699 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752371AbdCCOay (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:34179 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752170AbdCDWpE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 09:30:54 -0500
+        Sat, 4 Mar 2017 17:45:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-2-arnd@arndb.de>
- <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com> <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 3 Mar 2017 15:30:37 +0100
-Message-ID: <CAK8P3a3+8wxsUntUnOteOv8_p=yBZLk-4Uu-HGM17o9n9OqteQ@mail.gmail.com> (sfid-20170303_153117_139590_55DCA162)
-Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
-To: Alexander Potapenko <glider@google.com>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        kasan-dev <kasan-dev@googlegroups.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
+In-Reply-To: <1488474268-15876-1-git-send-email-geo.emmnl@gmail.com>
+References: <1488474268-15876-1-git-send-email-geo.emmnl@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 5 Mar 2017 09:44:42 +1100
+Message-ID: <CAGRGNgXP=kDnSw-3zHaumTg3mGF4BaQeK_SJzuDoU7K3LT17MQ@mail.gmail.com> (sfid-20170304_234526_830548_9356CB75)
+Subject: Re: [PATCH 1/4] Staging:wilc1000:wilc_spi: Fixed comment style to the
+ preferred kernel comment style
+To: Georgios Emmanouil <geo.emmnl@gmail.com>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 2:55 PM, Alexander Potapenko <glider@google.com> wrote:
-> On Fri, Mar 3, 2017 at 2:50 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+Hi All,
 
->>> @@ -416,6 +416,17 @@ static __always_inline void __write_once_size(volatile void *p, void *res, int s
->>>   */
->>>  #define noinline_for_stack noinline
->>>
->>> +/*
->>> + * CONFIG_KASAN can lead to extreme stack usage with certain patterns when
->>> + * one function gets inlined many times and each instance requires a stack
->>> + * ckeck.
->>> + */
->>> +#ifdef CONFIG_KASAN
->>> +#define noinline_for_kasan noinline __maybe_unused
->>
->>
->> noinline_iff_kasan might be a better name.  noinline_for_kasan gives the impression
->> that we always noinline function for the sake of kasan, while noinline_iff_kasan
->> clearly indicates that function is noinline only if kasan is used.
+On Fri, Mar 3, 2017 at 4:04 AM, Georgios Emmanouil <geo.emmnl@gmail.com> wrote:
+> Fixed comment style to the preferred kernel comment style.
 
-Fine with me. I actually tried to come up with a name that implies that the
-symbol is actually "inline" (or even __always_inline_ without KASAN, but
-couldn't think of any good name for it.
+Fixing comment style and other stuff like that are the _least_ of the
+problems with this driver, but you've done it, so...
 
-> FWIW we may be facing the same problem with other compiler-based
-> tools, e.g. KMSAN (which isn't there yet).
-> So it might be better to choose a macro name that doesn't use the name "KASAN".
-> E.g. noinline_iff_memtool (or noinline_iff_memory_tool if that's not too long).
-> WDYT?
+> Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
 
-Would KMSAN also force local variables to be non-overlapping the way that
-asan-stack=1 and -fsanitize-address-use-after-scope do? As I understood it,
-KMSAN would add extra code for maintaining the uninit bits, but in an example
-like this
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-int f(int *);
-static inline __attribute__((always_inline)) int g(void)
-{
-    int i;
-    f(&i);
-    return i;
-}
-int f(void)
-{
-     return g()+g()+g()+g();
-}
+> ---
+>  drivers/staging/wilc1000/wilc_spi.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
 
-each of the four copies of 'i' could have the same location on the stack
-and get marked uninitialized again before calling f(). We only need
-noinline_for_kasan (whatever we end up calling that) for compiler
-features that force each instance of 'i' to have its own stack redzone.
+-- 
+Julian Calaby
 
-     Arnd
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
