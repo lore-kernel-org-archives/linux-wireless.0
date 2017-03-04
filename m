@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [195.159.176.226] ([195.159.176.226]:36333 "EHLO
-        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1751454AbdCZRoB (ORCPT
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:34632 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752510AbdCDWsS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Mar 2017 13:44:01 -0400
-Received: from list by blaine.gmane.org with local (Exim 4.84_2)
-        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
-        id 1csCCY-0001zT-Bo
-        for linux-wireless@vger.kernel.org; Sun, 26 Mar 2017 19:43:38 +0200
-To: linux-wireless@vger.kernel.org
-From: Dennis New <dennisn@dennisn.mooo.com>
-Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
-Date: Sun, 26 Mar 2017 13:43:24 -0400
-Message-ID: <20170326134324.046ad0d4cc3c7dd9da5c56b1@dennisn.mooo.com> (sfid-20170326_194526_880064_2594FB0D)
-References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
-        <77d7e7a0-b529-ad29-9584-da51c68a5917@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-In-Reply-To: <77d7e7a0-b529-ad29-9584-da51c68a5917@lwfinger.net>
+        Sat, 4 Mar 2017 17:48:18 -0500
+MIME-Version: 1.0
+In-Reply-To: <1488471247-11820-1-git-send-email-geo.emmnl@gmail.com>
+References: <1488471247-11820-1-git-send-email-geo.emmnl@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 5 Mar 2017 09:47:56 +1100
+Message-ID: <CAGRGNgXuUNZmKVAT0xODieXQo=PeNOga9W52p1FGvXSysmpBMA@mail.gmail.com> (sfid-20170304_234840_976800_72EC4DB9)
+Subject: Re: [PATCH] Staging:wilc1000:linux_wlan: Modified the 'if-else' statement
+To: Georgios Emmanouil <geo.emmnl@gmail.com>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 26 Mar 2017 11:00:12 -0500, Larry Finger wrote:
-> ...  provide information regarding what specific card you have. The
-> appropriate stanza from "lspci -nn" has that information.
-> 
-> I do not normally run a b43 wireless NIC, but I did pull out an
-> ancient laptop that uses the PCMCIA version of a BCM4318 with PCI ID
-> of 14e4:4318. Running kernel 4.10.0, I do see periodic drops. My
-> period is 120 sec and the drop is a reason 7, not reason 3 as you
-> see. Another difference is that I see the drops with kernel 4.8.0 as
-> well. With the earlier kernel, the drop period is closer to 60 sec,
-> but it is not as regular.
+Hi All,
 
-Huh. I also have that BCM4318 card, but not PCMCIA.
+On Fri, Mar 3, 2017 at 3:14 AM, Georgios Emmanouil <geo.emmnl@gmail.com> wrote:
+> Modified the 'if-else' statement to make it more readable.
+>
+> Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
 
-06:02.0 Network controller [0280]: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller [14e4:4318] (rev 02)
-        Subsystem: AMBIT Microsystem Corp. Aspire 3022WLMi, 5024WLMi, 5020 [1468:0311]
-        Flags: bus master, fast devsel, latency 64, IRQ 9
-        Memory at c0304000 (32-bit, non-prefetchable) [size=8K]
-        Kernel driver in use: b43-pci-bridge
+Again, I'm dubious if this is needed or helpful, but
 
-These past few days I seem to have had some "success" by simply
-putting a 60 second sleep in my bootup scripts before bringing up
-my wlan0 interface. (Ie. I haven't been getting any deauths after
-doing this.)
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+> ---
+>  drivers/staging/wilc1000/linux_wlan.c | 11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
