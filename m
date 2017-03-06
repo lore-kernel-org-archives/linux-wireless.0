@@ -1,132 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31425 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753859AbdCOPpq (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:35427 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753188AbdCFL0r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 11:45:46 -0400
-Subject: [PATCH v6 04/10] ath10k: htc: refactorization
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 15 Mar 2017 17:45:35 +0200
-Message-ID: <148959273559.31432.1473763056505214776.stgit@potku.adurom.net> (sfid-20170315_164611_577970_1A292E13)
-In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
+        Mon, 6 Mar 2017 06:26:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAK8P3a3fNbuPvXt4M5HsXOga5Ay0yN7saewRJUoaAsXLq6AypQ@mail.gmail.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-8-arnd@arndb.de>
+ <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com> <CAK8P3a30Ge5gyKco4HKCdKWiJk9ee1PU3_P6THjOQgHm3EQcJw@mail.gmail.com>
+ <2dd6ce84-0285-b4c1-97d4-bb41a6ffec04@broadcom.com> <CAK8P3a3fNbuPvXt4M5HsXOga5Ay0yN7saewRJUoaAsXLq6AypQ@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 6 Mar 2017 12:18:33 +0100
+Message-ID: <CAK8P3a12L27jXeshDngcZD9NRF5eSgsjuAwfJMXCPm4x3TU53A@mail.gmail.com> (sfid-20170306_123327_124499_C41E1E41)
+Subject: Re: [PATCH 07/26] brcmsmac: reduce stack size with KASAN
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+On Mon, Mar 6, 2017 at 12:16 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Mon, Mar 6, 2017 at 12:02 PM, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 6-3-2017 11:38, Arnd Bergmann wrote:
+>>> On Mon, Mar 6, 2017 at 10:16 AM, Arend Van Spriel
+>>> <arend.vanspriel@broadcom.com> wrote:
 
-Code refactorization:
+>> Given the amount of local variables maybe just tag the functions with
+>> noinline instead.
+>
+> But that would result in less efficient object code without KASAN,
+> as inlining these by default is a good idea when the stack variables
+> all get folded.
 
-Moved the code for ep 0 in ath10k_htc_rx_completion_handler
-to ath10k_htc_control_rx_complete.
+Note that David Laight alread suggested renaming noinline_for_kasan
+to noinline_if_stackbloat, which makes it a little more obvious what
+is going on. Would that address your concern as well?
 
-This eases the implementation of SDIO/mbox significantly since
-the ep_rx_complete cb is invoked directly from the SDIO/mbox
-hif layer.
-
-Since the ath10k_htc_control_rx_complete already is present
-(only containing a warning message) there is no reason for not
-using it (instead of having a special case for ep 0 in
-ath10k_htc_rx_completion_handler).
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   73 +++++++++++++++------------------
- 1 file changed, 34 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 92d5ac45327a..a8452ce77873 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -461,42 +461,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- 		/* zero length packet with trailer data, just drop these */
- 		goto out;
- 
--	if (eid == ATH10K_HTC_EP_0) {
--		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
--
--		switch (__le16_to_cpu(msg->hdr.message_id)) {
--		case ATH10K_HTC_MSG_READY_ID:
--		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
--			/* handle HTC control message */
--			if (completion_done(&htc->ctl_resp)) {
--				/*
--				 * this is a fatal error, target should not be
--				 * sending unsolicited messages on the ep 0
--				 */
--				ath10k_warn(ar, "HTC rx ctrl still processing\n");
--				complete(&htc->ctl_resp);
--				goto out;
--			}
--
--			htc->control_resp_len =
--				min_t(int, skb->len,
--				      ATH10K_HTC_MAX_CTRL_MSG_LEN);
--
--			memcpy(htc->control_resp_buffer, skb->data,
--			       htc->control_resp_len);
--
--			complete(&htc->ctl_resp);
--			break;
--		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
--			htc->htc_ops.target_send_suspend_complete(ar);
--			break;
--		default:
--			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
--			break;
--		}
--		goto out;
--	}
--
- 	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
- 		   eid, skb);
- 	ep->ep_ops.ep_rx_complete(ar, skb);
-@@ -511,9 +475,40 @@ EXPORT_SYMBOL(ath10k_htc_rx_completion_handler);
- static void ath10k_htc_control_rx_complete(struct ath10k *ar,
- 					   struct sk_buff *skb)
- {
--	/* This is unexpected. FW is not supposed to send regular rx on this
--	 * endpoint. */
--	ath10k_warn(ar, "unexpected htc rx\n");
-+	struct ath10k_htc *htc = &ar->htc;
-+	struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
-+
-+	switch (__le16_to_cpu(msg->hdr.message_id)) {
-+	case ATH10K_HTC_MSG_READY_ID:
-+	case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
-+		/* handle HTC control message */
-+		if (completion_done(&htc->ctl_resp)) {
-+			/* this is a fatal error, target should not be
-+			 * sending unsolicited messages on the ep 0
-+			 */
-+			ath10k_warn(ar, "HTC rx ctrl still processing\n");
-+			complete(&htc->ctl_resp);
-+			goto out;
-+		}
-+
-+		htc->control_resp_len =
-+			min_t(int, skb->len,
-+			      ATH10K_HTC_MAX_CTRL_MSG_LEN);
-+
-+		memcpy(htc->control_resp_buffer, skb->data,
-+		       htc->control_resp_len);
-+
-+		complete(&htc->ctl_resp);
-+		break;
-+	case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
-+		htc->htc_ops.target_send_suspend_complete(ar);
-+		break;
-+	default:
-+		ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
-+		break;
-+	}
-+
-+out:
- 	kfree_skb(skb);
- }
- 
+    Arnd
