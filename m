@@ -1,95 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18596 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751920AbdCOPpM (ORCPT
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:33065 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753156AbdCFNHe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 11:45:12 -0400
-Subject: [PATCH v6 01/10] ath10k: htc: made static function public
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 15 Mar 2017 17:44:56 +0200
-Message-ID: <148959269580.31432.8019003304606930479.stgit@potku.adurom.net> (sfid-20170315_164527_069572_10DE56A3)
-In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
+        Mon, 6 Mar 2017 08:07:34 -0500
+Received: by mail-qk0-f180.google.com with SMTP id y76so20861617qkb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 05:07:33 -0800 (PST)
+Subject: Re: [PATCH] 4.9.13 brcmfmac: fix use-after-free on resume
+To: Daniel J Blueman <daniel@quora.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieterpg@broadcom.com>
+References: <CAMVG2stHA9qSUiRFBW=-4jhSMk-o7Frext+Qf9JK3Fo822XHhw@mail.gmail.com>
+Cc: Netdev <netdev@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <3626494c-8482-d003-1c83-e6171f6990a8@broadcom.com> (sfid-20170306_140751_768773_07C1F718)
+Date: Mon, 6 Mar 2017 14:00:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAMVG2stHA9qSUiRFBW=-4jhSMk-o7Frext+Qf9JK3Fo822XHhw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
++ linux-wireless
 
-Changed ath10k_htc_notify_tx_completion and
-ath10k_htc_process_trailer from static to non static.
+On 6-3-2017 8:14, Daniel J Blueman wrote:
+> KASAN reported 'struct wireless_dev wdev' was read after being freed.
+> Fix by freeing after the access.
 
-These functions are needed by SDIO/mbox.
+I would rather like to see the KASAN report, because something is off
+here. This function is called with wdev as a parameter so how can it be
+accessed after free here? brcmf_remove_interface() does not free the
+wdev nor the brcmf_cfg80211_vif instance which contains the wdev.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   14 ++++++++------
- drivers/net/wireless/ath/ath10k/htc.h |    6 ++++++
- 2 files changed, 14 insertions(+), 6 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 9f6a915f91bf..35e67c46e027 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -57,8 +57,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
- 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
- }
- 
--static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
--					    struct sk_buff *skb)
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb)
- {
- 	struct ath10k *ar = ep->htc->ar;
- 
-@@ -75,6 +75,7 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- 
- 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
- }
-+EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
- 
- static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 				      struct sk_buff *skb)
-@@ -227,10 +228,10 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
- 	spin_unlock_bh(&htc->tx_lock);
- }
- 
--static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
--				      u8 *buffer,
--				      int length,
--				      enum ath10k_htc_ep_id src_eid)
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid)
- {
- 	struct ath10k *ar = htc->ar;
- 	int status = 0;
-@@ -291,6 +292,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 
- 	return status;
- }
-+EXPORT_SYMBOL(ath10k_htc_process_trailer);
- 
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 6ababa345e2b..f728ce7124cf 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -351,5 +351,11 @@ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
- void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb);
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid);
- 
- #endif
+> Signed-off-by: Daniel J Blueman <daniel@quora.org>
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> index de19c7c..aa0f470 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> @@ -2288,12 +2288,13 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy,
+> struct wireless_dev *wdev)
+>                 else
+>                         err = 0;
+>         }
+> -       brcmf_remove_interface(vif->ifp, true);
+> 
+> -       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+>         if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
+>                 p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
+> 
+> +       brcmf_remove_interface(vif->ifp, true);
+> +       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+> +
+>         return err;
+>  }
+> 
