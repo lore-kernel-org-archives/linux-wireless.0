@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:38112 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750899AbdCPOXp (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:34724 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753415AbdCFKiC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 10:23:45 -0400
-Received: by mail-wm0-f41.google.com with SMTP id t189so49226137wmt.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 07:21:57 -0700 (PDT)
-To: ilw@linux.intel.com
-Cc: linux-wireless@vger.kernel.org
-From: korgman <korgie@gmail.com>
-Subject: iwl3945 bug report (occasionally crashing after suspend)
-Message-ID: <7ae0bf4f-6ea2-1a4c-2e6d-e793cf800c4a@gmail.com> (sfid-20170316_152348_984864_6B6A2309)
-Date: Thu, 16 Mar 2017 16:26:10 +0200
+        Mon, 6 Mar 2017 05:38:02 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-8-arnd@arndb.de>
+ <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 6 Mar 2017 11:38:00 +0100
+Message-ID: <CAK8P3a30Ge5gyKco4HKCdKWiJk9ee1PU3_P6THjOQgHm3EQcJw@mail.gmail.com> (sfid-20170306_115800_298093_BD4F84F7)
+Subject: Re: [PATCH 07/26] brcmsmac: reduce stack size with KASAN
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello there,
+On Mon, Mar 6, 2017 at 10:16 AM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 2-3-2017 17:38, Arnd Bergmann wrote:
+>> The wlc_phy_table_write_nphy/wlc_phy_table_read_nphy functions always put an object
+>> on the stack, which will each require a redzone with KASAN and lead to possible
+>> stack overflow:
+>>
+>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
+>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: warning: the frame size of 6312 bytes is larger than 1000 bytes [-Wframe-larger-than=]
+>
+> Looks like this warning text ended up in the wrong commit message. Got
+> me confused for a sec :-p
 
-I have the same problem as reported here.
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1627828
+What's wrong about the warning?
 
-and here
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1629603
+>> This marks the two functions as noinline_for_kasan, avoiding the problem entirely.
+>
+> Frankly I seriously dislike annotating code for the sake of some
+> (dynamic) memory analyzer. To me the whole thing seems rather
+> unnecessary. If the code passes the 2048 stack limit without KASAN it
+> would seem the limit with KASAN should be such that no warning is given.
+> I suspect that it is rather difficult to predict the additional size of
+> the instrumentation code and on some systems there might be a real issue
+> with increased stack usage.
 
-If I understood correctly (form 2nd link) the latest good kernel was 4.4.4 after 4.4.6 we have the problem. (see message #5)
+The frame sizes don't normally change that much. There are a couple of
+drivers like brcmsmac that repeatedly call an inline function which has
+a local variable that it passes by reference to an extern function.
 
-I quote:
-"Not a full bisection yet but I have narrowed it down:
+While normally those variables share a stack location, KASAN forces
+each instance to its own location and adds (in this case) 80 bytes of
+redzone around it to detect out-of-bounds access.
 
-I looked at all kernel versions that had changes committed to iwlwifi and tested between them.
+While most drivers are fine with a 1500 byte warning limit, increasing
+the limit to 7kb would silence brcmsmac (unless more registers
+are accessed from wlc_phy_workarounds_nphy) but also risk a
+stack overflow to go unnoticed.
 
-I now have determined that I do not have this issue in the kernel version 4.4.4.
-
-I do have the issue in 4.4.6 and that is the next kernel version that has changes to iwlwifi so I guess that is the first bad version."
-
-I am on Slackware-14.2 64bit custom config kernel. I can try some things if you want.
-
-If I modprobe -r iwl3945 | disable wifi (i have physical switch) | suspend to ram | power on | enable wifi (physical switch) | modrpobe iwl3945 the device is working again.
-
-Thank you!
-
-(excuse my bad English)
+    Arnd
