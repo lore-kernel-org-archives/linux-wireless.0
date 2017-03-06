@@ -1,45 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45591 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751632AbdCHFX3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 00:23:29 -0500
-Date: Wed, 8 Mar 2017 08:22:37 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Vincent Cuissard <cuissard@marvell.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] NFC: nfcmrvl: double free on error path
-Message-ID: <20170308052237.GA14542@mwanda> (sfid-20170308_062532_484878_FAE075D9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:47038 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753307AbdCFMys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Mar 2017 07:54:48 -0500
+Message-ID: <1488804882.27057.5.camel@sipsolutions.net> (sfid-20170306_135645_686844_1B64E4CD)
+Subject: Re: [PATCH V2 0/3] Pre-CAC and sharing DFS state across multiple
+ radios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 06 Mar 2017 13:54:42 +0100
+In-Reply-To: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
+Content-Type: text/plain
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nci_spi_send() function calls kfree_skb(skb) on both error and
-success so this extra kfree_skb() is a double free.
+All three applied.
 
-Fixes: caf6e49bf6d0 ("NFC: nfcmrvl: add spi driver")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Static analysis.  Not tested.
-
-diff --git a/drivers/nfc/nfcmrvl/spi.c b/drivers/nfc/nfcmrvl/spi.c
-index a7faa0bcc01e..fc8e78a29d77 100644
---- a/drivers/nfc/nfcmrvl/spi.c
-+++ b/drivers/nfc/nfcmrvl/spi.c
-@@ -96,10 +96,9 @@ static int nfcmrvl_spi_nci_send(struct nfcmrvl_private *priv,
- 	/* Send the SPI packet */
- 	err = nci_spi_send(drv_data->nci_spi, &drv_data->handshake_completion,
- 			   skb);
--	if (err != 0) {
-+	if (err)
- 		nfc_err(priv->dev, "spi_send failed %d", err);
--		kfree_skb(skb);
--	}
-+
- 	return err;
- }
- 
+johannes
