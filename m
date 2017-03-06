@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:45093 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754891AbdCGKOF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:14:05 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 2/2] NFC: pn544: Add GPIO ACPI mapping table
-Date: Tue,  7 Mar 2017 12:12:30 +0200
-Message-Id: <20170307101230.23062-2-andriy.shevchenko@linux.intel.com> (sfid-20170307_111804_551410_F6B01D3F)
-In-Reply-To: <20170307101230.23062-1-andriy.shevchenko@linux.intel.com>
-References: <20170307101230.23062-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:36836 "EHLO
+        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752708AbdCFNXq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Mar 2017 08:23:46 -0500
+Received: by mail-yw0-f182.google.com with SMTP id o4so57095151ywd.3
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 05:23:15 -0800 (PST)
+MIME-Version: 1.0
+From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
+Date: Mon, 6 Mar 2017 21:23:14 +0800
+Message-ID: <CABWe71x69veyzepd=+Pgn6JtV4PMhFfn1nfM3K+Peb4aVRU-yw@mail.gmail.com> (sfid-20170306_142528_006619_6EB59BEC)
+Subject: Atheros ath9k superchannel
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+hi,
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+I am reading ath9k code. And try use superchannel (2312 ~ 2732) on
+openwrt. I have successfully opened these channels, and verified by
+mikrotik. But when use hostapd on these superchannel , ath9k can not
+send out any packets. A large number of Global Tx Timeout (GTT) and
+Carrier Sense Timeout (CST) were interrupted.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
-- assign table only for ACPI case
- drivers/nfc/pn544/i2c.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+root@OpenWrt:~# cat /sys/kernel/debug/ieee80211/phy0/ath9k/interrupt
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 2df3176205c4..bfe099f3d347 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -874,11 +874,25 @@ static void pn544_hci_i2c_fw_work(struct work_struct *work)
- 	}
- }
- 
-+static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
-+static const struct acpi_gpio_params firmware_gpios = { 2, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_pn544_gpios[] = {
-+	{ "enable-gpios", &enable_gpios, 1 },
-+	{ "firmware-gpios", &firmware_gpios, 1 },
-+	{ },
-+};
-+
- static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct gpio_desc *gpiod_en, *gpiod_fw;
- 	struct device *dev = &client->dev;
-+	int ret;
-+
-+	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
-+	if (ret)
-+		return ret;
- 
- 	/* Get EN GPIO from ACPI */
- 	gpiod_en = devm_gpiod_get_index(dev, "enable", 1, GPIOD_OUT_LOW);
-@@ -1092,6 +1106,7 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
- 		pdata->free_resources();
- 	}
- 
-+	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
- 	return 0;
- }
- 
--- 
-2.11.0
+                  CST:        791
+                  GTT:        660
+
+
+My chip is ar9331 which is ar9003 family.  I am confused by some
+registers in ar9003_phy.h. In ar9331 datasheet many registers are
+reserved.
+
+I do not know how to go on now. Can you give me a hint?
+
+Regards
