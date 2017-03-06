@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:33694 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751550AbdCVV5i (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:32809 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752768AbdCFMfO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 17:57:38 -0400
-Received: by mail-pf0-f174.google.com with SMTP id o190so15208400pfo.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 14:57:37 -0700 (PDT)
-Date: Wed, 22 Mar 2017 14:57:33 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: David Miller <davem@davemloft.net>
-Cc: marcel@holtmann.org, gustavo@padovan.org, johan.hedberg@gmail.com,
-        k.eugene.e@gmail.com, kvalo@codeaurora.org, andy.gross@linaro.org,
-        david.brown@linaro.org, arnd@arndb.de,
-        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-soc@vger.kernel.org
-Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd
- to rpmsg
-Message-ID: <20170322215733.GH20094@minitux> (sfid-20170322_225814_830696_C247A629)
-References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
- <20170322.114439.679826829857326050.davem@davemloft.net>
+        Mon, 6 Mar 2017 07:35:14 -0500
+Subject: Re: [PATCH] mac80211: Use setup_timer instead of init_timer
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <20170303124535.30125-1-jslaby@suse.cz>
+ <1488803104.5761.6.camel@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org,
+        =?UTF-8?Q?Ond=c5=99ej_Lyson=c4=9bk?= <ondrej.lysonek@seznam.cz>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+From: Jiri Slaby <jslaby@suse.cz>
+Message-ID: <7545a8ad-ec74-ed01-d84d-9ef4528b21df@suse.cz> (sfid-20170306_133554_318107_A5CA214A)
+Date: Mon, 6 Mar 2017 13:35:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170322.114439.679826829857326050.davem@davemloft.net>
+In-Reply-To: <1488803104.5761.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 22 Mar 11:44 PDT 2017, David Miller wrote:
-
-> From: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Date: Mon, 20 Mar 2017 16:35:42 -0700
+On 03/06/2017, 01:25 PM, Johannes Berg wrote:
+> On Fri, 2017-03-03 at 13:45 +0100, Jiri Slaby wrote:
+>> From: Ondřej Lysoněk <ondrej.lysonek@seznam.cz>
+>>
+>> Use setup_timer() and setup_deferrable_timer() to set the data and
+>> function timer fields. It makes the code cleaner and will allow for
+>> easier change of the timer struct internals.
 > 
-> > By moving these client drivers to use RPMSG instead of the direct SMD
-> > API we can reuse them ontop of the newly added GLINK wire-protocol
-> > support found in the 820 and 835 Qualcomm platforms.
-> > 
-> > As the new (RPMSG-based) and old SMD implementations are mutually
-> > exclusive we have to change all client drivers in one commit, to make
-> > sure we have a working system before and after this transition.
-> > 
-> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> > ---
-> > 
-> > Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
-> > (https://lkml.org/lkml/2017/3/20/1038).
-> 
-> Just some questions since I'm supposed to merge this into my net-next
-> tree.
-> 
-> What is the status of the Kconfig dependency fix and how will I be
-> getting it?
-> 
+> Btw, I suspect you generated this with coccinelle and didn't put enough
+> "..." there, because you missed one in mesh_path_new() :)
 
-There are two Kconfig dependencies in play here, the first is
-c3104aae5d8c ("remoteproc: qcom: fix QCOM_SMD dependencies"), this was
-picked up by Linus yesterday and will as such be in v4.10-rc4.
+Not really. This is one of assignments for students I lead, so this is
+done by hand every end of winter semester (Note the From line.)
 
-The other dependency, is the one Marcel wants you to pick up here is
-https://patchwork.kernel.org/patch/9635385/. It's on LKML, but if you
-want I can resend it with you as direct recipient, with Marcel's ack.
+> Care to send a patch for that one too?
 
-Likely Arnd would like this fix to be sent upstream for v4.11 already.
+I am just a forwarder, he received this request too, so you can try to
+persuade him :).
 
-> Second, should I merge all three of these patches to net-next or just
-> this one?
-> 
-
-I would like all three to be merged in this cycle and in addition I have
-a couple of patches coming up that will cause some minor conflicts with
-patch 2 - so I would prefer if patch 2 was available in a tag I can
-merge into my tree.
-
-Would it be possible for you to prepare merge all 4 (these 3 and the
-bluetooth fix) and prepare a tag for Andy, Marcel and myself to include
-in our trees?
-
-Regards,
-Bjorn
+thanks,
+-- 
+js
+suse labs
