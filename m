@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:36589 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753114AbdC2QV4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 12:21:56 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>
-Subject: [PATCH 0/7] NFC: fix device allocation and nfcmrvl crashes
-Date: Wed, 29 Mar 2017 18:21:05 +0200
-Message-Id: <20170329162112.18121-1-johan@kernel.org> (sfid-20170329_182501_901026_0B5C37AC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:46700 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753344AbdCFMSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Mar 2017 07:18:35 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211: copy VHT EXT NSS BW Support/Capable data to station
+Date: Mon,  6 Mar 2017 13:18:29 +0100
+Message-Id: <20170306121829.14613-4-johannes@sipsolutions.net> (sfid-20170306_131927_434187_193EF9D1)
+In-Reply-To: <20170306121829.14613-1-johannes@sipsolutions.net>
+References: <20170306121829.14613-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This started out with the observation that the nfcmrvl_uart driver
-unconditionally dereferenced the tty class device despite the fact that
-not every tty has an associated struct device (Unix98 ptys). Some
-further changes were needed in the common nfcmrvl code to fully address
-this, some of which also incidentally fixed a few related bugs (e.g.
-resource leaks in error paths).
+From: Johannes Berg <johannes.berg@intel.com>
 
-While fixing this I stumbled over a regression in NFC core that lead to
-broken registration error paths and misnamed workqueues.
+When taking VHT capabilities for a station, copy the new
+fields if we support them as a transmitter. Also adjust
+the maximum bandwidth the station supports appropriately.
 
-Note that this has only been tested by configuring the n_hci line
-discipline for different ttys without any actual NFC hardware connected.
+Also, since it was missing, copy tx_highest and rx_highest.
 
-Johan
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/vht.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-
-Johan Hovold (7):
-  NFC: fix broken device allocation
-  NFC: nfcmrvl_uart: add missing tty-device sanity check
-  NFC: nfcmrvl: do not use device-managed resources
-  NFC: nfcmrvl: use nfc-device for firmware download
-  NFC: nfcmrvl: fix firmware-management initialisation
-  NFC: nfcmrvl_uart: fix device-node leak during probe
-  NFC: nfcmrvl_usb: use interface as phy device
-
- drivers/nfc/nfcmrvl/fw_dnld.c |  7 +++++--
- drivers/nfc/nfcmrvl/main.c    | 25 +++++++++++++------------
- drivers/nfc/nfcmrvl/uart.c    | 11 +++++++----
- drivers/nfc/nfcmrvl/usb.c     |  4 +---
- net/nfc/core.c                | 31 ++++++++++++++++++-------------
- net/nfc/nci/core.c            |  3 +--
- 6 files changed, 45 insertions(+), 36 deletions(-)
-
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index 19ec2189d3ac..b7b240ca61ed 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -231,6 +231,13 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(&vht_cap->vht_mcs, &vht_cap_ie->supp_mcs,
+ 	       sizeof(struct ieee80211_vht_mcs_info));
+ 
++	/* copy EXT_NSS_BW Support value or remove the capability */
++	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_VHT_EXT_NSS_BW))
++		vht_cap->cap |= (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
++	else
++		vht_cap->vht_mcs.tx_highest &=
++			~cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
++
+ 	/* but also restrict MCSes */
+ 	for (i = 0; i < 8; i++) {
+ 		u16 own_rx, own_tx, peer_rx, peer_tx;
+@@ -294,6 +301,18 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	default:
+ 		sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_80;
++
++		if (!(vht_cap->vht_mcs.tx_highest &
++				cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE)))
++			break;
++
++		/*
++		 * If this is non-zero, then it does support 160 MHz after all,
++		 * in one form or the other. We don't distinguish here (or even
++		 * above) between 160 and 80+80 yet.
++		 */
++		if (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
++			sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_160;
+ 	}
+ 
+ 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
 -- 
-2.12.2
+2.11.0
