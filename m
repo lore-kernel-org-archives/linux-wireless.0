@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:35220 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbdCQFsK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39428 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752973AbdCFQYc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 01:48:10 -0400
-Received: by mail-pg0-f48.google.com with SMTP id b129so35897226pgc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 22:47:51 -0700 (PDT)
-Received: from xeon-e3 (204-195-18-65.wavecable.com. [204.195.18.65])
-        by smtp.gmail.com with ESMTPSA id u29sm7804856pfa.123.2017.03.16.22.47.50
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 16 Mar 2017 22:47:50 -0700 (PDT)
-Date: Thu, 16 Mar 2017 22:47:43 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: linux-wireless@vger.kernel.org
-Subject: Fw: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless
- adapter does not work
-Message-ID: <20170316224743.2723cf14@xeon-e3> (sfid-20170317_064859_645514_38F617B8)
+        Mon, 6 Mar 2017 11:24:32 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, kasan-dev@googlegroups.com,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 10/26] brcmsmac: reindent split functions
+References: <20170302163834.2273519-1-arnd@arndb.de>
+        <20170302163834.2273519-11-arnd@arndb.de>
+        <c18494f1-1a21-c1e5-31db-bef78abe172f@broadcom.com>
+Date: Mon, 06 Mar 2017 18:24:16 +0200
+In-Reply-To: <c18494f1-1a21-c1e5-31db-bef78abe172f@broadcom.com> (Arend Van
+        Spriel's message of "Mon, 6 Mar 2017 10:33:34 +0100")
+Message-ID: <87tw7674r3.fsf@purkki.adurom.net> (sfid-20170306_174139_507570_05951C5C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
 
+> On 2-3-2017 17:38, Arnd Bergmann wrote:
+>> In the previous commit I left the indentation alone to help reviewing
+>> the patch, this one now runs the three new functions through 'indent -kr -8'
+>> with some manual fixups to avoid silliness.
+>> 
+>> No changes other than whitespace are intended here.
+>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> ---
+>>  .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        | 1507 +++++++++-----------
+>>  1 file changed, 697 insertions(+), 810 deletions(-)
+>> 
 
-Begin forwarded message:
+Arend, please edit your quotes. Leaving 1000 lines of unnecessary quotes
+in your reply makes my use of patchwork horrible:
 
-Date: Fri, 17 Mar 2017 02:22:58 +0000
-From: bugzilla-daemon@bugzilla.kernel.org
-To: stephen@networkplumber.org
-Subject: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless adapter does not work
-
-
-https://bugzilla.kernel.org/show_bug.cgi?id=194903
-
-            Bug ID: 194903
-           Summary: After updating Kernel to 4.9.9 my wireless adapter
-                    does not work
-           Product: Networking
-           Version: 2.5
-    Kernel Version: 4.9.9
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: blocking
-          Priority: P1
-         Component: IPV4
-          Assignee: stephen@networkplumber.org
-          Reporter: jemel.robinson@icloud.com
-        Regression: No
-
-I have a Macbook Pro 13" (7, 1) and when I updated my kernel version to 4.9.9
-(F25), my broadcom wireless adapter is no longer detected. I have since updated
-to the latest kernel and have gotten the same result. As of now, I am currently
-operating at the kernel version prior to 4.9.9 (4.8.6-300.fc25.x86_64
-) and I am able to use WiFi with no issues. I have tried uninstalling and
-reinstalling the broadcom -wl driver to no avail. I narrowed the issue down to
-the kernel simply by updating the kernel only and after reboot, wireless was
-gone.
+https://patchwork.kernel.org/patch/9601155/
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Kalle Valo
