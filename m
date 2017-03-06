@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:30966 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754430AbdCGTZK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 14:25:10 -0500
-Date: Tue, 7 Mar 2017 20:23:04 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Andrea Ghittino <aghittino@gmail.com>
-Cc: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: Fix sparse warnings incorrect type
- assignment
-Message-ID: <20170307172304.GH4171@mwanda> (sfid-20170307_202800_359194_48860BA2)
-References: <20170306211106.GA9885@myhd3>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170306211106.GA9885@myhd3>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52938 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750940AbdCFWIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Mar 2017 17:08:06 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/3] iwlwifi: dvm: remove usage of txrc->max_rate_idx
+Date: Mon,  6 Mar 2017 23:07:12 +0100
+Message-Id: <20170306220713.14499-2-johannes@sipsolutions.net> (sfid-20170306_230809_477068_835A01D7)
+In-Reply-To: <20170306220713.14499-1-johannes@sipsolutions.net>
+References: <20170306220713.14499-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 06, 2017 at 10:11:21PM +0100, Andrea Ghittino wrote:
-> Fixed sparse warnings
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2011:52: warning: incorrect type in assignment (different base types)
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2011:52:    expected unsigned short [unsigned] [assigned] [usertype] ht_ext_params
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2011:52:    got restricted __le16 const [usertype] extended_ht_cap_info
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2012:51: warning: incorrect type in assignment (different base types)
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2012:51:    expected unsigned int [unsigned] [assigned] [usertype] ht_tx_bf_cap
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2012:51:    got restricted __le32 const [usertype] tx_BF_cap_info
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2078:51: warning: incorrect type in assignment (different base types)
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2078:51:    expected unsigned short [unsigned] [assigned] [usertype] ht_capa_info
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2078:51:    got restricted __le16 const [usertype] cap_info
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2083:52: warning: incorrect type in assignment (different base types)
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2083:52:    expected unsigned short [unsigned] [assigned] [usertype] ht_ext_params
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2083:52:    got restricted __le16 const [usertype] extended_ht_cap_info
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2084:51: warning: incorrect type in assignment (different base types)
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2084:51:    expected unsigned int [unsigned] [assigned] [usertype] ht_tx_bf_cap
-> drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2084:51:    got restricted __le32 const [usertype] tx_BF_cap_info
-> 
-> 
-> Signed-off-by: Andrea Ghittino <aghittino@gmail.com>
-> ---
-> Compile tested only
+From: Johannes Berg <johannes.berg@intel.com>
 
-This commit doesn't tell me if you though about what you are doing at
-all.  We get so many commits where people just randomly do random endian
-things...  Did you think about this?  Could you resend with a better
-commit message?
+Just calculate it like mac80211 does today, so we can get rid
+of the calculation in mac80211 for everyone else.
 
-regards,
-dan carpenter
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+index ff44ebc5829d..ddcd8c2d66cd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+@@ -2720,7 +2720,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+ 
+ 	/* Get max rate if user set max rate */
+ 	if (lq_sta) {
+-		lq_sta->max_rate_idx = txrc->max_rate_idx;
++		lq_sta->max_rate_idx = fls(txrc->rate_idx_mask) - 1;
+ 		if ((sband->band == NL80211_BAND_5GHZ) &&
+ 		    (lq_sta->max_rate_idx != -1))
+ 			lq_sta->max_rate_idx += IWL_FIRST_OFDM_RATE;
+-- 
+2.11.0
