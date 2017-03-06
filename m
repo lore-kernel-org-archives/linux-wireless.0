@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0128.outbound.protection.outlook.com ([104.47.1.128]:50656
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751310AbdCCP2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 10:28:49 -0500
-Subject: Re: [PATCH 26/26] kasan: rework Kconfig settings
-To: Arnd Bergmann <arnd@arndb.de>, <kasan-dev@googlegroups.com>
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-27-arnd@arndb.de>
-CC: Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        <kernel-build-reports@lists.linaro.org>,
-        "David S . Miller" <davem@davemloft.net>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <125a8ea6-35d7-9d37-3841-eebb37fce515@virtuozzo.com> (sfid-20170303_162853_802405_47D88E1F)
-Date: Fri, 3 Mar 2017 17:51:37 +0300
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:34465 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752779AbdCFOuH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Mar 2017 09:50:07 -0500
+Received: by mail-ua0-f195.google.com with SMTP id 72so21899799uaf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 06:50:06 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20170302163834.2273519-27-arnd@arndb.de>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <3626494c-8482-d003-1c83-e6171f6990a8@broadcom.com>
+References: <CAMVG2stHA9qSUiRFBW=-4jhSMk-o7Frext+Qf9JK3Fo822XHhw@mail.gmail.com>
+ <3626494c-8482-d003-1c83-e6171f6990a8@broadcom.com>
+From: Daniel J Blueman <daniel@quora.org>
+Date: Mon, 6 Mar 2017 22:50:05 +0800
+Message-ID: <CAMVG2st=ZW-HhqQOMnDunjSJHj8Zw_K2+w2_8AVsHQePN3Ow9w@mail.gmail.com> (sfid-20170306_155024_062711_E0CD0C06)
+Subject: Re: [PATCH] 4.9.13 brcmfmac: fix use-after-free on resume
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+        Netdev <netdev@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 6 March 2017 at 21:00, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> + linux-wireless
+>
+> On 6-3-2017 8:14, Daniel J Blueman wrote:
+>> KASAN reported 'struct wireless_dev wdev' was read after being freed.
+>> Fix by freeing after the access.
+>
+> I would rather like to see the KASAN report, because something is off
+> here. This function is called with wdev as a parameter so how can it be
+> accessed after free here? brcmf_remove_interface() does not free the
+> wdev nor the brcmf_cfg80211_vif instance which contains the wdev.
+>
+> Regards,
+> Arend
+>
+>> Signed-off-by: Daniel J Blueman <daniel@quora.org>
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>> index de19c7c..aa0f470 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>> @@ -2288,12 +2288,13 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy,
+>> struct wireless_dev *wdev)
+>>                 else
+>>                         err = 0;
+>>         }
+>> -       brcmf_remove_interface(vif->ifp, true);
+>>
+>> -       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+>>         if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
+>>                 p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
+>>
+>> +       brcmf_remove_interface(vif->ifp, true);
+>> +       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+>> +
+>>         return err;
+>>  }
 
+Sure, https://quora.org/kernel/brcmfmac/dmesg.txt
 
-On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
+vmlinux, cfg80211.o, brcmfmac.o and config are in the same path; this
+is against v4.9.13 stock.
 
-> 
-> diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-> index 97d62c2da6c2..27c838c40a36 100644
-> --- a/lib/Kconfig.debug
-> +++ b/lib/Kconfig.debug
-> @@ -216,10 +216,9 @@ config ENABLE_MUST_CHECK
->  config FRAME_WARN
->  	int "Warn for stack frames larger than (needs gcc 4.4)"
->  	range 0 8192
-> -	default 0 if KASAN
-> -	default 2048 if GCC_PLUGIN_LATENT_ENTROPY
-> +	default 3072 if KASAN_EXTRA
->  	default 1024 if !64BIT
-> -	default 2048 if 64BIT
-> +	default 1280 if 64BIT
-
-This looks unrelated. Also, it means that now we have 1280 with KASAN=y && KASAN_EXTRA=n.
-Judging from changelog I assume that this hunk slipped here from the follow up series.
-
->  	help
->  	  Tell gcc to warn at build time for stack frames larger than this.
->  	  Setting this too low will cause a lot of warnings.
-> @@ -499,7 +498,7 @@ config DEBUG_OBJECTS_ENABLE_DEFAULT
->  
->  config DEBUG_SLAB
->  	bool "Debug slab memory allocations"
-> -	depends on DEBUG_KERNEL && SLAB && !KMEMCHECK
-> +	depends on DEBUG_KERNEL && SLAB && !KMEMCHECK && !KASAN
->  	help
->  	  Say Y here to have the kernel do limited verification on memory
->  	  allocation as well as poisoning memory on free to catch use of freed
-> @@ -511,7 +510,7 @@ config DEBUG_SLAB_LEAK
->  
->  config SLUB_DEBUG_ON
->  	bool "SLUB debugging on by default"
-> -	depends on SLUB && SLUB_DEBUG && !KMEMCHECK
-> +	depends on SLUB && SLUB_DEBUG && !KMEMCHECK && !KASAN
-
-Why? SLUB_DEBUG_ON works with KASAN.
-
->  	default n
->  	help
->  	  Boot with debugging on by default. SLUB boots by default with
+Thanks,
+  Daniel
+-- 
+Daniel J Blueman
