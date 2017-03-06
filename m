@@ -1,69 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48150 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754210AbdCBJAC (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:34466 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753315AbdCFLQX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 04:00:02 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 6 Mar 2017 06:16:23 -0500
 MIME-Version: 1.0
-Subject: Re: [v4] ath10k: search SMBIOS for OEM board file extension
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170224223003.32156-1-ext.waldemar.rymarkiewicz@tieto.com>
-References: <20170224223003.32156-1-ext.waldemar.rymarkiewicz@tieto.com>
-To: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
-        jouni@qca.qualcomm.com,
-        Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
-Message-Id: <20170302085318.3FA5760D5B@smtp.codeaurora.org> (sfid-20170302_100023_146078_3BAEF815)
-Date: Thu,  2 Mar 2017 08:53:18 +0000 (UTC)
+In-Reply-To: <2dd6ce84-0285-b4c1-97d4-bb41a6ffec04@broadcom.com>
+References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-8-arnd@arndb.de>
+ <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com> <CAK8P3a30Ge5gyKco4HKCdKWiJk9ee1PU3_P6THjOQgHm3EQcJw@mail.gmail.com>
+ <2dd6ce84-0285-b4c1-97d4-bb41a6ffec04@broadcom.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 6 Mar 2017 12:16:21 +0100
+Message-ID: <CAK8P3a3fNbuPvXt4M5HsXOga5Ay0yN7saewRJUoaAsXLq6AypQ@mail.gmail.com> (sfid-20170306_121818_658813_724B9994)
+Subject: Re: [PATCH 07/26] brcmsmac: reduce stack size with KASAN
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: kasan-dev <kasan-dev@googlegroups.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-media@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kernel-build-reports@lists.linaro.org,
+        "David S . Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com> wrote:
-> Board Data File (BDF) is loaded upon driver boot-up procedure. The right
-> board data file is identified, among others, by device and sybsystem ids.
-> 
-> The problem, however, can occur when the (default) board data file cannot
-> fulfill with the vendor requirements and it is necessary to use a different
-> board data file.
-> 
-> To solve the issue QCA uses SMBIOS type 0xF8 to store Board Data File Name
-> Extension to specify the extension/variant name. The driver will take the
-> extension suffix into consideration and will load the right (non-default)
-> board data file if necessary.
-> 
-> If it is unnecessary to use extension board data file, please leave the
-> SMBIOS field blank and default configuration will be used.
-> 
-> Example:
-> If a default board data file for a specific board is identified by a string
->       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
->        subsystem-device=0310"
-> then the OEM specific data file, if used, could be identified by variant
-> suffix:
->       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
->        subsystem-device=0310,variant=DE_1AB"
-> 
-> If board data file name extension is set but board-2.bin does not contain
-> board data file for the variant, the driver will fallback to the default
-> board data file not to break backward compatibility.
-> 
-> This was first applied in commit f2593cb1b291 ("ath10k: Search SMBIOS for OEM
-> board file extension") but later reverted in commit 005c3490e9db ("Revert
-> "ath10k: Search SMBIOS for OEM board file extension"") due to a regression.
-> This patch is now otherwise the same as commit f2593cb1b291 except the
-> regression fixed.
-> 
-> Signed-off-by: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+On Mon, Mar 6, 2017 at 12:02 PM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 6-3-2017 11:38, Arnd Bergmann wrote:
+>> On Mon, Mar 6, 2017 at 10:16 AM, Arend Van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> On 2-3-2017 17:38, Arnd Bergmann wrote:
+>>>> The wlc_phy_table_write_nphy/wlc_phy_table_read_nphy functions always put an object
+>>>> on the stack, which will each require a redzone with KASAN and lead to possible
+>>>> stack overflow:
+>>>>
+>>>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
+>>>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: warning: the frame size of 6312 bytes is larger than 1000 bytes [-Wframe-larger-than=]
+>>>
+>>> Looks like this warning text ended up in the wrong commit message. Got
+>>> me confused for a sec :-p
+>>
+>> What's wrong about the warning?
+>
+> The warning is about the function 'wlc_phy_workarounds_nphy' (see PATCH
+> 9/26) and not about wlc_phy_table_write_nphy/wlc_phy_table_read_nphy
+> functions.
 
-Patch applied to wireless-drivers.git, thanks.
+The warning only shows up for wlc_phy_workarounds_nphy, and we have to
+fix both issues to get the size down enough. If we split it up without
+uninlining the register access functions, we end up with two or three smaller
+functions that still exceed the limit.
 
-1657b8f84ed9 ath10k: search SMBIOS for OEM board file extension
+>>>> This marks the two functions as noinline_for_kasan, avoiding the problem entirely.
+>>>
+>>> Frankly I seriously dislike annotating code for the sake of some
+>>> (dynamic) memory analyzer. To me the whole thing seems rather
+>>> unnecessary. If the code passes the 2048 stack limit without KASAN it
+>>> would seem the limit with KASAN should be such that no warning is given.
+>>> I suspect that it is rather difficult to predict the additional size of
+>>> the instrumentation code and on some systems there might be a real issue
+>>> with increased stack usage.
+>>
+>> The frame sizes don't normally change that much. There are a couple of
+>> drivers like brcmsmac that repeatedly call an inline function which has
+>> a local variable that it passes by reference to an extern function.
+>>
+>> While normally those variables share a stack location, KASAN forces
+>> each instance to its own location and adds (in this case) 80 bytes of
+>> redzone around it to detect out-of-bounds access.
+>>
+>> While most drivers are fine with a 1500 byte warning limit, increasing
+>> the limit to 7kb would silence brcmsmac (unless more registers
+>> are accessed from wlc_phy_workarounds_nphy) but also risk a
+>> stack overflow to go unnoticed.
+>
+> Given the amount of local variables maybe just tag the functions with
+> noinline instead.
 
--- 
-https://patchwork.kernel.org/patch/9591335/
+But that would result in less efficient object code without KASAN,
+as inlining these by default is a good idea when the stack variables
+all get folded.
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+     Arnd
