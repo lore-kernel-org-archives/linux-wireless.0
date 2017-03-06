@@ -1,85 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:33499 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753147AbdCIIR4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Mar 2017 03:17:56 -0500
-Received: by mail-wm0-f45.google.com with SMTP id v203so20137942wmg.0
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Mar 2017 00:17:55 -0800 (PST)
-Subject: Re: [PATCH v3] brcmfmac: Do not print the firmware version as an
- error
-To: Hans de Goede <hdegoede@redhat.com>, Joe Perches <joe@perches.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170308082321.4755-1-hdegoede@redhat.com>
- <1488990890.2210.33.camel@perches.com>
- <797bce36-7887-24cb-2389-9a9e3c0d9760@redhat.com>
- <1488995605.2210.36.camel@perches.com>
- <333cdc50-9def-9af8-5081-cd776b4e0512@broadcom.com>
- <6b632474-7521-8b24-0ee6-48f390b14d24@redhat.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <dae22737-4c0f-d988-a8ba-109b18d232b2@broadcom.com> (sfid-20170309_091830_639023_6E86DC86)
-Date: Thu, 9 Mar 2017 09:17:51 +0100
-MIME-Version: 1.0
-In-Reply-To: <6b632474-7521-8b24-0ee6-48f390b14d24@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:52942 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754081AbdCFWIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Mar 2017 17:08:06 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/3] mac80211: remove ieee80211_tx_rate_control.max_rate_idx
+Date: Mon,  6 Mar 2017 23:07:13 +0100
+Message-Id: <20170306220713.14499-3-johannes@sipsolutions.net> (sfid-20170306_230817_062648_EEF6C079)
+In-Reply-To: <20170306220713.14499-1-johannes@sipsolutions.net>
+References: <20170306220713.14499-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9-3-2017 9:09, Hans de Goede wrote:
-> Hi all,
-> 
-> On 08-03-17 21:44, Arend Van Spriel wrote:
->>
->>
->> On 8-3-2017 18:53, Joe Perches wrote:
->>> On Wed, 2017-03-08 at 17:57 +0100, Hans de Goede wrote:
->>>> Hi,
->>>
->>> And hello back to you.
->>
->> Also hello.
->>
->>>> On 08-03-17 17:34, Joe Perches wrote:
->>>>> On Wed, 2017-03-08 at 09:23 +0100, Hans de Goede wrote:
->>>>>> Using pr_err for things which are not errors is a bad idea. E.g. it
->>>>>> will cause the plymouth bootsplash screen to drop back to the text
->>>>>> console so that the user can see the error, which is not what we
->>>>>> normally want to happen.
->>>>>>
->>>>>> Instead add a new brcmf_info macro and use that.
->>>>>>
->>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>>>>> ---
->>>>>> Changes in v2:
->>>>>> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
->>>>>> Changes in v3:
->>>>>> -Use do { } while (0) around macro
->>>>>
->>>>> why?  Single statement macros do not need a do/while
->>>>
->>>> Because Arend ask me to during review of v2.
->>>
->>> Well, maybe Arend should learn that single statement macros
->>> don't need do/while guards and that do/while guards are
->>> generally not used in the kernel for single statements.
->>
->> Always good to learn from an expert. The intent behind my remark was to
->> follow the same pattern as brcmf_err for the sake of consistency. I was
->> not clear.
-> 
-> Ok, so what is it going to be, are we going to keep this as is
-> with the do .. while added or shall I do a v4 dropping it again?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Sorry, Hans
+As promised a little more than 7 years ago, remove it now
+since nothing uses it anymore.
 
-My bad. Let's stick with v3 and I will do a follow-up patch.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 4 ----
+ net/mac80211/tx.c      | 8 --------
+ 2 files changed, 12 deletions(-)
 
-Regards,
-Arend
-
-> Regards,
-> 
-> Hans
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1a26a375feb8..b1ac872dc88a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5444,9 +5444,6 @@ void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
+  *	RTS threshold
+  * @short_preamble: whether mac80211 will request short-preamble transmission
+  *	if the selected rate supports it
+- * @max_rate_idx: user-requested maximum (legacy) rate
+- *	(deprecated; this will be removed once drivers get updated to use
+- *	rate_idx_mask)
+  * @rate_idx_mask: user-requested (legacy) rate mask
+  * @rate_idx_mcs_mask: user-requested MCS rate mask (NULL if not in use)
+  * @bss: whether this frame is sent out in AP or IBSS mode
+@@ -5458,7 +5455,6 @@ struct ieee80211_tx_rate_control {
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_rate reported_rate;
+ 	bool rts, short_preamble;
+-	u8 max_rate_idx;
+ 	u32 rate_idx_mask;
+ 	u8 *rate_idx_mcs_mask;
+ 	bool bss;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ba8d7db0a071..f27719eeeed7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -682,10 +682,6 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	txrc.skb = tx->skb;
+ 	txrc.reported_rate.idx = -1;
+ 	txrc.rate_idx_mask = tx->sdata->rc_rateidx_mask[info->band];
+-	if (txrc.rate_idx_mask == (1 << sband->n_bitrates) - 1)
+-		txrc.max_rate_idx = -1;
+-	else
+-		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
+ 
+ 	if (tx->sdata->rc_has_mcs_mask[info->band])
+ 		txrc.rate_idx_mcs_mask =
+@@ -4249,10 +4245,6 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 	txrc.skb = skb;
+ 	txrc.reported_rate.idx = -1;
+ 	txrc.rate_idx_mask = sdata->rc_rateidx_mask[band];
+-	if (txrc.rate_idx_mask == (1 << txrc.sband->n_bitrates) - 1)
+-		txrc.max_rate_idx = -1;
+-	else
+-		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
+ 	txrc.bss = true;
+ 	rate_control_get_rate(sdata, NULL, &txrc);
+ 
+-- 
+2.11.0
