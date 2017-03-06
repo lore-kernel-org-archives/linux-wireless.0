@@ -1,89 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f169.google.com ([209.85.128.169]:35440 "EHLO
-        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758961AbdCVJPU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16439 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752729AbdCFMNU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 05:15:20 -0400
-Received: by mail-wr0-f169.google.com with SMTP id g10so126253436wrg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 02:15:19 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Subject: [REGRESSION] mac80211: IBSS vif queue stopped when started after 11s vif
-Date: Wed, 22 Mar 2017 10:15:11 +0100
-Message-ID: <1978424.XTv2Qph05K@bentobox> (sfid-20170322_101600_364232_CA0A885F)
+        Mon, 6 Mar 2017 07:13:20 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH] mac80211_hwsim: Add channel 169 (5845 MHz)
+Date: Mon, 6 Mar 2017 11:56:06 +0200
+Message-ID: <1488794166-26903-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20170306_131341_617395_D3D5182B)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart12317554.V7rrdmb2pt"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart12317554.V7rrdmb2pt
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+This channel is defined in the IEEE 802.11 standard and available in
+number of countries, so extend the mac80211_hwsim channel list to cover
+channel 169 to enable additional testing.
 
-Hi,
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I had following "simple" setup with LEDE with a single ath9k phy and multiple 
-vif:
-
- * encrypted AP
- * encrypted 802.11s meshpoint
- * encrypted IBSS
-
-Everything was started in the order by hostapd/wpa_supplicant (but immediately 
-after each other).
-
-The problem which I've experienced was that IBSS was not able to communicate 
-with its link partner. The reason for that problem was that the IBSS 
-interface's queue was stopped (QUEUE_STATE_DRV_XOFF). This problem disappeared 
-when either the IBSS or meshpoint interface was changed to unencrypted (which 
-disables wpa_supplicant in LEDE).
-
-It looks like ieee80211_do_open didn't start the queues via 
-netif_start_subqueue because local->queue_stop_reasons was for all queues set 
-to IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL. This happened because 
-ieee80211_offchannel_stop_vifs was called from somewhere in the scan code at 
-that time and ieee80211_offchannel_return was not yet called.
-
-
-This behavior seems to be introduced by 2b730daacee6 ("mac80211: don't start 
-new netdev queues if driver stopped"). I have therefore chosen to call it for 
-now a regression by this change. Especially because it is rather odd that the 
-commit talked about not starting the queues for AP_VLAN and 2b436312f091 
-("mac80211: fix queue handling crash") introduced extra code to use the old 
-behavior again for AP_VLAN.
-
-But I could be completely wrong about it. It would therefore be interesting 
-for me to know who would be responsible to start the queues when 
-ieee80211_do_open rejected it for IBSS.
-
-I am now simply using this setup with a revert of 
-2b436312f0919c05804fed5aa4b7f255db196e7a and 
-2b730daacee6c318bce7b6373c19909e36a74590.
-
-Kind regards,
-	Sven
---nextPart12317554.V7rrdmb2pt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAljSQJ8ACgkQXYcKB8Em
-e0a0UxAAok1EvYmt7CdriRQOxdOGq6Ib7X/xoVcrW1ACDDwhjF1s6ke1hARJHT1E
-ASP5IEMsKXyrVWsZNE5Mx9wpp1b0G/QRxs/pZepUyrKMEUngHH2Vo4oZfV1lhOa5
-6/tM/Pm54ARd9Sv7ZdelCUI2LVKftLMDXbPeyXD7sPaQVE+v8y6Td0gystIyuvND
-wcbmYLLZ/Nv+YDB068XghjNLb9SnPDQNjvQFlIHxqOjraHjZ4vjKGcw6nEmjT6Ru
-Uge7vjnUa2EMQ/8xq2Qr1ICRqJurYR/h+LR6T2TfgGOWvSKN2Sk/Bi0qzHu5tP6T
-HD32VD4eSyziUuKDwr9k0BWzOTdPWw9ruf9/y54q/gQyT8XzRPyXqSAMsD8hi5oI
-Hjv6eY5sCa4aBV68rhHCzzvpvdsEC7G0ijt/dUxgD6ozLoh0ll9zymrp6mzb/PNA
-o40xMAiidZuzz0vcNTrIeGxiwdcgoMeNH0ES7UcxMAlsl3UPzkhEjtM7UOf6YaV4
-sHGfUmSsyd5sz/Rsm1G8j+4Cn1P0K3GpAfM75lsPMJfNkOVX1sz8XCE89VhhZ4Rb
-1SujUm3GPKXzehmPO5bk27LMHwdkcTs6+zO4b1Z/R1nG33QhaxbE4H84SAQv0vwG
-TMS8sbIoRMfUHUAikTb9rMJhOUkCPQL4J96J3xcXcMrSD1F5yQw=
-=JpAT
------END PGP SIGNATURE-----
-
---nextPart12317554.V7rrdmb2pt--
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 7b9662a..8b823c7 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -350,6 +350,7 @@ static const struct ieee80211_channel hwsim_channels_5ghz[] = {
+ 	CHAN5G(5785), /* Channel 157 */
+ 	CHAN5G(5805), /* Channel 161 */
+ 	CHAN5G(5825), /* Channel 165 */
++	CHAN5G(5845), /* Channel 169 */
+ };
+ 
+ static const struct ieee80211_rate hwsim_rates[] = {
+-- 
+2.7.4
