@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33682 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750808AbdCMMot (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:35519 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753938AbdCFN6d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2017 08:44:49 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johan Hovold <johan@kernel.org>,
-        Sujith Manoharan <Sujith.Manoharan@atheros.com>
-Subject: [PATCH 1/2] wireless: ath9k_htc: fix NULL-deref at probe
-Date: Mon, 13 Mar 2017 13:44:20 +0100
-Message-Id: <20170313124421.28587-1-johan@kernel.org> (sfid-20170313_134548_815021_7458FF14)
+        Mon, 6 Mar 2017 08:58:33 -0500
+Received: by mail-it0-f67.google.com with SMTP id 203so9577969ith.2
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 05:58:32 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: New talk accepted on IO no Things
+To: people@netdevconf.org
+Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
+        Brenda Butler <bjb@mojatatu.com>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org
+Message-ID: <5dea07e6-10bc-421f-15d2-a4f71a4bf7b5@mojatatu.com> (sfid-20170306_150606_345831_B57BA3D6)
+Date: Mon, 6 Mar 2017 08:32:21 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure to check the number of endpoints to avoid dereferencing a
-NULL-pointer or accessing memory beyond the endpoint array should a
-malicious device lack the expected endpoints.
 
-Fixes: 36bcce430657 ("ath9k_htc: Handle storage devices")
-Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c | 3 +++
- 1 file changed, 3 insertions(+)
+The tech committee would like to announce a new accepted talk.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index de2d212f39ec..9206955e865a 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1219,6 +1219,9 @@ static int send_eject_command(struct usb_interface *interface)
- 	u8 bulk_out_ep;
- 	int r;
- 
-+	if (iface_desc->desc.bNumEndpoints < 2)
-+		return -ENODEV;
-+
- 	/* Find bulk out endpoint */
- 	for (r = 1; r >= 0; r--) {
- 		endpoint = &iface_desc->endpoint[r].desc;
--- 
-2.12.0
+Alexander Aring will give a talk on IOT _without the things_ ;->
+Building virtual 6LoWPAN Mesh Networks
+
+Details on the talk:
+----
+
+Operating IEEE 802.15.4 6LoWPAN IOT networks often requires to deal
+with lossy wireless connections. This often requires to run
+experimental work with IPV6 routing protocols e.g RPL etc. Such
+experimental work requires a physical environment which is difficult
+to create or expensive to setup.
+
+In this talk we describe our approach to create a virtual networking
+environment to address this challenge.
+We use the virtual IEEE 802.15.4 driver "fakelb" to emulate
+multiple virtual PHYs which can talk to each others.
+
+The fakelb driver is similar to the mac80211_hwsim driver and doesn't
+require any IEEE 802.15.4 hardware.
+
+In addition we provide a mechanism to create a mesh network topology
+where these virtual PHYs act as graph edges. Edges are modeled in the
+config as simple 2D-vectors each of which represents the connection between
+one PHY to another PHY. On top of each PHY you can run several 6LoWPAN
+interfaces separated by a network namespace (container).
+
+It is possible to use AF_PACKET to connect other IEEE 802.15.4
+Stacks(e.g RIOT-OS or OpenThread) to be part of the setup interacting
+with the Linux kernel IEEE 802.15.4 stack implementation.
+
+In addition to the described static configuration, it is possible to
+make runtime changes on the physical layer e.g. topology changes or
+manipulate link quality parameters on a per connection basis. Upper
+protocols like RPL need to react on these changes and offer new
+routing paths for your 6LoWPAN network. This talk will describe the
+current state of this work and how you can use it. If time permits, We
+will do a live demonstration of some RPL example where we create a
+mesh network with multiple nodes.
+----
+
+cheers,
+jamal
