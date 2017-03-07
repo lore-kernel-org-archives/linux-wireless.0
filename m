@@ -1,101 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45764 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750815AbdCMNAm (ORCPT
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:34566 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751230AbdCGK1Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2017 09:00:42 -0400
-Message-ID: <1489410030.22435.34.camel@coelho.fi> (sfid-20170313_140046_420233_DE161D33)
-From: Luca Coelho <luca@coelho.fi>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: sara.sharon@intel.com, liad.kaufman@intel.com,
-        linux-wireless@vger.kernel.org
-Date: Mon, 13 Mar 2017 15:00:30 +0200
-In-Reply-To: <5d235320-9c9d-c9e9-6688-3336061cbaf4@kernel.dk>
-References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
-         <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
-         <fdfbfffa-31c9-7646-82b5-b6a759b73d21@kernel.dk>
-         <1489147283.22435.14.camel@coelho.fi>
-         <aceb734b-8e2c-e5b6-300d-172f8d28f471@kernel.dk>
-         <1489160164.22435.18.camel@coelho.fi>
-         <5d235320-9c9d-c9e9-6688-3336061cbaf4@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: WARNING: CPU: 1 PID: 23668 at
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
+        Tue, 7 Mar 2017 05:27:24 -0500
+Received: by mail-wr0-f172.google.com with SMTP id l37so135795803wrc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 02:25:44 -0800 (PST)
+Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an
+ error
+To: Hans de Goede <hdegoede@redhat.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
+Cc: Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com> (sfid-20170307_112747_222259_79CC2731)
+Date: Tue, 7 Mar 2017 10:59:08 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170227214539.16422-1-hdegoede@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-10 at 08:41 -0700, Jens Axboe wrote:
-> On 03/10/2017 08:36 AM, Luca Coelho wrote:
-> > On Fri, 2017-03-10 at 08:23 -0700, Jens Axboe wrote:
-> > > On 03/10/2017 05:01 AM, Luca Coelho wrote:
-> > > > Hi Jens,
-> > > > 
-> > > > On Thu, 2017-03-09 at 21:41 -0700, Jens Axboe wrote:
-> > > > > On 03/01/2017 09:10 PM, Jens Axboe wrote:
-> > > > > > On 03/01/2017 08:33 PM, Luca Coelho wrote:
-> > > > > > > Hi Jens,
-> > > > > > > 
-> > > > > > > On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
-> > > > > > > 
-> > > > > > >     Not that folks have been jumping all over this, but in case someone is
-> > > > > > >     curious, it triggered twice here today. For those two times, the value
-> > > > > > >     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
-> > > > > > > 
-> > > > > > > Sorry for the delay, I'm on vacation now with limited internet access.
-> > > > > > > But we'll take a look into this early next week at the latest.
-> > > > > > > 
-> > > > > > > Thanks a lot for the detailed report!
-> > > > > > 
-> > > > > > No worries, thanks for responding. I just wanted to ensure this wasn't
-> > > > > > dropped on the floor.
-> > > > > > 
-> > > > > > BTW, a few more values of ->pending_frames[sta_id]:
-> > > > > > 
-> > > > > > $ dmesg | grep "ret="
-> > > > > > [ 2334.308254] ret=39
-> > > > > > [ 7915.311828] ret=80
-> > > > > > [31602.317204] ret=41
-> > > > > > [32139.510993] ret=54
-> > > > > > [33292.917759] ret=96
-> > > > > > 
-> > > > > > it seems to often happen around resume.
-> > > > > 
-> > > > > This is still happening all the time in current -git.
-> > > > 
-> > > > Could you collect traces with trace-cmd, as explained in our wiki[1]?
-> > > > This will probably help point out the problem.  I know it's a bit
-> > > > difficult because it appears to happen randomly for you, but it's worth
-> > > > trying.
-> > > 
-> > > Sure I can, but honestly I'm a little puzzled that nobody else can
-> > > reproduce this, it happens every time I resume of switch access points.
-> > > Is anyone trying to reproduce this?
-> > > 
-> > > I'll have to recompile with iwlwifi tracing enabled, then I'll send a trace
-> > > when it happens.
-> > 
-> > Are you using 4.11-rc1? Or linus' master? Or...?
+On 27-2-2017 22:45, Hans de Goede wrote:
+> Using pr_err for things which are not errors is a bad idea. E.g. it
+> will cause the plymouth bootsplash screen to drop back to the text
+> console so that the user can see the error, which is not what we
+> normally want to happen.
 > 
-> The trace I just sent is tip of Linus' tree. It's happened continually
-> since the commit I mentioned in my initial report was merged:
+> Instead add a new brcmf_info macro and use that.
 > 
-> commit 94c3e614df2117626fccfac8f821c66e30556384
-> Author: Sara Sharon <sara.sharon@intel.com>
-> Date:   Wed Dec 7 15:04:37 2016 +0200
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+> Changes in v2:
+> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 3 +++
+>  2 files changed, 4 insertions(+), 1 deletion(-)
 > 
->     iwlwifi: mvm: fix pending frame counter calculation
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> index 3e15d64..6d565f1 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> @@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+>  	strsep(&ptr, "\n");
+>  
+>  	/* Print fw version info */
+> -	brcmf_err("Firmware version = %s\n", buf);
+> +	brcmf_info("Firmware version = %s\n", buf);
+>  
+>  	/* locate firmware version number for ethtool */
+>  	ptr = strrchr(buf, ' ') + 1;
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> index 6687812..605f260 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> @@ -59,11 +59,14 @@
+>  			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
+>  	} while (0)
+>  #endif
+> +#define brcmf_info(fmt, ...)	pr_info("%s: " fmt, __func__, ##__VA_ARGS__)
 
-I found the patch that fixes this issue in our internal tree.  I'll send
-it out for you to try now.
+Prefer using the same style as for brcmf_err, ie. using do {} while (0)
 
-The reason is that in DQA (Dynamic Queue Allocation) mode that we
-introduced recently, we should not be counting the frames in the same
-way as before.  The warning was introduced exactly to catch this kind of
-problems.
+Regards,
+Arend
 
-Please let me know if it works for you!
-
---
-Cheers,
-Luca.
+>  #else
+>  __printf(2, 3)
+>  void __brcmf_err(const char *func, const char *fmt, ...);
+>  #define brcmf_err(fmt, ...) \
+>  	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
+> +/* For tracing purposes treat info messages as errors */
+> +#define brcmf_info brcmf_err
+>  #endif
+>  
+>  #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+> 
