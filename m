@@ -1,76 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:36718 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933538AbdCJPXe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 10:23:34 -0500
-Received: by mail-pg0-f42.google.com with SMTP id g2so22651211pge.3
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 07:23:33 -0800 (PST)
-Subject: Re: WARNING: CPU: 1 PID: 23668 at
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
-To: Luca Coelho <luca@coelho.fi>
-References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
- <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
- <fdfbfffa-31c9-7646-82b5-b6a759b73d21@kernel.dk>
- <1489147283.22435.14.camel@coelho.fi>
-Cc: sara.sharon@intel.com, liad.kaufman@intel.com,
+Received: from mga07.intel.com ([134.134.136.100]:45093 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755088AbdCGKOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 05:14:07 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
         linux-wireless@vger.kernel.org,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <aceb734b-8e2c-e5b6-300d-172f8d28f471@kernel.dk> (sfid-20170310_162344_497586_A947DD20)
-Date: Fri, 10 Mar 2017 08:23:30 -0700
-MIME-Version: 1.0
-In-Reply-To: <1489147283.22435.14.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 6/6] NFC: st21nfca: Use unified device property API meaningfully
+Date: Tue,  7 Mar 2017 12:14:01 +0200
+Message-Id: <20170307101401.23182-6-andriy.shevchenko@linux.intel.com> (sfid-20170307_111805_095348_EE88DD4A)
+In-Reply-To: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
+References: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/10/2017 05:01 AM, Luca Coelho wrote:
-> Hi Jens,
-> 
-> On Thu, 2017-03-09 at 21:41 -0700, Jens Axboe wrote:
->> On 03/01/2017 09:10 PM, Jens Axboe wrote:
->>> On 03/01/2017 08:33 PM, Luca Coelho wrote:
->>>> Hi Jens,
->>>>
->>>> On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
->>>>
->>>>     Not that folks have been jumping all over this, but in case someone is
->>>>     curious, it triggered twice here today. For those two times, the value
->>>>     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
->>>>
->>>> Sorry for the delay, I'm on vacation now with limited internet access.
->>>> But we'll take a look into this early next week at the latest.
->>>>
->>>> Thanks a lot for the detailed report!
->>>
->>> No worries, thanks for responding. I just wanted to ensure this wasn't
->>> dropped on the floor.
->>>
->>> BTW, a few more values of ->pending_frames[sta_id]:
->>>
->>> $ dmesg | grep "ret="
->>> [ 2334.308254] ret=39
->>> [ 7915.311828] ret=80
->>> [31602.317204] ret=41
->>> [32139.510993] ret=54
->>> [33292.917759] ret=96
->>>
->>> it seems to often happen around resume.
->>
->> This is still happening all the time in current -git.
-> 
-> Could you collect traces with trace-cmd, as explained in our wiki[1]?
-> This will probably help point out the problem.  I know it's a bit
-> difficult because it appears to happen randomly for you, but it's worth
-> trying.
+Another place in the code that unveils non-tested at all ACPI case.
 
-Sure I can, but honestly I'm a little puzzled that nobody else can
-reproduce this, it happens every time I resume of switch access points.
-Is anyone trying to reproduce this?
+Use unified device property API in meaningful way.
 
-I'll have to recompile with iwlwifi tracing enabled, then I'll send a trace
-when it happens.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/st21nfca/i2c.c | 29 +++++------------------------
+ 1 file changed, 5 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 429ecdfd6e37..9a31d3cec92b 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -505,7 +505,6 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
+-	u8 tmp;
+ 
+ 	/* Get EN GPIO from ACPI */
+ 	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+@@ -515,19 +514,6 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 		return PTR_ERR(phy->gpiod_ena);
+ 	}
+ 
+-	phy->se_status.is_ese_present = false;
+-	phy->se_status.is_uicc_present = false;
+-
+-	if (device_property_present(dev, "ese-present")) {
+-		device_property_read_u8(dev, "ese-present", &tmp);
+-		phy->se_status.is_ese_present = tmp;
+-	}
+-
+-	if (device_property_present(dev, "uicc-present")) {
+-		device_property_read_u8(dev, "uicc-present", &tmp);
+-		phy->se_status.is_uicc_present = tmp;
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -535,11 +521,6 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ {
+ 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
+-	struct device_node *pp;
+-
+-	pp = client->dev.of_node;
+-	if (!pp)
+-		return -ENODEV;
+ 
+ 	/* Get GPIO from device tree */
+ 	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
+@@ -549,11 +530,6 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 		return PTR_ERR(phy->gpiod_ena);
+ 	}
+ 
+-	phy->se_status.is_ese_present =
+-				of_property_read_bool(pp, "ese-present");
+-	phy->se_status.is_uicc_present =
+-				of_property_read_bool(pp, "uicc-present");
+-
+ 	return 0;
+ }
+ 
+@@ -603,6 +579,11 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 		return -ENODEV;
+ 	}
+ 
++	phy->se_status.is_ese_present =
++			device_property_read_bool(&client->dev, "ese-present");
++	phy->se_status.is_uicc_present =
++			device_property_read_bool(&client->dev, "uicc-present");
++
+ 	r = st21nfca_hci_platform_init(phy);
+ 	if (r < 0) {
+ 		nfc_err(&client->dev, "Unable to reboot st21nfca\n");
 -- 
-Jens Axboe
+2.11.0
