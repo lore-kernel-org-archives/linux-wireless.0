@@ -1,64 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33200 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751104AbdCPHyU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 03:54:20 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-sn1nam01on0080.outbound.protection.outlook.com ([104.47.32.80]:22688
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753543AbdCGLeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 06:34:17 -0500
+Subject: Re: [PATCH v4] qtnfmac: announcement of new FullMAC driver for
+ Quantenna chipsets
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1483952830-3967-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <af3dbd89-d9e8-7f6a-d48a-ebe430671963@gmail.com>
+ <2cf744b3-60f9-fa38-658d-fe06e878f548@quantenna.com>
+ <CACna6rywOG+x7eEaj3-hfUrm8rYdLV38xGFO_JeV0GzvjU6Tvw@mail.gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        <btherthala@quantenna.com>, <hwang@quantenna.com>,
+        <smaksimenko@quantenna.com>, <dlebed@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <e5b07c06-740c-cb41-8b92-c4077390ab4c@quantenna.com> (sfid-20170307_123457_695167_42427573)
+Date: Tue, 7 Mar 2017 14:00:38 +0300
 MIME-Version: 1.0
-Subject: Re: [RESEND,4.11] iwlwifi: mvm: cleanup pending frames in DQA mode
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170314075035.19248-1-luca@coelho.fi>
-References: <20170314075035.19248-1-luca@coelho.fi>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: axboe@kernel.dk, linux-wireless@vger.kernel.org,
-        torvalds@linux-foundation.org, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-        sara.sharon@intel.com, liad.kaufman@intel.com,
-        luciano.coelho@intel.com
-Message-Id: <20170316075418.D00DF6028B@smtp.codeaurora.org> (sfid-20170316_085423_103486_CB4BDC00)
-Date: Thu, 16 Mar 2017 07:54:18 +0000 (UTC)
+In-Reply-To: <CACna6rywOG+x7eEaj3-hfUrm8rYdLV38xGFO_JeV0GzvjU6Tvw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <luca@coelho.fi> wrote:
-> From: Sara Sharon <sara.sharon@intel.com>
-> 
-> When a station is asleep, the fw will set it as "asleep".
-> All queues that are used only by one station will be stopped by
-> the fw.
-> 
-> In pre-DQA mode this was relevant for aggregation queues. However,
-> in DQA mode a queue is owned by one station only, so all queues
-> will be stopped.
-> As a result, we don't expect to get filtered frames back to
-> mac80211 and don't have to maintain the entire pending_frames
-> state logic, the same way as we do in aggregations.
-> 
-> The correct behavior is to align DQA behavior with the aggregation
-> queue behaviour pre-DQA:
-> - Don't count pending frames.
-> - Let mac80211 know we have frames in these queues so that it can
-> properly handle trigger frames.
-> 
-> When a trigger frame is received, mac80211 tells the driver to send
-> frames from the queues using release_buffered_frames.
-> The driver will tell the fw to let frames out even if the station
-> is asleep. This is done by iwl_mvm_sta_modify_sleep_tx_count.
-> 
-> Reported-and-tested-by: Jens Axboe <axboe@kernel.dk>
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+On 03/07/2017 01:45 PM, Rafał Miłecki wrote:
+>
+> External Email
+>
+>
+> On 7 March 2017 at 11:07, Igor Mitsyanko
+> <igor.mitsyanko.os@quantenna.com> wrote:
+>> On 03/07/2017 12:19 AM, Rafał Miłecki wrote:
+>>> On 01/09/2017 10:07 AM, igor.mitsyanko.os@quantenna.com wrote:
+>>>>
+>>>> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+>>>>
+>>>> This patch adds support for new FullMAC WiFi driver for Quantenna
+>>>> QSR10G chipsets.
+>>>>
+>>>> QSR10G (aka Pearl) is Quantenna's 8x8, 160M, 11ac offering.
+>>>> QSR10G supports 2 simultaneous WMACs - one 5G and one 2G.
+>>>> 5G WMAC supports 160M, 8x8 configuration. FW supports
+>>>> up to 8 concurrent virtual interfaces on each WMAC.
+>>>>
+>>>> Patch introduces 2 new drivers:
+>>>> - qtnfmac.ko for interfacing with kernel wireless core
+>>>> - qtnfmac_pearl_pcie.ko for interfacing with hardware over PCIe interface
+>>>
+>>>
+>>> Hi, what's the state of this patch? Kalle I see it in your pending branch,
+>>> could you give me/us a hint what does it mean, please?
+>>
+>>
+>> Hi Rafal, we will be submitting V5 soon addressing your comments and adding
+>> option to "boot from internal flash" rather then from PCIe.
+>>
+>>>
+>>> I've also one not-strictly-related question. What about other chipsets
+>>> support?
+>>> I'm mostly interested in QT3840BC which can be found in few home routers
+>>> that
+>>> OpenWrt/LEDE could support.
+>>> Can they be supported with submitted core code and just an additional bus
+>>> driver?
+>>
+>>
+>> Yes, this is a previous generation SoC, we already have support for those
+>> with additional bus driver which we plan to submit as a followup patch,
+>> after first one is accepted.
+>> But support is only for SoCs' connected with host system over PCIe bus, I'm
+>> not sure which product you're interested in exactly: if it uses RGMII
+>> interface to interface QT3840BC with host CPU then it basically looks like a
+>> simple ETH to host. Not much we can do to support FullMAC driver in this
+>> case.
+>
+> I was interested in supporting ASUS RT-AC87U and maybe Netgear R7500.
+>
+> According to the https://wikidevi.com/wiki/ASUS_RT-AC87U ASUS indeed
+> uses some RGMII interface, I'll need to look for more details first.
+> Thanks for looking at this.
+>
 
-Patch applied to wireless-drivers.git, thanks.
-
-9a3fcf912ef7 iwlwifi: mvm: cleanup pending frames in DQA mode
-
--- 
-https://patchwork.kernel.org/patch/9622617/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Yes, looks like it uses RGMII for Quantenna SoC. In theory I think even 
+in this case it should be relatively easy to support FullMAC driver by 
+implementing one more bus driver that has to use special types of 
+ETHERNET frames to implement communication between host CPU and 
+Quantenna CPU over RGMII link (using RAW sockets). In this case it will 
+look like proxying of cfg80211 requests from host system to any other 
+system in the same network L2 domain (addressable by MAC).
+But I don't think this approach can ever be upstreamed.
