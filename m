@@ -1,60 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:57083 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752574AbdCBQsW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 11:48:22 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+Received: from mga07.intel.com ([134.134.136.100]:19953 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755465AbdCGLFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 06:05:49 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
         linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 13/26] rtl8180: reduce stack size for KASAN
-Date: Thu,  2 Mar 2017 17:38:21 +0100
-Message-Id: <20170302163834.2273519-14-arnd@arndb.de> (sfid-20170302_175004_007376_E94D44B2)
-In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 5/5] NFC: st21nfca: Use unified device property API meaningfully
+Date: Tue,  7 Mar 2017 12:25:46 +0200
+Message-Id: <20170307102546.32224-5-andriy.shevchenko@linux.intel.com> (sfid-20170307_120625_061068_61C964F1)
+In-Reply-To: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
+References: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_KASAN is set, we see overly large stack frames from inlining
-functions with local variables:
+Another place in the code that unveils non-tested at all ACPI case.
 
-drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c: In function 'rtl8225se_rf_init':
-drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c:431:1: warning: the frame size of 4384 bytes is larger than 3072 bytes [-Wframe-larger-than=]
+Use unified device property API in meaningful way.
 
-This marks them noinline_for_kasan.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/nfc/st21nfca/i2c.c | 29 +++++------------------------
+ 1 file changed, 5 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
-index fde89866fa8d..1efa098a2e32 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
-@@ -174,14 +174,14 @@ static void rtl8187se_three_wire_io(struct ieee80211_hw *dev, u8 *data,
- 	} while (0);
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 941f6f61166e..d9e585ac0ee6 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -506,7 +506,6 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
+-	u8 tmp;
+ 
+ 	/* Get EN GPIO from ACPI */
+ 	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+@@ -516,19 +515,6 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 		return PTR_ERR(phy->gpiod_ena);
+ 	}
+ 
+-	phy->se_status.is_ese_present = false;
+-	phy->se_status.is_uicc_present = false;
+-
+-	if (device_property_present(dev, "ese-present")) {
+-		device_property_read_u8(dev, "ese-present", &tmp);
+-		phy->se_status.is_ese_present = tmp;
+-	}
+-
+-	if (device_property_present(dev, "uicc-present")) {
+-		device_property_read_u8(dev, "uicc-present", &tmp);
+-		phy->se_status.is_uicc_present = tmp;
+-	}
+-
+ 	return 0;
  }
  
--static u32 rtl8187se_rf_readreg(struct ieee80211_hw *dev, u8 addr)
-+static noinline_for_kasan u32 rtl8187se_rf_readreg(struct ieee80211_hw *dev, u8 addr)
+@@ -536,11 +522,6 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
  {
- 	u32 dataread = addr & 0x0F;
- 	rtl8187se_three_wire_io(dev, (u8 *)&dataread, 16, 0);
- 	return dataread;
+ 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
+-	struct device_node *pp;
+-
+-	pp = client->dev.of_node;
+-	if (!pp)
+-		return -ENODEV;
+ 
+ 	/* Get GPIO from device tree */
+ 	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
+@@ -550,11 +531,6 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 		return PTR_ERR(phy->gpiod_ena);
+ 	}
+ 
+-	phy->se_status.is_ese_present =
+-				of_property_read_bool(pp, "ese-present");
+-	phy->se_status.is_uicc_present =
+-				of_property_read_bool(pp, "uicc-present");
+-
+ 	return 0;
  }
  
--static void rtl8187se_rf_writereg(struct ieee80211_hw *dev, u8 addr, u32 data)
-+static noinline_for_kasan void rtl8187se_rf_writereg(struct ieee80211_hw *dev, u8 addr, u32 data)
- {
- 	u32 outdata = (data << 4) | (u32)(addr & 0x0F);
- 	rtl8187se_three_wire_io(dev, (u8 *)&outdata, 16, 1);
+@@ -604,6 +580,11 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 		return -ENODEV;
+ 	}
+ 
++	phy->se_status.is_ese_present =
++			device_property_read_bool(&client->dev, "ese-present");
++	phy->se_status.is_uicc_present =
++			device_property_read_bool(&client->dev, "uicc-present");
++
+ 	r = st21nfca_hci_platform_init(phy);
+ 	if (r < 0) {
+ 		nfc_err(&client->dev, "Unable to reboot st21nfca\n");
 -- 
-2.9.0
+2.11.0
