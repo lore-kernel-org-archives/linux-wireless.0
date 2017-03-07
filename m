@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2306 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750922AbdCJHxh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51992 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752390AbdCGNtw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 02:53:37 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Rostyslav Khudolii <rkhudolii@airtame.com>
-CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Attila Sukosd" <attila@airtame.com>
-Subject: Re: ath6kl: Remove old 802.11a-only channels
-Date: Fri, 10 Mar 2017 07:53:31 +0000
-Message-ID: <87d1dp4lgx.fsf@kamboji.qca.qualcomm.com> (sfid-20170310_085340_799054_0ACDAC8F)
-References: <CAPXt_dY_qFkm0uNEB7AB1FG=pn6MJBS5g3GiejXJGfeTn2r48w@mail.gmail.com>
-In-Reply-To: <CAPXt_dY_qFkm0uNEB7AB1FG=pn6MJBS5g3GiejXJGfeTn2r48w@mail.gmail.com>
-        (Rostyslav Khudolii's message of "Thu, 9 Mar 2017 16:57:13 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+        Tue, 7 Mar 2017 08:49:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
+        johannes@sipsolutions.net, btherthala@quantenna.com,
+        hwang@quantenna.com, smaksimenko@quantenna.com,
+        dlebed@quantenna.com,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH v4] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
+References: <1483952830-3967-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+        <af3dbd89-d9e8-7f6a-d48a-ebe430671963@gmail.com>
+Date: Tue, 07 Mar 2017 15:39:49 +0200
+In-Reply-To: <af3dbd89-d9e8-7f6a-d48a-ebe430671963@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Mon, 6 Mar 2017
+ 22:19:18 +0100")
+Message-ID: <87d1dt6w9m.fsf@purkki.adurom.net> (sfid-20170307_145001_999819_0995015F)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rostyslav Khudolii <rkhudolii@airtame.com> writes:
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-> Following our conversation ("AR6003 5.2GHz AP on channel 38") on the
-> mailing list, sending a patch which removes channels 34/38/42/46 from
-> ath6kl driver.
+> On 01/09/2017 10:07 AM, igor.mitsyanko.os@quantenna.com wrote:
+>> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+>>
+>> This patch adds support for new FullMAC WiFi driver for Quantenna
+>> QSR10G chipsets.
+>>
+>> QSR10G (aka Pearl) is Quantenna's 8x8, 160M, 11ac offering.
+>> QSR10G supports 2 simultaneous WMACs - one 5G and one 2G.
+>> 5G WMAC supports 160M, 8x8 configuration. FW supports
+>> up to 8 concurrent virtual interfaces on each WMAC.
+>>
+>> Patch introduces 2 new drivers:
+>> - qtnfmac.ko for interfacing with kernel wireless core
+>> - qtnfmac_pearl_pcie.ko for interfacing with hardware over PCIe interface
+>
+> Hi, what's the state of this patch?
 
-No attachments, please. The best is to use 'git send-email' to submit
-patches.
+I haven't had a chance to look at the latest review comments yet, but
+this is starting to look good, I think.
 
-Also read the documentation as Signed-off-by line is missing.
+> Kalle I see it in your pending branch, could you give me/us a hint
+> what does it mean, please?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+The pending branch usually contains patches which I want the kbuild bot
+to test.
 
 --=20
-Kalle Valo=
+Kalle Valo
