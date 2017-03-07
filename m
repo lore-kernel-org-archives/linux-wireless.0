@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:34995 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754895AbdCTWOF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 18:14:05 -0400
-Received: by mail-qk0-f177.google.com with SMTP id v127so122332424qkb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 15:14:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHdg3xbK-_gUAs=nnPYtgQmBCSu-VfR2GNgaYaPqd3qSh1wuwg@mail.gmail.com>
-References: <CAHdg3xbK-_gUAs=nnPYtgQmBCSu-VfR2GNgaYaPqd3qSh1wuwg@mail.gmail.com>
-From: Alexis Green <agreen@uniumwifi.com>
-Date: Mon, 20 Mar 2017 15:13:52 -0700
-Message-ID: <CAAnMG+OoyEPAYTMFVUaAUusyq1-HkU8VisGS1c818kFSjJSogQ@mail.gmail.com> (sfid-20170320_231443_866621_9F6C394B)
-Subject: Re: ath10k monitor mode issue
-To: Matteo Grandi <iu5bdp@gmail.com>
-Cc: LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:33092 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754929AbdCGKPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 05:15:07 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 2/6] NFC: st21nfca: Fix typo in copy pasted macro
+Date: Tue,  7 Mar 2017 12:13:57 +0200
+Message-Id: <20170307101401.23182-2-andriy.shevchenko@linux.intel.com> (sfid-20170307_111806_240916_ECF1B9E6)
+In-Reply-To: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
+References: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As far as I understand, only CT firmware provides per-packet
-information about TX rate at the moment.
-http://www.candelatech.com/ath10k-10.4.php
+Seems this driver has never been even compile tested.
 
-Best regards,
+Fix obvious typo in macro to make it defined.
 
-Alexis
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/st21nfca/i2c.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-On Mon, Mar 20, 2017 at 11:00 AM, Matteo Grandi <iu5bdp@gmail.com> wrote:
-> Hello all,
->
-> I have an issue to collect tx/rx bitrates using ath10k.
-> I want to collect Tx/RX statistics on a mesh network using
-> compexWLE900VX Wi-Fi miniPCIe adapters chipset QCA9884 (QCA988X) with
-> ath10k firmware firmware-5.bin_10.2.4.70.59-2.
->
-> The OS is Ubuntu 14.04 kernel 3.14.48 backports 4.4.2.
->
-> I'm able to build the mesh without any problem and I already have read
-> that ath10k firmware doesn't provide correct TX/RX information.
-> Using "iw <iunterface> station dump" I can see the tx bitrate stuck on
-> 6Mbps and the rx giving unreliable information about MCS, NSS, bitrate
-> etc.
-> I tried using iw version 3.4, 3.6 and 4.9.
->
-> I really need to retrieve these info, and I tried also sniffing the
-> airtraffic with another ath10k interface. According to
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/monitor I
-> should see the right radiotap headers, since they are not in the
-> knowing issue list.
-> But I had the same bad results.
->
-> I tried also using an ath9k wifi card.
-> Each mesh link is set on 80MHz channel bandwidth, therefore I'm not
-> able to capture the data traffic with the ath9k that doesn't support
-> 80MHz.
->
-> I'm able to sniff the traffic and see the radiotap header only using
-> my laptop with an iwlwifi 11ac card.
->
-> Do you know if there is a way to obtain reliable TX/RX information
-> from the firmware, or if there is a way to sniff the radiotap header
-> on an 80MHz channel using an ath9k interface?
->
-> Thank you in advance for any hint!
->
-> My best regards
->
-> Matteo
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 737384d287aa..7f68a5fe15d8 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -286,7 +286,7 @@ static int check_crc(u8 *buf, int buflen)
+ 	crc = ~crc;
+ 
+ 	if (buf[buflen - 2] != (crc & 0xff) || buf[buflen - 1] != (crc >> 8)) {
+-		pr_err(ST21NFCA_HCI_DRIVER_NAME
++		pr_err(ST21NFCA_HCI_I2C_DRIVER_NAME
+ 		       ": CRC error 0x%x != 0x%x 0x%x\n", crc, buf[buflen - 1],
+ 		       buf[buflen - 2]);
+ 
+@@ -672,7 +672,7 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 	r = devm_request_threaded_irq(&client->dev, client->irq, NULL,
+ 				st21nfca_hci_irq_thread_fn,
+ 				phy->irq_polarity | IRQF_ONESHOT,
+-				ST21NFCA_HCI_DRIVER_NAME, phy);
++				ST21NFCA_HCI_I2C_DRIVER_NAME, phy);
+ 	if (r < 0) {
+ 		nfc_err(&client->dev, "Unable to register IRQ handler\n");
+ 		return r;
+@@ -701,7 +701,7 @@ static int st21nfca_hci_i2c_remove(struct i2c_client *client)
+ }
+ 
+ static struct i2c_device_id st21nfca_hci_i2c_id_table[] = {
+-	{ST21NFCA_HCI_DRIVER_NAME, 0},
++	{ST21NFCA_HCI_I2C_DRIVER_NAME, 0},
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(i2c, st21nfca_hci_i2c_id_table);
+-- 
+2.11.0
