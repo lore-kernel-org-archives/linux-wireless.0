@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17625 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757092AbdCUMZu (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:35997 "EHLO
+        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754941AbdCGJ5h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 08:25:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Konstantin Koslowski <konstantin.koslowski@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        wil6210 <wil6210@qca.qualcomm.com>
-Subject: Re: Dell DW1601 (WIL6210)
-Date: Tue, 21 Mar 2017 12:21:57 +0000
-Message-ID: <87var26cre.fsf@kamboji.qca.qualcomm.com> (sfid-20170321_132553_537199_BD354917)
-References: <17d816d3dafddb3447e21808c130f596@rainloop.xkonni.de>
-In-Reply-To: <17d816d3dafddb3447e21808c130f596@rainloop.xkonni.de> (Konstantin
-        Koslowski's message of "Fri, 17 Mar 2017 08:46:36 +0000")
-Content-Type: text/plain; charset="iso-8859-1"
+        Tue, 7 Mar 2017 04:57:37 -0500
+Received: by mail-qk0-f178.google.com with SMTP id 1so198557966qkl.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 01:57:12 -0800 (PST)
+Subject: Re: [PATCH] mac80211: ignore VHT membership selector when parsing
+ rates
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170306220113.4666-1-johannes@sipsolutions.net>
+ <220e1799-9fba-c113-805d-3589421cdecd@broadcom.com>
+ <1488876157.2366.0.camel@sipsolutions.net>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <188f17a6-4814-9c3c-003b-685e9cbdcbca@broadcom.com> (sfid-20170307_110019_205922_02812E8F)
+Date: Tue, 7 Mar 2017 10:49:05 +0100
 MIME-Version: 1.0
+In-Reply-To: <1488876157.2366.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(adding wil6210 list)
 
-"Konstantin Koslowski" <konstantin.koslowski@gmail.com> writes:
 
-> I recently acquired a few Dell DW1601 cards and after a few initial
-> searches it sounded like they could be used to connect to each other.
-> Now it seems that they do not have the wifi connectivity enabled, just WB=
-E.
->
-> relevant lspci output:
-> 03:00.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 PCI Express Root Port
-> [1ae9:0101] (rev 04)
-> 04:00.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 PCI Express Port [1ae9:0=
-200] (rev 04)
-> 04:02.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 Wireless PCI Express
-> Port [1ae9:0201] (rev 14)
-> 04:03.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 Wireless PCI Express
-> Port [1ae9:0201] (rev 14)
-> 05:00.0 Network controller [0280]: Qualcomm Atheros AR9462 Wireless
-> Network Adapter [168c:0034] (rev 01)
->
-> So the wifi device does not show up. Seems it needs a different firmware.
+On 7-3-2017 9:42, Johannes Berg wrote:
+> 
+>>>  
+>>>  		/*
+>>> -		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in
+>>> 802.11n-2009
+>>> -		 * 7.3.2.2 as a magic value instead of a rate.
+>>> Hence, skip it.
+>>> +		 * Skip HT and VHT BSS membership selectors since
+>>> they're not
+>>> +		 * rates.
+>>>  		 *
+>>>  		 * Note: Even through the membership selector and
+>>> the basic
+>>
+>> typo: through -> though.
+> 
+> That's just existing context ;-)
+> 
+> Will fix here.
 
-I was told that this an older device and it only supports WBE, not
-Wi-Fi. So it's not actually supported by wil6210.
+I noticed and indeed could create a patch for it, but this is easier
+(for me :-p ).
 
---=20
-Kalle Valo=
+Gr. AvS
