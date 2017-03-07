@@ -1,78 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:34047 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932604AbdCKNEv (ORCPT
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:36549 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750728AbdCGKf3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Mar 2017 08:04:51 -0500
-Received: by mail-it0-f67.google.com with SMTP id r141so1928952ita.1
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Mar 2017 05:04:50 -0800 (PST)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: Netdev Conference: What you have been missing
-To: people@netdevconf.org
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        lwn@lwn.net
-Message-ID: <acd80e7e-a371-1173-1058-ed5069abcb84@mojatatu.com> (sfid-20170311_140516_242962_42111FA0)
-Date: Sat, 11 Mar 2017 08:04:47 -0500
+        Tue, 7 Mar 2017 05:35:29 -0500
+Received: by mail-qk0-f175.google.com with SMTP id 1so199844406qkl.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 02:34:34 -0800 (PST)
+Subject: Re: [PATCH] mac80211: ignore VHT membership selector when parsing
+ rates
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170306220113.4666-1-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <220e1799-9fba-c113-805d-3589421cdecd@broadcom.com> (sfid-20170307_113533_147202_FEA15973)
+Date: Tue, 7 Mar 2017 09:39:28 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170306220113.4666-1-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As announced last time, we are making more frequent announcements on
-people@netdevconf.org
+On 6-3-2017 23:01, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> There isn't really much harm in not ignoring, since it doesn't
+> represent a valid rate, but since we already ignore the HT one
+> also ignore VHT. Also simplify the code a bit.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/mac80211/mlme.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 1568a74757bc..6340127a71c6 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2823,15 +2823,15 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
+>  			*have_higher_than_11mbit = true;
+>  
+>  		/*
+> -		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in 802.11n-2009
+> -		 * 7.3.2.2 as a magic value instead of a rate. Hence, skip it.
+> +		 * Skip HT and VHT BSS membership selectors since they're not
+> +		 * rates.
+>  		 *
+>  		 * Note: Even through the membership selector and the basic
 
-You can subscribe via mailman here:
-https://lists.netdevconf.org/cgi-bin/mailman/listinfo/people
+typo: through -> though.
 
-We urge people to subscribe to that list to get more up to date
-information and conference discussions. We will still be sending
-weekly summaries and announcements on the netdev list.
+Regards,
+Arend
 
-If you have already registered for the conference we will
-very likely have registered you already.
-
-Register early so we can plan better (and so you can save some $$).
-https://onlineregistrations.ca/netdev21/
-
-- hotel (unfortunately space is running out here. If you cant
-get in and need help from us, please send email to info@netdevconf.org):
-https://www.netdevconf.org/2.1/hotel.html
-
-And here's a summary of whats new since last posting on netdev:
-
-1) New sponsors
-a) Mojatatu - Gold sponsor
-https://netdevconf.org/2.1/news.html?sponsor-mojatatu
-
-b) Verizon - Platinum
-https://netdevconf.org/2.1/news.html?news-verizon-sponsor
-Accepted sessions:
-
-2) New sessions
-a) Talk:  XDP in practice: integrating XDP in our DDoS mitigation 
-pipeline from Gilberto Bertin
-https://netdevconf.org/2.1/news.html?news-bertin
-
-b)Workshop: Network Performance Workshop chaired by
-Alex Duyck
-https://netdevconf.org/2.1/news.html?news-duyck
-
-c) Talk: Netfilter's connection tracking subsystem by
-Florian Westphal
-https://netdevconf.org/2.1/news.html?news-netfilters-talk
-
-d) Talk: IOT Without Things: Building virtual 6LoWPAN Mesh Networks
-by Alexander Aring
-https://netdevconf.org/2.1/news.html?news-aring-talk
-
-e) Talk: Kernel HTTP/TCP/IP stack for HTTP DDoS mitigation
-by Alexander Krizhanovsky
-https://netdevconf.org/2.1/news.html?news-krizhanovsky-talk
-
-A lot more exciting announcements coming.
-
-cheers,
-jamal
+>  		 *	 rate flag share the same bit, they are not exactly
+>  		 *	 the same.
+>  		 */
+> -		if (!!(supp_rates[i] & 0x80) &&
+> -		    (supp_rates[i] & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
+> +		if (supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HT_PHY) ||
+> +		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_VHT_PHY))
+>  			continue;
+>  
+>  		for (j = 0; j < sband->n_bitrates; j++) {
+> 
