@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:64652 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752109AbdCBQsW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 11:48:22 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+Received: from mga07.intel.com ([134.134.136.100]:63034 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755154AbdCGKOh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 05:14:37 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
         linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 25/26] isdn: eicon: mark divascapi incompatible with kasan
-Date: Thu,  2 Mar 2017 17:38:33 +0100
-Message-Id: <20170302163834.2273519-26-arnd@arndb.de> (sfid-20170302_175431_464541_EADCC7F8)
-In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 4/6] NFC: st21nfca: Get rid of "interesting" use of interrupt polarity
+Date: Tue,  7 Mar 2017 12:13:59 +0200
+Message-Id: <20170307101401.23182-4-andriy.shevchenko@linux.intel.com> (sfid-20170307_111806_832040_0941073F)
+In-Reply-To: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
+References: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_KASAN is enabled, we have several functions that use rather
-large kernel stacks, e.g.
+I2C framework followed by IRQ framework does set interrupt polarity
+correctly if it's properly specified in firmware (ACPI or DT).
 
-drivers/isdn/hardware/eicon/message.c: In function 'group_optimization':
-drivers/isdn/hardware/eicon/message.c:14841:1: warning: the frame size of 864 bytes is larger than 500 bytes [-Wframe-larger-than=]
-drivers/isdn/hardware/eicon/message.c: In function 'add_b1':
-drivers/isdn/hardware/eicon/message.c:7925:1: warning: the frame size of 1008 bytes is larger than 500 bytes [-Wframe-larger-than=]
-drivers/isdn/hardware/eicon/message.c: In function 'add_b23':
-drivers/isdn/hardware/eicon/message.c:8551:1: warning: the frame size of 928 bytes is larger than 500 bytes [-Wframe-larger-than=]
-drivers/isdn/hardware/eicon/message.c: In function 'sig_ind':
-drivers/isdn/hardware/eicon/message.c:6113:1: warning: the frame size of 2112 bytes is larger than 500 bytes [-Wframe-larger-than=]
+Get rid of the redundant trick when requesting interrupt.
 
-To be on the safe side, and to enable a lower frame size warning limit, let's
-just mark this driver as broken when KASAN is in use. I have tried to reduce
-the stack size as I did with dozens of other drivers, but failed to come up
-with a good solution for this one.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/isdn/hardware/eicon/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/nfc/st21nfca/i2c.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/isdn/hardware/eicon/Kconfig b/drivers/isdn/hardware/eicon/Kconfig
-index 6082b6a5ced3..b64496062421 100644
---- a/drivers/isdn/hardware/eicon/Kconfig
-+++ b/drivers/isdn/hardware/eicon/Kconfig
-@@ -31,6 +31,7 @@ config ISDN_DIVAS_PRIPCI
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index d9ed6a279283..c98199c2b8a0 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -68,7 +68,6 @@ struct st21nfca_i2c_phy {
+ 	struct nfc_hci_dev *hdev;
  
- config ISDN_DIVAS_DIVACAPI
- 	tristate "DIVA CAPI2.0 interface support"
-+	depends on !KASAN || BROKEN
- 	help
- 	  You need this to provide the CAPI interface
- 	  for DIVA Server cards.
+ 	unsigned int gpio_ena;
+-	unsigned int irq_polarity;
+ 
+ 	struct st21nfca_se_status se_status;
+ 
+@@ -520,8 +519,6 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 
+ 	phy->gpio_ena = desc_to_gpio(gpiod_ena);
+ 
+-	phy->irq_polarity = irq_get_trigger_type(client->irq);
+-
+ 	phy->se_status.is_ese_present = false;
+ 	phy->se_status.is_uicc_present = false;
+ 
+@@ -566,8 +563,6 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 
+ 	phy->gpio_ena = gpio;
+ 
+-	phy->irq_polarity = irq_get_trigger_type(client->irq);
+-
+ 	phy->se_status.is_ese_present =
+ 				of_property_read_bool(pp, "ese-present");
+ 	phy->se_status.is_uicc_present =
+@@ -630,7 +625,7 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 
+ 	r = devm_request_threaded_irq(&client->dev, client->irq, NULL,
+ 				st21nfca_hci_irq_thread_fn,
+-				phy->irq_polarity | IRQF_ONESHOT,
++				IRQF_ONESHOT,
+ 				ST21NFCA_HCI_I2C_DRIVER_NAME, phy);
+ 	if (r < 0) {
+ 		nfc_err(&client->dev, "Unable to register IRQ handler\n");
 -- 
-2.9.0
+2.11.0
