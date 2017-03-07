@@ -1,265 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:34221 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933194AbdC3BUW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 21:20:22 -0400
-Received: by mail-ot0-f193.google.com with SMTP id y88so3195142ota.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Mar 2017 18:20:21 -0700 (PDT)
-Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
-To: Hans de Goede <hdegoede@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20170329174751.13184-1-hdegoede@redhat.com>
-Cc: Bastien Nocera <hadess@hadess.net>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <2266f69c-2eda-fb94-e1c7-cf1bafeb7ad7@lwfinger.net> (sfid-20170330_032039_555483_16F92F38)
-Date: Wed, 29 Mar 2017 20:20:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170329174751.13184-1-hdegoede@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mga07.intel.com ([134.134.136.100]:31179 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754909AbdCGKcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 05:32:09 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/5] NFC: st21nfca: Fix obvious typo when check error code
+Date: Tue,  7 Mar 2017 12:25:42 +0200
+Message-Id: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com> (sfid-20170307_113257_706735_FCBF0198)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/29/2017 12:47 PM, Hans de Goede wrote:
-> The rtl8723bs is found on quite a few systems used by Linux users,
-> such as on Atom systems (Intel Computestick and various other
-> Atom based devices) and on many (budget) ARM boards such as
-> the CHIP.
->
-> The plan moving forward with this is for the new clean,
-> written from scratch, rtl8xxxu driver to eventually gain
-> support for sdio devices. But there is no clear timeline
-> for that, so lets add this driver included in staging for now.
->
-> Cc: Bastien Nocera <hadess@hadess.net>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Jes Sorensen <jes.sorensen@gmail.com>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+We return -ENODEV if ACPI provides a GPIO resource. Looks really wrong.
+If it has even been tested?
 
-Hans,
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/st21nfca/i2c.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I am still building the driver on my CherryTrail tablet, but I did see some 
-warnings and errors listed by Smatch as follows:
-
-finger@linux-4v1g:~/wireless-drivers-next> make CHECK=~/smatch/smatch C=2 
-drivers/staging/rtl8723bs/
-   CHK     include/config/kernel.release
-   CHK     include/generated/uapi/linux/version.h
-   CHK     include/generated/utsrelease.h
-   CHECK   arch/x86/purgatory/purgatory.c
-   CHECK   arch/x86/purgatory/sha256.c
-   CHECK   arch/x86/purgatory/string.c
-   CHK     include/generated/bounds.h
-   CHK     include/generated/timeconst.h
-   CHK     include/generated/asm-offsets.h
-   CALL    scripts/checksyscalls.sh
-   CHECK   scripts/mod/empty.c
-   CHECK   drivers/staging/rtl8723bs/core/rtw_ap.c
-drivers/staging/rtl8723bs/core/rtw_ap.c:382 expire_timeout_chk() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/core/rtw_btcoex.c
-   CHECK   drivers/staging/rtl8723bs/core/rtw_cmd.c
-   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
-drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info() error: we 
-previously assumed 'phead' could be null (see line 453)
-drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info() warn: 
-variable dereferenced before check 'phead' (see line 454)
-   CHECK   drivers/staging/rtl8723bs/core/rtw_efuse.c
-   CHECK   drivers/staging/rtl8723bs/core/rtw_io.c
-   CHECK   drivers/staging/rtl8723bs/core/rtw_ioctl_set.c
-   CHECK   drivers/staging/rtl8723bs/core/rtw_ieee80211.c
-drivers/staging/rtl8723bs/core/rtw_ieee80211.c:83 rtw_is_cckrates_included() 
-warn: if statement not indented
-drivers/staging/rtl8723bs/core/rtw_ieee80211.c:98 rtw_is_cckratesonly_included() 
-warn: if statement not indented
-   CHECK   drivers/staging/rtl8723bs/core/rtw_mlme.c
-drivers/staging/rtl8723bs/core/rtw_mlme.c:862 rtw_survey_event_callback() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_mlme.c:1102 rtw_free_assoc_resources() warn: 
-if statement not indented
-drivers/staging/rtl8723bs/core/rtw_mlme.c:1165 rtw_indicate_disconnect() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_mlme.c:2830 rtw_restructure_ht_ie() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_mlme.c:2991 rtw_update_ht_cap() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/core/rtw_mlme_ext.c
-drivers/staging/rtl8723bs/core/rtw_mlme_ext.c:525 _mgt_dispatcher() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_mlme_ext.c:1595 OnAssocReq() error: buffer 
-overflow 'pstapriv->sta_aid' 32 <= 32
-drivers/staging/rtl8723bs/core/rtw_mlme_ext.c:2391 dump_mgntframe_and_wait() 
-warn: inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_mlme_ext.c:2420 dump_mgntframe_and_wait_ack() 
-warn: inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_mlme_ext.c:4969 process_80211d() error: 
-testing array offset 'i' after use.
-drivers/staging/rtl8723bs/core/rtw_mlme_ext.c:5738 linked_status_chk() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_mlme_ext.c:6459 sitesurvey_cmd_hdl() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/core/rtw_odm.c
-drivers/staging/rtl8723bs/core/rtw_odm.c:109 rtw_odm_dbg_comp_msg() warn: if 
-statement not indented
-drivers/staging/rtl8723bs/core/rtw_odm.c:146 rtw_odm_ability_msg() warn: if 
-statement not indented
-   CHECK   drivers/staging/rtl8723bs/core/rtw_pwrctrl.c
-drivers/staging/rtl8723bs/core/rtw_pwrctrl.c:641 LeaveAllPowerSaveModeDirect() 
-warn: inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/core/rtw_recv.c
-drivers/staging/rtl8723bs/core/rtw_recv.c:598 portctrl() warn: inconsistent 
-indenting
-drivers/staging/rtl8723bs/core/rtw_recv.c:838 sta2sta_data_frame() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_recv.c:1547 validate_recv_frame() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/core/rtw_rf.c
-   CHECK   drivers/staging/rtl8723bs/core/rtw_security.c
-drivers/staging/rtl8723bs/core/rtw_security.c:266 rtw_wep_encrypt() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:433 rtw_seccalctkipmic() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:749 rtw_tkip_encrypt() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:865 rtw_tkip_decrypt() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:1383 aes_cipher() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:1415 aes_cipher() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:1430 aes_cipher() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:1582 rtw_aes_encrypt() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:1651 aes_decipher() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:1739 aes_decipher() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_security.c:1792 aes_decipher() warn: curly 
-braces intended?
-drivers/staging/rtl8723bs/core/rtw_security.c:1809 aes_decipher() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/core/rtw_sta_mgt.c
-drivers/staging/rtl8723bs/core/rtw_sta_mgt.c:25 _rtw_init_stainfo() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/core/rtw_wlan_util.c
-drivers/staging/rtl8723bs/core/rtw_wlan_util.c:67 cckrates_included() warn: if 
-statement not indented
-drivers/staging/rtl8723bs/core/rtw_wlan_util.c:81 cckratesonly_included() warn: 
-if statement not indented
-drivers/staging/rtl8723bs/core/rtw_wlan_util.c:815 rtw_camid_alloc() warn: 
-should '1 << (cam_id)' be a 64 bit type?
-   CHECK   drivers/staging/rtl8723bs/core/rtw_xmit.c
-drivers/staging/rtl8723bs/core/rtw_xmit.c:277 _rtw_init_xmit_priv() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_xmit.c:294 _rtw_free_xmit_priv() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_xmit.c:295 _rtw_free_xmit_priv() warn: 
-inconsistent indenting
-drivers/staging/rtl8723bs/core/rtw_xmit.c:946 xmitframe_addmic() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/hal/hal_intf.c
-   CHECK   drivers/staging/rtl8723bs/hal/hal_com.c
-drivers/staging/rtl8723bs/hal/hal_com.c:1734 rtw_bb_rf_gain_offset() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/hal/hal_com_phycfg.c
-drivers/staging/rtl8723bs/hal/hal_com_phycfg.c:2090 
-Hal_ChannelPlanToRegulation() warn: inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/hal/hal_btcoex.c
-   CHECK   drivers/staging/rtl8723bs/hal/hal_sdio.c
-   CHECK   drivers/staging/rtl8723bs/hal/Hal8723BPwrSeq.c
-   CHECK   drivers/staging/rtl8723bs/hal/HalPhyRf.c
-   CHECK   drivers/staging/rtl8723bs/hal/HalPwrSeqCmd.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_CfoTracking.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_debug.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_DIG.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_DynamicBBPowerSaving.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_DynamicTxPower.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_EdcaTurboCheck.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_HWConfig.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_NoiseMonitor.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_PathDiv.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_RegConfig8723B.c
-   CHECK   drivers/staging/rtl8723bs/hal/odm_RTL8723B.c
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723b_cmd.c
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723b_dm.c
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723b_hal_init.c
-drivers/staging/rtl8723bs/hal/rtl8723b_hal_init.c:518 
-rtl8723b_FirmwareDownload() error: we previously assumed 'pFirmware' could be 
-null (see line 382)
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723b_phycfg.c
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723b_rf6052.c
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723b_rxdesc.c
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723bs_recv.c
-   CHECK   drivers/staging/rtl8723bs/hal/rtl8723bs_xmit.c
-   CHECK   drivers/staging/rtl8723bs/hal/sdio_halinit.c
-   CHECK   drivers/staging/rtl8723bs/hal/sdio_ops.c
-   CHECK   drivers/staging/rtl8723bs/hal/HalBtc8723b1Ant.c
-   CHECK   drivers/staging/rtl8723bs/hal/HalBtc8723b2Ant.c
-   CHECK   drivers/staging/rtl8723bs/hal/HalHWImg8723B_BB.c
-drivers/staging/rtl8723bs/hal/HalHWImg8723B_BB.c:314 
-ODM_ReadAndConfig_MP_8723B_AGC_TAB() warn: for statement not indented
-drivers/staging/rtl8723bs/hal/HalHWImg8723B_BB.c:583 
-ODM_ReadAndConfig_MP_8723B_PHY_REG() warn: for statement not indented
-drivers/staging/rtl8723bs/hal/HalHWImg8723B_BB.c:586 
-ODM_ReadAndConfig_MP_8723B_PHY_REG() warn: inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/hal/HalHWImg8723B_MAC.c
-   CHECK   drivers/staging/rtl8723bs/hal/HalHWImg8723B_RF.c
-   CHECK   drivers/staging/rtl8723bs/hal/HalPhyRf_8723B.c
-   CHECK   drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:470 
-rtw_cfg80211_ibss_indicate_connect() error: we previously assumed 'scanned' 
-could be null (see line 466)
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:942 
-rtw_cfg80211_set_encryption() warn: inconsistent indenting
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:955 
-rtw_cfg80211_set_encryption() error: buffer overflow 
-'psecuritypriv->dot11DefKey' 4 <= 4
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:1017 
-rtw_cfg80211_set_encryption() error: buffer overflow 
-'padapter->securitypriv.dot118021XGrpKey' 5 <= 5
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:1216 
-cfg80211_rtw_set_default_key() warn: inconsistent indenting
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:2498 
-rtw_cfg80211_monitor_if_xmit_entry() error: we previously assumed 'skb' could be 
-null (see line 2495)
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:2850 cfg80211_rtw_start_ap() 
-warn: if statement not indented
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:2860 cfg80211_rtw_start_ap() 
-warn: if statement not indented
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:3417 
-rtw_cfg80211_preinit_wiphy() warn: inconsistent indenting
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:3547 rtw_wdev_alloc() info: 
-ignoring unreachable code.
-   CHECK   drivers/staging/rtl8723bs/os_dep/ioctl_linux.c
-   CHECK   drivers/staging/rtl8723bs/os_dep/mlme_linux.c
-drivers/staging/rtl8723bs/os_dep/mlme_linux.c:149 rtw_os_indicate_disconnect() 
-warn: inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/os_dep/osdep_service.c
-   CHECK   drivers/staging/rtl8723bs/os_dep/os_intfs.c
-drivers/staging/rtl8723bs/os_dep/os_intfs.c:1082 ips_netdrv_open() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/os_dep/recv_linux.c
-drivers/staging/rtl8723bs/os_dep/recv_linux.c:353 rtw_recv_indicatepkt() warn: 
-variable dereferenced before check 'precv_frame' (see line 312)
-   CHECK   drivers/staging/rtl8723bs/os_dep/rtw_proc.c
-drivers/staging/rtl8723bs/os_dep/rtw_proc.c:102 rtw_drv_proc_open() warn: 
-inconsistent indenting
-   CHECK   drivers/staging/rtl8723bs/os_dep/sdio_intf.c
-   CHECK   drivers/staging/rtl8723bs/os_dep/sdio_ops_linux.c
-   CHECK   drivers/staging/rtl8723bs/os_dep/wifi_regd.c
-   CHECK   drivers/staging/rtl8723bs/os_dep/xmit_linux.c
-drivers/staging/rtl8723bs/os_dep/xmit_linux.c:42 _rtw_pktfile_read() warn: 
-inconsistent indenting
-
-The indent problems can probably be ignored, but many of the others are serious 
-enough to be addressed now.
-
-Once this driver is merged into staging, the Outreachy folks will be really busy.
-
-Thanks for posting this driver,
-
-Larry
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 5a82f553906c..737384d287aa 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -514,9 +514,9 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 	/* Get EN GPIO from ACPI */
+ 	gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+ 					 GPIOD_OUT_LOW);
+-	if (!IS_ERR(gpiod_ena)) {
++	if (IS_ERR(gpiod_ena)) {
+ 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+-		return -ENODEV;
++		return PTR_ERR(gpiod_ena);
+ 	}
+ 
+ 	phy->gpio_ena = desc_to_gpio(gpiod_ena);
+-- 
+2.11.0
