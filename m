@@ -1,59 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43338 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751639AbdCHPH1 (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35692 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756650AbdCHDnr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 10:07:27 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 7 Mar 2017 22:43:47 -0500
+Received: by mail-wm0-f68.google.com with SMTP id z63so3935038wmg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 19:43:46 -0800 (PST)
+Date: Tue, 7 Mar 2017 22:36:53 +0100
+From: Andrea Ghittino <aghittino@gmail.com>
+To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] staging: wilc1000: Fix sparse warnings incorrect type
+ assignment
+Message-ID: <20170307213641.GA4193@myhd3> (sfid-20170308_044446_584004_ADB255CC)
 MIME-Version: 1.0
-Subject: Re: [v2,
- 01/10] rt2x00: rt2800lib: move rt2800_drv_data declaration into
- rt2800lib.h
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1487150713-3510-2-git-send-email-sgruszka@redhat.com>
-References: <1487150713-3510-2-git-send-email-sgruszka@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>, Gabor Juhos <juhosg@openwrt.org>,
-        Daniel Golle <daniel@makrotopia.org>
-Message-Id: <20170308150704.8FC3F607A5@smtp.codeaurora.org> (sfid-20170308_160814_646898_C5D5FE1D)
-Date: Wed,  8 Mar 2017 15:07:04 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> From: Gabor Juhos <juhosg@openwrt.org>
-> 
-> The rt2800_drv_data structure contains driver specific
-> information. Move the declaration into the rt2800lib.h
-> header which is a more logical place for it. Also fix
-> the comment style to avoid checkpatch warning.
-> 
-> The patch contains no functional changes, it is in
-> preparation for the next patch.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Fixed sparse warnings related to the conversion of le16 and le32 to u16 and u32, during the update of internal structures
 
-10 patches applied to wireless-drivers-next.git, thanks.
+Fixed sparse warnings:
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2011:52: warning: incorrect type in assignment (different base types)
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2011:52:    expected unsigned short [unsigned] [assigned] [usertype] ht_ext_params
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2011:52:    got restricted __le16 const [usertype] extended_ht_cap_info
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2012:51: warning: incorrect type in assignment (different base types)
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2012:51:    expected unsigned int [unsigned] [assigned] [usertype] ht_tx_bf_cap
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2012:51:    got restricted __le32 const [usertype] tx_BF_cap_info
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2078:51: warning: incorrect type in assignment (different base types)
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2078:51:    expected unsigned short [unsigned] [assigned] [usertype] ht_capa_info
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2078:51:    got restricted __le16 const [usertype] cap_info
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2083:52: warning: incorrect type in assignment (different base types)
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2083:52:    expected unsigned short [unsigned] [assigned] [usertype] ht_ext_params
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2083:52:    got restricted __le16 const [usertype] extended_ht_cap_info
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2084:51: warning: incorrect type in assignment (different base types)
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2084:51:    expected unsigned int [unsigned] [assigned] [usertype] ht_tx_bf_cap
+drivers/staging/wilc1000//wilc_wfi_cfgoperations.c:2084:51:    got restricted __le32 const [usertype] tx_BF_cap_info
 
-96609f366c6f rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
-a13d985f26f6 rt2800: identify station based on status WCID
-5edb05afebba rt2x00: separte filling tx status from rt2x00lib_txdone
-56646adf9cd6 rt2x00: separte clearing entry from rt2x00lib_txdone
-a09305d05216 rt2x00: add txdone nomatch function
-ec80ad70d778 rt2x00: fixup fill_tx_status for nomatch case
-293dff78ee05 rt2x00: use txdone_nomatch on rt2800usb
-9d7a7a4d2b02 rt2800: status based rate flags for nomatch case
-fb47ada8dc3c rt2800: use TXOP_BACKOFF for probe frames
-dd35cc0896fa rt2x00: fix rt2x00debug_dump_frame comment
 
--- 
-https://patchwork.kernel.org/patch/9573627/
+Signed-off-by: Andrea Ghittino <aghittino@gmail.com>
+---
+changelog:
+v2) Changed patch desacription
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+Compile tested only
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+ wilc_wfi_cfgoperations.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 7961d1c..d3b5ac8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2003,13 +2003,13 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported = false;
+ 		} else {
+ 			strStaParams.ht_supported = true;
+-			strStaParams.ht_capa_info = params->ht_capa->cap_info;
++			strStaParams.ht_capa_info = le16_to_cpu(params->ht_capa->cap_info);
+ 			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+ 			memcpy(strStaParams.ht_supp_mcs_set,
+ 			       &params->ht_capa->mcs,
+ 			       WILC_SUPP_MCS_SET_SIZE);
+-			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
+-			strStaParams.ht_tx_bf_cap = params->ht_capa->tx_BF_cap_info;
++			strStaParams.ht_ext_params = le16_to_cpu(params->ht_capa->extended_ht_cap_info);
++			strStaParams.ht_tx_bf_cap = le32_to_cpu(params->ht_capa->tx_BF_cap_info);
+ 			strStaParams.ht_ante_sel = params->ht_capa->antenna_selection_info;
+ 		}
+ 
+@@ -2075,13 +2075,13 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 			strStaParams.ht_supported = false;
+ 		} else {
+ 			strStaParams.ht_supported = true;
+-			strStaParams.ht_capa_info = params->ht_capa->cap_info;
++			strStaParams.ht_capa_info = le16_to_cpu(params->ht_capa->cap_info);
+ 			strStaParams.ht_ampdu_params = params->ht_capa->ampdu_params_info;
+ 			memcpy(strStaParams.ht_supp_mcs_set,
+ 			       &params->ht_capa->mcs,
+ 			       WILC_SUPP_MCS_SET_SIZE);
+-			strStaParams.ht_ext_params = params->ht_capa->extended_ht_cap_info;
+-			strStaParams.ht_tx_bf_cap = params->ht_capa->tx_BF_cap_info;
++			strStaParams.ht_ext_params = le16_to_cpu(params->ht_capa->extended_ht_cap_info);
++			strStaParams.ht_tx_bf_cap = le32_to_cpu(params->ht_capa->tx_BF_cap_info);
+ 			strStaParams.ht_ante_sel = params->ht_capa->antenna_selection_info;
+ 		}
+ 
