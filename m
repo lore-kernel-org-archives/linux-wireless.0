@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39935 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751212AbdCUFgO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 01:36:14 -0400
-From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: RE: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
- offload
-Date: Tue, 21 Mar 2017 05:36:05 +0000
-Message-ID: <fbc82bc9af344237bd5cd3210d9d012e@aphydexm01f.ap.qualcomm.com> (sfid-20170321_063618_271406_70FCAB26)
-References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488544754.25750.8.camel@sipsolutions.net>
-         <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
-         <1489008812.7127.9.camel@sipsolutions.net>
-         <828dd0c9cb0d409eb4d3aadc7f585a69@aphydexm01f.ap.qualcomm.com>
- <1489500692.10872.11.camel@sipsolutions.net>
-In-Reply-To: <1489500692.10872.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mga06.intel.com ([134.134.136.31]:30435 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755140AbdCGKOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 05:14:36 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/6] NFC: st21nfca: Fix obvious typo when check error code
+Date: Tue,  7 Mar 2017 12:13:56 +0200
+Message-Id: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com> (sfid-20170307_111809_091673_49AC7D57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj5bTWFuaWthbnRhXSBJbiB0aGF0IGNhc2UgSSB3aWxsIGtlZXAgdGhpcyBjaGFuZ2Us
-IHNob3VsZCB3ZSBjb25zaWRlciBhIHNlcGFyYXRlDQo+ZHJpdmVyIGhvb2sgZm9yIGxlZ2FjeS9t
-Z210IHR4IGxpa2UgZHJ2X3R4XzgwMjM/Pw0KPj4gSG93IGFib3V0IGhhdmluZyB3YWtlX3R4X3F1
-ZXVlXzgwMjMgYW5kIGllZWU4MDIxMV90eF9kZXF1ZXVlXzgwMjMNCj5zbw0KPj4gdGhhdCBFdGhl
-cm5ldCB0cmFuc21pdCBwYXRoIGlzIHRvdGFsbHkgZXhjbHVzaXZlLiBUaG91Z2h0cz8/DQo+DQo+
-SSdtIG5vdCBzdXJlIHRoaXMgd2lsbCB3b3JrIHdlbGwuIFRoZSBkcml2ZXIgbWlnaHQgaGF2ZSBt
-b3JlIHNwYWNlIGZvciBzZW5kaW5nDQo+dG8gYSBzcGVjaWZpYyBzdGF0aW9uLCBidXQgZG9lc24n
-dCByZWFsbHkga25vdyB3aGljaCBmcmFtZXMgc2hvdWxkIGdvIGZpcnN0LiBTbw0KPmVpdGhlciBp
-dCdkIGhhdmUgdG8gY2FsbCBib3RoIChkZXF1ZXVlXzgwMjMgZm9sbG93ZWQgYnkgZGVxdWV1ZSkg
-d2l0aA0KPm1hYzgwMjExIHNvcnRpbmcgb3V0IHdoYXQgdG8gZG8sIG9yIHdlIHNob3VsZCBrZWVw
-IGl0IGNvbWJpbmVkLiBJIHRoaW5rDQo+bWFjODAyMTEgc29ydGluZyBvdXQgdGhlIHByaW9yaXR5
-IGhlcmUgZXRjLg0KPndvdWxkIGJlIGZhciBtb3JlIGNvbXBsZXggdGhhbiB0aGlzLg0KPg0KW01h
-bmlrYW50YV0gSG1tbS4NCg0KPj4gW01hbmlrYW50YV0gSG1tbSwgSSB3b3VsZCBsaWtlIHRvIGhh
-dmUgaWVlZTgwMjExX3R4X3N0YXR1c184MDIzIGZvcg0KPj4gbm93IGFuZCBnbyB3aXRoIGEgVE9E
-TyBmb3Igc2luZ2xlIHR4IHJlcG9ydGluZyBtZWNoYW5pc20gZm9yIGJvdGgNCj4+IEV0aGVybmV0
-IGFuZCA4MDIuMTEgdHggZm9ybWF0cy4gQW55IHRob3VnaHRzPw0KPg0KPlRoZXJlJ3MgYW4gYWRk
-aXRpb25hbCB3cmlua2xlIGJ0dyAtIHdlIGN1cnJlbnRseSByZXBvcnQgdGhlIDgwMi4xMSBmcmFt
-ZSB0bw0KPnRoZSBtb25pdG9yIGludGVyZmFjZSwgaWYgYWN0aXZlLiBOb3Qgc3VyZSB3ZSBjYW4g
-a2VlcCB0aGF0LCBidXQgaXQncyBzb21ldGhpbmcNCj50byB0aGluayBhYm91dC4NCj4NCltNYW5p
-a2FudGFdIEdvb2QgcG9pbnQsIHRoaXMgaXMgc29tZXRoaW5nIHdlIGhhdmUgdG8gdGhpbmsgYWJv
-dXQuIEkgYmVsaWV2ZSB0aGlzIG9uZSBpcyB0cmlja3ksIGRvIHdlIG5lZWQgdG8gYWRkIHRoZSAu
-MTEgaGVhZGVyIGp1c3QgYmVmb3JlIGdpdmluZyB0byBtb25pdG9yIGludGVyZmFjZXM/DQpIb3cg
-aW1wb3J0YW50IHdpbGwgdGhpcyBiZSBmb3IgRXRoZXJuZXQgdHggY2hhbmdlcz8gSSBhbSBydW5u
-aW5nIG91dCBvZiB0aG91Z2h0cy4NCg0KPj4gPiBUaGUgb25seSByZWFsIGFsdGVybmF0aXZlIEkg
-c2VlLCB3aGljaCBtaWdodCBiZSBwcmVmZXJhYmxlLCBpcyBmb3INCj4+ID4gdGhlIGRyaXZlciB0
-byBhZHZlcnRpc2UgYSBiaXRtYXAgb2YgaW50ZXJmYWNlIHR5cGVzIHRoYXQgaXQgd2FudHMgdG8N
-Cj4+ID4gdXNlIGV0aGVybmV0IGZyYW1pbmcgd2l0aC4NCj4+ID4NCj4+DQo+PiBbTWFuaWthbnRh
-XSBDb3JyZWN0LCB0aGlzIHdvdWxkIGJlIGEgb25ldGltZSByZWdpc3RyYXRpb24uIElzbid0IGl0
-ID8NCj4+IEkgYW0ganVzdCBjdXJpb3VzIHRvIGtub3cgd2hldGhlciB0aGUgc3VwcG9ydGVkIHZp
-ZiB0eXBlcyBmb3IgZXRoZXJuZXQNCj4+IGZyYW1pbmcgY2FuIGNoYW5nZSBkeW5hbWljYWxseSwg
-aXMgdGhpcyBwb3NzaWJsZT8NCj4NCj5JIGRvbid0IHNlZSB3aHkgaXQgd291bGQgY2hhbmdlLiBJ
-IGd1ZXNzIHRoZXJlJ3MgYSBzbWFsbCBjaGFuY2UgdGhhdCB5b3UgbWlnaHQNCj5kZXNpZ24gdGhl
-IEhXIGluIGEgd2F5IHRoYXQgaXQgb25seSBoYXMgZW5vdWdoIEhXIHJlc291cmNlcyB0byBkbyBo
-ZWFkZXINCj5mb3JtYXQgY29udmVyc2lvbiBmb3IgYSBsaW1pdGVkIG51bWJlciBvZiBpbnRlcmZh
-Y2VzLCBidXQgaWYgdGhhdCBlbmRzIHVwIGJlaW5nDQo+YSBwcm9ibGVtIHdlIGNhbiBwZXJoYXBz
-IGFkZCBtb3JlIG90aGVyIGNhcGFiaWxpdGllcy4NCj4NCj5UaGUgd2F5IHdlJ3JlIGxvb2tpbmcg
-YXQgaXQgd2lsbCBiZSB0eXBlL2hlYWRlciBmb3JtYXQgZGVwZW5kZW50LCBub3RoaW5nDQo+ZWxz
-ZS4NCj4NCltNYW5pa2FudGFdIEhtbW0gb2theS4NCg0KTWFuaWthbnRhDQo=
+We return -ENODEV if ACPI provides a GPIO resource. Looks really wrong.
+If it has even been tested?
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/st21nfca/i2c.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 5a82f553906c..737384d287aa 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -514,9 +514,9 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 	/* Get EN GPIO from ACPI */
+ 	gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+ 					 GPIOD_OUT_LOW);
+-	if (!IS_ERR(gpiod_ena)) {
++	if (IS_ERR(gpiod_ena)) {
+ 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+-		return -ENODEV;
++		return PTR_ERR(gpiod_ena);
+ 	}
+ 
+ 	phy->gpio_ena = desc_to_gpio(gpiod_ena);
+-- 
+2.11.0
