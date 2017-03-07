@@ -1,108 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41339 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754572AbdC1Knw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 06:43:52 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 3/5] brcmfmac: add support to move wiphy instance into network namespace
-Date: Tue, 28 Mar 2017 11:43:26 +0100
-Message-Id: <1490697808-5538-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_124743_622304_36AF78FA)
-In-Reply-To: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mga03.intel.com ([134.134.136.65]:30171 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755084AbdCGKOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 05:14:42 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 3/6] NFC: st21nfca: Get rid of platform data
+Date: Tue,  7 Mar 2017 12:13:58 +0200
+Message-Id: <20170307101401.23182-3-andriy.shevchenko@linux.intel.com> (sfid-20170307_111805_660318_F7D32C8D)
+In-Reply-To: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
+References: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To support network namespace the driver must assure all created
-network interfaces are in the same namespace as the wiphy instance
-and flag the support using WIPHY_FLAG_NETNS_OK.
+Legacy platform data must go away. We are on the safe side here since
+there are no users of it in the kernel.
 
-Verified using two terminals:
+If anyone by any odd reason needs it the GPIO lookup tables and
+built-in device properties at your service.
 
- Terminal 1			Terminal 2
- --------------------------	---------------------------------
- # ip netns add brcm-wifi	# iw dev
-				phy#0
-					Interface wlan3
-						ifindex 11
-						wdev 0x1
- # ip netns exec brcm-wifi bash
- # iw dev
- # echo $$
- 20337			# iw phy0 set netns 20337
- # iw dev
- phy#0
-	Interface wlan3
-		ifindex 11
-		wdev 0x2
- # iw phy0 interface add wl3.ap type __ap
- # iw dev
- phy#0
-	Interface wl3.ap
-		ifindex 2
-		wdev 0x3
-	Interface wlan3
-		ifindex 11
-		wdev 0x2
-				# iw dev
- # iw phy0 set netns 1
- # iw dev
-				# iw dev
-				phy#0
-					Interface wl3.ap
-						ifindex 2
-						wdev 0x5
-					Interface wlan3
-						ifindex 11
-						wdev 0x4
-
-Note:
-	increasing wdev identifier above indicates issue in
-	cfg80211 which is addressed separately.
-
-Tested-by: Mark Asselstine <mark.asselstine@windriver.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Change-Id: I533ad998aec13b42b2605d8eae19a9c8fa540ffb
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/8161
-Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/nfc/st21nfca/i2c.c             | 45 ++--------------------------------
+ include/linux/platform_data/st21nfca.h | 33 -------------------------
+ 2 files changed, 2 insertions(+), 76 deletions(-)
+ delete mode 100644 include/linux/platform_data/st21nfca.h
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 4e1ca69..89ac124 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6453,7 +6453,8 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 				    BIT(NL80211_BSS_SELECT_ATTR_BAND_PREF) |
- 				    BIT(NL80211_BSS_SELECT_ATTR_RSSI_ADJUST);
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 7f68a5fe15d8..d9ed6a279283 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -20,7 +20,6 @@
+ #include <linux/crc-ccitt.h>
+ #include <linux/module.h>
+ #include <linux/i2c.h>
+-#include <linux/gpio.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_gpio.h>
+@@ -30,7 +29,7 @@
+ #include <linux/delay.h>
+ #include <linux/nfc.h>
+ #include <linux/firmware.h>
+-#include <linux/platform_data/st21nfca.h>
++
+ #include <asm/unaligned.h>
  
--	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
-+	wiphy->flags |= WIPHY_FLAG_NETNS_OK |
-+			WIPHY_FLAG_PS_ON_BY_DEFAULT |
- 			WIPHY_FLAG_OFFCHAN_TX |
- 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_TDLS))
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index ba4da48..a5ffdfe 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -475,8 +475,9 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 	ndev->needed_headroom += drvr->hdrlen;
- 	ndev->ethtool_ops = &brcmf_ethtool_ops;
+ #include <net/nfc/hci.h>
+@@ -577,43 +576,10 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 	return 0;
+ }
  
--	/* set the mac address */
-+	/* set the mac address & netns */
- 	memcpy(ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
-+	dev_net_set(ndev, wiphy_net(cfg_to_wiphy(drvr->config)));
+-static int st21nfca_hci_i2c_request_resources(struct i2c_client *client)
+-{
+-	struct st21nfca_nfc_platform_data *pdata;
+-	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+-	int r;
+-
+-	pdata = client->dev.platform_data;
+-	if (pdata == NULL) {
+-		nfc_err(&client->dev, "No platform data\n");
+-		return -EINVAL;
+-	}
+-
+-	/* store for later use */
+-	phy->gpio_ena = pdata->gpio_ena;
+-	phy->irq_polarity = pdata->irq_polarity;
+-
+-	if (phy->gpio_ena > 0) {
+-		r = devm_gpio_request_one(&client->dev, phy->gpio_ena,
+-					  GPIOF_OUT_INIT_HIGH,
+-					  ST21NFCA_GPIO_NAME_EN);
+-		if (r) {
+-			pr_err("%s : ena gpio_request failed\n", __FILE__);
+-			return r;
+-		}
+-	}
+-
+-	phy->se_status.is_ese_present = pdata->is_ese_present;
+-	phy->se_status.is_uicc_present = pdata->is_uicc_present;
+-
+-	return 0;
+-}
+-
+ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 				  const struct i2c_device_id *id)
+ {
+ 	struct st21nfca_i2c_phy *phy;
+-	struct st21nfca_nfc_platform_data *pdata;
+ 	int r;
  
- 	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
- 	INIT_WORK(&ifp->ndoffload_work, _brcmf_update_ndtable);
+ 	dev_dbg(&client->dev, "%s\n", __func__);
+@@ -639,19 +605,12 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 	mutex_init(&phy->phy_lock);
+ 	i2c_set_clientdata(client, phy);
+ 
+-	pdata = client->dev.platform_data;
+-	if (!pdata && client->dev.of_node) {
++	if (client->dev.of_node) {
+ 		r = st21nfca_hci_i2c_of_request_resources(client);
+ 		if (r) {
+ 			nfc_err(&client->dev, "No platform data\n");
+ 			return r;
+ 		}
+-	} else if (pdata) {
+-		r = st21nfca_hci_i2c_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev, "Cannot get platform resources\n");
+-			return r;
+-		}
+ 	} else if (ACPI_HANDLE(&client->dev)) {
+ 		r = st21nfca_hci_i2c_acpi_request_resources(client);
+ 		if (r) {
+diff --git a/include/linux/platform_data/st21nfca.h b/include/linux/platform_data/st21nfca.h
+deleted file mode 100644
+index cc2bdafb0c69..000000000000
+--- a/include/linux/platform_data/st21nfca.h
++++ /dev/null
+@@ -1,33 +0,0 @@
+-/*
+- * Driver include for the ST21NFCA NFC chip.
+- *
+- * Copyright (C) 2014  STMicroelectronics SAS. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+- */
+-
+-#ifndef _ST21NFCA_HCI_H_
+-#define _ST21NFCA_HCI_H_
+-
+-#include <linux/i2c.h>
+-
+-#define ST21NFCA_HCI_DRIVER_NAME "st21nfca_hci"
+-
+-struct st21nfca_nfc_platform_data {
+-	unsigned int gpio_ena;
+-	unsigned int irq_polarity;
+-	bool is_ese_present;
+-	bool is_uicc_present;
+-};
+-
+-#endif /* _ST21NFCA_HCI_H_ */
 -- 
-1.9.1
+2.11.0
