@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53462 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750848AbdCNM7d (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 08:59:33 -0400
-Date: Tue, 14 Mar 2017 05:59:32 -0700
-From: Kyle McMartin <kyle@infradead.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, linux-firmware@kernel.org
-Subject: Re: pull-request mwifiex-firmware 2017-03-11
-Message-ID: <20170314125931.GH13400@bombadil.infradead.org> (sfid-20170314_135941_569847_6DC6101C)
-References: <1489324113-22129-1-git-send-email-huxinming820@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1489324113-22129-1-git-send-email-huxinming820@gmail.com>
+Received: from mga07.intel.com ([134.134.136.100]:17628 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755289AbdCGKP1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Mar 2017 05:15:27 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/2] NFC: pn544: Request GPIOs with proper connection IDs
+Date: Tue,  7 Mar 2017 12:15:20 +0200
+Message-Id: <20170307101521.23271-1-andriy.shevchenko@linux.intel.com> (sfid-20170307_111807_965933_078A10D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 12, 2017 at 01:08:33PM +0000, Xinming Hu wrote:
-> The following changes since commit 8f171e29aade68e8a9193e288ba526e6f8fa7575:
-> 
->   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-02-20 18:17:17 +0530)
-> 
-> are available in the git repository at:
-> 
->   git://git.marvell.com/mwifiex-firmware.git 
-> 
-> for you to fetch changes up to 59d72586fbaa71cdf3a9f0e0ea2bb169f80d9e6b:
-> 
->   linux-firmware: update Marvell PCIe-USB8997 wifi-only firmware image (2017-03-11 02:31:18 -0800)
-> 
+Since ACPI does support _DSD we might have a firmware that provides a
+GPIO mapping in DSDT. When GPIO is requested the core will check for
+property with given name. That's why we have to follow the standard
+names which are already in use in DT case.
 
-Thanks! Pulled and pushed back out.
+Request GPIOs with proper connection IDs, i.e. use same names as used
+for DT case.
 
-regards, --Kyle
+In the future ACPI and DT cases might be unified.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/pn544/i2c.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index f837c39a8017..2df3176205c4 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -881,8 +881,7 @@ static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 	struct device *dev = &client->dev;
+ 
+ 	/* Get EN GPIO from ACPI */
+-	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1,
+-					GPIOD_OUT_LOW);
++	gpiod_en = devm_gpiod_get_index(dev, "enable", 1, GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpiod_en)) {
+ 		nfc_err(dev, "Unable to get EN GPIO\n");
+ 		return -ENODEV;
+@@ -891,8 +890,7 @@ static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ 	phy->gpio_en = desc_to_gpio(gpiod_en);
+ 
+ 	/* Get FW GPIO from ACPI */
+-	gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2,
+-					GPIOD_OUT_LOW);
++	gpiod_fw = devm_gpiod_get_index(dev, "firmware", 2, GPIOD_OUT_LOW);
+ 	if (IS_ERR(gpiod_fw)) {
+ 		nfc_err(dev, "Unable to get FW GPIO\n");
+ 		return -ENODEV;
+-- 
+2.11.0
