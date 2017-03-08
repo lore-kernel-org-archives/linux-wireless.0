@@ -1,101 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:10172 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754644AbdC1I62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 04:58:28 -0400
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
-        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
-        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
-        matanb@mellanox.com, leonro@mellanox.com,
-        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
-        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 08/16] drivers, net, hamradio: convert sixpack.refcnt from atomic_t to refcount_t
-Date: Tue, 28 Mar 2017 11:56:35 +0300
-Message-Id: <1490691403-4016-9-git-send-email-elena.reshetova@intel.com> (sfid-20170328_110900_453597_DAC88D2B)
-In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+Received: from smtprelay0123.hostedemail.com ([216.40.44.123]:44523 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753877AbdCHSCY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 13:02:24 -0500
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave01.hostedemail.com (Postfix) with ESMTP id 312FB5E64B
+        for <linux-wireless@vger.kernel.org>; Wed,  8 Mar 2017 17:54:30 +0000 (UTC)
+Message-ID: <1488995605.2210.36.camel@perches.com> (sfid-20170308_190254_929452_CD4624B1)
+Subject: Re: [PATCH v3] brcmfmac: Do not print the firmware version as an
+ error
+From: Joe Perches <joe@perches.com>
+To: Hans de Goede <hdegoede@redhat.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Date: Wed, 08 Mar 2017 09:53:25 -0800
+In-Reply-To: <797bce36-7887-24cb-2389-9a9e3c0d9760@redhat.com>
+References: <20170308082321.4755-1-hdegoede@redhat.com>
+         <1488990890.2210.33.camel@perches.com>
+         <797bce36-7887-24cb-2389-9a9e3c0d9760@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On Wed, 2017-03-08 at 17:57 +0100, Hans de Goede wrote:
+> Hi,
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- drivers/net/hamradio/6pack.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+And hello back to you.
 
-diff --git a/drivers/net/hamradio/6pack.c b/drivers/net/hamradio/6pack.c
-index 922bf44..ea6c975 100644
---- a/drivers/net/hamradio/6pack.c
-+++ b/drivers/net/hamradio/6pack.c
-@@ -35,7 +35,7 @@
- #include <linux/tcp.h>
- #include <linux/semaphore.h>
- #include <linux/compat.h>
--#include <linux/atomic.h>
-+#include <linux/refcount.h>
- 
- #define SIXPACK_VERSION    "Revision: 0.3.0"
- 
-@@ -120,7 +120,7 @@ struct sixpack {
- 
- 	struct timer_list	tx_t;
- 	struct timer_list	resync_t;
--	atomic_t		refcnt;
-+	refcount_t		refcnt;
- 	struct semaphore	dead_sem;
- 	spinlock_t		lock;
- };
-@@ -381,7 +381,7 @@ static struct sixpack *sp_get(struct tty_struct *tty)
- 	read_lock(&disc_data_lock);
- 	sp = tty->disc_data;
- 	if (sp)
--		atomic_inc(&sp->refcnt);
-+		refcount_inc(&sp->refcnt);
- 	read_unlock(&disc_data_lock);
- 
- 	return sp;
-@@ -389,7 +389,7 @@ static struct sixpack *sp_get(struct tty_struct *tty)
- 
- static void sp_put(struct sixpack *sp)
- {
--	if (atomic_dec_and_test(&sp->refcnt))
-+	if (refcount_dec_and_test(&sp->refcnt))
- 		up(&sp->dead_sem);
- }
- 
-@@ -580,7 +580,7 @@ static int sixpack_open(struct tty_struct *tty)
- 	sp->dev = dev;
- 
- 	spin_lock_init(&sp->lock);
--	atomic_set(&sp->refcnt, 1);
-+	refcount_set(&sp->refcnt, 1);
- 	sema_init(&sp->dead_sem, 0);
- 
- 	/* !!! length of the buffers. MTU is IP MTU, not PACLEN!  */
-@@ -676,7 +676,7 @@ static void sixpack_close(struct tty_struct *tty)
- 	 * We have now ensured that nobody can start using ap from now on, but
- 	 * we have to wait for all existing users to finish.
- 	 */
--	if (!atomic_dec_and_test(&sp->refcnt))
-+	if (!refcount_dec_and_test(&sp->refcnt))
- 		down(&sp->dead_sem);
- 
- 	/* We must stop the queue to avoid potentially scribbling
--- 
-2.7.4
+> On 08-03-17 17:34, Joe Perches wrote:
+> > On Wed, 2017-03-08 at 09:23 +0100, Hans de Goede wrote:
+> > > Using pr_err for things which are not errors is a bad idea. E.g. it
+> > > will cause the plymouth bootsplash screen to drop back to the text
+> > > console so that the user can see the error, which is not what we
+> > > normally want to happen.
+> > > 
+> > > Instead add a new brcmf_info macro and use that.
+> > > 
+> > > Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> > > ---
+> > > Changes in v2:
+> > > -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+> > > Changes in v3:
+> > > -Use do { } while (0) around macro
+> > 
+> > why?  Single statement macros do not need a do/while
+> 
+> Because Arend ask me to during review of v2.
+
+Well, maybe Arend should learn that single statement macros
+don't need do/while guards and that do/while guards are
+generally not used in the kernel for single statements.
