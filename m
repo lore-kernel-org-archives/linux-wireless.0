@@ -1,51 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41818 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751353AbdCPKEs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 06:04:48 -0400
-Message-ID: <1489658630.2370.4.camel@sipsolutions.net> (sfid-20170316_110543_189454_962DB713)
-Subject: Re: [PATCH 2/2] mac80211: Drop new node with weak power
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 16 Mar 2017 11:03:50 +0100
-In-Reply-To: <1489629438-7087-2-git-send-email-masashi.honma@gmail.com> (sfid-20170316_025743_262084_63875C60)
-References: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com>
-         <1489629438-7087-2-git-send-email-masashi.honma@gmail.com>
-         (sfid-20170316_025743_262084_63875C60)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:33049 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753277AbdCHNZq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 08:25:46 -0500
+Received: by mail-wr0-f177.google.com with SMTP id u48so23284773wrc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Mar 2017 05:24:54 -0800 (PST)
+Subject: Re: [PATCH] mac80211: reject/clear user rate mask if not usable
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170308102008.31184-1-johannes@sipsolutions.net>
+Cc: kirtika@google.com, Johannes Berg <johannes.berg@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9f80f983-ca51-ae55-163e-311d86d1edbe@broadcom.com> (sfid-20170308_142643_182824_B63E35CF)
+Date: Wed, 8 Mar 2017 14:17:44 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170308102008.31184-1-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Thu, 2017-03-16 at 10:57 +0900, Masashi Honma wrote:
-> On some practical cases, it is useful to drop new node in the
-> distance.
-> Because mesh metric is calculated with hop count and without RSSI
-> information, a node far from local peer and near to destination node
-> could be used as best path.
+On 8-3-2017 11:20, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> For example, the nodes are located in linear. Distance of 0 - 1 and
-> 1 - 2 and 2 - 3 is 20meters. 0 to 3 signal is very weak.
+> If the user rate mask results in no (basic) rates being usable,
+> clear it. Also, if we're already operating when it's set, reject
+> it instead.
 > 
->     0 --- 1 --- 2 --- 3
+> Technically, selecting basic rates as the criterion is a bit too
+> restrictive, but calculating the usable rates over all stations
+> (e.g. in AP mode) is harder, and all stations must support the
+> basic rates. Similarly, in client mode, the basic rates will be
+> used anyway for control frames.
 > 
-> Though most robust path from 0 to 3 is 0 -> 1 -> 2 -> 3,
-> unfortunately, node 0 could recognize node 3 as neighbor. Then node 3
-> could be next of node 0. This patch aims to avoid such a case.
+> This fixes the "no supported rates (...) in rate_mask ..." warning
+> that occurs on TX when you've selected a rate mask that's not
+> compatible with the connection (e.g. an AP that enables only the
+> rates 36, 48, 54 and you've selected only 6, 9, 12.)
+> 
+> Reported-by: Kirtika Ruchandani <kirtika@google.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/mac80211/cfg.c  | 18 +++++++++++++++++-
+>  net/mac80211/mlme.c |  2 ++
+>  net/mac80211/rate.c | 29 +++++++++++++++++++++++++++++
+>  net/mac80211/rate.h |  2 ++
+>  4 files changed, 50 insertions(+), 1 deletion(-)
+> 
 
-I'm not really sure this is the right solution?
+[...]
 
-It seems to me that it should be a function of the path selection to
-take this into account, not prohibiting the longer path entirely?
+> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+> index 094c15645228..8c8d178ba798 100644
+> --- a/net/mac80211/rate.c
+> +++ b/net/mac80211/rate.c
+> @@ -2,6 +2,7 @@
+>   * Copyright 2002-2005, Instant802 Networks, Inc.
+>   * Copyright 2005-2006, Devicescape Software, Inc.
+>   * Copyright (c) 2006 Jiri Benc <jbenc@suse.cz>
+> + * Copyright 2017	Intel Deutschland GmbH
+>   *
+>   * This program is free software; you can redistribute it and/or modify
+>   * it under the terms of the GNU General Public License version 2 as
+> @@ -241,6 +242,34 @@ static void rate_control_free(struct ieee80211_local *local,
+>  	kfree(ctrl_ref);
+>  }
+>  
+> +void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +	struct ieee80211_supported_band *sband;
+> +	u32 user_mask, basic_rates = sdata->vif.bss_conf.basic_rates;
+> +	enum nl80211_band band;
+> +
+> +	if (WARN_ON(!sdata->vif.bss_conf.chandef.chan))
+> +		return;
+> +
+> +	if (WARN_ON_ONCE(!basic_rates))
+> +		return;
+> +
+> +	band = sdata->vif.bss_conf.chandef.chan->band;
+> +	user_mask = sdata->rc_rateidx_mask[band];
+> +	sband = local->hw.wiphy->bands[band];
+> +
+> +	basic_rates = sdata->vif.bss_conf.basic_rates;
 
-It seems that this is really what the meshcfg.rssi_threshold was
-intended for, and the plink code *does* take it into account. Can you
-explain where that's breaking down?
+basic_rates has already been initialized (and checked) above so this is
+redundant.
 
-The documentation for this als talks about it being a plink threshold,
-so I'm not really sure we should use it to kick out stations entirely.
-
-johannes
+Regards,
+Arend
