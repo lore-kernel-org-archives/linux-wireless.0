@@ -1,83 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51062 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754150AbdCHWIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 17:08:45 -0500
-Message-ID: <1489008812.7127.9.camel@sipsolutions.net> (sfid-20170308_231029_408604_8FBD4586)
-Subject: Re: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Pubbisetty, Manikanta" <mpubbise@qti.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-Date: Wed, 08 Mar 2017 22:33:32 +0100
-In-Reply-To: <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
-References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488544754.25750.8.camel@sipsolutions.net>
-         <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:33416 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751929AbdCHMRf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 07:17:35 -0500
+Received: by mail-qk0-f172.google.com with SMTP id y76so62096419qkb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Mar 2017 04:15:42 -0800 (PST)
+Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an
+ error
+To: Hans de Goede <hdegoede@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
+ <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com>
+ <6c1dd576-7571-e85f-ee43-8e9e69a76679@redhat.com>
+ <ecb4cc58-8cf5-1ca6-7649-fe4e97ac2149@broadcom.com>
+ <87a88w851p.fsf@kamboji.qca.qualcomm.com>
+ <8cd33792-0a44-fbce-f485-218b8c126625@redhat.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6b9680df-93ff-6e55-f3c9-64f33412bbc6@broadcom.com> (sfid-20170308_131819_619453_04441B13)
+Date: Wed, 8 Mar 2017 11:13:25 +0100
+MIME-Version: 1.0
+In-Reply-To: <8cd33792-0a44-fbce-f485-218b8c126625@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> > Why is that needed? Since you have a separate TX path
-> > (ndo_start_xmit),
-> > wouldn't it make more sense to call into a drv_tx_8023() or
-> > something like that instead?
-> > 
+On 8-3-2017 11:08, Hans de Goede wrote:
+> HI,
 > 
-> [Manikanta]  Yes, it makes sense having a separate driver hook
-> instead of using drv_tx, but in case of drivers (fe ath10k) 
-> where enqueuing and dequeuing tx logic (wake_tx_queue and
-> ieee80211_tx_dequeue) is used there should be a way
-> to indicate that the packet is not 80211 encapsulated, isn't it?
-> Correct me if I am missing anything.
+> On 08-03-17 10:57, Kalle Valo wrote:
+>> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+>>
+>>> On 8-3-2017 9:23, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> On 07-03-17 10:59, Arend Van Spriel wrote:
+>>>>> On 27-2-2017 22:45, Hans de Goede wrote:
+>>>>>> Using pr_err for things which are not errors is a bad idea. E.g. it
+>>>>>> will cause the plymouth bootsplash screen to drop back to the text
+>>>>>> console so that the user can see the error, which is not what we
+>>>>>> normally want to happen.
+>>>>>>
+>>>>>> Instead add a new brcmf_info macro and use that.
+>>>>>>
+>>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>>>> ---
+>>>>>> Changes in v2:
+>>>>>> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+>>>>>> ---
+>>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+>>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 3 +++
+>>>>>>  2 files changed, 4 insertions(+), 1 deletion(-)
+>>>>>>
+>>>>>> diff --git
+>>>>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>>> index 3e15d64..6d565f1 100644
+>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>>> @@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+>>>>>>      strsep(&ptr, "\n");
+>>>>>>
+>>>>>>      /* Print fw version info */
+>>>>>> -    brcmf_err("Firmware version = %s\n", buf);
+>>>>>> +    brcmf_info("Firmware version = %s\n", buf);
+>>>>>>
+>>>>>>      /* locate firmware version number for ethtool */
+>>>>>>      ptr = strrchr(buf, ' ') + 1;
+>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>>> index 6687812..605f260 100644
+>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>>> @@ -59,11 +59,14 @@
+>>>>>>              pr_err("%s: " fmt, __func__, ##__VA_ARGS__);    \
+>>>>>>      } while (0)
+>>>>>>  #endif
+>>>>>> +#define brcmf_info(fmt, ...)    pr_info("%s: " fmt, __func__,
+>>>>>> ##__VA_ARGS__)
+>>>>>
+>>>>> Prefer using the same style as for brcmf_err, ie. using do {} while
+>>>>> (0)
+>>>>
+>>>> OK, v3 with this fixed coming up.
+>>>
+>>> I think Kalle prefers the whole series to be resubmitted.
+>>>
+>>> Kalle,
+>>>
+>>> Can you confirm (or deny)?
+>>
+>> Exactly, I want to apply the full series (with the highest version
+>> number). Not waste time guessing what patches I should take and what to
+>> drop, with the increased risk of guessing wrong.
+> 
+> Ok, so patch 2/4 is still under discussion (and may be so for a while)
+> shall I send a new version with that patch dropped ?  And then send
+> that patch (or a modified version) separately later ?
 
-Ah, interesting. Yeah, I guess that makes some sense then, though I'm
-not super happy with sharing the code paths between differently
-encapsulated frames - best to leave that as minimal as possible.
+Yeah. Let's drop that patch for now.
 
-> [Manikanta]  Hmmm you are right. I just went through the code, seems
-> ieee80211_tx_status_noskb does most of them what
-> ieee80211_tx_status_8023 is doing, resetting the station connection
-> monitoring logic and updating last known tx rate is missing in
-> _noskb. These are required, isn't it?
-
-Maybe. I don't think the tx rate is strictly required but would be
-nice, while the monitoring logic is probably needed only to avoid
-spurious null data packets over the air.
-
-However, come to think of it, we need to see how this interacts with
-the tx status thing - if tx status is requested then I believe _no_skb
-cannot be used.
-
-> [Manikanta] You are correct. It is good if driver advertises the vif
-> types it support in encap offload mode, but how can we decide the
-> netdev_ops to be used while creating the vif? drv_add_interface will
-> be invoked from ndo_open and
-> even before invoking driver add_interface we have to make the
-> decision of using Ethernet mode netdev_ops or the default netdev_ops,
-> isn't it?
-
-It might not be a problem to swap the dev->netdev_ops, changing only
-the start_xmit, while the interface is being brought up. I assume the
-driver can make this decision in add_interface(), and I think swapping
-there should be OK. It might be problematic if this value changes
-during suspend/resume or HW restart though.
-
-> Can we have a separate driver hook which gives whether 80211 encap
-> offload is supported for the given interface type and then decide the
-> netdev_ops to be attached for the vif?
-
-I don't think that makes sense, since you can't know if the interface
-will ever be brought up, so the driver can't make a good decision since
-it normally doesn't have to care about interfaces that aren't brought
-up.
-
-The only real alternative I see, which might be preferable, is for the
-driver to advertise a bitmap of interface types that it wants to use
-ethernet framing with.
-
-johannes
+Regards,
+Arend
