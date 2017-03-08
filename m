@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34627 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752337AbdCDP6P (ORCPT
+Received: from bombadil.infradead.org ([65.50.211.133]:50806 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753899AbdCHR6q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Mar 2017 10:58:15 -0500
-From: Arushi Singhal <arushisinghal19971997@gmail.com>
-To: w.d.hubbs@gmail.com
-Cc: chris@the-brannons.com, outreachy-kernel@googlegroups.com,
-        kirk@reisers.ca, samuel.thibault@ens-lyon.org,
-        gregkh@linuxfoundation.org, speakup@linux-speakup.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        linux-wireless@vger.kernel.org,
-        Arushi Singhal <arushisinghal19971997@gmail.com>
-Subject: [PATCH 5/6] staging: wilc1000: function prototype argument should have identifier name
-Date: Sat,  4 Mar 2017 21:27:39 +0530
-Message-Id: <20170304155740.26105-6-arushisinghal19971997@gmail.com> (sfid-20170304_165949_110428_879D7E7A)
-In-Reply-To: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
-References: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
+        Wed, 8 Mar 2017 12:58:46 -0500
+Date: Wed, 8 Mar 2017 07:56:46 -0800
+From: Kyle McMartin <kyle@infradead.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-firmware@kernel.org
+Subject: Re: [PATCH] ath10k: QCA6174 hw3.0: update board-2.bin
+Message-ID: <20170308155646.GE13400@bombadil.infradead.org> (sfid-20170308_185854_905426_2702FCF1)
+References: <1488983536-28364-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488983536-28364-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-function prototype argument should have an identifier name as reported
-by checkpatch.pl.
+On Wed, Mar 08, 2017 at 04:32:16PM +0200, Kalle Valo wrote:
+> Add new board images:
+> 
+> bus=pci,vendor=168c,device=003e,subsystem-vendor=1a56,subsystem-device=1535,variant=RV_0520
+> bus=pci,vendor=168c,device=003e,subsystem-vendor=1a56,subsystem-device=1535,variant=RV_0519
+> bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,subsystem-device=0310,variant=RV_0519
+> 
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Arushi Singhal <arushisinghal19971997@gmail.com>
----
- drivers/staging/wilc1000/wilc_wlan.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Applied, thanks Kalle.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 11365efcc5d0..7a5eba9b5f47 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -274,8 +274,8 @@ struct wilc_vif;
- 
- int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
- 				u32 buffer_size);
--int wilc_wlan_start(struct wilc *);
--int wilc_wlan_stop(struct wilc *);
-+int wilc_wlan_start(struct wilc *wilc);
-+int wilc_wlan_stop(struct wilc *wilc);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func);
- int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count);
-@@ -291,7 +291,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- void wilc_chip_sleep_manually(struct wilc *wilc);
- 
- void wilc_enable_tcp_ack_filter(bool value);
--int wilc_wlan_get_num_conn_ifcs(struct wilc *);
-+int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc);
- int wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
- 
- void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
--- 
-2.11.0
+regards, Kyle
+
+> ---
+>  ath10k/QCA6174/hw3.0/board-2.bin | Bin 337204 -> 361924 bytes
+>  1 file changed, 0 insertions(+), 0 deletions(-)
+> 
+> diff --git a/ath10k/QCA6174/hw3.0/board-2.bin b/ath10k/QCA6174/hw3.0/board-2.bin
+> index 8e7b8c0b0cae7f7ac15ef5ca42fa5bcca6ad66c2..ea18004951fed49aa9214093fa900427e4960a5d 100644
+> GIT binary patch
+> delta 572
+> zcmdmTO5{klSVIeA3sVbo3(FQ(6V=HMDlD8D3JhQnJ)Q9>i=T{6Sz=LUVqS@DP*}Wy
+> zsi9>qBT#maJO~$V{@tL>A-Q}_K`96?T2s|Bc@ctMK6yWfu7qNen23CW1haf%Bx87D
+> zFcXa4{^TvoUq0QQ30rpTJ$Tj!O8bSS^-Wv1|9DW+q(z$!GccfvPtS{CN!I6&;**k$
+> zl8EAs;+B$#5*Ln?;D`(rj^q~Pk(3l*V1SA9M~ZMn1`0%Mc9>bgj^wL@3mN@n@%Soq
+> z!{$2)S{x#sK(9bB&|5P=Y#_ah!$?9gF;QMVF;P}NAwf1IAwdX6Z%)Z%=I1=?6O#e*
+> z)7i-d6{5^QuTAc#$kdOEi<1T7C?J*r(Nb};VsVmk5fYKHu@OKw17#wm5#pN_DhavS
+> z$N(uOww(dGS)XHi_8Df!%|4k@{2IU@1-s+mS--fnY3sHj1u2U7<i3hjodnsqq@<{%
+> exC9vxtrVA#kRYiPB_XMx0CF3u_-6UaQg#61GR2|*
+> 
+> delta 19
+> acmX@oEw<&9NJ9%_3sVbo3(FQ(6IB3C%Lb$X
+> 
+> -- 
+> 2.7.4
+> 
+> 
