@@ -1,124 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:53858 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752838AbdCBRQN (ORCPT
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:32963 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752062AbdCHJhG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 12:16:13 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 23/26] mtd: cfi: reduce stack size with KASAN
-Date: Thu,  2 Mar 2017 17:38:31 +0100
-Message-Id: <20170302163834.2273519-24-arnd@arndb.de> (sfid-20170302_183055_552283_3109FB72)
-In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
+        Wed, 8 Mar 2017 04:37:06 -0500
+Received: by mail-qk0-f179.google.com with SMTP id y76so55404847qkb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Mar 2017 01:37:05 -0800 (PST)
+Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an
+ error
+To: Hans de Goede <hdegoede@redhat.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
+ <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com>
+ <6c1dd576-7571-e85f-ee43-8e9e69a76679@redhat.com>
+Cc: Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ecb4cc58-8cf5-1ca6-7649-fe4e97ac2149@broadcom.com> (sfid-20170308_103818_078891_A814CC2B)
+Date: Wed, 8 Mar 2017 10:28:10 +0100
+MIME-Version: 1.0
+In-Reply-To: <6c1dd576-7571-e85f-ee43-8e9e69a76679@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_KASAN is used, we consume a lot of extra stack space:
+On 8-3-2017 9:23, Hans de Goede wrote:
+> Hi,
+> 
+> On 07-03-17 10:59, Arend Van Spriel wrote:
+>> On 27-2-2017 22:45, Hans de Goede wrote:
+>>> Using pr_err for things which are not errors is a bad idea. E.g. it
+>>> will cause the plymouth bootsplash screen to drop back to the text
+>>> console so that the user can see the error, which is not what we
+>>> normally want to happen.
+>>>
+>>> Instead add a new brcmf_info macro and use that.
+>>>
+>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>> ---
+>>> Changes in v2:
+>>> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+>>> ---
+>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 3 +++
+>>>  2 files changed, 4 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git
+>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>> index 3e15d64..6d565f1 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>> @@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+>>>      strsep(&ptr, "\n");
+>>>
+>>>      /* Print fw version info */
+>>> -    brcmf_err("Firmware version = %s\n", buf);
+>>> +    brcmf_info("Firmware version = %s\n", buf);
+>>>
+>>>      /* locate firmware version number for ethtool */
+>>>      ptr = strrchr(buf, ' ') + 1;
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>> index 6687812..605f260 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>> @@ -59,11 +59,14 @@
+>>>              pr_err("%s: " fmt, __func__, ##__VA_ARGS__);    \
+>>>      } while (0)
+>>>  #endif
+>>> +#define brcmf_info(fmt, ...)    pr_info("%s: " fmt, __func__,
+>>> ##__VA_ARGS__)
+>>
+>> Prefer using the same style as for brcmf_err, ie. using do {} while (0)
+> 
+> OK, v3 with this fixed coming up.
 
-drivers/mtd/chips/cfi_cmdset_0020.c: In function 'do_write_buffer':
-drivers/mtd/chips/cfi_cmdset_0020.c:603:1: error: the frame size of 2080 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
-drivers/mtd/chips/cfi_cmdset_0020.c: In function 'cfi_staa_erase_varsize':
-drivers/mtd/chips/cfi_cmdset_0020.c:972:1: error: the frame size of 1936 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
-drivers/mtd/chips/cfi_cmdset_0001.c: In function 'do_write_buffer':
-drivers/mtd/chips/cfi_cmdset_0001.c:1841:1: error: the frame size of 1776 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+I think Kalle prefers the whole series to be resubmitted.
 
-This marks some functions as noinline_for_kasan to keep reduce the
-overall stack size.
+Kalle,
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/mtd/chips/cfi_cmdset_0020.c | 8 ++++----
- include/linux/mtd/map.h             | 8 ++++----
- 2 files changed, 8 insertions(+), 8 deletions(-)
+Can you confirm (or deny)?
 
-diff --git a/drivers/mtd/chips/cfi_cmdset_0020.c b/drivers/mtd/chips/cfi_cmdset_0020.c
-index 94d3eb42c4d5..8a21e030829c 100644
---- a/drivers/mtd/chips/cfi_cmdset_0020.c
-+++ b/drivers/mtd/chips/cfi_cmdset_0020.c
-@@ -244,7 +244,7 @@ static struct mtd_info *cfi_staa_setup(struct map_info *map)
- }
- 
- 
--static inline int do_read_onechip(struct map_info *map, struct flchip *chip, loff_t adr, size_t len, u_char *buf)
-+static noinline_for_kasan int do_read_onechip(struct map_info *map, struct flchip *chip, loff_t adr, size_t len, u_char *buf)
- {
- 	map_word status, status_OK;
- 	unsigned long timeo;
-@@ -728,7 +728,7 @@ cfi_staa_writev(struct mtd_info *mtd, const struct kvec *vecs,
- }
- 
- 
--static inline int do_erase_oneblock(struct map_info *map, struct flchip *chip, unsigned long adr)
-+static noinline_for_kasan int do_erase_oneblock(struct map_info *map, struct flchip *chip, unsigned long adr)
- {
- 	struct cfi_private *cfi = map->fldrv_priv;
- 	map_word status, status_OK;
-@@ -1029,7 +1029,7 @@ static void cfi_staa_sync (struct mtd_info *mtd)
- 	}
- }
- 
--static inline int do_lock_oneblock(struct map_info *map, struct flchip *chip, unsigned long adr)
-+static noinline_for_kasan int do_lock_oneblock(struct map_info *map, struct flchip *chip, unsigned long adr)
- {
- 	struct cfi_private *cfi = map->fldrv_priv;
- 	map_word status, status_OK;
-@@ -1175,7 +1175,7 @@ static int cfi_staa_lock(struct mtd_info *mtd, loff_t ofs, uint64_t len)
- 	}
- 	return 0;
- }
--static inline int do_unlock_oneblock(struct map_info *map, struct flchip *chip, unsigned long adr)
-+static noinline_for_kasan int do_unlock_oneblock(struct map_info *map, struct flchip *chip, unsigned long adr)
- {
- 	struct cfi_private *cfi = map->fldrv_priv;
- 	map_word status, status_OK;
-diff --git a/include/linux/mtd/map.h b/include/linux/mtd/map.h
-index 3aa56e3104bb..8c2e241f45c7 100644
---- a/include/linux/mtd/map.h
-+++ b/include/linux/mtd/map.h
-@@ -316,7 +316,7 @@ static inline map_word map_word_or(struct map_info *map, map_word val1, map_word
- 	return r;
- }
- 
--static inline int map_word_andequal(struct map_info *map, map_word val1, map_word val2, map_word val3)
-+static noinline_for_kasan int map_word_andequal(struct map_info *map, map_word val1, map_word val2, map_word val3)
- {
- 	int i;
- 
-@@ -328,7 +328,7 @@ static inline int map_word_andequal(struct map_info *map, map_word val1, map_wor
- 	return 1;
- }
- 
--static inline int map_word_bitsset(struct map_info *map, map_word val1, map_word val2)
-+static noinline_for_kasan int map_word_bitsset(struct map_info *map, map_word val1, map_word val2)
- {
- 	int i;
- 
-@@ -362,7 +362,7 @@ static inline map_word map_word_load(struct map_info *map, const void *ptr)
- 	return r;
- }
- 
--static inline map_word map_word_load_partial(struct map_info *map, map_word orig, const unsigned char *buf, int start, int len)
-+static noinline_for_kasan map_word map_word_load_partial(struct map_info *map, map_word orig, const unsigned char *buf, int start, int len)
- {
- 	int i;
- 
-@@ -392,7 +392,7 @@ static inline map_word map_word_load_partial(struct map_info *map, map_word orig
- #define MAP_FF_LIMIT 8
- #endif
- 
--static inline map_word map_word_ff(struct map_info *map)
-+static noinline_for_kasan map_word map_word_ff(struct map_info *map)
- {
- 	map_word r;
- 	int i;
--- 
-2.9.0
+Regards,
+Arend
+
+> Regards,
+> 
+> Hans
+> 
+> 
+>>
+>> Regards,
+>> Arend
+>>
+>>>  #else
+>>>  __printf(2, 3)
+>>>  void __brcmf_err(const char *func, const char *fmt, ...);
+>>>  #define brcmf_err(fmt, ...) \
+>>>      __brcmf_err(__func__, fmt, ##__VA_ARGS__)
+>>> +/* For tracing purposes treat info messages as errors */
+>>> +#define brcmf_info brcmf_err
+>>>  #endif
+>>>
+>>>  #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+>>>
