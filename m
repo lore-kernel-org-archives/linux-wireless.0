@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02-sz.bfs.de ([194.94.69.103]:25646 "EHLO mx02-sz.bfs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751029AbdCQIf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 04:35:58 -0400
-Message-ID: <58CB9FE3.9010708@bfs.de> (sfid-20170317_093628_918948_AF7B225E)
-Date: Fri, 17 Mar 2017 09:35:47 +0100
-From: walter harms <wharms@bfs.de>
-Reply-To: wharms@bfs.de
+Received: from smtp.codeaurora.org ([198.145.29.96]:57752 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751591AbdCHP3r (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 10:29:47 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Colin King <colin.king@canonical.com>
-CC: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: fix incorrect copy of pmkid data
-References: <20170316232145.7704-1-colin.king@canonical.com>
-In-Reply-To: <20170316232145.7704-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: bcma: gpio: set of_node regardless of the host type
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170214220346.10479-1-zajec5@gmail.com>
+References: <20170214220346.10479-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20170308150528.8572A6076A@smtp.codeaurora.org> (sfid-20170308_163026_206835_72DA372E)
+Date: Wed,  8 Mar 2017 15:05:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-Am 17.03.2017 00:21, schrieb Colin King:
-> From: Colin Ian King <colin.king@canonical.com>
+Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> The pmkid data is meant be be copied to the previous item in the
-> pmkidlist, however the code is just copying the data to itself because
-> the src index into pmkidlist is the same as the dst index into pmkidlist.
-> Fix this with i + 1 instead of i.
+> DT allows describing many device types, not only platform ones. If e.g.
+> bcma is hosted on PCI(e) and it has its of_node, let's pass it to the
+> GPIO subsystem. This allows GPIO code to handle more hardware details
+> not only for bcma on a SoC.
 > 
-> Detected by CoverityScan,CID#13339465 ("Overlapping buffer in memory copy")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index a37896f..4034f40 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -1346,7 +1346,7 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
->  			       priv->pmkid_list.pmkidlist[i + 1].bssid,
->  			       ETH_ALEN);
->  			memcpy(priv->pmkid_list.pmkidlist[i].pmkid,
-> -			       priv->pmkid_list.pmkidlist[i].pmkid,
-> +			       priv->pmkid_list.pmkidlist[i + 1].pmkid,
->  			       PMKID_LEN);
->  		}
->  		priv->pmkid_list.numpmkid--;
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 
+Patch applied to wireless-drivers-next.git, thanks.
 
+a4bb5b1b47cb bcma: gpio: set of_node regardless of the host type
 
-perhaps we can also simplify the error handling:
-that would reduce the indentlevel by one and effectivly remove the s32Error variable.
+-- 
+https://patchwork.kernel.org/patch/9572997/
 
-if (i >= priv->pmkid_list.numpmkid || priv->pmkid_list.numpmkid <= 0)
-	return -EINVAL;
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-
-just my 2 cents.
-re,
- wh
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
