@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:35202 "EHLO
-        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753253AbdCFLLh (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:47385 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752370AbdCIAse (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 06:11:37 -0500
-Received: by mail-qk0-f182.google.com with SMTP id v125so85950580qkh.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 03:11:36 -0800 (PST)
-Subject: Re: [PATCH 07/26] brcmsmac: reduce stack size with KASAN
-To: Arnd Bergmann <arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-8-arnd@arndb.de>
- <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com>
- <CAK8P3a30Ge5gyKco4HKCdKWiJk9ee1PU3_P6THjOQgHm3EQcJw@mail.gmail.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <2dd6ce84-0285-b4c1-97d4-bb41a6ffec04@broadcom.com> (sfid-20170306_121152_557201_24E0EADF)
-Date: Mon, 6 Mar 2017 12:02:19 +0100
+        Wed, 8 Mar 2017 19:48:34 -0500
+Date: Thu, 9 Mar 2017 00:54:22 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] rt2x00: fix TX_PWR_CFG_4 register definition
+Message-ID: <20170308235412.GA22227@makrotopia.org> (sfid-20170309_014913_870472_7C42D32D)
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a30Ge5gyKco4HKCdKWiJk9ee1PU3_P6THjOQgHm3EQcJw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6-3-2017 11:38, Arnd Bergmann wrote:
-> On Mon, Mar 6, 2017 at 10:16 AM, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 2-3-2017 17:38, Arnd Bergmann wrote:
->>> The wlc_phy_table_write_nphy/wlc_phy_table_read_nphy functions always put an object
->>> on the stack, which will each require a redzone with KASAN and lead to possible
->>> stack overflow:
->>>
->>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
->>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: warning: the frame size of 6312 bytes is larger than 1000 bytes [-Wframe-larger-than=]
->>
->> Looks like this warning text ended up in the wrong commit message. Got
->> me confused for a sec :-p
-> 
-> What's wrong about the warning?
+Some of the macros used to describe the TX_PWR_CFG_4 register accidentally
+refer to TX_PWR_CFG_3, probably a copy&paste error. Fix that.
 
-The warning is about the function 'wlc_phy_workarounds_nphy' (see PATCH
-9/26) and not about wlc_phy_table_write_nphy/wlc_phy_table_read_nphy
-functions.
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
->>> This marks the two functions as noinline_for_kasan, avoiding the problem entirely.
->>
->> Frankly I seriously dislike annotating code for the sake of some
->> (dynamic) memory analyzer. To me the whole thing seems rather
->> unnecessary. If the code passes the 2048 stack limit without KASAN it
->> would seem the limit with KASAN should be such that no warning is given.
->> I suspect that it is rather difficult to predict the additional size of
->> the instrumentation code and on some systems there might be a real issue
->> with increased stack usage.
-> 
-> The frame sizes don't normally change that much. There are a couple of
-> drivers like brcmsmac that repeatedly call an inline function which has
-> a local variable that it passes by reference to an extern function.
-> 
-> While normally those variables share a stack location, KASAN forces
-> each instance to its own location and adds (in this case) 80 bytes of
-> redzone around it to detect out-of-bounds access.
-> 
-> While most drivers are fine with a 1500 byte warning limit, increasing
-> the limit to 7kb would silence brcmsmac (unless more registers
-> are accessed from wlc_phy_workarounds_nphy) but also risk a
-> stack overflow to go unnoticed.
-
-Given the amount of local variables maybe just tag the functions with
-noinline instead.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index 480b08601785..fd1dbd956bad 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -1171,10 +1171,10 @@
+ #define TX_PWR_CFG_4_UKNOWN7		FIELD32(0x00000f00)
+ #define TX_PWR_CFG_4_UKNOWN8		FIELD32(0x0000f000)
+ /* bits for 3T devices */
+-#define TX_PWR_CFG_3_STBC4_CH0		FIELD32(0x0000000f)
+-#define TX_PWR_CFG_3_STBC4_CH1		FIELD32(0x000000f0)
+-#define TX_PWR_CFG_3_STBC6_CH0		FIELD32(0x00000f00)
+-#define TX_PWR_CFG_3_STBC6_CH1		FIELD32(0x0000f000)
++#define TX_PWR_CFG_4_STBC4_CH0		FIELD32(0x0000000f)
++#define TX_PWR_CFG_4_STBC4_CH1		FIELD32(0x000000f0)
++#define TX_PWR_CFG_4_STBC6_CH0		FIELD32(0x00000f00)
++#define TX_PWR_CFG_4_STBC6_CH1		FIELD32(0x0000f000)
+ 
+ /*
+  * TX_PIN_CFG:
+-- 
+2.11.1
