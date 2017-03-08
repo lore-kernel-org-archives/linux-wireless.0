@@ -1,100 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33207 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932760AbdC3JT5 (ORCPT
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:36499 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751291AbdCHKP6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 05:19:57 -0400
-Received: by mail-pg0-f66.google.com with SMTP id 79so8614477pgf.0
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2017 02:19:56 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only firmware name
-Date: Thu, 30 Mar 2017 09:19:07 +0000
-Message-Id: <1490865547-10208-3-git-send-email-huxinming820@gmail.com> (sfid-20170330_112020_330089_66BC2552)
-In-Reply-To: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
-References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
+        Wed, 8 Mar 2017 05:15:58 -0500
+Received: by mail-qk0-f174.google.com with SMTP id 1so56572136qkl.3
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Mar 2017 02:15:40 -0800 (PST)
+Subject: Re: [PATCH v2 2/4] brcmfmac: p2p and normal ap access are not always
+ possible at the same time
+To: Hans de Goede <hdegoede@redhat.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
+ <20170227214539.16422-2-hdegoede@redhat.com>
+ <33689f32-1bf8-98f8-df65-278de097e435@broadcom.com>
+ <738d049d-4e90-8a5d-e5c0-d037085a064c@redhat.com>
+ <d0bec61e-4481-42b9-fcdd-d6a8f8f3524e@broadcom.com>
+Cc: Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <edc0f67d-59d7-437c-2588-e895217577cd@broadcom.com> (sfid-20170308_111624_828204_E8DC8EB1)
+Date: Wed, 8 Mar 2017 11:15:35 +0100
+MIME-Version: 1.0
+In-Reply-To: <d0bec61e-4481-42b9-fcdd-d6a8f8f3524e@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 8-3-2017 10:26, Arend Van Spriel wrote:
+> On 8-3-2017 9:24, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 07-03-17 11:03, Arend Van Spriel wrote:
+>>>
+>>>
+>>> On 27-2-2017 22:45, Hans de Goede wrote:
+>>>> The firmware responding with -EBUSY when trying to add an extra
+>>>> virtual-if
+>>>> is a normal thing, do not print an error for this.
+>>>
+>>> This may be something we need to look into. It seems to me the interface
+>>> combinations needs to be fixed so we do not try to provision firmware.
+>>> Can you explain the scenario here?
+>>
+>> I'm not doing anything special just connecting to my isp provided
+>> accesspoint
+>> using NetworkManager.
+> 
+> Ok. So it is probably the P2P_DEVICE interface as that is the only
+> interface being created in that scenario. Can you provide a log with
+> brcmfmac driver debug=0x1416.
 
-Wifi-only firmware name should be chipset specific.
+I guess you are seeing this with 43362. Is that correct?
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 8 +++++++-
- drivers/net/wireless/marvell/mwifiex/pcie.h | 6 ++++++
- 2 files changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 59cb01a..282aa9a 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -351,6 +351,12 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
- 	struct pcie_service_card *card = pci_get_drvdata(pdev);
- 	struct mwifiex_adapter *adapter = card->adapter;
- 
-+	if (!card->pcie.flr_support) {
-+		pr_err("%s: FLR disabled in current chipset\n", __func__);
-+		return;
-+	}
-+
-+	adapter = card->adapter;
- 	if (!adapter) {
- 		dev_err(&pdev->dev, "%s: adapter structure is not valid\n",
- 			__func__);
-@@ -3047,7 +3053,7 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
- 	 * during pcie FLR, so that bluetooth part of firmware which is
- 	 * already running doesn't get affected.
- 	 */
--	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
-+	strcpy(adapter->fw_name, card->pcie.wifi_fw_name);
- 
- 	/* tx_buf_size might be changed to 3584 by firmware during
- 	 * data transfer, we should reset it to default size.
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 00e8ee5..d6c8526 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -285,6 +285,8 @@ struct mwifiex_pcie_device {
- 	struct memory_type_mapping *mem_type_mapping_tbl;
- 	u8 num_mem_types;
- 	bool can_ext_scan;
-+	u8 flr_support;
-+	char *wifi_fw_name;
- };
- 
- static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
-@@ -293,6 +295,7 @@ struct mwifiex_pcie_device {
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.can_dump_fw = false,
- 	.can_ext_scan = true,
-+	.flr_support = 0,
- };
- 
- static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
-@@ -303,6 +306,7 @@ struct mwifiex_pcie_device {
- 	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
- 	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
- 	.can_ext_scan = true,
-+	.flr_support = 0,
- };
- 
- static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
-@@ -313,6 +317,8 @@ struct mwifiex_pcie_device {
- 	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8997,
- 	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8997),
- 	.can_ext_scan = true,
-+	.flr_support = 1,
-+	.wifi_fw_name = "mrvl/pcie8997_wlan_v4.bin",
- };
- 
- struct mwifiex_evt_buf_desc {
--- 
-1.8.1.4
+Regards,
+Arend
