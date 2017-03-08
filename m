@@ -1,48 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59392 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40886 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752034AbdC1MfP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 08:35:15 -0400
-Message-ID: <1490704473.18052.1.camel@sipsolutions.net> (sfid-20170328_143652_459787_7AB43CDB)
-Subject: Re: [PATCH for-4.11 2/2] cfg80211: check rdev resume callback only
- for registered wiphy
-From: Johannes Berg <johannes@sipsolutions.net>
+        id S1753290AbdCHOBD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 09:01:03 -0500
+From: Hans de Goede <hdegoede@redhat.com>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
         Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Daniel J Blueman <daniel@quora.org>
-Date: Tue, 28 Mar 2017 14:34:33 +0200
-In-Reply-To: <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_112615_711798_FE2BF116)
-References: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com>
-         (sfid-20170328_112615_711798_FE2BF116)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v3 1/3] brcmfmac: Do not print the firmware version as an error
+Date: Wed,  8 Mar 2017 14:50:15 +0100
+Message-Id: <20170308135017.29867-1-hdegoede@redhat.com> (sfid-20170308_150136_643223_347CCE06)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Changing the checks in
-> wiphy_resume() to only access the struct
-> cfg80211_registered_device::ops
-> when the wiphy instance is registered.
+Using pr_err for things which are not errors is a bad idea. E.g. it
+will cause the plymouth bootsplash screen to drop back to the text
+console so that the user can see the error, which is not what we
+normally want to happen.
 
-[...]
+Instead add a new brcmf_info macro and use that.
 
-> +++ b/net/wireless/sysfs.c
-> @@ -132,12 +132,10 @@ static int wiphy_resume(struct device *dev)
->  	/* Age scan results with time spent in suspend */
->  	cfg80211_bss_age(rdev, get_seconds() - rdev->suspend_at);
->  
-> -	if (rdev->ops->resume) {
-> -		rtnl_lock();
-> -		if (rdev->wiphy.registered)
-> -			ret = rdev_resume(rdev);
-> -		rtnl_unlock();
-> -	}
-> +	rtnl_lock();
-> +	if (rdev->wiphy.registered && rdev->ops->resume)
-> +		ret = rdev_resume(rdev);
-> +	rtnl_unlock();
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+Changes in v2:
+-Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+Changes in v3:
+-Use do { } while (0) around macro
+-Rebase on top of v4.11-rc1
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 9 +++++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-Hmm? Commit message seems ... old perhaps?
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 33b133f..7a2b495 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	strsep(&ptr, "\n");
+ 
+ 	/* Print fw version info */
+-	brcmf_err("Firmware version = %s\n", buf);
++	brcmf_info("Firmware version = %s\n", buf);
+ 
+ 	/* locate firmware version number for ethtool */
+ 	ptr = strrchr(buf, ' ') + 1;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 0661261..afb2436 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -59,6 +59,10 @@ void __brcmf_err(const char *func, const char *fmt, ...);
+ 	} while (0)
+ 
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
++
++/* For debug/tracing purposes treat info messages as errors */
++#define brcmf_info brcmf_err
++
+ __printf(3, 4)
+ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...);
+ #define brcmf_dbg(level, fmt, ...)				\
+@@ -77,6 +81,11 @@ do {								\
+ 
+ #else /* defined(DEBUG) || defined(CONFIG_BRCM_TRACING) */
+ 
++#define brcmf_info(fmt, ...)						\
++	do {								\
++		pr_info("%s: " fmt, __func__, ##__VA_ARGS__);		\
++	} while (0)
++
+ #define brcmf_dbg(level, fmt, ...) no_printk(fmt, ##__VA_ARGS__)
+ 
+ #define BRCMF_DATA_ON()		0
+-- 
+2.9.3
