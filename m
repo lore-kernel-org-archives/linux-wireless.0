@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51420 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40884 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965271AbdCXJZC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 05:25:02 -0400
-Message-ID: <1490347486.2766.17.camel@sipsolutions.net> (sfid-20170324_102601_255673_5A8211D2)
-Subject: Re: deadlock in synchronize_srcu() in debugfs?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Nicolai Stange <nicstange@gmail.com>,
-        "Paul E.McKenney" <paulmck@linux.vnet.ibm.com>,
-        gregkh <gregkh@linuxfoundation.org>, sharon.dvir@intel.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 24 Mar 2017 10:24:46 +0100
-In-Reply-To: <1490345799.2766.15.camel@sipsolutions.net>
-References: <1490280886.2766.4.camel@sipsolutions.net>
-         <1490282991.2766.7.camel@sipsolutions.net>
-         <1490345799.2766.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1753030AbdCHOBD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 09:01:03 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v3 3/3] brcmfmac: Handle status == BRCMF_E_STATUS_ABORT in cfg80211_escan_handler
+Date: Wed,  8 Mar 2017 14:50:17 +0100
+Message-Id: <20170308135017.29867-3-hdegoede@redhat.com> (sfid-20170308_150134_915484_810EC891)
+In-Reply-To: <20170308135017.29867-1-hdegoede@redhat.com>
+References: <20170308135017.29867-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+If a scan gets aborted BRCMF_SCAN_STATUS_BUSY gets cleared in
+cfg->scan_status and when we receive an abort event from the firmware
+the BRCMF_SCAN_STATUS_BUSY check in the cfg80211_escan_handler will
+trigger resulting in multiple errors getting logged.
 
-On Fri, 2017-03-24 at 09:56 +0100, Johannes Berg wrote:
-> On Thu, 2017-03-23 at 16:29 +0100, Johannes Berg wrote:
-> > Isn't it possible for the following to happen?
-> > 
-> > CPU1					CPU2
-> > 
-> > mutex_lock(&M); // acquires mutex
-> > 					full_proxy_xyz();
-> > 					srcu_read_lock(&debugfs_srcu);
-> > 					real_fops->xyz();
-> > 					mutex_lock(&M); // waiting for mutex
-> > debugfs_remove(F);
-> > synchronize_srcu(&debugfs_srcu);
+Check for a status of BRCMF_E_STATUS_ABORT and in this case simply
+cleanly exit the cfg80211_escan_handler. This also avoids a
+BRCMF_E_STATUS_ABORT event arriving after a new scan has been started
+causing the new scan to complete prematurely without any data.
 
-> So I'm pretty sure that this can happen. I'm not convinced that it's
-> happening here, but still.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+Changes in v3:
+-Add Arend's Acked-by
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-I'm a bit confused, in that SRCU, of course, doesn't wait until all the
-readers are done - that'd be a regular reader/writer lock or something.
-
-However, it does (have to) wait until all the currently active read-
-side sections have terminated, which still leads to a deadlock in the
-example above, I think?
-
-In his 2006 LWN article Paul wrote:
-
-    The designer of a given subsystem is responsible for: (1) ensuring
-    that SRCU read-side sleeping is bounded and (2) limiting the amount
-    of memory waiting for synchronize_srcu(). [1]
-
-In the case of debugfs files acquiring locks, (1) can't really be
-guaranteed, especially if those locks can be held while doing
-synchronize_srcu() [via debugfs_remove], so I still think the lockdep
-annotation needs to be changed to at least have some annotation at
-synchronize_srcu() time so we can detect this.
-
-Now, I still suspect there's some other bug here in the case that I'm
-seeing, because I don't actually see the "mutex_lock(&M); // waiting"
-piece in the traces. I'll need to run this with some tracing on Monday
-when the test guys are back from the weekend.
-
-I'm also not sure how I can possibly fix this in debugfs in mac80211
-and friends, but that's perhaps a different story. Clearly, this
-debugfs patch is a good thing - the code will likely have had use-
-after-free problems in this situation without it. But flagging the
-potential deadlocks would make it a lot easier to find them.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 7765ad0..4e1ca69 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3097,6 +3097,9 @@ brcmf_cfg80211_escan_handler(struct brcmf_if *ifp,
+ 
+ 	status = e->status;
+ 
++	if (status == BRCMF_E_STATUS_ABORT)
++		goto exit;
++
+ 	if (!test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
+ 		brcmf_err("scan not ready, bsscfgidx=%d\n", ifp->bsscfgidx);
+ 		return -EPERM;
+-- 
+2.9.3
