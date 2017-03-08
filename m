@@ -1,95 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48927 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932909AbdCJMoG (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44192 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750764AbdCHKP6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 07:44:06 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v4 06/21] ath10k: sdio support
-Date: Fri, 10 Mar 2017 12:43:34 +0000
-Message-ID: <871su52th2.fsf@kamboji.qca.qualcomm.com> (sfid-20170310_134427_377815_9C5456D6)
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
-        <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8760jh2uy8.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Fri, 10 Mar 2017 12:11:40 +0000")
-Content-Type: text/plain; charset="iso-8859-1"
+        Wed, 8 Mar 2017 05:15:58 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an error
+References: <20170227214539.16422-1-hdegoede@redhat.com>
+        <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com>
+        <6c1dd576-7571-e85f-ee43-8e9e69a76679@redhat.com>
+        <ecb4cc58-8cf5-1ca6-7649-fe4e97ac2149@broadcom.com>
+        <87a88w851p.fsf@kamboji.qca.qualcomm.com>
+        <8cd33792-0a44-fbce-f485-218b8c126625@redhat.com>
+Date: Wed, 08 Mar 2017 12:14:28 +0200
+In-Reply-To: <8cd33792-0a44-fbce-f485-218b8c126625@redhat.com> (Hans de
+        Goede's message of "Wed, 8 Mar 2017 11:08:27 +0100")
+Message-ID: <8760jk848r.fsf@kamboji.qca.qualcomm.com> (sfid-20170308_111803_677396_B536CC37)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Valo, Kalle" <kvalo@qca.qualcomm.com> writes:
+Hans de Goede <hdegoede@redhat.com> writes:
 
-> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
->
->> sdio/mailbox HIF implementation.
+>>> I think Kalle prefers the whole series to be resubmitted.
+>>>
+>>> Kalle,
+>>>
+>>> Can you confirm (or deny)?
 >>
->> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>> Exactly, I want to apply the full series (with the highest version
+>> number). Not waste time guessing what patches I should take and what to
+>> drop, with the increased risk of guessing wrong.
 >
-> I'm looking at this more carefully now and noticed this:
->
->> +static int ath10k_sdio_bmi_credits(struct ath10k *ar)
->> +{
->> +	int ret;
->> +	u32 addr, *cmd_credits;
->> +	unsigned long timeout;
->> +
->> +	cmd_credits =3D kzalloc(sizeof(*cmd_credits), GFP_KERNEL);
->> +	if (!cmd_credits) {
->> +		ret =3D -ENOMEM;
->> +		goto err;
->> +	}
->> +
->> +	/* Read the counter register to get the command credits */
->> +	addr =3D MBOX_COUNT_DEC_ADDRESS + ATH10K_HIF_MBOX_NUM_MAX * 4;
->> +
->> +	timeout =3D jiffies + BMI_COMMUNICATION_TIMEOUT_HZ;
->> +	while (time_before(jiffies, timeout) && !*cmd_credits) {
->> +		/* Hit the credit counter with a 4-byte access, the first byte
->> +		 * read will hit the counter and cause a decrement, while the
->> +		 * remaining 3 bytes has no effect. The rationale behind this
->> +		 * is to make all HIF accesses 4-byte aligned.
->> +		 */
->> +		ret =3D ath10k_sdio_read_write_sync(ar, addr,
->> +						  (u8 *)cmd_credits,
->> +						  sizeof(*cmd_credits),
->> +						  HIF_RD_SYNC_BYTE_INC);
->> +		if (ret) {
->> +			ath10k_warn(ar,
->> + "Unable to decrement the command credit count register: %d\n",
->> +				    ret);
->> +			goto err_free;
->> +		}
->> +
->> +		/* The counter is only 8 bits.
->> +		 * Ignore anything in the upper 3 bytes
->> +		 */
->> +		*cmd_credits &=3D 0xFF;
->> +	}
->> +
->> +	if (!*cmd_credits) {
->> +		ath10k_warn(ar, "bmi communication timeout\n");
->> +		ret =3D -ETIMEDOUT;
->> +		goto err_free;
->> +	}
->> +
->> +	return 0;
->> +err_free:
->> +	kfree(cmd_credits);
->> +err:
->> +	return ret;
->> +}
->
-> AFAICS we are leaking cmd_credits if there's no error. Or is the buffer
-> freed somewhere within the mmc stack or something? The reason why I ask
-> is that I saw the same pattern in multiple functions so I'm curious.
+> Ok, so patch 2/4 is still under discussion (and may be so for a while)
+> shall I send a new version with that patch dropped ?  And then send
+> that patch (or a modified version) separately later ?
 
-Also I'm worried about endianness. We are reading from the device
-directly to an u32 variable and not converting the bytes. Is the MMC
-subsystem doing the conversion, I guess not?
+Yeah, for me that would be the easiest. Thanks.
 
---=20
-Kalle Valo=
+-- 
+Kalle Valo
