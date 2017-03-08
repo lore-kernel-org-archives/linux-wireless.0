@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53936 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751318AbdCQV02 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57764 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751657AbdCHP3r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 17:26:28 -0400
-Message-Id: <1489784453.616318.915027280.18AA7FBF@webmail.messagingengine.com> (sfid-20170317_222725_445350_9122EC42)
-From: "Nikita N." <nikitan@operamail.com>
-To: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        helmut.schaa@googlemail.com
+        Wed, 8 Mar 2017 10:29:47 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Karthik D A <karthida@marvell.com>
+Subject: Re: [PATCH 1/3] mwifiex: add qualifier to firmware structures
+References: <1488980829-6075-1-git-send-email-gbhat@marvell.com>
+        <1488980829-6075-2-git-send-email-gbhat@marvell.com>
+Date: Wed, 08 Mar 2017 16:48:00 +0200
+In-Reply-To: <1488980829-6075-2-git-send-email-gbhat@marvell.com> (Ganapathi
+        Bhat's message of "Wed, 8 Mar 2017 19:17:07 +0530")
+Message-ID: <874lz37rkv.fsf@purkki.adurom.net> (sfid-20170308_163026_782026_69A12F64)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Subject: Ralink - rt2800usb
-In-Reply-To: <1489782418.608233.914997416.7AA6FF7F@webmail.messagingengine.com>
-Date: Fri, 17 Mar 2017 14:00:53 -0700
-References: <1489685379.2341893.913635800.3ACB3D38@webmail.messagingengine.com>
- <1489732680.3555697.914250624.7A79601B@webmail.messagingengine.com>
- <1489782418.608233.914997416.7AA6FF7F@webmail.messagingengine.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-I'm addressing to the maintainers of Ralink driver rt2800usb
-(RT2870,RT3070).
-To who can I send my request?
-Thanks
+Ganapathi Bhat <gbhat@marvell.com> writes:
+
+> From: Karthik D A <karthida@marvell.com>
+>
+> Adding qualifier "__packed" indicates that no padding should be
+> performed on the qualified object for alignment.
+> This patch adds qualifier __packed to the required firmware
+> structures in mwifiex driver.
+>
+> Signed-off-by: Karthik D A <karthida@marvell.com>
+
+I just want to confirm "Karthik D A" is really the full legal name,
+which should be in both From and Signed-off-by lines. No nicknames nor
+just the first name or anything like that.
+
+Also this should contain S-o-b from Ganapathi. Please carefully read
+Documentation/process/submitting-patches.rst.
 
 -- 
-http://www.fastmail.com - Or how I learned to stop worrying and
-                          love email again
+Kalle Valo
