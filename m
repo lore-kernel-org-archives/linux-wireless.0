@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52476 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753819AbdCTRMo (ORCPT
+Received: from mail.free-electrons.com ([62.4.15.54]:42130 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750749AbdCHQM3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 13:12:44 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 8 Mar 2017 11:12:29 -0500
+Date: Wed, 8 Mar 2017 17:10:25 +0100
+From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Simon Kelley <simon@thekelleys.org.uk>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: wireless/atmel: remove time_t usage
+Message-ID: <20170308161025.nxz6puyeo3ezwa43@piout.net> (sfid-20170308_171232_901567_594248E0)
+References: <20170223161445.19200-1-alexandre.belloni@free-electrons.com>
+ <20170308151340.9D6E360209@smtp.codeaurora.org>
 MIME-Version: 1.0
-Subject: Re: [4.12,1/2] bcma: use helper function to set core dev's parent
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170303103415.5188-1-zajec5@gmail.com>
-References: <20170303103415.5188-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20170320171231.22896609A1@smtp.codeaurora.org> (sfid-20170320_181316_535929_B1D86047)
-Date: Mon, 20 Mar 2017 17:12:30 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170308151340.9D6E360209@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> A tiny code deduplication thanks to the bcma_bus_get_host_dev.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Hi,
 
-2 patches applied to wireless-drivers-next.git, thanks.
+On 08/03/2017 at 15:13:40 +0000, Kalle Valo wrote:
+> Alexandre Belloni <alexandre.belloni@free-electrons.com> wrote:
+> > last_qual never really holds a time. It only holds jiffies. Make it the
+> > same type as jiffies.
+> > 
+> > Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+> 
+> The title should start with "atmel:", I can fix that during commit.
+> 
 
-5e48a4cd2ee9 bcma: use helper function to set core dev's parent
-f825f6ed20e3 bcma: fill core OF info independently of bus type
+If you prefer, I can send a v2
 
 -- 
-https://patchwork.kernel.org/patch/9602507/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Alexandre Belloni, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
