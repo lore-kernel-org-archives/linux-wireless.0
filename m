@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40536 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753005AbdCHGin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 01:38:43 -0500
-Message-ID: <1488955036.31187.1.camel@sipsolutions.net> (sfid-20170308_073900_709773_D879D861)
-Subject: Re: rate mask resulting in no usable rates - WARN_ON
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 08 Mar 2017 07:37:16 +0100
-In-Reply-To: <a1cd3a56-0453-7675-6895-9521a412a9cd@candelatech.com>
-References: <1488933811.4723.1.camel@sipsolutions.net>
-         <a1cd3a56-0453-7675-6895-9521a412a9cd@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:39700 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752998AbdCHTEw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 14:04:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Simon Kelley <simon@thekelleys.org.uk>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: wireless/atmel: remove time_t usage
+References: <20170223161445.19200-1-alexandre.belloni@free-electrons.com>
+        <20170308151340.9D6E360209@smtp.codeaurora.org>
+        <20170308161025.nxz6puyeo3ezwa43@piout.net>
+Date: Wed, 08 Mar 2017 20:53:15 +0200
+In-Reply-To: <20170308161025.nxz6puyeo3ezwa43@piout.net> (Alexandre Belloni's
+        message of "Wed, 8 Mar 2017 17:10:25 +0100")
+Message-ID: <871su77g84.fsf@kamboji.qca.qualcomm.com> (sfid-20170308_200511_122425_F1D2788B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Alexandre Belloni <alexandre.belloni@free-electrons.com> writes:
 
-> > Is anyone - other than ChromeOS, which sets it just after
-> > association - actually using this?
-> 
-> I know several people who use this and depend on it being sticky.  
+> Hi,
+>
+> On 08/03/2017 at 15:13:40 +0000, Kalle Valo wrote:
+>> Alexandre Belloni <alexandre.belloni@free-electrons.com> wrote:
+>> > last_qual never really holds a time. It only holds jiffies. Make it the
+>> > same type as jiffies.
+>> > 
+>> > Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+>> 
+>> The title should start with "atmel:", I can fix that during commit.
+>> 
+>
+> If you prefer, I can send a v2
 
-Do you know how they use it in more detail?
+Thanks, but no need. I can easily edit the commit log when I commit it.
 
-> For that matter, I think LEDE and probably OpenWRT uses 'iw' quite a
-> bit to affect rates.
-
-That seems odd, but ok.
-
-Either way, if people do rely on it being sticky then I'll do the next
-best thing and just clear the mask when detecting a situation where it
-would result in no usable rates, as well as rejecting it when it's
-already known that it would do so.
-
-johannes
+-- 
+Kalle Valo
