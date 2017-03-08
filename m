@@ -1,134 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40849 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753265AbdC0MVM (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42928 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756934AbdCHGmC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Mar 2017 08:21:12 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2RCENcR003774
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 05:20:37 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 29exna8t5u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 05:20:37 -0700
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH] mwifiex: Support USB interrupt endpoint for command response/event
-Date: Mon, 27 Mar 2017 17:48:20 +0530
-Message-ID: <1490617100-13548-1-git-send-email-gbhat@marvell.com> (sfid-20170327_142600_099899_E2AA95D4)
+        Wed, 8 Mar 2017 01:42:02 -0500
+Subject: Re: rate mask resulting in no usable rates - WARN_ON
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <1488933811.4723.1.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <a1cd3a56-0453-7675-6895-9521a412a9cd@candelatech.com> (sfid-20170308_074303_062859_2F42C612)
+Date: Tue, 7 Mar 2017 17:13:39 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1488933811.4723.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-USB firmware added support for sending command response/event through
-interrupt endpoint, to enhance RX throupghut. Added corresponding changes
-required to support this feature.
+On 03/07/2017 04:43 PM, Johannes Berg wrote:
+> Ben, all,
+>
+> There are scenarios where setting a rate mask from userspace will
+> result in no usable rates, e.g. when you set a rate mask of 6,9,12
+> MBps, and the AP reports it only supports 36,48,54 (which some APs do).
+> This results in a WARN_ONCE() hitting since we can't find a usable
+> rate, and then we fall back to 1 or 6 MBps, which is a mandatory rate
+> but the AP didn't report it as supported (is it thus misbehaving?
+> doesn't matter much though)
+>
+> I'd go and reject a setting that results in no usable rates, but
+> because the setting is sticky this is very complicated (it's a good
+> thing I insisted we have very few of these, but some I couldn't get
+> around).
+>
+> Would there be any objection to making this setting non-sticky, i.e.
+> always resetting it for a new association? It's kinda designed to be
+> sticky, with the per-band setting, but clearly this is causing big
+> problems.
+>
+> Alternatively, the really proper behaviour would be for this setting to
+> actually influence whether or not we can connect to the AP, but that
+> will just lead to massive problems because wpa_s will be unaware and
+> will pick APs that we can't support with the setting etc. Therefore I'm
+> not going to do this.
+>
+> I could also reset the setting only when it would result in no usable
+> rates, but that doesn't even give userspace any good way at all to
+> predict it.
+>
+> Is anyone - other than ChromeOS, which sets it just after association -
+> actually using this?
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 45 +++++++++++++++++++++++-------
- drivers/net/wireless/marvell/mwifiex/usb.h |  4 +++
- 2 files changed, 39 insertions(+), 10 deletions(-)
+I know several people who use this and depend on it being sticky.  For that
+matter, I think LEDE and probably OpenWRT uses 'iw' quite a bit to affect rates.   I wrote
+up some patches to help make this less sticky by allowing supplicant to specify
+the (V)HT rates at connect time, but I am pretty sure those were not wanted
+upstream at the time.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 9cf3334..2f7705c 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -306,9 +306,17 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
- 		}
- 	}
- 
--	usb_fill_bulk_urb(ctx->urb, card->udev,
--			  usb_rcvbulkpipe(card->udev, ctx->ep), ctx->skb->data,
--			  size, mwifiex_usb_rx_complete, (void *)ctx);
-+	if (card->rx_cmd_ep == ctx->ep &&
-+	    card->rx_cmd_ep_type == USB_ENDPOINT_XFER_INT)
-+		usb_fill_int_urb(ctx->urb, card->udev,
-+				 usb_rcvintpipe(card->udev, ctx->ep),
-+				 ctx->skb->data, size, mwifiex_usb_rx_complete,
-+				 (void *)ctx, card->rx_cmd_interval);
-+	else
-+		usb_fill_bulk_urb(ctx->urb, card->udev,
-+				  usb_rcvbulkpipe(card->udev, ctx->ep),
-+				  ctx->skb->data, size, mwifiex_usb_rx_complete,
-+				  (void *)ctx);
- 
- 	if (card->rx_cmd_ep == ctx->ep)
- 		atomic_inc(&card->rx_cmd_urb_pending);
-@@ -424,10 +432,13 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 		epd = &iface_desc->endpoint[i].desc;
- 		if (usb_endpoint_dir_in(epd) &&
- 		    usb_endpoint_num(epd) == MWIFIEX_USB_EP_CMD_EVENT &&
--		    usb_endpoint_xfer_bulk(epd)) {
--			pr_debug("info: bulk IN: max pkt size: %d, addr: %d\n",
-+		    (usb_endpoint_xfer_bulk(epd) ||
-+		     usb_endpoint_xfer_int(epd))) {
-+			card->rx_cmd_ep_type = usb_endpoint_type(epd);
-+			card->rx_cmd_interval = epd->bInterval;
-+			pr_debug("info: Rx CMD/EVT:: max pkt size: %d, addr: %d, ep_type: %d\n",
- 				 le16_to_cpu(epd->wMaxPacketSize),
--				 epd->bEndpointAddress);
-+				 epd->bEndpointAddress, card->rx_cmd_ep_type);
- 			card->rx_cmd_ep = usb_endpoint_num(epd);
- 			atomic_set(&card->rx_cmd_urb_pending, 0);
- 		}
-@@ -461,10 +472,16 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 		}
- 		if (usb_endpoint_dir_out(epd) &&
- 		    usb_endpoint_num(epd) == MWIFIEX_USB_EP_CMD_EVENT &&
--		    usb_endpoint_xfer_bulk(epd)) {
-+		    (usb_endpoint_xfer_bulk(epd) ||
-+		     usb_endpoint_xfer_int(epd))) {
-+			card->tx_cmd_ep_type = usb_endpoint_type(epd);
-+			card->tx_cmd_interval = epd->bInterval;
- 			pr_debug("info: bulk OUT: max pkt size: %d, addr: %d\n",
- 				 le16_to_cpu(epd->wMaxPacketSize),
- 				 epd->bEndpointAddress);
-+			pr_debug("info: Tx CMD:: max pkt size: %d, addr: %d, ep_type: %d\n",
-+				 le16_to_cpu(epd->wMaxPacketSize),
-+				 epd->bEndpointAddress, card->tx_cmd_ep_type);
- 			card->tx_cmd_ep = usb_endpoint_num(epd);
- 			atomic_set(&card->tx_cmd_urb_pending, 0);
- 			card->bulk_out_maxpktsize =
-@@ -884,9 +901,17 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	context->skb = skb;
- 	tx_urb = context->urb;
- 
--	usb_fill_bulk_urb(tx_urb, card->udev, usb_sndbulkpipe(card->udev, ep),
--			  data, skb->len, mwifiex_usb_tx_complete,
--			  (void *)context);
-+	if (ep == card->tx_cmd_ep &&
-+	    card->tx_cmd_ep_type == USB_ENDPOINT_XFER_INT)
-+		usb_fill_int_urb(tx_urb, card->udev,
-+				 usb_sndintpipe(card->udev, ep), data,
-+				 skb->len, mwifiex_usb_tx_complete,
-+				 (void *)context, card->tx_cmd_interval);
-+	else
-+		usb_fill_bulk_urb(tx_urb, card->udev,
-+				  usb_sndbulkpipe(card->udev, ep), data,
-+				  skb->len, mwifiex_usb_tx_complete,
-+				  (void *)context);
- 
- 	tx_urb->transfer_flags |= URB_ZERO_PACKET;
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
-index 16017ae..e36bd63 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.h
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.h
-@@ -90,6 +90,10 @@ struct usb_card_rec {
- 	struct urb_context tx_cmd;
- 	u8 mc_resync_flag;
- 	struct usb_tx_data_port port[MWIFIEX_TX_DATA_PORT];
-+	int rx_cmd_ep_type;
-+	u8 rx_cmd_interval;
-+	int tx_cmd_ep_type;
-+	u8 tx_cmd_interval;
- };
- 
- struct fw_header {
+Personally, I'd prefer to be able to specify the advertised and allowed-tx-rates
+at assoc time and drive it from supplicant.
+
+For my needs, you need both advertised (like how the station presents itself)
+as well as the rateset that you want to transmit with.  That allows you to
+configure your station to act like a /b station (advertise 1,2,...11Mbps), but only transmit on
+1Mbps, for instance.
+
+Nice thing about doing it in supplicant is that it has fairly good access to
+the rates the AP is advertising...
+
+Thanks,
+Ben
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
