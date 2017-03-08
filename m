@@ -1,119 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0082.hostedemail.com ([216.40.44.82]:46490 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753834AbdCBRuV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 12:50:21 -0500
-Message-ID: <1488476770.2179.6.camel@perches.com> (sfid-20170302_185217_512980_40B5B950)
-Subject: Re: [PATCH 24/26] ocfs2: reduce stack size with KASAN
-From: Joe Perches <joe@perches.com>
-To: Arnd Bergmann <arnd@arndb.de>, kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Date: Thu, 02 Mar 2017 09:46:10 -0800
-In-Reply-To: <20170302163834.2273519-25-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
-         <20170302163834.2273519-25-arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51062 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754150AbdCHWIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 17:08:45 -0500
+Message-ID: <1489008812.7127.9.camel@sipsolutions.net> (sfid-20170308_231029_408604_8FBD4586)
+Subject: Re: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
+ offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Pubbisetty, Manikanta" <mpubbise@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+Date: Wed, 08 Mar 2017 22:33:32 +0100
+In-Reply-To: <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
+References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488544754.25750.8.camel@sipsolutions.net>
+         <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-03-02 at 17:38 +0100, Arnd Bergmann wrote:
-> The internal logging infrastructure in ocfs2 causes special warning code to be
-> used with KASAN, which produces rather large stack frames:
 
-> fs/ocfs2/super.c: In function 'ocfs2_fill_super':
-> fs/ocfs2/super.c:1219:1: error: the frame size of 3264 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-
-At least by default it doesn't seem to.
-
-gcc 6.2 allyesconfig, CONFIG_KASAN=y
-with either CONFIG_KASAN_INLINE or CONFIG_KASAN_OUTLINE
-
-gcc doesn't emit a stack warning
-
-> By simply passing the mask by value instead of reference, we can avoid the
-> problem completely.
-
-Any idea why that's so?
- 
->  On 64-bit architectures, this is also more efficient,
-
-Efficient true, but the same overall stack no?
-
-> while on the less common (at least among ocfs2 users) 32-bit architectures,
-> I'm guessing that the resulting code is comparable to what it was before.
+> > Why is that needed? Since you have a separate TX path
+> > (ndo_start_xmit),
+> > wouldn't it make more sense to call into a drv_tx_8023() or
+> > something like that instead?
+> > 
 > 
-> The current version was introduced by Joe Perches as an optimization, maybe
-> he can see if my change regresses compared to his.
+> [Manikanta]  Yes, it makes sense having a separate driver hook
+> instead of using drv_tx, but in case of drivers (fe ath10k) 
+> where enqueuing and dequeuing tx logic (wake_tx_queue and
+> ieee80211_tx_dequeue) is used there should be a way
+> to indicate that the packet is not 80211 encapsulated, isn't it?
+> Correct me if I am missing anything.
 
-I don't see it.
+Ah, interesting. Yeah, I guess that makes some sense then, though I'm
+not super happy with sharing the code paths between differently
+encapsulated frames - best to leave that as minimal as possible.
 
-> Cc: Joe Perches <joe@perches.com>
-> Fixes: 7c2bd2f930ae ("ocfs2: reduce object size of mlog uses")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  fs/ocfs2/cluster/masklog.c | 10 +++++-----
->  fs/o cfs2/cluster/masklog.h |  4 ++--
->  2 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/ocfs2/cluster/masklog.c b/fs/ocfs2/cluster/masklog.c
-> index d331c2386b94..9720c5443e4d 100644
-> --- a/fs/ocfs2/cluster/masklog.c
-> +++ b/fs/ocfs2/cluster/masklog.c
-> @@ -64,7 +64,7 @@ static ssize_t mlog_mask_store(u64 mask, const char *buf, size_t count)
->  	return count;
->  }
->  
-> -void __mlog_printk(const u64 *mask, const char *func, int line,
-> +void __mlog_printk(const u64 mask, const char *func, int line,
->  		   const char *fmt, ...)
->  {
->  	struct va_format vaf;
-> @@ -72,14 +72,14 @@ void __mlog_printk(const u64 *mask, const char *func, int line,
->  	const char *level;
->  	const char *prefix = "";
->  
-> -	if (!__mlog_test_u64(*mask, mlog_and_bits) ||
-> -	    __mlog_test_u64(*mask, mlog_not_bits))
-> +	if (!__mlog_test_u64(mask, mlog_and_bits) ||
-> +	    __mlog_test_u64(mask, mlog_not_bits))
->  		return;
->  
-> -	if (*mask & ML_ERROR) {
-> +	if (mask & ML_ERROR) {
->  		level = KERN_ERR;
->  		prefix = "ERROR: ";
-> -	} else if (*mask & ML_NOTICE) {
-> +	} else if (mask & ML_NOTICE) {
->  		level = KERN_NOTICE;
->  	} else {
->  		level = KERN_INFO;
-> diff --git a/fs/ocfs2/cluster/masklog.h b/fs/ocfs2/cluster/masklog.h
-> index 308ea0eb35fd..0d0f4bf2c3d8 100644
-> --- a/fs/ocfs2/cluster/masklog.h
-> +++ b/fs/ocfs2/cluster/masklog.h
-> @@ -163,7 +163,7 @@ extern struct mlog_bits mlog_and_bits, mlog_not_bits;
->  #endif
->  
->  __printf(4, 5)
-> -void __mlog_printk(const u64 *m, const char *func, int line,
-> +void __mlog_printk(const u64 m, const char *func, int line,
->  		   const char *fmt, ...);
->  
->  /*
-> @@ -174,7 +174,7 @@ void __mlog_printk(const u64 *m, const char *func, int line,
->  do {									\
->  	u64 _m = MLOG_MASK_PREFIX | (mask);				\
->  	if (_m & ML_ALLOWED_BITS)					\
-> -		__mlog_printk(&_m, __func__, __LINE__, fmt,		\
-> +		__mlog_printk(_m, __func__, __LINE__, fmt,		\
->  			      ##__VA_ARGS__);				\
->  } while (0)
->  
+> [Manikanta]  Hmmm you are right. I just went through the code, seems
+> ieee80211_tx_status_noskb does most of them what
+> ieee80211_tx_status_8023 is doing, resetting the station connection
+> monitoring logic and updating last known tx rate is missing in
+> _noskb. These are required, isn't it?
+
+Maybe. I don't think the tx rate is strictly required but would be
+nice, while the monitoring logic is probably needed only to avoid
+spurious null data packets over the air.
+
+However, come to think of it, we need to see how this interacts with
+the tx status thing - if tx status is requested then I believe _no_skb
+cannot be used.
+
+> [Manikanta] You are correct. It is good if driver advertises the vif
+> types it support in encap offload mode, but how can we decide the
+> netdev_ops to be used while creating the vif? drv_add_interface will
+> be invoked from ndo_open and
+> even before invoking driver add_interface we have to make the
+> decision of using Ethernet mode netdev_ops or the default netdev_ops,
+> isn't it?
+
+It might not be a problem to swap the dev->netdev_ops, changing only
+the start_xmit, while the interface is being brought up. I assume the
+driver can make this decision in add_interface(), and I think swapping
+there should be OK. It might be problematic if this value changes
+during suspend/resume or HW restart though.
+
+> Can we have a separate driver hook which gives whether 80211 encap
+> offload is supported for the given interface type and then decide the
+> netdev_ops to be attached for the vif?
+
+I don't think that makes sense, since you can't know if the interface
+will ever be brought up, so the driver can't make a good decision since
+it normally doesn't have to care about interfaces that aren't brought
+up.
+
+The only real alternative I see, which might be preferable, is for the
+driver to advertise a bitmap of interface types that it wants to use
+ethernet framing with.
+
+johannes
