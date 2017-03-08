@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18640 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753368AbdCOPq4 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:45591 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751632AbdCHFX3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 11:46:56 -0400
-Subject: [PATCH v6 09/10] ath10k: different fw file names for usb and sdio
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 15 Mar 2017 17:46:44 +0200
-Message-ID: <148959280431.31432.16087997710973721077.stgit@potku.adurom.net> (sfid-20170315_164951_337743_9E617FC3)
-In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
+        Wed, 8 Mar 2017 00:23:29 -0500
+Date: Wed, 8 Mar 2017 08:22:37 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Vincent Cuissard <cuissard@marvell.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] NFC: nfcmrvl: double free on error path
+Message-ID: <20170308052237.GA14542@mwanda> (sfid-20170308_062532_484878_FAE075D9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+The nci_spi_send() function calls kfree_skb(skb) on both error and
+success so this extra kfree_skb() is a double free.
 
-Since both SDIO and USB based chipsets will use different
-firmware from the PCIe and AHB chipsets, the fw file name
-must be different depending on bus type.
-
-The new firmware names are:
-
-For PCIe and AHB:
-firmware-<api_version>.bin (same as before)
-
-For SDIO:
-firmware-sdio-<api_version>.bin
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Fixes: caf6e49bf6d0 ("NFC: nfcmrvl: add spi driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+Static analysis.  Not tested.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index d7fb11107df4..d2648d09a772 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1398,7 +1398,18 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
- static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
- 				    size_t fw_name_len, int fw_api)
- {
--	scnprintf(fw_name, fw_name_len, "%s-%d.bin", ATH10K_FW_FILE_BASE, fw_api);
-+	switch (ar->hif.bus) {
-+	case ATH10K_BUS_SDIO:
-+		scnprintf(fw_name, fw_name_len, "%s-%s-%d.bin",
-+			  ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
-+			  fw_api);
-+		break;
-+	case ATH10K_BUS_PCI:
-+	case ATH10K_BUS_AHB:
-+		scnprintf(fw_name, fw_name_len, "%s-%d.bin",
-+			  ATH10K_FW_FILE_BASE, fw_api);
-+		break;
-+	}
+diff --git a/drivers/nfc/nfcmrvl/spi.c b/drivers/nfc/nfcmrvl/spi.c
+index a7faa0bcc01e..fc8e78a29d77 100644
+--- a/drivers/nfc/nfcmrvl/spi.c
++++ b/drivers/nfc/nfcmrvl/spi.c
+@@ -96,10 +96,9 @@ static int nfcmrvl_spi_nci_send(struct nfcmrvl_private *priv,
+ 	/* Send the SPI packet */
+ 	err = nci_spi_send(drv_data->nci_spi, &drv_data->handshake_completion,
+ 			   skb);
+-	if (err != 0) {
++	if (err)
+ 		nfc_err(priv->dev, "spi_send failed %d", err);
+-		kfree_skb(skb);
+-	}
++
+ 	return err;
  }
  
- static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
