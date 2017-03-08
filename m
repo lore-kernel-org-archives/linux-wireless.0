@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11128 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753317AbdCIICy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43920 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752643AbdCHPIm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Mar 2017 03:02:54 -0500
+        Wed, 8 Mar 2017 10:08:42 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: wcn36xx: Fix error handling
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170219174751.18966-1-christophe.jaillet@wanadoo.fr>
-References: <20170219174751.18966-1-christophe.jaillet@wanadoo.fr>
-To: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
-CC: <k.eugene.e@gmail.com>, <kvalo@codeaurora.org>,
-        <wcn36xx@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Message-ID: <b37f84dce99d4f6fa577845f664aaba6@euamsexm01a.eu.qualcomm.com> (sfid-20170309_090433_049445_4D5E7560)
-Date: Thu, 9 Mar 2017 09:02:44 +0100
+Subject: Re: rtlwifi: fix spelling mistake: "conuntry" -> "country"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170222233552.8196-1-colin.king@canonical.com>
+References: <20170222233552.8196-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20170308150836.EDFE3607A0@smtp.codeaurora.org> (sfid-20170308_160940_624722_D8F7F763)
+Date: Wed,  8 Mar 2017 15:08:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christophe Jaillet <christophe.jaillet@wanadoo.fr> wrote:
-> Reorder 'out_free_dxe_pool' and 'out_free_dxe_ctl' error handling labels
-> in order to match the way resources have been allocated.
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> trivial fix to spelling mistake in RT_TRACE message
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-4aa2d31f5df8 wcn36xx: Fix error handling
+3e062eb21df8 rtlwifi: fix spelling mistake: "conuntry" -> "country"
 
 -- 
-https://patchwork.kernel.org/patch/9581709/
+https://patchwork.kernel.org/patch/9587555/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
