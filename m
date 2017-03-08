@@ -1,52 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39648 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751635AbdCNODo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 10:03:44 -0400
-Message-ID: <1489500220.10872.8.camel@sipsolutions.net> (sfid-20170314_150447_016814_3C7715E8)
-Subject: Re: [PATCH v4] qtnfmac: announcement of new FullMAC driver for
- Quantenna chipsets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, btherthala@quantenna.com,
-        hwang@quantenna.com, smaksimenko@quantenna.com,
-        dlebed@quantenna.com,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Tue, 14 Mar 2017 15:03:40 +0100
-In-Reply-To: <6be6c73d-381b-6579-8b57-2a836973b446@quantenna.com>
-References: <1483952830-3967-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-         <af3dbd89-d9e8-7f6a-d48a-ebe430671963@gmail.com>
-         <87d1dt6w9m.fsf@purkki.adurom.net>
-         <ca350f9b-55de-8903-b213-c041f8b569e3@broadcom.com>
-         <6be6c73d-381b-6579-8b57-2a836973b446@quantenna.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:35171 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752547AbdCHKdh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 05:33:37 -0500
+Received: by mail-qk0-f169.google.com with SMTP id v125so56719524qkh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Mar 2017 02:33:36 -0800 (PST)
+Subject: Re: [PATCH v2 2/4] brcmfmac: p2p and normal ap access are not always
+ possible at the same time
+To: Hans de Goede <hdegoede@redhat.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
+ <20170227214539.16422-2-hdegoede@redhat.com>
+ <33689f32-1bf8-98f8-df65-278de097e435@broadcom.com>
+ <738d049d-4e90-8a5d-e5c0-d037085a064c@redhat.com>
+Cc: Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d0bec61e-4481-42b9-fcdd-d6a8f8f3524e@broadcom.com> (sfid-20170308_113509_082703_AE099C7B)
+Date: Wed, 8 Mar 2017 10:26:13 +0100
+MIME-Version: 1.0
+In-Reply-To: <738d049d-4e90-8a5d-e5c0-d037085a064c@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8-3-2017 9:24, Hans de Goede wrote:
+> Hi,
+> 
+> On 07-03-17 11:03, Arend Van Spriel wrote:
+>>
+>>
+>> On 27-2-2017 22:45, Hans de Goede wrote:
+>>> The firmware responding with -EBUSY when trying to add an extra
+>>> virtual-if
+>>> is a normal thing, do not print an error for this.
+>>
+>> This may be something we need to look into. It seems to me the interface
+>> combinations needs to be fixed so we do not try to provision firmware.
+>> Can you explain the scenario here?
+> 
+> I'm not doing anything special just connecting to my isp provided
+> accesspoint
+> using NetworkManager.
 
-> 1. Modify cfg80211 driver patch to introduce ability to boot from
-> card's 
-> internal flash rather then over PCIe only. This will hopefully
-> unblock 
-> driver itself.
+Ok. So it is probably the P2P_DEVICE interface as that is the only
+interface being created in that scenario. Can you provide a log with
+brcmfmac driver debug=0x1416.
 
-This is good, and I think that'll be OK for the driver.
+Regards,
+Arend
 
-> 2. Work internally to provide access to SDK used to build firmware on
-> a 
-> public server, that has to be accessible for two years. Then submit 
-> firmware to linux-firmware again.
-
-I'm not sure this will work, since it would fall on anyone
-redistributing to ensure it's still there after *they* distribute it,
-so anyone who has the linux-firmware repo... That's why it's most
-practical to simply combine the two, although that's not really the
-case here.
-
-johannes
+> Regards,
+> 
+> Hans
+> 
+> 
+>>
+>> Regards,
+>> Arend
+>>
+>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>> ---
+>>>  .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14
+>>> ++++++++++----
+>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5 ++++-
+>>>  2 files changed, 14 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git
+>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> index 7ffc4ab..c54e8b4 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> @@ -688,11 +688,17 @@ static struct wireless_dev
+>>> *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+>>>          return ERR_PTR(-EINVAL);
+>>>      }
+>>>
+>>> -    if (IS_ERR(wdev))
+>>> -        brcmf_err("add iface %s type %d failed: err=%d\n",
+>>> -              name, type, (int)PTR_ERR(wdev));
+>>> -    else
+>>> +    if (IS_ERR(wdev)) {
+>>> +        err = PTR_ERR(wdev);
+>>> +        if (err != -EBUSY)
+>>> +            brcmf_err("add iface %s type %d failed: err=%d\n",
+>>> +                  name, type, err);
+>>> +        else
+>>> +            brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
+>>> +                  name, type, err);
+>>> +    } else {
+>>>          brcmf_cfg80211_update_proto_addr_mode(wdev);
+>>> +    }
+>>>
+>>>      return wdev;
+>>>  }
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> index de19c7c..b5df0a0 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> @@ -2090,7 +2090,10 @@ static struct wireless_dev
+>>> *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+>>>      /* Initialize P2P Discovery in the firmware */
+>>>      err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
+>>>      if (err < 0) {
+>>> -        brcmf_err("set p2p_disc error\n");
+>>> +        if (err != -EBUSY)
+>>> +            brcmf_err("set p2p_disc error\n");
+>>> +        else
+>>> +            brcmf_dbg(INFO, "set p2p_disc error\n");
+>>>          brcmf_fweh_p2pdev_setup(pri_ifp, false);
+>>>          brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
+>>>          goto fail;
+>>>
