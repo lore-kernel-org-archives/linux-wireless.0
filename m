@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53256 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932792AbdC3QmQ (ORCPT
+Received: from smtprelay0179.hostedemail.com ([216.40.44.179]:55091 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753096AbdCHQfH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 12:42:16 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi 2017-03-29
-References: <1490784401.13345.6.camel@coelho.fi>
-Date: Thu, 30 Mar 2017 19:42:09 +0300
-In-Reply-To: <1490784401.13345.6.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 29 Mar 2017 13:46:41 +0300")
-Message-ID: <87zig2som6.fsf@kamboji.qca.qualcomm.com> (sfid-20170330_184219_537521_03FC072F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 8 Mar 2017 11:35:07 -0500
+Message-ID: <1488990890.2210.33.camel@perches.com> (sfid-20170308_173549_292427_5BF7D840)
+Subject: Re: [PATCH v3] brcmfmac: Do not print the firmware version as an
+ error
+From: Joe Perches <joe@perches.com>
+To: Hans de Goede <hdegoede@redhat.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Date: Wed, 08 Mar 2017 08:34:50 -0800
+In-Reply-To: <20170308082321.4755-1-hdegoede@redhat.com>
+References: <20170308082321.4755-1-hdegoede@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Wed, 2017-03-08 at 09:23 +0100, Hans de Goede wrote:
+> Using pr_err for things which are not errors is a bad idea. E.g. it
+> will cause the plymouth bootsplash screen to drop back to the text
+> console so that the user can see the error, which is not what we
+> normally want to happen.
+> 
+> Instead add a new brcmf_info macro and use that.
+> 
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+> Changes in v2:
+> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+> Changes in v3:
+> -Use do { } while (0) around macro
 
-> Hi Kalle,
->
-> Here are some fixes for 4.11.  More details in the tag description.
->
-> I have sent this out before and kbuildbot didn't find any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 6be3b6cce1e225f189b68b4e84fc711d19b4277b:
->
->   ath10k: fix incorrect wlan_mac_base in qca6174_regs (2017-03-20 17:11:31 +0200)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2017-03-29
->
-> for you to fetch changes up to 4d339989acd730f17bc814b5ddb9c54e405766b6:
->
->   iwlwifi: mvm: support ibss in dqa mode (2017-03-24 17:15:25 +0200)
->
-> ----------------------------------------------------------------
-> iwlwifi fixes for 4.11
->
-> Here are three patches intended for 4.11.  The first one is an RCU fix
-> by Sari.  The second one is a fix for a potential out-of-bounds access
-> crash by Dan.  And finally, the third and bigger one, is a fix for
-> IBSS, which has been broken since DQA was enabled in the driver.
->
-> ----------------------------------------------------------------
+why?  Single statement macros do not need a do/while
 
-Pulled, thanks.
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+[]
+> @@ -59,6 +59,10 @@ void __brcmf_err(const char *func, const char *fmt, ...);
+>  	} while (0)
+>  
+>  #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+> +
+> +/* For debug/tracing purposes treat info messages as errors */
+> +#define brcmf_info brcmf_err
+> +
+>  __printf(3, 4)
+>  void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...);
+>  #define brcmf_dbg(level, fmt, ...)				\
+> @@ -77,6 +81,11 @@ do {								\
+>  
+>  #else /* defined(DEBUG) || defined(CONFIG_BRCM_TRACING) */
+>  
+> +#define brcmf_info(fmt, ...)						\
+> +	do {								\
+> +		pr_info("%s: " fmt, __func__, ##__VA_ARGS__);		\
+> +	} while (0)
 
--- 
-Kalle Valo
+#define brcmf_info(fmt, ...)
+	pr_info("%s: " fmt, __func__, ##__VA_ARGS__)
+
+> +
+>  #define brcmf_dbg(level, fmt, ...) no_printk(fmt, ##__VA_ARGS__)
+
+I think the separate defines for DEBUG/CONFIG_BRCM_TRACING
+are not necessary.
