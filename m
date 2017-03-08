@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:58167 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59876 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934716AbdCVT0G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 15:26:06 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] NFC: Add nfc_dbg() macro
-Date: Wed, 22 Mar 2017 21:22:51 +0200
-Message-Id: <20170322192251.30261-1-andriy.shevchenko@linux.intel.com> (sfid-20170322_202918_080129_FCF78419)
+        id S1751603AbdCHIrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 03:47:14 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v3] brcmfmac: Do not print the firmware version as an error
+Date: Wed,  8 Mar 2017 09:23:21 +0100
+Message-Id: <20170308082321.4755-1-hdegoede@redhat.com> (sfid-20170308_094811_583255_E7C74225)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases nfc_dbg() is useful. Add such macro to a header.
+Using pr_err for things which are not errors is a bad idea. E.g. it
+will cause the plymouth bootsplash screen to drop back to the text
+console so that the user can see the error, which is not what we
+normally want to happen.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Instead add a new brcmf_info macro and use that.
+
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- include/net/nfc/nfc.h | 1 +
- 1 file changed, 1 insertion(+)
+Changes in v2:
+-Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+Changes in v3:
+-Use do { } while (0) around macro
+-Rebase on top of v4.11-rc1
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 9 +++++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 1a3de8b34ad2..bbdc73a3239d 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -27,6 +27,7 @@
- #include <linux/device.h>
- #include <linux/skbuff.h>
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 33b133f..7a2b495 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	strsep(&ptr, "\n");
  
-+#define nfc_dbg(dev, fmt, ...) dev_dbg((dev), "NFC: " fmt, ##__VA_ARGS__)
- #define nfc_info(dev, fmt, ...) dev_info((dev), "NFC: " fmt, ##__VA_ARGS__)
- #define nfc_err(dev, fmt, ...) dev_err((dev), "NFC: " fmt, ##__VA_ARGS__)
+ 	/* Print fw version info */
+-	brcmf_err("Firmware version = %s\n", buf);
++	brcmf_info("Firmware version = %s\n", buf);
  
+ 	/* locate firmware version number for ethtool */
+ 	ptr = strrchr(buf, ' ') + 1;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 0661261..afb2436 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -59,6 +59,10 @@ void __brcmf_err(const char *func, const char *fmt, ...);
+ 	} while (0)
+ 
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
++
++/* For debug/tracing purposes treat info messages as errors */
++#define brcmf_info brcmf_err
++
+ __printf(3, 4)
+ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...);
+ #define brcmf_dbg(level, fmt, ...)				\
+@@ -77,6 +81,11 @@ do {								\
+ 
+ #else /* defined(DEBUG) || defined(CONFIG_BRCM_TRACING) */
+ 
++#define brcmf_info(fmt, ...)						\
++	do {								\
++		pr_info("%s: " fmt, __func__, ##__VA_ARGS__);		\
++	} while (0)
++
+ #define brcmf_dbg(level, fmt, ...) no_printk(fmt, ##__VA_ARGS__)
+ 
+ #define BRCMF_DATA_ON()		0
 -- 
-2.11.0
+2.9.3
