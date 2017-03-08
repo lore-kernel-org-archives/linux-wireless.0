@@ -1,70 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:35962 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751562AbdCRRls (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Mar 2017 13:41:48 -0400
-Received: by mail-ot0-f196.google.com with SMTP id i1so15820958ota.3
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 10:41:47 -0700 (PDT)
-Subject: Re: [BUG] with a 4.10.x kernel it's impossible to apply country
- regulatory rules
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-        Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <09a819fc-c936-6838-654b-e349c58a09ec@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <8c844f92-6148-2ad7-068c-a919891c7a90@lwfinger.net> (sfid-20170318_184151_809388_46B51F9A)
-Date: Sat, 18 Mar 2017 12:41:45 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:36502 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751772AbdCHKdB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Mar 2017 05:33:01 -0500
+Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an
+ error
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+References: <20170227214539.16422-1-hdegoede@redhat.com>
+ <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com>
+ <6c1dd576-7571-e85f-ee43-8e9e69a76679@redhat.com>
+ <ecb4cc58-8cf5-1ca6-7649-fe4e97ac2149@broadcom.com>
+ <87a88w851p.fsf@kamboji.qca.qualcomm.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <8cd33792-0a44-fbce-f485-218b8c126625@redhat.com> (sfid-20170308_113315_102511_7CEAED5E)
+Date: Wed, 8 Mar 2017 11:08:27 +0100
 MIME-Version: 1.0
-In-Reply-To: <09a819fc-c936-6838-654b-e349c58a09ec@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87a88w851p.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/14/2017 08:14 PM, Xose Vazquez Perez wrote:
-> Hi,
->
-> Can anyone with a 4.10.x kernel run "iw reg get" to
-> verified it?
->
-> I get with different wireless devices and platforms:
-> global
-> country 00: DFS-UNSET
->         (2402 - 2472 @ 40), (6, 20), (N/A)
->         (2457 - 2482 @ 20), (6, 20), (N/A), AUTO-BW, PASSIVE-SCAN
->         (2474 - 2494 @ 20), (6, 20), (N/A), NO-OFDM, PASSIVE-SCAN
->         (5170 - 5250 @ 80), (6, 20), (N/A), AUTO-BW, PASSIVE-SCAN
->         (5250 - 5330 @ 80), (6, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
->         (5490 - 5730 @ 160), (6, 20), (0 ms), DFS, PASSIVE-SCAN
->         (5735 - 5835 @ 80), (6, 20), (N/A), PASSIVE-SCAN
->         (57240 - 63720 @ 2160), (N/A, 0), (N/A)
->
->
-> It works flawlessly with 4.9.13:
-> global
-> country ES: DFS-ETSI
->         (2400 - 2483 @ 40), (N/A, 20), (N/A)
->         (5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
->         (5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS, AUTO-BW
->         (5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
->         (57000 - 66000 @ 2160), (N/A, 40), (N/A)
->
-> phy#0
-> country AW: DFS-ETSI
->         (2402 - 2482 @ 40), (N/A, 20), (N/A)
->         (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
->         (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
->         (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
+HI,
 
-I have duplicated your bug and I have bisected it to
+On 08-03-17 10:57, Kalle Valo wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+>> On 8-3-2017 9:23, Hans de Goede wrote:
+>>> Hi,
+>>>
+>>> On 07-03-17 10:59, Arend Van Spriel wrote:
+>>>> On 27-2-2017 22:45, Hans de Goede wrote:
+>>>>> Using pr_err for things which are not errors is a bad idea. E.g. it
+>>>>> will cause the plymouth bootsplash screen to drop back to the text
+>>>>> console so that the user can see the error, which is not what we
+>>>>> normally want to happen.
+>>>>>
+>>>>> Instead add a new brcmf_info macro and use that.
+>>>>>
+>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>>> ---
+>>>>> Changes in v2:
+>>>>> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+>>>>> ---
+>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 3 +++
+>>>>>  2 files changed, 4 insertions(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git
+>>>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>> index 3e15d64..6d565f1 100644
+>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>>>>> @@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+>>>>>      strsep(&ptr, "\n");
+>>>>>
+>>>>>      /* Print fw version info */
+>>>>> -    brcmf_err("Firmware version = %s\n", buf);
+>>>>> +    brcmf_info("Firmware version = %s\n", buf);
+>>>>>
+>>>>>      /* locate firmware version number for ethtool */
+>>>>>      ptr = strrchr(buf, ' ') + 1;
+>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>> index 6687812..605f260 100644
+>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+>>>>> @@ -59,11 +59,14 @@
+>>>>>              pr_err("%s: " fmt, __func__, ##__VA_ARGS__);    \
+>>>>>      } while (0)
+>>>>>  #endif
+>>>>> +#define brcmf_info(fmt, ...)    pr_info("%s: " fmt, __func__,
+>>>>> ##__VA_ARGS__)
+>>>>
+>>>> Prefer using the same style as for brcmf_err, ie. using do {} while (0)
+>>>
+>>> OK, v3 with this fixed coming up.
+>>
+>> I think Kalle prefers the whole series to be resubmitted.
+>>
+>> Kalle,
+>>
+>> Can you confirm (or deny)?
+>
+> Exactly, I want to apply the full series (with the highest version
+> number). Not waste time guessing what patches I should take and what to
+> drop, with the increased risk of guessing wrong.
 
-commit 2ae0f17df1cd52aafd1ab0415ea1f1dd56dc0e2a
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Mon Oct 24 14:40:04 2016 +0200
+Ok, so patch 2/4 is still under discussion (and may be so for a while)
+shall I send a new version with that patch dropped ?  And then send
+that patch (or a modified version) separately later ?
 
-     genetlink: use idr to track families
+Regards,
 
-This patch is quite extensive and I have no idea which part is failing, thus all 
-I can do is report this confirmation.
+Hans
 
-Larry
+>
