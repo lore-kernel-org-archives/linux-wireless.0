@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:36076 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754151AbdCGDIV (ORCPT
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:33303 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932275AbdCINjD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 22:08:21 -0500
-Received: by mail-qk0-f180.google.com with SMTP id 1so187465103qkl.3
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 19:07:10 -0800 (PST)
+        Thu, 9 Mar 2017 08:39:03 -0500
+Received: by mail-qk0-f181.google.com with SMTP id y76so118909820qkb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Mar 2017 05:39:02 -0800 (PST)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
+ WPA/WPA2-PSK
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+ <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
+ <1487673603.2215.3.camel@sipsolutions.net>
+ <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
+ <a021dbf9-854d-0339-b87d-b27b746ccd1b@broadcom.com>
+ <1487677574.2215.4.camel@sipsolutions.net>
+ <96cd71c3-c279-b298-3876-68bac7297dc4@broadcom.com>
+ <1488543681.25750.3.camel@sipsolutions.net>
+Cc: Eliad Peller <eliad@wizery.com>,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Avraham Stern <avraham.stern@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5f34db3e-1d68-71aa-07b2-5296eaa9f533@broadcom.com> (sfid-20170309_143923_955802_81AF5668)
+Date: Thu, 9 Mar 2017 14:38:54 +0100
 MIME-Version: 1.0
-In-Reply-To: <faafc817ee74ba39171199985756b87b@mail.gmail.com>
-References: <CAEFj984umxKZgMqzgbQvX+VgPjqCW98E17bfED9+Yg3XGzatOw@mail.gmail.com>
- <b285e11810b612a6a156693f34e232ac@mail.gmail.com> <CAEFj9874ynLcjn7AhpB-ajre3twpwHM4iEVN2ozYEGDPGErs0Q@mail.gmail.com>
- <39c846a5bcfa1fff26f69a082466e414@mail.gmail.com> <CAEFj987m=5a6pWZLMtTcVshmVfOmwwbb-+s0FR_+Dz6_xx7Dtw@mail.gmail.com>
- <CAEFj9868zDVomdjQhrzNKs9ANaRF85wdA49vKwVZJ2dUiTpoVg@mail.gmail.com> <faafc817ee74ba39171199985756b87b@mail.gmail.com>
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Date: Tue, 7 Mar 2017 10:06:31 +0800
-Message-ID: <CAEFj984B=6C_AvzHqKnLLS5-h3cKMDmasXANQF1UZT64JSfW8g@mail.gmail.com> (sfid-20170307_040923_027768_9F7300BC)
-Subject: Re: [PATCH v2] mac80211: mesh - always do every discovery retry
-To: Jesse Jones <jjones@uniumwifi.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Alexis Green <agreen@cococorp.com>,
-        Alexis Green <agreen@uniumwifi.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1488543681.25750.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> They are only reliable when compared to individual rate controlled frames.
-> But, in general, they are most certainly not reliable. Even in a shielded
-> and conductive (i.e. with physical wires connecting antennas) environment
-> lost PREQ frames are not hard to see.
+On 3-3-2017 13:21, Johannes Berg wrote:
+> On Tue, 2017-02-28 at 12:06 +0100, Arend Van Spriel wrote:
+>> On 21-2-2017 12:46, Johannes Berg wrote:
+>>>
+>>>>>> Would this work for you? We should have wpa_supplicant
+>>>>>> support
+>>>>>> too, but need to ask Andrei to look at that.
+>>>>
+>>>> Forgot to reply to this. Yes, this will work. Can come up with
+>>>> wpa_supp changes.
+>>>
+>>> No, we have them. Just need to see where they are :)
+>>
+>> Found anything ? :-p
+> 
+> Sorry, got too busy with other stuff.
+> 
+> +Andrei, can you send out the patches from Avi in wpa_s for doing the
+> 4-way-HS offload (as an RFC)?
+> 
+> Arend, wait a bit - he's travelling now I think.
 
-Did you try to reduce dot11MeshHWMPpreqMinInterval to send out more
-PREQ and see whether this works for you?
+So the 4-way hs offload patches in wpa_s RFC do not make distinction
+between 1X and WPA-PSK. Can we expect drivers to support one, but not
+the other? In other words do we need the flexibility in nl80211?
 
-I think that we have similar lengthy discussion last time.
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/139453
-
-I would suggest the following edition to the commit message:
-
-Instead of stopping path discovery when a path is established, continue the
-attempts to find alternative paths until we hit the dot11MeshHWMPmaxPREQretries
-limit. However, this is not a standard behavior and may easily
-increase the number of
-broadcast PREQ frame in your network. So this feature is turned off by default.
-
-and the remaining are removed due to misleading explanation.
-
-Then, in the mesh_path_timer, I think that only the following is needed:
-
-- if (mpath->flags & MESH_PATH_RESOLVED ||
-- (!(mpath->flags & MESH_PATH_RESOLVING))) {
-+ if (!multiple_discoveries &&
-+    (mpath->flags & MESH_PATH_RESOLVED ||
-+     (!(mpath->flags & MESH_PATH_RESOLVING)))) {
-
-Thanks
-
----
-Chun-Yeow
+Regards,
+Arend
