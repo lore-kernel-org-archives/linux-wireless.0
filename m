@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36504 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751050AbdCCPIY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 10:08:24 -0500
+Received: from mail.neratec.com ([46.140.151.2]:14229 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754648AbdCIPvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Mar 2017 10:51:16 -0500
+Subject: Re: [PATCH v2] mac80211: Jitter HWMP MPATH reply frames to reduce
+ collision on dense networks.
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Jesse Jones <jjones@uniumwifi.com>, agreen@cococorp.com,
+        linux-wireless@vger.kernel.org
+References: <58B09082.7020704@cococorp.com>
+ <1488202227.28431.9.camel@sipsolutions.net> <58B487A8.7000602@cococorp.com>
+ <1488443814.8390.3.camel@sipsolutions.net>
+ <d717a94d5c6632b6665b7ac3b319b726@mail.gmail.com>
+ <1488803913.5761.11.camel@sipsolutions.net>
+Cc: Jesse Jones <jjones@cococorp.com>
+From: Matthias May <matthias.may@neratec.com>
+Message-ID: <19214832-030e-2028-49a2-2db087c8c857@neratec.com> (sfid-20170309_165144_872557_7F772E74)
+Date: Thu, 9 Mar 2017 16:49:59 +0100
 MIME-Version: 1.0
-In-Reply-To: <6ada42bd-4cc7-4985-3e3b-705cba6e157d@virtuozzo.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-26-arnd@arndb.de>
- <6ada42bd-4cc7-4985-3e3b-705cba6e157d@virtuozzo.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 3 Mar 2017 15:54:04 +0100
-Message-ID: <CAK8P3a1AT+x9TiCyC56m6DoiZnxCYcMm6ZtLKXa7nfq=f8kWvw@mail.gmail.com> (sfid-20170303_161015_124229_8E39CACC)
-Subject: Re: [PATCH 25/26] isdn: eicon: mark divascapi incompatible with kasan
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1488803913.5761.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 3:20 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
->
->
-> On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
->> When CONFIG_KASAN is enabled, we have several functions that use rather
->> large kernel stacks, e.g.
->>
->> drivers/isdn/hardware/eicon/message.c: In function 'group_optimization':
->> drivers/isdn/hardware/eicon/message.c:14841:1: warning: the frame size of 864 bytes is larger than 500 bytes [-Wframe-larger-than=]
->> drivers/isdn/hardware/eicon/message.c: In function 'add_b1':
->> drivers/isdn/hardware/eicon/message.c:7925:1: warning: the frame size of 1008 bytes is larger than 500 bytes [-Wframe-larger-than=]
->> drivers/isdn/hardware/eicon/message.c: In function 'add_b23':
->> drivers/isdn/hardware/eicon/message.c:8551:1: warning: the frame size of 928 bytes is larger than 500 bytes [-Wframe-larger-than=]
->> drivers/isdn/hardware/eicon/message.c: In function 'sig_ind':
->> drivers/isdn/hardware/eicon/message.c:6113:1: warning: the frame size of 2112 bytes is larger than 500 bytes [-Wframe-larger-than=]
->>
->> To be on the safe side, and to enable a lower frame size warning limit, let's
->> just mark this driver as broken when KASAN is in use. I have tried to reduce
->> the stack size as I did with dozens of other drivers, but failed to come up
->> with a good solution for this one.
->>
->
-> This is kinda radical solution.
-> Wouldn't be better to just increase -Wframe-larger-than for this driver through Makefile?
+On 06/03/17 13:38, Johannes Berg wrote:
+> 
+>> Well it certainly attempts to via stuff like carrier sense. But that
+>> is not fool proof and any time two routers hear a frame and both
+>> decide to forward it immediately there is a chance that they will
+>> both sense the air at the same time, decide that it is clear, and
+>> lose both their forwarded frames due to a collision. How often that
+>> happens is hard to say but we have observed that exact behavior a few
+>> years ago with an 802.11 multicast routing protocol and adding jitter
+>> significantly improved reliability.
+> 
+> I'm really surprised by this since they both should jitter their
+> transmissions already between CWmin and CWmax. Is that window somehow really super small for what you're doing?
+> 
+> johannes
+> 
 
-I thought about it too, and decided for disabling the driver entirely
-since I suspected that
-not only the per-function stack frame is overly large here but also
-depth of the call chain,
-which would then lead us to hiding an actual stack overflow.
+Isn't CWmin and CWmax only used for retries?
+We recently had the problem that on 5MHz channels probe-responses of APs
+which can't hear each other (hidden node problem) always collide.
+See [1] for a trace showing the problem.
+Yellow is the probe-request (and ack on success), the other colours are
+3 APs.
+Putting probe-responses on their own queue with it's own timing results
+in [2] and seems to make the problem less worse.
+However the first frame still always collides, and only subsequent
+retries have the randomness of cwmin/cwmax added.
+5MHz channels make the problem worse since frames are 4 times longer.
 
-Note that this driver is almost certainly broken, it hasn't seen any
-updates other than
-style and compile-warning fixes in 10 years and doesn't support any of
-the hardware
-introduced since 2002 (the company still makes PCIe ISDN adapters, but
-the driver
-only supports legacy PCI versions and older buses).
+I'm currently trying to find a way to add some randomness to the initial
+response, which it seems this patchset attempts to solve as well
+(different context though).
 
-    Arnd
+[1] http://may.nu/images/problem.png
+[2] http://may.nu/images/jittered.png
