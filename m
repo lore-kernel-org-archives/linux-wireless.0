@@ -1,34 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:55970 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753587AbdCBDYV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57135 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752811AbdCIJ7h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2017 22:24:21 -0500
-Date: Wed, 01 Mar 2017 15:09:39 -0800 (PST)
-Message-Id: <20170301.150939.1418366532271934812.davem@davemloft.net> (sfid-20170302_042425_780957_D1E16253)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2017-02-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170228095019.10637-1-johannes@sipsolutions.net>
-References: <20170228095019.10637-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 9 Mar 2017 04:59:37 -0500
+From: "Pubbisetty, Manikanta" <mpubbise@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+Subject: RE: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
+ offload
+Date: Thu, 9 Mar 2017 09:56:25 +0000
+Message-ID: <828dd0c9cb0d409eb4d3aadc7f585a69@aphydexm01f.ap.qualcomm.com> (sfid-20170309_105956_613204_AAA59965)
+References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488544754.25750.8.camel@sipsolutions.net>
+         <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
+ <1489008812.7127.9.camel@sipsolutions.net>
+In-Reply-To: <1489008812.7127.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 28 Feb 2017 10:50:18 +0100
-
-> First round of fixes - we actually have quite a few.
-> 
-> Please pull and let me know if there's any problem.
-
-Pulled, thanks Johannes.
-
-> I had another question - I have this average.h API change pending
-> (you saw it before). It seems it might be a good time to get it in
-> now, since no new users should be showing up. If I put it in only
-> with the next merge window, new users might show up and break.
-
-Ok, you can feel free to send this now for 'net' if you like.
+Pj4gPiBXaHkgaXMgdGhhdCBuZWVkZWQ/IFNpbmNlIHlvdSBoYXZlIGEgc2VwYXJhdGUgVFggcGF0
+aA0KPj4gPiAobmRvX3N0YXJ0X3htaXQpLCB3b3VsZG4ndCBpdCBtYWtlIG1vcmUgc2Vuc2UgdG8g
+Y2FsbCBpbnRvIGENCj4+ID4gZHJ2X3R4XzgwMjMoKSBvciBzb21ldGhpbmcgbGlrZSB0aGF0IGlu
+c3RlYWQ/DQo+PiA+DQo+Pg0KPj4gW01hbmlrYW50YV3CoMKgWWVzLCBpdCBtYWtlcyBzZW5zZSBo
+YXZpbmcgYSBzZXBhcmF0ZSBkcml2ZXIgaG9vayBpbnN0ZWFkDQo+PiBvZiB1c2luZyBkcnZfdHgs
+IGJ1dCBpbiBjYXNlIG9mIGRyaXZlcnMgKGZlIGF0aDEwaykgd2hlcmUgZW5xdWV1aW5nDQo+PiBh
+bmQgZGVxdWV1aW5nIHR4IGxvZ2ljICh3YWtlX3R4X3F1ZXVlIGFuZA0KPj4gaWVlZTgwMjExX3R4
+X2RlcXVldWUpIGlzIHVzZWQgdGhlcmUgc2hvdWxkIGJlIGEgd2F5IHRvIGluZGljYXRlIHRoYXQN
+Cj4+IHRoZSBwYWNrZXQgaXMgbm90IDgwMjExIGVuY2Fwc3VsYXRlZCwgaXNuJ3QgaXQ/DQo+PiBD
+b3JyZWN0IG1lIGlmIEkgYW0gbWlzc2luZyBhbnl0aGluZy4NCj4NCj5BaCwgaW50ZXJlc3Rpbmcu
+IFllYWgsIEkgZ3Vlc3MgdGhhdCBtYWtlcyBzb21lIHNlbnNlIHRoZW4sIHRob3VnaCBJJ20gbm90
+DQo+c3VwZXIgaGFwcHkgd2l0aCBzaGFyaW5nIHRoZSBjb2RlIHBhdGhzIGJldHdlZW4gZGlmZmVy
+ZW50bHkgZW5jYXBzdWxhdGVkDQo+ZnJhbWVzIC0gYmVzdCB0byBsZWF2ZSB0aGF0IGFzIG1pbmlt
+YWwgYXMgcG9zc2libGUuDQo+DQpbTWFuaWthbnRhXSBJbiB0aGF0IGNhc2UgSSB3aWxsIGtlZXAg
+dGhpcyBjaGFuZ2UsIHNob3VsZCB3ZSBjb25zaWRlciBhIHNlcGFyYXRlIGRyaXZlciBob29rIGZv
+ciBsZWdhY3kvbWdtdCB0eCBsaWtlIGRydl90eF84MDIzPz8NCkhvdyBhYm91dCBoYXZpbmcgd2Fr
+ZV90eF9xdWV1ZV84MDIzIGFuZCBpZWVlODAyMTFfdHhfZGVxdWV1ZV84MDIzIHNvIHRoYXQgRXRo
+ZXJuZXQgdHJhbnNtaXQgcGF0aCBpcyB0b3RhbGx5IGV4Y2x1c2l2ZS4gVGhvdWdodHM/Pw0KDQo+
+PiBbTWFuaWthbnRhXcKgwqBIbW1tIHlvdSBhcmUgcmlnaHQuIEkganVzdCB3ZW50IHRocm91Z2gg
+dGhlIGNvZGUsIHNlZW1zDQo+PiBpZWVlODAyMTFfdHhfc3RhdHVzX25vc2tiIGRvZXMgbW9zdCBv
+ZiB0aGVtIHdoYXQNCj4+IGllZWU4MDIxMV90eF9zdGF0dXNfODAyMyBpcyBkb2luZywgcmVzZXR0
+aW5nIHRoZSBzdGF0aW9uIGNvbm5lY3Rpb24NCj4+IG1vbml0b3JpbmcgbG9naWMgYW5kIHVwZGF0
+aW5nIGxhc3Qga25vd24gdHggcmF0ZSBpcyBtaXNzaW5nIGluIF9ub3NrYi4NCj4+IFRoZXNlIGFy
+ZSByZXF1aXJlZCwgaXNuJ3QgaXQ/DQo+DQo+TWF5YmUuIEkgZG9uJ3QgdGhpbmsgdGhlIHR4IHJh
+dGUgaXMgc3RyaWN0bHkgcmVxdWlyZWQgYnV0IHdvdWxkIGJlIG5pY2UsIHdoaWxlDQo+dGhlIG1v
+bml0b3JpbmcgbG9naWMgaXMgcHJvYmFibHkgbmVlZGVkIG9ubHkgdG8gYXZvaWQgc3B1cmlvdXMg
+bnVsbCBkYXRhDQo+cGFja2V0cyBvdmVyIHRoZSBhaXIuDQo+DQo+SG93ZXZlciwgY29tZSB0byB0
+aGluayBvZiBpdCwgd2UgbmVlZCB0byBzZWUgaG93IHRoaXMgaW50ZXJhY3RzIHdpdGggdGhlIHR4
+DQo+c3RhdHVzIHRoaW5nIC0gaWYgdHggc3RhdHVzIGlzIHJlcXVlc3RlZCB0aGVuIEkgYmVsaWV2
+ZSBfbm9fc2tiIGNhbm5vdCBiZSB1c2VkLg0KPg0KW01hbmlrYW50YV0gSG1tbSwgSSB3b3VsZCBs
+aWtlIHRvIGhhdmUgaWVlZTgwMjExX3R4X3N0YXR1c184MDIzIGZvciBub3cgYW5kIGdvIHdpdGgg
+YSBUT0RPIGZvciBzaW5nbGUgdHggcmVwb3J0aW5nIG1lY2hhbmlzbSBmb3IgYm90aCBFdGhlcm5l
+dCBhbmQgODAyLjExIHR4IGZvcm1hdHMuIEFueSB0aG91Z2h0cz8NCg0KPj4gW01hbmlrYW50YV0g
+WW91IGFyZSBjb3JyZWN0LiBJdCBpcyBnb29kIGlmIGRyaXZlciBhZHZlcnRpc2VzIHRoZSB2aWYN
+Cj4+IHR5cGVzIGl0IHN1cHBvcnQgaW4gZW5jYXAgb2ZmbG9hZCBtb2RlLCBidXQgaG93IGNhbiB3
+ZSBkZWNpZGUgdGhlDQo+PiBuZXRkZXZfb3BzIHRvIGJlIHVzZWQgd2hpbGUgY3JlYXRpbmcgdGhl
+IHZpZj8gZHJ2X2FkZF9pbnRlcmZhY2Ugd2lsbA0KPj4gYmUgaW52b2tlZCBmcm9tIG5kb19vcGVu
+IGFuZCBldmVuIGJlZm9yZSBpbnZva2luZyBkcml2ZXIgYWRkX2ludGVyZmFjZQ0KPj4gd2UgaGF2
+ZSB0byBtYWtlIHRoZSBkZWNpc2lvbiBvZiB1c2luZyBFdGhlcm5ldCBtb2RlIG5ldGRldl9vcHMg
+b3IgdGhlDQo+PiBkZWZhdWx0IG5ldGRldl9vcHMsIGlzbid0IGl0Pw0KPg0KPkl0IG1pZ2h0IG5v
+dCBiZSBhIHByb2JsZW0gdG8gc3dhcCB0aGUgZGV2LT5uZXRkZXZfb3BzLCBjaGFuZ2luZyBvbmx5
+IHRoZQ0KPnN0YXJ0X3htaXQsIHdoaWxlIHRoZSBpbnRlcmZhY2UgaXMgYmVpbmcgYnJvdWdodCB1
+cC4gSSBhc3N1bWUgdGhlIGRyaXZlciBjYW4NCj5tYWtlIHRoaXMgZGVjaXNpb24gaW4gYWRkX2lu
+dGVyZmFjZSgpLCBhbmQgSSB0aGluayBzd2FwcGluZyB0aGVyZSBzaG91bGQgYmUNCj5PSy4gSXQg
+bWlnaHQgYmUgcHJvYmxlbWF0aWMgaWYgdGhpcyB2YWx1ZSBjaGFuZ2VzIGR1cmluZyBzdXNwZW5k
+L3Jlc3VtZSBvcg0KPkhXIHJlc3RhcnQgdGhvdWdoLg0KPg0KW01hbmlrYW50YV0gQ29ycmVjdC4N
+Cg0KPj4gQ2FuIHdlIGhhdmUgYSBzZXBhcmF0ZSBkcml2ZXIgaG9vayB3aGljaCBnaXZlcyB3aGV0
+aGVyIDgwMjExIGVuY2FwDQo+PiBvZmZsb2FkIGlzIHN1cHBvcnRlZCBmb3IgdGhlIGdpdmVuIGlu
+dGVyZmFjZSB0eXBlIGFuZCB0aGVuIGRlY2lkZSB0aGUNCj4+IG5ldGRldl9vcHMgdG8gYmUgYXR0
+YWNoZWQgZm9yIHRoZSB2aWY/DQo+DQo+SSBkb24ndCB0aGluayB0aGF0IG1ha2VzIHNlbnNlLCBz
+aW5jZSB5b3UgY2FuJ3Qga25vdyBpZiB0aGUgaW50ZXJmYWNlIHdpbGwgZXZlcg0KPmJlIGJyb3Vn
+aHQgdXAsIHNvIHRoZSBkcml2ZXIgY2FuJ3QgbWFrZSBhIGdvb2QgZGVjaXNpb24gc2luY2UgaXQg
+bm9ybWFsbHkNCj5kb2Vzbid0IGhhdmUgdG8gY2FyZSBhYm91dCBpbnRlcmZhY2VzIHRoYXQgYXJl
+bid0IGJyb3VnaHQgdXAuDQo+DQpbTWFuaWthbnRhXSBIbW1tIG9rYXkuDQoNCj5UaGUgb25seSBy
+ZWFsIGFsdGVybmF0aXZlIEkgc2VlLCB3aGljaCBtaWdodCBiZSBwcmVmZXJhYmxlLCBpcyBmb3Ig
+dGhlIGRyaXZlciB0bw0KPmFkdmVydGlzZSBhIGJpdG1hcCBvZiBpbnRlcmZhY2UgdHlwZXMgdGhh
+dCBpdCB3YW50cyB0byB1c2UgZXRoZXJuZXQgZnJhbWluZw0KPndpdGguDQo+DQpbTWFuaWthbnRh
+XSBDb3JyZWN0LCB0aGlzIHdvdWxkIGJlIGEgb25ldGltZSByZWdpc3RyYXRpb24uIElzbid0IGl0
+ID8NCkkgYW0ganVzdCBjdXJpb3VzIHRvIGtub3cgd2hldGhlciB0aGUgc3VwcG9ydGVkIHZpZiB0
+eXBlcyBmb3IgZXRoZXJuZXQgZnJhbWluZyBjYW4gY2hhbmdlIGR5bmFtaWNhbGx5LCBpcyB0aGlz
+IHBvc3NpYmxlPw0KDQotLQ0KTWFuaWthbnRhDQo=
