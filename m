@@ -1,154 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:52534 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752714AbdCPPct (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 11:32:49 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-        Simon Wunderlich <sw@simonwunderlich.de>,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
-Subject: [PATCH 3/3] ath9k: add noise floor override option
-Date: Thu, 16 Mar 2017 16:13:37 +0100
-Message-Id: <20170316151337.24163-4-sw@simonwunderlich.de> (sfid-20170316_163544_743450_224D75E9)
-In-Reply-To: <20170316151337.24163-1-sw@simonwunderlich.de>
-References: <20170316151337.24163-1-sw@simonwunderlich.de>
+Received: from mx1.redhat.com ([209.132.183.28]:37258 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751942AbdCII35 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Mar 2017 03:29:57 -0500
+Subject: Re: [PATCH v3] brcmfmac: Do not print the firmware version as an
+ error
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Joe Perches <joe@perches.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170308082321.4755-1-hdegoede@redhat.com>
+ <1488990890.2210.33.camel@perches.com>
+ <797bce36-7887-24cb-2389-9a9e3c0d9760@redhat.com>
+ <1488995605.2210.36.camel@perches.com>
+ <333cdc50-9def-9af8-5081-cd776b4e0512@broadcom.com>
+ <6b632474-7521-8b24-0ee6-48f390b14d24@redhat.com>
+ <dae22737-4c0f-d988-a8ba-109b18d232b2@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <50a3c6b8-7380-71b1-a1d9-b4ea3ecc8d27@redhat.com> (sfid-20170309_093002_349933_0423BD7E)
+Date: Thu, 9 Mar 2017 09:28:17 +0100
+MIME-Version: 1.0
+In-Reply-To: <dae22737-4c0f-d988-a8ba-109b18d232b2@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce a debugfs option to manually override the noise floor,
-ignoring the automatically tuned noise floor of the driver/hw.
+Hi,
 
-In my tests with a AR9580 based module and a tx99 5 MHz interferer,
-I could tune the noisefloor to -95 dBm or above to allow communication
-again. The automatic noise floor calibration sometimes could adapt to
-the situation as well, but not reliably and permanently.
+On 09-03-17 09:17, Arend Van Spriel wrote:
+> On 9-3-2017 9:09, Hans de Goede wrote:
+>> Hi all,
+>>
+>> On 08-03-17 21:44, Arend Van Spriel wrote:
+>>>
+>>>
+>>> On 8-3-2017 18:53, Joe Perches wrote:
+>>>> On Wed, 2017-03-08 at 17:57 +0100, Hans de Goede wrote:
+>>>>> Hi,
+>>>>
+>>>> And hello back to you.
+>>>
+>>> Also hello.
+>>>
+>>>>> On 08-03-17 17:34, Joe Perches wrote:
+>>>>>> On Wed, 2017-03-08 at 09:23 +0100, Hans de Goede wrote:
+>>>>>>> Using pr_err for things which are not errors is a bad idea. E.g. it
+>>>>>>> will cause the plymouth bootsplash screen to drop back to the text
+>>>>>>> console so that the user can see the error, which is not what we
+>>>>>>> normally want to happen.
+>>>>>>>
+>>>>>>> Instead add a new brcmf_info macro and use that.
+>>>>>>>
+>>>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>>>>> ---
+>>>>>>> Changes in v2:
+>>>>>>> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+>>>>>>> Changes in v3:
+>>>>>>> -Use do { } while (0) around macro
+>>>>>>
+>>>>>> why?  Single statement macros do not need a do/while
+>>>>>
+>>>>> Because Arend ask me to during review of v2.
+>>>>
+>>>> Well, maybe Arend should learn that single statement macros
+>>>> don't need do/while guards and that do/while guards are
+>>>> generally not used in the kernel for single statements.
+>>>
+>>> Always good to learn from an expert. The intent behind my remark was to
+>>> follow the same pattern as brcmf_err for the sake of consistency. I was
+>>> not clear.
+>>
+>> Ok, so what is it going to be, are we going to keep this as is
+>> with the do .. while added or shall I do a v4 dropping it again?
+>
+> Sorry, Hans
+>
+> My bad. Let's stick with v3 and I will do a follow-up patch.
 
-I would consider this "feature" experimental and interesting for people
-debugging the noise floor calibration or other effects of the hardware.
+Ok, that works for me :)
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
----
- drivers/net/wireless/ath/ath9k/calib.c |  5 ++-
- drivers/net/wireless/ath/ath9k/debug.c | 62 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h    |  1 +
- 3 files changed, 67 insertions(+), 1 deletion(-)
+Regards,
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 0f71146b781d..13ab6bc46775 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -254,7 +254,9 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 			if ((i >= AR5416_MAX_CHAINS) && !IS_CHAN_HT40(chan))
- 				continue;
- 
--			if (h)
-+			if (ah->nf_override)
-+				nfval = ah->nf_override;
-+			else if (h)
- 				nfval = h[i].privNF;
- 			else
- 				nfval = default_nf;
-@@ -348,6 +350,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath9k_hw_loadnf);
- 
- 
- static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 43930c336987..2e64977a8ab6 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1191,6 +1191,65 @@ static const struct file_operations fops_tpc = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t read_file_nf_override(struct file *file,
-+				     char __user *user_buf,
-+				     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	char buf[32];
-+	unsigned int len;
-+
-+	if (ah->nf_override == 0)
-+		len = sprintf(buf, "off\n");
-+	else
-+		len = sprintf(buf, "%d\n", ah->nf_override);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_nf_override(struct file *file,
-+				      const char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	long val;
-+	char buf[32];
-+	ssize_t len;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+
-+	buf[len] = '\0';
-+	if (strncmp("off", buf, 3) == 0)
-+		val = 0;
-+	else if (kstrtol(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val > 0)
-+		return -EINVAL;
-+
-+	if (val < -120)
-+		return -EINVAL;
-+
-+	ah->nf_override = val;
-+
-+	if (ah->curchan)
-+		ath9k_hw_loadnf(ah, ah->curchan);
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_nf_override = {
-+	.read = read_file_nf_override,
-+	.write = write_file_nf_override,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- /* Ethtool support for get-stats */
- 
- #define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
-@@ -1402,5 +1461,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	debugfs_create_u16("airtime_flags", S_IRUSR | S_IWUSR,
- 			   sc->debug.debugfs_phy, &sc->airtime_flags);
- 
-+	debugfs_create_file("nf_override", S_IRUSR | S_IWUSR,
-+			    sc->debug.debugfs_phy, sc, &fops_nf_override);
-+
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 496e3cd1b509..eba478f052b9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -803,6 +803,7 @@ struct ath_hw {
- 	u32 rfkill_gpio;
- 	u32 rfkill_polarity;
- 	u32 ah_flags;
-+	s16 nf_override;
- 
- 	bool reset_power_on;
- 	bool htc_reset_init;
--- 
-2.11.0
+Hans
