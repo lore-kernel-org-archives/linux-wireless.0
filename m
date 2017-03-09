@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47644 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S936302AbdCXPh3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 11:37:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Dan Carpenter <dan.carpenter@oracle.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Mar 2017 17:37:13 +0200
-Message-Id: <20170324153714.8880-3-luca@coelho.fi> (sfid-20170324_163805_492649_CCDEAE1C)
-In-Reply-To: <20170324153714.8880-1-luca@coelho.fi>
-References: <20170324153714.8880-1-luca@coelho.fi>
-Subject: [PATCH 2/3] iwlwifi: mvm: writing zero bytes to debugfs causes a crash
+Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:26272
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754280AbdCIJ6n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Mar 2017 04:58:43 -0500
+Subject: Re: [PATCH v4] qtnfmac: announcement of new FullMAC driver for
+ Quantenna chipsets
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1483952830-3967-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <af3dbd89-d9e8-7f6a-d48a-ebe430671963@gmail.com>
+ <87d1dt6w9m.fsf@purkki.adurom.net>
+ <ca350f9b-55de-8903-b213-c041f8b569e3@broadcom.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+        <btherthala@quantenna.com>, <hwang@quantenna.com>,
+        <smaksimenko@quantenna.com>, <dlebed@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <6be6c73d-381b-6579-8b57-2a836973b446@quantenna.com> (sfid-20170309_105939_543316_B86EC88B)
+Date: Thu, 9 Mar 2017 12:58:03 +0300
+MIME-Version: 1.0
+In-Reply-To: <ca350f9b-55de-8903-b213-c041f8b569e3@broadcom.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+On 03/08/2017 12:10 PM, Arend Van Spriel wrote:
+> On 7-3-2017 14:39, Kalle Valo wrote:
+>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>
+>>> On 01/09/2017 10:07 AM, igor.mitsyanko.os@quantenna.com wrote:
+>>>> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+>>>>
+>>>> This patch adds support for new FullMAC WiFi driver for Quantenna
+>>>> QSR10G chipsets.
+>>>>
+>>>> QSR10G (aka Pearl) is Quantenna's 8x8, 160M, 11ac offering.
+>>>> QSR10G supports 2 simultaneous WMACs - one 5G and one 2G.
+>>>> 5G WMAC supports 160M, 8x8 configuration. FW supports
+>>>> up to 8 concurrent virtual interfaces on each WMAC.
+>>>>
+>>>> Patch introduces 2 new drivers:
+>>>> - qtnfmac.ko for interfacing with kernel wireless core
+>>>> - qtnfmac_pearl_pcie.ko for interfacing with hardware over PCIe interface
+>>>
+>>> Hi, what's the state of this patch?
+>>
+>> I haven't had a chance to look at the latest review comments yet, but
+>> this is starting to look good, I think.
+>
+> So what is the status for the firmware patch. It was submitted as RFC a
+> while ago [1].
 
-This is a static analysis fix.  The warning is:
+ From Quantenna side the plan to move forward is:
+1. Modify cfg80211 driver patch to introduce ability to boot from card's 
+internal flash rather then over PCIe only. This will hopefully unblock 
+driver itself.
+2. Work internally to provide access to SDK used to build firmware on a 
+public server, that has to be accessible for two years. Then submit 
+firmware to linux-firmware again.
 
-	drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c:912 iwl_mvm_fw_dbg_collect()
-	warn: integer overflows 'sizeof(*desc) + len'
-
-I guess this code is supposed to take a NUL character, but if we write
-zero bytes then it tries to write -1 characters and crashes.
-
-Fixes: c91b865cb14d ("iwlwifi: mvm: support description for user triggered fw dbg collection")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index a260cd503200..077bfd8f4c0c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1056,6 +1056,8 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
- 
- 	if (ret)
- 		return ret;
-+	if (count == 0)
-+		return 0;
- 
- 	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, buf,
- 			       (count - 1), NULL);
--- 
-2.11.0
+>
+> Regards,
+> Arend
+>
+> [1] https://patchwork.kernel.org/patch/9487515/
+>
