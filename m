@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41457 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754572AbdC1KoV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 06:44:21 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 5/5] brcmfmac: no need for d11inf instance in brcmf_pno_start_sched_scan()
-Date: Tue, 28 Mar 2017 11:43:28 +0100
-Message-Id: <1490697808-5538-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_124745_883678_AC40E948)
-In-Reply-To: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47438 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753862AbdCIIKp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Mar 2017 03:10:45 -0500
+Subject: Re: [PATCH v3] brcmfmac: Do not print the firmware version as an
+ error
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Joe Perches <joe@perches.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170308082321.4755-1-hdegoede@redhat.com>
+ <1488990890.2210.33.camel@perches.com>
+ <797bce36-7887-24cb-2389-9a9e3c0d9760@redhat.com>
+ <1488995605.2210.36.camel@perches.com>
+ <333cdc50-9def-9af8-5081-cd776b4e0512@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <6b632474-7521-8b24-0ee6-48f390b14d24@redhat.com> (sfid-20170309_091051_821559_0F63561C)
+Date: Thu, 9 Mar 2017 09:09:17 +0100
+MIME-Version: 1.0
+In-Reply-To: <333cdc50-9def-9af8-5081-cd776b4e0512@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_pno_start_sched_scan() a local variable is declared and
-assigned for struct brcmu_d11inf. However, there is no other reference
-to it so it is unnecessary.
+Hi all,
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 2 --
- 1 file changed, 2 deletions(-)
+On 08-03-17 21:44, Arend Van Spriel wrote:
+>
+>
+> On 8-3-2017 18:53, Joe Perches wrote:
+>> On Wed, 2017-03-08 at 17:57 +0100, Hans de Goede wrote:
+>>> Hi,
+>>
+>> And hello back to you.
+>
+> Also hello.
+>
+>>> On 08-03-17 17:34, Joe Perches wrote:
+>>>> On Wed, 2017-03-08 at 09:23 +0100, Hans de Goede wrote:
+>>>>> Using pr_err for things which are not errors is a bad idea. E.g. it
+>>>>> will cause the plymouth bootsplash screen to drop back to the text
+>>>>> console so that the user can see the error, which is not what we
+>>>>> normally want to happen.
+>>>>>
+>>>>> Instead add a new brcmf_info macro and use that.
+>>>>>
+>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>>> ---
+>>>>> Changes in v2:
+>>>>> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
+>>>>> Changes in v3:
+>>>>> -Use do { } while (0) around macro
+>>>>
+>>>> why?  Single statement macros do not need a do/while
+>>>
+>>> Because Arend ask me to during review of v2.
+>>
+>> Well, maybe Arend should learn that single statement macros
+>> don't need do/while guards and that do/while guards are
+>> generally not used in the kernel for single statements.
+>
+> Always good to learn from an expert. The intent behind my remark was to
+> follow the same pattern as brcmf_err for the sake of consistency. I was
+> not clear.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index 9a25e79..6c3bde8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -182,7 +182,6 @@ int brcmf_pno_clean(struct brcmf_if *ifp)
- int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
- 			       struct cfg80211_sched_scan_request *req)
- {
--	struct brcmu_d11inf *d11inf;
- 	struct brcmf_pno_config_le pno_cfg;
- 	struct cfg80211_ssid *ssid;
- 	u16 chan;
-@@ -209,7 +208,6 @@ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
- 	}
- 
- 	/* configure channels to use */
--	d11inf = &ifp->drvr->config->d11inf;
- 	for (i = 0; i < req->n_channels; i++) {
- 		chan = req->channels[i]->hw_value;
- 		pno_cfg.channel_list[i] = cpu_to_le16(chan);
--- 
-1.9.1
+Ok, so what is it going to be, are we going to keep this as is
+with the do .. while added or shall I do a v4 dropping it again?
+
+Regards,
+
+Hans
