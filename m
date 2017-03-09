@@ -1,97 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36363 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751074AbdCCKwT (ORCPT
+Received: from mail-ua0-f182.google.com ([209.85.217.182]:36166 "EHLO
+        mail-ua0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754715AbdCIPBj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 05:52:19 -0500
+        Thu, 9 Mar 2017 10:01:39 -0500
+Received: by mail-ua0-f182.google.com with SMTP id 72so81792155uaf.3
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Mar 2017 07:01:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <f86cf852-3960-0dcf-5917-509080ca7bf5@de.ibm.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-3-arnd@arndb.de>
- <76790664-a7a9-193c-2e30-edaee1308cb0@de.ibm.com> <CAK8P3a082Bi6Vf5gEFLAJtJvUm=7MtddBzcCOqagQyfJPFTu_g@mail.gmail.com>
- <2adc6ff4-5dc5-8f1d-cce1-47f3124a528f@de.ibm.com> <CAK8P3a2mepCjPfM9Ychk7CHFHi0UW8RBzK4skJKMSOjw3gKoYg@mail.gmail.com>
- <f86cf852-3960-0dcf-5917-509080ca7bf5@de.ibm.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 3 Mar 2017 10:54:07 +0100
-Message-ID: <CAK8P3a0M6KAiLj9HM8UYykL-CtZNEsDcD0L1kZ1usPCx4=vq+g@mail.gmail.com> (sfid-20170303_115247_304115_32AA6DBB)
-Subject: Re: [PATCH 02/26] rewrite READ_ONCE/WRITE_ONCE
-To: Christian Borntraeger <borntraeger@de.ibm.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Paul McKenney <paulmck@linux.vnet.ibm.com>
+In-Reply-To: <1488543607.25750.1.camel@sipsolutions.net>
+References: <20170221100957.30965-1-johannes@sipsolutions.net>
+ <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com> <1487673603.2215.3.camel@sipsolutions.net>
+ <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com> <1487680651.2215.5.camel@sipsolutions.net>
+ <3fa1e3ac-5722-c46d-acc1-62407f4eef07@broadcom.com> <CA+gyVQ11yZjkJXjiVoMVijs=_K8itZMQrces9XQha_bT4=H-DA@mail.gmail.com>
+ <9b6de09f-d872-fd67-971a-6da369fefe1a@broadcom.com> <1248c04b-a643-9254-383c-707ab68c0815@broadcom.com>
+ <CA+gyVQ24qDqpOBKPjVaZ_BFAJa9kLMjA=nD8FF8V7HvxUkWb=w@mail.gmail.com> <1488543607.25750.1.camel@sipsolutions.net>
+From: Jithu Jance <jithu.jance@broadcom.com>
+Date: Thu, 9 Mar 2017 20:23:31 +0530
+Message-ID: <CA+gyVQ2sEafO2iivLNUhQUx+n7QD7EVm01Pu8zqj26uwS2t4Lw@mail.gmail.com> (sfid-20170309_160142_495336_F6C6E304)
+Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+        Jouni Malinen <j@w1.fi>,
+        Avraham Stern <avraham.stern@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 9:26 AM, Christian Borntraeger
-<borntraeger@de.ibm.com> wrote:
-> On 03/02/2017 10:45 PM, Arnd Bergmann wrote:
->> Ok, got it. So I guess the behavior of forcing aligned accesses on aligned
->> data is accidental, and allowing non-power-of-two arguments is also not
->> the main purpose.
+On Fri, Mar 3, 2017 at 5:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
+> Perhaps instead it'd make sense to instead include the new AUTHORIZED
+> flag in the CONNECT_RESULT as well, if authorized? I basically see 3
+> valid cases:
 >
-> Right. The main purpose is to read/write _ONCE_. You can assume a somewhat
-> atomic access for sizes <= word size. And there are certainly places that
-> rely on that. But the *ONCE thing is mostly used for things where we used
-> barrier() 10 years ago.
-
-Ok
-
+>  * connection successful with authorized port
+>  * connection successful with need for 1X handshake (non-offloaded)
+>  * connection failed
 >
->  Maybe we could just bail out on new compilers if we get
->> either of those? That might catch code that accidentally does something
->> that is inherently non-atomic or that causes a trap when the intention was
->> to have a simple atomic access.
+> Why should we have the case of
+>  * association successful but 4-way-HS failed
 >
-> I think Linus stated that its ok to assume that the compiler is smart enough
-> to uses a single instruction to access aligned and properly sized scalar types
-> for *ONCE.
->
-> Back then when I changed ACCESS_ONCE there were many places that did use it
-> for non-atomic, > word size accesses. For example on some architectures a pmd_t
-> is a typedef to an array, for which there is no way to read that atomically.
-> So the focus must be on the "ONCE" part.
->
-> If some code uses a properly aligned, word sized object we can also assume
-> atomic access. If the access is not properly sized/aligned we do not get
-> atomicity, but we do get the "ONCE".
-> But adding a check for alignment/size would break the compilation of some
-> code.
+> separately?
 
-So what should be the expected behavior for objects that have a smaller
-alignment? E.g. this structure
+Sorry for delayed reply. Makes sense. Authorized flag should do the
+job. Thanks Johannes!
 
-struct fourbytes {
-   char bytes[4];
-} __packed;
 
-when passed into the current READ_ONCE() will be accessed with
-a 32-bit load, while reading it with
+-- 
 
-struct fourbytes local = *(volatile struct fourbytes *)voidpointer;
-
-on architectures like ARMv5 or lower will turn into four single-byte
-reads to avoid an alignment trap when the pointer is actually
-unaligned.
-
-I can see arguments for and against either behavior, but what should
-I do when modifying it for newer compilers? The possible options
-that I see are
-
-- keep assuming that the pointer will be aligned at runtime
-  and doesn't trap
-- use the regular gcc behavior and do byte-accesses on those
-  architectures that otherwise might trap
-- add a runtime alignment check to do atomic accesses whenever
-  possible, but never trap
-- fail the build
-
-     Arnd
+- Jithu Jance
