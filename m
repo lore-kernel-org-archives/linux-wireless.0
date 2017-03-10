@@ -1,52 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46014 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754237AbdCFQ34 (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:36112 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755104AbdCJPlF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 11:29:56 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>
-Cc: kasan-dev@googlegroups.com,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 08/26] brcmsmac: make some local variables 'static const' to reduce stack size
-References: <20170302163834.2273519-1-arnd@arndb.de>
-        <20170302163834.2273519-9-arnd@arndb.de>
-        <227c8e5a-fa20-0300-1cb0-1d3ef17deb19@broadcom.com>
-Date: Mon, 06 Mar 2017 18:19:59 +0200
-In-Reply-To: <227c8e5a-fa20-0300-1cb0-1d3ef17deb19@broadcom.com> (Arend Van
-        Spriel's message of "Mon, 6 Mar 2017 10:30:58 +0100")
-Message-ID: <87y3wi74y8.fsf@purkki.adurom.net> (sfid-20170306_173014_883687_46AB0ED4)
+        Fri, 10 Mar 2017 10:41:05 -0500
+Received: by mail-pf0-f170.google.com with SMTP id o126so43207220pfb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 07:41:05 -0800 (PST)
+Subject: Re: WARNING: CPU: 1 PID: 23668 at
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
+To: Luca Coelho <luca@coelho.fi>
+References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
+ <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
+ <fdfbfffa-31c9-7646-82b5-b6a759b73d21@kernel.dk>
+ <1489147283.22435.14.camel@coelho.fi>
+ <aceb734b-8e2c-e5b6-300d-172f8d28f471@kernel.dk>
+ <1489160164.22435.18.camel@coelho.fi>
+Cc: sara.sharon@intel.com, liad.kaufman@intel.com,
+        linux-wireless@vger.kernel.org
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <5d235320-9c9d-c9e9-6688-3336061cbaf4@kernel.dk> (sfid-20170310_164109_670793_6FD4C1EE)
+Date: Fri, 10 Mar 2017 08:41:02 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1489160164.22435.18.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+On 03/10/2017 08:36 AM, Luca Coelho wrote:
+> On Fri, 2017-03-10 at 08:23 -0700, Jens Axboe wrote:
+>> On 03/10/2017 05:01 AM, Luca Coelho wrote:
+>>> Hi Jens,
+>>>
+>>> On Thu, 2017-03-09 at 21:41 -0700, Jens Axboe wrote:
+>>>> On 03/01/2017 09:10 PM, Jens Axboe wrote:
+>>>>> On 03/01/2017 08:33 PM, Luca Coelho wrote:
+>>>>>> Hi Jens,
+>>>>>>
+>>>>>> On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>
+>>>>>>     Not that folks have been jumping all over this, but in case someone is
+>>>>>>     curious, it triggered twice here today. For those two times, the value
+>>>>>>     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
+>>>>>>
+>>>>>> Sorry for the delay, I'm on vacation now with limited internet access.
+>>>>>> But we'll take a look into this early next week at the latest.
+>>>>>>
+>>>>>> Thanks a lot for the detailed report!
+>>>>>
+>>>>> No worries, thanks for responding. I just wanted to ensure this wasn't
+>>>>> dropped on the floor.
+>>>>>
+>>>>> BTW, a few more values of ->pending_frames[sta_id]:
+>>>>>
+>>>>> $ dmesg | grep "ret="
+>>>>> [ 2334.308254] ret=39
+>>>>> [ 7915.311828] ret=80
+>>>>> [31602.317204] ret=41
+>>>>> [32139.510993] ret=54
+>>>>> [33292.917759] ret=96
+>>>>>
+>>>>> it seems to often happen around resume.
+>>>>
+>>>> This is still happening all the time in current -git.
+>>>
+>>> Could you collect traces with trace-cmd, as explained in our wiki[1]?
+>>> This will probably help point out the problem.  I know it's a bit
+>>> difficult because it appears to happen randomly for you, but it's worth
+>>> trying.
+>>
+>> Sure I can, but honestly I'm a little puzzled that nobody else can
+>> reproduce this, it happens every time I resume of switch access points.
+>> Is anyone trying to reproduce this?
+>>
+>> I'll have to recompile with iwlwifi tracing enabled, then I'll send a trace
+>> when it happens.
+> 
+> Are you using 4.11-rc1? Or linus' master? Or...?
 
-> On 2-3-2017 17:38, Arnd Bergmann wrote:
->> With KASAN and a couple of other patches applied, this driver is one
->> of the few remaining ones that actually use more than 2048 bytes of
->> kernel stack:
->> 
->> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy_gainctrl':
->> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the frame size of 3264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
->> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
->> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the frame size of 2864 bytes is larger than 2048 bytes [-Wframe-larger-than=]
->> 
->> Here, I'm reducing the stack size by marking as many local variables as
->> 'static const' as I can without changing the actual code.
->
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+The trace I just sent is tip of Linus' tree. It's happened continually
+since the commit I mentioned in my initial report was merged:
 
-Arnd, via which tree are you planning to submit these? I'm not sure
-what I should do with the wireless drivers patches from this series.
+commit 94c3e614df2117626fccfac8f821c66e30556384
+Author: Sara Sharon <sara.sharon@intel.com>
+Date:   Wed Dec 7 15:04:37 2016 +0200
+
+    iwlwifi: mvm: fix pending frame counter calculation
 
 -- 
-Kalle Valo
+Jens Axboe
