@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35087 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750758AbdCIGgs (ORCPT
+Received: from mail-ua0-f177.google.com ([209.85.217.177]:33523 "EHLO
+        mail-ua0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750981AbdCJItt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Mar 2017 01:36:48 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        "Nishant Sarmukadam" <nishants@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
-Subject: RE: [EXT] Re: [PATCH 1/3] mwifiex: add qualifier to firmware
- structures
-Date: Thu, 9 Mar 2017 06:35:57 +0000
-Message-ID: <5a45c32cb855493f9704435c10851243@SC-EXCH02.marvell.com> (sfid-20170309_073710_939033_F86DBCB8)
-References: <1488980829-6075-1-git-send-email-gbhat@marvell.com>
-        <1488980829-6075-2-git-send-email-gbhat@marvell.com>
- <874lz37rkv.fsf@purkki.adurom.net>
-In-Reply-To: <874lz37rkv.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 10 Mar 2017 03:49:49 -0500
+Received: by mail-ua0-f177.google.com with SMTP id u30so108275606uau.0
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 00:49:48 -0800 (PST)
 MIME-Version: 1.0
+From: Rostyslav Khudolii <rkhudolii@airtame.com>
+Date: Fri, 10 Mar 2017 09:49:47 +0100
+Message-ID: <CAPXt_dabk8KNL0HTHZJfoHT+93ZS+3R31tVEPb4zpKJWE65cMw@mail.gmail.com> (sfid-20170310_094952_335386_C643D863)
+Subject: [PATCH] ath6kl: Remove old 802.11a-only channels
+To: kvalo@qca.qualcomm.com
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Attila Sukosd <attila@airtame.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Wednesday, March 08, 2017 8:18 PM
-> To: Ganapathi Bhat
-> Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo;
-> Nishant Sarmukadam; Karthik Doddayennegere Ananthapadmanabha
-> Subject: Re: [PATCH 1/3] mwifiex: add qualifier to firmware
-> structures
->
-> Ganapathi Bhat <gbhat@marvell.com> writes:
-> 
-> > From: Karthik D A <karthida@marvell.com>
-> >
-> > Adding qualifier "__packed" indicates that no padding should be
-> > performed on the qualified object for alignment.
-> > This patch adds qualifier __packed to the required firmware
-> structures
-> > in mwifiex driver.
-> >
-> > Signed-off-by: Karthik D A <karthida@marvell.com>
-> 
-> I just want to confirm "Karthik D A" is really the full legal name,
-> which should be in both From and Signed-off-by lines. No nicknames nor
-> just the first name or anything like that.
->
-That was author's initials. I will resend the patch with complete name.
->
-> 
-> Also this should contain S-o-b from Ganapathi. Please carefully read
-> Documentation/process/submitting-patches.rst.
-> 
-Sure. I will edit this too and will refer the same for further submitting.
-> --
+Channels 34/38/42/46 can only be used for compatibility with
+old devices sold in Japan. Modern products, such as AR6003/AR6004
+don't support these channels.
+Keeping them in the upstream is error prone and requires full
+network stack support.
+A custom patch should be used in case such compatibility is required.
 
-Regards,
-Ganapathi
+Signed-off-by: Rostyslav Khudolii <rkhudolii@airtame.com>
+Cc: Attila Sukosd <attila@airtame.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 363b30a..aae65ce 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -102,10 +102,8 @@ static struct ieee80211_channel ath6kl_2ghz_channels[] = {
+ };
+
+ static struct ieee80211_channel ath6kl_5ghz_a_channels[] = {
+-       CHAN5G(34, 0), CHAN5G(36, 0),
+-       CHAN5G(38, 0), CHAN5G(40, 0),
+-       CHAN5G(42, 0), CHAN5G(44, 0),
+-       CHAN5G(46, 0), CHAN5G(48, 0),
++       CHAN5G(36, 0), CHAN5G(40, 0),
++       CHAN5G(44, 0), CHAN5G(48, 0),
+        CHAN5G(52, 0), CHAN5G(56, 0),
+        CHAN5G(60, 0), CHAN5G(64, 0),
+        CHAN5G(100, 0), CHAN5G(104, 0),
