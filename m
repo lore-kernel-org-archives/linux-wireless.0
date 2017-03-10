@@ -1,51 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43742 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750770AbdCHPIl (ORCPT
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:35400 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754068AbdCJIGz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 10:08:41 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] rtl8187: Enable monitor mode to fix multicast reception
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170219235919.GA15763@tisys.org>
-References: <20170219235919.GA15763@tisys.org>
-To: Nils Holland <nholland@tisys.org>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20170308150803.DA679607A4@smtp.codeaurora.org> (sfid-20170308_160926_538182_24896B44)
-Date: Wed,  8 Mar 2017 15:08:03 +0000 (UTC)
+        Fri, 10 Mar 2017 03:06:55 -0500
+Received: by mail-wr0-f171.google.com with SMTP id g10so59840520wrg.2
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 00:06:34 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        robh+dt@kernel.org, mark.rutland@arm.com,
+        ext.waldemar.rymarkiewicz@tieto.com, kvalo@codeaurora.org,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 2/2] ath10k: search DT for qcom,ath10k-calibration-variant
+Date: Fri, 10 Mar 2017 09:06:15 +0100
+Message-Id: <20170310080615.22958-2-sven.eckelmann@openmesh.com> (sfid-20170310_090736_930348_582245BC)
+In-Reply-To: <20170310080615.22958-1-sven.eckelmann@openmesh.com>
+References: <20170310080615.22958-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nils Holland <nholland@tisys.org> wrote:
-> The rtl8187 cards don't seem to receive multicast frames, which,
-> among other things, makes them fail to receive RAs in IPv6 networks.
-> The cause seems to be that the RTL818X_RX_CONF_MULTICAST flag doesn't
-> have the desired effect.
-> 
-> Fix the issue by setting RTL818X_RX_CONF_MONITOR instead, which puts the
-> card into monitor mode and resolves the problem so that multicast frames
-> are sucessfully passed to the kernel.
-> 
-> The existence of the problem and the effectiveness of the solution has
-> originally been confirmed on an 8187B based card with the USB id of
-> 0bda:8197. Subsequent testing by Larry Finger on an 8187L based card,
-> which follows the second (8187, i.e. "non-b") code path in the driver,
-> has confirmed that the fix does not cause any noticeable regresssions
-> there either.
-> 
-> Signed-off-by: Nils Holland <nholland@tisys.org>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Board Data File (BDF) is loaded upon driver boot-up procedure. The right
+board data file is identified on QCA4019 using bus, bmi-chip-id and
+bmi-board-id.
 
-Patch applied to wireless-drivers-next.git, thanks.
+The problem, however, can occur when the (default) board data file cannot
+fulfill with the vendor requirements and it is necessary to use a different
+board data file.
 
-3beb27028c44 rtl8187: Enable monitor mode to fix multicast reception
+This problem was solved for SMBIOS by adding a special SMBIOS type 0xF8.
+Something similar has to be provided for systems without SMBIOS but with
+device trees. No solution was specified by QCA and therefore a new one has
+to be found for ath10k.
 
+The device tree requires addition strings to define the variant name
+
+    wifi@a000000 {
+    	status = "okay";
+    	qcom,ath10k-calibration-variant = "RT-AC58U";
+    };
+
+    wifi@a800000 {
+    	status = "okay";
+    	qcom,ath10k-calibration-variant = "RT-AC58U";
+    };
+
+This would create the boarddata identifiers for the board-2.bin search
+
+ *  bus=ahb,bmi-chip-id=0,bmi-board-id=16,variant=RT-AC58U
+ *  bus=ahb,bmi-chip-id=0,bmi-board-id=17,variant=RT-AC58U
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+Since RFC:
+
+ - initialize variant pointer to have it initialized to NULL when
+   of_property_read_string fails (thanks Christian Lamparter)
+ - Only print warning that DT doesn't contain string ones (thanks Christian
+   Lamparter)
+ - Split patch in DT doc and ath10k part (thanks Christian Lamparter)
+ - Allow to overwrite the variant string via DT and ignore that SMBIOS had
+   written anything to it
+---
+ drivers/net/wireless/ath/ath10k/core.c | 37 +++++++++++++++++++++++++++-------
+ 1 file changed, 30 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 0a8e29e9a0eb..e459e84afe9f 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -779,6 +779,25 @@ static int ath10k_core_check_smbios(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static int ath10k_core_check_dt(struct ath10k *ar)
++{
++	struct device_node *node;
++	const char *variant = NULL;
++
++	node = ar->dev->of_node;
++	if (!node)
++		return -ENOENT;
++
++	of_property_read_string(node, "qcom,ath10k-calibration-variant",
++				&variant);
++	if (!variant)
++		return -ENODATA;
++
++	strscpy(ar->id.bdf_ext, variant, sizeof(ar->id.bdf_ext));
++
++	return 0;
++}
++
+ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ {
+ 	u32 result, address = ar->hw_params.patch_load_addr;
+@@ -1145,19 +1164,19 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+ 	/* strlen(',variant=') + strlen(ar->id.bdf_ext) */
+ 	char variant[9 + ATH10K_SMBIOS_BDF_EXT_STR_LENGTH] = { 0 };
+ 
++	if (ar->id.bdf_ext[0] != '\0')
++		scnprintf(variant, sizeof(variant), ",variant=%s",
++			  ar->id.bdf_ext);
++
+ 	if (ar->id.bmi_ids_valid) {
+ 		scnprintf(name, name_len,
+-			  "bus=%s,bmi-chip-id=%d,bmi-board-id=%d",
++			  "bus=%s,bmi-chip-id=%d,bmi-board-id=%d%s",
+ 			  ath10k_bus_str(ar->hif.bus),
+ 			  ar->id.bmi_chip_id,
+-			  ar->id.bmi_board_id);
++			  ar->id.bmi_board_id, variant);
+ 		goto out;
+ 	}
+ 
+-	if (ar->id.bdf_ext[0] != '\0')
+-		scnprintf(variant, sizeof(variant), ",variant=%s",
+-			  ar->id.bdf_ext);
+-
+ 	scnprintf(name, name_len,
+ 		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
+ 		  ath10k_bus_str(ar->hif.bus),
+@@ -2221,7 +2240,11 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 
+ 	ret = ath10k_core_check_smbios(ar);
+ 	if (ret)
+-		ath10k_dbg(ar, ATH10K_DBG_BOOT, "bdf variant name not set.\n");
++		ath10k_dbg(ar, ATH10K_DBG_BOOT, "SMBIOS bdf variant name not set.\n");
++
++	ret = ath10k_core_check_dt(ar);
++	if (ret)
++		ath10k_dbg(ar, ATH10K_DBG_BOOT, "DT bdf variant name not set.\n");
+ 
+ 	ret = ath10k_core_fetch_board_file(ar);
+ 	if (ret) {
 -- 
-https://patchwork.kernel.org/patch/9581905/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
