@@ -1,85 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:2298 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751246AbdCVT61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 15:58:27 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 4/5] NFC: pn544: Add GPIO ACPI mapping table
-Date: Wed, 22 Mar 2017 21:57:51 +0200
-Message-Id: <20170322195752.33291-4-andriy.shevchenko@linux.intel.com> (sfid-20170322_205855_483623_B2267CD2)
-In-Reply-To: <20170322195752.33291-1-andriy.shevchenko@linux.intel.com>
-References: <20170322195752.33291-1-andriy.shevchenko@linux.intel.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:40670 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755104AbdCJPiW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Mar 2017 10:38:22 -0500
+Message-ID: <58C2CABA.6070007@candelatech.com> (sfid-20170310_163826_271625_2EEBBB10)
+Date: Fri, 10 Mar 2017 07:48:10 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rate mask resulting in no usable rates - WARN_ON
+References: <1488933811.4723.1.camel@sipsolutions.net>   <a1cd3a56-0453-7675-6895-9521a412a9cd@candelatech.com> <1488955036.31187.1.camel@sipsolutions.net>
+In-Reply-To: <1488955036.31187.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+On 03/07/2017 10:37 PM, Johannes Berg wrote:
+>
+>>> Is anyone - other than ChromeOS, which sets it just after
+>>> association - actually using this?
+>>
+>> I know several people who use this and depend on it being sticky.
+>
+> Do you know how they use it in more detail?
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+The goal would be to make a more capable station on a radio act like
+something less, typically for testing purposes.  Maybe limit to /a rates, for instance:
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/pn544/i2c.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+They do this before association, though they seem to also do it
+after association to work around some bug or another, and API is slightly
+different on newer kernels.
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 5e780e7a28e5..6226d220f1d0 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -870,22 +870,34 @@ static void pn544_hci_i2c_fw_work(struct work_struct *work)
- 	}
- }
- 
-+static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
-+static const struct acpi_gpio_params firmware_gpios = { 2, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_pn544_gpios[] = {
-+	{ "enable-gpios", &enable_gpios, 1 },
-+	{ "firmware-gpios", &firmware_gpios, 1 },
-+	{ },
-+};
-+
- static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct device *dev = &client->dev;
-+	int ret;
-+
-+	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
-+	if (ret)
-+		return ret;
- 
- 	/* Get EN GPIO from ACPI */
--	phy->gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1,
--					     GPIOD_OUT_LOW);
-+	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
- 	if (IS_ERR(phy->gpiod_en)) {
- 		nfc_err(dev, "Unable to get EN GPIO\n");
- 		return PTR_ERR(phy->gpiod_en);
- 	}
- 
- 	/* Get FW GPIO from ACPI */
--	phy->gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2,
--					     GPIOD_OUT_LOW);
-+	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
- 	if (IS_ERR(phy->gpiod_fw)) {
- 		nfc_err(dev, "Unable to get FW GPIO\n");
- 		return PTR_ERR(phy->gpiod_fw);
-@@ -997,6 +1009,7 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
- 	if (phy->powered)
- 		pn544_hci_i2c_disable(phy);
- 
-+	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
- 	return 0;
- }
- 
+
+802.11 ac station :
+iw dev vif0 set bitrates legacy-2.4 legacy-5 6 9 12 18 24 36 48 54 ht-mcs-5 vht-mcs-5 3:9
+
+802.11 n (2.4G):
+iw dev vif1 set bitrates legacy-2.4 ht-mcs-2.4 23
+
+802.11 b:
+iw dev vif2 set bitrates legacy-2.4 11 legacy-5 ht-mcs-2.4 vht-mcs-5  ( setting 1 , 2 , 5.5 .. is not working)
+
+802.11 g:
+iw dev vif3 set bitrates legacy-2.4 54 legacy-5 ht-mcs-2.4 vht-mcs-5  (setting 1 2 6 ... is not working)
+
+802.11 a:
+iw dev vif0_7962 set bitrates legacy-2.4 legacy-5 6 9 12 18 24 36 48 54 ht-mcs-5 vht-mcs-5
+
+>
+>> For that matter, I think LEDE and probably OpenWRT uses 'iw' quite a
+>> bit to affect rates.
+>
+> That seems odd, but ok.
+>
+> Either way, if people do rely on it being sticky then I'll do the next
+> best thing and just clear the mask when detecting a situation where it
+> would result in no usable rates, as well as rejecting it when it's
+> already known that it would do so.
+
+I just briefly looked at related code in LEDE while debugging something
+else, so I might be confused about it.  In particular, if you try to set
+up a VHT40 IBSS network, then it ends up configuring an HT40 one since there
+is no valid API (that I know of) to configure an IBSS station for VHT40 (VHT80 works fine).
+
+Thanks,
+Ben
+
 -- 
-2.11.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
