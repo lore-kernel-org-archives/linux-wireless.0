@@ -1,219 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34227 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933564AbdCaQsP (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46004 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933646AbdCJVR0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 12:48:15 -0400
-Received: by mail-oi0-f68.google.com with SMTP id t11so9919740oib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 09:48:14 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 10/12] rtlwifi: btcoex: 23b 2ant: finer bt power adjustment
-Date: Fri, 31 Mar 2017 11:47:40 -0500
-Message-Id: <20170331164742.22374-11-Larry.Finger@lwfinger.net> (sfid-20170331_184847_950801_CD60B1E6)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+        Fri, 10 Mar 2017 16:17:26 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/5] brcmfmac: only use fwsignal functionality for bcdc protocol
+Date: Fri, 10 Mar 2017 21:17:01 +0000
+Message-Id: <1489180626-6722-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170310_221743_515446_BA6F864F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+This series is rework in the driver getting fwsignal out of the way for
+protocols that do not need it. For example PCIe devices do not need that
+functionality. To summarize:
 
-The bt can specify a power level to decrease. Rather than decreasing by a
-fixed value (usually 2), this change makes the driver fit to the
-environment more quickly.
+  * use fwsignal functionality only for bcdc protocol.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 52 ++++++++++------------
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  4 +-
- 2 files changed, 25 insertions(+), 31 deletions(-)
+This series applies to the master branch of the wireless-drivers-next
+repository. 
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 8e27c1a..ac4074c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -660,44 +660,40 @@ static void btc8723b2ant_set_fw_dac_swing_level(struct btc_coexist *btcoexist,
- }
- 
- static void btc8723b2ant_set_fw_dec_bt_pwr(struct btc_coexist *btcoexist,
--					   bool dec_bt_pwr)
-+					   u8 dec_bt_pwr_lvl)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	u8 h2c_parameter[1] = {0};
- 
--	h2c_parameter[0] = 0;
--
--	if (dec_bt_pwr)
--		h2c_parameter[0] |= BIT1;
-+	h2c_parameter[0] = dec_bt_pwr_lvl;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--		 "[BTCoex], decrease Bt Power : %s, FW write 0x62=0x%x\n",
--		    (dec_bt_pwr ? "Yes!!" : "No!!"), h2c_parameter[0]);
-+		 "[BTCoex], decrease Bt Power Level : %u\n", dec_bt_pwr_lvl);
- 
- 	btcoexist->btc_fill_h2c(btcoexist, 0x62, 1, h2c_parameter);
- }
- 
- static void btc8723b2ant_dec_bt_pwr(struct btc_coexist *btcoexist,
--				    bool force_exec, bool dec_bt_pwr)
-+				    bool force_exec, u8 dec_bt_pwr_lvl)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--		 "[BTCoex], %s Dec BT power = %s\n",
--		    force_exec ? "force to" : "", dec_bt_pwr ? "ON" : "OFF");
--	coex_dm->cur_dec_bt_pwr = dec_bt_pwr;
-+		 "[BTCoex], Dec BT power level = %u\n", dec_bt_pwr_lvl);
-+	coex_dm->cur_dec_bt_pwr_lvl = dec_bt_pwr_lvl;
- 
- 	if (!force_exec) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], bPreDecBtPwr=%d, bCurDecBtPwr=%d\n",
--			    coex_dm->pre_dec_bt_pwr, coex_dm->cur_dec_bt_pwr);
-+			 "[BTCoex], PreDecBtPwrLvl=%d, CurDecBtPwrLvl=%d\n",
-+			    coex_dm->pre_dec_bt_pwr_lvl,
-+			    coex_dm->cur_dec_bt_pwr_lvl);
- 
--		if (coex_dm->pre_dec_bt_pwr == coex_dm->cur_dec_bt_pwr)
-+		if (coex_dm->pre_dec_bt_pwr_lvl == coex_dm->cur_dec_bt_pwr_lvl)
- 			return;
- 	}
--	btc8723b2ant_set_fw_dec_bt_pwr(btcoexist, coex_dm->cur_dec_bt_pwr);
-+	btc8723b2ant_set_fw_dec_bt_pwr(btcoexist, coex_dm->cur_dec_bt_pwr_lvl);
- 
--	coex_dm->pre_dec_bt_pwr = coex_dm->cur_dec_bt_pwr;
-+	coex_dm->pre_dec_bt_pwr_lvl = coex_dm->cur_dec_bt_pwr_lvl;
- }
- 
- static void btc8723b2ant_fw_dac_swing_lvl(struct btc_coexist *btcoexist,
-@@ -1340,7 +1336,7 @@ static void btc8723b2ant_coex_alloff(struct btc_coexist *btcoexist)
- 	/* fw all off */
- 	btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
--	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	/* sw all off */
- 	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
-@@ -1356,7 +1352,7 @@ static void btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
- 
- 	btc8723b2ant_ps_tdma(btcoexist, FORCE_EXEC, false, 1);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, FORCE_EXEC, 6);
--	btc8723b2ant_dec_bt_pwr(btcoexist, FORCE_EXEC, false);
-+	btc8723b2ant_dec_bt_pwr(btcoexist, FORCE_EXEC, 0);
- 
- 	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
- 
-@@ -1381,7 +1377,7 @@ static void btc8723b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
- 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 	}
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, FORCE_EXEC, 6);
--	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
- }
-@@ -1413,7 +1409,7 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
- 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 		btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 		btc8723b2ant_sw_mechanism(btcoexist, false, false, false,
- 					  false);
-@@ -1439,8 +1435,7 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 			btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 			btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC,
- 						      0xb);
--			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC,
--						false);
-+			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 			btc8723b2ant_sw_mechanism(btcoexist, false, false,
- 						  false, false);
-@@ -1467,8 +1462,7 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 			btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 			btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC,
- 						      0xb);
--			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC,
--						false);
-+			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 			btc8723b2ant_sw_mechanism(btcoexist, true, false,
- 						  false, false);
-@@ -1988,7 +1982,7 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
- 	    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, true);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
- 	btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
-@@ -2033,7 +2027,7 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 
-@@ -2088,7 +2082,7 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
-@@ -2156,7 +2150,7 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 
-@@ -2541,7 +2535,7 @@ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist)
- 		 ps_tdma_case, coex_dm->auto_tdma_adjust);
- 
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = %d/ %d ",
--		 "DecBtPwr/ IgnWlanAct", coex_dm->cur_dec_bt_pwr,
-+		 "DecBtPwr/ IgnWlanAct", coex_dm->cur_dec_bt_pwr_lvl,
- 		 coex_dm->cur_ignore_wlan_act);
- 
- 	/* Hw setting */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-index e36ab42..746930d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-@@ -75,8 +75,8 @@ enum BT_8723B_2ANT_COEX_ALGO {
- 
- struct coex_dm_8723b_2ant {
- 	/* fw mechanism */
--	bool pre_dec_bt_pwr;
--	bool cur_dec_bt_pwr;
-+	bool pre_dec_bt_pwr_lvl;
-+	bool cur_dec_bt_pwr_lvl;
- 	u8 pre_fw_dac_swing_lvl;
- 	u8 cur_fw_dac_swing_lvl;
- 	bool cur_ignore_wlan_act;
+Franky Lin (5):
+  brcmfmac: move brcmf_txflowblock to bcdc layer
+  brcmfmac: move brcmf_txcomplete to bcdc layer
+  brcmfmac: wrap brcmf_fws_add_interface into bcdc layer
+  brcmfmac: wrap brcmf_fws_del_interface into bcdc layer
+  brcmfmac: wrap brcmf_fws_reset_interface into bcdc layer
+
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    | 51 ++++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.h    |  3 ++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  5 ---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 34 ++-------------
+ .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    |  6 +--
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.h   | 27 ++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  8 ++--
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  7 +--
+ 8 files changed, 96 insertions(+), 45 deletions(-)
+
 -- 
-2.10.2
+1.9.1
