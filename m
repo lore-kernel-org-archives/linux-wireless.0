@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19546 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752883AbdCOJyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 05:54:43 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "Kaufman, Liad" <liad.kaufman@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Sharon, Sara" <sara.sharon@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [RESEND PATCH 4.11] iwlwifi: mvm: cleanup pending frames in DQA
- mode
-Date: Wed, 15 Mar 2017 09:54:38 +0000
-Message-ID: <1489571676.22435.46.camel@intel.com> (sfid-20170315_105446_942720_97AE6369)
-References: <1489410030.22435.34.camel@coelho.fi>
-         <20170314075035.19248-1-luca@coelho.fi> <87pohi6f5d.fsf@purkki.adurom.net>
-In-Reply-To: <87pohi6f5d.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:45402 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755104AbdCJPgM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Mar 2017 10:36:12 -0500
+Message-ID: <1489160164.22435.18.camel@coelho.fi> (sfid-20170310_163621_874681_9BE389B1)
+From: Luca Coelho <luca@coelho.fi>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: sara.sharon@intel.com, liad.kaufman@intel.com,
+        linux-wireless@vger.kernel.org
+Date: Fri, 10 Mar 2017 17:36:04 +0200
+In-Reply-To: <aceb734b-8e2c-e5b6-300d-172f8d28f471@kernel.dk>
+References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
+         <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
+         <fdfbfffa-31c9-7646-82b5-b6a759b73d21@kernel.dk>
+         <1489147283.22435.14.camel@coelho.fi>
+         <aceb734b-8e2c-e5b6-300d-172f8d28f471@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: WARNING: CPU: 1 PID: 23668 at
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE3LTAzLTE1IGF0IDExOjUyICswMjAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBM
-dWNhIENvZWxobyA8bHVjYUBjb2VsaG8uZmk+IHdyaXRlczoNCj4gDQo+ID4gRnJvbTogU2FyYSBT
-aGFyb24gPHNhcmEuc2hhcm9uQGludGVsLmNvbT4NCj4gPiANCj4gPiBXaGVuIGEgc3RhdGlvbiBp
-cyBhc2xlZXAsIHRoZSBmdyB3aWxsIHNldCBpdCBhcyAiYXNsZWVwIi4NCj4gPiBBbGwgcXVldWVz
-IHRoYXQgYXJlIHVzZWQgb25seSBieSBvbmUgc3RhdGlvbiB3aWxsIGJlIHN0b3BwZWQgYnkNCj4g
-PiB0aGUgZncuDQo+ID4gDQo+ID4gSW4gcHJlLURRQSBtb2RlIHRoaXMgd2FzIHJlbGV2YW50IGZv
-ciBhZ2dyZWdhdGlvbiBxdWV1ZXMuIEhvd2V2ZXIsDQo+ID4gaW4gRFFBIG1vZGUgYSBxdWV1ZSBp
-cyBvd25lZCBieSBvbmUgc3RhdGlvbiBvbmx5LCBzbyBhbGwgcXVldWVzDQo+ID4gd2lsbCBiZSBz
-dG9wcGVkLg0KPiA+IEFzIGEgcmVzdWx0LCB3ZSBkb24ndCBleHBlY3QgdG8gZ2V0IGZpbHRlcmVk
-IGZyYW1lcyBiYWNrIHRvDQo+ID4gbWFjODAyMTEgYW5kIGRvbid0IGhhdmUgdG8gbWFpbnRhaW4g
-dGhlIGVudGlyZSBwZW5kaW5nX2ZyYW1lcw0KPiA+IHN0YXRlIGxvZ2ljLCB0aGUgc2FtZSB3YXkg
-YXMgd2UgZG8gaW4gYWdncmVnYXRpb25zLg0KPiA+IA0KPiA+IFRoZSBjb3JyZWN0IGJlaGF2aW9y
-IGlzIHRvIGFsaWduIERRQSBiZWhhdmlvciB3aXRoIHRoZSBhZ2dyZWdhdGlvbg0KPiA+IHF1ZXVl
-IGJlaGF2aW91ciBwcmUtRFFBOg0KPiA+IC0gRG9uJ3QgY291bnQgcGVuZGluZyBmcmFtZXMuDQo+
-ID4gLSBMZXQgbWFjODAyMTEga25vdyB3ZSBoYXZlIGZyYW1lcyBpbiB0aGVzZSBxdWV1ZXMgc28g
-dGhhdCBpdCBjYW4NCj4gPiBwcm9wZXJseSBoYW5kbGUgdHJpZ2dlciBmcmFtZXMuDQo+ID4gDQo+
-ID4gV2hlbiBhIHRyaWdnZXIgZnJhbWUgaXMgcmVjZWl2ZWQsIG1hYzgwMjExIHRlbGxzIHRoZSBk
-cml2ZXIgdG8gc2VuZA0KPiA+IGZyYW1lcyBmcm9tIHRoZSBxdWV1ZXMgdXNpbmcgcmVsZWFzZV9i
-dWZmZXJlZF9mcmFtZXMuDQo+ID4gVGhlIGRyaXZlciB3aWxsIHRlbGwgdGhlIGZ3IHRvIGxldCBm
-cmFtZXMgb3V0IGV2ZW4gaWYgdGhlIHN0YXRpb24NCj4gPiBpcyBhc2xlZXAuIFRoaXMgaXMgZG9u
-ZSBieSBpd2xfbXZtX3N0YV9tb2RpZnlfc2xlZXBfdHhfY291bnQuDQo+ID4gDQo+ID4gUmVwb3J0
-ZWQtYW5kLXRlc3RlZC1ieTogSmVucyBBeGJvZSA8YXhib2VAa2VybmVsLmRrPg0KPiA+IFJlcG9y
-dGVkLWJ5OiBMaW51cyBUb3J2YWxkcyA8dG9ydmFsZHNAbGludXgtZm91bmRhdGlvbi5vcmc+DQo+
-ID4gU2lnbmVkLW9mZi1ieTogU2FyYSBTaGFyb24gPHNhcmEuc2hhcm9uQGludGVsLmNvbT4NCj4g
-PiBTaWduZWQtb2ZmLWJ5OiBMdWNhIENvZWxobyA8bHVjaWFuby5jb2VsaG9AaW50ZWwuY29tPg0K
-PiA+IC0tLQ0KPiA+IA0KPiA+IEp1c3QgcmVzZW5kaW5nIHdpdGggcmVwb3J0ZWQgYW5kIHRlc3Rl
-ZCBieSB0YWdzLg0KPiANCj4gU29ycnksIG15IHVzdWFsIHJhbnQgZm9sbG93cyA6KSBCdXQgbmV2
-ZXIgZXZlciB1c2UgIlJFU0VORCIsIGl0J3Mgc28NCj4gbXVjaCBzaW1wbGVyIHRvIGhhdmUgdjIs
-IHYzIGFuZCBzbyBvbiB0byBmaWd1cmUgb3V0IHdoYXQncyB0aGUgKGxhdGVzdCkNCj4gdmVyc2lv
-biBJIHNob3VsZCB0YWtlLg0KDQpPa2F5LCBzb3JyeS4gIEkganVzdCB1c2VkIFJFU0VORCwgYmVj
-YXVzZSBJIGRpZG4ndCBjaGFuZ2UgdGhlIHBhdGNoDQppdHNlbGYsIGJ1dCBvbmx5IGFkZGVkIHRo
-ZSByZXBvcnRlZC1ieSB0YWdzLi4uDQoNCi0tDQpMdWNhLg==
+On Fri, 2017-03-10 at 08:23 -0700, Jens Axboe wrote:
+> On 03/10/2017 05:01 AM, Luca Coelho wrote:
+> > Hi Jens,
+> > 
+> > On Thu, 2017-03-09 at 21:41 -0700, Jens Axboe wrote:
+> > > On 03/01/2017 09:10 PM, Jens Axboe wrote:
+> > > > On 03/01/2017 08:33 PM, Luca Coelho wrote:
+> > > > > Hi Jens,
+> > > > > 
+> > > > > On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > > 
+> > > > >     Not that folks have been jumping all over this, but in case someone is
+> > > > >     curious, it triggered twice here today. For those two times, the value
+> > > > >     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
+> > > > > 
+> > > > > Sorry for the delay, I'm on vacation now with limited internet access.
+> > > > > But we'll take a look into this early next week at the latest.
+> > > > > 
+> > > > > Thanks a lot for the detailed report!
+> > > > 
+> > > > No worries, thanks for responding. I just wanted to ensure this wasn't
+> > > > dropped on the floor.
+> > > > 
+> > > > BTW, a few more values of ->pending_frames[sta_id]:
+> > > > 
+> > > > $ dmesg | grep "ret="
+> > > > [ 2334.308254] ret=39
+> > > > [ 7915.311828] ret=80
+> > > > [31602.317204] ret=41
+> > > > [32139.510993] ret=54
+> > > > [33292.917759] ret=96
+> > > > 
+> > > > it seems to often happen around resume.
+> > > 
+> > > This is still happening all the time in current -git.
+> > 
+> > Could you collect traces with trace-cmd, as explained in our wiki[1]?
+> > This will probably help point out the problem.  I know it's a bit
+> > difficult because it appears to happen randomly for you, but it's worth
+> > trying.
+> 
+> Sure I can, but honestly I'm a little puzzled that nobody else can
+> reproduce this, it happens every time I resume of switch access points.
+> Is anyone trying to reproduce this?
+> 
+> I'll have to recompile with iwlwifi tracing enabled, then I'll send a trace
+> when it happens.
+
+Are you using 4.11-rc1? Or linus' master? Or...?
+
+--
+Luca.
