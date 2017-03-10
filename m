@@ -1,42 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55740 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756329AbdCWX0Z (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55691 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936013AbdCJMMO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2017 19:26:25 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 2/4] mac80211-hwsim: remove dmesg spam about get-survey.
-Date: Thu, 23 Mar 2017 16:26:16 -0700
-Message-Id: <1490311578-18926-2-git-send-email-greearb@candelatech.com> (sfid-20170324_002702_015076_05D3E672)
-In-Reply-To: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
-References: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
+        Fri, 10 Mar 2017 07:12:14 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v4 06/21] ath10k: sdio support
+Date: Fri, 10 Mar 2017 12:11:40 +0000
+Message-ID: <8760jh2uy8.fsf@kamboji.qca.qualcomm.com> (sfid-20170310_131237_650391_9E78D852)
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
+In-Reply-To: <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
+        (Erik Stromdahl's message of "Tue, 21 Feb 2017 17:15:26 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-This message just fills up dmesg and/or kernel logs and does
-not provide any useful information.
+> sdio/mailbox HIF implementation.
+>
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 2 --
- 1 file changed, 2 deletions(-)
+I'm looking at this more carefully now and noticed this:
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index f1ad908..234df8c 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1893,8 +1893,6 @@ static int mac80211_hwsim_get_survey(struct ieee80211_hw *hw, int idx,
- {
- 	struct mac80211_hwsim_data *hwsim = hw->priv;
- 
--	wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx);
--
- 	if (idx < 0 || idx >= ARRAY_SIZE(hwsim->survey_data))
- 		return -ENOENT;
- 
--- 
-2.4.11
+> +static int ath10k_sdio_bmi_credits(struct ath10k *ar)
+> +{
+> +	int ret;
+> +	u32 addr, *cmd_credits;
+> +	unsigned long timeout;
+> +
+> +	cmd_credits =3D kzalloc(sizeof(*cmd_credits), GFP_KERNEL);
+> +	if (!cmd_credits) {
+> +		ret =3D -ENOMEM;
+> +		goto err;
+> +	}
+> +
+> +	/* Read the counter register to get the command credits */
+> +	addr =3D MBOX_COUNT_DEC_ADDRESS + ATH10K_HIF_MBOX_NUM_MAX * 4;
+> +
+> +	timeout =3D jiffies + BMI_COMMUNICATION_TIMEOUT_HZ;
+> +	while (time_before(jiffies, timeout) && !*cmd_credits) {
+> +		/* Hit the credit counter with a 4-byte access, the first byte
+> +		 * read will hit the counter and cause a decrement, while the
+> +		 * remaining 3 bytes has no effect. The rationale behind this
+> +		 * is to make all HIF accesses 4-byte aligned.
+> +		 */
+> +		ret =3D ath10k_sdio_read_write_sync(ar, addr,
+> +						  (u8 *)cmd_credits,
+> +						  sizeof(*cmd_credits),
+> +						  HIF_RD_SYNC_BYTE_INC);
+> +		if (ret) {
+> +			ath10k_warn(ar,
+> +				    "Unable to decrement the command credit count register: %d\n",
+> +				    ret);
+> +			goto err_free;
+> +		}
+> +
+> +		/* The counter is only 8 bits.
+> +		 * Ignore anything in the upper 3 bytes
+> +		 */
+> +		*cmd_credits &=3D 0xFF;
+> +	}
+> +
+> +	if (!*cmd_credits) {
+> +		ath10k_warn(ar, "bmi communication timeout\n");
+> +		ret =3D -ETIMEDOUT;
+> +		goto err_free;
+> +	}
+> +
+> +	return 0;
+> +err_free:
+> +	kfree(cmd_credits);
+> +err:
+> +	return ret;
+> +}
+
+AFAICS we are leaking cmd_credits if there's no error. Or is the buffer
+freed somewhere within the mmc stack or something? The reason why I ask
+is that I saw the same pattern in multiple functions so I'm curious.
+
+--=20
+Kalle Valo=
