@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:61642 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753337AbdCBQsW (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:36565 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751778AbdCJEmB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 11:48:22 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 19/26] [media] r820t: mark register functions as noinline_for_kasan
-Date: Thu,  2 Mar 2017 17:38:27 +0100
-Message-Id: <20170302163834.2273519-20-arnd@arndb.de> (sfid-20170302_175429_189604_7E113078)
-In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
+        Thu, 9 Mar 2017 23:42:01 -0500
+Received: by mail-pf0-f177.google.com with SMTP id o126so37138231pfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Mar 2017 20:42:00 -0800 (PST)
+Subject: Re: WARNING: CPU: 1 PID: 23668 at
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
+To: Luca Coelho <luca@coelho.fi>
+References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
+ <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
+Cc: luciano.coelho@intel.com, sara.sharon@intel.com,
+        liad.kaufman@intel.com, linux-wireless@vger.kernel.org
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <fdfbfffa-31c9-7646-82b5-b6a759b73d21@kernel.dk> (sfid-20170310_054204_664366_5DBFF49D)
+Date: Thu, 9 Mar 2017 21:41:57 -0700
+MIME-Version: 1.0
+In-Reply-To: <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With KASAN, we get an overly long stack frame due to inlining
-the register access function:
+On 03/01/2017 09:10 PM, Jens Axboe wrote:
+> On 03/01/2017 08:33 PM, Luca Coelho wrote:
+>> Hi Jens,
+>>
+>> On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
+>>
+>>     Not that folks have been jumping all over this, but in case someone is
+>>     curious, it triggered twice here today. For those two times, the value
+>>     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
+>>
+>> Sorry for the delay, I'm on vacation now with limited internet access.
+>> But we'll take a look into this early next week at the latest.
+>>
+>> Thanks a lot for the detailed report!
+> 
+> No worries, thanks for responding. I just wanted to ensure this wasn't
+> dropped on the floor.
+> 
+> BTW, a few more values of ->pending_frames[sta_id]:
+> 
+> $ dmesg | grep "ret="
+> [ 2334.308254] ret=39
+> [ 7915.311828] ret=80
+> [31602.317204] ret=41
+> [32139.510993] ret=54
+> [33292.917759] ret=96
+> 
+> it seems to often happen around resume.
 
-drivers/media/tuners/r820t.c: In function 'generic_set_freq.isra.7':
-drivers/media/tuners/r820t.c:1334:1: error: the frame size of 2880 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
+This is still happening all the time in current -git.
 
-An earlier patch I tried used an open-coded r820t_write_reg()
-implementation that may have been more efficent, while this
-version simply adds the annotation, which has a lower risk for
-regressions.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/media/tuners/r820t.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/media/tuners/r820t.c b/drivers/media/tuners/r820t.c
-index ba80376a3b86..0fbfa6416e38 100644
---- a/drivers/media/tuners/r820t.c
-+++ b/drivers/media/tuners/r820t.c
-@@ -396,7 +396,7 @@ static int r820t_write(struct r820t_priv *priv, u8 reg, const u8 *val,
- 	return 0;
- }
- 
--static int r820t_write_reg(struct r820t_priv *priv, u8 reg, u8 val)
-+static noinline_for_kasan int r820t_write_reg(struct r820t_priv *priv, u8 reg, u8 val)
- {
- 	return r820t_write(priv, reg, &val, 1);
- }
-@@ -411,7 +411,7 @@ static int r820t_read_cache_reg(struct r820t_priv *priv, int reg)
- 		return -EINVAL;
- }
- 
--static int r820t_write_reg_mask(struct r820t_priv *priv, u8 reg, u8 val,
-+static noinline_for_kasan int r820t_write_reg_mask(struct r820t_priv *priv, u8 reg, u8 val,
- 				u8 bit_mask)
- {
- 	int rc = r820t_read_cache_reg(priv, reg);
 -- 
-2.9.0
+Jens Axboe
