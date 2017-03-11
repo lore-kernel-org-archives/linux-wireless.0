@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39872 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751389AbdCNONP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 10:13:15 -0400
-Message-ID: <1489500792.10872.13.camel@sipsolutions.net> (sfid-20170314_151451_283752_8CF5C77D)
-Subject: Re: [PATCH] mac80211: Allow multiple listeners for management
- frames.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@openmesh.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Cc: linux-wireless@vger.kernel.org,
-        Benjamin Berg <benjamin@sipsolutions.net>
-Date: Tue, 14 Mar 2017 15:13:12 +0100
-In-Reply-To: <3029516.gVNlmVZjU3@prime> (sfid-20170314_151031_045293_89F882D3)
-References: <20170310093454.27664-1-sven.eckelmann@openmesh.com>
-         <1489499461.10872.4.camel@sipsolutions.net> <33102038.DFbxuT1K2h@bentobox>
-         <3029516.gVNlmVZjU3@prime> (sfid-20170314_151031_045293_89F882D3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f67.google.com ([209.85.214.67]:34047 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932604AbdCKNEv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Mar 2017 08:04:51 -0500
+Received: by mail-it0-f67.google.com with SMTP id r141so1928952ita.1
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Mar 2017 05:04:50 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev Conference: What you have been missing
+To: people@netdevconf.org
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Brenda Butler <bjb@mojatatu.com>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
+        lwn@lwn.net
+Message-ID: <acd80e7e-a371-1173-1058-ed5069abcb84@mojatatu.com> (sfid-20170311_140516_242962_42111FA0)
+Date: Sat, 11 Mar 2017 08:04:47 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-03-14 at 15:10 +0100, Simon Wunderlich wrote:
-> On Tuesday, March 14, 2017 3:06:35 PM CET Sven Eckelmann wrote:
-> > On Dienstag, 14. März 2017 14:51:01 CET Johannes Berg wrote:
-> > [...]
-> > 
-> > > I'm not sure I mentioned it to him, or even remembered it when we
-> > > were
-> > > discussing it, but I don't think this patch is a good idea, at
-> > > least
-> > > for action frames.
-> > 
-> > [...]
-> > 
-> > > If you restrict it to non-action I can live with it, but I don't
-> > > know
-> > > what you really want to do with this.
-> > 
-> > I think he required it only for probe requests.
+As announced last time, we are making more frequent announcements on
+people@netdevconf.org
 
-Similar situation for probe requests though - who answers them? :-)
+You can subscribe via mailman here:
+https://lists.netdevconf.org/cgi-bin/mailman/listinfo/people
 
-Though at least in that case the kernel doesn't care (unlike in the
-action frame case) since it never does.
+We urge people to subscribe to that list to get more up to date
+information and conference discussions. We will still be sending
+weekly summaries and announcements on the netdev list.
 
-> The idea was to grab probe requests from userspace with a program
-> running next to hostapd.
+If you have already registered for the conference we will
+very likely have registered you already.
 
-I guess there are some efficiency problems with that right now, but a
-monitor mode interface should work just as well. Perhaps we can allow
-attaching a BPF program to a monitor mode interface, and run that
-without cloning the SKB etc.?
+Register early so we can plan better (and so you can save some $$).
+https://onlineregistrations.ca/netdev21/
 
-johannes
+- hotel (unfortunately space is running out here. If you cant
+get in and need help from us, please send email to info@netdevconf.org):
+https://www.netdevconf.org/2.1/hotel.html
+
+And here's a summary of whats new since last posting on netdev:
+
+1) New sponsors
+a) Mojatatu - Gold sponsor
+https://netdevconf.org/2.1/news.html?sponsor-mojatatu
+
+b) Verizon - Platinum
+https://netdevconf.org/2.1/news.html?news-verizon-sponsor
+Accepted sessions:
+
+2) New sessions
+a) Talk:  XDP in practice: integrating XDP in our DDoS mitigation 
+pipeline from Gilberto Bertin
+https://netdevconf.org/2.1/news.html?news-bertin
+
+b)Workshop: Network Performance Workshop chaired by
+Alex Duyck
+https://netdevconf.org/2.1/news.html?news-duyck
+
+c) Talk: Netfilter's connection tracking subsystem by
+Florian Westphal
+https://netdevconf.org/2.1/news.html?news-netfilters-talk
+
+d) Talk: IOT Without Things: Building virtual 6LoWPAN Mesh Networks
+by Alexander Aring
+https://netdevconf.org/2.1/news.html?news-aring-talk
+
+e) Talk: Kernel HTTP/TCP/IP stack for HTTP DDoS mitigation
+by Alexander Krizhanovsky
+https://netdevconf.org/2.1/news.html?news-krizhanovsky-talk
+
+A lot more exciting announcements coming.
+
+cheers,
+jamal
