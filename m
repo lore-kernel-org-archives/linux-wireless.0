@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:36836 "EHLO
-        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752708AbdCFNXq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45946 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750954AbdCKPE7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 08:23:46 -0500
-Received: by mail-yw0-f182.google.com with SMTP id o4so57095151ywd.3
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 05:23:15 -0800 (PST)
+        Sat, 11 Mar 2017 10:04:59 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v4 06/21] ath10k: sdio support
+Date: Sat, 11 Mar 2017 15:04:42 +0000
+Message-ID: <87innfq2gp.fsf@qca.qualcomm.com> (sfid-20170311_160503_233197_B98DF404)
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
+        <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
+        <871su52th2.fsf@kamboji.qca.qualcomm.com>
+        <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
+        <0d331e5f-7868-ed9a-7506-eecd1e8b9df6@gmail.com>
+In-Reply-To: <0d331e5f-7868-ed9a-7506-eecd1e8b9df6@gmail.com> (Erik
+        Stromdahl's message of "Sat, 11 Mar 2017 11:36:21 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
-Date: Mon, 6 Mar 2017 21:23:14 +0800
-Message-ID: <CABWe71x69veyzepd=+Pgn6JtV4PMhFfn1nfM3K+Peb4aVRU-yw@mail.gmail.com> (sfid-20170306_142528_006619_6EB59BEC)
-Subject: Atheros ath9k superchannel
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-I am reading ath9k code. And try use superchannel (2312 ~ 2732) on
-openwrt. I have successfully opened these channels, and verified by
-mikrotik. But when use hostapd on these superchannel , ath9k can not
-send out any packets. A large number of Global Tx Timeout (GTT) and
-Carrier Sense Timeout (CST) were interrupted.
+>> You are right, there is definitely a memory leak (and there are similar =
+problems
+>> in a couple of other functions as well as you have pointed out).
+>>
+>> This was introduced in version 3 of the
+>> RFC when I removed the bounce buffer from ath6kl. Instead I introduced a=
+ bunch of
+>> local "bounce" buffers in order to make sure that the buffers passed to =
+the sdio
+>> subsystem is dma-able (malloc'ed buffer instead of stack allocated).
+>>
+>> Regarding endianess: That particular code construct is an artifact from =
+ath6kl.
+>> I am not sure it makes any sense to use a u32 in that particular case.
+>> A u8 array is most likely more convenient.
+>>
+>> It is really nice you have found some time to review the patches!
+>
+> After doing some reviewing myself I have found some more endianess relate=
+d issues.
+> I will fix those (and the memory leaks) and submit v5 some time next week=
+.
 
-root@OpenWrt:~# cat /sys/kernel/debug/ieee80211/phy0/ath9k/interrupt
+Actually let me send v5 (for the sdio part, I'm ignoring usb for now). I
+have made some small changes while looking at the patches.
 
-                  CST:        791
-                  GTT:        660
-
-
-My chip is ar9331 which is ar9003 family.  I am confused by some
-registers in ar9003_phy.h. In ar9331 datasheet many registers are
-reserved.
-
-I do not know how to go on now. Can you give me a hint?
-
-Regards
+--=20
+Kalle Valo=
