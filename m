@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:38345 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751910AbdCCPvK (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:32831 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932789AbdCKBjd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 10:51:10 -0500
-Received: by mail-wm0-f44.google.com with SMTP id t193so18556064wmt.1
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 07:50:13 -0800 (PST)
-Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
- WPA/WPA2-PSK
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20170221100957.30965-1-johannes@sipsolutions.net>
- <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
- <1487673603.2215.3.camel@sipsolutions.net>
- <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
- <a021dbf9-854d-0339-b87d-b27b746ccd1b@broadcom.com>
- <1487677574.2215.4.camel@sipsolutions.net>
- <96cd71c3-c279-b298-3876-68bac7297dc4@broadcom.com>
- <1488543681.25750.3.camel@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Avraham Stern <avraham.stern@intel.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <be6446e2-0a39-3b62-a95e-d97739a8bd35@broadcom.com> (sfid-20170303_165207_557804_5A578DF4)
-Date: Fri, 3 Mar 2017 13:47:00 +0100
-MIME-Version: 1.0
-In-Reply-To: <1488543681.25750.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Fri, 10 Mar 2017 20:39:33 -0500
+Received: by mail-pf0-f171.google.com with SMTP id w189so48009167pfb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 17:39:33 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 2/4] mwifiex: set adapter->dev before starting to use mwifiex_dbg()
+Date: Fri, 10 Mar 2017 17:39:22 -0800
+Message-Id: <20170311013924.73348-3-briannorris@chromium.org> (sfid-20170311_024039_543308_1DCE9303)
+In-Reply-To: <20170311013924.73348-1-briannorris@chromium.org>
+References: <20170311013924.73348-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The mwifiex_dbg() log handler utilizes the struct device in
+adapter->dev. Without it, it decides not to print anything.
 
+As of commit 2e02b5814217 ("mwifiex: Allow mwifiex early access to device
+structure"), we started assigning that pointer only after we finished
+mwifiex_register() -- this effectively neuters any mwifiex_dbg() logging
+done before this point.
 
-On 3-3-2017 13:21, Johannes Berg wrote:
-> On Tue, 2017-02-28 at 12:06 +0100, Arend Van Spriel wrote:
->> On 21-2-2017 12:46, Johannes Berg wrote:
->>>
->>>>>> Would this work for you? We should have wpa_supplicant
->>>>>> support
->>>>>> too, but need to ask Andrei to look at that.
->>>>
->>>> Forgot to reply to this. Yes, this will work. Can come up with
->>>> wpa_supp changes.
->>>
->>> No, we have them. Just need to see where they are :)
->>
->> Found anything ? :-p
-> 
-> Sorry, got too busy with other stuff.
-> 
-> +Andrei, can you send out the patches from Avi in wpa_s for doing the
-> 4-way-HS offload (as an RFC)?
-> 
-> Arend, wait a bit - he's travelling now I think.
+Let's move the device assignment into mwifiex_register().
 
-Having a day off today so I can wait. Actually made the WPA-PSK change
-myself in wpa_supplicant. It is working with brcmfmac. I did not look at
-1X yet as I do not have a radius server up and running.
+Fixes: 2e02b5814217 ("mwifiex: Allow mwifiex early access to device structure")
+Cc: Rajat Jain <rajatja@google.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 5ebca1d0cfc7..43d040e02e4d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -57,8 +57,8 @@ MODULE_PARM_DESC(mfg_mode, "manufacturing mode enable:1, disable:0");
+  * In case of any errors during inittialization, this function also ensures
+  * proper cleanup before exiting.
+  */
+-static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
+-			    void **padapter)
++static int mwifiex_register(void *card, struct device *dev,
++			    struct mwifiex_if_ops *if_ops, void **padapter)
+ {
+ 	struct mwifiex_adapter *adapter;
+ 	int i;
+@@ -68,6 +68,7 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
+ 		return -ENOMEM;
+ 
+ 	*padapter = adapter;
++	adapter->dev = dev;
+ 	adapter->card = card;
+ 
+ 	/* Save interface specific operations in adapter */
+@@ -1568,12 +1569,11 @@ mwifiex_add_card(void *card, struct completion *fw_done,
+ {
+ 	struct mwifiex_adapter *adapter;
+ 
+-	if (mwifiex_register(card, if_ops, (void **)&adapter)) {
++	if (mwifiex_register(card, dev, if_ops, (void **)&adapter)) {
+ 		pr_err("%s: software init failed\n", __func__);
+ 		goto err_init_sw;
+ 	}
+ 
+-	adapter->dev = dev;
+ 	mwifiex_probe_of(adapter);
+ 
+ 	adapter->iface_type = iface_type;
+-- 
+2.12.0.246.ga2ecc84866-goog
