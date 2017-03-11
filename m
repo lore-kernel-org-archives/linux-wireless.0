@@ -1,38 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50906 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753188AbdCTRJD (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33433 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751254AbdCKKgZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 13:09:03 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sat, 11 Mar 2017 05:36:25 -0500
+Received: by mail-lf0-f65.google.com with SMTP id r36so8486915lfi.0
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Mar 2017 02:36:24 -0800 (PST)
+Subject: Re: [RFC v4 06/21] ath10k: sdio support
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+ <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
+ <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
+ <871su52th2.fsf@kamboji.qca.qualcomm.com>
+ <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <0d331e5f-7868-ed9a-7506-eecd1e8b9df6@gmail.com> (sfid-20170311_113644_821430_DFA36782)
+Date: Sat, 11 Mar 2017 11:36:21 +0100
 MIME-Version: 1.0
-Subject: Re: mwifiex: send fewer channels to scan while connected
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1489661171-29796-1-git-send-email-akarwar@marvell.com>
-References: <1489661171-29796-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20170320170902.19A4260795@smtp.codeaurora.org> (sfid-20170320_180910_436027_E7C0F32B)
-Date: Mon, 20 Mar 2017 17:09:02 +0000 (UTC)
+In-Reply-To: <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Application triggers periodic background scans when device is connected.
-> We will scan less number of channels per scan command so that data
-> traffic won't get affected.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
 
-0a5cc49750b8 mwifiex: send fewer channels to scan while connected
+On 2017-03-10 17:29, Erik Stromdahl wrote:
+>
+>
+> On 2017-03-10 13:43, Valo, Kalle wrote:
+>> "Valo, Kalle" <kvalo@qca.qualcomm.com> writes:
+>>
+>>> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+>>>
+>>>> sdio/mailbox HIF implementation.
+>>>>
+>>>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>>>
+>>> I'm looking at this more carefully now and noticed this:
+>>>
+>>>> +static int ath10k_sdio_bmi_credits(struct ath10k *ar)
+>>>> +{
+>>>> +    int ret;
+>>>> +    u32 addr, *cmd_credits;
+>>>> +    unsigned long timeout;
+>>>> +
+>>>> +    cmd_credits = kzalloc(sizeof(*cmd_credits), GFP_KERNEL);
+>>>> +    if (!cmd_credits) {
+>>>> +        ret = -ENOMEM;
+>>>> +        goto err;
+>>>> +    }
+>>>> +
+>>>> +    /* Read the counter register to get the command credits */
+>>>> +    addr = MBOX_COUNT_DEC_ADDRESS + ATH10K_HIF_MBOX_NUM_MAX * 4;
+>>>> +
+>>>> +    timeout = jiffies + BMI_COMMUNICATION_TIMEOUT_HZ;
+>>>> +    while (time_before(jiffies, timeout) && !*cmd_credits) {
+>>>> +        /* Hit the credit counter with a 4-byte access, the first byte
+>>>> +         * read will hit the counter and cause a decrement, while the
+>>>> +         * remaining 3 bytes has no effect. The rationale behind this
+>>>> +         * is to make all HIF accesses 4-byte aligned.
+>>>> +         */
+>>>> +        ret = ath10k_sdio_read_write_sync(ar, addr,
+>>>> +                          (u8 *)cmd_credits,
+>>>> +                          sizeof(*cmd_credits),
+>>>> +                          HIF_RD_SYNC_BYTE_INC);
+>>>> +        if (ret) {
+>>>> +            ath10k_warn(ar,
+>>>> + "Unable to decrement the command credit count register: %d\n",
+>>>> +                    ret);
+>>>> +            goto err_free;
+>>>> +        }
+>>>> +
+>>>> +        /* The counter is only 8 bits.
+>>>> +         * Ignore anything in the upper 3 bytes
+>>>> +         */
+>>>> +        *cmd_credits &= 0xFF;
+>>>> +    }
+>>>> +
+>>>> +    if (!*cmd_credits) {
+>>>> +        ath10k_warn(ar, "bmi communication timeout\n");
+>>>> +        ret = -ETIMEDOUT;
+>>>> +        goto err_free;
+>>>> +    }
+>>>> +
+>>>> +    return 0;
+>>>> +err_free:
+>>>> +    kfree(cmd_credits);
+>>>> +err:
+>>>> +    return ret;
+>>>> +}
+>>>
+>>> AFAICS we are leaking cmd_credits if there's no error. Or is the buffer
+>>> freed somewhere within the mmc stack or something? The reason why I ask
+>>> is that I saw the same pattern in multiple functions so I'm curious.
+>>
+>> Also I'm worried about endianness. We are reading from the device
+>> directly to an u32 variable and not converting the bytes. Is the MMC
+>> subsystem doing the conversion, I guess not?
+>>
+> You are right, there is definitely a memory leak (and there are similar problems
+> in a couple of other functions as well as you have pointed out).
+>
+> This was introduced in version 3 of the
+> RFC when I removed the bounce buffer from ath6kl. Instead I introduced a bunch of
+> local "bounce" buffers in order to make sure that the buffers passed to the sdio
+> subsystem is dma-able (malloc'ed buffer instead of stack allocated).
+>
+> Regarding endianess: That particular code construct is an artifact from ath6kl.
+> I am not sure it makes any sense to use a u32 in that particular case.
+> A u8 array is most likely more convenient.
+>
+> It is really nice you have found some time to review the patches!
+>
+> --
+> Erik
 
--- 
-https://patchwork.kernel.org/patch/9627821/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+After doing some reviewing myself I have found some more endianess related issues.
+I will fix those (and the memory leaks) and submit v5 some time next week.
