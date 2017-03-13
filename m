@@ -1,32 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36342 "EHLO mx1.redhat.com"
+Received: from smtp5-g21.free.fr ([212.27.42.5]:2270 "EHLO smtp5-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751101AbdCRAsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 20:48:42 -0400
-Message-ID: <1489798021.26594.12.camel@redhat.com> (sfid-20170318_014845_192504_03BE9BA5)
-Subject: Re: Ralink - rt2800usb
-From: Dan Williams <dcbw@redhat.com>
-To: "Nikita N." <nikitan@operamail.com>,
-        linux-wireless@vger.kernel.org, ivdoorn@gmail.com,
-        info@willowgarage.com, comm@willowgarage.com,
-        mattias.nissler@gmx.de, nbd@openwrt.org, xose.vazquez@gmail.com,
-        rain_maker@root-forum.org
-Date: Fri, 17 Mar 2017 19:47:01 -0500
-In-Reply-To: <1489782418.608233.914997416.7AA6FF7F@webmail.messagingengine.com>
-References: <1489685379.2341893.913635800.3ACB3D38@webmail.messagingengine.com>
-         <1489732680.3555697.914250624.7A79601B@webmail.messagingengine.com>
-         <1489782418.608233.914997416.7AA6FF7F@webmail.messagingengine.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S932118AbdCMVGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Mar 2017 17:06:44 -0400
+From: Alban <albeu@free.fr>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: John Crispin <john@phrozen.org>, Alban <albeu@free.fr>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/7] ath9k: Add support for reading the EEPROM data using the nvmem API
+Date: Mon, 13 Mar 2017 22:05:11 +0100
+Message-Id: <1489439116-4233-3-git-send-email-albeu@free.fr> (sfid-20170313_220952_793742_D6E46A42)
+In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
+References: <1489439116-4233-1-git-send-email-albeu@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-17 at 13:26 -0700, Nikita N. wrote:
-> Hi All,
-> I'm addressing to the maintainers of Ralink driver rt2800usb
-> (RT2870,RT3070).
-> To who can I send my request?
+Currently SoC platforms use a firmware request to get the EEPROM data.
+This is mostly a hack and rely on using a user-helper scripts which is
+deprecated. A nicer alternative is to use the nvmem API which was
+designed for this kind of task.
 
-This mailing list (linux-wireless@) is the right place.
+Furthermore we let CONFIG_ATH9K_AHB select CONFIG_NVMEM as such
+devices will generally use this method for loading the EEPROM data.
 
-Dan
+Signed-off-by: Alban <albeu@free.fr>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig  |  1 +
+ drivers/net/wireless/ath/ath9k/eeprom.c | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h     |  2 ++
+ drivers/net/wireless/ath/ath9k/init.c   | 21 +++++++++++++++++++++
+ 4 files changed, 34 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 783a38f..1558c03 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -49,6 +49,7 @@ config ATH9K_PCI
+ config ATH9K_AHB
+ 	bool "Atheros ath9k AHB bus support"
+ 	depends on ATH9K
++	select NVMEM
+ 	default n
+ 	---help---
+ 	  This option enables the AHB bus support in ath9k.
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index fb80ec8..1f28222 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -127,6 +127,14 @@ static bool ath9k_hw_nvram_read_pdata(struct ath9k_platform_data *pdata,
+ 					 offset, data);
+ }
+ 
++static bool ath9k_hw_nvram_read_data(struct ath_hw *ah,
++				     off_t offset, u16 *data)
++{
++	return ath9k_hw_nvram_read_array(ah->eeprom_data,
++					 ah->eeprom_size / 2,
++					 offset, data);
++}
++
+ static bool ath9k_hw_nvram_read_firmware(const struct firmware *eeprom_blob,
+ 					 off_t offset, u16 *data)
+ {
+@@ -143,6 +151,8 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
+ 
+ 	if (ah->eeprom_blob)
+ 		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
++	else if (ah->eeprom_data)
++		ret = ath9k_hw_nvram_read_data(ah, off, data);
+ 	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
+ 		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
+ 	else
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9cbca12..7f17c2a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -970,6 +970,8 @@ struct ath_hw {
+ 	bool disable_5ghz;
+ 
+ 	const struct firmware *eeprom_blob;
++	void *eeprom_data;
++	size_t eeprom_size;
+ 
+ 	struct ath_dynack dynack;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index fa4b3cc..054f254 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -22,6 +22,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_net.h>
++#include <linux/nvmem-consumer.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+@@ -511,6 +512,7 @@ static int ath9k_eeprom_request(struct ath_softc *sc, const char *name)
+ static void ath9k_eeprom_release(struct ath_softc *sc)
+ {
+ 	release_firmware(sc->sc_ah->eeprom_blob);
++	kfree(sc->sc_ah->eeprom_data);
+ }
+ 
+ static int ath9k_init_platform(struct ath_softc *sc)
+@@ -654,6 +656,25 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
+ 
++	/* If the EEPROM hasn't been retrieved via firmware request
++	 * use the nvmem API insted.
++	 */
++	if (!ah->eeprom_blob) {
++		struct nvmem_cell *eeprom_cell;
++
++		eeprom_cell = nvmem_cell_get(ah->dev, "eeprom");
++		if (!IS_ERR(eeprom_cell)) {
++			ah->eeprom_data = nvmem_cell_read(
++				eeprom_cell, &ah->eeprom_size);
++			nvmem_cell_put(eeprom_cell);
++
++			if (IS_ERR(ah->eeprom_data)) {
++				dev_err(ah->dev, "failed to read eeprom");
++				return PTR_ERR(ah->eeprom_data);
++			}
++		}
++	}
++
+ 	if (ath9k_led_active_high != -1)
+ 		ah->config.led_active_high = ath9k_led_active_high == 1;
+ 
+-- 
+2.7.4
