@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:31179 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754909AbdCGKcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:32:09 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 1/5] NFC: st21nfca: Fix obvious typo when check error code
-Date: Tue,  7 Mar 2017 12:25:42 +0200
-Message-Id: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com> (sfid-20170307_113257_706735_FCBF0198)
+Received: from paleale.coelho.fi ([176.9.41.70]:45810 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751037AbdCMPI4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Mar 2017 11:08:56 -0400
+Message-ID: <1489417727.22435.37.camel@coelho.fi> (sfid-20170313_160900_447451_9462088D)
+From: Luca Coelho <luca@coelho.fi>
+To: Jens Axboe <axboe@kernel.dk>, linux-wireless@vger.kernel.org
+Cc: torvalds@linux-foundation.org, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+        sara.sharon@intel.com, liad.kaufman@intel.com
+Date: Mon, 13 Mar 2017 17:08:47 +0200
+In-Reply-To: <57bc6afa-7b78-36ca-98c3-7bbdfc36672d@kernel.dk>
+References: <1489410030.22435.34.camel@coelho.fi>
+         <20170313131427.17147-1-luca@coelho.fi>
+         <57bc6afa-7b78-36ca-98c3-7bbdfc36672d@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: mvm: cleanup pending frames in DQA mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We return -ENODEV if ACPI provides a GPIO resource. Looks really wrong.
-If it has even been tested?
+On Mon, 2017-03-13 at 08:24 -0600, Jens Axboe wrote:
+> On 03/13/2017 07:14 AM, Luca Coelho wrote:
+> > From: Sara Sharon <sara.sharon@intel.com>
+> > 
+> > When a station is asleep, the fw will set it as "asleep".
+> > All queues that are used only by one station will be stopped by
+> > the fw.
+> > 
+> > In pre-DQA mode this was relevant for aggregation queues. However,
+> > in DQA mode a queue is owned by one station only, so all queues
+> > will be stopped.
+> > As a result, we don't expect to get filtered frames back to
+> > mac80211 and don't have to maintain the entire pending_frames
+> > state logic, the same way as we do in aggregations.
+> > 
+> > The correct behavior is to align DQA behavior with the aggregation
+> > queue behaviour pre-DQA:
+> > - Don't count pending frames.
+> > - Let mac80211 know we have frames in these queues so that it can
+> > properly handle trigger frames.
+> > 
+> > When a trigger frame is received, mac80211 tells the driver to send
+> > frames from the queues using release_buffered_frames.
+> > The driver will tell the fw to let frames out even if the station
+> > is asleep. This is done by iwl_mvm_sta_modify_sleep_tx_count.
+> 
+> It fixes the warning for me.
+> 
+> Tested-by: Jens Axboe <axboe@fb.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/st21nfca/i2c.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Great! Thanks for testing.
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 5a82f553906c..737384d287aa 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -514,9 +514,9 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
- 	/* Get EN GPIO from ACPI */
- 	gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
- 					 GPIOD_OUT_LOW);
--	if (!IS_ERR(gpiod_ena)) {
-+	if (IS_ERR(gpiod_ena)) {
- 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
--		return -ENODEV;
-+		return PTR_ERR(gpiod_ena);
- 	}
- 
- 	phy->gpio_ena = desc_to_gpio(gpiod_ena);
--- 
-2.11.0
+I'll queue this for the 4.11-rc series via the normal path (i.e.
+wireless-driver->netdev).
+
+--
+Cheers,
+Luca.
