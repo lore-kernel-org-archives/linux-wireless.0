@@ -1,45 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39580 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750925AbdCNNw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 09:52:26 -0400
-Message-ID: <1489499543.10872.5.camel@sipsolutions.net> (sfid-20170314_145705_758148_25B25F3D)
-Subject: Re: [PATCH] cfg80211: support 4-way handshake offloading for
- WPA/WPA2-PSK
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Avraham Stern <avraham.stern@intel.com>
-Date: Tue, 14 Mar 2017 14:52:23 +0100
-In-Reply-To: <5f34db3e-1d68-71aa-07b2-5296eaa9f533@broadcom.com> (sfid-20170309_143857_819168_765E6ED5)
-References: <20170221100957.30965-1-johannes@sipsolutions.net>
-         <231f969e-eac1-3196-07c2-80e37e6dda55@broadcom.com>
-         <1487673603.2215.3.camel@sipsolutions.net>
-         <c38019e8-32b5-5fa2-1da7-8022cbb62b13@broadcom.com>
-         <a021dbf9-854d-0339-b87d-b27b746ccd1b@broadcom.com>
-         <1487677574.2215.4.camel@sipsolutions.net>
-         <96cd71c3-c279-b298-3876-68bac7297dc4@broadcom.com>
-         <1488543681.25750.3.camel@sipsolutions.net>
-         <5f34db3e-1d68-71aa-07b2-5296eaa9f533@broadcom.com>
-         (sfid-20170309_143857_819168_765E6ED5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:35941 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750929AbdCMXx7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Mar 2017 19:53:59 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Alban <albeu@free.fr>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        John Crispin <john@phrozen.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, chrisrblake93@gmail.com
+Subject: Re: [PATCH 3/7] ath9k: Add support for reading the EEPROM data using the nvmem API
+Date: Tue, 14 Mar 2017 00:53:55 +0100
+Message-ID: <1609202.bQK0rlNN3Y@debian64> (sfid-20170314_005434_867554_3DD8B4B4)
+In-Reply-To: <1489439116-4233-3-git-send-email-albeu@free.fr>
+References: <1489439116-4233-1-git-send-email-albeu@free.fr> <1489439116-4233-3-git-send-email-albeu@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday, March 13, 2017 10:05:11 PM CET Alban wrote:
+> Currently SoC platforms use a firmware request to get the EEPROM data.
+> This is mostly a hack and rely on using a user-helper scripts which is
+> deprecated. A nicer alternative is to use the nvmem API which was
+> designed for this kind of task.
+> 
+> Furthermore we let CONFIG_ATH9K_AHB select CONFIG_NVMEM as such
+> devices will generally use this method for loading the EEPROM data.
+> 
+> Signed-off-by: Alban <albeu@free.fr>
+> ---
+> @@ -654,6 +656,25 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+>  	if (ret)
+>  		return ret;
+>  
+> +	/* If the EEPROM hasn't been retrieved via firmware request
+> +	 * use the nvmem API insted.
+> +	 */
+> +	if (!ah->eeprom_blob) {
+> +		struct nvmem_cell *eeprom_cell;
+> +
+> +		eeprom_cell = nvmem_cell_get(ah->dev, "eeprom");
+> +		if (!IS_ERR(eeprom_cell)) {
+> +			ah->eeprom_data = nvmem_cell_read(
+> +				eeprom_cell, &ah->eeprom_size);
+> +			nvmem_cell_put(eeprom_cell);
+> +
+> +			if (IS_ERR(ah->eeprom_data)) {
+> +				dev_err(ah->dev, "failed to read eeprom");
+> +				return PTR_ERR(ah->eeprom_data);
+> +			}
+> +		}
+> +	}
+> +
+>  	if (ath9k_led_active_high != -1)
+>  		ah->config.led_active_high = ath9k_led_active_high == 1;
+>  
+Are you sure this works with AR93XX SoCs that have the calibration data
+in the OTP?
 
-> So the 4-way hs offload patches in wpa_s RFC do not make distinction
-> between 1X and WPA-PSK. Can we expect drivers to support one, but not
-> the other? In other words do we need the flexibility in nl80211?
+I've added Chris to the CC, since he has a HiveAP 121 that has this
+configuration, so he can test, whenever this is a problem or not.
 
-You tell me :)
+But from what I can tell, devices with the calibration data in the
+OTP would fail now. This is because the OTP is done by ath9k_hw_init()
+which hasn't run yet (it's a bit further down the road in the same
+function though). 
 
-We're implementing both. Andrei also raised this question on the wpa_s
-patches at my request, and nobody commented.
+Note: the OTP doesn't store the whole caldata. Just a few parts.
+A temporary "eeprom" gets constructed with the help of the 
+ar9300_eep_templates in ar9003_eeprom.c's
+ar9300_eeprom_restore_internal(). But from what I don't think, 
+that the eeprom_blob is constructed/set by the functions in
+ar9003_eeprom.
 
-I can live with combining them, but nobody better complain about it
-when they just implement one of them on their device ... :)
+I think this will require an additional property like
+qca,calibration-in-otp. What's your opinion?
 
-johannes
+Thanks,
+Christian
