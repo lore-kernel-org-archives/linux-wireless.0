@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:33811 "EHLO
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:36856 "EHLO
         mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754229AbdCFJpz (ORCPT
+        with ESMTP id S1752096AbdCMJdd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 04:45:55 -0500
-Received: by mail-qk0-f170.google.com with SMTP id p64so25696707qke.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 01:45:49 -0800 (PST)
-Subject: Re: [PATCH 07/26] brcmsmac: reduce stack size with KASAN
-To: Arnd Bergmann <arnd@arndb.de>, kasan-dev@googlegroups.com
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-8-arnd@arndb.de>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
+        Mon, 13 Mar 2017 05:33:33 -0400
+Received: by mail-qk0-f170.google.com with SMTP id 1so217206212qkl.3
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Mar 2017 02:33:32 -0700 (PDT)
+Subject: Re: [PATCH] 4.9.13 brcmfmac: fix use-after-free on resume
+To: Daniel J Blueman <daniel@quora.org>
+References: <CAMVG2stHA9qSUiRFBW=-4jhSMk-o7Frext+Qf9JK3Fo822XHhw@mail.gmail.com>
+ <3626494c-8482-d003-1c83-e6171f6990a8@broadcom.com>
+ <CAMVG2st=ZW-HhqQOMnDunjSJHj8Zw_K2+w2_8AVsHQePN3Ow9w@mail.gmail.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+        Netdev <netdev@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
 From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com> (sfid-20170306_104942_334737_DC954F37)
-Date: Mon, 6 Mar 2017 10:16:08 +0100
+Message-ID: <1a978960-3962-0eda-15b0-b1259b21e58f@broadcom.com> (sfid-20170313_103348_171462_1874E5A5)
+Date: Mon, 13 Mar 2017 10:33:27 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170302163834.2273519-8-arnd@arndb.de>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CAMVG2st=ZW-HhqQOMnDunjSJHj8Zw_K2+w2_8AVsHQePN3Ow9w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2-3-2017 17:38, Arnd Bergmann wrote:
-> The wlc_phy_table_write_nphy/wlc_phy_table_read_nphy functions always put an object
-> on the stack, which will each require a redzone with KASAN and lead to possible
-> stack overflow:
+On 6-3-2017 15:50, Daniel J Blueman wrote:
+> On 6 March 2017 at 21:00, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>> + linux-wireless
+>>
+>> On 6-3-2017 8:14, Daniel J Blueman wrote:
+>>> KASAN reported 'struct wireless_dev wdev' was read after being freed.
+>>> Fix by freeing after the access.
+>>
+>> I would rather like to see the KASAN report, because something is off
+>> here. This function is called with wdev as a parameter so how can it be
+>> accessed after free here? brcmf_remove_interface() does not free the
+>> wdev nor the brcmf_cfg80211_vif instance which contains the wdev.
+>>
+>> Regards,
+>> Arend
+>>
+>>> Signed-off-by: Daniel J Blueman <daniel@quora.org>
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> index de19c7c..aa0f470 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> @@ -2288,12 +2288,13 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy,
+>>> struct wireless_dev *wdev)
+>>>                 else
+>>>                         err = 0;
+>>>         }
+>>> -       brcmf_remove_interface(vif->ifp, true);
+>>>
+>>> -       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+>>>         if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
+>>>                 p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
+>>>
+>>> +       brcmf_remove_interface(vif->ifp, true);
+>>> +       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+>>> +
+>>>         return err;
+>>>  }
 > 
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: warning: the frame size of 6312 bytes is larger than 1000 bytes [-Wframe-larger-than=]
+> Sure, https://quora.org/kernel/brcmfmac/dmesg.txt
 
-Looks like this warning text ended up in the wrong commit message. Got
-me confused for a sec :-p
-
-> This marks the two functions as noinline_for_kasan, avoiding the problem entirely.
-
-Frankly I seriously dislike annotating code for the sake of some
-(dynamic) memory analyzer. To me the whole thing seems rather
-unnecessary. If the code passes the 2048 stack limit without KASAN it
-would seem the limit with KASAN should be such that no warning is given.
-I suspect that it is rather difficult to predict the additional size of
-the instrumentation code and on some systems there might be a real issue
-with increased stack usage.
+So this dmesg looks to be about a separate issue during resume, which
+you sent an email about earlier [1] which is about using wiphy struct
+after free. However, back to this I further checked the code and it
+seems the vif is indeed freed through the netdev destructor callback
+upon calling brcmf_remove_inteface(). However, I would prefer to store
+vif->wdev.iftype in a local variable and avoid changing the order of the
+calls in the code.
 
 Regards,
 Arend
 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> index b3aab2fe96eb..42dc8e1f483d 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> @@ -14157,7 +14157,7 @@ static void wlc_phy_bphy_init_nphy(struct brcms_phy *pi)
->  	write_phy_reg(pi, NPHY_TO_BPHY_OFF + BPHY_STEP, 0x668);
->  }
->  
-> -void
-> +noinline_for_kasan void
->  wlc_phy_table_write_nphy(struct brcms_phy *pi, u32 id, u32 len, u32 offset,
->  			 u32 width, const void *data)
->  {
-> @@ -14171,7 +14171,7 @@ wlc_phy_table_write_nphy(struct brcms_phy *pi, u32 id, u32 len, u32 offset,
->  	wlc_phy_write_table_nphy(pi, &tbl);
->  }
->  
-> -void
-> +noinline_for_kasan void
->  wlc_phy_table_read_nphy(struct brcms_phy *pi, u32 id, u32 len, u32 offset,
->  			u32 width, void *data)
->  {
-> 
+[1] http://marc.info/?l=linux-netdev&m=148878437808750&w=2
+
+> vmlinux, cfg80211.o, brcmfmac.o and config are in the same path; this
+> is against v4.9.13 stock.
