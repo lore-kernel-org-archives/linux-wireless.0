@@ -1,46 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42938 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752206AbdC2JBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 05:01:31 -0400
-Message-ID: <1490778081.7948.17.camel@sipsolutions.net> (sfid-20170329_110255_239038_F6F4684C)
-Subject: Re: [PATCH v3] cfg80211: add set/get link loss profile
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-        wil6210@qca.qualcomm.com
-Date: Wed, 29 Mar 2017 11:01:21 +0200
-In-Reply-To: <62127d4a-db9f-ab77-fb86-17d92b0ce81d@codeaurora.org>
-References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
-         <8737izqw0q.fsf@purkki.adurom.net>
-         <b1ab1406-d996-fc03-d0a2-b8028c7c0044@codeaurora.org>
-         <8737ipm4jy.fsf@kamboji.qca.qualcomm.com>
-         <9bdf0a3a-1283-21c5-0739-e0b48dd9ddcc@codeaurora.org>
-         <1482253209.30160.13.camel@redhat.com>
-         <62127d4a-db9f-ab77-fb86-17d92b0ce81d@codeaurora.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:45764 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750815AbdCMNAm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Mar 2017 09:00:42 -0400
+Message-ID: <1489410030.22435.34.camel@coelho.fi> (sfid-20170313_140046_420233_DE161D33)
+From: Luca Coelho <luca@coelho.fi>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: sara.sharon@intel.com, liad.kaufman@intel.com,
+        linux-wireless@vger.kernel.org
+Date: Mon, 13 Mar 2017 15:00:30 +0200
+In-Reply-To: <5d235320-9c9d-c9e9-6688-3336061cbaf4@kernel.dk>
+References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
+         <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
+         <fdfbfffa-31c9-7646-82b5-b6a759b73d21@kernel.dk>
+         <1489147283.22435.14.camel@coelho.fi>
+         <aceb734b-8e2c-e5b6-300d-172f8d28f471@kernel.dk>
+         <1489160164.22435.18.camel@coelho.fi>
+         <5d235320-9c9d-c9e9-6688-3336061cbaf4@kernel.dk>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: WARNING: CPU: 1 PID: 23668 at
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-03-06 at 15:54 +0200, Lazar, Alexei Avshalom wrote:
+On Fri, 2017-03-10 at 08:41 -0700, Jens Axboe wrote:
+> On 03/10/2017 08:36 AM, Luca Coelho wrote:
+> > On Fri, 2017-03-10 at 08:23 -0700, Jens Axboe wrote:
+> > > On 03/10/2017 05:01 AM, Luca Coelho wrote:
+> > > > Hi Jens,
+> > > > 
+> > > > On Thu, 2017-03-09 at 21:41 -0700, Jens Axboe wrote:
+> > > > > On 03/01/2017 09:10 PM, Jens Axboe wrote:
+> > > > > > On 03/01/2017 08:33 PM, Luca Coelho wrote:
+> > > > > > > Hi Jens,
+> > > > > > > 
+> > > > > > > On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > > > > 
+> > > > > > >     Not that folks have been jumping all over this, but in case someone is
+> > > > > > >     curious, it triggered twice here today. For those two times, the value
+> > > > > > >     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
+> > > > > > > 
+> > > > > > > Sorry for the delay, I'm on vacation now with limited internet access.
+> > > > > > > But we'll take a look into this early next week at the latest.
+> > > > > > > 
+> > > > > > > Thanks a lot for the detailed report!
+> > > > > > 
+> > > > > > No worries, thanks for responding. I just wanted to ensure this wasn't
+> > > > > > dropped on the floor.
+> > > > > > 
+> > > > > > BTW, a few more values of ->pending_frames[sta_id]:
+> > > > > > 
+> > > > > > $ dmesg | grep "ret="
+> > > > > > [ 2334.308254] ret=39
+> > > > > > [ 7915.311828] ret=80
+> > > > > > [31602.317204] ret=41
+> > > > > > [32139.510993] ret=54
+> > > > > > [33292.917759] ret=96
+> > > > > > 
+> > > > > > it seems to often happen around resume.
+> > > > > 
+> > > > > This is still happening all the time in current -git.
+> > > > 
+> > > > Could you collect traces with trace-cmd, as explained in our wiki[1]?
+> > > > This will probably help point out the problem.  I know it's a bit
+> > > > difficult because it appears to happen randomly for you, but it's worth
+> > > > trying.
+> > > 
+> > > Sure I can, but honestly I'm a little puzzled that nobody else can
+> > > reproduce this, it happens every time I resume of switch access points.
+> > > Is anyone trying to reproduce this?
+> > > 
+> > > I'll have to recompile with iwlwifi tracing enabled, then I'll send a trace
+> > > when it happens.
+> > 
+> > Are you using 4.11-rc1? Or linus' master? Or...?
 > 
-> The supported values are:
-[...]
+> The trace I just sent is tip of Linus' tree. It's happened continually
+> since the commit I mentioned in my initial report was merged:
+> 
+> commit 94c3e614df2117626fccfac8f821c66e30556384
+> Author: Sara Sharon <sara.sharon@intel.com>
+> Date:   Wed Dec 7 15:04:37 2016 +0200
+> 
+>     iwlwifi: mvm: fix pending frame counter calculation
 
-Regardless of the documentation, I think this is a bit fishy. Why
-bother with this to start with?
+I found the patch that fixes this issue in our internal tree.  I'll send
+it out for you to try now.
 
-We once had two patches (that we ultimately gave up on) doing something
-similar but simply letting userspace decide. This was centered on
-mac80211's beacon loss "link loss detection", but could easily be
-generalized a little bit more:
+The reason is that in DQA (Dynamic Queue Allocation) mode that we
+introduced recently, we should not be counting the frames in the same
+way as before.  The warning was introduced exactly to catch this kind of
+problems.
 
-https://p.sipsolutions.net/3a594dead519b4b2.txt
-https://p.sipsolutions.net/100ce7df53692daa.txt
+Please let me know if it works for you!
 
-Perhaps with some adjustments such an approach would be workable for
-you?
-
-johannes
+--
+Cheers,
+Luca.
