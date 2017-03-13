@@ -1,56 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:36479 "EHLO
-        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753382AbdCMOYn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2017 10:24:43 -0400
-Received: by mail-io0-f181.google.com with SMTP id l7so84639388ioe.3
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Mar 2017 07:24:43 -0700 (PDT)
-Subject: Re: [PATCH] iwlwifi: mvm: cleanup pending frames in DQA mode
-To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
-References: <1489410030.22435.34.camel@coelho.fi>
- <20170313131427.17147-1-luca@coelho.fi>
-Cc: torvalds@linux-foundation.org, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-        sara.sharon@intel.com, liad.kaufman@intel.com,
-        luciano.coelho@intel.com
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <57bc6afa-7b78-36ca-98c3-7bbdfc36672d@kernel.dk> (sfid-20170313_152553_739723_6BC761D6)
-Date: Mon, 13 Mar 2017 08:24:40 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170313131427.17147-1-luca@coelho.fi>
-Content-Type: text/plain; charset=windows-1252
+Received: from smtp5-g21.free.fr ([212.27.42.5]:6504 "EHLO smtp5-g21.free.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932279AbdCMVHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Mar 2017 17:07:19 -0400
+From: Alban <albeu@free.fr>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: John Crispin <john@phrozen.org>, Alban Bedel <albeu@free.fr>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 6/7] ath9k: Allow using the reset API for the external reset
+Date: Mon, 13 Mar 2017 22:05:14 +0100
+Message-Id: <1489439116-4233-6-git-send-email-albeu@free.fr> (sfid-20170313_220903_148670_84C72755)
+In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
+References: <1489439116-4233-1-git-send-email-albeu@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/13/2017 07:14 AM, Luca Coelho wrote:
-> From: Sara Sharon <sara.sharon@intel.com>
-> 
-> When a station is asleep, the fw will set it as "asleep".
-> All queues that are used only by one station will be stopped by
-> the fw.
-> 
-> In pre-DQA mode this was relevant for aggregation queues. However,
-> in DQA mode a queue is owned by one station only, so all queues
-> will be stopped.
-> As a result, we don't expect to get filtered frames back to
-> mac80211 and don't have to maintain the entire pending_frames
-> state logic, the same way as we do in aggregations.
-> 
-> The correct behavior is to align DQA behavior with the aggregation
-> queue behaviour pre-DQA:
-> - Don't count pending frames.
-> - Let mac80211 know we have frames in these queues so that it can
-> properly handle trigger frames.
-> 
-> When a trigger frame is received, mac80211 tells the driver to send
-> frames from the queues using release_buffered_frames.
-> The driver will tell the fw to let frames out even if the station
-> is asleep. This is done by iwl_mvm_sta_modify_sleep_tx_count.
+From: Alban Bedel <albeu@free.fr>
 
-It fixes the warning for me.
+Allow using the reset API instead of a platform specific callback to
+reset the device.
 
-Tested-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Alban Bedel <albeu@free.fr>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   | 26 +++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath9k/hw.h   |  1 +
+ drivers/net/wireless/ath/ath9k/init.c | 10 ++++++++++
+ 3 files changed, 32 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8c5c2dd..efc0435 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -21,6 +21,7 @@
+ #include <linux/bitops.h>
+ #include <linux/etherdevice.h>
+ #include <linux/gpio.h>
++#include <linux/reset.h>
+ #include <asm/unaligned.h>
+ 
+ #include "hw.h"
+@@ -551,6 +552,24 @@ static int ath9k_hw_attach_ops(struct ath_hw *ah)
+ 	return 0;
+ }
+ 
++static int ath9k_hw_external_reset(struct ath_hw *ah)
++{
++	int ret = 0;
++
++	ath_dbg(ath9k_hw_common(ah), RESET,
++		"reset MAC via external reset\n");
++
++	if (ah->external_reset) {
++		ret = ah->external_reset();
++	} else if (ah->reset) {
++		ret = reset_control_assert(ah->reset);
++		if (!ret)
++			ret = reset_control_deassert(ah->reset);
++	}
++
++	return ret;
++}
++
+ /* Called for all hardware families */
+ static int __ath9k_hw_init(struct ath_hw *ah)
+ {
+@@ -1286,14 +1305,11 @@ static bool ath9k_hw_ar9330_reset_war(struct ath_hw *ah, int type)
+ 			break;
+ 	}
+ 
+-	if (ah->external_reset &&
++	if ((ah->reset || ah->external_reset) &&
+ 	    (npend || type == ATH9K_RESET_COLD)) {
+ 		int reset_err = 0;
+ 
+-		ath_dbg(ath9k_hw_common(ah), RESET,
+-			"reset MAC via external reset\n");
+-
+-		reset_err = ah->external_reset();
++		reset_err = ath9k_hw_external_reset(ah);
+ 		if (reset_err) {
+ 			ath_err(ath9k_hw_common(ah),
+ 				"External reset failed, err=%d\n",
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 7f17c2a..53b67e3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -966,6 +966,7 @@ struct ath_hw {
+ 	bool is_clk_25mhz;
+ 	int (*get_mac_revision)(void);
+ 	int (*external_reset)(void);
++	struct reset_control *reset;
+ 	bool disable_2ghz;
+ 	bool disable_5ghz;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 5cb9c61..f1cb806 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -25,6 +25,7 @@
+ #include <linux/nvmem-consumer.h>
+ #include <linux/relay.h>
+ #include <linux/clk.h>
++#include <linux/reset.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+ #include "ath9k.h"
+@@ -697,6 +698,15 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (!is_valid_ether_addr(common->macaddr))
+ 		ath9k_get_nvmem_address(sc);
+ 
++	/* Try to get a reset controller */
++	ah->reset = devm_reset_control_get_optional(sc->dev, NULL);
++	if (IS_ERR(ah->reset)) {
++		if (PTR_ERR(ah->reset) != -ENOENT &&
++		    PTR_ERR(ah->reset) != -ENOTSUPP)
++			return PTR_ERR(ah->reset);
++		ah->reset = NULL;
++	}
++
+ 	/* If the EEPROM hasn't been retrieved via firmware request
+ 	 * use the nvmem API insted.
+ 	 */
 -- 
-Jens Axboe
+2.7.4
