@@ -1,39 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:38245 "EHLO mga03.intel.com"
+Received: from smtp5-g21.free.fr ([212.27.42.5]:3109 "EHLO smtp5-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753960AbdCXRzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 13:55:01 -0400
-Message-ID: <1490377801.21738.23.camel@linux.intel.com> (sfid-20170324_185515_264565_BAAD9642)
-Subject: Re: Is NFC subsystem abandoned?
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: David Miller <davem@davemloft.net>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, linux-wireless@vger.kernel.org
-Date: Fri, 24 Mar 2017 19:50:01 +0200
-In-Reply-To: <20170324.101446.630822222397402719.davem@davemloft.net>
-References: <1490371835.21738.15.camel@linux.intel.com>
-         <20170324.101446.630822222397402719.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S932149AbdCMVGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Mar 2017 17:06:49 -0400
+From: Alban <albeu@free.fr>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: John Crispin <john@phrozen.org>, Alban <albeu@free.fr>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/7] ath9k: Add support for reading the MAC address with nvmem
+Date: Mon, 13 Mar 2017 22:05:12 +0100
+Message-Id: <1489439116-4233-4-git-send-email-albeu@free.fr> (sfid-20170313_220738_049329_68F05F7E)
+In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
+References: <1489439116-4233-1-git-send-email-albeu@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-24 at 10:14 -0700, David Miller wrote:
-> From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Date: Fri, 24 Mar 2017 18:10:35 +0200
-> 
-> > Should I escalate to Linus?
-> 
-> Threats of "escalating" are never effective, please never do
-> this.
+On embedded platforms the MAC address is often stored in flash,
+use nvmem to read it if the platform data or DT didn't specify one.
 
-Thanks for a hint.
+Signed-off-by: Alban <albeu@free.fr>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-Can't promise for "never", but will try to avoid them.
-
-I was being afraid that it may be the case like with MTD or PWM where we
- missed few releases because of non-responsive maintainers at that time.
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 054f254..36b51a5 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -594,6 +594,35 @@ static int ath9k_of_init(struct ath_softc *sc)
+ 	return 0;
+ }
+ 
++static int ath9k_get_nvmem_address(struct ath_softc *sc)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct nvmem_cell *cell;
++	size_t cell_size;
++	int err = 0;
++	void *mac;
++
++	cell = nvmem_cell_get(sc->dev, "address");
++	if (IS_ERR(cell))
++		return PTR_ERR(cell);
++
++	mac = nvmem_cell_read(cell, &cell_size);
++	nvmem_cell_put(cell);
++
++	if (IS_ERR(mac))
++		return PTR_ERR(mac);
++
++	if (cell_size == 6) {
++		ether_addr_copy(common->macaddr, mac);
++	} else {
++		dev_err(sc->dev, "nvmem 'address' cell has invalid size\n");
++		err = -EINVAL;
++	}
++
++	kfree(mac);
++	return err;
++}
++
+ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 			    const struct ath_bus_ops *bus_ops)
+ {
+@@ -656,6 +685,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
+ 
++	/* If no MAC address has been set yet try to use nvmem */
++	if (!is_valid_ether_addr(common->macaddr))
++		ath9k_get_nvmem_address(sc);
++
+ 	/* If the EEPROM hasn't been retrieved via firmware request
+ 	 * use the nvmem API insted.
+ 	 */
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.7.4
