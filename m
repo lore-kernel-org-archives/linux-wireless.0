@@ -1,54 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:36602 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753309AbdC2QV7 (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36218 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752143AbdCMJmA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 12:21:59 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-        Vincent Cuissard <cuissard@marvell.com>
-Subject: [PATCH 6/7] NFC: nfcmrvl_uart: fix device-node leak during probe
-Date: Wed, 29 Mar 2017 18:21:11 +0200
-Message-Id: <20170329162112.18121-7-johan@kernel.org> (sfid-20170329_182257_386112_2F7A73F5)
-In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
-References: <20170329162112.18121-1-johan@kernel.org>
+        Mon, 13 Mar 2017 05:42:00 -0400
+Received: by mail-pf0-f172.google.com with SMTP id o126so67391802pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Mar 2017 02:42:00 -0700 (PDT)
+Subject: Re: [PATCH] 4.9.13 brcmfmac: fix use-after-free on resume
+To: Daniel J Blueman <daniel@quora.org>
+References: <CAMVG2stHA9qSUiRFBW=-4jhSMk-o7Frext+Qf9JK3Fo822XHhw@mail.gmail.com>
+ <3626494c-8482-d003-1c83-e6171f6990a8@broadcom.com>
+ <CAMVG2st=ZW-HhqQOMnDunjSJHj8Zw_K2+w2_8AVsHQePN3Ow9w@mail.gmail.com>
+ <1a978960-3962-0eda-15b0-b1259b21e58f@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+        Netdev <netdev@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f0507546-2bd4-76a6-3e77-0108a5bcf755@broadcom.com> (sfid-20170313_104223_420191_73EAAAD5)
+Date: Mon, 13 Mar 2017 10:41:50 +0100
+MIME-Version: 1.0
+In-Reply-To: <1a978960-3962-0eda-15b0-b1259b21e58f@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure to release the device-node reference when done parsing the
-node.
+On 13-3-2017 10:33, Arend Van Spriel wrote:
+> On 6-3-2017 15:50, Daniel J Blueman wrote:
+>> On 6 March 2017 at 21:00, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>> + linux-wireless
+>>>
+>>> On 6-3-2017 8:14, Daniel J Blueman wrote:
+>>>> KASAN reported 'struct wireless_dev wdev' was read after being freed.
+>>>> Fix by freeing after the access.
+>>>
+>>> I would rather like to see the KASAN report, because something is off
+>>> here. This function is called with wdev as a parameter so how can it be
+>>> accessed after free here? brcmf_remove_interface() does not free the
+>>> wdev nor the brcmf_cfg80211_vif instance which contains the wdev.
+>>>
+>>> Regards,
+>>> Arend
+>>>
+>>>> Signed-off-by: Daniel J Blueman <daniel@quora.org>
+>>>>
+>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>> index de19c7c..aa0f470 100644
+>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>> @@ -2288,12 +2288,13 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy,
+>>>> struct wireless_dev *wdev)
+>>>>                 else
+>>>>                         err = 0;
+>>>>         }
+>>>> -       brcmf_remove_interface(vif->ifp, true);
+>>>>
+>>>> -       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+>>>>         if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
+>>>>                 p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
+>>>>
+>>>> +       brcmf_remove_interface(vif->ifp, true);
+>>>> +       brcmf_cfg80211_arm_vif_event(cfg, NULL);
+>>>> +
+>>>>         return err;
+>>>>  }
+>>
+>> Sure, https://quora.org/kernel/brcmfmac/dmesg.txt
+> 
+> So this dmesg looks to be about a separate issue during resume, which
+> you sent an email about earlier [1] which is about using wiphy struct
+> after free. However, back to this I further checked the code and it
+> seems the vif is indeed freed through the netdev destructor callback
+> upon calling brcmf_remove_inteface(). However, I would prefer to store
+> vif->wdev.iftype in a local variable and avoid changing the order of the
+> calls in the code.
 
-Fixes: e097dc624f78 ("NFC: nfcmrvl: add UART driver")
-Cc: Vincent Cuissard <cuissard@marvell.com>
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- drivers/nfc/nfcmrvl/uart.c | 3 +++
- 1 file changed, 3 insertions(+)
+Forgot to mention some things about the commit message. Please drop the
+the kernel version from the subject. You should create the patch against
+the wireless-drivers tree and indicate the patch is for 4.11, ie.
+"[PATCH for-4.11] brcmfmac: fix use-after-free of wireless_dev
+instance". Also add as much useful information in the commit message as
+possible like the proper KASAN report or at least mention that
+brcmf_remove_interface() does an unregister_netdev() which results in
+freeing the wireless_dev through netdev destructor callback.
 
-diff --git a/drivers/nfc/nfcmrvl/uart.c b/drivers/nfc/nfcmrvl/uart.c
-index 6c0c301611c4..91162f8e0366 100644
---- a/drivers/nfc/nfcmrvl/uart.c
-+++ b/drivers/nfc/nfcmrvl/uart.c
-@@ -84,6 +84,7 @@ static int nfcmrvl_uart_parse_dt(struct device_node *node,
- 	ret = nfcmrvl_parse_dt(matched_node, pdata);
- 	if (ret < 0) {
- 		pr_err("Failed to get generic entries\n");
-+		of_node_put(matched_node);
- 		return ret;
- 	}
- 
-@@ -97,6 +98,8 @@ static int nfcmrvl_uart_parse_dt(struct device_node *node,
- 	else
- 		pdata->break_control = 0;
- 
-+	of_node_put(matched_node);
-+
- 	return 0;
- }
- 
--- 
-2.12.2
+Regards,
+Arend
+
+> Regards,
+> Arend
+> 
+> [1] http://marc.info/?l=linux-netdev&m=148878437808750&w=2
+> 
+>> vmlinux, cfg80211.o, brcmfmac.o and config are in the same path; this
+>> is against v4.9.13 stock.
+> 
