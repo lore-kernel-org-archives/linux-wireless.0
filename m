@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:35647 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751593AbdCCOwL (ORCPT
+Received: from mail-io0-f181.google.com ([209.85.223.181]:36479 "EHLO
+        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753382AbdCMOYn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 09:52:11 -0500
+        Mon, 13 Mar 2017 10:24:43 -0400
+Received: by mail-io0-f181.google.com with SMTP id l7so84639388ioe.3
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Mar 2017 07:24:43 -0700 (PDT)
+Subject: Re: [PATCH] iwlwifi: mvm: cleanup pending frames in DQA mode
+To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
+References: <1489410030.22435.34.camel@coelho.fi>
+ <20170313131427.17147-1-luca@coelho.fi>
+Cc: torvalds@linux-foundation.org, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+        sara.sharon@intel.com, liad.kaufman@intel.com,
+        luciano.coelho@intel.com
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <57bc6afa-7b78-36ca-98c3-7bbdfc36672d@kernel.dk> (sfid-20170313_152553_739723_6BC761D6)
+Date: Mon, 13 Mar 2017 08:24:40 -0600
 MIME-Version: 1.0
-In-Reply-To: <CAG_fn=X3PDDpX_K8Dhk-yCviC87ycRaX4X1d+rJENPZJK_rFmw@mail.gmail.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-2-arnd@arndb.de>
- <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com> <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com>
- <CAK8P3a3+8wxsUntUnOteOv8_p=yBZLk-4Uu-HGM17o9n9OqteQ@mail.gmail.com> <CAG_fn=X3PDDpX_K8Dhk-yCviC87ycRaX4X1d+rJENPZJK_rFmw@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 3 Mar 2017 15:51:41 +0100
-Message-ID: <CAK8P3a1r9LbZ3f_AcBG6LCmmL9KhzUSUMJuhtVKTkUwYjrexmg@mail.gmail.com> (sfid-20170303_161100_833566_52B0660E)
-Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
-To: Alexander Potapenko <glider@google.com>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        kasan-dev <kasan-dev@googlegroups.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170313131427.17147-1-luca@coelho.fi>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 3:33 PM, Alexander Potapenko <glider@google.com> wrote:
-> On Fri, Mar 3, 2017 at 3:30 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> On Fri, Mar 3, 2017 at 2:55 PM, Alexander Potapenko <glider@google.com> wrote:
->>
->> Would KMSAN also force local variables to be non-overlapping the way that
->> asan-stack=1 and -fsanitize-address-use-after-scope do? As I understood it,
->> KMSAN would add extra code for maintaining the uninit bits, but in an example
->> like this
-> The thing is that KMSAN (and other tools that insert heavyweight
-> instrumentation) may cause heavy register spilling which will also
-> blow up the stack frames.
+On 03/13/2017 07:14 AM, Luca Coelho wrote:
+> From: Sara Sharon <sara.sharon@intel.com>
+> 
+> When a station is asleep, the fw will set it as "asleep".
+> All queues that are used only by one station will be stopped by
+> the fw.
+> 
+> In pre-DQA mode this was relevant for aggregation queues. However,
+> in DQA mode a queue is owned by one station only, so all queues
+> will be stopped.
+> As a result, we don't expect to get filtered frames back to
+> mac80211 and don't have to maintain the entire pending_frames
+> state logic, the same way as we do in aggregations.
+> 
+> The correct behavior is to align DQA behavior with the aggregation
+> queue behaviour pre-DQA:
+> - Don't count pending frames.
+> - Let mac80211 know we have frames in these queues so that it can
+> properly handle trigger frames.
+> 
+> When a trigger frame is received, mac80211 tells the driver to send
+> frames from the queues using release_buffered_frames.
+> The driver will tell the fw to let frames out even if the station
+> is asleep. This is done by iwl_mvm_sta_modify_sleep_tx_count.
 
-In that case, I would expect a mostly distinct set of functions to have large
-stack frames with KMSAN, compared to the ones that need
-noinline_for_kasan. In most cases I patched, the called inline function is
-actually trivial, but invoked many times from the same caller.
+It fixes the warning for me.
 
-     Arnd
+Tested-by: Jens Axboe <axboe@fb.com>
+
+-- 
+Jens Axboe
