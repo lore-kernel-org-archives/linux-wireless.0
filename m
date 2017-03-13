@@ -1,81 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34164 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755180AbdCGKFB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:05:01 -0500
-Received: by mail-wm0-f51.google.com with SMTP id 196so23264783wmm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 02:04:48 -0800 (PST)
-Subject: Re: [PATCH 08/26] brcmsmac: make some local variables 'static const'
- to reduce stack size
-To: Kalle Valo <kvalo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-9-arnd@arndb.de>
- <227c8e5a-fa20-0300-1cb0-1d3ef17deb19@broadcom.com>
- <87y3wi74y8.fsf@purkki.adurom.net>
- <CAK8P3a0cemG0=6jZOQEpGN+RG2Be1LM_DE7aJVX18en_i6G7=Q@mail.gmail.com>
- <877f414e1n.fsf@codeaurora.org>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <2e8b7c30-41d5-b605-d502-6b914507e4e1@broadcom.com> (sfid-20170307_110626_284456_17EB5DD9)
-Date: Tue, 7 Mar 2017 10:55:36 +0100
-MIME-Version: 1.0
-In-Reply-To: <877f414e1n.fsf@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+Received: from smtp5-g21.free.fr ([212.27.42.5]:64999 "EHLO smtp5-g21.free.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751374AbdCMVGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Mar 2017 17:06:08 -0400
+From: Alban <albeu@free.fr>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: John Crispin <john@phrozen.org>, Alban <albeu@free.fr>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/7] ath9k: ahb: Add OF support
+Date: Mon, 13 Mar 2017 22:05:10 +0100
+Message-Id: <1489439116-4233-2-git-send-email-albeu@free.fr> (sfid-20170313_220736_753155_15DE61F0)
+In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
+References: <1489439116-4233-1-git-send-email-albeu@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7-3-2017 10:44, Kalle Valo wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
-> 
->> On Mon, Mar 6, 2017 at 5:19 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
->>>
->>>> On 2-3-2017 17:38, Arnd Bergmann wrote:
->>>>> With KASAN and a couple of other patches applied, this driver is one
->>>>> of the few remaining ones that actually use more than 2048 bytes of
->>>>> kernel stack:
->>>>>
->>>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function
->>>>> 'wlc_phy_workarounds_nphy_gainctrl':
->>>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the
->>>>> frame size of 3264 bytes is larger than 2048 bytes
->>>>> [-Wframe-larger-than=]
->>>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
->>>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the
->>>>> frame size of 2864 bytes is larger than 2048 bytes
->>>>> [-Wframe-larger-than=]
->>>>>
->>>>> Here, I'm reducing the stack size by marking as many local variables as
->>>>> 'static const' as I can without changing the actual code.
->>>>
->>>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>
->>> Arnd, via which tree are you planning to submit these? I'm not sure
->>> what I should do with the wireless drivers patches from this series.
->>
->> I'm not quite sure myself yet. I'd probably want the first few patches that
->> do most of the work get merged through Andrew's linux-mm tree once
->> we have come to agreement on them. The driver specific patches like
->> the brcmsmac ones depend on the introduction of noinline_for_kasan
->> or noinline_if_stackbloat and could either go in along with the first
->> set, or as a follow-up through the normal maintainer trees.
-> 
-> Either way is fine for me. Just mark clearly if you want the wireless
-> drivers patches to go through via my tree, otherwise I'll ignore them.
+Allow registering ath9k AHB devices defined in DT. This just add the
+compatible strings to allow matching the driver and setting the proper
+device ID.
 
-That (dreaded) phy code does not get a lot of changes so I think it does
-not matter which tree is will go through in terms of risk for conflicts.
-So going through linux-mm is fine for me as well.
+Signed-off-by: Alban <albeu@free.fr>
+---
+ drivers/net/wireless/ath/ath9k/ahb.c | 47 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 43 insertions(+), 4 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 2bd982c..36a2645 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -18,6 +18,7 @@
+ 
+ #include <linux/nl80211.h>
+ #include <linux/platform_device.h>
++#include <linux/of_device.h>
+ #include <linux/module.h>
+ #include "ath9k.h"
+ 
+@@ -49,6 +50,33 @@ static const struct platform_device_id ath9k_platform_id_table[] = {
+ 	{},
+ };
+ 
++#ifdef CONFIG_OF
++static const struct of_device_id ath_ahb_of_match[] = {
++	{
++		.compatible = "qca,ar9100-wmac",
++		.data = (void *)AR5416_AR9100_DEVID
++	},
++	{
++		.compatible = "qca,ar9330-wmac",
++		.data = (void *)AR9300_DEVID_AR9330
++	},
++	{
++		.compatible = "qca,ar9340-wmac",
++		.data = (void *)AR9300_DEVID_AR9340
++	},
++	{
++		.compatible = "qca,qca9550-wmac",
++		.data = (void *)AR9300_DEVID_QCA955X
++	},
++	{
++		.compatible = "qca,qca9530-wmac",
++		.data = (void *)AR9300_DEVID_AR953X
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, ath_ahb_of_match);
++#endif
++
+ /* return bus cachesize in 4B word units */
+ static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
+ {
+@@ -79,10 +107,20 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	int ret = 0;
+ 	struct ath_hw *ah;
+ 	char hw_name[64];
++	u16 devid;
+ 
+-	if (!dev_get_platdata(&pdev->dev)) {
+-		dev_err(&pdev->dev, "no platform data specified\n");
+-		return -EINVAL;
++	if (id) {
++		devid = id->driver_data;
++	} else {
++		const struct of_device_id *match;
++
++		match = of_match_device(ath_ahb_of_match, &pdev->dev);
++		if (!match) {
++			dev_err(&pdev->dev, "no device match found\n");
++			return -EINVAL;
++		}
++
++		devid = (u16)(unsigned long)match->data;
+ 	}
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+@@ -127,7 +165,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 		goto err_free_hw;
+ 	}
+ 
+-	ret = ath9k_init_device(id->driver_data, sc, &ath_ahb_bus_ops);
++	ret = ath9k_init_device(devid, sc, &ath_ahb_bus_ops);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to initialize device\n");
+ 		goto err_irq;
+@@ -167,6 +205,7 @@ static struct platform_driver ath_ahb_driver = {
+ 	.remove     = ath_ahb_remove,
+ 	.driver		= {
+ 		.name	= "ath9k",
++		.of_match_table = of_match_ptr(ath_ahb_of_match),
+ 	},
+ 	.id_table    = ath9k_platform_id_table,
+ };
+-- 
+2.7.4
