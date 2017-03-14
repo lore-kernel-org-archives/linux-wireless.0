@@ -1,30 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41466 "EHLO sipsolutions.net"
+Received: from mail5.windriver.com ([192.103.53.11]:51244 "EHLO mail5.wrs.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753517AbdC2HNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 03:13:23 -0400
-Message-ID: <1490771594.18052.6.camel@sipsolutions.net> (sfid-20170329_091542_984750_1A33E17E)
-Subject: Re: [PATCH for-4.11 2/2] cfg80211: check rdev resume callback only
- for registered wiphy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Daniel J Blueman <daniel@quora.org>
-Date: Wed, 29 Mar 2017 09:13:14 +0200
-In-Reply-To: <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_112615_711798_FE2BF116)
-References: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com>
-         (sfid-20170328_112615_711798_FE2BF116)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751760AbdCNNVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Mar 2017 09:21:33 -0400
+From: Mark Asselstine <mark.asselstine@windriver.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac and WIPHY_FLAG_NETNS_OK
+Date: Tue, 14 Mar 2017 09:21:21 -0400
+Message-ID: <4310845.fn2SnuB68N@yow-masselst-lx1> (sfid-20170314_142200_654078_4AE7187D)
+In-Reply-To: <6d879e70-b75a-4708-78fc-ee25c0ffa67c@broadcom.com>
+References: <2253234.njokx7NVYT@yow-masselst-lx1> <1489490906.28373.3.camel@sipsolutions.net> <6d879e70-b75a-4708-78fc-ee25c0ffa67c@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-03-28 at 09:11 +0100, Arend van Spriel wrote:
-> We got the following use-after-free KASAN report:
+On Tuesday, March 14, 2017 1:41:02 PM EDT Arend Van Spriel wrote:
+> On 14-3-2017 12:28, Johannes Berg wrote:
+> >> It never came up with any projects so far. 
+
+Myself and one of my colleagues had thought that this might be the case. On 
+the bright side this matches my inability to find any discussions on the 
+matter and that there is the possibility to get this functionality added.
+
+> >> I doubt that the patch
+> >> below is sufficient. I suspect something more is needed. Using git
+> >> blame I ended up finding these commits:
+> >> 
+> >> a272a72 mac80211: allow using network namespaces
+> > 
+> > This is needed in brcm drivers.
+
+I will have a closer look, thanks for the pointer to this patch.
+
+> > 
+> >> 463d018 cfg80211: make aware of net namespaces
+> > 
+> > This has no impact on brcm drivers :)
+> > 
+> >> 5061b0c mac80211: cooperate more with network namespaces
+> > 
+> > This shouldn't be needed, you're not referring to init_net in brcm
+> > drivers.
+> > 
+> >> I think what is required from brcmfmac is to set netns for each
+> >> netdev that we create to the same netns as the wiphy instance using
+> >> wiphy_net().
+> > 
+> > Yes, like the mac80211 patch above.
+> > 
+> >> Not sure if there is more to consider, but hopefully Johannes can
+> >> comment on this although the mentioned commits have been around for a
+> >> while.
+> > 
+> > I don't think there's anything else.
+> > 
+> >>>         wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+> >>>         
+> >>>                         WIPHY_FLAG_OFFCHAN_TX |
+> >>> 
+> >>> -                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+> >>> +                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+> >>> +                       WIPHY_FLAG_NETNS_OK;
+> > 
+> > This is not sufficient, you still have to set the netns for newly
+> > created netdevs.
+
+Ah, that is something I had not tested out. I moved an existing phy and its 
+associated vif and things worked as expected and also destroying the NS had 
+things move back as expected. I did not however create any new vifs
+
 > 
-[...]
+> Thanks for confirming my suspicion.
+> 
+> Regards,
+> Arend
 
-Applied.
+Thanks for the quick pointers, not being all that familiar with the wireless 
+code I appreciate the discussion. I will have a closer look and see if I can 
+get a patch out for review.
 
-johannes
+Mark
