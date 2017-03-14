@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33383 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751730AbdC0GgT (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:45397 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750930AbdCNXP6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Mar 2017 02:36:19 -0400
-Received: by mail-pg0-f67.google.com with SMTP id 79so10220212pgf.0
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Mar 2017 23:36:18 -0700 (PDT)
-From: vaibhavddit@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Vaibhav Kothari <vaibhavddit@gmail.com>
-Subject: [PATCH] Fixing Style Problems
-Date: Mon, 27 Mar 2017 12:06:19 +0530
-Message-Id: <1490596579-22039-1-git-send-email-vaibhavddit@gmail.com> (sfid-20170327_083641_370555_362192BC)
-In-Reply-To: <[PATCH 1/1] Fixing Coding style problems>
-References: <[PATCH 1/1] Fixing Coding style problems>
+        Tue, 14 Mar 2017 19:15:58 -0400
+To: Daniel Drake <drake@endlessm.com>, qca_merez@qca.qualcomm.com,
+        wil6210@qca.qualcomm.com
+References: <CAD8Lp45k01+rN8RXdvPthEDeJj7p-a-Lk5A1AQWXJBGezxQpaA@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        Chris Chiu <chiu@endlessm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <0651bd85-656c-1156-b2e6-655f7649b8fe@dd-wrt.com> (sfid-20170315_001601_893509_E7704B90)
+Date: Wed, 15 Mar 2017 00:15:53 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAD8Lp45k01+rN8RXdvPthEDeJj7p-a-Lk5A1AQWXJBGezxQpaA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: Where is wil6210.fw / wil6210.brd?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vaibhav Kothari <vaibhavddit@gmail.com>
+Am 14.03.2017 um 22:55 schrieb Daniel Drake:
+> Hi,
+>
+> We are working with a new consumer laptop model that includes a
+> wil6210 wireless adapter.
+>
+> It is not usable on current Linux distros because the firmware is not
+> present. It's not in linux-firmware and we can't even find any
+> download links when searching the web.
+>
+> Could you please send a copy of the required firmware to linux-firmware?
+> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+die firmware is only available from qca direct. but i could give you a 
+hint. download the gpl source of the netgear r9000 model. it includes 
+this firmware files
+for anything else you need a sla/nda with qca
+>
+> Thanks
+> Daniel
+>
 
-- Corrected 80 characters column width
 
-Signed-off-by: Vaibhav Kothari <vaibhavddit@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 5256f40..794104b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -123,7 +123,7 @@ struct disconnect_info {
- s32 wilc_parse_network_info(u8 *msg_buffer,
- 			    struct network_info **ret_network_info);
- s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
--			       struct connect_resp_info **ret_connect_resp_info);
-+			      struct connect_resp_info **ret_connect_resp_info);
- void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer, u32 length);
- void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length);
- void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length);
 -- 
-1.9.1
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
