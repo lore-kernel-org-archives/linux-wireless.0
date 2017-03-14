@@ -1,48 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55726 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932919AbdC3Qob (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 12:44:31 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [for-4.11,
- 1/2] brcmfmac: use local iftype avoiding use-after-free of virtual
- interface
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1490688691-20100-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1490688691-20100-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39636 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750969AbdCNOCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Mar 2017 10:02:00 -0400
+Message-ID: <1489500117.10872.7.camel@sipsolutions.net> (sfid-20170314_150318_693953_2BEB284C)
+Subject: Re: [RFC v2] cfg80211: Add support for FILS shared key
+ authentication offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org,
-        Daniel J Blueman <daniel@quora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170330164429.CBF7060E0E@smtp.codeaurora.org> (sfid-20170330_184434_636486_304C761D)
-Date: Thu, 30 Mar 2017 16:44:29 +0000 (UTC)
+        "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+Date: Tue, 14 Mar 2017 15:01:57 +0100
+In-Reply-To: <1489054141-7848-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1489054141-7848-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> A use-after-free was found using KASAN. In brcmf_p2p_del_if() the virtual
-> interface is removed using call to brcmf_remove_interface(). After that
-> the virtual interface instance has been freed and should not be referenced.
-> Solve this by storing the nl80211 iftype in local variable, which is used
-> in a couple of places anyway.
-> 
-> Cc: stable@vger.kernel.org # 4.10.x, 4.9.x
-> Reported-by: Daniel J Blueman <daniel@quora.org>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Patch applied to wireless-drivers.git, thanks.
+> +	/* 802.11ai */
+> +	WLAN_STATUS_FILS_AUTHENTICATION_FAILURE = 108,
+> +	WLAN_STATUS_UNKNOWN_AUTHENTICATION_SERVER = 109,
 
-d77facb88448 brcmfmac: use local iftype avoiding use-after-free of virtual interface
+Not sure I see much value in that comment there, but whatever :)
 
--- 
-https://patchwork.kernel.org/patch/9648553/
+>   * caching.
+>   *
+>   * @bssid: The AP's BSSID.
+> - * @pmkid: The PMK material itself.
+> + * @pmkid: The identifer to refer a PMKSA.
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+typo - identifier
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> + * @pmk: The PMK for the PMKSA identified by @pmkid. This is used
+> for key
+> + *	derivation by a FILS STA. Otherwise, %NULL.
+> + * @pmk_len: Length of the @pmk. The length of @pmk can differ
+> depending on
+> + *	the hash algorithm used to generate this.
+> + * @ssid: SSID to specify the ESS within which a PMKSA is valid.
+> + * @ssid_len: Length of the @ssid in octets.
+> + * @cache_id: Unsigned 16 bit identifier advertized by an AP
+> identifying the
+> + *	scope of PMKSA. This is valid only if @ssid_len is non-
+> zero.
+>   */
+>  struct cfg80211_pmksa {
+>  	const u8 *bssid;
+>  	const u8 *pmkid;
+> +	const u8 *pmk;
+> +	size_t pmk_len;
+> +	const u8 *ssid;
+> +	size_t ssid_len;
+> +	u16 cache_id;
+>  };
+
+So I'm really still a bit confused by this.
+
+For 802.1X, we decided that using the PMKSA cache to convey the PMK
+from the host to the device (after doing the handshake) was a bad idea.
+
+Can you explain why this is different for FILS?
+
+Or wait - I'll attempt myself. In this case, it really *is* a cache,
+since the firmware will be able to use any of them?
+
+>  /**
+> + * struct cfg80211_connect_resp_params - Connection response params
+
+I like this, but I think it'd be good to split it out into a separate
+patch.
+
+> +struct cfg80211_connect_resp_params {
+> +	int status;
+> +	u8 bssid[ETH_ALEN];
+
+Is there a reason for this to be the value rather than a pointer? I'm
+not really sure it actually matters, but the fields below are pointers
+too (and kinda have to be) so why the difference?
+
+(Ok, so on 64-bit systems this is smaller, but it's actually easier to
+assign a pointer than to memcpy())
+
+>  /**
+> + * DOC: FILS shared key authentication offload
+
+Thanks :)
+
+johannes
