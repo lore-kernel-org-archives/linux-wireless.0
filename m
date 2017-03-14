@@ -1,122 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:57346 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751022AbdCQQCF (ORCPT
+Received: from mail-pg0-f41.google.com ([74.125.83.41]:35004 "EHLO
+        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751111AbdCNSdN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 12:02:05 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>,
-        Julian Calaby <julian.calaby@gmail.com>,
-        Simon Wunderlich <sw@simonwunderlich.de>,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
-Subject: [PATCHv2 1/3] ath9k: Support channels in licensed bands
-Date: Fri, 17 Mar 2017 17:00:20 +0100
-Message-Id: <20170317160020.30991-1-sw@simonwunderlich.de> (sfid-20170317_170220_637387_859429C5)
-In-Reply-To: <096bcee2-a991-eac1-8f4f-d7cf7c34730d@neratec.com>
-References: <096bcee2-a991-eac1-8f4f-d7cf7c34730d@neratec.com>
+        Tue, 14 Mar 2017 14:33:13 -0400
+Received: by mail-pg0-f41.google.com with SMTP id b129so94525128pgc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2017 11:33:12 -0700 (PDT)
+Date: Tue, 14 Mar 2017 11:33:08 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        dmitry.torokhov@gmail.com
+Subject: Re: [PATCH] mwifiex: fix kernel crash after shutdown command timeout
+Message-ID: <20170314183306.GA55602@google.com> (sfid-20170314_193331_431679_4AEFDF73)
+References: <1487942964-3193-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1487942964-3193-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Amit,
 
-Many chips support channels in licensed bands. Add support for those,
-along with a corresponding kernel config option to disable them by
-default. Note that these channels are not selectable even if the
-option has been compiled unless the user modifies the regulatory
-database to explicitly enable the corresponding channels.
+You managed to CC several other Google folks, but not me, the one who
+actually reviewed most of this! You might consider including me in the
+future :)
 
-NOTE:  These channels must not be used in most regulatory
-domains unless you have a license from the FCC or similar!
+On Fri, Feb 24, 2017 at 06:59:24PM +0530, Amitkumar Karwar wrote:
+> We observed a SHUTDOWN command timeout during reboot stress test due
+> to a corner case firmware bug. It leads to use-after-free on adapter
+> structure pointer and crash.
+> 
+> We already have a cancel_work_sync() call in teardown thread. This
+> issue is fixed by having this call just before mwifiex_remove_card().
+> At this point no further work will be scheduled.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-[Hide this support behind a Kconfig option]
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
-[only use the 20 mhz channels, add 5 ghz, change to 4.9ghz to licensed bands, simplify]
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
----
-Changes to PATCHv1:
- * fix bug reported by Zefir, and simplify patch more
----
- drivers/net/wireless/ath/ath9k/Kconfig       | 20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common-init.c | 15 +++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h          |  4 ++++
- 3 files changed, 39 insertions(+)
+I'm testing this artificially by testing things like this concurrently:
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 783a38f1a626..23b8abf4449a 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -116,6 +116,26 @@ config ATH9K_DFS_CERTIFIED
- 	  developed. At this point enabling this option won't do anything
- 	  except increase code size.
- 
-+config ATH9K_LICENSED_CHAN
-+	bool "Support channels in licensed bands"
-+	depends on ATH9K && CFG80211_CERTIFICATION_ONUS
-+	default n
-+	---help---
-+	  This option enables support for licensed channels on such as
-+          4.9 GHz (public safety).
-+
-+	  These are PUBLIC SAFETY CHANNELS and MUST NOT BE USED in most
-+	  regulatory domains UNLESS YOU HAVE A FULL LICENSE for their use from
-+	  your local radio regulator, e.g. the FCC or equivalent. Using these
-+	  channels without proper authorisation may result in serious legal
-+	  consequences.
-+
-+	  You will also have to build a regulatory database with these channels
-+	  enabled to actually use them.
-+
-+	  If you are a distro kernel builder or have any doubt whatsoever about
-+	  your legal ability to use these channels, say N.
-+
- config ATH9K_DYNACK
- 	bool "Atheros ath9k ACK timeout estimation algorithm (EXPERIMENTAL)"
- 	depends on ATH9K
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
-index 8b4f7fdabf58..3d65dce13048 100644
---- a/drivers/net/wireless/ath/ath9k/common-init.c
-+++ b/drivers/net/wireless/ath/ath9k/common-init.c
-@@ -86,6 +86,21 @@ static const struct ieee80211_channel ath9k_5ghz_chantable[] = {
- 	CHAN5G(5785, 35), /* Channel 157 */
- 	CHAN5G(5805, 36), /* Channel 161 */
- 	CHAN5G(5825, 37), /* Channel 165 */
-+
-+#ifdef CONFIG_ATH9K_LICENSED_CHAN
-+	/* 4.9Ghz channels, public safety channels, license is required in US
-+	 * and most other regulatory domains!
-+	 */
-+	/* 802.11j 4.9 GHz (20 MHz) */
-+	CHAN5G(4920, 38), /* channel 184 */
-+	CHAN5G(4940, 39), /* channel 188 */
-+	CHAN5G(4960, 40), /* channel 192 */
-+	CHAN5G(4980, 41), /* channel 196 */
-+	/* 802.11j 5.030 - 5.080 GHz (20 MHz) */
-+	CHAN5G(5040, 42), /* channel 8 */
-+	CHAN5G(5060, 43), /* channel 12 */
-+	CHAN5G(5080, 44), /* channel 16 */
-+#endif
- };
- 
- /* Atheros hardware rate code addition for short premble */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9cbca1229bac..2166f644599d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -73,7 +73,11 @@
- 
- #define ATH9K_RSSI_BAD			-128
- 
-+#ifdef CONFIG_ATH9K_LICENSED_CHAN
-+#define ATH9K_NUM_CHANNELS	45
-+#else
- #define ATH9K_NUM_CHANNELS	38
-+#endif
- 
- /* Register read/write primitives */
- #define REG_WRITE(_ah, _reg, _val) \
--- 
-2.11.0
+rmmod mwifiex_pcie &
+cat /sys/kernel/debug/mwifiex/mlan0/device_dump
+
+I'm using a 4.4-based kernel (plus quite a few backports) at the moment
+and I'm having problems (I can retest on upstream if really needed), and
+pretty sure this patch is buggy.
+
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 3 +--
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 3 +--
+>  2 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index a0d9180..f31c5ea 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -294,8 +294,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>  	if (!adapter || !adapter->priv_num)
+>  		return;
+>  
+> -	cancel_work_sync(&card->work);
+> -
+>  	reg = card->pcie.reg;
+>  	if (reg)
+>  		ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
+> @@ -312,6 +310,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+>  	}
+>  
+> +	cancel_work_sync(&card->work);
+
+I don't think we want to move the cancellation to be this far; see the
+mwifiex_init_shutdown_fw() above! If I add a msleep(3000) below this,
+then run:
+
+  rmmod mwifiex_pcie & sleep 0.5; cat /sys/kernel/debug/mwifiex/mlan0/device_dump
+
+I can trigger an abort in mwifiex_pcie_rdwr_firmware(). The problem is
+that you still allow a command timeout + firmware dump worker to still
+race with the shutdown -- in this case, I think it's
+mwifiex_init_shutdown_fw() that's disabling the device.
+
+I think the real solution is to, somewhere before we shutdown the
+firmware, *really* prevent any further work to be scheduled to
+&card->work. Maybe that means adding another flag so that the worker
+will just abort quickly in that case? So it's something like:
+
+	card->worker_flags |= DONT_RUN_ANY_MORE;
+	cancel_work_sync(&card->work);
+
+	... (this can be done either above the FIRMWARE_READY_PCIE
+	check, or else you need to write a different version for
+	FIRMWARE_READY_PCIE vs. !FIRMWARE_READY_PCIE) ... but definitely
+	before mwifiex_init_shutdown_fw() ) ...
+
+And in mwifiex_pcie_work():
+
+	if (card->worker_flags & DONT_RUN_ANY_MORE)
+		return;
+
+IOW, NAK to this patch.
+
+Brian
+
+>  	mwifiex_remove_card(adapter);
+>  }
+>  
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index a4b356d..9534b47 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -387,8 +387,6 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+>  	if (!adapter || !adapter->priv_num)
+>  		return;
+>  
+> -	cancel_work_sync(&card->work);
+> -
+>  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+>  
+>  	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
+> @@ -400,6 +398,7 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+>  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+>  	}
+>  
+> +	cancel_work_sync(&card->work);
+>  	mwifiex_remove_card(adapter);
+>  }
+>  
+> -- 
+> 1.9.1
+> 
