@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:34575 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752915AbdC1WVm (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:37536 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750788AbdCNMlG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 18:21:42 -0400
-Received: by mail-it0-f68.google.com with SMTP id e75so6450029itd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Mar 2017 15:21:41 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: netdev 2.1 conference Schedule out!
-To: people@netdevconf.org
-Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
-        Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Heri Muhero <hmuhero@gmail.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>, lwn@lwn.net
-Message-ID: <53040eb8-7a93-591e-97ed-542f702de1f3@mojatatu.com> (sfid-20170329_002305_006790_5748B2D8)
-Date: Tue, 28 Mar 2017 18:21:22 -0400
+        Tue, 14 Mar 2017 08:41:06 -0400
+Received: by mail-wm0-f46.google.com with SMTP id n11so62781831wma.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2017 05:41:05 -0700 (PDT)
+Subject: Re: brcmfmac and WIPHY_FLAG_NETNS_OK
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Mark Asselstine <mark.asselstine@windriver.com>
+References: <2253234.njokx7NVYT@yow-masselst-lx1>
+ <df16691e-62f7-4c95-0534-48d1dea4f5ba@broadcom.com>
+ <1489490906.28373.3.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6d879e70-b75a-4708-78fc-ee25c0ffa67c@broadcom.com> (sfid-20170314_134123_874978_C2D4D73E)
+Date: Tue, 14 Mar 2017 13:41:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1489490906.28373.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 14-3-2017 12:28, Johannes Berg wrote:
+> 
+>> It never came up with any projects so far. I doubt that the patch
+>> below is sufficient. I suspect something more is needed. Using git
+>> blame I ended up finding these commits:
+>>
+>> a272a72 mac80211: allow using network namespaces
+> 
+> This is needed in brcm drivers.
+> 
+>> 463d018 cfg80211: make aware of net namespaces
+> 
+> This has no impact on brcm drivers :)
+> 
+>> 5061b0c mac80211: cooperate more with network namespaces
+> 
+> This shouldn't be needed, you're not referring to init_net in brcm
+> drivers.
+> 
+>> I think what is required from brcmfmac is to set netns for each
+>> netdev that we create to the same netns as the wiphy instance using
+>> wiphy_net().
+> 
+> Yes, like the mac80211 patch above.
+> 
+>> Not sure if there is more to consider, but hopefully Johannes can
+>> comment on this although the mentioned commits have been around for a
+>> while.
+> 
+> I don't think there's anything else.
+> 
+>>>         wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+>>>                         WIPHY_FLAG_OFFCHAN_TX |
+>>> -                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+>>> +                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+>>> +                       WIPHY_FLAG_NETNS_OK;
+> 
+> This is not sufficient, you still have to set the netns for newly
+> created netdevs.
 
-The tech committee would like to announce the schedule.
+Thanks for confirming my suspicion.
 
-There is a lot of great great content which we hope you are
-going to enjoy.
-
-There were also many other fantastic submissions which we were
-unfortunately unable to accommodate. We appreciate everyone that
-took the time to make a submission.
-
-Please visit:
-http://www.netdevconf.org/2.1/schedule.html
-
-for more details.
-
-cheers,
-jamal
+Regards,
+Arend
