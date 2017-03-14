@@ -1,119 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12256 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753859AbdCOPpd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 11:45:33 -0400
-Subject: [PATCH v6 03/10] ath10k: htc: move htc ctrl ep connect to htc_init
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 15 Mar 2017 17:45:21 +0200
-Message-ID: <148959272140.31432.695287262065906036.stgit@potku.adurom.net> (sfid-20170315_164537_728344_1848DD58)
-In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39872 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751389AbdCNONP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Mar 2017 10:13:15 -0400
+Message-ID: <1489500792.10872.13.camel@sipsolutions.net> (sfid-20170314_151451_283752_8CF5C77D)
+Subject: Re: [PATCH] mac80211: Allow multiple listeners for management
+ frames.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@openmesh.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: linux-wireless@vger.kernel.org,
+        Benjamin Berg <benjamin@sipsolutions.net>
+Date: Tue, 14 Mar 2017 15:13:12 +0100
+In-Reply-To: <3029516.gVNlmVZjU3@prime> (sfid-20170314_151031_045293_89F882D3)
+References: <20170310093454.27664-1-sven.eckelmann@openmesh.com>
+         <1489499461.10872.4.camel@sipsolutions.net> <33102038.DFbxuT1K2h@bentobox>
+         <3029516.gVNlmVZjU3@prime> (sfid-20170314_151031_045293_89F882D3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+On Tue, 2017-03-14 at 15:10 +0100, Simon Wunderlich wrote:
+> On Tuesday, March 14, 2017 3:06:35 PM CET Sven Eckelmann wrote:
+> > On Dienstag, 14. März 2017 14:51:01 CET Johannes Berg wrote:
+> > [...]
+> > 
+> > > I'm not sure I mentioned it to him, or even remembered it when we
+> > > were
+> > > discussing it, but I don't think this patch is a good idea, at
+> > > least
+> > > for action frames.
+> > 
+> > [...]
+> > 
+> > > If you restrict it to non-action I can live with it, but I don't
+> > > know
+> > > what you really want to do with this.
+> > 
+> > I think he required it only for probe requests.
 
-This patch moves the HTC ctrl service connect from
-htc_wait_target to htc_init.
+Similar situation for probe requests though - who answers them? :-)
 
-This is done in order to make sure the htc ctrl service
-is setup properly before hif_start is called.
+Though at least in that case the kernel doesn't care (unlike in the
+action frame case) since it never does.
 
-The reason for this is that we want the HTC ctrl service
-callback to be initialized before the target sends the
-HTC ready message.
+> The idea was to grab probe requests from userspace with a program
+> running next to hostapd.
 
-The ready message will always be transmitted on endpoint 0
-(which is always assigned to the HTC control service) so it
-makes more sense if HTC control has been connected before the
-ready message is received.
+I guess there are some efficiency problems with that right now, but a
+monitor mode interface should work just as well. Perhaps we can allow
+attaching a BPF program to a monitor mode interface, and run that
+without cloning the SKB etc.?
 
-Since the service to pipe mapping is done as a part of
-the service connect, the get_default_pipe call is redundant
-and was removed.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   39 ++++++++++++++-------------------
- 1 file changed, 17 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index fd5be4484984..92d5ac45327a 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -586,8 +586,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 	struct ath10k *ar = htc->ar;
- 	int i, status = 0;
- 	unsigned long time_left;
--	struct ath10k_htc_svc_conn_req conn_req;
--	struct ath10k_htc_svc_conn_resp conn_resp;
- 	struct ath10k_htc_msg *msg;
- 	u16 message_id;
- 	u16 credit_count;
-@@ -650,22 +648,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 		return -ECOMM;
- 	}
- 
--	/* setup our pseudo HTC control endpoint connection */
--	memset(&conn_req, 0, sizeof(conn_req));
--	memset(&conn_resp, 0, sizeof(conn_resp));
--	conn_req.ep_ops.ep_tx_complete = ath10k_htc_control_tx_complete;
--	conn_req.ep_ops.ep_rx_complete = ath10k_htc_control_rx_complete;
--	conn_req.max_send_queue_depth = ATH10K_NUM_CONTROL_TX_BUFFERS;
--	conn_req.service_id = ATH10K_HTC_SVC_ID_RSVD_CTRL;
--
--	/* connect fake service */
--	status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
--	if (status) {
--		ath10k_err(ar, "could not connect to htc service (%d)\n",
--			   status);
--		return status;
--	}
--
- 	return 0;
- }
- 
-@@ -875,8 +857,10 @@ int ath10k_htc_start(struct ath10k_htc *htc)
- /* registered target arrival callback from the HIF layer */
- int ath10k_htc_init(struct ath10k *ar)
- {
--	struct ath10k_htc_ep *ep = NULL;
-+	int status;
- 	struct ath10k_htc *htc = &ar->htc;
-+	struct ath10k_htc_svc_conn_req conn_req;
-+	struct ath10k_htc_svc_conn_resp conn_resp;
- 
- 	spin_lock_init(&htc->tx_lock);
- 
-@@ -884,10 +868,21 @@ int ath10k_htc_init(struct ath10k *ar)
- 
- 	htc->ar = ar;
- 
--	/* Get HIF default pipe for HTC message exchange */
--	ep = &htc->endpoint[ATH10K_HTC_EP_0];
-+	/* setup our pseudo HTC control endpoint connection */
-+	memset(&conn_req, 0, sizeof(conn_req));
-+	memset(&conn_resp, 0, sizeof(conn_resp));
-+	conn_req.ep_ops.ep_tx_complete = ath10k_htc_control_tx_complete;
-+	conn_req.ep_ops.ep_rx_complete = ath10k_htc_control_rx_complete;
-+	conn_req.max_send_queue_depth = ATH10K_NUM_CONTROL_TX_BUFFERS;
-+	conn_req.service_id = ATH10K_HTC_SVC_ID_RSVD_CTRL;
- 
--	ath10k_hif_get_default_pipe(ar, &ep->ul_pipe_id, &ep->dl_pipe_id);
-+	/* connect fake service */
-+	status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
-+	if (status) {
-+		ath10k_err(ar, "could not connect to htc service (%d)\n",
-+			   status);
-+		return status;
-+	}
- 
- 	init_completion(&htc->ctl_resp);
- 
+johannes
