@@ -1,102 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:34031 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751663AbdCPSlV (ORCPT
+Received: from mail1.windriver.com ([147.11.146.13]:34565 "EHLO
+        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751740AbdCNNhz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 14:41:21 -0400
-Received: by mail-pf0-f176.google.com with SMTP id p189so5094942pfp.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 11:41:20 -0700 (PDT)
-Date: Thu, 16 Mar 2017 11:41:16 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com
-Subject: Re: [PATCH v2] mwifiex: fix kernel crash after shutdown command
- timeout
-Message-ID: <20170316184115.GA105900@google.com> (sfid-20170316_194136_090289_4A362246)
-References: <1489660132-27352-1-git-send-email-akarwar@marvell.com>
- <20170316183317.GA2935@dtor-ws>
+        Tue, 14 Mar 2017 09:37:55 -0400
+From: Mark Asselstine <mark.asselstine@windriver.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac and WIPHY_FLAG_NETNS_OK
+Date: Tue, 14 Mar 2017 09:37:49 -0400
+Message-ID: <11746680.tvDfvcmMav@yow-masselst-lx1> (sfid-20170314_143857_291506_DF5C5E40)
+In-Reply-To: <97ddefbb-12a8-50e6-faf3-001271ac669e@broadcom.com>
+References: <2253234.njokx7NVYT@yow-masselst-lx1> <4310845.fn2SnuB68N@yow-masselst-lx1> <97ddefbb-12a8-50e6-faf3-001271ac669e@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170316183317.GA2935@dtor-ws>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
-
-On Thu, Mar 16, 2017 at 11:33:17AM -0700, Dmitry Torokhov wrote:
-> On Thu, Mar 16, 2017 at 03:58:52PM +0530, Amitkumar Karwar wrote:
-> > We observed a SHUTDOWN command timeout during reboot stress test
-> > due to a corner case firmware bug. It leads to use-after-free on
-> > adapter structure pointer and crash.
+On Tuesday, March 14, 2017 2:27:53 PM EDT Arend Van Spriel wrote:
+> On 14-3-2017 14:21, Mark Asselstine wrote:
+> > On Tuesday, March 14, 2017 1:41:02 PM EDT Arend Van Spriel wrote:
+> >> On 14-3-2017 12:28, Johannes Berg wrote:
+> >>>> It never came up with any projects so far.
 > > 
-> > Let's add MWIFIEX_IFACE_WORK_DONT_RUN work flag to avoid executing
-> > any work scheduled after cancel_work_sync() call in teardown path
-> > to resolve the issue.
+> > Myself and one of my colleagues had thought that this might be the case.
+> > On
+> > the bright side this matches my inability to find any discussions on the
+> > matter and that there is the possibility to get this functionality added.
 > > 
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > ---
-> > v2: New work_flag has been added to resolve the issue cleanly as per
-> > Brian's suggestion.
-> > ---
-> >  drivers/net/wireless/marvell/mwifiex/main.h | 1 +
-> >  drivers/net/wireless/marvell/mwifiex/pcie.c | 4 ++++
-> >  drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++++
-> >  3 files changed, 9 insertions(+)
+> >>>> I doubt that the patch
+> >>>> below is sufficient. I suspect something more is needed. Using git
+> >>>> blame I ended up finding these commits:
+> >>>> 
+> >>>> a272a72 mac80211: allow using network namespaces
+> >>> 
+> >>> This is needed in brcm drivers.
 > > 
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> > index 5c82972..d5b1fd6 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> > +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> > @@ -510,6 +510,7 @@ struct mwifiex_roc_cfg {
-> >  enum mwifiex_iface_work_flags {
-> >  	MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-> >  	MWIFIEX_IFACE_WORK_CARD_RESET,
-> > +	MWIFIEX_IFACE_WORK_DONT_RUN,
-> >  };
-> >  
-> >  struct mwifiex_private {
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > index a0d9180..bb3d798 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > @@ -294,6 +294,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
-> >  	if (!adapter || !adapter->priv_num)
-> >  		return;
-> >  
-> > +	set_bit(MWIFIEX_IFACE_WORK_DONT_RUN, &card->work_flags);
-> >  	cancel_work_sync(&card->work);
-> >  
-> >  	reg = card->pcie.reg;
-> > @@ -2721,6 +2722,9 @@ static void mwifiex_pcie_work(struct work_struct *work)
-> >  	struct pcie_service_card *card =
-> >  		container_of(work, struct pcie_service_card, work);
-> >  
-> > +	if (test_bit(MWIFIEX_IFACE_WORK_DONT_RUN, &card->work_flags))
-> > +		return;
+> > I will have a closer look, thanks for the pointer to this patch.
+> > 
+> >>>> 463d018 cfg80211: make aware of net namespaces
+> >>> 
+> >>> This has no impact on brcm drivers :)
+> >>> 
+> >>>> 5061b0c mac80211: cooperate more with network namespaces
+> >>> 
+> >>> This shouldn't be needed, you're not referring to init_net in brcm
+> >>> drivers.
+> >>> 
+> >>>> I think what is required from brcmfmac is to set netns for each
+> >>>> netdev that we create to the same netns as the wiphy instance using
+> >>>> wiphy_net().
+> >>> 
+> >>> Yes, like the mac80211 patch above.
+> >>> 
+> >>>> Not sure if there is more to consider, but hopefully Johannes can
+> >>>> comment on this although the mentioned commits have been around for a
+> >>>> while.
+> >>> 
+> >>> I don't think there's anything else.
+> >>> 
+> >>>>>         wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+> >>>>>         
+> >>>>>                         WIPHY_FLAG_OFFCHAN_TX |
+> >>>>> 
+> >>>>> -                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+> >>>>> +                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+> >>>>> +                       WIPHY_FLAG_NETNS_OK;
+> >>> 
+> >>> This is not sufficient, you still have to set the netns for newly
+> >>> created netdevs.
+> > 
+> > Ah, that is something I had not tested out. I moved an existing phy and
+> > its
+> > associated vif and things worked as expected and also destroying the NS
+> > had
+> > things move back as expected. I did not however create any new vifs
+> > 
+> >> Thanks for confirming my suspicion.
+> >> 
+> >> Regards,
+> >> Arend
+> > 
+> > Thanks for the quick pointers, not being all that familiar with the
+> > wireless code I appreciate the discussion. I will have a closer look and
+> > see if I can get a patch out for review.
 > 
-> I do not see how this could possible prevent use-after-free, assuming
-> that the "card" memory is gone by the time mwifiex_pcie_work() gets to
-> run.
+> Hi Mark,
+> 
+> I looked at it and preparing a patch. Will send it out shortly to give
+> it a try.
 
-The 'card' memory isn't getting freed; it's the 'adapter' memory we're
-worried about. This is either already freed (because the FW init
-procedure failed), or else it's freed later in this function via
-mwifiex_remove_card().
+Oh perfect thanks. I wasn't intending to create work for you but I will not 
+protest. Your expert eye might catch things I would have missed, only to be 
+caught in review.
 
-(We're also worried about having the FW dump race with the FW shutdown
-sequence, which can begin later in this function. This patch blocks both
-races AFAICT.)
+Mark
 
-> You need to check this flag before queueing firmware dump work, and
-> make sure it is not racy with setting this flag in mwifiex_pcie_remove()
-> (and sdio).
-
-That's another approach that could work, but it's a little more
-invasive.
-
-I'm still reviewing and testing this, but I believe this is nearly
-equivalent to my own draft version, which tested out fine.
-
-Brian
+> 
+> Regards,
+> Arend
