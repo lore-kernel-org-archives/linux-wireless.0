@@ -1,112 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:34667 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752123AbdCCOfO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 09:35:14 -0500
-Received: by mail-qk0-f174.google.com with SMTP id s186so177747934qkb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 06:33:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAK8P3a3+8wxsUntUnOteOv8_p=yBZLk-4Uu-HGM17o9n9OqteQ@mail.gmail.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-2-arnd@arndb.de>
- <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com> <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com>
- <CAK8P3a3+8wxsUntUnOteOv8_p=yBZLk-4Uu-HGM17o9n9OqteQ@mail.gmail.com>
-From: Alexander Potapenko <glider@google.com>
-Date: Fri, 3 Mar 2017 15:33:16 +0100
-Message-ID: <CAG_fn=X3PDDpX_K8Dhk-yCviC87ycRaX4X1d+rJENPZJK_rFmw@mail.gmail.com> (sfid-20170303_153602_680402_2409CF8B)
-Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        kasan-dev <kasan-dev@googlegroups.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:39568 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751599AbdCNNvK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Mar 2017 09:51:10 -0400
+Message-ID: <1489499461.10872.4.camel@sipsolutions.net> (sfid-20170314_145113_136232_E6561D9F)
+Subject: Re: [PATCH] mac80211: Allow multiple listeners for management
+ frames.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>,
+        linux-wireless@vger.kernel.org
+Cc: simon.wunderlich@openmesh.com,
+        Benjamin Berg <benjamin@sipsolutions.net>
+Date: Tue, 14 Mar 2017 14:51:01 +0100
+In-Reply-To: <20170310093454.27664-1-sven.eckelmann@openmesh.com> (sfid-20170310_103523_108597_73CF7884)
+References: <20170310093454.27664-1-sven.eckelmann@openmesh.com>
+         (sfid-20170310_103523_108597_73CF7884)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 3:30 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Fri, Mar 3, 2017 at 2:55 PM, Alexander Potapenko <glider@google.com> w=
-rote:
->> On Fri, Mar 3, 2017 at 2:50 PM, Andrey Ryabinin <aryabinin@virtuozzo.com=
-> wrote:
->
->>>> @@ -416,6 +416,17 @@ static __always_inline void __write_once_size(vol=
-atile void *p, void *res, int s
->>>>   */
->>>>  #define noinline_for_stack noinline
->>>>
->>>> +/*
->>>> + * CONFIG_KASAN can lead to extreme stack usage with certain patterns=
- when
->>>> + * one function gets inlined many times and each instance requires a =
-stack
->>>> + * ckeck.
->>>> + */
->>>> +#ifdef CONFIG_KASAN
->>>> +#define noinline_for_kasan noinline __maybe_unused
->>>
->>>
->>> noinline_iff_kasan might be a better name.  noinline_for_kasan gives th=
-e impression
->>> that we always noinline function for the sake of kasan, while noinline_=
-iff_kasan
->>> clearly indicates that function is noinline only if kasan is used.
->
-> Fine with me. I actually tried to come up with a name that implies that t=
-he
-> symbol is actually "inline" (or even __always_inline_ without KASAN, but
-> couldn't think of any good name for it.
->
->> FWIW we may be facing the same problem with other compiler-based
->> tools, e.g. KMSAN (which isn't there yet).
->> So it might be better to choose a macro name that doesn't use the name "=
-KASAN".
->> E.g. noinline_iff_memtool (or noinline_iff_memory_tool if that's not too=
- long).
->> WDYT?
->
-> Would KMSAN also force local variables to be non-overlapping the way that
-> asan-stack=3D1 and -fsanitize-address-use-after-scope do? As I understood=
- it,
-> KMSAN would add extra code for maintaining the uninit bits, but in an exa=
-mple
-> like this
-The thing is that KMSAN (and other tools that insert heavyweight
-instrumentation) may cause heavy register spilling which will also
-blow up the stack frames.
-> int f(int *);
-> static inline __attribute__((always_inline)) int g(void)
-> {
->     int i;
->     f(&i);
->     return i;
-> }
-> int f(void)
-> {
->      return g()+g()+g()+g();
-> }
->
-> each of the four copies of 'i' could have the same location on the stack
-> and get marked uninitialized again before calling f(). We only need
-> noinline_for_kasan (whatever we end up calling that) for compiler
-> features that force each instance of 'i' to have its own stack redzone.
->
->      Arnd
+On Fri, 2017-03-10 at 10:34 +0100, Sven Eckelmann wrote:
+> From: Benjamin Berg <benjamin@sipsolutions.net>
+> 
+> Previously it was not possible to have multiple listeners for
+> management frames in userspace. This is a bit weird as multiple
+> processes in userspace might try to request management frame
+> reporting but only the first request was accepted.
 
+I vaguely remember discussing this with Benjamin.
 
+> It is currently unknown why Benjamin never forwarded it. I am doing
+> this now to have a chance that this private patch doesn't have to be
+> rebased anymore by OpenMesh.
 
---=20
-Alexander Potapenko
-Software Engineer
+I'm not sure I mentioned it to him, or even remembered it when we were
+discussing it, but I don't think this patch is a good idea, at least
+for action frames.
 
-Google Germany GmbH
-Erika-Mann-Stra=C3=9Fe, 33
-80636 M=C3=BCnchen
+For non-action frames, I don't see any problem.
 
-Gesch=C3=A4ftsf=C3=BChrer: Matthew Scott Sucherman, Paul Terence Manicle
-Registergericht und -nummer: Hamburg, HRB 86891
-Sitz der Gesellschaft: Hamburg
+However, for action frames, if you subscribe you get the responsibility
+to return if unhandled (setting 0x80 in the action code fields).
+
+With multiple subscribers, that becomes impossible.
+
+If you restrict it to non-action I can live with it, but I don't know
+what you really want to do with this.
+
+johannes
