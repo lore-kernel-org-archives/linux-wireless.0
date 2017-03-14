@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:35112 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751513AbdCSN64 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Mar 2017 09:58:56 -0400
-Received: by mail-it0-f67.google.com with SMTP id y18so12338354itc.2
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Mar 2017 06:58:55 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: New talk accepted! Droplet: DDoS countermeasures powered by
- BPF + XDP
-To: people@netdevconf.org
-Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
-        Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Heri Muhero <hmuhero@gmail.com>
-Message-ID: <29545711-ad05-f3f7-0a69-2d329ac70c41@mojatatu.com> (sfid-20170319_145906_130278_1FA21A4D)
-Date: Sun, 19 Mar 2017 09:49:40 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:37948 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750771AbdCNL2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Mar 2017 07:28:32 -0400
+Message-ID: <1489490906.28373.3.camel@sipsolutions.net> (sfid-20170314_122835_221002_EEFCAAB8)
+Subject: Re: brcmfmac and WIPHY_FLAG_NETNS_OK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Mark Asselstine <mark.asselstine@windriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 14 Mar 2017 12:28:26 +0100
+In-Reply-To: <df16691e-62f7-4c95-0534-48d1dea4f5ba@broadcom.com> (sfid-20170314_105145_213435_11AD40CE)
+References: <2253234.njokx7NVYT@yow-masselst-lx1>
+         <df16691e-62f7-4c95-0534-48d1dea4f5ba@broadcom.com>
+         (sfid-20170314_105145_213435_11AD40CE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am going to keep netfilter and wireless lists on for now unless I hear
-more objections. We will be doing about one a day from now until about
-the time of the conference.
 
-The tech committee would like to announce a new accepted talk.
+> It never came up with any projects so far. I doubt that the patch
+> below is sufficient. I suspect something more is needed. Using git
+> blame I ended up finding these commits:
+> 
+> a272a72 mac80211: allow using network namespaces
 
-Huapeng Zhou, Doug Porter, Ryan Tierney and Nikita Shirokov
-are going to give a talk on Droplet which is used at Facebook
-to plug in DDoS countermeasures.
+This is needed in brcm drivers.
 
-More details:
-----
-Droplet is a generic framework to implement bpf policers to drop
-packets at the earliest stage in the networking stack, preferably at
-line rate. It's born for anti-DDoS and is the preferred infrastructure
-at Facebook to plug in DDoS countermeasures. This talk presents the
-overall architecture of Droplet and discusses a few issues in
-developing and rolling out the software.
+> 463d018 cfg80211: make aware of net namespaces
 
-At a high level, Droplet takes bpf policer code written in restricted C
-syntax, compiles it at runtime and hooks it into the kernel. The
-framework abstracts out interactions between user space and kernel
-space so the end user only needs to write policer code. It could chain
-bpf programs together so we get multiple active DDoS countermeasures at
-the same time. The policer code is shipped as configuration, which
-enables fast response time when under active attacks.
---------
+This has no impact on brcm drivers :)
 
-cheers,
-jamal
+> 5061b0c mac80211: cooperate more with network namespaces
+
+This shouldn't be needed, you're not referring to init_net in brcm
+drivers.
+
+> I think what is required from brcmfmac is to set netns for each
+> netdev that we create to the same netns as the wiphy instance using
+> wiphy_net().
+
+Yes, like the mac80211 patch above.
+
+> Not sure if there is more to consider, but hopefully Johannes can
+> comment on this although the mentioned commits have been around for a
+> while.
+
+I don't think there's anything else.
+
+> >         wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+> >                         WIPHY_FLAG_OFFCHAN_TX |
+> > -                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+> > +                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+> > +                       WIPHY_FLAG_NETNS_OK;
+
+This is not sufficient, you still have to set the netns for newly
+created netdevs.
+
+johannes
