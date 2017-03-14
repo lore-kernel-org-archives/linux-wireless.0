@@ -1,72 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47712 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754158AbdCBJBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 04:01:35 -0500
-Message-ID: <1488442991.8390.1.camel@sipsolutions.net> (sfid-20170302_100223_948379_58B1B22E)
-Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in
- NEW_RADIO/GET_RADIO
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        Ben Greear <greearb@candelatech.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 02 Mar 2017 09:23:11 +0100
-In-Reply-To: <60000eb2-f404-aab7-5493-9b952adb1dde@uni-rostock.de>
-References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
-         <20170223120211.22358-2-andrew.zaborowski@intel.com>
-         <1488202062.28431.7.camel@sipsolutions.net>
-         <CAOq732JzrGxFUa5BiuO=Sz7gscRV7PFxOOyy1xf6mtmQfUqkaA@mail.gmail.com>
-         <2155efb0-1325-0089-fbb1-cc63cc289745@candelatech.com>
-         <CAOq732+MZt=mytXrZko0uw=EsBWvQpZ49wg3CxFPVn0uGGNyog@mail.gmail.com>
-         <4549b209-df6c-0eaa-65e6-72562c61bf4b@candelatech.com>
-         <4efcd470-86ee-2f3d-bbe2-1d82874edffd@uni-rostock.de>
-         <4d3505b9-9714-8ad0-5159-794cb566dc3b@candelatech.com>
-         <60000eb2-f404-aab7-5493-9b952adb1dde@uni-rostock.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:35237 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750853AbdCNJvq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Mar 2017 05:51:46 -0400
+Received: by mail-wr0-f179.google.com with SMTP id g10so120243417wrg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2017 02:51:45 -0700 (PDT)
+Subject: Re: brcmfmac and WIPHY_FLAG_NETNS_OK
+To: Mark Asselstine <mark.asselstine@windriver.com>
+References: <2253234.njokx7NVYT@yow-masselst-lx1>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <df16691e-62f7-4c95-0534-48d1dea4f5ba@broadcom.com> (sfid-20170314_105150_280842_7649693D)
+Date: Tue, 14 Mar 2017 10:51:43 +0100
+MIME-Version: 1.0
+In-Reply-To: <2253234.njokx7NVYT@yow-masselst-lx1>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-03-01 at 18:04 +0100, Benjamin Beichler wrote:
-> Am 01.03.2017 um 16:35 schrieb Ben Greear:
-> > That is actually not possible. The permanent MAC-Addresses of hwsim
-> > 
-> > > radios are directly created by there internal ID, which is only
-> > > increased for new radios and definitely not reassigned.
-> > > 
-> > > But I would be happy, if this were possible, since it would make
-> > > some
-> > > simulation related stuff easier (currently we need to unload and
-> > > load
-> > > the hwsim module over and over again for every run).
-> > 
-> > Ahh, you are right.  But you can specify the wiphy name, and then
-> > you
-> > can use that to query the debugfs to find the MAC addr, and then
-> > sync
-> > your user-space with that info.
-> > 
-> > It should also be easy enough to specify the MAC address when
-> > creating
-> > the radio.
-> > 
-> > And, you should be able to create virtual STA, AP, etc, with any
-> > specified
-> > MAC address, so the MAC of the radio really should not matter much?
-> > 
++ linux-wireless
++ Johannes
+
+On 13-3-2017 19:15, Mark Asselstine wrote:
+> Hello Arend,
 > 
-> That is another problem ... this won't work currently, since the
-> frame
-> delivery compares the receiver address with the permanent MAC
-> addresses
-> of all hwsim phys. I work as an idle task on patch, which makes this
-> lookup (currently implemented as linear search) as a hashmap mapping
-> an
-> MAC to a wiphy struct , including scenarios with differing MAC
-> addresses
-> of vifs.
+> I am thinking about proposing the following patch on linux-wireless but would 
+> like to ask you your thoughts first. I have looked in detail at the kernel 
+> code, the brcmfmac development pages, the mailing list archives etc. to make 
+> sure that I haven't missed previous discussions on this subject, if you have 
+> already ruled this functionality out I apologize for missing the relevant 
+> info.
+> 
+> Like others folks (for example https://github.com/fgg89/docker-ap/issues/3) I 
+> would like to have the ability to make the wifi interface available in a 
+> container. The *80211 infrastructure should allow this but the brcmfmac driver 
+> does not enable WIPHY_FLAG_NETNS_OK so attempts to move the phy and vifs to a 
+> network NS results in -EOPNOTSUPP. Is there a reason for this not being 
+> supported?
 
-That's probably something we really ought to fix :)
+Hi Mark,
 
-johannes
+It never came up with any projects so far. I doubt that the patch below
+is sufficient. I suspect something more is needed. Using git blame I
+ended up finding these commits:
+
+a272a72 mac80211: allow using network namespaces
+463d018 cfg80211: make aware of net namespaces
+5061b0c mac80211: cooperate more with network namespaces
+
+I think what is required from brcmfmac is to set netns for each netdev
+that we create to the same netns as the wiphy instance using
+wiphy_net(). Not sure if there is more to consider, but hopefully
+Johannes can comment on this although the mentioned commits have been
+around for a while.
+
+Regards,
+Arend
+
+> Thanks so much for taking the time to read this email and thanks in advance 
+> for any feedback you are able to provide.
+> 
+> Regards,
+> Mark Asselstine
+> 
+> ----
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 944b83c..f38500b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -6452,7 +6452,8 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct 
+> brcmf_if *ifp)
+>  
+>         wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+>                         WIPHY_FLAG_OFFCHAN_TX |
+> -                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+> +                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+> +                       WIPHY_FLAG_NETNS_OK;
+>         if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_TDLS))
+>                 wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+>         if (!ifp->drvr->settings->roamoff)
+> 
