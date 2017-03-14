@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:54526 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754000AbdCOV7J (ORCPT
+Received: from bombadil.infradead.org ([65.50.211.133]:53462 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750848AbdCNM7d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 17:59:09 -0400
-Date: Wed, 15 Mar 2017 14:59:02 -0700 (PDT)
-Message-Id: <20170315.145902.1038598966216203408.davem@davemloft.net> (sfid-20170315_225919_165880_62BBF3AE)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        sowmini.varadhan@oracle.com, dvyukov@google.com,
-        johannes.berg@intel.com
-Subject: Re: [PATCH] nl80211: fix dumpit error path RTNL deadlocks
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170315132913.26088-1-johannes@sipsolutions.net>
-References: <20170315132913.26088-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Tue, 14 Mar 2017 08:59:33 -0400
+Date: Tue, 14 Mar 2017 05:59:32 -0700
+From: Kyle McMartin <kyle@infradead.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, linux-firmware@kernel.org
+Subject: Re: pull-request mwifiex-firmware 2017-03-11
+Message-ID: <20170314125931.GH13400@bombadil.infradead.org> (sfid-20170314_135941_569847_6DC6101C)
+References: <1489324113-22129-1-git-send-email-huxinming820@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1489324113-22129-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 15 Mar 2017 14:29:13 +0100
+On Sun, Mar 12, 2017 at 01:08:33PM +0000, Xinming Hu wrote:
+> The following changes since commit 8f171e29aade68e8a9193e288ba526e6f8fa7575:
+> 
+>   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-02-20 18:17:17 +0530)
+> 
+> are available in the git repository at:
+> 
+>   git://git.marvell.com/mwifiex-firmware.git 
+> 
+> for you to fetch changes up to 59d72586fbaa71cdf3a9f0e0ea2bb169f80d9e6b:
+> 
+>   linux-firmware: update Marvell PCIe-USB8997 wifi-only firmware image (2017-03-11 02:31:18 -0800)
+> 
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Sowmini pointed out Dmitry's RTNL deadlock report to me, and it turns out
-> to be perfectly accurate - there are various error paths that miss unlock
-> of the RTNL.
-> 
-> To fix those, change the locking a bit to not be conditional in all those
-> nl80211_prepare_*_dump() functions, but make those require the RTNL to
-> start with, and fix the buggy error paths. This also let me use sparse
-> (by appropriately overriding the rtnl_lock/rtnl_unlock functions) to
-> validate the changes.
-> 
-> Reported-by: Sowmini Varadhan <sowmini.varadhan@oracle.com>
-> Reported-by: Dmitry Vyukov <dvyukov@google.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Thanks! Pulled and pushed back out.
 
-Johannes, I assume I will get this in a future pull request?
+regards, --Kyle
