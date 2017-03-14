@@ -1,127 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5-g21.free.fr ([212.27.42.5]:6504 "EHLO smtp5-g21.free.fr"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39782 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932279AbdCMVHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2017 17:07:19 -0400
-From: Alban <albeu@free.fr>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: John Crispin <john@phrozen.org>, Alban Bedel <albeu@free.fr>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 6/7] ath9k: Allow using the reset API for the external reset
-Date: Mon, 13 Mar 2017 22:05:14 +0100
-Message-Id: <1489439116-4233-6-git-send-email-albeu@free.fr> (sfid-20170313_220903_148670_84C72755)
-In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
-References: <1489439116-4233-1-git-send-email-albeu@free.fr>
+        id S1751389AbdCNOLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Mar 2017 10:11:36 -0400
+Message-ID: <1489500692.10872.11.camel@sipsolutions.net> (sfid-20170314_151155_669889_E7E3E83C)
+Subject: Re: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
+ offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Pubbisetty, Manikanta" <mpubbise@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+Date: Tue, 14 Mar 2017 15:11:32 +0100
+In-Reply-To: <828dd0c9cb0d409eb4d3aadc7f585a69@aphydexm01f.ap.qualcomm.com>
+References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488544754.25750.8.camel@sipsolutions.net>
+         <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
+         <1489008812.7127.9.camel@sipsolutions.net>
+         <828dd0c9cb0d409eb4d3aadc7f585a69@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alban Bedel <albeu@free.fr>
+Hi,
 
-Allow using the reset API instead of a platform specific callback to
-reset the device.
+[Manikanta] In that case I will keep this change, should we consider
+a separate driver hook for legacy/mgmt tx like drv_tx_8023??
+> How about having wake_tx_queue_8023 and ieee80211_tx_dequeue_8023 so
+> that Ethernet transmit path is totally exclusive. Thoughts??
 
-Signed-off-by: Alban Bedel <albeu@free.fr>
----
- drivers/net/wireless/ath/ath9k/hw.c   | 26 +++++++++++++++++++++-----
- drivers/net/wireless/ath/ath9k/hw.h   |  1 +
- drivers/net/wireless/ath/ath9k/init.c | 10 ++++++++++
- 3 files changed, 32 insertions(+), 5 deletions(-)
+I'm not sure this will work well. The driver might have more space for
+sending to a specific station, but doesn't really know which frames
+should go first. So either it'd have to call both (dequeue_8023
+followed by dequeue) with mac80211 sorting out what to do, or we should
+keep it combined. I think mac80211 sorting out the priority here etc.
+would be far more complex than this.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8c5c2dd..efc0435 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -21,6 +21,7 @@
- #include <linux/bitops.h>
- #include <linux/etherdevice.h>
- #include <linux/gpio.h>
-+#include <linux/reset.h>
- #include <asm/unaligned.h>
- 
- #include "hw.h"
-@@ -551,6 +552,24 @@ static int ath9k_hw_attach_ops(struct ath_hw *ah)
- 	return 0;
- }
- 
-+static int ath9k_hw_external_reset(struct ath_hw *ah)
-+{
-+	int ret = 0;
-+
-+	ath_dbg(ath9k_hw_common(ah), RESET,
-+		"reset MAC via external reset\n");
-+
-+	if (ah->external_reset) {
-+		ret = ah->external_reset();
-+	} else if (ah->reset) {
-+		ret = reset_control_assert(ah->reset);
-+		if (!ret)
-+			ret = reset_control_deassert(ah->reset);
-+	}
-+
-+	return ret;
-+}
-+
- /* Called for all hardware families */
- static int __ath9k_hw_init(struct ath_hw *ah)
- {
-@@ -1286,14 +1305,11 @@ static bool ath9k_hw_ar9330_reset_war(struct ath_hw *ah, int type)
- 			break;
- 	}
- 
--	if (ah->external_reset &&
-+	if ((ah->reset || ah->external_reset) &&
- 	    (npend || type == ATH9K_RESET_COLD)) {
- 		int reset_err = 0;
- 
--		ath_dbg(ath9k_hw_common(ah), RESET,
--			"reset MAC via external reset\n");
--
--		reset_err = ah->external_reset();
-+		reset_err = ath9k_hw_external_reset(ah);
- 		if (reset_err) {
- 			ath_err(ath9k_hw_common(ah),
- 				"External reset failed, err=%d\n",
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7f17c2a..53b67e3 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -966,6 +966,7 @@ struct ath_hw {
- 	bool is_clk_25mhz;
- 	int (*get_mac_revision)(void);
- 	int (*external_reset)(void);
-+	struct reset_control *reset;
- 	bool disable_2ghz;
- 	bool disable_5ghz;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 5cb9c61..f1cb806 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -25,6 +25,7 @@
- #include <linux/nvmem-consumer.h>
- #include <linux/relay.h>
- #include <linux/clk.h>
-+#include <linux/reset.h>
- #include <net/ieee80211_radiotap.h>
- 
- #include "ath9k.h"
-@@ -697,6 +698,15 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (!is_valid_ether_addr(common->macaddr))
- 		ath9k_get_nvmem_address(sc);
- 
-+	/* Try to get a reset controller */
-+	ah->reset = devm_reset_control_get_optional(sc->dev, NULL);
-+	if (IS_ERR(ah->reset)) {
-+		if (PTR_ERR(ah->reset) != -ENOENT &&
-+		    PTR_ERR(ah->reset) != -ENOTSUPP)
-+			return PTR_ERR(ah->reset);
-+		ah->reset = NULL;
-+	}
-+
- 	/* If the EEPROM hasn't been retrieved via firmware request
- 	 * use the nvmem API insted.
- 	 */
--- 
-2.7.4
+> [Manikanta] Hmmm, I would like to have ieee80211_tx_status_8023 for
+> now and go with a TODO for single tx reporting mechanism for both
+> Ethernet and 802.11 tx formats. Any thoughts?
+
+There's an additional wrinkle btw - we currently report the 802.11
+frame to the monitor interface, if active. Not sure we can keep that,
+but it's something to think about.
+
+> > The only real alternative I see, which might be preferable, is for
+> > the driver to advertise a bitmap of interface types that it wants
+> > to use ethernet framing with.
+> > 
+> 
+> [Manikanta] Correct, this would be a onetime registration. Isn't it ?
+> I am just curious to know whether the supported vif types for
+> ethernet framing can change dynamically, is this possible?
+
+I don't see why it would change. I guess there's a small chance that
+you might design the HW in a way that it only has enough HW resources
+to do header format conversion for a limited number of interfaces, but
+if that ends up being a problem we can perhaps add more other
+capabilities.
+
+The way we're looking at it will be type/header format dependent,
+nothing else.
+
+johannes
