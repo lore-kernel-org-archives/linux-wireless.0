@@ -1,112 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:15925 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933465AbdCaMyI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 08:54:08 -0400
-From: Jani Nikula <jani.nikula@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 1/2] Documentation/sphinx: kerneldoc: add "unused-functions"
-In-Reply-To: <20170331071632.6209-1-johannes@sipsolutions.net>
-References: <20170331071632.6209-1-johannes@sipsolutions.net>
-Date: Fri, 31 Mar 2017 15:54:04 +0300
-Message-ID: <878tnl38ur.fsf@intel.com> (sfid-20170331_145442_551233_2D519BBB)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18596 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751920AbdCOPpM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Mar 2017 11:45:12 -0400
+Subject: [PATCH v6 01/10] ath10k: htc: made static function public
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Mar 2017 17:44:56 +0200
+Message-ID: <148959269580.31432.8019003304606930479.stgit@potku.adurom.net> (sfid-20170315_164527_069572_10DE56A3)
+In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
+References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 31 Mar 2017, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When adding functions one by one into documentation, in order to
-> order/group things properly, it's easy to miss things. Allow use
-> of the kernel-doc directive with "unused-functions" like this
->
-> .. kernel-doc:: <filename>
->    :unused-functions:
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-I'm sure the parameter name could be improved to capture what you mean
-better; alas I don't have a suggestion.
+Changed ath10k_htc_notify_tx_completion and
+ath10k_htc_process_trailer from static to non static.
 
->
-> to output anything previously unused from that file. This allows
-> grouping things but still making sure that the documentation has
-> all the functions.
->
-> Internally this works by collecting (per-file) those functions
-> (and enums, structs, doc sections...) that are explicitly used,
-> and invoking the kernel-doc script with "-nofunction" later.
+These functions are needed by SDIO/mbox.
 
-A quick thought that I don't have the time to check now, but should be
-checked before merging: Is the order of directive extension execution
-deterministic if the Sphinx run is parallelized (sphinx-build -j)? Is it
-deterministic within an rst file? Surely it's not deterministic when
-called from several rst files? The latter is, perhaps, acceptable, but
-the former not.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |   14 ++++++++------
+ drivers/net/wireless/ath/ath10k/htc.h |    6 ++++++
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-BR,
-Jani.
-
-
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  Documentation/sphinx/kerneldoc.py | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
->
-> diff --git a/Documentation/sphinx/kerneldoc.py b/Documentation/sphinx/kerneldoc.py
-> index d15e07f36881..79fc1491348a 100644
-> --- a/Documentation/sphinx/kerneldoc.py
-> +++ b/Documentation/sphinx/kerneldoc.py
-> @@ -41,6 +41,9 @@ from sphinx.ext.autodoc import AutodocReporter
->  
->  __version__  = '1.0'
->  
-> +# per-file list
-> +_used_fns = {}
-> +
->  class KernelDocDirective(Directive):
->      """Extract kernel-doc comments from the specified file"""
->      required_argument = 1
-> @@ -50,6 +53,7 @@ class KernelDocDirective(Directive):
->          'functions': directives.unchanged_required,
->          'export': directives.unchanged,
->          'internal': directives.unchanged,
-> +        'unused-functions': directives.unchanged,
->      }
->      has_content = False
->  
-> @@ -60,6 +64,10 @@ class KernelDocDirective(Directive):
->          filename = env.config.kerneldoc_srctree + '/' + self.arguments[0]
->          export_file_patterns = []
->  
-> +        if not filename in _used_fns:
-> +            _used_fns[filename] = []
-> +        _used_fns_this_file = _used_fns[filename]
-> +
->          # Tell sphinx of the dependency
->          env.note_dependency(os.path.abspath(filename))
->  
-> @@ -73,10 +81,16 @@ class KernelDocDirective(Directive):
->              cmd += ['-internal']
->              export_file_patterns = str(self.options.get('internal')).split()
->          elif 'doc' in self.options:
-> -            cmd += ['-function', str(self.options.get('doc'))]
-> +            f = str(self.options.get('doc'))
-> +            cmd += ['-function', f]
-> +            _used_fns_this_file.append(f)
-> +        elif 'unused-functions' in self.options:
-> +            for f in _used_fns_this_file:
-> +                cmd += ['-nofunction', f]
->          elif 'functions' in self.options:
->              for f in str(self.options.get('functions')).split():
->                  cmd += ['-function', f]
-> +                _used_fns_this_file.append(f)
->  
->          for pattern in export_file_patterns:
->              for f in glob.glob(env.config.kerneldoc_srctree + '/' + pattern):
-
--- 
-Jani Nikula, Intel Open Source Technology Center
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 9f6a915f91bf..35e67c46e027 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -57,8 +57,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
+ 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
+ }
+ 
+-static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+-					    struct sk_buff *skb)
++void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
++				     struct sk_buff *skb)
+ {
+ 	struct ath10k *ar = ep->htc->ar;
+ 
+@@ -75,6 +75,7 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ 
+ 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
+ }
++EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
+ 
+ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
+ 				      struct sk_buff *skb)
+@@ -227,10 +228,10 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
+ 	spin_unlock_bh(&htc->tx_lock);
+ }
+ 
+-static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+-				      u8 *buffer,
+-				      int length,
+-				      enum ath10k_htc_ep_id src_eid)
++int ath10k_htc_process_trailer(struct ath10k_htc *htc,
++			       u8 *buffer,
++			       int length,
++			       enum ath10k_htc_ep_id src_eid)
+ {
+ 	struct ath10k *ar = htc->ar;
+ 	int status = 0;
+@@ -291,6 +292,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 
+ 	return status;
+ }
++EXPORT_SYMBOL(ath10k_htc_process_trailer);
+ 
+ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 6ababa345e2b..f728ce7124cf 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -351,5 +351,11 @@ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
+ struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
+ void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
++				     struct sk_buff *skb);
++int ath10k_htc_process_trailer(struct ath10k_htc *htc,
++			       u8 *buffer,
++			       int length,
++			       enum ath10k_htc_ep_id src_eid);
+ 
+ #endif
