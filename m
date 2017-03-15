@@ -1,84 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:36216 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750980AbdCQJdW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49143 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753293AbdCOPqN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 05:33:22 -0400
-Received: by mail-qt0-f181.google.com with SMTP id r45so57899182qte.3
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 02:33:21 -0700 (PDT)
-Subject: Re: [RFT] brcmfmac: add support to move wiphy instance into network
- namespace
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Mark Asselstine <mark.asselstine@windriver.com>
-References: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
- <124157392.J1GrpqVLd5@yow-masselst-lx1>
- <0343e3c9-baf8-f3b1-8c37-c8b0864bd7e5@broadcom.com>
- <1489742655.2544.4.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <1fe602fe-3db0-f533-f176-bed58f7e011c@broadcom.com> (sfid-20170317_103325_930706_FE965A2A)
-Date: Fri, 17 Mar 2017 10:33:18 +0100
+        Wed, 15 Mar 2017 11:46:13 -0400
+Subject: [PATCH v6 06/10] ath10k: add sdio extra initializations
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Mar 2017 17:46:01 +0200
+Message-ID: <148959276143.31432.4108050733445067980.stgit@potku.adurom.net> (sfid-20170315_164929_097451_244CCBDA)
+In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
+References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1489742655.2544.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-3-2017 10:24, Johannes Berg wrote:
-> On Fri, 2017-03-17 at 10:06 +0100, Arend Van Spriel wrote:
->> On 16-3-2017 22:51, Mark Asselstine wrote:
->>> On Tuesday, March 14, 2017 9:51:52 PM EDT Arend van Spriel wrote:
->>>> To support network namespace the driver must assure all created
->>>> network interfaces are in the same namespace as the wiphy
->>>> instance.
->>>>
->>>> Reported-by: Mark Asselstine <mark.asselstine@windriver.com>
->>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>> ---
->>>> Hi Mark,
->>>>
->>>> Please check this patch. I can not say I am an expert when it
->>>> comes
->>>> to using namespaces. So let me know if it works and I can change
->>>> Reported-by into Tested-by.
->>>
->>> Seems to pass the tests I threw at it. Seems happy with namespaces.
->>
->> I tested it myself and noticed something unexpected. Upon changing
->> from &init_net to brcm-wifi the wdev id has changed from 0x1 to 0x2
->> (see below) and upon going from brcm-wifi to &init_net both interface
->> change their wdev id.
-> 
-> Interesting. That's clearly a cfg80211 bug, does this help?
-> 
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 2e1740c7a8bf..d71d5e90229f 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -1183,7 +1183,15 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
->  		INIT_LIST_HEAD(&wdev->mgmt_registrations);
->  		spin_lock_init(&wdev->mgmt_registrations_lock);
->  
-> -		wdev->identifier = ++rdev->wdev_id;
-> +		/*
-> +		 * We get here also when the interface changes network namespaces,
-> +		 * as it's registered into the new one, but we don't want it to
-> +		 * change ID in that case. Checking if the ID is already assigned
-> +		 * works, because 0 isn't considered a valid ID and the memory is
-> +		 * 0-initialized.
-> +		 */
-> +		if (!wdev->identifier)
-> +			wdev->identifier = ++rdev->wdev_id;
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-Given my debug session just a minute ago I would say yes ;-) as this is
-where I put wiphy_err() statement. Will give it a quick spin.
+Extra initializations needed by all sdio boards.
+Derived from qcacld.
 
-Regards,
-Arend
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
 
->  		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
->  		rdev->devlist_generation++;
->  		/* can only change netns with wiphy */
-> 
-> johannes
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index f450ebbb28d5..6b6ea8a571fa 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -377,7 +377,22 @@ static void ath10k_send_suspend_complete(struct ath10k *ar)
+ 	complete(&ar->target_suspend);
+ }
+ 
+-static int ath10k_init_configure_target(struct ath10k *ar)
++static void ath10k_sdio_extra_initialization(struct ath10k *ar)
++{
++	u32 param = 0;
++
++	ath10k_bmi_write32(ar, hi_mbox_io_block_sz, 256);
++	ath10k_bmi_write32(ar, hi_mbox_isr_yield_limit, 99);
++	ath10k_bmi_read32(ar, hi_acs_flags, &param);
++
++	param |= (HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_SET |
++		  HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET |
++		  HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE);
++
++	ath10k_bmi_write32(ar, hi_acs_flags, param);
++}
++
++static int ath10k_init_sdio(struct ath10k *ar)
+ {
+ 	u32 param_host;
+ 	int ret;
+@@ -1900,7 +1915,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 
+ 	ath10k_bmi_start(ar);
+ 
+-	if (ath10k_init_configure_target(ar)) {
++	if (ath10k_init_sdio(ar)) {
+ 		status = -EINVAL;
+ 		goto err;
+ 	}
+@@ -1933,6 +1948,9 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	if (status)
+ 		goto err;
+ 
++	if (ar->hif.bus == ATH10K_BUS_SDIO)
++		ath10k_sdio_extra_initialization(ar);
++
+ 	ar->htc.htc_ops.target_send_suspend_complete =
+ 		ath10k_send_suspend_complete;
+ 
