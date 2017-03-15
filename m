@@ -1,38 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57472 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934419AbdCWPwC (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31381 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753859AbdCOPp3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2017 11:52:02 -0400
+        Wed, 15 Mar 2017 11:45:29 -0400
+Subject: [PATCH v6 02/10] ath10k: htc: rx trailer lookahead support
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v6 09/10] ath10k: different fw file names for usb and sdio
-Date: Thu, 23 Mar 2017 15:51:58 +0000
-Message-ID: <87mvccyorl.fsf@kamboji.qca.qualcomm.com> (sfid-20170323_165224_017494_E58BEFD3)
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Mar 2017 17:45:08 +0200
+Message-ID: <148959270857.31432.13041497148628392953.stgit@potku.adurom.net> (sfid-20170315_164535_126768_B908CF03)
+In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
 References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
-        <148959280431.31432.16087997710973721077.stgit@potku.adurom.net>
-        <e25f7672-0114-7928-7f4a-cf64638dc900@qca.qualcomm.com>
-In-Reply-To: <e25f7672-0114-7928-7f4a-cf64638dc900@qca.qualcomm.com> (Ryan
-        Hsu's message of "Thu, 16 Mar 2017 21:08:20 +0000")
-Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ryan Hsu <ryanhsu@qca.qualcomm.com> writes:
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-> On 03/15/2017 08:46 AM, Kalle Valo wrote:
->
->> From: Erik Stromdahl <erik.stromdahl@gmail.com>
->>
->> Since both SDIO and USB based chipsets will use different
->
-> nitpick, since the patch is separating the USB and SDIO support now,
-> maybe you want to remove the "USB" from the patch title?
+The RX trailer parsing is now capable of parsing lookahead reports.
+A lookahead contains the first 4 bytes of the next HTC message
+(that will be read in the next SDIO read operation).
+Lookaheads are used by the SDIO/mbox HIF layer to determine if
+the next message is part of a bundle, which endpoint it belongs
+to and how long it is.
 
-Will fix in v7.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |   95 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/htc.h |   30 +++++++++-
+ 2 files changed, 120 insertions(+), 5 deletions(-)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 35e67c46e027..fd5be4484984 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -228,11 +228,78 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
+ 	spin_unlock_bh(&htc->tx_lock);
+ }
+ 
++static int
++ath10k_htc_process_lookahead(struct ath10k_htc *htc,
++			     const struct ath10k_htc_lookahead_report *report,
++			     int len,
++			     enum ath10k_htc_ep_id eid,
++			     void *next_lookaheads,
++			     int *next_lookaheads_len)
++{
++	struct ath10k *ar = htc->ar;
++
++	/* Invalid lookahead flags are actually transmitted by
++	 * the target in the HTC control message.
++	 * Since this will happen at every boot we silently ignore
++	 * the lookahead in this case
++	 */
++	if (report->pre_valid != ((~report->post_valid) & 0xFF))
++		return 0;
++
++	if (next_lookaheads && next_lookaheads_len) {
++		ath10k_dbg(ar, ATH10K_DBG_HTC,
++			   "htc rx lookahead found pre_valid 0x%x post_valid 0x%x\n",
++			   report->pre_valid, report->post_valid);
++
++		/* look ahead bytes are valid, copy them over */
++		memcpy((u8 *)next_lookaheads, report->lookahead, 4);
++
++		*next_lookaheads_len = 1;
++	}
++
++	return 0;
++}
++
++static int
++ath10k_htc_process_lookahead_bundle(struct ath10k_htc *htc,
++				    const struct ath10k_htc_lookahead_bundle *report,
++				    int len,
++				    enum ath10k_htc_ep_id eid,
++				    void *next_lookaheads,
++				    int *next_lookaheads_len)
++{
++	struct ath10k *ar = htc->ar;
++	int bundle_cnt = len / sizeof(*report);
++
++	if (!bundle_cnt || (bundle_cnt > HTC_HOST_MAX_MSG_PER_BUNDLE)) {
++		ath10k_warn(ar, "Invalid lookahead bundle count: %d\n",
++			    bundle_cnt);
++		return -EINVAL;
++	}
++
++	if (next_lookaheads && next_lookaheads_len) {
++		int i;
++
++		for (i = 0; i < bundle_cnt; i++) {
++			memcpy(((u8 *)next_lookaheads) + 4 * i,
++			       report->lookahead, 4);
++			report++;
++		}
++
++		*next_lookaheads_len = bundle_cnt;
++	}
++
++	return 0;
++}
++
+ int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 			       u8 *buffer,
+ 			       int length,
+-			       enum ath10k_htc_ep_id src_eid)
++			       enum ath10k_htc_ep_id src_eid,
++			       void *next_lookaheads,
++			       int *next_lookaheads_len)
+ {
++	struct ath10k_htc_lookahead_bundle *bundle;
+ 	struct ath10k *ar = htc->ar;
+ 	int status = 0;
+ 	struct ath10k_htc_record *record;
+@@ -272,6 +339,29 @@ int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 							 record->hdr.len,
+ 							 src_eid);
+ 			break;
++		case ATH10K_HTC_RECORD_LOOKAHEAD:
++			len = sizeof(struct ath10k_htc_lookahead_report);
++			if (record->hdr.len < len) {
++				ath10k_warn(ar, "Lookahead report too long\n");
++				status = -EINVAL;
++				break;
++			}
++			status = ath10k_htc_process_lookahead(htc,
++							      record->lookahead_report,
++							      record->hdr.len,
++							      src_eid,
++							      next_lookaheads,
++							      next_lookaheads_len);
++			break;
++		case ATH10K_HTC_RECORD_LOOKAHEAD_BUNDLE:
++			bundle = record->lookahead_bundle;
++			status = ath10k_htc_process_lookahead_bundle(htc,
++								     bundle,
++								     record->hdr.len,
++								     src_eid,
++								     next_lookaheads,
++								     next_lookaheads_len);
++			break;
+ 		default:
+ 			ath10k_warn(ar, "Unhandled record: id:%d length:%d\n",
+ 				    record->hdr.id, record->hdr.len);
+@@ -359,7 +449,8 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		trailer += payload_len;
+ 		trailer -= trailer_len;
+ 		status = ath10k_htc_process_trailer(htc, trailer,
+-						    trailer_len, hdr->eid);
++						    trailer_len, hdr->eid,
++						    NULL, NULL);
+ 		if (status)
+ 			goto out;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index f728ce7124cf..ae6003495649 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -50,6 +50,8 @@ struct ath10k;
+  * 4-byte aligned.
+  */
+ 
++#define HTC_HOST_MAX_MSG_PER_BUNDLE        8
++
+ enum ath10k_htc_tx_flags {
+ 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
+ 	ATH10K_HTC_FLAG_SEND_BUNDLE        = 0x02
+@@ -174,8 +176,10 @@ struct ath10k_htc_msg {
+ } __packed __aligned(4);
+ 
+ enum ath10k_ath10k_htc_record_id {
+-	ATH10K_HTC_RECORD_NULL    = 0,
+-	ATH10K_HTC_RECORD_CREDITS = 1
++	ATH10K_HTC_RECORD_NULL             = 0,
++	ATH10K_HTC_RECORD_CREDITS          = 1,
++	ATH10K_HTC_RECORD_LOOKAHEAD        = 2,
++	ATH10K_HTC_RECORD_LOOKAHEAD_BUNDLE = 3,
+ };
+ 
+ struct ath10k_ath10k_htc_record_hdr {
+@@ -192,10 +196,28 @@ struct ath10k_htc_credit_report {
+ 	u8 pad1;
+ } __packed;
+ 
++struct ath10k_htc_lookahead_report {
++	u8 pre_valid;
++	u8 pad0;
++	u8 pad1;
++	u8 pad2;
++	u8 lookahead[4];
++	u8 post_valid;
++	u8 pad3;
++	u8 pad4;
++	u8 pad5;
++} __packed;
++
++struct ath10k_htc_lookahead_bundle {
++	u8 lookahead[4];
++} __packed;
++
+ struct ath10k_htc_record {
+ 	struct ath10k_ath10k_htc_record_hdr hdr;
+ 	union {
+ 		struct ath10k_htc_credit_report credit_report[0];
++		struct ath10k_htc_lookahead_report lookahead_report[0];
++		struct ath10k_htc_lookahead_bundle lookahead_bundle[0];
+ 		u8 pauload[0];
+ 	};
+ } __packed __aligned(4);
+@@ -356,6 +378,8 @@ void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 			       u8 *buffer,
+ 			       int length,
+-			       enum ath10k_htc_ep_id src_eid);
++			       enum ath10k_htc_ep_id src_eid,
++			       void *next_lookaheads,
++			       int *next_lookaheads_len);
+ 
+ #endif
