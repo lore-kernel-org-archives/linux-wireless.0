@@ -1,169 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:45041 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754730AbdC1I62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 04:58:28 -0400
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
-        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
-        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
-        matanb@mellanox.com, leonro@mellanox.com,
-        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
-        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 07/16] drivers, net, mlx5: convert fs_node.refcount from atomic_t to refcount_t
-Date: Tue, 28 Mar 2017 11:56:34 +0300
-Message-Id: <1490691403-4016-8-git-send-email-elena.reshetova@intel.com> (sfid-20170328_110902_165303_0C989F71)
-In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2490 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754135AbdCOPp7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Mar 2017 11:45:59 -0400
+Subject: [PATCH v6 05/10] ath10k: various sdio related definitions
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Mar 2017 17:45:48 +0200
+Message-ID: <148959274833.31432.12226962233912165365.stgit@potku.adurom.net> (sfid-20170315_164612_215900_6F08001D)
+In-Reply-To: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
+References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
+Debug masks for SDIO HIF layer.
+Address definitions for SDIO/mbox based chipsets.
+Augmented struct host_interest with more members.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/ethernet/mellanox/mlx5/core/fs_core.c | 24 +++++++++++------------
- drivers/net/ethernet/mellanox/mlx5/core/fs_core.h |  3 ++-
- 2 files changed, 14 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h      |    3 ++
+ drivers/net/wireless/ath/ath10k/debug.h     |    2 +
+ drivers/net/wireless/ath/ath10k/hw.h        |   53 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/targaddrs.h |   24 ++++++++++++
+ 4 files changed, 82 insertions(+)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/fs_core.c b/drivers/net/ethernet/mellanox/mlx5/core/fs_core.c
-index 2478516..4f74d15 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/fs_core.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/fs_core.c
-@@ -163,7 +163,7 @@ static void tree_init_node(struct fs_node *node,
- 			   unsigned int refcount,
- 			   void (*remove_func)(struct fs_node *))
- {
--	atomic_set(&node->refcount, refcount);
-+	refcount_set(&node->refcount, refcount);
- 	INIT_LIST_HEAD(&node->list);
- 	INIT_LIST_HEAD(&node->children);
- 	mutex_init(&node->lock);
-@@ -173,7 +173,7 @@ static void tree_init_node(struct fs_node *node,
- static void tree_add_node(struct fs_node *node, struct fs_node *parent)
- {
- 	if (parent)
--		atomic_inc(&parent->refcount);
-+		refcount_inc(&parent->refcount);
- 	node->parent = parent;
- 
- 	/* Parent is the root */
-@@ -185,7 +185,7 @@ static void tree_add_node(struct fs_node *node, struct fs_node *parent)
- 
- static void tree_get_node(struct fs_node *node)
- {
--	atomic_inc(&node->refcount);
-+	refcount_inc(&node->refcount);
- }
- 
- static void nested_lock_ref_node(struct fs_node *node,
-@@ -193,7 +193,7 @@ static void nested_lock_ref_node(struct fs_node *node,
- {
- 	if (node) {
- 		mutex_lock_nested(&node->lock, class);
--		atomic_inc(&node->refcount);
-+		refcount_inc(&node->refcount);
- 	}
- }
- 
-@@ -201,14 +201,14 @@ static void lock_ref_node(struct fs_node *node)
- {
- 	if (node) {
- 		mutex_lock(&node->lock);
--		atomic_inc(&node->refcount);
-+		refcount_inc(&node->refcount);
- 	}
- }
- 
- static void unlock_ref_node(struct fs_node *node)
- {
- 	if (node) {
--		atomic_dec(&node->refcount);
-+		refcount_dec(&node->refcount);
- 		mutex_unlock(&node->lock);
- 	}
- }
-@@ -218,7 +218,7 @@ static void tree_put_node(struct fs_node *node)
- 	struct fs_node *parent_node = node->parent;
- 
- 	lock_ref_node(parent_node);
--	if (atomic_dec_and_test(&node->refcount)) {
-+	if (refcount_dec_and_test(&node->refcount)) {
- 		if (parent_node)
- 			list_del_init(&node->list);
- 		if (node->remove_func)
-@@ -233,8 +233,8 @@ static void tree_put_node(struct fs_node *node)
- 
- static int tree_remove_node(struct fs_node *node)
- {
--	if (atomic_read(&node->refcount) > 1) {
--		atomic_dec(&node->refcount);
-+	if (refcount_read(&node->refcount) > 1) {
-+		refcount_dec(&node->refcount);
- 		return -EEXIST;
- 	}
- 	tree_put_node(node);
-@@ -982,7 +982,7 @@ static void destroy_flow_handle(struct fs_fte *fte,
- 				int i)
- {
- 	for (; --i >= 0;) {
--		if (atomic_dec_and_test(&handle->rule[i]->node.refcount)) {
-+		if (refcount_dec_and_test(&handle->rule[i]->node.refcount)) {
- 			fte->dests_size--;
- 			list_del(&handle->rule[i]->node.list);
- 			kfree(handle->rule[i]);
-@@ -1013,7 +1013,7 @@ create_flow_handle(struct fs_fte *fte,
- 		if (dest) {
- 			rule = find_flow_rule(fte, dest + i);
- 			if (rule) {
--				atomic_inc(&rule->node.refcount);
-+				refcount_inc(&rule->node.refcount);
- 				goto rule_found;
- 			}
- 		}
-@@ -1282,7 +1282,7 @@ static struct mlx5_flow_handle *add_rule_fg(struct mlx5_flow_group *fg,
- 	list_add(&fte->node.list, prev);
- add_rules:
- 	for (i = 0; i < handle->num_rules; i++) {
--		if (atomic_read(&handle->rule[i]->node.refcount) == 1)
-+		if (refcount_read(&handle->rule[i]->node.refcount) == 1)
- 			tree_add_node(&handle->rule[i]->node, &fte->node);
- 	}
- unlock_fte:
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/fs_core.h b/drivers/net/ethernet/mellanox/mlx5/core/fs_core.h
-index 8e668c6..86bc743b 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/fs_core.h
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/fs_core.h
-@@ -33,6 +33,7 @@
- #ifndef _MLX5_FS_CORE_
- #define _MLX5_FS_CORE_
- 
-+#include <linux/refcount.h>
- #include <linux/mlx5/fs.h>
- 
- enum fs_node_type {
-@@ -80,7 +81,7 @@ struct fs_node {
- 	struct fs_node		*root;
- 	/* lock the node for writing and traversing */
- 	struct mutex		lock;
--	atomic_t		refcount;
-+	refcount_t		refcount;
- 	void			(*remove_func)(struct fs_node *);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 88d14be7fcce..5965d181e6ba 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -91,6 +91,7 @@ struct ath10k;
+ enum ath10k_bus {
+ 	ATH10K_BUS_PCI,
+ 	ATH10K_BUS_AHB,
++	ATH10K_BUS_SDIO,
  };
  
--- 
-2.7.4
+ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+@@ -100,6 +101,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+ 		return "pci";
+ 	case ATH10K_BUS_AHB:
+ 		return "ahb";
++	case ATH10K_BUS_SDIO:
++		return "sdio";
+ 	}
+ 
+ 	return "unknown";
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 2368f47314ae..257d10985c6e 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -38,6 +38,8 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
+ 	ATH10K_DBG_PCI_PS	= 0x00004000,
+ 	ATH10K_DBG_AHB		= 0x00008000,
++	ATH10K_DBG_SDIO		= 0x00010000,
++	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
+ 	ATH10K_DBG_ANY		= 0xffffffff,
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index d370b573e0f9..405514455191 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -856,6 +856,59 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
+ #define QCA9887_EEPROM_ADDR_LO_MASK		0x00ff0000
+ #define QCA9887_EEPROM_ADDR_LO_LSB		16
+ 
++#define MBOX_RESET_CONTROL_ADDRESS		0x00000000
++#define MBOX_HOST_INT_STATUS_ADDRESS		0x00000800
++#define MBOX_HOST_INT_STATUS_ERROR_LSB		7
++#define MBOX_HOST_INT_STATUS_ERROR_MASK		0x00000080
++#define MBOX_HOST_INT_STATUS_CPU_LSB		6
++#define MBOX_HOST_INT_STATUS_CPU_MASK		0x00000040
++#define MBOX_HOST_INT_STATUS_COUNTER_LSB	4
++#define MBOX_HOST_INT_STATUS_COUNTER_MASK	0x00000010
++#define MBOX_CPU_INT_STATUS_ADDRESS		0x00000801
++#define MBOX_ERROR_INT_STATUS_ADDRESS		0x00000802
++#define MBOX_ERROR_INT_STATUS_WAKEUP_LSB	2
++#define MBOX_ERROR_INT_STATUS_WAKEUP_MASK	0x00000004
++#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_LSB	1
++#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_MASK	0x00000002
++#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_LSB	0
++#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_MASK	0x00000001
++#define MBOX_COUNTER_INT_STATUS_ADDRESS		0x00000803
++#define MBOX_COUNTER_INT_STATUS_COUNTER_LSB	0
++#define MBOX_COUNTER_INT_STATUS_COUNTER_MASK	0x000000ff
++#define MBOX_RX_LOOKAHEAD_VALID_ADDRESS		0x00000805
++#define MBOX_INT_STATUS_ENABLE_ADDRESS		0x00000828
++#define MBOX_INT_STATUS_ENABLE_ERROR_LSB	7
++#define MBOX_INT_STATUS_ENABLE_ERROR_MASK	0x00000080
++#define MBOX_INT_STATUS_ENABLE_CPU_LSB		6
++#define MBOX_INT_STATUS_ENABLE_CPU_MASK		0x00000040
++#define MBOX_INT_STATUS_ENABLE_INT_LSB		5
++#define MBOX_INT_STATUS_ENABLE_INT_MASK		0x00000020
++#define MBOX_INT_STATUS_ENABLE_COUNTER_LSB	4
++#define MBOX_INT_STATUS_ENABLE_COUNTER_MASK	0x00000010
++#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_LSB	0
++#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_MASK	0x0000000f
++#define MBOX_CPU_INT_STATUS_ENABLE_ADDRESS	0x00000819
++#define MBOX_CPU_INT_STATUS_ENABLE_BIT_LSB	0
++#define MBOX_CPU_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
++#define MBOX_ERROR_STATUS_ENABLE_ADDRESS	0x0000081a
++#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_LSB  1
++#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_MASK 0x00000002
++#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_LSB   0
++#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_MASK  0x00000001
++#define MBOX_COUNTER_INT_STATUS_ENABLE_ADDRESS	0x0000081b
++#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_LSB	0
++#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
++#define MBOX_COUNT_ADDRESS			0x00000820
++#define MBOX_COUNT_DEC_ADDRESS			0x00000840
++#define MBOX_WINDOW_DATA_ADDRESS		0x00000874
++#define MBOX_WINDOW_WRITE_ADDR_ADDRESS		0x00000878
++#define MBOX_WINDOW_READ_ADDR_ADDRESS		0x0000087c
++#define MBOX_CPU_DBG_SEL_ADDRESS		0x00000883
++#define MBOX_CPU_DBG_ADDRESS			0x00000884
++#define MBOX_RTC_BASE_ADDRESS			0x00000000
++#define MBOX_GPIO_BASE_ADDRESS			0x00005000
++#define MBOX_MBOX_BASE_ADDRESS			0x00008000
++
+ #define RTC_STATE_V_GET(x) (((x) & RTC_STATE_V_MASK) >> RTC_STATE_V_LSB)
+ 
+ /* Register definitions for first generation ath10k cards. These cards include
+diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
+index a47cab44d9c8..58e0541da4b5 100644
+--- a/drivers/net/wireless/ath/ath10k/targaddrs.h
++++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
+@@ -205,6 +205,24 @@ struct host_interest {
+ 	 */
+ 	/* Bit 1 - unused */
+ 	u32 hi_fw_swap;					/* 0x104 */
++
++	/* global arenas pointer address, used by host driver debug */
++	u32 hi_dynamic_mem_arenas_addr;			/* 0x108 */
++
++	/* allocated bytes of DRAM use by allocated */
++	u32 hi_dynamic_mem_allocated;			/* 0x10C */
++
++	/* remaining bytes of DRAM */
++	u32 hi_dynamic_mem_remaining;			/* 0x110 */
++
++	/* memory track count, configured by host */
++	u32 hi_dynamic_mem_track_max;			/* 0x114 */
++
++	/* minidump buffer */
++	u32 hi_minidump;				/* 0x118 */
++
++	/* bdata's sig and key addr */
++	u32 hi_bd_sig_key;				/* 0x11c */
+ } __packed;
+ 
+ #define HI_ITEM(item)  offsetof(struct host_interest, item)
+@@ -319,6 +337,12 @@ Fw Mode/SubMode Mask
+ #define HI_ACS_FLAGS_USE_WWAN       (1 << 1)
+ /* Use test VAP */
+ #define HI_ACS_FLAGS_TEST_VAP       (1 << 2)
++/* SDIO/mailbox ACS flag definitions */
++#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_SET       (1 << 0)
++#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET    (1 << 1)
++#define HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE        (1 << 2)
++#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_FW_ACK    (1 << 16)
++#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_FW_ACK (1 << 17)
+ 
+ /*
+  * CONSOLE FLAGS
