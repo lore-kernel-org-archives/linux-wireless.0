@@ -1,108 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37709 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965046AbdCJJfZ (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:32887 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbdCOVe7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 04:35:25 -0500
-Received: by mail-wm0-f51.google.com with SMTP id n11so6232547wma.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 01:35:24 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        simon.wunderlich@openmesh.com,
-        Benjamin Berg <benjamin@sipsolutions.net>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH] mac80211: Allow multiple listeners for management frames.
-Date: Fri, 10 Mar 2017 10:34:54 +0100
-Message-Id: <20170310093454.27664-1-sven.eckelmann@openmesh.com> (sfid-20170310_105054_629053_A05BBF88)
+        Wed, 15 Mar 2017 17:34:59 -0400
+MIME-Version: 1.0
+In-Reply-To: <59d8c3d4-1fdf-7f30-f78c-92ddc9028d36@ti.com>
+References: <20170315163730.17055-1-afd@ti.com> <CAK8P3a1XBUUtJHrzfTa3GRqh+beU+1MteQ0evB8Vvy5zABRbmw@mail.gmail.com>
+ <59d8c3d4-1fdf-7f30-f78c-92ddc9028d36@ti.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 15 Mar 2017 22:34:57 +0100
+Message-ID: <CAK8P3a3JxkbEyJig3M=Df=W8KDbwZURmfs7YdMWHx_K+2LsEfQ@mail.gmail.com> (sfid-20170315_223550_365218_D1B03F3C)
+Subject: Re: [PATCH v3 0/7] Remove unneeded build directory traversals
+To: "Andrew F. Davis" <afd@ti.com>
+Cc: Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Richard Purdie <rpurdie@rpsys.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        kernel-janitors@vger.kernel.org, linux-pwm@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-media@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin@sipsolutions.net>
+On Wed, Mar 15, 2017 at 10:15 PM, Andrew F. Davis <afd@ti.com> wrote:
+> On 03/15/2017 04:03 PM, Arnd Bergmann wrote:
+>> On Wed, Mar 15, 2017 at 5:37 PM, Andrew F. Davis <afd@ti.com> wrote:
+>>> Hello all,
+>>>
+>>> I was building a kernel for x86 and noticed Make still descended into
+>>> directories like drivers/gpu/drm/hisilicon, this seems kind of odd given
+>>> nothing will be built here. It looks to be due to some directories being
+>>> included in obj-y unconditionally instead of only when the relevant
+>>> CONFIG_ is set.
+>>>
+>>> These patches are split by subsystem in-case, for some reason, a file in
+>>> a directory does need to be built, I believe I have checked for all
+>>> instances of this, but a quick review from some maintainers would be nice.
+>>
+>> I didn't see anything wrong with the patches, and made sure that there
+>> are no tristate symbols controlling the subdirectory for anything that
+>> requires a built-in driver (which would cause a link failure).
+>>
+>> I'm not sure about drivers/lguest, which has some special magic
+>> in its Makefile, it's possible that this now fails with CONFIG_LGUEST=m.
+>>
+>
+> lguest and mmc are the strange ones, so I put them last in the series in
+> case they did need to be dropped.
+>
+> lguest was supposed to have been taken from v1:
+> https://lkml.org/lkml/2016/6/20/1086
+> but it looks like it didn't so I re-introduced it for v3.
+>
+> mmc caught some 0-day build warnings but I never got to the bottom of them.
 
-Previously it was not possible to have multiple listeners for management
-frames in userspace. This is a bit weird as multiple processes in
-userspace might try to request management frame reporting but only
-the first request was accepted.
+Ah, I see now what happened to mmc:
 
-Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
-It is currently unknown why Benjamin never forwarded it. I am doing this
-now to have a chance that this private patch doesn't have to be rebased
-anymore by OpenMesh.
----
- net/wireless/mlme.c | 30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+obj-$(subst m,y,$(CONFIG_MMC))  += host/
+tmio_mmc_core-$(subst m,y,$(CONFIG_MMC_SDHI))   += tmio_mmc_dma.o
+obj-$(subst m,y,$(CONFIG_MMC_SDHCI_PCI))        += sdhci-pci-data.o
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 22b3d9990065..f8ce18dcaa61 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -467,6 +467,7 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct cfg80211_mgmt_registration *reg, *nreg;
- 	int err = 0;
-+	int registered = 0;
- 	u16 mgmt_type;
- 
- 	if (!wdev->wiphy->mgmt_stypes)
-@@ -494,6 +495,12 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 		if (frame_type != le16_to_cpu(reg->frame_type))
- 			continue;
- 
-+		registered = 1;
-+
-+		/* Allow duplicate registrations on different ports */
-+		if (snd_portid != reg->nlportid)
-+			continue;
-+
- 		if (memcmp(reg->match, match_data, mlen) == 0) {
- 			err = -EALREADY;
- 			break;
-@@ -516,7 +523,7 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 	/* process all unregistrations to avoid driver confusion */
- 	cfg80211_process_mlme_unregistrations(rdev);
- 
--	if (rdev->ops->mgmt_frame_register)
-+	if (rdev->ops->mgmt_frame_register && !registered)
- 		rdev_mgmt_frame_register(rdev, wdev, frame_type, true);
- 
- 	return 0;
-@@ -536,6 +543,26 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
- 	spin_lock_bh(&wdev->mgmt_registrations_lock);
- 
- 	list_for_each_entry_safe(reg, tmp, &wdev->mgmt_registrations, list) {
-+		struct cfg80211_mgmt_registration *inner;
-+		int keep_registration = 0;
-+
-+		/* Do not remove registration as long as there is one other
-+		 * registration for the frame type. Note that this registration
-+		 * might even be on the same nlportid with a different match.
-+		 */
-+		list_for_each_entry(inner, &wdev->mgmt_registrations, list) {
-+			if (inner == reg)
-+				continue;
-+
-+			if (reg->frame_type == inner->frame_type) {
-+				keep_registration = 1;
-+				break;
-+			}
-+		}
-+
-+		if (keep_registration)
-+			continue;
-+
- 		if (reg->nlportid != nlportid)
- 			continue;
- 
-@@ -735,7 +762,6 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
- 			continue;
- 
- 		result = true;
--		break;
- 	}
- 
- 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
--- 
-2.11.0
+with CONFIG_MMC=m, this will fail to build the built-in files in
+drivers/mmc/host. I suppose this could be expressed in a different
+way these days, but dropping the patch would be easier.
+
+     Arnd
