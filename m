@@ -1,88 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:34466 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753315AbdCFLQX (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35489 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753314AbdCOM2s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 06:16:23 -0500
+        Wed, 15 Mar 2017 08:28:48 -0400
+Received: by mail-io0-f195.google.com with SMTP id f103so2797117ioi.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Mar 2017 05:28:47 -0700 (PDT)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: New Talk: Story of a Network Virtualization and it's future
+ in Software and in Hardware
+To: people@netdevconf.org
+Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
+        Brenda Butler <bjb@mojatatu.com>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Heri Muhero <hmuhero@gmail.com>
+Message-ID: <a08ffed4-7ae7-68c3-4ebb-296346241469@mojatatu.com> (sfid-20170315_133037_355840_50CF2689)
+Date: Wed, 15 Mar 2017 08:28:40 -0400
 MIME-Version: 1.0
-In-Reply-To: <2dd6ce84-0285-b4c1-97d4-bb41a6ffec04@broadcom.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-8-arnd@arndb.de>
- <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com> <CAK8P3a30Ge5gyKco4HKCdKWiJk9ee1PU3_P6THjOQgHm3EQcJw@mail.gmail.com>
- <2dd6ce84-0285-b4c1-97d4-bb41a6ffec04@broadcom.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 6 Mar 2017 12:16:21 +0100
-Message-ID: <CAK8P3a3fNbuPvXt4M5HsXOga5Ay0yN7saewRJUoaAsXLq6AypQ@mail.gmail.com> (sfid-20170306_121818_658813_724B9994)
-Subject: Re: [PATCH 07/26] brcmsmac: reduce stack size with KASAN
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 6, 2017 at 12:02 PM, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 6-3-2017 11:38, Arnd Bergmann wrote:
->> On Mon, Mar 6, 2017 at 10:16 AM, Arend Van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 2-3-2017 17:38, Arnd Bergmann wrote:
->>>> The wlc_phy_table_write_nphy/wlc_phy_table_read_nphy functions always put an object
->>>> on the stack, which will each require a redzone with KASAN and lead to possible
->>>> stack overflow:
->>>>
->>>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
->>>> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: warning: the frame size of 6312 bytes is larger than 1000 bytes [-Wframe-larger-than=]
->>>
->>> Looks like this warning text ended up in the wrong commit message. Got
->>> me confused for a sec :-p
->>
->> What's wrong about the warning?
->
-> The warning is about the function 'wlc_phy_workarounds_nphy' (see PATCH
-> 9/26) and not about wlc_phy_table_write_nphy/wlc_phy_table_read_nphy
-> functions.
+The tech committee would like to announce a new accepted talk from
+Anjali Singhai Jain along with
+Alexander H Duyck, Parthasarathy Sarangam and Nrupal Jani
 
-The warning only shows up for wlc_phy_workarounds_nphy, and we have to
-fix both issues to get the size down enough. If we split it up without
-uninlining the register access functions, we end up with two or three smaller
-functions that still exceed the limit.
+The details are as follows:
+-------
+The paper and the presentation will quickly go through a time lapse of 
+Network virtualization as it evolved, successes and failures and the 
+reasons behind those. Revisiting history and understanding the present 
+and future use cases for Network virtualization will fuel the future 
+Hardware and Software designs for a better end user experience and 
+pushing the envelope on Network virtualization. Intel and the industry 
+has seen many generations of Network virtualization.
 
->>>> This marks the two functions as noinline_for_kasan, avoiding the problem entirely.
->>>
->>> Frankly I seriously dislike annotating code for the sake of some
->>> (dynamic) memory analyzer. To me the whole thing seems rather
->>> unnecessary. If the code passes the 2048 stack limit without KASAN it
->>> would seem the limit with KASAN should be such that no warning is given.
->>> I suspect that it is rather difficult to predict the additional size of
->>> the instrumentation code and on some systems there might be a real issue
->>> with increased stack usage.
->>
->> The frame sizes don't normally change that much. There are a couple of
->> drivers like brcmsmac that repeatedly call an inline function which has
->> a local variable that it passes by reference to an extern function.
->>
->> While normally those variables share a stack location, KASAN forces
->> each instance to its own location and adds (in this case) 80 bytes of
->> redzone around it to detect out-of-bounds access.
->>
->> While most drivers are fine with a 1500 byte warning limit, increasing
->> the limit to 7kb would silence brcmsmac (unless more registers
->> are accessed from wlc_phy_workarounds_nphy) but also risk a
->> stack overflow to go unnoticed.
->
-> Given the amount of local variables maybe just tag the functions with
-> noinline instead.
+The talk will be focused on two important areas:
 
-But that would result in less efficient object code without KASAN,
-as inlining these by default is a good idea when the stack variables
-all get folded.
+     Briefly Analyze the past and present
+     Make a case for the future technologies
 
-     Arnd
+The talk will go deep dive into HW challenges in two areas of Network 
+Virtualization:
+
+     Why the Hardware offloads and getting them just right is important 
+(Goldilocks effect), may be SRIOV is little too much.
+     Host interface exposed by a network Virtualization device and how 
+do we get that just right
+
+The talk will also cover what the future SW model for Network 
+Virtualization is shaping up to be
+
+     The best control and data plane split that works for Network or 
+compute intensive VMs/Containers.
+     Why less is more in some cases for the Virtual function device.
+     Is true SR-IOV a good answer in all cases, are Mediated devices a 
+better compromise
+
+To conclude we will go over the upcoming Virtualization technology 
+supported by VFIO Mediated devices and PCIE specification for PASID, 
+what problems will that solve. How do we get the software model right in 
+this case and learn from our mistakes with SR-IOV.
+----
+
+cheers,
+jamal
