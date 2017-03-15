@@ -1,113 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:34737 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755951AbdCTWGW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52184 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753546AbdCOOrH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 18:06:22 -0400
-Date: Mon, 20 Mar 2017 17:06:19 -0500
-From: Rob Herring <robh@kernel.org>
-To: Alban <albeu@free.fr>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        John Crispin <john@phrozen.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/7] Documentation: dt: net: Update the ath9k binding for
- SoC devices
-Message-ID: <20170320220619.6lybt3wieqqedfuo@rob-hp-laptop> (sfid-20170320_230702_000499_33E313C3)
-References: <1489439116-4233-1-git-send-email-albeu@free.fr>
+        Wed, 15 Mar 2017 10:47:07 -0400
+Subject: [PATCH v5 03/10] ath10k: htc: move htc ctrl ep connect to htc_init
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Mar 2017 16:46:54 +0200
+Message-ID: <148958921420.25727.14261861155277006455.stgit@potku.adurom.net> (sfid-20170315_154831_538444_22C3C2ED)
+In-Reply-To: <148958913141.25727.15769281552095255609.stgit@potku.adurom.net>
+References: <148958913141.25727.15769281552095255609.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 10:05:09PM +0100, Alban wrote:
-> The current binding only cover PCI devices so extend it for SoC devices.
-> 
-> Most SoC platforms use an MTD partition for the calibration data
-> instead of an EEPROM. The qca,no-eeprom property was added to allow
-> loading the EEPROM content using firmware loading. This new binding
-> replace this hack with NVMEM cells, so we also mark the qca,no-eeprom
-> property as deprecated in case anyone ever used it.
-> 
-> Signed-off-by: Alban <albeu@free.fr>
-> ---
->  .../devicetree/bindings/net/wireless/qca,ath9k.txt | 41 ++++++++++++++++++++--
->  1 file changed, 38 insertions(+), 3 deletions(-)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-For the subject, "dt-bindings: net: ..." and one nit below, otherwise:
+This patch moves the HTC ctrl service connect from
+htc_wait_target to htc_init.
 
-Acked-by: Rob Herring <robh@kernel.org>
+This is done in order to make sure the htc ctrl service
+is setup properly before hif_start is called.
 
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> index b7396c8..61f5f6d 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> @@ -27,16 +27,34 @@ Required properties:
->  			- 0034 for AR9462
->  			- 0036 for AR9565
->  			- 0037 for AR9485
-> +		For SoC devices the compatible should be "qca,<soctype>-wmac"
-> +		and one of the following fallbacks:
-> +			- "qca,ar9100-wmac"
-> +			- "qca,ar9330-wmac"
-> +			- "qca,ar9340-wmac"
-> +			- "qca,qca9550-wmac"
-> +			- "qca,qca9530-wmac"
->  - reg: Address and length of the register set for the device.
->  
-> +Required properties for SoC devices:
-> +- interrupt-parent: phandle of the parent interrupt controller.
-> +- interrupts: Interrupt specifier for the controllers interrupt.
-> +
->  Optional properties:
-> +- mac-address: See ethernet.txt in the parent directory
-> +- local-mac-address: See ethernet.txt in the parent directory
-> +- clock-names: has to be "ref"
-> +- clocks: phandle of the reference clock
-> +- resets: phandle of the reset line
-> +- nvmem-cell-names: has to be "eeprom" and/or "address"
-> +- nvmem-cells: phandle to the eeprom nvmem cell and/or to the mac address
-> +		nvmem cell.
-> +
-> +Deprecated properties:
->  - qca,no-eeprom: Indicates that there is no physical EEPROM connected to the
->  			ath9k wireless chip (in this case the calibration /
->  			EEPROM data will be loaded from userspace using the
->  			kernel firmware loader).
-> -- mac-address: See ethernet.txt in the parent directory
-> -- local-mac-address: See ethernet.txt in the parent directory
-> -
->  
->  In this example, the node is defined as child node of the PCI controller:
->  &pci0 {
-> @@ -46,3 +64,20 @@ In this example, the node is defined as child node of the PCI controller:
->  		qca,no-eeprom;
->  	};
->  };
-> +
-> +In this example it is defined as a SoC device:
-> +	wmac@180c0000 {
+The reason for this is that we want the HTC ctrl service
+callback to be initialized before the target sends the
+HTC ready message.
 
-wifi@...
+The ready message will always be transmitted on endpoint 0
+(which is always assigned to the HTC control service) so it
+makes more sense if HTC control has been connected before the
+ready message is received.
 
-> +		compatible = "qca,ar9132-wmac", "qca,ar9100-wmac";
-> +		reg = <0x180c0000 0x30000>;
-> +
-> +		interrupt-parent = <&cpuintc>;
-> +		interrupts = <2>;
-> +
-> +		clock-names = "ref";
-> +		clocks = <&extosc>;
-> +
-> +		nvmem-cell-names = "eeprom", "address";
-> +		nvmem-cells = <&wmac_eeprom>, <&wmac_address>;
-> +
-> +		resets = <&rst 22>;
-> +	};
-> -- 
-> 2.7.4
-> 
+Since the service to pipe mapping is done as a part of
+the service connect, the get_default_pipe call is redundant
+and was removed.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |   39 ++++++++++++++-------------------
+ 1 file changed, 17 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index fd5be4484984..92d5ac45327a 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -586,8 +586,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 	struct ath10k *ar = htc->ar;
+ 	int i, status = 0;
+ 	unsigned long time_left;
+-	struct ath10k_htc_svc_conn_req conn_req;
+-	struct ath10k_htc_svc_conn_resp conn_resp;
+ 	struct ath10k_htc_msg *msg;
+ 	u16 message_id;
+ 	u16 credit_count;
+@@ -650,22 +648,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 		return -ECOMM;
+ 	}
+ 
+-	/* setup our pseudo HTC control endpoint connection */
+-	memset(&conn_req, 0, sizeof(conn_req));
+-	memset(&conn_resp, 0, sizeof(conn_resp));
+-	conn_req.ep_ops.ep_tx_complete = ath10k_htc_control_tx_complete;
+-	conn_req.ep_ops.ep_rx_complete = ath10k_htc_control_rx_complete;
+-	conn_req.max_send_queue_depth = ATH10K_NUM_CONTROL_TX_BUFFERS;
+-	conn_req.service_id = ATH10K_HTC_SVC_ID_RSVD_CTRL;
+-
+-	/* connect fake service */
+-	status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
+-	if (status) {
+-		ath10k_err(ar, "could not connect to htc service (%d)\n",
+-			   status);
+-		return status;
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -875,8 +857,10 @@ int ath10k_htc_start(struct ath10k_htc *htc)
+ /* registered target arrival callback from the HIF layer */
+ int ath10k_htc_init(struct ath10k *ar)
+ {
+-	struct ath10k_htc_ep *ep = NULL;
++	int status;
+ 	struct ath10k_htc *htc = &ar->htc;
++	struct ath10k_htc_svc_conn_req conn_req;
++	struct ath10k_htc_svc_conn_resp conn_resp;
+ 
+ 	spin_lock_init(&htc->tx_lock);
+ 
+@@ -884,10 +868,21 @@ int ath10k_htc_init(struct ath10k *ar)
+ 
+ 	htc->ar = ar;
+ 
+-	/* Get HIF default pipe for HTC message exchange */
+-	ep = &htc->endpoint[ATH10K_HTC_EP_0];
++	/* setup our pseudo HTC control endpoint connection */
++	memset(&conn_req, 0, sizeof(conn_req));
++	memset(&conn_resp, 0, sizeof(conn_resp));
++	conn_req.ep_ops.ep_tx_complete = ath10k_htc_control_tx_complete;
++	conn_req.ep_ops.ep_rx_complete = ath10k_htc_control_rx_complete;
++	conn_req.max_send_queue_depth = ATH10K_NUM_CONTROL_TX_BUFFERS;
++	conn_req.service_id = ATH10K_HTC_SVC_ID_RSVD_CTRL;
+ 
+-	ath10k_hif_get_default_pipe(ar, &ep->ul_pipe_id, &ep->dl_pipe_id);
++	/* connect fake service */
++	status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
++	if (status) {
++		ath10k_err(ar, "could not connect to htc service (%d)\n",
++			   status);
++		return status;
++	}
+ 
+ 	init_completion(&htc->ctl_resp);
+ 
