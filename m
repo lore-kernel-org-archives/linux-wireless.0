@@ -1,108 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35060 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751603AbdCBWwk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18596 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751280AbdCOPpM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 17:52:40 -0500
+        Wed, 15 Mar 2017 11:45:12 -0400
+Subject: [PATCH v6 00/10] ath10k: sdio support
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Mar 2017 17:44:41 +0200
+Message-ID: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net> (sfid-20170315_164527_636834_BE6C0F70)
 MIME-Version: 1.0
-In-Reply-To: <1488476770.2179.6.camel@perches.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-25-arnd@arndb.de>
- <1488476770.2179.6.camel@perches.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 2 Mar 2017 23:22:26 +0100
-Message-ID: <CAK8P3a1gW9UqMKD2ijzxMH4rv1zAji0GUoz+bLY_oi0yvLU1cw@mail.gmail.com> (sfid-20170302_235331_539158_7636F512)
-Subject: Re: [PATCH 24/26] ocfs2: reduce stack size with KASAN
-To: Joe Perches <joe@perches.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 2, 2017 at 6:46 PM, Joe Perches <joe@perches.com> wrote:
-> On Thu, 2017-03-02 at 17:38 +0100, Arnd Bergmann wrote:
->> The internal logging infrastructure in ocfs2 causes special warning code to be
->> used with KASAN, which produces rather large stack frames:
->
->> fs/ocfs2/super.c: In function 'ocfs2_fill_super':
->> fs/ocfs2/super.c:1219:1: error: the frame size of 3264 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
->
-> At least by default it doesn't seem to.
->
-> gcc 6.2 allyesconfig, CONFIG_KASAN=y
-> with either CONFIG_KASAN_INLINE or CONFIG_KASAN_OUTLINE
->
-> gcc doesn't emit a stack warning
+I did some changes while reviewing Erik's SDIO patches. Only compile
+tested, I don't have any SDIO boards at the moment.
 
-The warning is disabled until patch 26/26. which picks the 3072 default.
-The 3264 number was with gcc-7, which is worse than gcc-6 since it enables
-an extra check.
+Changes in v6:
 
->> By simply passing the mask by value instead of reference, we can avoid the
->> problem completely.
->
-> Any idea why that's so?
+* resubmit due to stgit problems
 
-With KASAN, every time we inline the function, the compiler has to allocate
-space for another copy of the variable plus a redzone to detect whether
-passing it by reference into another function causes an overflow at runtime.
+Changes in v5:
 
->>  On 64-bit architectures, this is also more efficient,
->
-> Efficient true, but the same overall stack no?
+* promote from RFC to PATCH
 
-Here is what I see with CONFIG_FRAME_WARN=300 and x86_64-linux-gcc-6.3.1:
+* move "ath10k: sdio support" patch to last
 
-before:
-fs/ocfs2/super.c: In function 'ocfs2_parse_options.isra.3':
-fs/ocfs2/super.c:1508:1: error: the frame size of 352 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_enable_quotas':
-fs/ocfs2/super.c:974:1: error: the frame size of 344 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_fill_super':
-fs/ocfs2/super.c:1219:1: error: the frame size of 552 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
+* in "ath10k: sdio get target info" fix sparse warning by changing tmp
+  variable to __le32:
 
-after:
-fs/ocfs2/super.c: In function 'ocfs2_fill_super':
-fs/ocfs2/super.c:1219:1: error: the frame size of 472 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
+drivers/net/wireless/ath/ath10k/bmi.c:145:19: warning: cast to restricted __le32
 
-and with gcc-7.0.1 (including -fsanitize-address-use-after-scope), before:
-fs/ocfs2/super.c: In function 'ocfs2_check_volume':
-fs/ocfs2/super.c:2512:1: error: the frame size of 768 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_statfs':
-fs/ocfs2/super.c:1717:1: error: the frame size of 320 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_parse_options.isra.3':
-fs/ocfs2/super.c:1508:1: error: the frame size of 464 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_enable_quotas':
-fs/ocfs2/super.c:974:1: error: the frame size of 320 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_remount':
-fs/ocfs2/super.c:752:1: error: the frame size of 568 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_initialize_super.isra.8':
-fs/ocfs2/super.c:2339:1: error: the frame size of 1712 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
-fs/ocfs2/super.c: In function 'ocfs2_fill_super':
-fs/ocfs2/super.c:1219:1: error: the frame size of 3264 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
+* fix checkpatch warnings by renaming to struct ath10k_htc_lookahead_bundle:
 
-after:
-fs/ocfs2/super.c: In function 'ocfs2_fill_super':
-fs/ocfs2/super.c:1219:1: error: the frame size of 704 bytes is larger
-than 300 bytes [-Werror=frame-larger-than=]
+drivers/net/wireless/ath/ath10k/htc.c:265: line over 90 characters
+drivers/net/wireless/ath/ath10k/htc.c:357: line over 90 characters
 
-     Arnd
+* use switch statement in ath10k_core_get_fw_name()
+
+* remove enable of fwlog from ath10k_sdio_extra_initialization(),
+  that's not sdio specific and should be enabled separately (with a
+  module parameter?)
+
+* rename ath10k_sdio_extra_initialization() to ath10k_init_sdio()
+
+* add warning to probe() that sdio support is not complete
+
+* unify error and debug messagess
+
+* whitespace changes
+
+* move variable declarations to the beginning of the function
+
+* remove unnecessary gotos
+
+* small cosmetic changes
+
+* add FIXME comments to unclear cases
+
+still todo:
+
+o fix remaining memory leaks (if any)
+
+o endian support, eg ath10k_sdio_hif_set_mbox_sleep()
+
+o are ath10k_sdio_io() and ath10k_sdio_read_write_sync() really
+  necessary? looks like just an unnecessary abstraction layer
+
+o write commit log for patch "ath10k: sdio support"
+
+o improve Kconfig description
+
+
+---
+
+Erik Stromdahl (10):
+      ath10k: htc: made static function public
+      ath10k: htc: rx trailer lookahead support
+      ath10k: htc: move htc ctrl ep connect to htc_init
+      ath10k: htc: refactorization
+      ath10k: various sdio related definitions
+      ath10k: add sdio extra initializations
+      ath10k: sdio get target info
+      ath10k: htc: ready_ext msg support
+      ath10k: different fw file names for usb and sdio
+      ath10k: sdio support
+
+
+ drivers/net/wireless/ath/ath10k/Kconfig     |    6 
+ drivers/net/wireless/ath/ath10k/Makefile    |    3 
+ drivers/net/wireless/ath/ath10k/bmi.c       |   71 +
+ drivers/net/wireless/ath/ath10k/bmi.h       |    2 
+ drivers/net/wireless/ath/ath10k/core.c      |   40 -
+ drivers/net/wireless/ath/ath10k/core.h      |    3 
+ drivers/net/wireless/ath/ath10k/debug.h     |    2 
+ drivers/net/wireless/ath/ath10k/htc.c       |  243 ++-
+ drivers/net/wireless/ath/ath10k/htc.h       |   39 -
+ drivers/net/wireless/ath/ath10k/hw.h        |   53 +
+ drivers/net/wireless/ath/ath10k/sdio.c      | 2102 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/sdio.h      |  263 +++
+ drivers/net/wireless/ath/ath10k/targaddrs.h |   24 
+ 13 files changed, 2773 insertions(+), 78 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/sdio.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/sdio.h
