@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44670 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753809AbdCFJbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 04:31:11 -0500
-Message-ID: <1488787876.5761.1.camel@sipsolutions.net> (sfid-20170306_103535_865009_8D3CB01F)
-Subject: Re: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to
- suspend async: error -16)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oliver Freyermuth <o.freyermuth@googlemail.com>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 06 Mar 2017 09:11:16 +0100
-In-Reply-To: <37f7bd69-9a0e-7e49-7035-9e6f2cfef260@googlemail.com> (sfid-20170305_161243_562385_03404077)
-References: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com>
-         <1487938277.2540.13.camel@sipsolutions.net>
-         <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com>
-         <1487965047.30601.2.camel@sipsolutions.net>
-         <6337fa40-adcc-b889-1842-16e0f316ea3e@googlemail.com>
-         <1488444909.8390.11.camel@sipsolutions.net>
-         <0cd984fd-3d26-15b2-03ce-69cdb7c0e434@googlemail.com>
-         <1488479939.23555.1.camel@sipsolutions.net>
-         <37f7bd69-9a0e-7e49-7035-9e6f2cfef260@googlemail.com>
-         (sfid-20170305_161243_562385_03404077)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:60826 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751183AbdCOQgr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:36:47 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: remove redundant check of len with buf_len
+Date: Wed, 15 Mar 2017 16:36:41 +0000
+Message-Id: <20170315163641.17052-1-colin.king@canonical.com> (sfid-20170315_173920_965709_E9CD2F30)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2017-03-05 at 16:12 +0100, Oliver Freyermuth wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-[snip]
+The check of len > buf_len is redundant as len is initialized
+to 0 and buf_len to 4096, so this comparison is always false.
+Remove it.
 
-> With tcp-mode, and using the small testing code I found from you
-> somewhere on the web:
-> https://bugs.chromium.org/p/chromium/issues/detail?id=361435#c21
-> indeed I get:
-> "new client!"
-> after the machine has suspended. 
-> It even seems to receive the "WAKEUPNOW" when I close the server,
-> since it does not make further reconnection attempts after. 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Heh. I think you're quite possibly the first person (other than me) to
-ever use this :)
-
-[snip]
-
-> So nothing which looks bad as far as I can see. 
-
-Agree, nothing looks bad. Try running "iw event" while you suspend - if
-the NIC thought it woke up the system there will be an event indicating
-so.
-
-> Maybe this UEFI firmware is broken in a different, albeit "more
-> stupid" way: 
-> Discarding ACPI wakeup from PCI devices, even though it leaves them
-> powered? 
-
-I guess it's possible. I guess there's also a chance that we're missing
-some setup in the driver though. I vaguely remember a patch in ChromeOS
-that somehow we never merged ... ah yes, must've been this one:
-https://chromium-review.googlesource.com/311101
-though that means it's not relevant in your system.
-
-So basically I don't really see anything missing in the driver, hmm.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index fb0ade3..b499a09 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -249,9 +249,6 @@ static ssize_t ath10k_read_wmi_services(struct file *file,
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+-	if (len > buf_len)
+-		len = buf_len;
+-
+ 	spin_lock_bh(&ar->data_lock);
+ 	for (i = 0; i < WMI_SERVICE_MAX; i++) {
+ 		enabled = test_bit(i, ar->wmi.svc_map);
+-- 
+2.10.2
