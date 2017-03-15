@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49684 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750899AbdCPWek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 18:34:40 -0400
-Message-ID: <1489703635.3930.5.camel@sipsolutions.net> (sfid-20170316_233446_186508_99D61778)
-Subject: netdev level filtering? perhaps pushing socket filters down?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 16 Mar 2017 23:33:55 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18971 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751672AbdCOPFz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Mar 2017 11:05:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v5 00/10] ath10k: sdio support
+Date: Wed, 15 Mar 2017 15:05:50 +0000
+Message-ID: <87y3w6wpf6.fsf@kamboji.qca.qualcomm.com> (sfid-20170315_160651_175621_E0239975)
+References: <148958913141.25727.15769281552095255609.stgit@potku.adurom.net>
+In-Reply-To: <148958913141.25727.15769281552095255609.stgit@potku.adurom.net>
+        (Kalle Valo's message of "Wed, 15 Mar 2017 16:46:12 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Occasionally - we just had another case - people want to hook into
-packets received and processed by the mac80211 stack, but because they
-don't need all of them (e.g. not data packets), even adding a monitor
-interface and bringing it up has too high a cost because SKBs need to
-be prepared to send them to the monitor interface, even if no socket is
-consuming them.
+> I did some changes while reviewing Erik's SDIO patches. Only compile
+> tested, I don't have any SDIO boards at the moment.
 
-Ideally, we'd be able to detect that there are filter programs attached
-to the socket(s) that are looking at the frames coming in on the
-monitor interface, and we could somehow magically run those before we
-create a new SKB.
-One problem here is that we wouldn't really want to prepare all the
-radiotap header just to throw it away, so we'd have to be able to
-analyse the filter program to make sure it doesn't access anything but
-the radiotap header length, and that only in order to jump over it.
-That seems ... difficult, but we don't even know the header length -
-although we could fudge that and make a very long constant-size header,
-which might make it possible to do such analysis, or handle it by
-trapping on such access. But it seems rather difficult to implement
-this.
+Only the first three patches were submitted so please ignore this
+patchset. I'll investigate what's wrong and resubmit v6 once it works
+again.
 
-The next best thing would be to install a filter program on the virtual
-monitor *interface* (netdev), but say that it doesn't get frames with
-radiotap, but pure 802.11 frames. We already have those in SKB format
-at this point, so it'd be simple to run such a program and only pass
-the SKB to the monitor netdev's RX when the program asked to do that.
-
-This now seems a bit like XDP, but for XDP this header difference
-doesn't seem appropriate either.
-
-Anyone have any other thoughts?
-
-Thanks,
-johannes
+--=20
+Kalle Valo=
