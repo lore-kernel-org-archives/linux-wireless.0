@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45289 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751366AbdCPJdr (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56354 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752595AbdCPOMV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 05:33:47 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v4 06/21] ath10k: sdio support
-Date: Thu, 16 Mar 2017 09:33:26 +0000
-Message-ID: <87y3w5tvkq.fsf@kamboji.qca.qualcomm.com> (sfid-20170316_103350_724515_65EF1A5E)
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
-        <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
-        <871su52th2.fsf@kamboji.qca.qualcomm.com>
-        <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
-        <877f3qyc5g.fsf@kamboji.qca.qualcomm.com>
-        <29c3dd40-c3ac-746e-d8ef-cb072c58578a@gmail.com>
-In-Reply-To: <29c3dd40-c3ac-746e-d8ef-cb072c58578a@gmail.com> (Erik
-        Stromdahl's message of "Wed, 15 Mar 2017 19:01:12 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+        Thu, 16 Mar 2017 10:12:21 -0400
+Date: Thu, 16 Mar 2017 23:03:52 +0900
+From: Greg KH <gregkh@linuxfoundation.org>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Ming Lei <tom.leiming@gmail.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Subject: Re: [PATCH V4 1/2] firmware: add more flexible
+ request_firmware_async function
+Message-ID: <20170316140352.GA30080@kroah.com> (sfid-20170316_151313_360516_DF536AFC)
+References: <20170221094754.15406-1-zajec5@gmail.com>
+ <20170223183018.16704-1-zajec5@gmail.com>
+ <f0451c04-cffe-ae1c-74de-38748da38272@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <f0451c04-cffe-ae1c-74de-38748da38272@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+On Thu, Mar 16, 2017 at 02:55:09PM +0100, Rafał Miłecki wrote:
+> On 02/23/2017 07:30 PM, Rafał Miłecki wrote:
+> > From: Rafał Miłecki <rafal@milecki.pl>
+> > 
+> > So far we got only one function for loading firmware asynchronously:
+> > request_firmware_nowait. It didn't allow much customization of firmware
+> > loading process - there is only one bool uevent argument. Moreover this
+> > bool also controls user helper in an unclear way.
+> > 
+> > Resolve this problem by adding one internally shared  function that
+> > allows specifying any flags manually.
+> > 
+> > This implementation:
+> > 1) Allows keeping old request_firmware_nowait API unchanged
+> > 2) Doesn't require adjusting / rewriting current drivers
+> > 3) Minimizes risk of regressions
+> > 4) Adds new function for drivers that need more control over loading a
+> >    firmware.
+> > 
+> > The new function takes options struct pointer as an argument to make
+> > further improvements possible (without any big reworks).
+> > 
+> > Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> > ---
+> > V3: Don't expose all FW_OPT_* flags.
+> >     As Luis noted we want a struct so add struct firmware_opts for real
+> >     flexibility.
+> >     Thank you Luis for your review!
+> > 
+> > Ming/Luis/Greg: assuming this gets a positive review, could someone of you pick
+> > this patchset?
+> 
+> Hi Ming,
+> 
+> It seems you changed e-mail address somewhere between V3 and V4 of this
+> patchset. Could you review/comment/ack this, please?
 
->> There seems to be same pattern for reading four bytes, what if we should
->> add a helper for that? Something like ath10k_sdio_read32()? It could
->> handle the kmalloc and switch endianess also.
->>
->> But please don't make any chances to sdio.c for the moment, let me
->> submit v5 first.
->>
-> I notice that you have submitted v5 (and v6) of the sdio patches. Great!
->
-> I assume you will add them to master-pending soon so I will try out
-> everything (usb too) as soon as they are on master-pending.
+Ming isn't the firmware maintainer anymore :(
 
-v6 is now in master-pending.
+> Luis: would you ack this patch now I followed your guidance?
 
---=20
-Kalle Valo=
+It's up to Luis now :)
+
+greg k-h
