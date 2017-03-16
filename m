@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f49.google.com ([209.85.215.49]:35466 "EHLO
-        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751186AbdCSGGl (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:36130 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751357AbdCPJ5C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Mar 2017 02:06:41 -0400
-Received: by mail-lf0-f49.google.com with SMTP id j90so45461064lfk.2
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 23:06:40 -0700 (PDT)
-Date: Sun, 19 Mar 2017 07:06:37 +0100
-From: Alexander Alemayhu <alexander@alemayhu.com>
-To: Jamal Hadi Salim <jhs@mojatatu.com>
-Cc: Alexis Green <agreen@uniumwifi.com>,
-        tech-committee <tech-committee@netdevconf.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Heri Muhero <hmuhero@gmail.com>, people@netdevconf.org,
-        netfilter@vger.kernel.org,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        netfilter-devel@vger.kernel.org,
-        Amine Aouled Hamed <amine.ahd@gmail.com>
-Subject: Re: [NetDev] [NetDev-tech]  ANNOUNCE: New sponsor Netronome
-Message-ID: <20170319060637.GA3733@gmail.com> (sfid-20170319_093705_872765_E348A6E8)
-References: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
- <CAMXA6B1noOrAFxzy7YhEW+oNvDFLk3+JcTvjorYfKkuZp5xk=w@mail.gmail.com>
- <2b522b0c-fdd8-a9e8-bbbd-1bd48881bb08@mojatatu.com>
- <2099393925.18313.1489875757778.JavaMail.zimbra@efficios.com>
- <ea392711-26b0-4d82-d86e-2adf8365b024@mojatatu.com>
- <CAAFAkD9uG2UUxxLPDF8fuWCP4gxEmozfw3giOSViaWRE38UhFQ@mail.gmail.com>
- <CAMXA6B0B4q__gYbRM8ksBr3-g1PhjYkk68z9w-gp96h1YZp0FQ@mail.gmail.com>
- <5ce34c9c-29c6-4b59-1fc9-f0b5425a8347@mojatatu.com>
- <CAAnMG+O=DMk5dnUnNktMRywa5mkLA0scty6YpU2fnZyQ8BX+JA@mail.gmail.com>
- <9119c54c-df24-7846-71e5-fc4b6a531488@mojatatu.com>
+        Thu, 16 Mar 2017 05:57:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <9119c54c-df24-7846-71e5-fc4b6a531488@mojatatu.com>
+In-Reply-To: <20170223183018.16704-1-zajec5@gmail.com>
+References: <20170221094754.15406-1-zajec5@gmail.com> <20170223183018.16704-1-zajec5@gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 16 Mar 2017 10:57:00 +0100
+Message-ID: <CACna6rzK29VSR2YNQPMhVri3M_DzbFSvFfZ1=RVnkT2P+ohTFw@mail.gmail.com> (sfid-20170316_105728_654197_C5FF05C7)
+Subject: Re: [PATCH V4 1/2] firmware: add more flexible request_firmware_async function
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 18, 2017 at 09:56:36PM -0400, Jamal Hadi Salim wrote:
-> 
-> Note: this discussion already has generated more traffic
-> than a few days worth of announcements ;->
+On 23 February 2017 at 19:30, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 >
+> So far we got only one function for loading firmware asynchronously:
+> request_firmware_nowait. It didn't allow much customization of firmware
+> loading process - there is only one bool uevent argument. Moreover this
+> bool also controls user helper in an unclear way.
+>
+> Resolve this problem by adding one internally shared  function that
+> allows specifying any flags manually.
+>
+> This implementation:
+> 1) Allows keeping old request_firmware_nowait API unchanged
+> 2) Doesn't require adjusting / rewriting current drivers
+> 3) Minimizes risk of regressions
+> 4) Adds new function for drivers that need more control over loading a
+>    firmware.
+>
+> The new function takes options struct pointer as an argument to make
+> further improvements possible (without any big reworks).
+>
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> ---
+> V3: Don't expose all FW_OPT_* flags.
+>     As Luis noted we want a struct so add struct firmware_opts for real
+>     flexibility.
+>     Thank you Luis for your review!
+>
+> Ming/Luis/Greg: assuming this gets a positive review, could someone of yo=
+u pick
+> this patchset?
 
-IIRC Hajime always added links to the site in his announcements, which
-made it easy to lookup netdev.  Maybe adding some lines about netdev to
-all emails would reduce confusion? Suspect not everyone subscribed to
-these lists knows what netdev is. 
+Ping. I hope it's relatively simple and non-intrusive change with a
+proper design now.
 
-Don't consider these emails spam at all :)
-
-Thanks.
-
--- 
-Mit freundlichen Grüßen
-
-Alexander Alemayhu
+Is there some who could pick this small patchset?
