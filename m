@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53796 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932919AbdC3Qn3 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17749 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752086AbdCPI6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 12:43:29 -0400
+        Thu, 16 Mar 2017 04:58:03 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: rtlwifi: Fix scheduling while atomic splat
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170321142411.24044-1-Larry.Finger@lwfinger.net>
-References: <20170321142411.24044-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20170330164328.9B06860DB4@smtp.codeaurora.org> (sfid-20170330_184333_520688_9F3FC3FE)
-Date: Thu, 30 Mar 2017 16:43:28 +0000 (UTC)
+Subject: Re: ath10k: remove redundant error check
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170228111439.19546-1-colin.king@canonical.com>
+References: <20170228111439.19546-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Message-ID: <f9f879b23b604117bf434e122146882e@euamsexm01a.eu.qualcomm.com> (sfid-20170316_095852_512000_1CE0D3A3)
+Date: Thu, 16 Mar 2017 09:57:51 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Following commit cceb0a597320 ("rtlwifi: Add work queue for c2h cmd."),
-> the following BUG is reported when rtl8723be is used:
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> BUG: sleeping function called from invalid context at mm/slab.h:432
-> in_atomic(): 1, irqs_disabled(): 1, pid: 0, name: swapper/0
-> CPU: 0 PID: 0 Comm: swapper/0 Tainted: G        W  O    4.11.0-rc3-wl+ #276
-> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.50   09/29/2014
-> Call Trace:
->  <IRQ>
->  dump_stack+0x63/0x89
->  ___might_sleep+0xe9/0x130
->  __might_sleep+0x4a/0x90
->  kmem_cache_alloc_trace+0x19f/0x200
->  ? rtl_c2hcmd_enqueue+0x3e/0x110 [rtlwifi]
->  rtl_c2hcmd_enqueue+0x3e/0x110 [rtlwifi]
->  rtl8723be_c2h_packet_handler+0xac/0xc0 [rtl8723be]
->  rtl8723be_rx_command_packet+0x37/0x5c [rtl8723be]
->  _rtl_pci_rx_interrupt+0x200/0x6b0 [rtl_pci]
->  _rtl_pci_interrupt+0x20c/0x5d0 [rtl_pci]
->  __handle_irq_event_percpu+0x3f/0x1d0
->  handle_irq_event_percpu+0x23/0x60
->  handle_irq_event+0x3c/0x60
->  handle_fasteoi_irq+0xa2/0x170
->  handle_irq+0x20/0x30
->  do_IRQ+0x48/0xd0
->  common_interrupt+0x89/0x89
-> ...
+> The check on ret for an error is redundant because it is already been
+> checked for non-zero earlier on and ret is never non-zero at this point.
+> Fix this by removing the redundant check and error message.
 > 
-> Although commit cceb0a597320 converted most c2h commands to use a work
-> queue, the Bluetooth coexistence routines can be in atomic mode when
-> they execute such a call.
+> Detected by CoverityScan, CID#1357170 ("Logically Dead Code")
 > 
-> Fixes: cceb0a597320 ("rtlwifi: Add work queue for c2h cmd.")
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Patch applied to wireless-drivers.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-893dc68f1b18 rtlwifi: Fix scheduling while atomic splat
+51f60b8b6979 ath10k: remove redundant error check
 
 -- 
-https://patchwork.kernel.org/patch/9636661/
+https://patchwork.kernel.org/patch/9595221/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
