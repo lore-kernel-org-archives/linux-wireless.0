@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35706 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753826AbdCTPYo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42876 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751104AbdCPIOn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 11:24:44 -0400
+        Thu, 16 Mar 2017 04:14:43 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: ath10k: Fix typo in wmi header file
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1489491204-20855-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1489491204-20855-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <27b179f0f5b841ffbda2ff9f3113b0a6@euamsexm01a.eu.qualcomm.com> (sfid-20170320_162810_996806_33BE4225)
-Date: Mon, 20 Mar 2017 16:24:10 +0100
+Subject: Re: [1/4] mwifiex: pcie: don't leak DMA buffers when removing
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170311013924.73348-2-briannorris@chromium.org>
+References: <20170311013924.73348-2-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Rajat Jain <rajatja@google.com>,
+        Brian Norris <briannorris@chromium.org>, stable@vger.kernel.org
+Message-Id: <20170316081442.01B1B60C94@smtp.codeaurora.org> (sfid-20170316_091529_405685_B30833A5)
+Date: Thu, 16 Mar 2017 08:14:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Brian Norris <briannorris@chromium.org> wrote:
+> When PCIe FLR support was added, much of the remove/release code for
+> PCIe was migrated to ->down_dev(), but ->down_dev() is never called for
+> device removal. Let's refactor the cleanup to be done in both cases.
 > 
-> Fix typo(spelling mistake) in wmi.h
+> Also, drop the comments above mwifiex_cleanup_pcie(), because they were
+> clearly wrong, and it's better to have clear and obvious code than to
+> detail the code steps in comments anyway.
 > 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> Fixes: 4c5dae59d2e9 ("mwifiex: add PCIe function level reset support")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-Patch applied to ath-next branch of ath.git, thanks.
+3 patches applied to wireless-drivers.git, thanks.
 
-0a7d88e432e7 ath10k: fix typo in wmi header file
+4e841d3eb929 mwifiex: pcie: don't leak DMA buffers when removing
+ba1c7e45ec22 mwifiex: set adapter->dev before starting to use mwifiex_dbg()
+36908c4e5b10 mwifiex: uninit wakeup info when removing device
 
 -- 
-https://patchwork.kernel.org/patch/9623069/
+https://patchwork.kernel.org/patch/9618297/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
