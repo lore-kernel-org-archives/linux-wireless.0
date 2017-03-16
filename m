@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:31561 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934719AbdCVTVQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 15:21:16 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] NFC: netlink: Use error code from nfc_activate_target()
-Date: Wed, 22 Mar 2017 21:20:58 +0200
-Message-Id: <20170322192058.30193-1-andriy.shevchenko@linux.intel.com> (sfid-20170322_202127_757489_03077BAD)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50774 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751384AbdCPI6W (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Mar 2017 04:58:22 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: ath9k: don't trigger spectral scan when not enabled
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1488206976-7775-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1488206976-7775-1-git-send-email-zefir.kurtisi@neratec.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+CC: <linux-wireless@vger.kernel.org>
+Message-ID: <04217d3c635f44e5bcc0743316fcc53b@euamsexm01a.eu.qualcomm.com> (sfid-20170316_095843_105019_24C31666)
+Date: Thu, 16 Mar 2017 09:55:10 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It looks like a typo to assign a return code to a variable which is not
-used. Found due to a compiler warning:
+Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+> Doing so enables the FFT generation without prior
+> configuration, leading to an IRQ storm caused by
+> invalid (or at least unwanted) PHY errors.
+> 
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
-net/nfc/netlink.c: In function ‘nfc_genl_activate_target’:
-net/nfc/netlink.c:903:6: warning: variable ‘rc’ set but not used [-Wunused-but-set-variable]
-  int rc;
-        ^~
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- net/nfc/netlink.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+45c3d550b068 ath9k: don't trigger spectral scan when not enabled
 
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index 03f3d5c7beb8..03be522127ec 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -918,7 +918,7 @@ static int nfc_genl_activate_target(struct sk_buff *skb, struct genl_info *info)
- 	rc = nfc_activate_target(dev, target_idx, protocol);
- 
- 	nfc_put_device(dev);
--	return 0;
-+	return rc;
- }
- 
- static int nfc_genl_dep_link_up(struct sk_buff *skb, struct genl_info *info)
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9593623/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
