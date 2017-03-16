@@ -1,67 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33803 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753301AbdC1QkK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15232 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752249AbdCPVNZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 12:40:10 -0400
-Received: by mail-wm0-f65.google.com with SMTP id u132so679276wmg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Mar 2017 09:40:03 -0700 (PDT)
-Subject: Re: [PATCH v6 00/10] ath10k: sdio support
+        Thu, 16 Mar 2017 17:13:25 -0400
+From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 To: Kalle Valo <kvalo@qca.qualcomm.com>,
         "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v6 09/10] ath10k: different fw file names for usb and sdio
+Date: Thu, 16 Mar 2017 21:08:20 +0000
+Message-ID: <e25f7672-0114-7928-7f4a-cf64638dc900@qca.qualcomm.com> (sfid-20170316_221331_224648_557A23F2)
 References: <148959263520.31432.8488419244476213373.stgit@potku.adurom.net>
- <87k279wrao.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <7917f151-a8af-039d-119c-93ee2e6354f1@gmail.com> (sfid-20170328_184048_124000_45B8CCB4)
-Date: Tue, 28 Mar 2017 18:40:01 +0200
+ <148959280431.31432.16087997710973721077.stgit@potku.adurom.net>
+In-Reply-To: <148959280431.31432.16087997710973721077.stgit@potku.adurom.net>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <87k279wrao.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 03/15/2017 08:46 AM, Kalle Valo wrote:
 
-Please let me know if there is anything I can help with...
+> From: Erik Stromdahl <erik.stromdahl@gmail.com>
+>
+> Since both SDIO and USB based chipsets will use different
 
-I will test the patches as soon as v7 is submitted.
+nitpick, since the patch is separating the USB and SDIO support now, maybe =
+you want to remove the "USB" from the patch title?
 
-On 2017-03-28 13:53, Kalle Valo wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+> firmware from the PCIe and AHB chipsets, the fw file name
+> must be different depending on bus type.
 >
->> I did some changes while reviewing Erik's SDIO patches. Only compile
->> tested, I don't have any SDIO boards at the moment.
+> The new firmware names are:
 >
-> [...]
+> For PCIe and AHB:
+> firmware-<api_version>.bin (same as before)
 >
->> still todo:
->>
->> o fix remaining memory leaks (if any)
->>
->> o endian support, eg ath10k_sdio_hif_set_mbox_sleep()
->>
->> o are ath10k_sdio_io() and ath10k_sdio_read_write_sync() really
->>   necessary? looks like just an unnecessary abstraction layer
+> For SDIO:
+> firmware-sdio-<api_version>.bin
 >
-> It took me longer than I planned, but here are my notes about what I'm
-> planning to do to remove unnecessary ath10k_sdio_io() abstraction:
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c |   13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
 >
-> ath10k_sdio_read_write_sync():
-> HIF_RD_SYNC_BLOCK_FIX	-> ath10k_sdio_readsb()
-> HIF_RD_SYNC_BYTE_INC	-> ath10k_sdio_read(), ath10k_sdio_read32()
-> HIF_WR_SYNC_BYTE_FIX	-> ath10k_sdio_writesb()
-> HIF_WR_SYNC_BYTE_INC	-> ath10k_sdio_write()
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireles=
+s/ath/ath10k/core.c
+> index d7fb11107df4..d2648d09a772 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1398,7 +1398,18 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k=
+ *ar, const char *name,
+>  static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
+>  				    size_t fw_name_len, int fw_api)
+>  {
+> -	scnprintf(fw_name, fw_name_len, "%s-%d.bin", ATH10K_FW_FILE_BASE, fw_ap=
+i);
+> +	switch (ar->hif.bus) {
+> +	case ATH10K_BUS_SDIO:
+> +		scnprintf(fw_name, fw_name_len, "%s-%s-%d.bin",
+> +			  ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
+> +			  fw_api);
+> +		break;
+> +	case ATH10K_BUS_PCI:
+> +	case ATH10K_BUS_AHB:
+> +		scnprintf(fw_name, fw_name_len, "%s-%d.bin",
+> +			  ATH10K_FW_FILE_BASE, fw_api);
+> +		break;
+> +	}
+>  }
+> =20
+>  static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
 >
-> ath10k_sdio_prep_async_req():
-> HIF_WRITE		-> HIF_WR_SYNC_BYTE_INC -> ath10k_sdio_write()
 >
-> ath10k_sdio_read/write32():
-> sdio_readl()/sdio_writel() (those use endian macros)
->
-> ath10k_sdio_readsb():
-> len = round_down(len, ar_sdio->mbox_info.block_size);
-> sdio_memcpy_fromio(len)
->
-> With these changes I'm hoping to get rid of also the memory leaks and
-> have proper endian support.
->
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
