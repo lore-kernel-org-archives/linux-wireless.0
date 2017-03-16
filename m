@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:30435 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755140AbdCGKOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:14:36 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 1/6] NFC: st21nfca: Fix obvious typo when check error code
-Date: Tue,  7 Mar 2017 12:13:56 +0200
-Message-Id: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com> (sfid-20170307_111809_091673_49AC7D57)
+Received: from smtp.codeaurora.org ([198.145.29.96]:35072 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751161AbdCPIBF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Mar 2017 04:01:05 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mac80211: rt2x00: add support for MT7620
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170311193011.GA6809@makrotopia.org>
+References: <20170311193011.GA6809@makrotopia.org>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org
+Message-Id: <20170316080104.7F55760798@smtp.codeaurora.org> (sfid-20170316_090110_605770_4DE3EF84)
+Date: Thu, 16 Mar 2017 08:01:04 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We return -ENODEV if ACPI provides a GPIO resource. Looks really wrong.
-If it has even been tested?
+Daniel Golle <daniel@makrotopia.org> wrote:
+> From: Roman Yeryomin <roman@advem.lv>
+> 
+> Basic support for MT7620 built-in wireless radio was added to
+> OpenWrt in r41441. It has seen some heavy cleaning and refactoring
+> since in order to match the Kernel's code quality standards.
+> 
+> Signed-off-by: Roman Yeryomin <roman@advem.lv>
+> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/st21nfca/i2c.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I'll remove the "mac80211:" prefix during commit, that should be only used with
+mac80211 patches.
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 5a82f553906c..737384d287aa 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -514,9 +514,9 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
- 	/* Get EN GPIO from ACPI */
- 	gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
- 					 GPIOD_OUT_LOW);
--	if (!IS_ERR(gpiod_ena)) {
-+	if (IS_ERR(gpiod_ena)) {
- 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
--		return -ENODEV;
-+		return PTR_ERR(gpiod_ena);
- 	}
- 
- 	phy->gpio_ena = desc_to_gpio(gpiod_ena);
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9618995/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
