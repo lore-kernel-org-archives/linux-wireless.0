@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f44.google.com ([209.85.214.44]:36121 "EHLO
-        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936549AbdCXP4e (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:55744 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752624AbdCPXYj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 11:56:34 -0400
-Received: by mail-it0-f44.google.com with SMTP id w124so12171725itb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Mar 2017 08:56:33 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: [Netdev ANNOUNCE]: New talk accepted debug pipe
-To: people@netdevconf.org
-Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
-        Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Heri Muhero <hmuhero@gmail.com>
-Message-ID: <0edc0f79-c960-5f26-efea-4a26455f5747@mojatatu.com> (sfid-20170324_170245_988119_D7FF73CE)
-Date: Fri, 24 Mar 2017 11:56:30 -0400
+        Thu, 16 Mar 2017 19:24:39 -0400
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: fix incorrect copy of pmkid data
+Date: Thu, 16 Mar 2017 23:21:45 +0000
+Message-Id: <20170316232145.7704-1-colin.king@canonical.com> (sfid-20170317_002512_905451_53A01D3C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tech committee would like to announce a new accepted talk.
+From: Colin Ian King <colin.king@canonical.com>
 
-Arkadi Sharshevski will give a talk on the new dpipe tool.
+The pmkid data is meant be be copied to the previous item in the
+pmkidlist, however the code is just copying the data to itself because
+the src index into pmkidlist is the same as the dst index into pmkidlist.
+Fix this with i + 1 instead of i.
 
-Details are as follows:
------
-While doing the hardware offloading process much of the hardware
-specifics cannot be presented. One example for such is the routing LPM
-algorithm used in Mellanox Spectrum ASIC which differs in hardware
-implementation from the kernel software implementation. The only
-information the user receives is whether specific route is offloaded or
-not, but he cannot really understand the underlying implementation nor
-get the specific statistics related to that process.
+Detected by CoverityScan,CID#13339465 ("Overlapping buffer in memory copy")
 
-Another example is TC classification-action offload which in hardware
-commonly implemented using TCAM memory. Currently there is no
-capability to gain visibility into the TCAM structure and to debug
-sub-optimal resource allocation.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The new dpipe interface introduces capability for exporting the ASICs
-pipeline abstraction via devlink infrastructure, which should serve as
-an complementary tool. This infrastructure allows the user to get
-visibility into the ASIC by modeling it as a set of match/action tables.
-
------
-
-cheers,
-jamal
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index a37896f..4034f40 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1346,7 +1346,7 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 			       priv->pmkid_list.pmkidlist[i + 1].bssid,
+ 			       ETH_ALEN);
+ 			memcpy(priv->pmkid_list.pmkidlist[i].pmkid,
+-			       priv->pmkid_list.pmkidlist[i].pmkid,
++			       priv->pmkid_list.pmkidlist[i + 1].pmkid,
+ 			       PMKID_LEN);
+ 		}
+ 		priv->pmkid_list.numpmkid--;
+-- 
+2.10.2
