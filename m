@@ -1,23 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47660 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41764 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754201AbdCBIvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 03:51:40 -0500
-Message-ID: <1488444698.8390.9.camel@sipsolutions.net> (sfid-20170302_095145_205883_5C68A538)
-Subject: Re: [PATCHv2 3/4] cfg80211: Add Support set btcoex priority value
+        id S1751428AbdCPJzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Mar 2017 05:55:22 -0400
+Message-ID: <1489658101.2370.2.camel@sipsolutions.net> (sfid-20170316_105538_454597_AFEDC44E)
+Subject: Re: [PATCH 1/2] nl80211: Use signed function for a signed variable
 From: Johannes Berg <johannes@sipsolutions.net>
-To: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org
-Date: Thu, 02 Mar 2017 09:51:38 +0100
-In-Reply-To: <1488029873-14600-4-git-send-email-c_traja@qti.qualcomm.com>
-References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1488029873-14600-4-git-send-email-c_traja@qti.qualcomm.com>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 16 Mar 2017 10:55:01 +0100
+In-Reply-To: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com> (sfid-20170316_025739_682372_2431ED63)
+References: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com>
+         (sfid-20170316_025739_682372_2431ED63)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch will also (and correctly so) cause compilation warnings in
-mac80211, so you really should have just two patches.
+On Thu, 2017-03-16 at 10:57 +0900, Masashi Honma wrote:
+> The rssi_threshold is defined as s32.
+> 
+Doesn't really matter much, but does seem nicer - applied.
 
 johannes
