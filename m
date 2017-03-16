@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50528 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752784AbdCTRIg (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36428 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752668AbdCPSdV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 13:08:36 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 16 Mar 2017 14:33:21 -0400
+Received: by mail-pf0-f196.google.com with SMTP id r137so2782945pfr.3
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 11:33:20 -0700 (PDT)
+Date: Thu, 16 Mar 2017 11:33:17 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        briannorris@chromium.org
+Subject: Re: [PATCH v2] mwifiex: fix kernel crash after shutdown command
+ timeout
+Message-ID: <20170316183317.GA2935@dtor-ws> (sfid-20170316_193404_545080_CDCA1C13)
+References: <1489660132-27352-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Subject: Re: [4/4] mwifiex: pcie: de-duplicate buffer allocation code
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170311013924.73348-5-briannorris@chromium.org>
-References: <20170311013924.73348-5-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20170320170835.6C8AA609FB@smtp.codeaurora.org> (sfid-20170320_180840_029549_7A4DF31C)
-Date: Mon, 20 Mar 2017 17:08:35 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1489660132-27352-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> This code was duplicated as part of the PCIe FLR code added to this
-> driver. Let's de-duplicate it to:
+On Thu, Mar 16, 2017 at 03:58:52PM +0530, Amitkumar Karwar wrote:
+> We observed a SHUTDOWN command timeout during reboot stress test
+> due to a corner case firmware bug. It leads to use-after-free on
+> adapter structure pointer and crash.
 > 
->  * make things easier to read (mwifiex_pcie_free_buffers() now has a
->    corresponding mwifiex_pcie_alloc_buffers())
->  * reduce likelihood of bugs
->  * make error logging equally verbose
->  * save lines of code!
+> Let's add MWIFIEX_IFACE_WORK_DONT_RUN work flag to avoid executing
+> any work scheduled after cancel_work_sync() call in teardown path
+> to resolve the issue.
 > 
-> Also drop some of the commentary that isn't really needed.
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v2: New work_flag has been added to resolve the issue cleanly as per
+> Brian's suggestion.
+> ---
+>  drivers/net/wireless/marvell/mwifiex/main.h | 1 +
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 4 ++++
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++++
+>  3 files changed, 9 insertions(+)
 > 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+> index 5c82972..d5b1fd6 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
+> @@ -510,6 +510,7 @@ struct mwifiex_roc_cfg {
+>  enum mwifiex_iface_work_flags {
+>  	MWIFIEX_IFACE_WORK_DEVICE_DUMP,
+>  	MWIFIEX_IFACE_WORK_CARD_RESET,
+> +	MWIFIEX_IFACE_WORK_DONT_RUN,
+>  };
+>  
+>  struct mwifiex_private {
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index a0d9180..bb3d798 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -294,6 +294,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>  	if (!adapter || !adapter->priv_num)
+>  		return;
+>  
+> +	set_bit(MWIFIEX_IFACE_WORK_DONT_RUN, &card->work_flags);
+>  	cancel_work_sync(&card->work);
+>  
+>  	reg = card->pcie.reg;
+> @@ -2721,6 +2722,9 @@ static void mwifiex_pcie_work(struct work_struct *work)
+>  	struct pcie_service_card *card =
+>  		container_of(work, struct pcie_service_card, work);
+>  
+> +	if (test_bit(MWIFIEX_IFACE_WORK_DONT_RUN, &card->work_flags))
+> +		return;
 
-Failed to apply:
+I do not see how this could possible prevent use-after-free, assuming
+that the "card" memory is gone by the time mwifiex_pcie_work() gets to
+run. You need to check this flag before queueing firmware dump work, and
+make sure it is not racy with setting this flag in mwifiex_pcie_remove()
+(and sdio).
 
-fatal: sha1 information is lacking or useless (drivers/net/wireless/marvell/mwifiex/pcie.c).
-error: could not build fake ancestor
-Applying: mwifiex: pcie: de-duplicate buffer allocation code
-Patch failed at 0001 mwifiex: pcie: de-duplicate buffer allocation code
-The copy of the patch that failed is found in: .git/rebase-apply/patch
-
-Patch set to Changes Requested.
+Thanks.
 
 -- 
-https://patchwork.kernel.org/patch/9618309/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Dmitry
