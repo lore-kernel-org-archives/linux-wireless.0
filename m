@@ -1,155 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33264 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753144AbdC2QV4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 12:21:56 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>
-Subject: [PATCH 1/7] NFC: fix broken device allocation
-Date: Wed, 29 Mar 2017 18:21:06 +0200
-Message-Id: <20170329162112.18121-2-johan@kernel.org> (sfid-20170329_182501_346699_BEF5FF98)
-In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
-References: <20170329162112.18121-1-johan@kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41846 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751182AbdCPKIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Mar 2017 06:08:45 -0400
+Message-ID: <1489658923.2370.6.camel@sipsolutions.net> (sfid-20170316_110848_058214_F08F8BC5)
+Subject: Re: Beacon interval for Mesh/AP in single interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 16 Mar 2017 11:08:43 +0100
+In-Reply-To: <CAEFj985tdOMJOHdPEeSqWE6SvicGMdexcKxu8mxJb5CS=mm-iQ@mail.gmail.com> (sfid-20170315_092517_859551_F3CCE4B6)
+References: <CAEFj985oo-Dv3dXN7rTTph74mkw_jW=7QrCfEXSjP=OGoexuYg@mail.gmail.com>
+         <1489500275.10872.9.camel@sipsolutions.net>
+         <CAEFj985tdOMJOHdPEeSqWE6SvicGMdexcKxu8mxJb5CS=mm-iQ@mail.gmail.com>
+         (sfid-20170315_092517_859551_F3CCE4B6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 7eda8b8e9677 ("NFC: Use IDR library to assing NFC devices IDs")
-moved device-id allocation and struct-device initialisation from
-nfc_allocate_device() to nfc_register_device().
+On Wed, 2017-03-15 at 16:25 +0800, Chun-Yeow Yeoh wrote:
 
-This broke just about every nfc-device-registration error path, which
-continue to call nfc_free_device() that tries to put the device
-reference of the now uninitialised (but zeroed) struct device:
+> Yes, ath9k for mesh/AP running simultaneously in one single radio
+> interface can do beaconing using different beacon interval. Mesh
+> providing backhaul to user accessing via STA/AP mode.
 
-kobject: '(null)' (ce316420): is not initialized, yet kobject_put() is being called.
+Ok.
 
-The late struct-device initialisation also meant that various work
-queues whose names are derived from the nfc device name were also
-misnamed:
+> > If that worked, then it'd be reasonable to add the appropriate
+> > value to
+> > the interface combinations to let it work as before.
+> > 
+> > If it didn't really work properly, then we can just fix the
+> > defaults to
+> > be compatible?
+> 
+> I try to put beacon_int_min_gcd in the interface combination with
+> mesh/AP/adhoc but the patch "[PATCH] cfg80211: disallow
+> beacon_int_min_gcd with IBSS" disables the mesh interface due to
+> adhoc interface is there.
 
-  421 root         0 SW<  [(null)_nci_cmd_]
-  422 root         0 SW<  [(null)_nci_rx_w]
-  423 root         0 SW<  [(null)_nci_tx_w]
+Can we split the combination? Or should we just work on fixing this
+limitation? Perhaps we could say that if beacon_int_min_gcd is 1, then
+that obviously means that there's no real restriction, and then we can
+allow with IBSS? How would the hardware react if you had one interface
+with beacon interval 99 TU and another with 100 TU? they can collide,
+but if there's some kind of mitigation it wouldn't matter, just one of
+them would come late after the TBTT...
 
-Move the id-allocation and struct-device initialisation back to
-nfc_allocate_device() and fix up the single call site which did not use
-nfc_free_device() in its registration error path.
+If it seems reasonable for this hardware to advertise
+beacon_int_min_gcd==1, then I think we can change cfg80211 to allow
+IBSS in that case.
 
-Fixes: 7eda8b8e9677 ("NFC: Use IDR library to assing NFC devices IDs")
-Cc: stable <stable@vger.kernel.org>     # 3.8
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- net/nfc/core.c     | 31 ++++++++++++++++++-------------
- net/nfc/nci/core.c |  3 +--
- 2 files changed, 19 insertions(+), 15 deletions(-)
-
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 122bb81da918..5cf33df888c3 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -982,6 +982,8 @@ static void nfc_release(struct device *d)
- 			kfree(se);
- 	}
- 
-+	ida_simple_remove(&nfc_index_ida, dev->idx);
-+
- 	kfree(dev);
- }
- 
-@@ -1056,6 +1058,7 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
- 				    int tx_headroom, int tx_tailroom)
- {
- 	struct nfc_dev *dev;
-+	int rc;
- 
- 	if (!ops->start_poll || !ops->stop_poll || !ops->activate_target ||
- 	    !ops->deactivate_target || !ops->im_transceive)
-@@ -1068,6 +1071,15 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
- 	if (!dev)
- 		return NULL;
- 
-+	rc = ida_simple_get(&nfc_index_ida, 0, 0, GFP_KERNEL);
-+	if (rc < 0)
-+		goto err_free_dev;
-+	dev->idx = rc;
-+
-+	dev->dev.class = &nfc_class;
-+	dev_set_name(&dev->dev, "nfc%d", dev->idx);
-+	device_initialize(&dev->dev);
-+
- 	dev->ops = ops;
- 	dev->supported_protocols = supported_protocols;
- 	dev->tx_headroom = tx_headroom;
-@@ -1090,6 +1102,11 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
- 	}
- 
- 	return dev;
-+
-+err_free_dev:
-+	kfree(dev);
-+
-+	return ERR_PTR(rc);
- }
- EXPORT_SYMBOL(nfc_allocate_device);
- 
-@@ -1104,14 +1121,6 @@ int nfc_register_device(struct nfc_dev *dev)
- 
- 	pr_debug("dev_name=%s\n", dev_name(&dev->dev));
- 
--	dev->idx = ida_simple_get(&nfc_index_ida, 0, 0, GFP_KERNEL);
--	if (dev->idx < 0)
--		return dev->idx;
--
--	dev->dev.class = &nfc_class;
--	dev_set_name(&dev->dev, "nfc%d", dev->idx);
--	device_initialize(&dev->dev);
--
- 	mutex_lock(&nfc_devlist_mutex);
- 	nfc_devlist_generation++;
- 	rc = device_add(&dev->dev);
-@@ -1149,12 +1158,10 @@ EXPORT_SYMBOL(nfc_register_device);
-  */
- void nfc_unregister_device(struct nfc_dev *dev)
- {
--	int rc, id;
-+	int rc;
- 
- 	pr_debug("dev_name=%s\n", dev_name(&dev->dev));
- 
--	id = dev->idx;
--
- 	if (dev->rfkill) {
- 		rfkill_unregister(dev->rfkill);
- 		rfkill_destroy(dev->rfkill);
-@@ -1179,8 +1186,6 @@ void nfc_unregister_device(struct nfc_dev *dev)
- 	nfc_devlist_generation++;
- 	device_del(&dev->dev);
- 	mutex_unlock(&nfc_devlist_mutex);
--
--	ida_simple_remove(&nfc_index_ida, id);
- }
- EXPORT_SYMBOL(nfc_unregister_device);
- 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 61fff422424f..85a3d9ed4c29 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -1173,8 +1173,7 @@ struct nci_dev *nci_allocate_device(struct nci_ops *ops,
- 	return ndev;
- 
- free_nfc:
--	kfree(ndev->nfc_dev);
--
-+	nfc_free_device(ndev->nfc_dev);
- free_nci:
- 	kfree(ndev);
- 	return NULL;
--- 
-2.12.2
+johannes
