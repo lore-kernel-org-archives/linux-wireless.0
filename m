@@ -1,70 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:37280 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756654AbdCUIUF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 04:20:05 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
-Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd to
- rpmsg
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20170320233544.1656-1-bjorn.andersson@linaro.org>
-Date: Tue, 21 Mar 2017 09:20:01 +0100
-Cc: "Gustavo F. Padovan" <gustavo@padovan.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, wcn36xx@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org
-Message-Id: <3DCEF38C-F8FC-4941-936F-921247E13B78@holtmann.org> (sfid-20170321_092031_771593_352A30A0)
-References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39138 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751037AbdCPGzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Mar 2017 02:55:47 -0400
+Message-ID: <1489647339.2370.0.camel@sipsolutions.net> (sfid-20170316_075600_059606_EF2585CA)
+Subject: Re: [PATCH] nl80211: fix dumpit error path RTNL deadlocks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        sowmini.varadhan@oracle.com, dvyukov@google.com
+Date: Thu, 16 Mar 2017 07:55:39 +0100
+In-Reply-To: <20170315.145902.1038598966216203408.davem@davemloft.net>
+References: <20170315132913.26088-1-johannes@sipsolutions.net>
+         <20170315.145902.1038598966216203408.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bjorn,
-
-> By moving these client drivers to use RPMSG instead of the direct SMD
-> API we can reuse them ontop of the newly added GLINK wire-protocol
-> support found in the 820 and 835 Qualcomm platforms.
+On Wed, 2017-03-15 at 14:59 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Wed, 15 Mar 2017 14:29:13 +0100
 > 
-> As the new (RPMSG-based) and old SMD implementations are mutually
-> exclusive we have to change all client drivers in one commit, to make
-> sure we have a working system before and after this transition.
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
-> 
-> Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
-> (https://lkml.org/lkml/2017/3/20/1038).
-> 
-> drivers/bluetooth/Kconfig                  |  2 +-
-> drivers/bluetooth/btqcomsmd.c              | 32 +++++++++----------
-> drivers/net/wireless/ath/wcn36xx/Kconfig   |  2 +-
-> drivers/net/wireless/ath/wcn36xx/main.c    |  6 ++--
-> drivers/net/wireless/ath/wcn36xx/smd.c     | 10 +++---
-> drivers/net/wireless/ath/wcn36xx/smd.h     |  6 ++--
-> drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
-> drivers/soc/qcom/Kconfig                   |  4 +--
-> drivers/soc/qcom/smd-rpm.c                 | 43 +++++++++++++------------
-> drivers/soc/qcom/wcnss_ctrl.c              | 50 +++++++++++++++++-------------
-> include/linux/soc/qcom/wcnss_ctrl.h        | 11 ++++---
-> net/qrtr/Kconfig                           |  2 +-
-> net/qrtr/smd.c                             | 42 ++++++++++++-------------
-> 13 files changed, 108 insertions(+), 104 deletions(-)
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Sowmini pointed out Dmitry's RTNL deadlock report to me, and it
+> turns out
+> > to be perfectly accurate - there are various error paths that miss
+> unlock
+> > of the RTNL.
 
-I think that it is best if Dave takes these directly then and I pull them back down later into our trees. Including the Kconfig fix that I will ACK as well.
+> Johannes, I assume I will get this in a future pull request?
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+Sure, coming to a tree near you ... today I guess. Just didn't want to
+send it out entirely unreviewed, although I checked it with sparse.
 
-Regards
-
-Marcel
+johannes
