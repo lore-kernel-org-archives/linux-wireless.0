@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:35847 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754036AbdCBB2n (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:38112 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750899AbdCPOXp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2017 20:28:43 -0500
-Received: by mail-qk0-f173.google.com with SMTP id n186so98178505qkb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Mar 2017 17:28:42 -0800 (PST)
+        Thu, 16 Mar 2017 10:23:45 -0400
+Received: by mail-wm0-f41.google.com with SMTP id t189so49226137wmt.1
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 07:21:57 -0700 (PDT)
+To: ilw@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+From: korgman <korgie@gmail.com>
+Subject: iwl3945 bug report (occasionally crashing after suspend)
+Message-ID: <7ae0bf4f-6ea2-1a4c-2e6d-e793cf800c4a@gmail.com> (sfid-20170316_152348_984864_6B6A2309)
+Date: Thu, 16 Mar 2017 16:26:10 +0200
 MIME-Version: 1.0
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Date: Thu, 2 Mar 2017 09:28:40 +0800
-Message-ID: <CAEFj984umxKZgMqzgbQvX+VgPjqCW98E17bfED9+Yg3XGzatOw@mail.gmail.com> (sfid-20170302_023009_613398_38732B90)
-Subject: Re: [PATCH v2] mac80211: mesh - always do every discovery retry
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Alexis Green <agreen@cococorp.com>,
-        Alexis Green <agreen@uniumwifi.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Instead of stopping path discovery when a path is found continue
-> attempting to find paths until we hit the dot11MeshHWMPmaxPREQretries
-> limit.
+Hello there,
 
-I am not too sure whether by simply broadcasting the PREQ frame could
-actually solve the problem and this may cause problem of PREQ flooding
-in your network when the number of nodes scale. Please take note that
-all nodes need to rebroadcast the PREQ frame until target STA. Path
-discovery should stop once the path is established. By attempting 2nd,
-3rd or 4th doesn't guarantee the next path will be "good".
+I have the same problem as reported here.
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1627828
 
-> This is important because path messages are not reliable and it is
-> relatively common to have a short bad path to the destination along with a
-> longer but better path. With the original code rather often a path message
-> along the long path would be lost so we would stick with the bad path.
-> With this change we have a greater chance to get messages over the longer
-> path allowing us to select the long path if it's better.
+and here
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1629603
 
-Reduce the mesh_hwmp_active_path_timeout or mesh_path_refresh_time to
-reestablish your path link as soon as possible. Also, if you would
-like to have such aggressive behavior, you can reduce the
-mesh_hwmp_preq_min_interval to have more aggressive PREQ sending in
-your network.
+If I understood correctly (form 2nd link) the latest good kernel was 4.4.4 after 4.4.6 we have the problem. (see message #5)
 
-----
-Chun-Yeow
+I quote:
+"Not a full bisection yet but I have narrowed it down:
+
+I looked at all kernel versions that had changes committed to iwlwifi and tested between them.
+
+I now have determined that I do not have this issue in the kernel version 4.4.4.
+
+I do have the issue in 4.4.6 and that is the next kernel version that has changes to iwlwifi so I guess that is the first bad version."
+
+I am on Slackware-14.2 64bit custom config kernel. I can try some things if you want.
+
+If I modprobe -r iwl3945 | disable wifi (i have physical switch) | suspend to ram | power on | enable wifi (physical switch) | modrpobe iwl3945 the device is working again.
+
+Thank you!
+
+(excuse my bad English)
