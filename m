@@ -1,158 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42798 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751720AbdCHKik (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 05:38:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: kirtika@google.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: reject/clear user rate mask if not usable
-Date: Wed,  8 Mar 2017 11:20:08 +0100
-Message-Id: <20170308102008.31184-1-johannes@sipsolutions.net> (sfid-20170308_113924_477487_562A5663)
+Received: from mail.windriver.com ([147.11.1.11]:44852 "EHLO
+        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752122AbdCPVv6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Mar 2017 17:51:58 -0400
+From: Mark Asselstine <mark.asselstine@windriver.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFT] brcmfmac: add support to move wiphy instance into network namespace
+Date: Thu, 16 Mar 2017 17:51:55 -0400
+Message-ID: <124157392.J1GrpqVLd5@yow-masselst-lx1> (sfid-20170316_225200_872489_76F1BADB)
+In-Reply-To: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tuesday, March 14, 2017 9:51:52 PM EDT Arend van Spriel wrote:
+> To support network namespace the driver must assure all created
+> network interfaces are in the same namespace as the wiphy instance.
+> 
+> Reported-by: Mark Asselstine <mark.asselstine@windriver.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+> Hi Mark,
+> 
+> Please check this patch. I can not say I am an expert when it comes
+> to using namespaces. So let me know if it works and I can change
+> Reported-by into Tested-by.
 
-If the user rate mask results in no (basic) rates being usable,
-clear it. Also, if we're already operating when it's set, reject
-it instead.
+Seems to pass the tests I threw at it. Seems happy with namespaces.
 
-Technically, selecting basic rates as the criterion is a bit too
-restrictive, but calculating the usable rates over all stations
-(e.g. in AP mode) is harder, and all stations must support the
-basic rates. Similarly, in client mode, the basic rates will be
-used anyway for control frames.
+Mark
 
-This fixes the "no supported rates (...) in rate_mask ..." warning
-that occurs on TX when you've selected a rate mask that's not
-compatible with the connection (e.g. an AP that enables only the
-rates 36, 48, 54 and you've selected only 6, 9, 12.)
-
-Reported-by: Kirtika Ruchandani <kirtika@google.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c  | 18 +++++++++++++++++-
- net/mac80211/mlme.c |  2 ++
- net/mac80211/rate.c | 29 +++++++++++++++++++++++++++++
- net/mac80211/rate.h |  2 ++
- 4 files changed, 50 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9c7490cb2243..8bc3d3669348 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-- * Copyright (C) 2015-2016 Intel Deutschland GmbH
-+ * Copyright (C) 2015-2017 Intel Deutschland GmbH
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-@@ -2042,6 +2042,7 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 					 params->basic_rates_len,
- 					 &sdata->vif.bss_conf.basic_rates);
- 		changed |= BSS_CHANGED_BASIC_RATES;
-+		ieee80211_check_rate_mask(sdata);
- 	}
- 
- 	if (params->ap_isolate >= 0) {
-@@ -2685,6 +2686,21 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 			return ret;
- 	}
- 
-+	/*
-+	 * If active validate the setting and reject it if it doesn't leave
-+	 * at least one basic rate usable, since we really have to be able
-+	 * to send something, and if we're an AP we have to be able to do
-+	 * so at a basic rate so that all clients can receive it.
-+	 */
-+	if (rcu_access_pointer(sdata->vif.chanctx_conf) &&
-+	    sdata->vif.bss_conf.chandef.chan) {
-+		u32 basic_rates = sdata->vif.bss_conf.basic_rates;
-+		enum nl80211_band band = sdata->vif.bss_conf.chandef.chan->band;
-+
-+		if (!(mask->control[band].legacy & basic_rates))
-+			return -EINVAL;
-+	}
-+
- 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
- 		struct ieee80211_supported_band *sband = wiphy->bands[i];
- 		int j;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4b4d29edec09..24d69bcf71ad 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1908,6 +1908,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	sdata->u.mgd.associated = cbss;
- 	memcpy(sdata->u.mgd.bssid, cbss->bssid, ETH_ALEN);
- 
-+	ieee80211_check_rate_mask(sdata);
-+
- 	sdata->u.mgd.flags |= IEEE80211_STA_RESET_SIGNAL_AVE;
- 
- 	if (sdata->vif.p2p ||
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 094c15645228..8c8d178ba798 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -2,6 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright (c) 2006 Jiri Benc <jbenc@suse.cz>
-+ * Copyright 2017	Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -241,6 +242,34 @@ static void rate_control_free(struct ieee80211_local *local,
- 	kfree(ctrl_ref);
- }
- 
-+void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	u32 user_mask, basic_rates = sdata->vif.bss_conf.basic_rates;
-+	enum nl80211_band band;
-+
-+	if (WARN_ON(!sdata->vif.bss_conf.chandef.chan))
-+		return;
-+
-+	if (WARN_ON_ONCE(!basic_rates))
-+		return;
-+
-+	band = sdata->vif.bss_conf.chandef.chan->band;
-+	user_mask = sdata->rc_rateidx_mask[band];
-+	sband = local->hw.wiphy->bands[band];
-+
-+	basic_rates = sdata->vif.bss_conf.basic_rates;
-+
-+	if (user_mask & basic_rates)
-+		return;
-+
-+	sdata_dbg(sdata,
-+		  "no overlap between basic rates (0x%x) and user mask (0x%x on band %d) - clearing the latter",
-+		  basic_rates, user_mask, band);
-+	sdata->rc_rateidx_mask[band] = (1 << sband->n_bitrates) - 1;
-+}
-+
- static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
- {
- 	struct sk_buff *skb = txrc->skb;
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index d51a1cce4d4a..f7825ef5f871 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -110,6 +110,8 @@ static inline void rate_control_remove_sta_debugfs(struct sta_info *sta)
- #endif
- }
- 
-+void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata);
-+
- /* Get a reference to the rate control algorithm. If `name' is NULL, get the
-  * first available algorithm. */
- int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
--- 
-2.11.0
+> 
+> Regards,
+> Arend
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 5 ++++-
+>  2 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c index
+> 3856de6..e0d65df 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -6450,7 +6450,8 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy,
+> struct brcmf_if *ifp) BIT(NL80211_BSS_SELECT_ATTR_BAND_PREF) |
+>  				    BIT(NL80211_BSS_SELECT_ATTR_RSSI_ADJUST);
+> 
+> -	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+> +	wiphy->flags |= WIPHY_FLAG_NETNS_OK |
+> +			WIPHY_FLAG_PS_ON_BY_DEFAULT |
+>  			WIPHY_FLAG_OFFCHAN_TX |
+>  			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+>  	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_TDLS))
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c index
+> 22b4883..74ede27 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -463,6 +463,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
+>  int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
+>  {
+>  	struct brcmf_pub *drvr = ifp->drvr;
+> +	struct wiphy *wiphy;
+>  	struct net_device *ndev;
+>  	s32 err;
+> 
+> @@ -476,8 +477,10 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool
+> rtnl_locked) ndev->needed_headroom += drvr->hdrlen;
+>  	ndev->ethtool_ops = &brcmf_ethtool_ops;
+> 
+> -	/* set the mac address */
+> +	/* set the mac address & netns */
+>  	memcpy(ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
+> +	wiphy = cfg_to_wiphy(drvr->config);
+> +	dev_net_set(ndev, wiphy_net(wiphy));
+> 
+>  	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
+>  	INIT_WORK(&ifp->ndoffload_work, _brcmf_update_ndtable);
