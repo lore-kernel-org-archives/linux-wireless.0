@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42860 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754953AbdC2Iu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 04:50:27 -0400
-Message-ID: <1490777413.7948.14.camel@sipsolutions.net> (sfid-20170329_105119_054586_5F30D06F)
-Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Dennis New <dennisn@dennisn.mooo.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 29 Mar 2017 10:50:13 +0200
-In-Reply-To: <260a3f4a-1ee1-62ec-e3db-294510e71a4e@broadcom.com> (sfid-20170329_102018_969097_22371F10)
-References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
-         <1490772890.18052.8.camel@sipsolutions.net>
-         <3320e9f4-21c3-966f-df6e-0bc8292a88a0@broadcom.com>
-         <1490773593.7948.2.camel@sipsolutions.net>
-         <260a3f4a-1ee1-62ec-e3db-294510e71a4e@broadcom.com>
-         (sfid-20170329_102018_969097_22371F10)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from packetmixer.de ([79.140.42.25]:52480 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751930AbdCPPVz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Mar 2017 11:21:55 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH 0/3] Channels in licensed bands, noise floor override
+Date: Thu, 16 Mar 2017 16:13:34 +0100
+Message-Id: <20170316151337.24163-1-sw@simonwunderlich.de> (sfid-20170316_162718_719123_A6A81806)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This series contains two patches to enable channels in licensed bands.
+Note that there are quite a few requirements to enable those:
 
-> > This code was designed for regulatory changes, but the WARN_ON()
-> > indicates that we got connected on a channel that we think isn't
-> > actually usable. We quite possibly should reject that connection
-> > there, but it seems to me it should've been rejected elsewhere
-> > already...?
-> 
-> But this is prior to connection, right? This warning happens upon
-> authenticate.
+ * channels must be explicitly enabled using a licensed band kernel config
+   which contains a warning
+ * it depends on CFG80211_CERTIFICATION_ONUS
+ * users must install a custom regdb, since channels in those licensed
+   bands are not included in the standard regdb
 
-Yeah the warning happens in authentication.
+The ath9k patch has been proposed two times and rejected, but it also
+included some channels on fractional center frequencies, which is not
+the case this time (this would require more changes in mac80211 and
+also userspace). The other concern about useres accidently tuning
+should not be a problem based on the requirements mentioned above. I've
+added another patch doing the same thing for ath10k.
 
-> So in nl80211_authenticate() we do:
-> 
-> chan = nl80211_get_valid_chan(&rdev->wiphy,
-> 			      info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-> 
-> and in cfg80211_mlme_auth():
-> 
-> req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
-> 			   IEEE80211_BSS_TYPE_ESS,
-> 			   IEEE80211_PRIVACY_ANY);
+Here is some more info on our need/background:
 
-That might not be what's going on - the OP said he was getting this
-with iw, which doesn't go through nl80211_authenticate() but
-nl80211_connect().
+"We are working on a project that involves the use of Public Safety 
+channels (4.9x GHz). It is typical 'First Responder' scenario where a 
+communication network infrastructure should be set up in catastrophe 
+situations.
 
-> After that the chain is:
-> 
-> ieee80211_mgd_auth() ->
-> 	ieee80211_prep_connection() ->
-> 		ieee80211_prep_channel() ->
-> 			ieee80211_determine_chantype()
+As this is a controlled and managed network, the organization setting up 
+the network has control over the channels that are being used, when and 
+for how long and in which geographical area.  The enforcement of such a 
+temporary license is a major requirement in this project.
 
-And somehow that determines that even a 20MHz no-HT channel isn't
-valid.
+To reduce the cost for the equipment (compared to commercial offerings 
+in the 4k USD range), the outdoor devices run on hardened, but standard 
+embedded hardware with a recent linux kernel and use Atheros radios.
 
-johannes
+We believe, that driver support for 4.9GHz channels should be included 
+in the Linux kernel, as the driver just exposes specified hardware 
+features which are disabled by default via
+
+a) a separate compile-time flag. This is similar to the code used for 
+compliance testing.
+
+b) The default CRDA should (and does) not enable such channels.
+
+Those two safeguards seem sufficient to protect against accidental misuse."
+
+The third patch is adding an experimental debug option to override
+the noise floor level, which is usually calibrated automatically.
+
+Cheers,
+     Simon
+
+Ben Greear (1):
+  ath9k: Support channels in licensed bands
+
+Simon Wunderlich (2):
+  ath10k: add support for channels in licensed bands
+  ath9k: add noise floor override option
+
+ drivers/net/wireless/ath/ath10k/Kconfig      | 20 +++++++++
+ drivers/net/wireless/ath/ath10k/core.h       |  4 ++
+ drivers/net/wireless/ath/ath10k/mac.c        |  9 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c        |  7 +++-
+ drivers/net/wireless/ath/ath9k/Kconfig       | 20 +++++++++
+ drivers/net/wireless/ath/ath9k/ath9k.h       |  2 +-
+ drivers/net/wireless/ath/ath9k/calib.c       |  5 ++-
+ drivers/net/wireless/ath/ath9k/common-init.c | 35 ++++++++++++----
+ drivers/net/wireless/ath/ath9k/debug.c       | 62 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h          |  5 ++-
+ 10 files changed, 155 insertions(+), 14 deletions(-)
+
+-- 
+2.11.0
