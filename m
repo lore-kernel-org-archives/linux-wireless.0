@@ -1,41 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55808 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755200AbdCTRR1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41243 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751219AbdCPI6y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 13:17:27 -0400
+        Thu, 16 Mar 2017 04:58:54 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [1/4] rtlwifi: Update 8821ae new phy parameters and its parser.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170223171957.22500-2-Larry.Finger@lwfinger.net>
-References: <20170223171957.22500-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20170320171053.C398A60996@smtp.codeaurora.org> (sfid-20170320_181802_106668_CECFB891)
-Date: Mon, 20 Mar 2017 17:10:53 +0000 (UTC)
+Subject: Re: ath10k: Fix fetching channel during potential radar detection
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1488976412-8970-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1488976412-8970-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <3a929a219a774ce9b092a9167b4a9f4b@euamsexm01a.eu.qualcomm.com> (sfid-20170316_095942_375411_77A5675C)
+Date: Thu, 16 Mar 2017 09:58:42 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> There are new PHY table values for the RTL8821AE. The changes require
-> new parsing code.
+> Fetch target operating channel during potential radar detection when
+> the interface is just brought up, but no channel is assigned from
+> userspace. In this scenario rx_channel may not be having a valid pointer
+> hence fetch the target operating channel to avoid warnings as below
+> which can be triggered by the commands with DFS testing over longer run
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> comamnds:
+> iw wlan1 set type mesh
+> ifconfig wlan1 up (valid tgt_oper_chan only)
+> iw wlan1 cac trigger freq 5260 HT20 (valid rx_channel, tgt_oper_chan)
+> iw wlan1 cac trigger freq 5280 HT20
+> iw wlan1 cac trigger freq 5300 HT20
+> 
+> Once the CAC expires, current channel context will be removed and
+> we are only left with the fallback option of using 'target operating
+> channel'
+> 
+> Firmware and driver log:
+> ath: phy1: DFS: radar found on freq=5300: id=1, pri=1125, count=5,
+> count_false=4
+> ath: phy1: DFS: radar found on freq=5260: id=5, pri=3151, count=6,
+> count_false=11
+> ath: phy1: DFS: radar found on freq=5280: id=1, pri=1351, count=6,
+> count_false=4
+> ath: phy1: DFS: radar found on freq=5300: id=1, pri=1125, count=5,
+> count_false=4
+> ath10k_pci 0001:01:00.0: failed to derive channel for radar pulse,
+> treating as radar
+> ath10k_pci 0001:01:00.0: failed to derive channel for radar pulse,
+> treating as radar
+> 
+> Call trace:
+> 
+> WARNING: CPU: 1 PID: 2145 at
+> backports-20161201-3.14.77-9ab3068/net/wireless/chan.c:265
+> cfg80211_set_dfs_state+0x3c/0x88 [cfg80211]()
+> 
+>  Workqueue: phy1 ieee80211_dfs_radar_detected_work
+> [mac80211]
+> [<c0320770>] (warn_slowpath_null) from [<bf79b90c>]
+> (cfg80211_set_dfs_state+0x3c/0x88 [cfg80211])
+> [<bf79b90c>] (cfg80211_set_dfs_state [cfg80211]) from
+> [<bf79697c>] (cfg80211_radar_event+0xc4/0x140 [cfg80211])
+> [<bf79697c>] (cfg80211_radar_event [cfg80211]) from
+> [<bf83c058>] (ieee80211_dfs_radar_detected_work+0xa8/0xb4 [mac80211])
+> [<bf83c058>] (ieee80211_dfs_radar_detected_work
+> [mac80211]) from [<c0339518>] (process_one_work+0x298/0x4a4)
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-4 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-84d26fda52e2 rtlwifi: Update 8821ae new phy parameters and its parser.
-e6042859302e rtlwifi: Update 8812ae new phy parameters and its parser.
-f70e4df2b384 rtlwifi: Add code to read new versions of firmware
-74a7dfbcc649 rtlwifi: Add QoS-NULL and BT-QoS-NULL to reserved page.
+a28f6f27a88f ath10k: fix fetching channel during potential radar detection
 
 -- 
-https://patchwork.kernel.org/patch/9588671/
+https://patchwork.kernel.org/patch/9610979/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
