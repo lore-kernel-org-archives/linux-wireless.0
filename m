@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:34381 "EHLO
-        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751262AbdCBK7l (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45289 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751366AbdCPJdr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 05:59:41 -0500
-Received: by mail-qk0-f182.google.com with SMTP id s186so116715308qkb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Mar 2017 02:59:19 -0800 (PST)
-Subject: Re: [RFC v2 2/2] cfg80211: support 4-way handshake offloading for
- 802.1X
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20170221123758.5339-1-johannes@sipsolutions.net>
- <20170221123758.5339-2-johannes@sipsolutions.net>
- <177c53b2-cd5f-97a9-26b0-b590071785cb@broadcom.com>
- <1488445144.8390.13.camel@sipsolutions.net>
-Cc: Avraham Stern <avraham.stern@intel.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <dc3d9463-3fdf-d3cf-ca69-50350394b487@broadcom.com> (sfid-20170302_120017_657700_97F254E4)
-Date: Thu, 2 Mar 2017 11:50:44 +0100
+        Thu, 16 Mar 2017 05:33:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v4 06/21] ath10k: sdio support
+Date: Thu, 16 Mar 2017 09:33:26 +0000
+Message-ID: <87y3w5tvkq.fsf@kamboji.qca.qualcomm.com> (sfid-20170316_103350_724515_65EF1A5E)
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
+        <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
+        <871su52th2.fsf@kamboji.qca.qualcomm.com>
+        <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
+        <877f3qyc5g.fsf@kamboji.qca.qualcomm.com>
+        <29c3dd40-c3ac-746e-d8ef-cb072c58578a@gmail.com>
+In-Reply-To: <29c3dd40-c3ac-746e-d8ef-cb072c58578a@gmail.com> (Erik
+        Stromdahl's message of "Wed, 15 Mar 2017 19:01:12 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <1488445144.8390.13.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-
-On 2-3-2017 9:59, Johannes Berg wrote:
-> 
->>> +	int	(*del_pmk)(struct wiphy *wiphy, struct
->>> net_device *dev,
->>> +			   const u8 *aa);
+>> There seems to be same pattern for reading four bytes, what if we should
+>> add a helper for that? Something like ath10k_sdio_read32()? It could
+>> handle the kmalloc and switch endianess also.
 >>
->> Minor nit, but prefer clr_pmk to clear the pmk.
-> 
-> Why? You don't have "the PMK" that you can clear, you have "a PMK" (for
-> the network) and after deleting it you don't have it anymore. You don't
-> have a "cleared PMK" afterwards, you just don't have any. I think the
-> delete makes more sense?
-
-Ah. I just looked at set_pmk and felt its counter-part should therefor
-be clr_pmk. Following your logic should it be add_pmk iso set_pmk?
-
->>> +	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X,
+>> But please don't make any chances to sdio.c for the moment, let me
+>> submit v5 first.
 >>
->> So do we need this flag. Is the fact that the driver implements the
->> set_pmk and del_pmk (or clr_pmk) callbacks not sufficient provided
->> they are listed in the "supported commands" message of wiphy dump
->> (not in this patch). Which reminds me, is "supported commands" no
->> longer preferred because that list does not seem complete?
-> 
-> It's complicated... We've kinda naturally gravitated towards extended
-> feature flags because they're so easy to handle now (only need to
-> define the bit) - and with mac80211 in the picture, relying on the
-> handlers only often didn't work, so it requires extra code in the CMD()
-> advertising - and anyway it already requires extra code there unlike
-> the feature flags...
-> 
-> So overall - while this isn't stated policy (yet?) - I think we prefer
-> the feature bits.
+> I notice that you have submitted v5 (and v6) of the sdio patches. Great!
+>
+> I assume you will add them to master-pending soon so I will try out
+> everything (usb too) as soon as they are on master-pending.
 
-I see. Glad they worked out that way ;-)
+v6 is now in master-pending.
 
-Regards,
-Arend
+--=20
+Kalle Valo=
