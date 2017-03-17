@@ -1,283 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:35992 "EHLO
-        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754068AbdCFJb5 (ORCPT
+Received: from mail-ot0-f171.google.com ([74.125.82.171]:35463 "EHLO
+        mail-ot0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750999AbdCQMon (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 04:31:57 -0500
-Received: by mail-qk0-f179.google.com with SMTP id 1so143860377qkl.3
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Mar 2017 01:31:56 -0800 (PST)
-Subject: Re: [PATCH 09/26] brcmsmac: split up wlc_phy_workarounds_nphy
-To: Arnd Bergmann <arnd@arndb.de>, kasan-dev@googlegroups.com
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-10-arnd@arndb.de>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a47db44e-316f-4f38-a684-361ba08842e9@broadcom.com> (sfid-20170306_103501_767281_D8B31517)
-Date: Mon, 6 Mar 2017 10:31:42 +0100
+        Fri, 17 Mar 2017 08:44:43 -0400
+Received: by mail-ot0-f171.google.com with SMTP id x37so89545022ota.2
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 05:44:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170302163834.2273519-10-arnd@arndb.de>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1698550.OFukYSGa7m@prime>
+References: <20170316151337.24163-1-sw@simonwunderlich.de> <20170316151337.24163-4-sw@simonwunderlich.de>
+ <CALhHN=qNXW6FVr_Q4B7pmLN2UVywa2dWdZtnhwV+9AAqUO=EAQ@mail.gmail.com> <1698550.OFukYSGa7m@prime>
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Date: Fri, 17 Mar 2017 13:44:41 +0100
+Message-ID: <CALhHN=roObX1H3V8=LrOP4QJk8PYyc6kHt_KmPmVrx28Lg9MLw@mail.gmail.com> (sfid-20170317_134504_816797_A4FF38D8)
+Subject: Re: [PATCH 3/3] ath9k: add noise floor override option
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2-3-2017 17:38, Arnd Bergmann wrote:
-> The stack consumption in this driver is still relatively high, with one
-> remaining warning if the warning level is lowered to 1536 bytes:
-> 
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: error: the frame size of 1880 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
-> 
-> The affected function is actually a collection of three separate implementations,
-> and each of them is fairly large by itself. Splitting them up is done easily
-> and improves readability at the same time.
-> 
-> I'm leaving the original indentation to make the review easier.
+On 17 March 2017 at 09:55, Simon Wunderlich <sw@simonwunderlich.de> wrote:
+> On Friday, March 17, 2017 9:48:07 AM CET Janusz Dziedzic wrote:
+>> On 16 March 2017 at 16:13, Simon Wunderlich <sw@simonwunderlich.de> wrote:
+>> > Introduce a debugfs option to manually override the noise floor,
+>> > ignoring the automatically tuned noise floor of the driver/hw.
+>> >
+>> > In my tests with a AR9580 based module and a tx99 5 MHz interferer,
+>> > I could tune the noisefloor to -95 dBm or above to allow communication
+>> > again. The automatic noise floor calibration sometimes could adapt to
+>> > the situation as well, but not reliably and permanently.
+>> >
+>> > I would consider this "feature" experimental and interesting for people
+>> > debugging the noise floor calibration or other effects of the hardware.
+>> >
+>> > Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+>> > Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+>> > ---
+>> >
+>> >  drivers/net/wireless/ath/ath9k/calib.c |  5 ++-
+>> >  drivers/net/wireless/ath/ath9k/debug.c | 62
+>> >  ++++++++++++++++++++++++++++++++++ drivers/net/wireless/ath/ath9k/hw.h
+>> >   |  1 +
+>> >  3 files changed, 67 insertions(+), 1 deletion(-)
+>> >
+>> > diff --git a/drivers/net/wireless/ath/ath9k/calib.c
+>> > b/drivers/net/wireless/ath/ath9k/calib.c index 0f71146b781d..13ab6bc46775
+>> > 100644
+>> > --- a/drivers/net/wireless/ath/ath9k/calib.c
+>> > +++ b/drivers/net/wireless/ath/ath9k/calib.c
+>> > @@ -254,7 +254,9 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct
+>> > ath9k_channel *chan)>
+>> >                         if ((i >= AR5416_MAX_CHAINS) &&
+>> >                         !IS_CHAN_HT40(chan))
+>> >
+>> >                                 continue;
+>> >
+>> > -                       if (h)
+>> > +                       if (ah->nf_override)
+>> > +                               nfval = ah->nf_override;
+>> > +                       else if (h)
+>> >
+>> >                                 nfval = h[i].privNF;
+>> >
+>> >                         else
+>> >
+>> >                                 nfval = default_nf;
+>> >
+>> > @@ -348,6 +350,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct
+>> > ath9k_channel *chan)>
+>> >         return 0;
+>> >
+>> >  }
+>> >
+>> > +EXPORT_SYMBOL(ath9k_hw_loadnf);
+>> >
+>> >  static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
+>> >
+>> > diff --git a/drivers/net/wireless/ath/ath9k/debug.c
+>> > b/drivers/net/wireless/ath/ath9k/debug.c index 43930c336987..2e64977a8ab6
+>> > 100644
+>> > --- a/drivers/net/wireless/ath/ath9k/debug.c
+>> > +++ b/drivers/net/wireless/ath/ath9k/debug.c
+>> > @@ -1191,6 +1191,65 @@ static const struct file_operations fops_tpc = {
+>> >
+>> >         .llseek = default_llseek,
+>> >
+>> >  };
+>> >
+>> > +static ssize_t read_file_nf_override(struct file *file,
+>> > +                                    char __user *user_buf,
+>> > +                                    size_t count, loff_t *ppos)
+>> > +{
+>> > +       struct ath_softc *sc = file->private_data;
+>> > +       struct ath_hw *ah = sc->sc_ah;
+>> > +       char buf[32];
+>> > +       unsigned int len;
+>> > +
+>> > +       if (ah->nf_override == 0)
+>> > +               len = sprintf(buf, "off\n");
+>> > +       else
+>> > +               len = sprintf(buf, "%d\n", ah->nf_override);
+>> > +
+>> > +       return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+>> > +}
+>> > +
+>> > +static ssize_t write_file_nf_override(struct file *file,
+>> > +                                     const char __user *user_buf,
+>> > +                                     size_t count, loff_t *ppos)
+>> > +{
+>> > +       struct ath_softc *sc = file->private_data;
+>> > +       struct ath_hw *ah = sc->sc_ah;
+>> > +       long val;
+>> > +       char buf[32];
+>> > +       ssize_t len;
+>> > +
+>> > +       len = min(count, sizeof(buf) - 1);
+>> > +       if (copy_from_user(buf, user_buf, len))
+>> > +               return -EFAULT;
+>> > +
+>> > +       buf[len] = '\0';
+>> > +       if (strncmp("off", buf, 3) == 0)
+>> > +               val = 0;
+>> > +       else if (kstrtol(buf, 0, &val))
+>> > +               return -EINVAL;
+>> > +
+>> > +       if (val > 0)
+>> > +               return -EINVAL;
+>> > +
+>> > +       if (val < -120)
+>> > +               return -EINVAL;
+>> > +
+>> > +       ah->nf_override = val;
+>> > +
+>> > +       if (ah->curchan)
+>> > +               ath9k_hw_loadnf(ah, ah->curchan);
+>> > +
+>> > +       return count;
+>> > +}
+>> > +
+>> > +static const struct file_operations fops_nf_override = {
+>> > +       .read = read_file_nf_override,
+>> > +       .write = write_file_nf_override,
+>> > +       .open = simple_open,
+>> > +       .owner = THIS_MODULE,
+>> > +       .llseek = default_llseek,
+>> > +};
+>> > +
+>> >
+>> >  /* Ethtool support for get-stats */
+>> >
+>> >  #define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
+>> >
+>> > @@ -1402,5 +1461,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+>> >
+>> >         debugfs_create_u16("airtime_flags", S_IRUSR | S_IWUSR,
+>> >
+>> >                            sc->debug.debugfs_phy, &sc->airtime_flags);
+>> >
+>> > +       debugfs_create_file("nf_override", S_IRUSR | S_IWUSR,
+>> > +                           sc->debug.debugfs_phy, sc, &fops_nf_override);
+>> > +
+>>
+>> Why not simply:
+>>         debugfs_create_u32("nf_override", S_IRUSR|S_IWUSR ,
+>> sc->debug.debugfs_phy,
+>>                           &ah->nf_override);
+>>
+>> One line patch :)
+>
+> Thanks Janusz, good idea! That doesn't check the limits, which is probably not
+> a big deal anyway. What bothers me more is that it doesn't update the noise
+> floor immediately (ath9k_hw_loadnf()), which would be nice to have. Otherwise
+> you have to wait up to ~30 seconds or so until the noise floor is updated next
+> time. So I'd keep my variant for now, unless you have a good idea to fix the
+> latter. :)
+>
+I see, seems I miss ath9k_hw_loadnf() call :)
 
-Thanks ;-)
-
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        | 178 ++++++++++++---------
->  1 file changed, 104 insertions(+), 74 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> index 48a4df488d75..d76c092bb6b4 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> @@ -16061,52 +16061,8 @@ static void wlc_phy_workarounds_nphy_gainctrl(struct brcms_phy *pi)
->  	}
->  }
->  
-> -static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
-> +static void wlc_phy_workarounds_nphy_rev7(struct brcms_phy *pi)
->  {
-> -	static const u8 rfseq_rx2tx_events[] = {
-> -		NPHY_RFSEQ_CMD_NOP,
-> -		NPHY_RFSEQ_CMD_RXG_FBW,
-> -		NPHY_RFSEQ_CMD_TR_SWITCH,
-> -		NPHY_RFSEQ_CMD_CLR_HIQ_DIS,
-> -		NPHY_RFSEQ_CMD_RXPD_TXPD,
-> -		NPHY_RFSEQ_CMD_TX_GAIN,
-> -		NPHY_RFSEQ_CMD_EXT_PA
-> -	};
-> -	u8 rfseq_rx2tx_dlys[] = { 8, 6, 6, 2, 4, 60, 1 };
-> -	static const u8 rfseq_tx2rx_events[] = {
-> -		NPHY_RFSEQ_CMD_NOP,
-> -		NPHY_RFSEQ_CMD_EXT_PA,
-> -		NPHY_RFSEQ_CMD_TX_GAIN,
-> -		NPHY_RFSEQ_CMD_RXPD_TXPD,
-> -		NPHY_RFSEQ_CMD_TR_SWITCH,
-> -		NPHY_RFSEQ_CMD_RXG_FBW,
-> -		NPHY_RFSEQ_CMD_CLR_HIQ_DIS
-> -	};
-> -	static const u8 rfseq_tx2rx_dlys[] = { 8, 6, 2, 4, 4, 6, 1 };
-> -	static const u8 rfseq_tx2rx_events_rev3[] = {
-> -		NPHY_REV3_RFSEQ_CMD_EXT_PA,
-> -		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-> -		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-> -		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-> -		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-> -		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-> -		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-> -		NPHY_REV3_RFSEQ_CMD_END
-> -	};
-> -	static const u8 rfseq_tx2rx_dlys_rev3[] = { 8, 4, 2, 2, 4, 4, 6, 1 };
-> -	u8 rfseq_rx2tx_events_rev3[] = {
-> -		NPHY_REV3_RFSEQ_CMD_NOP,
-> -		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-> -		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-> -		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-> -		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-> -		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-> -		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-> -		NPHY_REV3_RFSEQ_CMD_EXT_PA,
-> -		NPHY_REV3_RFSEQ_CMD_END
-> -	};
-> -	u8 rfseq_rx2tx_dlys_rev3[] = { 8, 6, 6, 4, 4, 18, 42, 1, 1 };
-> -
->  	static const u8 rfseq_rx2tx_events_rev3_ipa[] = {
->  		NPHY_REV3_RFSEQ_CMD_NOP,
->  		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-> @@ -16120,29 +16076,15 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
->  	};
->  	static const u8 rfseq_rx2tx_dlys_rev3_ipa[] = { 8, 6, 6, 4, 4, 16, 43, 1, 1 };
->  	static const u16 rfseq_rx2tx_dacbufpu_rev7[] = { 0x10f, 0x10f };
-> -
-> -	s16 alpha0, alpha1, alpha2;
-> -	s16 beta0, beta1, beta2;
-> -	u32 leg_data_weights, ht_data_weights, nss1_data_weights,
-> -	    stbc_data_weights;
-> +	u32 leg_data_weights;
->  	u8 chan_freq_range = 0;
->  	static const u16 dac_control = 0x0002;
->  	u16 aux_adc_vmid_rev7_core0[] = { 0x8e, 0x96, 0x96, 0x96 };
->  	u16 aux_adc_vmid_rev7_core1[] = { 0x8f, 0x9f, 0x9f, 0x96 };
-> -	u16 aux_adc_vmid_rev4[] = { 0xa2, 0xb4, 0xb4, 0x89 };
-> -	u16 aux_adc_vmid_rev3[] = { 0xa2, 0xb4, 0xb4, 0x89 };
-> -	u16 *aux_adc_vmid;
->  	u16 aux_adc_gain_rev7[] = { 0x02, 0x02, 0x02, 0x02 };
-> -	u16 aux_adc_gain_rev4[] = { 0x02, 0x02, 0x02, 0x00 };
-> -	u16 aux_adc_gain_rev3[] = { 0x02, 0x02, 0x02, 0x00 };
-> -	u16 *aux_adc_gain;
-> -	static const u16 sk_adc_vmid[] = { 0xb4, 0xb4, 0xb4, 0x24 };
-> -	static const u16 sk_adc_gain[] = { 0x02, 0x02, 0x02, 0x02 };
->  	s32 min_nvar_val = 0x18d;
->  	s32 min_nvar_offset_6mbps = 20;
->  	u8 pdetrange;
-> -	u8 triso;
-> -	u16 regval;
->  	u16 afectrl_adc_ctrl1_rev7 = 0x20;
->  	u16 afectrl_adc_ctrl2_rev7 = 0x0;
->  	u16 rfseq_rx2tx_lpf_h_hpc_rev7 = 0x77;
-> @@ -16171,17 +16113,6 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
->  	u16 freq;
->  	int coreNum;
->  
-> -	if (CHSPEC_IS5G(pi->radio_chanspec))
-> -		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 0);
-> -	else
-> -		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 1);
-> -
-> -	if (pi->phyhang_avoid)
-> -		wlc_phy_stay_in_carriersearch_nphy(pi, true);
-> -
-> -	or_phy_reg(pi, 0xb1, NPHY_IQFlip_ADC1 | NPHY_IQFlip_ADC2);
-> -
-> -	if (NREV_GE(pi->pubpi.phy_rev, 7)) {
->  
->  		if (NREV_IS(pi->pubpi.phy_rev, 7)) {
->  			mod_phy_reg(pi, 0x221, (0x1 << 4), (1 << 4));
-> @@ -16703,8 +16634,62 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
->  					 &aux_adc_gain_rev7);
->  		wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_AFECTRL, 4, 0x1c, 16,
->  					 &aux_adc_gain_rev7);
-> +}
->  
-> -	} else if (NREV_GE(pi->pubpi.phy_rev, 3)) {
-> +static void wlc_phy_workarounds_nphy_rev3(struct brcms_phy *pi)
-> +{
-> +	static const u8 rfseq_tx2rx_events_rev3[] = {
-> +		NPHY_REV3_RFSEQ_CMD_EXT_PA,
-> +		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-> +		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-> +		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-> +		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-> +		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-> +		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-> +		NPHY_REV3_RFSEQ_CMD_END
-> +	};
-> +	static const u8 rfseq_tx2rx_dlys_rev3[] = { 8, 4, 2, 2, 4, 4, 6, 1 };
-> +	u8 rfseq_rx2tx_events_rev3[] = {
-> +		NPHY_REV3_RFSEQ_CMD_NOP,
-> +		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-> +		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-> +		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-> +		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-> +		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-> +		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-> +		NPHY_REV3_RFSEQ_CMD_EXT_PA,
-> +		NPHY_REV3_RFSEQ_CMD_END
-> +	};
-> +	u8 rfseq_rx2tx_dlys_rev3[] = { 8, 6, 6, 4, 4, 18, 42, 1, 1 };
-> +	static const u8 rfseq_rx2tx_events_rev3_ipa[] = {
-> +		NPHY_REV3_RFSEQ_CMD_NOP,
-> +		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-> +		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-> +		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-> +		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-> +		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-> +		NPHY_REV3_RFSEQ_CMD_CLR_RXRX_BIAS,
-> +		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-> +		NPHY_REV3_RFSEQ_CMD_END
-> +	};
-> +	static const u8 rfseq_rx2tx_dlys_rev3_ipa[] = { 8, 6, 6, 4, 4, 16, 43, 1, 1 };
-> +	s16 alpha0, alpha1, alpha2;
-> +	s16 beta0, beta1, beta2;
-> +	u32 leg_data_weights, ht_data_weights, nss1_data_weights,
-> +	    stbc_data_weights;
-> +	u8 chan_freq_range = 0;
-> +	static const u16 dac_control = 0x0002;
-> +	u16 aux_adc_vmid_rev4[] = { 0xa2, 0xb4, 0xb4, 0x89 };
-> +	u16 aux_adc_vmid_rev3[] = { 0xa2, 0xb4, 0xb4, 0x89 };
-> +	u16 *aux_adc_vmid;
-> +	u16 aux_adc_gain_rev4[] = { 0x02, 0x02, 0x02, 0x00 };
-> +	u16 aux_adc_gain_rev3[] = { 0x02, 0x02, 0x02, 0x00 };
-> +	u16 *aux_adc_gain;
-> +	static const u16 sk_adc_vmid[] = { 0xb4, 0xb4, 0xb4, 0x24 };
-> +	static const u16 sk_adc_gain[] = { 0x02, 0x02, 0x02, 0x02 };
-> +	s32 min_nvar_val = 0x18d;
-> +	u8 pdetrange;
-> +	u8 triso;
->  
->  		write_phy_reg(pi, 0x23f, 0x1f8);
->  		write_phy_reg(pi, 0x240, 0x1f8);
-> @@ -17030,7 +17015,33 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
->  					      MHF4_BPHY_TXCORE0,
->  					      MHF4_BPHY_TXCORE0, BRCM_BAND_ALL);
->  		}
-> -	} else {
-> +}
-> +
-> +void wlc_phy_workarounds_nphy_rev1(struct brcms_phy *pi)
-> +{
-> +	static const u8 rfseq_rx2tx_events[] = {
-> +		NPHY_RFSEQ_CMD_NOP,
-> +		NPHY_RFSEQ_CMD_RXG_FBW,
-> +		NPHY_RFSEQ_CMD_TR_SWITCH,
-> +		NPHY_RFSEQ_CMD_CLR_HIQ_DIS,
-> +		NPHY_RFSEQ_CMD_RXPD_TXPD,
-> +		NPHY_RFSEQ_CMD_TX_GAIN,
-> +		NPHY_RFSEQ_CMD_EXT_PA
-> +	};
-> +	u8 rfseq_rx2tx_dlys[] = { 8, 6, 6, 2, 4, 60, 1 };
-> +	static const u8 rfseq_tx2rx_events[] = {
-> +		NPHY_RFSEQ_CMD_NOP,
-> +		NPHY_RFSEQ_CMD_EXT_PA,
-> +		NPHY_RFSEQ_CMD_TX_GAIN,
-> +		NPHY_RFSEQ_CMD_RXPD_TXPD,
-> +		NPHY_RFSEQ_CMD_TR_SWITCH,
-> +		NPHY_RFSEQ_CMD_RXG_FBW,
-> +		NPHY_RFSEQ_CMD_CLR_HIQ_DIS
-> +	};
-> +	static const u8 rfseq_tx2rx_dlys[] = { 8, 6, 2, 4, 4, 6, 1 };
-> +	s16 alpha0, alpha1, alpha2;
-> +	s16 beta0, beta1, beta2;
-> +	u16 regval;
->  
->  		if (pi->sh->boardflags2 & BFL2_SKWRKFEM_BRD ||
->  		    (pi->sh->boardtype == 0x8b)) {
-> @@ -17128,7 +17139,26 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
->  			mod_phy_reg(pi, 0x221,
->  				    NPHY_FORCESIG_DECODEGATEDCLKS,
->  				    NPHY_FORCESIG_DECODEGATEDCLKS);
-> -	}
-> +}
-> +
-> +static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
-> +{
-> +	if (CHSPEC_IS5G(pi->radio_chanspec))
-> +		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 0);
-> +	else
-> +		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 1);
-> +
-> +	if (pi->phyhang_avoid)
-> +		wlc_phy_stay_in_carriersearch_nphy(pi, true);
-> +
-> +	or_phy_reg(pi, 0xb1, NPHY_IQFlip_ADC1 | NPHY_IQFlip_ADC2);
-> +
-> +	if (NREV_GE(pi->pubpi.phy_rev, 7))
-> +		wlc_phy_workarounds_nphy_rev7(pi);
-> +	else if (NREV_GE(pi->pubpi.phy_rev, 3))
-> +		wlc_phy_workarounds_nphy_rev3(pi);
-> +	else
-> +		wlc_phy_workarounds_nphy_rev1(pi);
->  
->  	if (pi->phyhang_avoid)
->  		wlc_phy_stay_in_carriersearch_nphy(pi, false);
-> 
+> Cheers,
+>       Simon
