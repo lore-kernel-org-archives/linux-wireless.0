@@ -1,105 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36314 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933394AbdCaQsR (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33984 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751081AbdCQAzs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 12:48:17 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so9913039oif.3
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 09:48:16 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 12/12] rtlwifi: btcoex: 23b 2ant: new fw use h2c to control GNT_BT
-Date: Fri, 31 Mar 2017 11:47:42 -0500
-Message-Id: <20170331164742.22374-13-Larry.Finger@lwfinger.net> (sfid-20170331_184847_375167_C32A5051)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+        Thu, 16 Mar 2017 20:55:48 -0400
+Received: by mail-qk0-f196.google.com with SMTP id v127so8151183qkb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 17:54:50 -0700 (PDT)
+Date: Thu, 16 Mar 2017 20:54:47 -0400
+From: Dylan Leggio <dleggio1@binghamton.edu>
+To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driver.dev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] Staging: wilc1000: fix two typos in #define's
+Message-ID: <20170317005447.GA1570@legs> (sfid-20170317_015616_107730_A82E9BDC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+GAS_INTIAL_REQ should be GAS_INITIAL_REQ.
+GAS_INTIAL_RSP should be GAS_INITIAL_RSP.
+Improves readability of code.
 
-Earlier versions of the FW did not support h2c to set GNT_BT, but later
-versions have that capability. Hence we check the FW version and decide
-whether to use h2c or just write to the register.
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Dylan Leggio <dleggio1@binghamton.edu>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 37 +++++++++++++++++-----
- 1 file changed, 29 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index c349675..3b3bdeb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1065,8 +1065,14 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
- 		btcoexist->btc_write_1byte(btcoexist, 0x930, 0x77);
- 		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x1);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index a37896fcd683..1bb63702c623 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -29,8 +29,8 @@
+ #define P2P_INV_REQ			0x03
+ #define P2P_INV_RSP			0x04
+ #define PUBLIC_ACT_VENDORSPEC		0x09
+-#define GAS_INTIAL_REQ			0x0a
+-#define GAS_INTIAL_RSP			0x0b
++#define GAS_INITIAL_REQ			0x0a
++#define GAS_INITIAL_RSP			0x0b
  
--		/* Force GNT_BT to low */
--		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x0);
-+		if (fw_ver >= 0x180000) {
-+			/* Use H2C to set GNT_BT to High to avoid A2DP click */
-+			h2c_parameter[0] = 1;
-+			btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
-+						h2c_parameter);
-+		} else {
-+			btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
-+		}
+ #define INVALID_CHANNEL			0
  
- 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT) {
- 			/* tell firmware "no antenna inverse" */
-@@ -1078,8 +1084,12 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
- 		} else {
- 			/* tell firmware "antenna inverse" */
- 			h2c_parameter[0] = 1;
--			h2c_parameter[1] = 1;  /* ext switch type */
--			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
-+		}
-+	} else {
-+		if (fw_ver >= 0x180000) {
-+			/* Use H2C to set GNT_BT to "Control by PTA"*/
-+			h2c_parameter[0] = 0;
-+			btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
- 						h2c_parameter);
- 			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
- 		}
-@@ -2370,12 +2380,23 @@ static void btc8723b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+@@ -1477,10 +1477,10 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
+ 			}
+ 			if (buff[ACTION_CAT_ID] == PUB_ACTION_ATTR_ID) {
+ 				switch (buff[ACTION_SUBTYPE_ID]) {
+-				case GAS_INTIAL_REQ:
++				case GAS_INITIAL_REQ:
+ 					break;
  
- static void btc8723b2ant_wifioff_hwcfg(struct btc_coexist *btcoexist)
- {
-+	u8 h2c_parameter[2] = {0};
-+	u32 fw_ver = 0;
-+
- 	/* set wlan_act to low */
- 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
--	/* Force GNT_BT to High */
--	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x3);
--	/* BT select s0/s1 is controlled by BT */
--	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x0);
-+
-+	/* WiFi standby while GNT_BT 0 -> 1 */
-+	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x780);
-+
-+	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
-+	if (fw_ver >= 0x180000) {
-+		/* Use H2C to set GNT_BT to HIGH */
-+		h2c_parameter[0] = 1;
-+		btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1, h2c_parameter);
-+	} else {
-+		btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
-+	}
- }
+-				case GAS_INTIAL_RSP:
++				case GAS_INITIAL_RSP:
+ 					break;
  
- /*********************************************************************
+ 				case PUBLIC_ACT_VENDORSPEC:
+@@ -1666,10 +1666,10 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 					curr_channel = chan->hw_value;
+ 				}
+ 				switch (buf[ACTION_SUBTYPE_ID])	{
+-				case GAS_INTIAL_REQ:
++				case GAS_INITIAL_REQ:
+ 					break;
+ 
+-				case GAS_INTIAL_RSP:
++				case GAS_INITIAL_RSP:
+ 					break;
+ 
+ 				case PUBLIC_ACT_VENDORSPEC:
 -- 
-2.10.2
+2.12.0
