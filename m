@@ -1,119 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:36380 "EHLO
-        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751333AbdCCN4J (ORCPT
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:35164 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbdCQJgP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 08:56:09 -0500
-Received: by mail-qk0-f169.google.com with SMTP id 1so57147387qkl.3
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 05:55:37 -0800 (PST)
+        Fri, 17 Mar 2017 05:36:15 -0400
+Received: by mail-wr0-f179.google.com with SMTP id g10so48098929wrg.2
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 02:36:13 -0700 (PDT)
+Subject: Re: [RFT] brcmfmac: add support to move wiphy instance into network
+ namespace
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Mark Asselstine <mark.asselstine@windriver.com>
+References: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
+ <124157392.J1GrpqVLd5@yow-masselst-lx1>
+ <0343e3c9-baf8-f3b1-8c37-c8b0864bd7e5@broadcom.com>
+ <1489742655.2544.4.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0b67e238-d31c-9091-735c-258675198040@broadcom.com> (sfid-20170317_103618_065849_221D6878)
+Date: Fri, 17 Mar 2017 10:36:10 +0100
 MIME-Version: 1.0
-In-Reply-To: <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-2-arnd@arndb.de>
- <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com>
-From: Alexander Potapenko <glider@google.com>
-Date: Fri, 3 Mar 2017 14:55:35 +0100
-Message-ID: <CAG_fn=WayMEnBO4pzuxQ5jgn-ii6vrALuOex5Ei1ZhzMR7_tjg@mail.gmail.com> (sfid-20170303_145840_920102_B53C2F5F)
-Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        kasan-dev <kasan-dev@googlegroups.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1489742655.2544.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 2:50 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> w=
-rote:
->
->
-> On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
->> When CONFIG_KASAN is set, we can run into some code that uses incredible
->> amounts of kernel stack:
+On 17-3-2017 10:24, Johannes Berg wrote:
+> On Fri, 2017-03-17 at 10:06 +0100, Arend Van Spriel wrote:
+>> On 16-3-2017 22:51, Mark Asselstine wrote:
+>>> On Tuesday, March 14, 2017 9:51:52 PM EDT Arend van Spriel wrote:
+>>>> To support network namespace the driver must assure all created
+>>>> network interfaces are in the same namespace as the wiphy
+>>>> instance.
+>>>>
+>>>> Reported-by: Mark Asselstine <mark.asselstine@windriver.com>
+>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>> ---
+>>>> Hi Mark,
+>>>>
+>>>> Please check this patch. I can not say I am an expert when it
+>>>> comes
+>>>> to using namespaces. So let me know if it works and I can change
+>>>> Reported-by into Tested-by.
+>>>
+>>> Seems to pass the tests I threw at it. Seems happy with namespaces.
 >>
->> drivers/staging/dgnc/dgnc_neo.c:1056:1: error: the frame size of 11112 b=
-ytes is larger than 2048 bytes [-Werror=3Dframe-larger-than=3D]
->> drivers/media/i2c/cx25840/cx25840-core.c:4960:1: error: the frame size o=
-f 94000 bytes is larger than 2048 bytes [-Werror=3Dframe-larger-than=3D]
->> drivers/media/dvb-frontends/stv090x.c:3430:1: error: the frame size of 5=
-312 bytes is larger than 3072 bytes [-Werror=3Dframe-larger-than=3D]
->>
->> This happens when a sanitizer uses stack memory each time an inline func=
-tion
->> gets called. This introduces a new annotation for those functions to mak=
-e
->> them either 'inline' or 'noinline' dependning on the CONFIG_KASAN symbol=
-.
->>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> ---
->>  include/linux/compiler.h | 11 +++++++++++
->>  1 file changed, 11 insertions(+)
->>
->> diff --git a/include/linux/compiler.h b/include/linux/compiler.h
->> index f8110051188f..56b90897a459 100644
->> --- a/include/linux/compiler.h
->> +++ b/include/linux/compiler.h
->> @@ -416,6 +416,17 @@ static __always_inline void __write_once_size(volat=
-ile void *p, void *res, int s
->>   */
->>  #define noinline_for_stack noinline
->>
->> +/*
->> + * CONFIG_KASAN can lead to extreme stack usage with certain patterns w=
-hen
->> + * one function gets inlined many times and each instance requires a st=
-ack
->> + * ckeck.
->> + */
->> +#ifdef CONFIG_KASAN
->> +#define noinline_for_kasan noinline __maybe_unused
->
->
-> noinline_iff_kasan might be a better name.  noinline_for_kasan gives the =
-impression
-> that we always noinline function for the sake of kasan, while noinline_if=
-f_kasan
-> clearly indicates that function is noinline only if kasan is used.
-FWIW we may be facing the same problem with other compiler-based
-tools, e.g. KMSAN (which isn't there yet).
-So it might be better to choose a macro name that doesn't use the name "KAS=
-AN".
-E.g. noinline_iff_memtool (or noinline_iff_memory_tool if that's not too lo=
-ng).
-WDYT?
->> +#else
->> +#define noinline_for_kasan inline
->> +#endif
->> +
->>  #ifndef __always_inline
->>  #define __always_inline inline
->>  #endif
->>
->
-> --
-> You received this message because you are subscribed to the Google Groups=
- "kasan-dev" group.
-> To unsubscribe from this group and stop receiving emails from it, send an=
- email to kasan-dev+unsubscribe@googlegroups.com.
-> To post to this group, send email to kasan-dev@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgi=
-d/kasan-dev/7e7a62de-3b79-6044-72fa-4ade418953d1%40virtuozzo.com.
-> For more options, visit https://groups.google.com/d/optout.
+>> I tested it myself and noticed something unexpected. Upon changing
+>> from &init_net to brcm-wifi the wdev id has changed from 0x1 to 0x2
+>> (see below) and upon going from brcm-wifi to &init_net both interface
+>> change their wdev id.
+> 
+> Interesting. That's clearly a cfg80211 bug, does this help?
 
+Yep. Tested and verified.
 
+Regards,
+Arend
 
---=20
-Alexander Potapenko
-Software Engineer
-
-Google Germany GmbH
-Erika-Mann-Stra=C3=9Fe, 33
-80636 M=C3=BCnchen
-
-Gesch=C3=A4ftsf=C3=BChrer: Matthew Scott Sucherman, Paul Terence Manicle
-Registergericht und -nummer: Hamburg, HRB 86891
-Sitz der Gesellschaft: Hamburg
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 2e1740c7a8bf..d71d5e90229f 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -1183,7 +1183,15 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+>  		INIT_LIST_HEAD(&wdev->mgmt_registrations);
+>  		spin_lock_init(&wdev->mgmt_registrations_lock);
+>  
+> -		wdev->identifier = ++rdev->wdev_id;
+> +		/*
+> +		 * We get here also when the interface changes network namespaces,
+> +		 * as it's registered into the new one, but we don't want it to
+> +		 * change ID in that case. Checking if the ID is already assigned
+> +		 * works, because 0 isn't considered a valid ID and the memory is
+> +		 * 0-initialized.
+> +		 */
+> +		if (!wdev->identifier)
+> +			wdev->identifier = ++rdev->wdev_id;
+>  		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
+>  		rdev->devlist_generation++;
+>  		/* can only change netns with wiphy */
+> 
+> johannes
+> 
