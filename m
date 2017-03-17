@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52916 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754228AbdCBJQo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 04:16:44 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2017-03-02
-Date: Thu, 02 Mar 2017 11:15:42 +0200
-Message-ID: <87r32g9gzl.fsf@kamboji.qca.qualcomm.com> (sfid-20170302_101933_128497_E9919C25)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:3732 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751061AbdCQPuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Mar 2017 11:50:18 -0400
+Message-ID: <1489765790.19767.62.camel@linux.intel.com> (sfid-20170317_165114_475662_BF039160)
+Subject: Re: [PATCH v2 1/5] NFC: st21nfca: Fix obvious typo when check error
+ code
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Christophe Ricard <christophe.ricard@gmail.com>
+Date: Fri, 17 Mar 2017 17:49:50 +0200
+In-Reply-To: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
+References: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Tue, 2017-03-07 at 12:25 +0200, Andy Shevchenko wrote:
+> We return -ENODEV if ACPI provides a GPIO resource. Looks really
+> wrong.
+> If it has even been tested?
 
-only one patch this time, the new version of ath10k patch we reverted
-earlier. I was supposed to send you this earlier but it got delayed
-because I'm on vacation, so sorry about that. I'm hoping this is ok to
-take also even the merge window is closed as the changes to the first
-version of the patch are minimal.
+Any comments on this clean up?
 
-Please let me know if there are any problems.
+Next patch which is dependent to this is related to ACPI enumeration.
+After GPIO ACPI library gets stricter the driver wouldn't work without
+ACPI related changes.
 
-Kalle
+By the way, is this device have ever been enumerated via ACPI?
 
-The following changes since commit 8313064c2e75542201e557e2b496668811c2484a:
-
-  Merge tag 'nfsd-4.11' of git://linux-nfs.org/~bfields/linux (2017-02-28 15:39:09 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-03-02
-
-for you to fetch changes up to 1657b8f84ed9fc1d2a100671f1d42d6286f20073:
-
-  ath10k: search SMBIOS for OEM board file extension (2017-03-02 10:48:41 +0200)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.11
-
-Add back a fixed version of an ath10k patch which was reverted during
-the merge window.
-
-----------------------------------------------------------------
-Waldemar Rymarkiewicz (1):
-      ath10k: search SMBIOS for OEM board file extension
-
- drivers/net/wireless/ath/ath10k/core.c | 101 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/core.h |  19 +++++++
- 2 files changed, 117 insertions(+), 3 deletions(-)
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/nfc/st21nfca/i2c.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+> index 5a82f553906c..737384d287aa 100644
+> --- a/drivers/nfc/st21nfca/i2c.c
+> +++ b/drivers/nfc/st21nfca/i2c.c
+> @@ -514,9 +514,9 @@ static int
+> st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+>  	/* Get EN GPIO from ACPI */
+>  	gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN,
+> 1,
+>  					 GPIOD_OUT_LOW);
+> -	if (!IS_ERR(gpiod_ena)) {
+> +	if (IS_ERR(gpiod_ena)) {
+>  		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+> -		return -ENODEV;
+> +		return PTR_ERR(gpiod_ena);
+>  	}
+>  
+>  	phy->gpio_ena = desc_to_gpio(gpiod_ena);
 
 -- 
-Kalle Valo
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
