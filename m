@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:13752 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751765AbdCOVQT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31989 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751105AbdCQPLF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 17:16:19 -0400
-Subject: Re: [PATCH v3 0/7] Remove unneeded build directory traversals
-To: Arnd Bergmann <arnd@arndb.de>
-References: <20170315163730.17055-1-afd@ti.com>
- <CAK8P3a1XBUUtJHrzfTa3GRqh+beU+1MteQ0evB8Vvy5zABRbmw@mail.gmail.com>
-CC: Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Richard Purdie <rpurdie@rpsys.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        <kernel-janitors@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-media@vger.kernel.org>
-From: "Andrew F. Davis" <afd@ti.com>
-Message-ID: <59d8c3d4-1fdf-7f30-f78c-92ddc9028d36@ti.com> (sfid-20170315_221707_988081_74B37F64)
-Date: Wed, 15 Mar 2017 16:15:49 -0500
+        Fri, 17 Mar 2017 11:11:05 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4.11] ath10k: fix incorrect wlan_mac_base in qca6174_regs
+Date: Fri, 17 Mar 2017 15:10:45 +0000
+Message-ID: <87mvckq6q3.fsf@kamboji.qca.qualcomm.com> (sfid-20170317_161111_239269_6F5D78F6)
+References: <1489445343-8719-1-git-send-email-ryanhsu@qca.qualcomm.com>
+In-Reply-To: <1489445343-8719-1-git-send-email-ryanhsu@qca.qualcomm.com>
+        (ryanhsu@qca.qualcomm.com's message of "Mon, 13 Mar 2017 15:49:03       -0700")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a1XBUUtJHrzfTa3GRqh+beU+1MteQ0evB8Vvy5zABRbmw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2017 04:03 PM, Arnd Bergmann wrote:
-> On Wed, Mar 15, 2017 at 5:37 PM, Andrew F. Davis <afd@ti.com> wrote:
->> Hello all,
->>
->> I was building a kernel for x86 and noticed Make still descended into
->> directories like drivers/gpu/drm/hisilicon, this seems kind of odd given
->> nothing will be built here. It looks to be due to some directories being
->> included in obj-y unconditionally instead of only when the relevant
->> CONFIG_ is set.
->>
->> These patches are split by subsystem in-case, for some reason, a file in
->> a directory does need to be built, I believe I have checked for all
->> instances of this, but a quick review from some maintainers would be nice.
-> 
-> I didn't see anything wrong with the patches, and made sure that there
-> are no tristate symbols controlling the subdirectory for anything that
-> requires a built-in driver (which would cause a link failure).
-> 
-> I'm not sure about drivers/lguest, which has some special magic
-> in its Makefile, it's possible that this now fails with CONFIG_LGUEST=m.
-> 
+<ryanhsu@qca.qualcomm.com> writes:
 
-lguest and mmc are the strange ones, so I put them last in the series in
-case they did need to be dropped.
+> From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+>
+> In the 'commit ebee76f7fa46 ("ath10k: allow setting coverage class")',
+> it inherits the design and the address offset from ath9k, but the address
+> is not applicable to QCA6174, which leads to a random crash while doing t=
+he
+> resume() operation, since the set_coverage_class.ops will be called from
+> ieee80211_reconfig() when resume() (if the wow is not configured).
+>
+> Fix the incorrect address offset here to avoid the random crash.
+>
+> Verified on QCA6174/hw3.0 with firmware WLAN.RM.4.4-00022-QCARMSWPZ-2.
 
-lguest was supposed to have been taken from v1:
-https://lkml.org/lkml/2016/6/20/1086
-but it looks like it didn't so I re-introduced it for v3.
+This also seems to fix a regression related to firmware restart. I was
+testing simulate_fw_crash on qca6174 with current ath.git master branch
+and noticed firmware crash recovery fails every time:
 
-mmc caught some 0-day build warnings but I never got to the bottom of them.
+[   90.402204] ath10k_pci 0000:02:00.0: device is wedged, will not restart
 
-Anyway, I have no problem with these two being held back until the magic
-in their Makefile is sorted out.
+With this patch the recovery works every time I tested this. But I'm not
+100% sure yet about this, need to test more.
 
-Thanks,
-Andrew
+> Cc: stable@vger.kernel.org
 
->       Arnd
-> 
+I'll add '# v4.10' because that should be first release which had
+ebee76f7fa46, no need to backport to older releases.
+
+--=20
+Kalle Valo=
