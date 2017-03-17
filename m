@@ -1,102 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55752 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756611AbdCWX01 (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33517 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751023AbdCQTtZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2017 19:26:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 4/4] mac80211-hwsim: add length checks before allocating skb.
-Date: Thu, 23 Mar 2017 16:26:18 -0700
-Message-Id: <1490311578-18926-4-git-send-email-greearb@candelatech.com> (sfid-20170324_002703_074915_7FB9FBD0)
-In-Reply-To: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
-References: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
+        Fri, 17 Mar 2017 15:49:25 -0400
+Received: by mail-lf0-f67.google.com with SMTP id r36so6193797lfi.0
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 12:49:24 -0700 (PDT)
+Subject: Re: [RFC v4 06/21] ath10k: sdio support
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+ <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
+ <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
+ <871su52th2.fsf@kamboji.qca.qualcomm.com>
+ <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
+ <877f3qyc5g.fsf@kamboji.qca.qualcomm.com>
+ <29c3dd40-c3ac-746e-d8ef-cb072c58578a@gmail.com>
+ <87y3w5tvkq.fsf@kamboji.qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <feaa5932-4a2b-d801-9226-5532cea93a14@gmail.com> (sfid-20170317_204959_026669_2313D166)
+Date: Fri, 17 Mar 2017 16:54:08 +0100
+MIME-Version: 1.0
+In-Reply-To: <87y3w5tvkq.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
 
-Modify the receive-from-user-space logic to do length
-and 'is-down' checks before trying to allocate an skb.
 
-And, if we are going to ignore the pkt due to radio idle,
-then do not return an error code to user-space.  User-space
-cannot reliably know exactly when a radio is idle or not.
+On 2017-03-16 10:33, Kalle Valo wrote:
+> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+>
+>>> There seems to be same pattern for reading four bytes, what if we should
+>>> add a helper for that? Something like ath10k_sdio_read32()? It could
+>>> handle the kmalloc and switch endianess also.
+>>>
+>>> But please don't make any chances to sdio.c for the moment, let me
+>>> submit v5 first.
+>>>
+>> I notice that you have submitted v5 (and v6) of the sdio patches. Great!
+>>
+>> I assume you will add them to master-pending soon so I will try out
+>> everything (usb too) as soon as they are on master-pending.
+>
+> v6 is now in master-pending.
+>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 41 +++++++++++++++++++----------------
- 1 file changed, 22 insertions(+), 19 deletions(-)
+I have added my usb patches on top of sdio v6 and everything works as expected
+(both usb and sdio).
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 84dcddf..6207d4a 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3074,6 +3074,7 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	int frame_data_len;
- 	void *frame_data;
- 	struct sk_buff *skb = NULL;
-+	int rv = -EINVAL;
- 
- 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
- 	    !info->attrs[HWSIM_ATTR_FRAME] ||
-@@ -3088,25 +3089,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
- 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
- 
--	/* Allocate new skb here */
--	skb = alloc_skb(frame_data_len, GFP_KERNEL);
--	if (skb == NULL) {
--		if (hwsim_ratelimit())
--			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
--			       frame_data_len);
--		goto out;
--	}
--
--	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
--		if (hwsim_ratelimit())
--			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
--			       frame_data_len, IEEE80211_MAX_DATA_LEN);
--		goto out;
--	}
--
--	/* Copy the data */
--	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
--
- 	data2 = get_hwsim_data_ref_from_addr(dst);
- 
- 	if (!data2) {
-@@ -3135,9 +3117,30 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 		if (((cnt++ & 0x3FF) == 0x3FF) && hwsim_ratelimit())
- 			printk(KERN_DEBUG " hwsim rx-nl: radio %pM idle: %d or not started: %d cnt: %d\n",
- 			       dst, data2->idle, !data2->started, cnt);
-+		rv = -ENETDOWN;
- 		goto out;
- 	}
- 
-+	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
-+		if (hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
-+			       frame_data_len, IEEE80211_MAX_DATA_LEN);
-+		goto out;
-+	}
-+
-+
-+	/* Allocate new skb here */
-+	skb = alloc_skb(frame_data_len, GFP_KERNEL);
-+	if (skb == NULL) {
-+		if (hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
-+			       frame_data_len);
-+		goto out;
-+	}
-+
-+	/* Copy the data */
-+	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
-+
- 	/* A frame is received from user space */
- 	memset(&rx_status, 0, sizeof(rx_status));
- 	if (info->attrs[HWSIM_ATTR_FREQ]) {
--- 
-2.4.11
+Your changes does not seem to have broken anything.
