@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44192 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdCHKP6 (ORCPT
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:34980 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751037AbdCQISj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 05:15:58 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an error
-References: <20170227214539.16422-1-hdegoede@redhat.com>
-        <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com>
-        <6c1dd576-7571-e85f-ee43-8e9e69a76679@redhat.com>
-        <ecb4cc58-8cf5-1ca6-7649-fe4e97ac2149@broadcom.com>
-        <87a88w851p.fsf@kamboji.qca.qualcomm.com>
-        <8cd33792-0a44-fbce-f485-218b8c126625@redhat.com>
-Date: Wed, 08 Mar 2017 12:14:28 +0200
-In-Reply-To: <8cd33792-0a44-fbce-f485-218b8c126625@redhat.com> (Hans de
-        Goede's message of "Wed, 8 Mar 2017 11:08:27 +0100")
-Message-ID: <8760jk848r.fsf@kamboji.qca.qualcomm.com> (sfid-20170308_111803_677396_B536CC37)
+        Fri, 17 Mar 2017 04:18:39 -0400
+Received: by mail-qt0-f181.google.com with SMTP id x35so56803071qtc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 01:18:07 -0700 (PDT)
+Subject: Re: Fw: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless
+ adapter does not work
+To: Stephen Hemminger <stephen@networkplumber.org>,
+        linux-wireless@vger.kernel.org
+References: <20170316224743.2723cf14@xeon-e3>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6932c361-4ca1-8d81-3e32-2bee1b62dd81@broadcom.com> (sfid-20170317_091941_987969_A18FCD73)
+Date: Fri, 17 Mar 2017 09:18:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170316224743.2723cf14@xeon-e3>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hans de Goede <hdegoede@redhat.com> writes:
+On 17-3-2017 6:47, Stephen Hemminger wrote:
+> 
 
->>> I think Kalle prefers the whole series to be resubmitted.
->>>
->>> Kalle,
->>>
->>> Can you confirm (or deny)?
->>
->> Exactly, I want to apply the full series (with the highest version
->> number). Not waste time guessing what patches I should take and what to
->> drop, with the increased risk of guessing wrong.
->
-> Ok, so patch 2/4 is still under discussion (and may be so for a while)
-> shall I send a new version with that patch dropped ?  And then send
-> that patch (or a modified version) separately later ?
+Hi Stephen,
 
-Yeah, for me that would be the easiest. Thanks.
+The issue here is with an out-of-tree driver, ie. broadcom-wl, so not
+really a kernel issue. Anyway, I asked for more info in bugzilla to
+determine whether using the brcmfmac driver, which is supported
+upstream, is an option.
 
--- 
-Kalle Valo
+Regards,
+Arend
+
+> Begin forwarded message:
+> 
+> Date: Fri, 17 Mar 2017 02:22:58 +0000
+> From: bugzilla-daemon@bugzilla.kernel.org
+> To: stephen@networkplumber.org
+> Subject: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless adapter does not work
+> 
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=194903
+> 
+>             Bug ID: 194903
+>            Summary: After updating Kernel to 4.9.9 my wireless adapter
+>                     does not work
+>            Product: Networking
+>            Version: 2.5
+>     Kernel Version: 4.9.9
+>           Hardware: x86-64
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: blocking
+>           Priority: P1
+>          Component: IPV4
+>           Assignee: stephen@networkplumber.org
+>           Reporter: jemel.robinson@icloud.com
+>         Regression: No
+> 
+> I have a Macbook Pro 13" (7, 1) and when I updated my kernel version to 4.9.9
+> (F25), my broadcom wireless adapter is no longer detected. I have since updated
+> to the latest kernel and have gotten the same result. As of now, I am currently
+> operating at the kernel version prior to 4.9.9 (4.8.6-300.fc25.x86_64
+> ) and I am able to use WiFi with no issues. I have tried uninstalling and
+> reinstalling the broadcom -wl driver to no avail. I narrowed the issue down to
+> the kernel simply by updating the kernel only and after reboot, wireless was
+> gone.
+> 
