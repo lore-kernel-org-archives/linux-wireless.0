@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37948 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750771AbdCNL2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 07:28:32 -0400
-Message-ID: <1489490906.28373.3.camel@sipsolutions.net> (sfid-20170314_122835_221002_EEFCAAB8)
-Subject: Re: brcmfmac and WIPHY_FLAG_NETNS_OK
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Mark Asselstine <mark.asselstine@windriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 14 Mar 2017 12:28:26 +0100
-In-Reply-To: <df16691e-62f7-4c95-0534-48d1dea4f5ba@broadcom.com> (sfid-20170314_105145_213435_11AD40CE)
-References: <2253234.njokx7NVYT@yow-masselst-lx1>
-         <df16691e-62f7-4c95-0534-48d1dea4f5ba@broadcom.com>
-         (sfid-20170314_105145_213435_11AD40CE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:35220 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750866AbdCQFsK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Mar 2017 01:48:10 -0400
+Received: by mail-pg0-f48.google.com with SMTP id b129so35897226pgc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 22:47:51 -0700 (PDT)
+Received: from xeon-e3 (204-195-18-65.wavecable.com. [204.195.18.65])
+        by smtp.gmail.com with ESMTPSA id u29sm7804856pfa.123.2017.03.16.22.47.50
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 16 Mar 2017 22:47:50 -0700 (PDT)
+Date: Thu, 16 Mar 2017 22:47:43 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: linux-wireless@vger.kernel.org
+Subject: Fw: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless
+ adapter does not work
+Message-ID: <20170316224743.2723cf14@xeon-e3> (sfid-20170317_064859_645514_38F617B8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> It never came up with any projects so far. I doubt that the patch
-> below is sufficient. I suspect something more is needed. Using git
-> blame I ended up finding these commits:
-> 
-> a272a72 mac80211: allow using network namespaces
 
-This is needed in brcm drivers.
+Begin forwarded message:
 
-> 463d018 cfg80211: make aware of net namespaces
+Date: Fri, 17 Mar 2017 02:22:58 +0000
+From: bugzilla-daemon@bugzilla.kernel.org
+To: stephen@networkplumber.org
+Subject: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless adapter does not work
 
-This has no impact on brcm drivers :)
 
-> 5061b0c mac80211: cooperate more with network namespaces
+https://bugzilla.kernel.org/show_bug.cgi?id=194903
 
-This shouldn't be needed, you're not referring to init_net in brcm
-drivers.
+            Bug ID: 194903
+           Summary: After updating Kernel to 4.9.9 my wireless adapter
+                    does not work
+           Product: Networking
+           Version: 2.5
+    Kernel Version: 4.9.9
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: IPV4
+          Assignee: stephen@networkplumber.org
+          Reporter: jemel.robinson@icloud.com
+        Regression: No
 
-> I think what is required from brcmfmac is to set netns for each
-> netdev that we create to the same netns as the wiphy instance using
-> wiphy_net().
+I have a Macbook Pro 13" (7, 1) and when I updated my kernel version to 4.9.9
+(F25), my broadcom wireless adapter is no longer detected. I have since updated
+to the latest kernel and have gotten the same result. As of now, I am currently
+operating at the kernel version prior to 4.9.9 (4.8.6-300.fc25.x86_64
+) and I am able to use WiFi with no issues. I have tried uninstalling and
+reinstalling the broadcom -wl driver to no avail. I narrowed the issue down to
+the kernel simply by updating the kernel only and after reboot, wireless was
+gone.
 
-Yes, like the mac80211 patch above.
-
-> Not sure if there is more to consider, but hopefully Johannes can
-> comment on this although the mentioned commits have been around for a
-> while.
-
-I don't think there's anything else.
-
-> >         wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
-> >                         WIPHY_FLAG_OFFCHAN_TX |
-> > -                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-> > +                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
-> > +                       WIPHY_FLAG_NETNS_OK;
-
-This is not sufficient, you still have to set the netns for newly
-created netdevs.
-
-johannes
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
