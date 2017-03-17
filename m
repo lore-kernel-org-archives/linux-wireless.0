@@ -1,252 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45978 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750829AbdCNHux (ORCPT
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:36216 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750980AbdCQJdW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 03:50:53 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: axboe@kernel.dk, linux-wireless@vger.kernel.org
-Cc: torvalds@linux-foundation.org, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-        sara.sharon@intel.com, liad.kaufman@intel.com,
-        luciano.coelho@intel.com
-Date: Tue, 14 Mar 2017 09:50:35 +0200
-Message-Id: <20170314075035.19248-1-luca@coelho.fi> (sfid-20170314_085057_567640_8984F974)
-In-Reply-To: <1489410030.22435.34.camel@coelho.fi>
-References: <1489410030.22435.34.camel@coelho.fi>
-Subject: [RESEND PATCH 4.11] iwlwifi: mvm: cleanup pending frames in DQA mode
+        Fri, 17 Mar 2017 05:33:22 -0400
+Received: by mail-qt0-f181.google.com with SMTP id r45so57899182qte.3
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 02:33:21 -0700 (PDT)
+Subject: Re: [RFT] brcmfmac: add support to move wiphy instance into network
+ namespace
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Mark Asselstine <mark.asselstine@windriver.com>
+References: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
+ <124157392.J1GrpqVLd5@yow-masselst-lx1>
+ <0343e3c9-baf8-f3b1-8c37-c8b0864bd7e5@broadcom.com>
+ <1489742655.2544.4.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <1fe602fe-3db0-f533-f176-bed58f7e011c@broadcom.com> (sfid-20170317_103325_930706_FE965A2A)
+Date: Fri, 17 Mar 2017 10:33:18 +0100
+MIME-Version: 1.0
+In-Reply-To: <1489742655.2544.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 17-3-2017 10:24, Johannes Berg wrote:
+> On Fri, 2017-03-17 at 10:06 +0100, Arend Van Spriel wrote:
+>> On 16-3-2017 22:51, Mark Asselstine wrote:
+>>> On Tuesday, March 14, 2017 9:51:52 PM EDT Arend van Spriel wrote:
+>>>> To support network namespace the driver must assure all created
+>>>> network interfaces are in the same namespace as the wiphy
+>>>> instance.
+>>>>
+>>>> Reported-by: Mark Asselstine <mark.asselstine@windriver.com>
+>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>> ---
+>>>> Hi Mark,
+>>>>
+>>>> Please check this patch. I can not say I am an expert when it
+>>>> comes
+>>>> to using namespaces. So let me know if it works and I can change
+>>>> Reported-by into Tested-by.
+>>>
+>>> Seems to pass the tests I threw at it. Seems happy with namespaces.
+>>
+>> I tested it myself and noticed something unexpected. Upon changing
+>> from &init_net to brcm-wifi the wdev id has changed from 0x1 to 0x2
+>> (see below) and upon going from brcm-wifi to &init_net both interface
+>> change their wdev id.
+> 
+> Interesting. That's clearly a cfg80211 bug, does this help?
+> 
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 2e1740c7a8bf..d71d5e90229f 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -1183,7 +1183,15 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+>  		INIT_LIST_HEAD(&wdev->mgmt_registrations);
+>  		spin_lock_init(&wdev->mgmt_registrations_lock);
+>  
+> -		wdev->identifier = ++rdev->wdev_id;
+> +		/*
+> +		 * We get here also when the interface changes network namespaces,
+> +		 * as it's registered into the new one, but we don't want it to
+> +		 * change ID in that case. Checking if the ID is already assigned
+> +		 * works, because 0 isn't considered a valid ID and the memory is
+> +		 * 0-initialized.
+> +		 */
+> +		if (!wdev->identifier)
+> +			wdev->identifier = ++rdev->wdev_id;
 
-When a station is asleep, the fw will set it as "asleep".
-All queues that are used only by one station will be stopped by
-the fw.
+Given my debug session just a minute ago I would say yes ;-) as this is
+where I put wiphy_err() statement. Will give it a quick spin.
 
-In pre-DQA mode this was relevant for aggregation queues. However,
-in DQA mode a queue is owned by one station only, so all queues
-will be stopped.
-As a result, we don't expect to get filtered frames back to
-mac80211 and don't have to maintain the entire pending_frames
-state logic, the same way as we do in aggregations.
+Regards,
+Arend
 
-The correct behavior is to align DQA behavior with the aggregation
-queue behaviour pre-DQA:
-- Don't count pending frames.
-- Let mac80211 know we have frames in these queues so that it can
-properly handle trigger frames.
-
-When a trigger frame is received, mac80211 tells the driver to send
-frames from the queues using release_buffered_frames.
-The driver will tell the fw to let frames out even if the station
-is asleep. This is done by iwl_mvm_sta_modify_sleep_tx_count.
-
-Reported-and-tested-by: Jens Axboe <axboe@kernel.dk>
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
-
-Just resending with reported and tested by tags.
-
-
-drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  5 +--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 11 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h      |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 41 ++++++++++-------------
- 4 files changed, 28 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d37b1695c64e..6927caecd48e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2319,7 +2319,7 @@ iwl_mvm_mac_release_buffered_frames(struct ieee80211_hw *hw,
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 
--	/* Called when we need to transmit (a) frame(s) from agg queue */
-+	/* Called when we need to transmit (a) frame(s) from agg or dqa queue */
- 
- 	iwl_mvm_sta_modify_sleep_tx_count(mvm, sta, reason, num_frames,
- 					  tids, more_data, true);
-@@ -2338,7 +2338,8 @@ static void __iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
- 	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++) {
- 		struct iwl_mvm_tid_data *tid_data = &mvmsta->tid_data[tid];
- 
--		if (tid_data->state != IWL_AGG_ON &&
-+		if (!iwl_mvm_is_dqa_supported(mvm) &&
-+		    tid_data->state != IWL_AGG_ON &&
- 		    tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA)
- 			continue;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index bd1dcc863d8f..b51a2853cc80 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -3135,7 +3135,7 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 				       struct ieee80211_sta *sta,
- 				       enum ieee80211_frame_release_type reason,
- 				       u16 cnt, u16 tids, bool more_data,
--				       bool agg)
-+				       bool single_sta_queue)
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct iwl_mvm_add_sta_cmd cmd = {
-@@ -3155,14 +3155,14 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 	for_each_set_bit(tid, &_tids, IWL_MAX_TID_COUNT)
- 		cmd.awake_acs |= BIT(tid_to_ucode_ac[tid]);
- 
--	/* If we're releasing frames from aggregation queues then check if the
--	 * all queues combined that we're releasing frames from have
-+	/* If we're releasing frames from aggregation or dqa queues then check
-+	 * if all the queues that we're releasing frames from, combined, have:
- 	 *  - more frames than the service period, in which case more_data
- 	 *    needs to be set
- 	 *  - fewer than 'cnt' frames, in which case we need to adjust the
- 	 *    firmware command (but do that unconditionally)
- 	 */
--	if (agg) {
-+	if (single_sta_queue) {
- 		int remaining = cnt;
- 		int sleep_tx_count;
- 
-@@ -3172,7 +3172,8 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 			u16 n_queued;
- 
- 			tid_data = &mvmsta->tid_data[tid];
--			if (WARN(tid_data->state != IWL_AGG_ON &&
-+			if (WARN(!iwl_mvm_is_dqa_supported(mvm) &&
-+				 tid_data->state != IWL_AGG_ON &&
- 				 tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA,
- 				 "TID %d state is %d\n",
- 				 tid, tid_data->state)) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 4be34f902278..1927ce607798 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -547,7 +547,7 @@ void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 				       struct ieee80211_sta *sta,
- 				       enum ieee80211_frame_release_type reason,
- 				       u16 cnt, u16 tids, bool more_data,
--				       bool agg);
-+				       bool single_sta_queue);
- int iwl_mvm_drain_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 		      bool drain);
- void iwl_mvm_sta_modify_disable_tx(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index dd2b4a300819..3f37075f4cde 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -34,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -628,8 +629,10 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 	 * values.
- 	 * Note that we don't need to make sure it isn't agg'd, since we're
- 	 * TXing non-sta
-+	 * For DQA mode - we shouldn't increase it though
- 	 */
--	atomic_inc(&mvm->pending_frames[sta_id]);
-+	if (!iwl_mvm_is_dqa_supported(mvm))
-+		atomic_inc(&mvm->pending_frames[sta_id]);
- 
- 	return 0;
- }
-@@ -1005,11 +1008,8 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 	spin_unlock(&mvmsta->lock);
- 
--	/* Increase pending frames count if this isn't AMPDU */
--	if ((iwl_mvm_is_dqa_supported(mvm) &&
--	     mvmsta->tid_data[tx_cmd->tid_tspec].state != IWL_AGG_ON &&
--	     mvmsta->tid_data[tx_cmd->tid_tspec].state != IWL_AGG_STARTING) ||
--	    (!iwl_mvm_is_dqa_supported(mvm) && !is_ampdu))
-+	/* Increase pending frames count if this isn't AMPDU or DQA queue */
-+	if (!iwl_mvm_is_dqa_supported(mvm) && !is_ampdu)
- 		atomic_inc(&mvm->pending_frames[mvmsta->sta_id]);
- 
- 	return 0;
-@@ -1079,12 +1079,13 @@ static void iwl_mvm_check_ratid_empty(struct iwl_mvm *mvm,
- 	lockdep_assert_held(&mvmsta->lock);
- 
- 	if ((tid_data->state == IWL_AGG_ON ||
--	     tid_data->state == IWL_EMPTYING_HW_QUEUE_DELBA) &&
-+	     tid_data->state == IWL_EMPTYING_HW_QUEUE_DELBA ||
-+	     iwl_mvm_is_dqa_supported(mvm)) &&
- 	    iwl_mvm_tid_queued(tid_data) == 0) {
- 		/*
--		 * Now that this aggregation queue is empty tell mac80211 so it
--		 * knows we no longer have frames buffered for the station on
--		 * this TID (for the TIM bitmap calculation.)
-+		 * Now that this aggregation or DQA queue is empty tell
-+		 * mac80211 so it knows we no longer have frames buffered for
-+		 * the station on this TID (for the TIM bitmap calculation.)
- 		 */
- 		ieee80211_sta_set_buffered(sta, tid, false);
- 	}
-@@ -1257,7 +1258,6 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	u8 skb_freed = 0;
- 	u16 next_reclaimed, seq_ctl;
- 	bool is_ndp = false;
--	bool txq_agg = false; /* Is this TXQ aggregated */
- 
- 	__skb_queue_head_init(&skbs);
- 
-@@ -1283,6 +1283,10 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			info->flags |= IEEE80211_TX_STAT_ACK;
- 			break;
- 		case TX_STATUS_FAIL_DEST_PS:
-+			/* In DQA, the FW should have stopped the queue and not
-+			 * return this status
-+			 */
-+			WARN_ON(iwl_mvm_is_dqa_supported(mvm));
- 			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 			break;
- 		default:
-@@ -1387,15 +1391,6 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			bool send_eosp_ndp = false;
- 
- 			spin_lock_bh(&mvmsta->lock);
--			if (iwl_mvm_is_dqa_supported(mvm)) {
--				enum iwl_mvm_agg_state state;
--
--				state = mvmsta->tid_data[tid].state;
--				txq_agg = (state == IWL_AGG_ON ||
--					state == IWL_EMPTYING_HW_QUEUE_DELBA);
--			} else {
--				txq_agg = txq_id >= mvm->first_agg_queue;
--			}
- 
- 			if (!is_ndp) {
- 				tid_data->next_reclaimed = next_reclaimed;
-@@ -1452,11 +1447,11 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	 * If the txq is not an AMPDU queue, there is no chance we freed
- 	 * several skbs. Check that out...
- 	 */
--	if (txq_agg)
-+	if (iwl_mvm_is_dqa_supported(mvm) || txq_id >= mvm->first_agg_queue)
- 		goto out;
- 
- 	/* We can't free more than one frame at once on a shared queue */
--	WARN_ON(!iwl_mvm_is_dqa_supported(mvm) && (skb_freed > 1));
-+	WARN_ON(skb_freed > 1);
- 
- 	/* If we have still frames for this STA nothing to do here */
- 	if (!atomic_sub_and_test(skb_freed, &mvm->pending_frames[sta_id]))
--- 
-2.11.0
+>  		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
+>  		rdev->devlist_generation++;
+>  		/* can only change netns with wiphy */
+> 
+> johannes
+> 
