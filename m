@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:50113 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751903AbdC1OAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 10:00:09 -0400
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-To: David Laight <David.Laight@ACULAB.COM>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
-        "linux-ppp@vger.kernel.org" <linux-ppp@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
-        "nbd@openwrt.org" <nbd@openwrt.org>,
-        "blogic@openwrt.org" <blogic@openwrt.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "yishaih@mellanox.com" <yishaih@mellanox.com>,
-        "saeedm@mellanox.com" <saeedm@mellanox.com>,
-        "matanb@mellanox.com" <matanb@mellanox.com>,
-        "leonro@mellanox.com" <leonro@mellanox.com>,
-        "ajk@comnets.uni-bremen.de" <ajk@comnets.uni-bremen.de>,
-        "paulus@samba.org" <paulus@samba.org>, "j@w1.fi" <j@w1.fi>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        "David Windsor" <dwindsor@gmail.com>
-Subject: RE: [PATCH 06/16] drivers, net, mlx5: convert mlx5_cq.refcount from
- atomic_t to refcount_t
-Date: Tue, 28 Mar 2017 14:00:01 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C82E54@IRSMSX102.ger.corp.intel.com> (sfid-20170328_160120_812065_69EEBCEE)
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
- <1490691403-4016-7-git-send-email-elena.reshetova@intel.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFFBE8AF@AcuExch.aculab.com>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFFBE8AF@AcuExch.aculab.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42396 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751105AbdCROSH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Mar 2017 10:18:07 -0400
+Message-Id: <1489845625.1862832.915495288.0E7B847A@webmail.messagingengine.com> (sfid-20170318_151810_900163_8E961799)
+From: "Nikita N." <nikitan@operamail.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Subject: offtopic
+In-Reply-To: <c845b656-f52e-12ec-82c2-d0533644a6da@broadcom.com>
+Date: Sat, 18 Mar 2017 07:00:25 -0700
+References: <1489685379.2341893.913635800.3ACB3D38@webmail.messagingengine.com>
+ <1489732680.3555697.914250624.7A79601B@webmail.messagingengine.com>
+ <1489782418.608233.914997416.7AA6FF7F@webmail.messagingengine.com>
+ <1489798021.26594.12.camel@redhat.com>
+ <81262ad8-2a6a-5f7f-835c-744cbb8a8fa6@broadcom.com>
+ <1489834155.1825125.915404800.07820D03@webmail.messagingengine.com>
+ <c845b656-f52e-12ec-82c2-d0533644a6da@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+how do you possibly dare to throw a personal message in public!!!
+you not able to fix your own personal stuffs yourself?
+is that what they teach you at broadcom? no wanders....
+mind your own dirty business mr arend, and you know what im talking
+about - out
+-- 
+  Nikita N.
+  nikitan@operamail.com
 
-> From: Elena Reshetova
-> > Sent: 28 March 2017 09:57
-> >
-> > refcount_t type and corresponding API should be
-> > used instead of atomic_t when the variable is used as
-> > a reference counter. This allows to avoid accidental
-> > refcounter overflows that might lead to use-after-free
-> > situations.
+
+On Sat, Mar 18, 2017, at 06:14 AM, Arend Van Spriel wrote:
+> + linux-wireless
+> + Stanislaw
 > 
-> I can't help feeling that you ought to find a scheme
-> that will detect extra decrements and extra increments
-> before the counter wraps 32 bits.
+> You probably dropped some people inadvertently so putting some back.
 > 
-> If an extra reference is requested every 100us it takes 4.8 days
-> for the counter to increment back to zero.
-> Simple tests aren't doing to find that - but it can easily happen
-> on a system that is running for several years.
-
-So, you are proposing to try detecting this case instead of preventing overflows?
-Not sure how this would look like in a generic form...
-
-
-
+> On 18-3-2017 11:49, Nikita N. wrote:
+> > unfortunately nobody besides you answered my call, so I already stopped
+> > requesting, because clearly the project is dead, and besides I
 > 
-> 	David
+> That is not what the MAINTAINERS file lists so you might want to send a
+> patch correcting that file. Anyway, it may also help if you make your
+> inquiry/request/whatever more concrete.
+> 
+> RALINK RT2X00 WIRELESS LAN DRIVER
+> P:      rt2x00 project
+> M:      Stanislaw Gruszka <sgruszka@redhat.com>
+> M:      Helmut Schaa <helmut.schaa@googlemail.com>
+> L:      linux-wireless@vger.kernel.org
+> S:      Maintained
+> F:      drivers/net/wireless/ralink/rt2x00/
+> 
+> > personally think you should mind your own dirty business only
+> 
+> Not sure what business you are referring to here. We are all engaged in
+> collaborating within the linux community and as such I responded. Not
+> sure what is "dirty" about that. Maybe I offended you in the past or by
+> the suggestion you might be a troll, but I did not say you are. If you
+> are sending emails to a public mailing list, you need to accept that
+> anyone may respond whatever dirty business they are doing otherwise.
+> They still spend their time to give you a response, which I personally
+> think is something you should mind and appreciate.
+> 
+> Regards,
+> Arend
+
+-- 
+http://www.fastmail.com - Or how I learned to stop worrying and
+                          love email again
