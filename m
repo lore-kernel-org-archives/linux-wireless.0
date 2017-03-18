@@ -1,88 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:38842 "EHLO mga07.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:46444 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755256AbdC1JAf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 05:00:35 -0400
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
-        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
-        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
-        matanb@mellanox.com, leonro@mellanox.com,
-        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
-        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org,
-        Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 00/16] Networking drivers refcount conversions
-Date: Tue, 28 Mar 2017 11:56:27 +0300
-Message-Id: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112614_651952_849E22F1)
+        id S1750957AbdCRUIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Mar 2017 16:08:39 -0400
+Message-ID: <1489866302.13995.3.camel@sipsolutions.net> (sfid-20170318_211217_252907_3CB6736C)
+Subject: Re: [BUG] with a 4.10.x kernel it's impossible to apply country
+ regulatory rules
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Xose Vazquez Perez <xose.vazquez@gmail.com>
+Date: Sat, 18 Mar 2017 20:45:02 +0100
+In-Reply-To: <8c844f92-6148-2ad7-068c-a919891c7a90@lwfinger.net> (sfid-20170318_184148_834282_FCD36BD9)
+References: <09a819fc-c936-6838-654b-e349c58a09ec@gmail.com>
+         <8c844f92-6148-2ad7-068c-a919891c7a90@lwfinger.net>
+         (sfid-20170318_184148_834282_FCD36BD9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series, for various different networking drivers, replaces atomic_t reference
-counters with the new refcount_t type and API (see include/linux/refcount.h).
-By doing this we prevent intentional or accidental
-underflows or overflows that can led to use-after-free vulnerabilities.
+On Sat, 2017-03-18 at 12:41 -0500, Larry Finger wrote:
+> 
+> I have duplicated your bug and I have bisected it to
+> 
+> commit 2ae0f17df1cd52aafd1ab0415ea1f1dd56dc0e2a
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Mon Oct 24 14:40:04 2016 +0200
+> 
+>      genetlink: use idr to track families
+> 
+> This patch is quite extensive and I have no idea which part is
+> failing, thus all I can do is report this confirmation.
 
-The below patches are fully independent and can be cherry-picked separately.
-Since we convert all kernel subsystems in the same fashion, resulting
-in about 300 patches, we have to group them for sending at least in some
-fashion to be manageable. Please excuse the long cc list.
+I don't think that makes any sense - have you verified that reverting
+that makes it go away?
 
-If there are no objections to these patches, please take them
-through the relevant trees.
-
-Elena Reshetova (16):
-  drivers, net, ethernet: convert clip_entry.refcnt from atomic_t to
-    refcount_t
-  drivers, net, ethernet: convert mtk_eth.dma_refcnt from atomic_t to
-    refcount_t
-  drivers, net, mlx4: convert mlx4_cq.refcount from atomic_t to
-    refcount_t
-  drivers, net, mlx4: convert mlx4_qp.refcount from atomic_t to
-    refcount_t
-  drivers, net, mlx4: convert mlx4_srq.refcount from atomic_t to
-    refcount_t
-  drivers, net, mlx5: convert mlx5_cq.refcount from atomic_t to
-    refcount_t
-  drivers, net, mlx5: convert fs_node.refcount from atomic_t to
-    refcount_t
-  drivers, net, hamradio: convert sixpack.refcnt from atomic_t to
-    refcount_t
-  drivers, net: convert masces_rx_sa.refcnt from atomic_t to refcount_t
-  drivers, net: convert masces_rx_sc.refcnt from atomic_t to refcount_t
-  drivers, net: convert masces_tx_sa.refcnt from atomic_t to refcount_t
-  drivers, net, ppp: convert asyncppp.refcnt from atomic_t to refcount_t
-  drivers, net, ppp: convert ppp_file.refcnt from atomic_t to refcount_t
-  drivers, net, ppp: convert syncppp.refcnt from atomic_t to refcount_t
-  drivers, net, intersil: convert hostap_cmd_queue.usecnt from atomic_t
-    to refcount_t
-  drivers, net, intersil: convert request_context.refcount from atomic_t
-    to refcount_t
-
- drivers/net/ethernet/chelsio/cxgb4/clip_tbl.c      | 13 ++++++-----
- drivers/net/ethernet/chelsio/cxgb4/clip_tbl.h      |  4 +++-
- drivers/net/ethernet/mediatek/mtk_eth_soc.c        |  8 ++++---
- drivers/net/ethernet/mediatek/mtk_eth_soc.h        |  4 +++-
- drivers/net/ethernet/mellanox/mlx4/cq.c            |  8 +++----
- drivers/net/ethernet/mellanox/mlx4/qp.c            |  8 +++----
- drivers/net/ethernet/mellanox/mlx4/srq.c           |  8 +++----
- drivers/net/ethernet/mellanox/mlx5/core/cq.c       | 16 +++++++-------
- drivers/net/ethernet/mellanox/mlx5/core/fs_core.c  | 24 ++++++++++-----------
- drivers/net/ethernet/mellanox/mlx5/core/fs_core.h  |  3 ++-
- drivers/net/hamradio/6pack.c                       | 12 +++++------
- drivers/net/macsec.c                               | 25 +++++++++++-----------
- drivers/net/ppp/ppp_async.c                        | 10 ++++-----
- drivers/net/ppp/ppp_generic.c                      | 17 ++++++++-------
- drivers/net/ppp/ppp_synctty.c                      | 11 +++++-----
- drivers/net/wireless/intersil/hostap/hostap_hw.c   | 12 +++++------
- drivers/net/wireless/intersil/hostap/hostap_wlan.h |  3 ++-
- .../net/wireless/intersil/orinoco/orinoco_usb.c    | 15 +++++++------
- include/linux/mlx4/device.h                        |  8 +++----
- include/linux/mlx5/cq.h                            |  4 ++--
- 20 files changed, 112 insertions(+), 101 deletions(-)
-
--- 
-2.7.4
+johannes
