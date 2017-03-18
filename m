@@ -1,129 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48973 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34928 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754891AbdCGKaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:30:25 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 4/5] NFC: st21nfca: Covert to use GPIO descriptor
-Date: Tue,  7 Mar 2017 12:25:45 +0200
-Message-Id: <20170307102546.32224-4-andriy.shevchenko@linux.intel.com> (sfid-20170307_113117_632507_E86D1678)
-In-Reply-To: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
-References: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
+        id S1750712AbdCRIeC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Mar 2017 04:34:02 -0400
+Date: Sat, 18 Mar 2017 09:28:24 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: korgman <korgie@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 bug report (occasionally crashing after suspend)
+Message-ID: <20170318082823.GA7356@redhat.com> (sfid-20170318_094026_807137_C1C4869D)
+References: <7ae0bf4f-6ea2-1a4c-2e6d-e793cf800c4a@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7ae0bf4f-6ea2-1a4c-2e6d-e793cf800c4a@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we got rid of platform data, the driver may use GPIO descriptor
-directly.
+On Thu, Mar 16, 2017 at 04:26:10PM +0200, korgman wrote:
+> Hello there,
+> 
+> I have the same problem as reported here.
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1627828
+> 
+> and here
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1629603
 
-Looking deeply to the use of the GPIO pin it looks like it should be
-a fixed voltage regulator rather than custom GPIO handling. But this
-is out of scope of the change.
+This could be caused by power save, which is disable by default
+in the driver but some programs/distribution seems to enable
+it without user knowlage. First check: 
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/st21nfca/i2c.c | 40 +++++++++++++---------------------------
- 1 file changed, 13 insertions(+), 27 deletions(-)
+$ iw dev wlan0 get power_save
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 30ef330c9030..941f6f61166e 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -68,8 +68,7 @@ struct st21nfca_i2c_phy {
- 	struct i2c_client *i2c_dev;
- 	struct nfc_hci_dev *hdev;
- 
--	unsigned int gpio_ena;
--
-+	struct gpio_desc *gpiod_ena;
- 	struct st21nfca_se_status se_status;
- 
- 	struct sk_buff *pending_skb;
-@@ -150,7 +149,7 @@ static int st21nfca_hci_i2c_enable(void *phy_id)
- {
- 	struct st21nfca_i2c_phy *phy = phy_id;
- 
--	gpio_set_value(phy->gpio_ena, 1);
-+	gpiod_set_value(phy->gpiod_ena, 1);
- 	phy->powered = 1;
- 	phy->run_mode = ST21NFCA_HCI_MODE;
- 
-@@ -163,7 +162,7 @@ static void st21nfca_hci_i2c_disable(void *phy_id)
- {
- 	struct st21nfca_i2c_phy *phy = phy_id;
- 
--	gpio_set_value(phy->gpio_ena, 0);
-+	gpiod_set_value(phy->gpiod_ena, 0);
- 
- 	phy->powered = 0;
- }
-@@ -506,20 +505,17 @@ static struct nfc_phy_ops i2c_phy_ops = {
- static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
--	struct gpio_desc *gpiod_ena;
- 	struct device *dev = &client->dev;
- 	u8 tmp;
- 
- 	/* Get EN GPIO from ACPI */
--	gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
--					 GPIOD_OUT_LOW);
--	if (IS_ERR(gpiod_ena)) {
-+	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
-+					      GPIOD_OUT_LOW);
-+	if (IS_ERR(phy->gpiod_ena)) {
- 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
--		return PTR_ERR(gpiod_ena);
-+		return PTR_ERR(phy->gpiod_ena);
- 	}
- 
--	phy->gpio_ena = desc_to_gpio(gpiod_ena);
--
- 	phy->se_status.is_ese_present = false;
- 	phy->se_status.is_uicc_present = false;
- 
-@@ -539,31 +535,21 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
- static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
- {
- 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
-+	struct device *dev = &client->dev;
- 	struct device_node *pp;
--	int gpio;
--	int r;
- 
- 	pp = client->dev.of_node;
- 	if (!pp)
- 		return -ENODEV;
- 
- 	/* Get GPIO from device tree */
--	gpio = of_get_named_gpio(pp, "enable-gpios", 0);
--	if (gpio < 0) {
--		nfc_err(&client->dev, "Failed to retrieve enable-gpios from device tree\n");
--		return gpio;
-+	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
-+					      GPIOD_OUT_HIGH);
-+	if (IS_ERR(phy->gpiod_ena)) {
-+		nfc_err(dev, "Failed to request enable pin\n");
-+		return PTR_ERR(phy->gpiod_ena);
- 	}
- 
--	/* GPIO request and configuration */
--	r = devm_gpio_request_one(&client->dev, gpio, GPIOF_OUT_INIT_HIGH,
--				  ST21NFCA_GPIO_NAME_EN);
--	if (r) {
--		nfc_err(&client->dev, "Failed to request enable pin\n");
--		return r;
--	}
--
--	phy->gpio_ena = gpio;
--
- 	phy->se_status.is_ese_present =
- 				of_property_read_bool(pp, "ese-present");
- 	phy->se_status.is_uicc_present =
--- 
-2.11.0
+and if PS is enabled, disable by:
+
+$ iw dev wlan0 set power_save off
+
+and check if problem still happen.
+
+> If I understood correctly (form 2nd link) the latest good kernel was 4.4.4 after 4.4.6 we have the problem. (see message #5)
+> 
+> I quote:
+> "Not a full bisection yet but I have narrowed it down:
+> 
+> I looked at all kernel versions that had changes committed to iwlwifi and tested between them.
+> 
+> I now have determined that I do not have this issue in the kernel version 4.4.4.
+> 
+> I do have the issue in 4.4.6 and that is the next kernel version that has changes to iwlwifi so I guess that is the first bad version."
+
+This does not make sense as 3945 device is handled by
+iwl3495 (iwlegacy) driver, not by iwlwifi.
+
+Stanislaw
