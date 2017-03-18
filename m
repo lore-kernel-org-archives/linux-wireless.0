@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53710 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752236AbdC2RLl (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:32999 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751341AbdCRNOf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 13:11:41 -0400
-Subject: Re: [PATCH v3 1/4] mac80211-hwsim: notify user-space about channel
- change.
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
- <1490776922.7948.9.camel@sipsolutions.net>
- <260bf7e1-5ff2-709a-419b-df54b80c87f0@candelatech.com>
- <1490806271.7948.22.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <6ddd5a26-042b-0eaf-e8f2-11833ede300b@candelatech.com> (sfid-20170329_191145_502332_C09594F9)
-Date: Wed, 29 Mar 2017 10:11:40 -0700
+        Sat, 18 Mar 2017 09:14:35 -0400
+Received: by mail-wm0-f50.google.com with SMTP id v203so12430845wmg.0
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 06:14:11 -0700 (PDT)
+Subject: Re: Ralink - rt2800usb
+To: "Nikita N." <nikitan@operamail.com>
+References: <1489685379.2341893.913635800.3ACB3D38@webmail.messagingengine.com>
+ <1489732680.3555697.914250624.7A79601B@webmail.messagingengine.com>
+ <1489782418.608233.914997416.7AA6FF7F@webmail.messagingengine.com>
+ <1489798021.26594.12.camel@redhat.com>
+ <81262ad8-2a6a-5f7f-835c-744cbb8a8fa6@broadcom.com>
+ <1489834155.1825125.915404800.07820D03@webmail.messagingengine.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c845b656-f52e-12ec-82c2-d0533644a6da@broadcom.com> (sfid-20170318_141441_627874_E478339B)
+Date: Sat, 18 Mar 2017 14:14:08 +0100
 MIME-Version: 1.0
-In-Reply-To: <1490806271.7948.22.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1489834155.1825125.915404800.07820D03@webmail.messagingengine.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/29/2017 09:51 AM, Johannes Berg wrote:
->
->> The patch appeared to solve my problem, and it seems an improvement
->> over what is there currently.  Whoever wants it to support even more
->> things can add that in the future?
->
-> Yes, that's kinda true. However, it also means that wmediumd (or
-> similar) would have to support the two APIs. It'd be simpler for them
-> to just have to support a single one, no?
++ linux-wireless
++ Stanislaw
 
-I really don't understand what change you are suggesting.  Anything that
-uses a new API needs to change, and as API is further improved, then the
-app will need to change again.  Netlink's saving grace is that it is easy to
-add new data members and so support new API in a forward/backward compatible manner.
+You probably dropped some people inadvertently so putting some back.
 
-Thanks,
-Ben
+On 18-3-2017 11:49, Nikita N. wrote:
+> unfortunately nobody besides you answered my call, so I already stopped
+> requesting, because clearly the project is dead, and besides I
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+That is not what the MAINTAINERS file lists so you might want to send a
+patch correcting that file. Anyway, it may also help if you make your
+inquiry/request/whatever more concrete.
+
+RALINK RT2X00 WIRELESS LAN DRIVER
+P:	rt2x00 project
+M:	Stanislaw Gruszka <sgruszka@redhat.com>
+M:	Helmut Schaa <helmut.schaa@googlemail.com>
+L:	linux-wireless@vger.kernel.org
+S:	Maintained
+F:	drivers/net/wireless/ralink/rt2x00/
+
+> personally think you should mind your own dirty business only
+
+Not sure what business you are referring to here. We are all engaged in
+collaborating within the linux community and as such I responded. Not
+sure what is "dirty" about that. Maybe I offended you in the past or by
+the suggestion you might be a troll, but I did not say you are. If you
+are sending emails to a public mailing list, you need to accept that
+anyone may respond whatever dirty business they are doing otherwise.
+They still spend their time to give you a response, which I personally
+think is something you should mind and appreciate.
+
+Regards,
+Arend
