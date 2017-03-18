@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33090 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751637AbdCCKlq (ORCPT
+Received: from mail.efficios.com ([167.114.142.141]:48821 "EHLO
+        mail.efficios.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbdCRWWF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 05:41:46 -0500
-Received: by mail-lf0-f67.google.com with SMTP id r36so7742404lfi.0
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 02:41:33 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 4.12] bcma: drop unneeded check for CONFIG_OF_IRQ
-Date: Fri,  3 Mar 2017 11:33:30 +0100
-Message-Id: <20170303103330.4914-1-zajec5@gmail.com> (sfid-20170303_114410_127151_31FE51A7)
+        Sat, 18 Mar 2017 18:22:05 -0400
+Date: Sat, 18 Mar 2017 22:22:37 +0000 (UTC)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: Jamal Hadi Salim <jhs@mojatatu.com>
+Cc: Amine Aouled Hamed <amine.ahd@gmail.com>,
+        tech-committee@netdevconf.org, linux-wireless@vger.kernel.org,
+        Heri Muhero <hmuhero@gmail.com>, people@netdevconf.org,
+        netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+Message-ID: <2099393925.18313.1489875757778.JavaMail.zimbra@efficios.com> (sfid-20170318_232215_626952_2243E489)
+In-Reply-To: <2b522b0c-fdd8-a9e8-bbbd-1bd48881bb08@mojatatu.com>
+References: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com> <CAMXA6B1noOrAFxzy7YhEW+oNvDFLk3+JcTvjorYfKkuZp5xk=w@mail.gmail.com> <2b522b0c-fdd8-a9e8-bbbd-1bd48881bb08@mojatatu.com>
+Subject: Re: [NetDev] ANNOUNCE: New sponsor Netronome
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+----- On Mar 18, 2017, at 8:34 AM, Jamal Hadi Salim jhs@mojatatu.com wrote:
 
-We already have the same check in bcma_of_get_irq which really calls
-symbols available with CONFIG_OF_IRQ only. It appears this duplicated
-check was accidentally added in commit c58d900cc96a ("bcma: fix building
-without OF_IRQ"). The rest of code in bcma_of_fill_device should work
-fine without CONFIG_OF_IRQ.
+> On 17-03-18 08:27 AM, Amine Aouled Hamed wrote:
+>> Can you stop with the spam?
+>>
+> 
+> Which mailing list do you represent that considers this spam?
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
- drivers/bcma/main.c | 3 ---
- 1 file changed, 3 deletions(-)
+My personal 2 cents: I got subscribed automatically to
+people@netdevconf.org when I registered to netconf.
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 2da7fe1d20a7..e6986c7608f1 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -201,9 +201,6 @@ static void bcma_of_fill_device(struct device *parent,
- {
- 	struct device_node *node;
- 
--	if (!IS_ENABLED(CONFIG_OF_IRQ))
--		return;
--
- 	node = bcma_of_find_child_device(parent, core);
- 	if (node)
- 		core->dev.of_node = node;
+The level of noise on this list is way too much for me.
+May I respectfully recommend that you guys use this kind of
+mailing list for organizational messages only, and keep the
+schedule and sponsor details to a website, or a summary sent at
+most once or twice before the event.
+
+I will personally unsubscribe from this netdev "people"
+mailing list, which will fix the problem on my side, but
+I won't receive any of the communication related to
+organization of the event from now on, which I think is
+something the event organizers should consider in their
+use of this communication channel with their attendees.
+
+Best regards,
+
+Mathieu
+
+> 
+> cheers,
+> jamal
+>> On Sat, Mar 18, 2017 at 1:10 PM, Jamal Hadi Salim <jhs@mojatatu.com> wrote:
+>>> The organizing committee would like to announce a new silver sponsor,
+>>> Netronome.
+>>>
+>>> Netronome is a returning silver sponsor. The netdev community
+>>> appreciates their support once again!
+>>>
+>>> cheers,
+>>> jamal
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe netfilter" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> 
+> _______________________________________________
+> people mailing list
+> people@lists.netdevconf.org
+> http://lists.netdevconf.org/cgi-bin/mailman/listinfo/people
+
 -- 
-2.11.0
+Mathieu Desnoyers
+EfficiOS Inc.
+http://www.efficios.com
