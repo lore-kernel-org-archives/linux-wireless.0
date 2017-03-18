@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:33139 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752103AbdCDWvC (ORCPT
+Received: from mail-vk0-f41.google.com ([209.85.213.41]:35828 "EHLO
+        mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751253AbdCRM2E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Mar 2017 17:51:02 -0500
+        Sat, 18 Mar 2017 08:28:04 -0400
 MIME-Version: 1.0
-In-Reply-To: <1488469085-9033-1-git-send-email-geo.emmnl@gmail.com>
-References: <1488469029-8918-1-git-send-email-geo.emmnl@gmail.com> <1488469085-9033-1-git-send-email-geo.emmnl@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 5 Mar 2017 09:50:40 +1100
-Message-ID: <CAGRGNgUKbRiimMgKr8cQ_47e6aTQ=OSaaC6WVVxi-_iKP5X=zg@mail.gmail.com> (sfid-20170304_235125_339188_F5F729D6)
-Subject: Re: [PATCH 3/3] Staging:wilc1000:host_interface: Integrated two 'if'
- statements to a single 'if' statement
-To: Georgios Emmanouil <geo.emmnl@gmail.com>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
+References: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
+From: Amine Aouled Hamed <amine.ahd@gmail.com>
+Date: Sat, 18 Mar 2017 13:27:09 +0100
+Message-ID: <CAMXA6B1noOrAFxzy7YhEW+oNvDFLk3+JcTvjorYfKkuZp5xk=w@mail.gmail.com> (sfid-20170318_132916_418096_29D3D14C)
+Subject: Re: ANNOUNCE: New sponsor Netronome
+To: Jamal Hadi Salim <jhs@mojatatu.com>
+Cc: people@netdevconf.org, tech-committee@netdevconf.org,
+        netfilter-devel@vger.kernel.org, Brenda Butler <bjb@mojatatu.com>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Heri Muhero <hmuhero@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Can you stop with the spam?
 
-On Fri, Mar 3, 2017 at 2:38 AM, Georgios Emmanouil <geo.emmnl@gmail.com> wrote:
-> Removed unnecessary 'if' statement and integrated the condition to the
-> previous 'if' statement.
+On Sat, Mar 18, 2017 at 1:10 PM, Jamal Hadi Salim <jhs@mojatatu.com> wrote:
+> The organizing committee would like to announce a new silver sponsor,
+> Netronome.
 >
-> Signed-off-by: Georgios Emmanouil <geo.emmnl@gmail.com>
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  drivers/staging/wilc1000/host_interface.c | 12 +++++-------
->  1 file changed, 5 insertions(+), 7 deletions(-)
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+> Netronome is a returning silver sponsor. The netdev community
+> appreciates their support once again!
+>
+> cheers,
+> jamal
+> --
+> To unsubscribe from this list: send the line "unsubscribe netfilter" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
