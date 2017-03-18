@@ -1,82 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35429 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751506AbdCWKpV (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:38862 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbdCRGzc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2017 06:45:21 -0400
-Subject: Re: [PATCH 4.11] genetlink: fix counting regression on
- ctrl_dumpfamily()
-To: Stanislaw Gruszka <sgruszka@redhat.com>, netdev@vger.kernel.org
-References: <1490195313-13272-1-git-send-email-sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Johannes Berg <johannes@sipsolutions.net>
-From: poma <pomidorabelisima@gmail.com>
-Message-ID: <c591cfc3-76a0-adb7-13ef-f1feb9290782@gmail.com> (sfid-20170323_114527_816853_2D2F65C3)
-Date: Thu, 23 Mar 2017 11:45:17 +0100
+        Sat, 18 Mar 2017 02:55:32 -0400
+Received: by mail-wm0-f45.google.com with SMTP id t189so30363500wmt.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 23:55:19 -0700 (PDT)
+Subject: Re: Ralink - rt2800usb
+To: Dan Williams <dcbw@redhat.com>,
+        "Nikita N." <nikitan@operamail.com>,
+        linux-wireless@vger.kernel.org, ivdoorn@gmail.com,
+        info@willowgarage.com, comm@willowgarage.com,
+        mattias.nissler@gmx.de, nbd@openwrt.org, xose.vazquez@gmail.com,
+        rain_maker@root-forum.org
+References: <1489685379.2341893.913635800.3ACB3D38@webmail.messagingengine.com>
+ <1489732680.3555697.914250624.7A79601B@webmail.messagingengine.com>
+ <1489782418.608233.914997416.7AA6FF7F@webmail.messagingengine.com>
+ <1489798021.26594.12.camel@redhat.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <81262ad8-2a6a-5f7f-835c-744cbb8a8fa6@broadcom.com> (sfid-20170318_075540_593316_1B32F0B8)
+Date: Sat, 18 Mar 2017 07:55:17 +0100
 MIME-Version: 1.0
-In-Reply-To: <1490195313-13272-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1489798021.26594.12.camel@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22.03.2017 16:08, Stanislaw Gruszka wrote:
-> Commit 2ae0f17df1cd ("genetlink: use idr to track families") replaced
-> 
-> 	if (++n < fams_to_skip)
-> 		continue;
-> into:
-> 
-> 	if (n++ < fams_to_skip)
-> 		continue;
-> 
-> This subtle change cause that on retry ctrl_dumpfamily() call we omit
-> one family that failed to do ctrl_fill_info() on previous call, because
-> cb->args[0] = n number counts also family that failed to do
-> ctrl_fill_info().
-> 
-> Patch fixes the problem and avoid confusion in the future just decrease
-> n counter when ctrl_fill_info() fail.
-> 
-> User visible problem caused by this bug is failure to get access to
-> some genetlink family i.e. nl80211. However problem is reproducible
-> only if number of registered genetlink families is big enough to
-> cause second call of ctrl_dumpfamily().
-> 
-> Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Fixes: 2ae0f17df1cd ("genetlink: use idr to track families")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> Dave, please also target this for 4.10+ -stable.
-> 
->  net/netlink/genetlink.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
-> index fb6e10f..92e0981 100644
-> --- a/net/netlink/genetlink.c
-> +++ b/net/netlink/genetlink.c
-> @@ -783,8 +783,10 @@ static int ctrl_dumpfamily(struct sk_buff *skb, struct netlink_callback *cb)
->  
->  		if (ctrl_fill_info(rt, NETLINK_CB(cb->skb).portid,
->  				   cb->nlh->nlmsg_seq, NLM_F_MULTI,
-> -				   skb, CTRL_CMD_NEWFAMILY) < 0)
-> +				   skb, CTRL_CMD_NEWFAMILY) < 0) {
-> +			n--;
->  			break;
-> +		}
->  	}
->  
->  	cb->args[0] = n;
-> 
 
 
-Thanks Stanislaw, Larry!
+On 18-3-2017 1:47, Dan Williams wrote:
+> On Fri, 2017-03-17 at 13:26 -0700, Nikita N. wrote:
+>> Hi All,
+>> I'm addressing to the maintainers of Ralink driver rt2800usb
+>> (RT2870,RT3070).
+>> To who can I send my request?
 
-Tested-by: poma <poma@gmail.com>
+Seeing this kind of emails repeatedly on this list and others makes me
+think this is a troll. If not, I am sorry, but get to point if any and
+make your request.
 
-Ref.
-https://bugzilla.redhat.com/show_bug.cgi?id=1422247
+Regards,
+Arend
+
+> This mailing list (linux-wireless@) is the right place.
+> 
+> Dan
+> 
