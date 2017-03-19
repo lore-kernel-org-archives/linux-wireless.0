@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:35608 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933217AbdCaRe4 (ORCPT
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:35466 "EHLO
+        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751186AbdCSGGl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 13:34:56 -0400
+        Sun, 19 Mar 2017 02:06:41 -0400
+Received: by mail-lf0-f49.google.com with SMTP id j90so45461064lfk.2
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 23:06:40 -0700 (PDT)
+Date: Sun, 19 Mar 2017 07:06:37 +0100
+From: Alexander Alemayhu <alexander@alemayhu.com>
+To: Jamal Hadi Salim <jhs@mojatatu.com>
+Cc: Alexis Green <agreen@uniumwifi.com>,
+        tech-committee <tech-committee@netdevconf.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Heri Muhero <hmuhero@gmail.com>, people@netdevconf.org,
+        netfilter@vger.kernel.org,
+        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+        netfilter-devel@vger.kernel.org,
+        Amine Aouled Hamed <amine.ahd@gmail.com>
+Subject: Re: [NetDev] [NetDev-tech]  ANNOUNCE: New sponsor Netronome
+Message-ID: <20170319060637.GA3733@gmail.com> (sfid-20170319_093705_872765_E348A6E8)
+References: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
+ <CAMXA6B1noOrAFxzy7YhEW+oNvDFLk3+JcTvjorYfKkuZp5xk=w@mail.gmail.com>
+ <2b522b0c-fdd8-a9e8-bbbd-1bd48881bb08@mojatatu.com>
+ <2099393925.18313.1489875757778.JavaMail.zimbra@efficios.com>
+ <ea392711-26b0-4d82-d86e-2adf8365b024@mojatatu.com>
+ <CAAFAkD9uG2UUxxLPDF8fuWCP4gxEmozfw3giOSViaWRE38UhFQ@mail.gmail.com>
+ <CAMXA6B0B4q__gYbRM8ksBr3-g1PhjYkk68z9w-gp96h1YZp0FQ@mail.gmail.com>
+ <5ce34c9c-29c6-4b59-1fc9-f0b5425a8347@mojatatu.com>
+ <CAAnMG+O=DMk5dnUnNktMRywa5mkLA0scty6YpU2fnZyQ8BX+JA@mail.gmail.com>
+ <9119c54c-df24-7846-71e5-fc4b6a531488@mojatatu.com>
 MIME-Version: 1.0
-In-Reply-To: <1490981039.27353.12.camel@perches.com>
-References: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com>
- <CALLGbR+szcYFdbdh_0qBS4B_X6YQvU6CDFpR-XZvc7p3zA+ZdQ@mail.gmail.com> <1490981039.27353.12.camel@perches.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Fri, 31 Mar 2017 10:34:53 -0700
-Message-ID: <CALLGbRJRstmGL-o2ds4SQ5hDNVBcfP23JnRt5qRrVg-ix-8Hiw@mail.gmail.com> (sfid-20170331_193548_381655_563AB014)
-Subject: Re: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
-To: Joe Perches <joe@perches.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <9119c54c-df24-7846-71e5-fc4b6a531488@mojatatu.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 31, 2017 at 10:23 AM, Joe Perches <joe@perches.com> wrote:
-> On Fri, 2017-03-31 at 10:19 -0700, Steve deRosier wrote:
->> On Thu, Mar 30, 2017 at 3:57 PM, Joe Perches <joe@perches.com> wrote:
->> > Fix fallout too.
-> []
->> My only question is why bother doing a format check on something
->> that's going to be compiled out anyway?
->
-> To avoid introducing defects when writing new code
-> and not using the debugging code path.
+On Sat, Mar 18, 2017 at 09:56:36PM -0400, Jamal Hadi Salim wrote:
+> 
+> Note: this discussion already has generated more traffic
+> than a few days worth of announcements ;->
 >
 
-Fair enough. And I totally agree with the defensive programming here
-in that case and feel it's worth the tradeoff (if indeed there really
-is any cost, I'm unsure what gcc actually does in this instance).
+IIRC Hajime always added links to the site in his announcements, which
+made it easy to lookup netdev.  Maybe adding some lines about netdev to
+all emails would reduce confusion? Suspect not everyone subscribed to
+these lists knows what netdev is. 
 
-For sake of discussion though - shouldn't anything not using the debug
-code path in this case always be of the form that compiles out? ie
-would be empty functions intended here just to make compilation work
-and the code that depends on it simpler? Thus, there really should
-never be a risk of introducing said defects. If any "real" code were
-put in that else clause, that'd be a big red-flag in the review of
-said hypothetical patch.
+Don't consider these emails spam at all :)
 
-Thanks,
-- Steve
+Thanks.
+
+-- 
+Mit freundlichen Grüßen
+
+Alexander Alemayhu
