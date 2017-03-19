@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36408 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751673AbdCCKel (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:36188 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751189AbdCSBmP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 05:34:41 -0500
-Received: by mail-lf0-f67.google.com with SMTP id g70so6712972lfh.3
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 02:34:23 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 4.12 1/2] bcma: use helper function to set core dev's parent
-Date: Fri,  3 Mar 2017 11:34:14 +0100
-Message-Id: <20170303103415.5188-1-zajec5@gmail.com> (sfid-20170303_113739_161065_3828EE56)
+        Sat, 18 Mar 2017 21:42:15 -0400
+Received: by mail-qt0-f170.google.com with SMTP id r45so86579743qte.3
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 18:42:14 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <5ce34c9c-29c6-4b59-1fc9-f0b5425a8347@mojatatu.com>
+References: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
+ <CAMXA6B1noOrAFxzy7YhEW+oNvDFLk3+JcTvjorYfKkuZp5xk=w@mail.gmail.com>
+ <2b522b0c-fdd8-a9e8-bbbd-1bd48881bb08@mojatatu.com> <2099393925.18313.1489875757778.JavaMail.zimbra@efficios.com>
+ <ea392711-26b0-4d82-d86e-2adf8365b024@mojatatu.com> <CAAFAkD9uG2UUxxLPDF8fuWCP4gxEmozfw3giOSViaWRE38UhFQ@mail.gmail.com>
+ <CAMXA6B0B4q__gYbRM8ksBr3-g1PhjYkk68z9w-gp96h1YZp0FQ@mail.gmail.com> <5ce34c9c-29c6-4b59-1fc9-f0b5425a8347@mojatatu.com>
+From: Alexis Green <agreen@uniumwifi.com>
+Date: Sat, 18 Mar 2017 18:42:13 -0700
+Message-ID: <CAAnMG+O=DMk5dnUnNktMRywa5mkLA0scty6YpU2fnZyQ8BX+JA@mail.gmail.com> (sfid-20170319_024241_969460_EFC86F12)
+Subject: Re: [NetDev-tech] [NetDev] ANNOUNCE: New sponsor Netronome
+To: Jamal Hadi Salim <jhs@mojatatu.com>
+Cc: Amine Aouled Hamed <amine.ahd@gmail.com>,
+        Jamal Hadi Salim <hadi@mojatatu.com>,
+        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+        tech-committee <tech-committee@netdevconf.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Heri Muhero <hmuhero@gmail.com>, people@netdevconf.org,
+        netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Why is this sent to linux-wireless?
 
-A tiny code deduplication thanks to the bcma_bus_get_host_dev.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/bcma/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 12da68ec48ba..4f88821c1b2a 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -242,17 +242,16 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
- 	core->dev.release = bcma_release_core_dev;
- 	core->dev.bus = &bcma_bus_type;
- 	dev_set_name(&core->dev, "bcma%d:%d", bus->num, core->core_index);
-+	core->dev.parent = bcma_bus_get_host_dev(bus);
- 
- 	switch (bus->hosttype) {
- 	case BCMA_HOSTTYPE_PCI:
--		core->dev.parent = &bus->host_pci->dev;
- 		core->dma_dev = &bus->host_pci->dev;
- 		core->irq = bus->host_pci->irq;
- 		break;
- 	case BCMA_HOSTTYPE_SOC:
- 		if (IS_ENABLED(CONFIG_OF) && bus->host_pdev) {
- 			core->dma_dev = &bus->host_pdev->dev;
--			core->dev.parent = &bus->host_pdev->dev;
- 			if (core->dev.parent)
- 				bcma_of_fill_device(core->dev.parent, core);
- 		} else {
--- 
-2.11.0
+On Sat, Mar 18, 2017 at 6:21 PM, Jamal Hadi Salim <jhs@mojatatu.com> wrote:
+> On 17-03-18 08:07 PM, Amine Aouled Hamed wrote:
+>>
+>> Im subscribed to netfilter and netfilter-dev but does it matter? you
+>> are spamming on multiple lists about something not related to the list
+>> subject.
+>> People subscribe to the list to exchange information and discuss
+>> relevant subjects not to get ads...
+>
+>
+> Netfilter is certainly part of the event.
+>
+>> If you are trying to bring people to your event than I guess you are
+>> doing the exact opposite by spamming in all these lists.
+>>
+>
+> Lets hear if more people want netfilter lists or any other lists
+> removed.
+>
+> cheers,
+> jamal
