@@ -1,170 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f68.google.com ([209.85.213.68]:34758 "EHLO
-        mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752987AbdC1Wz6 (ORCPT
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:33054 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751189AbdCSCQQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 18:55:58 -0400
+        Sat, 18 Mar 2017 22:16:16 -0400
+Received: by mail-qt0-f176.google.com with SMTP id i34so87012061qtc.0
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 19:16:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170109175222.3162-1-paul.gortmaker@windriver.com>
-References: <201701090839.5u37Hdez%fengguang.wu@intel.com> <20170109175222.3162-1-paul.gortmaker@windriver.com>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Date: Tue, 28 Mar 2017 18:55:26 -0400
-Message-ID: <CAP=VYLovck5PFD-5C93QahwkGv3ygkWaKjGy90MjNtEodF242Q@mail.gmail.com> (sfid-20170329_005832_455766_A7FBD84F)
-Subject: Re: [PATCH v2] nfc: don't be making arch specific unaligned decisions
- at driver level.
-To: LKML <linux-kernel@vger.kernel.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: kbuild test robot <lkp@intel.com>,
-        Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
+In-Reply-To: <1489659530.2370.10.camel@sipsolutions.net>
+References: <58B09082.7020704@cococorp.com> <1489659530.2370.10.camel@sipsolutions.net>
+From: Alexis Green <agreen@uniumwifi.com>
+Date: Sat, 18 Mar 2017 18:48:41 -0700
+Message-ID: <CAAnMG+MFTe7yU8RGmmGqUvS+TV5Mmm4u8XwJAG+g+WmQt5dj+A@mail.gmail.com> (sfid-20170319_031632_276471_8B585087)
+Subject: Re: [PATCH v2] mac80211: Jitter HWMP MPATH reply frames to reduce
+ collision on dense networks.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Jesse Jones <jjones@cococorp.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 9, 2017 at 12:52 PM, Paul Gortmaker
-<paul.gortmaker@windriver.com> wrote:
-> Currently ia64 fails building allmodconfig with variations of:
->
->    In file included from drivers/nfc/nxp-nci/i2c.c:39:0:
->    ./include/linux/unaligned/access_ok.h:62:29: error: redefinition of =
-=E2=80=98put_unaligned_be64=E2=80=99
->     static __always_inline void put_unaligned_be64(u64 val, void *p)
+Hi Johannes,
 
-Hi Samuel,
+Thank you for the comments, I'll see if I can apply all of your
+suggestions and resubmit.
 
-Do you require changes on this commit, or are you happy to queue it as is?
-Looking at the NFC git history it seems like you are the right person to as=
-k.
+Alexis
 
-Thanks,
-Paul.
---
-
->    In file included from ./arch/ia64/include/asm/unaligned.h:5:0,
->                     from ./arch/ia64/include/asm/io.h:22,
->                     from ./arch/ia64/include/asm/smp.h:20,
->                     from ./include/linux/smp.h:59,
->                     from ./include/linux/topology.h:33,
->                     from ./include/linux/gfp.h:8,
->                     from ./include/linux/slab.h:14,
->                     from ./include/linux/resource_ext.h:19,
->                     from ./include/linux/acpi.h:26,
->                     from drivers/nfc/nxp-nci/i2c.c:28:
->    ./include/linux/unaligned/be_byteshift.h:65:20: note: previous definit=
-ion of =E2=80=98put_unaligned_be64=E2=80=99 was here
->     static inline void put_unaligned_be64(u64 val, void *p)
->                        ^~~~~~~~~~~~~~~~~~
->    scripts/Makefile.build:293: recipe for target 'drivers/nfc/nxp-nci/i2c=
-.o' failed
+On Thu, Mar 16, 2017 at 3:18 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Sorry - this is the other half of my reply that I accidentally deleted
+> before sending...
 >
-> The easiest explanation for this is to look at the non-arch users in
-> the following output:
+>> +static void flush_tx_skbs(struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +     struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>> +     struct mesh_tx_queue *tx_node;
+>> +
+>> +     spin_lock_bh(&ifmsh->mesh_tx_queue_lock);
+>> +
+>> +     /* Note that this check is important because of the two-
+>> stage
+>> +      * way that ieee80211_if_mesh is initialized.
+>> +      */
 >
->    linux$git grep include.*access_ok.h
->    arch/arm64/crypto/crc32-arm64.c:#include <linux/unaligned/access_ok.h>
->    arch/cris/include/asm/unaligned.h:#include <linux/unaligned/access_ok.=
-h>
->    arch/m68k/include/asm/unaligned.h:#include <linux/unaligned/access_ok.=
-h>
->    arch/mn10300/include/asm/unaligned.h:#include <linux/unaligned/access_=
-ok.h>
->    arch/powerpc/include/asm/unaligned.h:#include <linux/unaligned/access_=
-ok.h>
->    arch/s390/include/asm/unaligned.h:#include <linux/unaligned/access_ok.=
-h>
->    arch/x86/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h=
+> I think you should fix that rather than work around it. If this is
+> called with iftype != mesh then this is super problematic anyway, since
+> ifmsh->tx_queue_len would alias some other variable (there's a union).
 >
->    drivers/nfc/nfcmrvl/fw_dnld.c:#include <linux/unaligned/access_ok.h>
->    drivers/nfc/nxp-nci/firmware.c:#include <linux/unaligned/access_ok.h>
->    drivers/nfc/nxp-nci/i2c.c:#include <linux/unaligned/access_ok.h>
->    include/asm-generic/unaligned.h:# include <linux/unaligned/access_ok.h=
+>> +     if (ifmsh->tx_queue_len > 0) {
+>> +             mhwmp_dbg(sdata, "flushing %d skbs", ifmsh-
+>> >tx_queue_len);
+>> +
+>> +             while (!list_empty(&ifmsh->tx_queue.list)) {
+>> +                     tx_node = list_last_entry(&ifmsh-
+>> >tx_queue.list,
+>> +                                               struct
+>> mesh_tx_queue, list);
+>> +                     kfree_skb(tx_node->skb);
+>> +                     list_del(&tx_node->list);
+>> +                     kfree(tx_node);
+>> +             }
+>> +             ifmsh->tx_queue_len = 0;
+>> +     }
+>> +
+>> +     spin_unlock_bh(&ifmsh->mesh_tx_queue_lock);
+>> +}
 >
+> All of this also gets *vastly* simpler if it's just skb_queue_purge()
+> :)
 >
-> Note that nfc is essentially the only non-arch user in the above.
-> When it forces use of access_ok.h, it will break any arch that has
-> already selected be_byteshift.h (or other conflicting implementations)
-> at the arch level.
+>> +     spin_lock_bh(&ifmsh->mesh_tx_queue_lock);
+>> +
+>> +     list_for_each_entry(tx_node, &ifmsh->tx_queue.list, list) {
+>> +             ieee80211_tx_skb(sdata, tx_node->skb);
+>> +     }
 >
-> The decision of what variant for unaligned access to use needs to be
-> left to the arch level and not used at the driver level.  Since not
-> all arch will have sourced asm/unaligned.h already, we need to call
-> it out and then the arch can give us just the one definition that
-> is needed.
+> I don't think you should hold the lock across _tx_skb(), ISTR problems
+> with that - particularly with the STA lock, so this might be OK, but it
+> might also cause lock ordering issues. It's easy to avoid anyway, so
+> better not to do it.
 >
-> See commit 064106a91be5 ("kernel: add common infrastructure for
-> unaligned access") as a reference.
->
-> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> Cc: Tony Luck <tony.luck@intel.com>
-> Cc: Fenghua Yu <fenghua.yu@intel.com>
-> Cc: linux-ia64@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> ---
->
-> [v2: explicitly include asm/uaccess.h since some arch won't be
->  getting any variant of an unaligned access header without it.
->  Build test allmodconfig on x86-64, i386, arm64, ia64. ]
->
->  drivers/nfc/nfcmrvl/fw_dnld.c  | 2 +-
->  drivers/nfc/nxp-nci/firmware.c | 2 +-
->  drivers/nfc/nxp-nci/i2c.c      | 2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/nfc/nfcmrvl/fw_dnld.c b/drivers/nfc/nfcmrvl/fw_dnld.=
-c
-> index f8dcdf4b24f6..f3f246ddae06 100644
-> --- a/drivers/nfc/nfcmrvl/fw_dnld.c
-> +++ b/drivers/nfc/nfcmrvl/fw_dnld.c
-> @@ -17,11 +17,11 @@
->   */
->
->  #include <linux/module.h>
-> -#include <linux/unaligned/access_ok.h>
->  #include <linux/firmware.h>
->  #include <linux/nfc.h>
->  #include <net/nfc/nci.h>
->  #include <net/nfc/nci_core.h>
-> +#include <asm/unaligned.h>
->  #include "nfcmrvl.h"
->
->  #define FW_DNLD_TIMEOUT                        15000
-> diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmwar=
-e.c
-> index 5291797324ba..553011f58339 100644
-> --- a/drivers/nfc/nxp-nci/firmware.c
-> +++ b/drivers/nfc/nxp-nci/firmware.c
-> @@ -24,7 +24,7 @@
->  #include <linux/completion.h>
->  #include <linux/firmware.h>
->  #include <linux/nfc.h>
-> -#include <linux/unaligned/access_ok.h>
-> +#include <asm/unaligned.h>
->
->  #include "nxp-nci.h"
->
-> diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-> index 36099e557730..20243dafea21 100644
-> --- a/drivers/nfc/nxp-nci/i2c.c
-> +++ b/drivers/nfc/nxp-nci/i2c.c
-> @@ -36,9 +36,9 @@
->  #include <linux/of_gpio.h>
->  #include <linux/of_irq.h>
->  #include <linux/platform_data/nxp-nci.h>
-> -#include <linux/unaligned/access_ok.h>
->
->  #include <net/nfc/nfc.h>
-> +#include <asm/unaligned.h>
->
->  #include "nxp-nci.h"
->
-> --
-> 2.11.0
->
+> johannes
