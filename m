@@ -1,90 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:36112 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755104AbdCJPlF (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:35993 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932093AbdCTQrD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 10:41:05 -0500
-Received: by mail-pf0-f170.google.com with SMTP id o126so43207220pfb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 07:41:05 -0800 (PST)
-Subject: Re: WARNING: CPU: 1 PID: 23668 at
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
-To: Luca Coelho <luca@coelho.fi>
-References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
- <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk>
- <fdfbfffa-31c9-7646-82b5-b6a759b73d21@kernel.dk>
- <1489147283.22435.14.camel@coelho.fi>
- <aceb734b-8e2c-e5b6-300d-172f8d28f471@kernel.dk>
- <1489160164.22435.18.camel@coelho.fi>
-Cc: sara.sharon@intel.com, liad.kaufman@intel.com,
-        linux-wireless@vger.kernel.org
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <5d235320-9c9d-c9e9-6688-3336061cbaf4@kernel.dk> (sfid-20170310_164109_670793_6FD4C1EE)
-Date: Fri, 10 Mar 2017 08:41:02 -0700
+        Mon, 20 Mar 2017 12:47:03 -0400
+Received: by mail-oi0-f51.google.com with SMTP id r203so20957833oib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 09:46:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1489160164.22435.18.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20064021-fcca-4092-e6ec-5ce7f964a0c1@lwfinger.net>
+References: <CADND2bqVLdSmmY=RG7m8r2maWyc7yGgvKUO4O4YGPLVnMx0pqg@mail.gmail.com>
+ <34e317ae-a112-79bc-41ef-c18433e8cc49@lwfinger.net> <CADND2bprCVNThAWVp-De7W3uRvKNDxGrxEond2ANZ+=2akKB_Q@mail.gmail.com>
+ <20064021-fcca-4092-e6ec-5ce7f964a0c1@lwfinger.net>
+From: Fernanda Vejar <fvejar85@gmail.com>
+Date: Mon, 20 Mar 2017 13:46:56 -0300
+Message-ID: <CADND2br8jjW1jmuW3e4Jg4CxVaHCDEs2M4PHNtUuh9uMaC4BCQ@mail.gmail.com> (sfid-20170320_174735_336568_4FD59768)
+Subject: Re: Wireless failed
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/10/2017 08:36 AM, Luca Coelho wrote:
-> On Fri, 2017-03-10 at 08:23 -0700, Jens Axboe wrote:
->> On 03/10/2017 05:01 AM, Luca Coelho wrote:
->>> Hi Jens,
->>>
->>> On Thu, 2017-03-09 at 21:41 -0700, Jens Axboe wrote:
->>>> On 03/01/2017 09:10 PM, Jens Axboe wrote:
->>>>> On 03/01/2017 08:33 PM, Luca Coelho wrote:
->>>>>> Hi Jens,
->>>>>>
->>>>>> On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>
->>>>>>     Not that folks have been jumping all over this, but in case someone is
->>>>>>     curious, it triggered twice here today. For those two times, the value
->>>>>>     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
->>>>>>
->>>>>> Sorry for the delay, I'm on vacation now with limited internet access.
->>>>>> But we'll take a look into this early next week at the latest.
->>>>>>
->>>>>> Thanks a lot for the detailed report!
->>>>>
->>>>> No worries, thanks for responding. I just wanted to ensure this wasn't
->>>>> dropped on the floor.
->>>>>
->>>>> BTW, a few more values of ->pending_frames[sta_id]:
->>>>>
->>>>> $ dmesg | grep "ret="
->>>>> [ 2334.308254] ret=39
->>>>> [ 7915.311828] ret=80
->>>>> [31602.317204] ret=41
->>>>> [32139.510993] ret=54
->>>>> [33292.917759] ret=96
->>>>>
->>>>> it seems to often happen around resume.
->>>>
->>>> This is still happening all the time in current -git.
->>>
->>> Could you collect traces with trace-cmd, as explained in our wiki[1]?
->>> This will probably help point out the problem.  I know it's a bit
->>> difficult because it appears to happen randomly for you, but it's worth
->>> trying.
+Hello Larry,
+
+thank you very much for your fast answer.
+
+Buy running "modinfo iwlwifi":
+filename:
+/lib/modules/3.13.0-112-lowlatency/updates/drivers/net/wireless/iwlwifi/iwlwifi.ko
+version:        iwlwifi-stack-public:release/LinuxCore5:3714:27076532
+license:        GPL
+author:         Copyright(c) 2003- 2014 Intel Corporation <ilw@linux.intel.com>
+version:        in-tree:d
+description:    Intel(R) Wireless WiFi driver for Linux
+firmware:       iwlwifi-7265-8.ucode
+firmware:       iwlwifi-3160-8.ucode
+firmware:       iwlwifi-7260-8.ucode
+firmware:       iwlwifi-8000-8.ucode
+srcversion:     6E29C5B96E10698E38DC01F
+....
+
+According to the reference
+(https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#firmware) I
+need  the iwlwifi-2030-6.ucode. I tried to install it previously as a
+first step, but It didn't work. I don't understand what I did wrong.
+
+Fernanda.
+
+2017-03-20 12:50 GMT-03:00 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/20/2017 10:10 AM, Fernanda Vejar wrote:
 >>
->> Sure I can, but honestly I'm a little puzzled that nobody else can
->> reproduce this, it happens every time I resume of switch access points.
->> Is anyone trying to reproduce this?
+>> Hello Larry,
 >>
->> I'll have to recompile with iwlwifi tracing enabled, then I'll send a trace
->> when it happens.
-> 
-> Are you using 4.11-rc1? Or linus' master? Or...?
-
-The trace I just sent is tip of Linus' tree. It's happened continually
-since the commit I mentioned in my initial report was merged:
-
-commit 94c3e614df2117626fccfac8f821c66e30556384
-Author: Sara Sharon <sara.sharon@intel.com>
-Date:   Wed Dec 7 15:04:37 2016 +0200
-
-    iwlwifi: mvm: fix pending frame counter calculation
-
--- 
-Jens Axboe
+>> thank you very much for your response.
+>>
+>> I'm using "Trisquel 7.0 LTS Belenos" since a few days.
+>> My kernel version is acoording to "uname -r" : "3.13.0-112-lowlatency".
+>> By "lspci --n"n I have found : "01:00.0 Network controller [0280]:
+>> Intel Corporation Centrino Wireless-N 2230 [8086:0887] (rev c4)".
+>> There is no evidence of iwlwifi by running" lsmod".
+>> According to "dmesg | less", I've found: "Linux version
+>> 3.13.0-112-lowlatency (pbuilder@devel.trisquel.info) (gcc version
+>> 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.3) ) #159+7.0trisquel2 SMP PREEMPT
+>> Mon Mar 13 13:58:08 UTC 2017 (Ubuntu
+>> 3.13.0-112.159+7.0trisquel2-lowlatency 3.13.11-ckt39-gnu)", I think it
+>> could clarify a little more. But I can't see more relevant issue given
+>> by this command.
+>>
+>> I don't know if the problem is to be solved. Maybe I should try a new
+>> distro.
+>
+>
+> Kernel 3.13 is quite old; however according to
+> https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#firmware, the
+> driver for the 2230 has been in the kernel since version 3.2. That reference
+> also tells you what firmware is needed.
+>
+> To resolve this, first check that the driver is available. If the command
+> "modinfo iwlwifi" returns an ERROR, then your kernel configuration does not
+> contain the driver. You will also need iwldvm to be configured.
+>
+> Larry
+>
+>
