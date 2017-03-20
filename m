@@ -1,145 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34565 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752331AbdCDP6P (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:36401 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752480AbdCTCDk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Mar 2017 10:58:15 -0500
-From: Arushi Singhal <arushisinghal19971997@gmail.com>
-To: w.d.hubbs@gmail.com
-Cc: chris@the-brannons.com, outreachy-kernel@googlegroups.com,
-        kirk@reisers.ca, samuel.thibault@ens-lyon.org,
-        gregkh@linuxfoundation.org, speakup@linux-speakup.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        linux-wireless@vger.kernel.org,
-        Arushi Singhal <arushisinghal19971997@gmail.com>
-Subject: [PATCH 4/6] staging: wilc1000: Alignment should match open parenthesis
-Date: Sat,  4 Mar 2017 21:27:38 +0530
-Message-Id: <20170304155740.26105-5-arushisinghal19971997@gmail.com> (sfid-20170304_165949_863988_F60FA42F)
-In-Reply-To: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
-References: <20170304155740.26105-1-arushisinghal19971997@gmail.com>
+        Sun, 19 Mar 2017 22:03:40 -0400
+Received: by mail-oi0-f47.google.com with SMTP id r203so11886636oib.3
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Mar 2017 19:03:39 -0700 (PDT)
+Subject: Re: Wireless failed
+To: Fernanda Vejar <fvejar85@gmail.com>, linux-wireless@vger.kernel.org
+References: <CADND2bqVLdSmmY=RG7m8r2maWyc7yGgvKUO4O4YGPLVnMx0pqg@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <34e317ae-a112-79bc-41ef-c18433e8cc49@lwfinger.net> (sfid-20170320_030558_664711_D826349D)
+Date: Sun, 19 Mar 2017 21:03:37 -0500
+MIME-Version: 1.0
+In-Reply-To: <CADND2bqVLdSmmY=RG7m8r2maWyc7yGgvKUO4O4YGPLVnMx0pqg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix checkpatch issues: "CHECK: Alignment should match open parenthesis".
+On 03/19/2017 12:15 PM, Fernanda Vejar wrote:
+> Dear Sir or Madam, I am writing you because I cannot make the wireless
+> connection work. I have just installed a new Linux operative system
+> which has no driver for the wireless card. I have the device "Intel
+> Centrino Wireless-N 2230" into my computer and I have been trying to
+> follow the instructions given by "wireless.wiki.kernel" with the
+> following steps: 1) I installed the corresponding firmware
+> "iwlwifi-2030-ucode-18.168.6.1.". 2) I installed the driver LinuxCore5
+> as indicated and rebooted. 3) As I found no change, I have noted that
+> the hostap was absent. Than I cloned it. 4) Since it also didn't work,
+> I took "linux-firmware" and I installed "-9 ucode: 7260, 3160, 7265"
+> at /lib/firmware. I think I maybe did something wrong, but I don't
+> know how can I undo all these steps and try again. I really hope you
+> can give me some hint. Thank you very much in advance. Best Regards,
+> Fernand Vejar
 
-Signed-off-by: Arushi Singhal <arushisinghal19971997@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/wilc_spi.c               |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 16 ++++++++--------
- drivers/staging/wilc1000/wilc_wlan.c              | 10 +++++-----
- 4 files changed, 15 insertions(+), 15 deletions(-)
+I have nothing to do with any Intel wireless drivers, but I will give you some 
+advice regarding your problem.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f848bb85ff1f..2429c85052bf 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1350,7 +1350,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 
- 				if (u32RcvdAssocRespInfoLen != 0) {
- 					s32Err = wilc_parse_assoc_resp_info(rcv_assoc_resp, u32RcvdAssocRespInfoLen,
--								    &pstrConnectRespInfo);
-+									    &pstrConnectRespInfo);
- 					if (s32Err) {
- 						netdev_err(vif->ndev, "wilc_parse_assoc_resp_info() returned error %d\n", s32Err);
- 					} else {
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 55d53c3a95df..fb7ccfc29a19 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -410,7 +410,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 
- 	if (len2 > ARRAY_SIZE(wb)) {
- 		dev_err(&spi->dev, "spi buffer size too small (%d) (%zu)\n",
--			 len2, ARRAY_SIZE(wb));
-+			len2, ARRAY_SIZE(wb));
- 		return N_FAIL;
- 	}
- 	/* zero spi write buffers. */
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 4a6fe90a41de..8cb7506bd0e5 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1301,16 +1301,16 @@ static int set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 
- 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
- 		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
--				 ETH_ALEN)) {
-+			    ETH_ALEN)) {
- 			flag = PMKID_FOUND;
- 			break;
- 		}
- 	}
- 	if (i < WILC_MAX_NUM_PMKIDS) {
- 		memcpy(priv->pmkid_list.pmkidlist[i].bssid, pmksa->bssid,
--			    ETH_ALEN);
-+		       ETH_ALEN);
- 		memcpy(priv->pmkid_list.pmkidlist[i].pmkid, pmksa->pmkid,
--			    PMKID_LEN);
-+		       PMKID_LEN);
- 		if (!(flag == PMKID_FOUND))
- 			priv->pmkid_list.numpmkid++;
- 	} else {
-@@ -1334,7 +1334,7 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 
- 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
- 		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
--				 ETH_ALEN)) {
-+			    ETH_ALEN)) {
- 			memset(&priv->pmkid_list.pmkidlist[i], 0, sizeof(struct host_if_pmkid));
- 			break;
- 		}
-@@ -1343,11 +1343,11 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 	if (i < priv->pmkid_list.numpmkid && priv->pmkid_list.numpmkid > 0) {
- 		for (; i < (priv->pmkid_list.numpmkid - 1); i++) {
- 			memcpy(priv->pmkid_list.pmkidlist[i].bssid,
--				    priv->pmkid_list.pmkidlist[i + 1].bssid,
--				    ETH_ALEN);
-+			       priv->pmkid_list.pmkidlist[i + 1].bssid,
-+			       ETH_ALEN);
- 			memcpy(priv->pmkid_list.pmkidlist[i].pmkid,
--				    priv->pmkid_list.pmkidlist[i].pmkid,
--				    PMKID_LEN);
-+			       priv->pmkid_list.pmkidlist[i].pmkid,
-+			       PMKID_LEN);
- 		}
- 		priv->pmkid_list.numpmkid--;
- 	} else {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index bc5ad20af0a3..9addef1f1e12 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -287,7 +287,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 
- 	while (dropped > 0) {
- 		wait_for_completion_timeout(&wilc->txq_event,
--						msecs_to_jiffies(1));
-+					    msecs_to_jiffies(1));
- 		dropped--;
- 	}
- 
-@@ -810,9 +810,9 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 				if (!is_cfg_packet) {
- 					if (pkt_len > 0) {
- 						wilc_frmw_to_linux(wilc,
--							      &buffer[offset],
--							      pkt_len,
--							      pkt_offset);
-+								   &buffer[offset],
-+								   pkt_len,
-+								   pkt_offset);
- 					}
- 				} else {
- 					struct wilc_cfg_rsp rsp;
-@@ -1226,7 +1226,7 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
- 			ret_size = 0;
- 
- 		if (!wait_for_completion_timeout(&wilc->cfg_event,
--					msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
-+						 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
- 			netdev_dbg(vif->ndev, "Set Timed Out\n");
- 			ret_size = 0;
- 		}
+Whenever you are reporting a problem, you must ABSOLUTELY specify the distro and 
+version of your Linux. You should also specify the kernel version as shown by 
+the "uname -r" command. It is also helpful if you specify the wireless hardware 
+by posting the appropriate stanza from the "lspci -nn" command.
+
+The above will verify what device you have, but the most probable driver is 
+iwlwifi, which has been in the kernel for a very long time. I would be very 
+surprised if any distributed kernel did not have this driver available. You can 
+run the lsmod command to see if the driver is loaded. You should also check the 
+log using "dmesg | less" to see if the firmware is missing.
+
+Larry
+
 -- 
-2.11.0
+If I was stranded on an island and the only way to get off
+the island was to make a pretty UI, I’d die there.
+
+Linus Torvalds
