@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39700 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752002AbdCCNbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 08:31:25 -0500
-Message-ID: <1488544158.25750.6.camel@sipsolutions.net> (sfid-20170303_143142_777747_D0A53AAB)
-Subject: Re: [RFCv2 1/2] mac80211: Add provision for 802.11 encap offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mpubbise@qti.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Date: Fri, 03 Mar 2017 13:29:18 +0100
-In-Reply-To: <1488540807-27415-2-git-send-email-mpubbise@qti.qualcomm.com>
-References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488540807-27415-2-git-send-email-mpubbise@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:34466 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753846AbdCTQmc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Mar 2017 12:42:32 -0400
+Received: by mail-qk0-f179.google.com with SMTP id p64so114894100qke.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 09:41:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <d717a94d5c6632b6665b7ac3b319b726@mail.gmail.com>
+References: <58B09082.7020704@cococorp.com> <1488202227.28431.9.camel@sipsolutions.net>
+ <58B487A8.7000602@cococorp.com> <1488443814.8390.3.camel@sipsolutions.net> <d717a94d5c6632b6665b7ac3b319b726@mail.gmail.com>
+From: Thomas Pedersen <thomas@eero.com>
+Date: Mon, 20 Mar 2017 09:41:57 -0700
+Message-ID: <CADjYELzEjOYEVPykd2Oqzk78Kq36zKi0FG_OfGq5u9sp3mp+WQ@mail.gmail.com> (sfid-20170320_174503_960830_ECF31077)
+Subject: Re: [PATCH v2] mac80211: Jitter HWMP MPATH reply frames to reduce
+ collision on dense networks.
+To: Jesse Jones <jjones@uniumwifi.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, agreen@cococorp.com,
+        linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-03 at 17:03 +0530, mpubbise@qti.qualcomm.com wrote:
-> From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-> 
-> Drivers can have the capability to offload 802.11 encap
-> to firmware or hardware for data frames. This patch adds a new
-> hw_flag for driver to advertise the offload support.
-> Transmit path offloading 802.11 header (including cipher headers)
-> encap for data frames will be implemented in a separate patch.
-> 
-> Drivers advertising this capability should also implement other
-> functionalities which deal with 802.11 frame format like below
-> 
->         - Hardware encryption
->         - Aggregation of A-MSDU offload
->         - Fragmentation offload
+On Thu, Mar 2, 2017 at 9:41 AM, Jesse Jones <jjones@uniumwifi.com> wrote:
+>> Hi Alexis,
+>>
+>> > This is loosely based on RFC5148, specifically event-triggered message
+>> > generation as described in section 5.2.
+>>
+>> I'm confused. I see how that generally seems to apply to any mobile
+>> network, but it *does* state up-front that
+>>     In some instances, these problems can be solved in these lower
+>>     layers, but in other instances, some help at the network and higher
+>>     layers is necessary.
+>>
+>> I believe 802.11 *does* in fact solve these issues at lower layers. Can
+>> you explain how you observed any problem in this area?
+>
+> Well it certainly attempts to via stuff like carrier sense. But that is not
+> fool proof and any time two routers hear a frame and both decide to forward
+> it immediately there is a chance that they will both sense the air at the
+> same time, decide that it is clear, and lose both their forwarded frames due
+> to a collision. How often that happens is hard to say but we have observed
+> that exact behavior a few years ago with an 802.11 multicast routing
+> protocol and adding jitter significantly improved reliability.
 
-Not much point in having this as a separate patch, but this
-documentation paragraph should move into the documentation for the new
-flag in mac80211.h
+Have you tried performing RTS/CTS before sending path selection frames
+to manage the hidden node problem?
 
-johannes
+
+-- 
+thomas
