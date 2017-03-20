@@ -1,76 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:39893 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754217AbdC1Jhd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 05:37:33 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 3/5] NFC: pn544: Convert to use devm_request_threaded_irq()
-Date: Tue, 28 Mar 2017 12:36:37 +0300
-Message-Id: <20170328093639.53481-3-andriy.shevchenko@linux.intel.com> (sfid-20170328_113942_638391_27F28D3C)
-In-Reply-To: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
-References: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:36832 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752569AbdCTRsY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Mar 2017 13:48:24 -0400
+Received: by mail-oi0-f45.google.com with SMTP id r203so21801618oib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 10:47:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <70ad78bc-2a94-3391-797b-d7f074ccd4fa@lwfinger.net>
+References: <CADND2bqVLdSmmY=RG7m8r2maWyc7yGgvKUO4O4YGPLVnMx0pqg@mail.gmail.com>
+ <34e317ae-a112-79bc-41ef-c18433e8cc49@lwfinger.net> <CADND2bprCVNThAWVp-De7W3uRvKNDxGrxEond2ANZ+=2akKB_Q@mail.gmail.com>
+ <20064021-fcca-4092-e6ec-5ce7f964a0c1@lwfinger.net> <CADND2br8jjW1jmuW3e4Jg4CxVaHCDEs2M4PHNtUuh9uMaC4BCQ@mail.gmail.com>
+ <70ad78bc-2a94-3391-797b-d7f074ccd4fa@lwfinger.net>
+From: Fernanda Vejar <fvejar85@gmail.com>
+Date: Mon, 20 Mar 2017 14:47:28 -0300
+Message-ID: <CADND2bpeRx6OGc=ZZXmPnCzoW0-kigibSuzoD751C9QqROAQDw@mail.gmail.com> (sfid-20170320_184835_430969_B7378FF7)
+Subject: Re: Wireless failed
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The error handling will be neat and short when using managed resources.
+Hello Larry,
 
-Convert the driver to use devm_request_threaded_irq().
+ok thank you, I will consider your advice.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- v3: no change
+I run:  "cp iwlwifi-2030-6.ucode /lib/firmware". I checked it out and
+it was right copied into the folder.
 
- drivers/nfc/pn544/i2c.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
+Fernanda
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index b4001306aff8..5e780e7a28e5 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -963,9 +963,10 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
- 
- 	pn544_hci_i2c_platform_init(phy);
- 
--	r = request_threaded_irq(client->irq, NULL, pn544_hci_i2c_irq_thread_fn,
--				 IRQF_TRIGGER_RISING | IRQF_ONESHOT,
--				 PN544_HCI_I2C_DRIVER_NAME, phy);
-+	r = devm_request_threaded_irq(&client->dev, client->irq, NULL,
-+				      pn544_hci_i2c_irq_thread_fn,
-+				      IRQF_TRIGGER_RISING | IRQF_ONESHOT,
-+				      PN544_HCI_I2C_DRIVER_NAME, phy);
- 	if (r < 0) {
- 		nfc_err(&client->dev, "Unable to register IRQ handler\n");
- 		return r;
-@@ -976,14 +977,9 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
- 			    PN544_HCI_I2C_LLC_MAX_PAYLOAD,
- 			    pn544_hci_i2c_fw_download, &phy->hdev);
- 	if (r < 0)
--		goto err_hci;
-+		return r;
- 
- 	return 0;
--
--err_hci:
--	free_irq(client->irq, phy);
--
--	return r;
- }
- 
- static int pn544_hci_i2c_remove(struct i2c_client *client)
-@@ -1001,8 +997,6 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
- 	if (phy->powered)
- 		pn544_hci_i2c_disable(phy);
- 
--	free_irq(client->irq, phy);
--
- 	return 0;
- }
- 
--- 
-2.11.0
+
+2017-03-20 14:33 GMT-03:00 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/20/2017 11:46 AM, Fernanda Vejar wrote:
+>>
+>> Hello Larry,
+>>
+>> thank you very much for your fast answer.
+>>
+>> Buy running "modinfo iwlwifi":
+>> filename:
+>>
+>> /lib/modules/3.13.0-112-lowlatency/updates/drivers/net/wireless/iwlwifi/iwlwifi.ko
+>> version:        iwlwifi-stack-public:release/LinuxCore5:3714:27076532
+>> license:        GPL
+>> author:         Copyright(c) 2003- 2014 Intel Corporation
+>> <ilw@linux.intel.com>
+>> version:        in-tree:d
+>> description:    Intel(R) Wireless WiFi driver for Linux
+>> firmware:       iwlwifi-7265-8.ucode
+>> firmware:       iwlwifi-3160-8.ucode
+>> firmware:       iwlwifi-7260-8.ucode
+>> firmware:       iwlwifi-8000-8.ucode
+>> srcversion:     6E29C5B96E10698E38DC01F
+>> ....
+>>
+>> According to the reference
+>> (https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#firmware) I
+>> need  the iwlwifi-2030-6.ucode. I tried to install it previously as a
+>> first step, but It didn't work. I don't understand what I did wrong.
+>
+>
+> On this list, please do not top post. When you put your information at the
+> top, then the reader has to go all the way to the bottom, then back to the
+> top. Having everything in chronological order is easier.
+>
+> The driver is in your kernel. All we need now is the firmware. Where did you
+> put the file? It should have been in /lib/firmware.
+>
+> Larry
+>
+>
