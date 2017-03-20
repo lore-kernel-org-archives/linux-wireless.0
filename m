@@ -1,99 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:36218 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752143AbdCMJmA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51244 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753387AbdCTRJp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2017 05:42:00 -0400
-Received: by mail-pf0-f172.google.com with SMTP id o126so67391802pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Mar 2017 02:42:00 -0700 (PDT)
-Subject: Re: [PATCH] 4.9.13 brcmfmac: fix use-after-free on resume
-To: Daniel J Blueman <daniel@quora.org>
-References: <CAMVG2stHA9qSUiRFBW=-4jhSMk-o7Frext+Qf9JK3Fo822XHhw@mail.gmail.com>
- <3626494c-8482-d003-1c83-e6171f6990a8@broadcom.com>
- <CAMVG2st=ZW-HhqQOMnDunjSJHj8Zw_K2+w2_8AVsHQePN3Ow9w@mail.gmail.com>
- <1a978960-3962-0eda-15b0-b1259b21e58f@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-        Netdev <netdev@vger.kernel.org>,
-        David Miller <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f0507546-2bd4-76a6-3e77-0108a5bcf755@broadcom.com> (sfid-20170313_104223_420191_73EAAAD5)
-Date: Mon, 13 Mar 2017 10:41:50 +0100
+        Mon, 20 Mar 2017 13:09:45 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1a978960-3962-0eda-15b0-b1259b21e58f@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [v3] mwifiex: fix kernel crash after shutdown command timeout
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170316213607.62386-1-briannorris@chromium.org>
+References: <20170316213607.62386-1-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        dmitry.torokhov@gmail.com, Amitkumar Karwar <akarwar@marvell.com>,
+        <linux-kernel@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>
+Message-Id: <20170320170944.3D26D609C6@smtp.codeaurora.org> (sfid-20170320_181010_640416_39F1CAC4)
+Date: Mon, 20 Mar 2017 17:09:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-3-2017 10:33, Arend Van Spriel wrote:
-> On 6-3-2017 15:50, Daniel J Blueman wrote:
->> On 6 March 2017 at 21:00, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>> + linux-wireless
->>>
->>> On 6-3-2017 8:14, Daniel J Blueman wrote:
->>>> KASAN reported 'struct wireless_dev wdev' was read after being freed.
->>>> Fix by freeing after the access.
->>>
->>> I would rather like to see the KASAN report, because something is off
->>> here. This function is called with wdev as a parameter so how can it be
->>> accessed after free here? brcmf_remove_interface() does not free the
->>> wdev nor the brcmf_cfg80211_vif instance which contains the wdev.
->>>
->>> Regards,
->>> Arend
->>>
->>>> Signed-off-by: Daniel J Blueman <daniel@quora.org>
->>>>
->>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> index de19c7c..aa0f470 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> @@ -2288,12 +2288,13 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy,
->>>> struct wireless_dev *wdev)
->>>>                 else
->>>>                         err = 0;
->>>>         }
->>>> -       brcmf_remove_interface(vif->ifp, true);
->>>>
->>>> -       brcmf_cfg80211_arm_vif_event(cfg, NULL);
->>>>         if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
->>>>                 p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
->>>>
->>>> +       brcmf_remove_interface(vif->ifp, true);
->>>> +       brcmf_cfg80211_arm_vif_event(cfg, NULL);
->>>> +
->>>>         return err;
->>>>  }
->>
->> Sure, https://quora.org/kernel/brcmfmac/dmesg.txt
+Brian Norris <briannorris@chromium.org> wrote:
+> We observed a SHUTDOWN command timeout during reboot stress test due to
+> a corner case firmware bug. It can lead to either a use-after-free +
+> OOPS (on either the adapter structure, or the 'card' structure) or an
+> abort (where, e.g., the PCI device is "disabled" before we're done
+> dumping the FW).
 > 
-> So this dmesg looks to be about a separate issue during resume, which
-> you sent an email about earlier [1] which is about using wiphy struct
-> after free. However, back to this I further checked the code and it
-> seems the vif is indeed freed through the netdev destructor callback
-> upon calling brcmf_remove_inteface(). However, I would prefer to store
-> vif->wdev.iftype in a local variable and avoid changing the order of the
-> calls in the code.
+> We can avoid this by canceling/flushing the FW dump work:
+> 
+> (a) after we've terminated all other work queues (e.g., for processing
+>     commands which could time out)
+> (b) after we've disabled all interrupts (which could also queue more
+>     work for us)
+> (c) after we've unregistered the netdev and wiphy structures (and
+>     implicitly, and debugfs entries which could manually trigger FW dumps)
+> (d) before we've actually disabled the device (e.g.,
+>     pci_device_disable())
+> 
+> Altogether, this means no card->work will be scheduled if we sync at
+> a point that satisfies the above. This can be done at the beginning of
+> the .cleanup_if() callback.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-Forgot to mention some things about the commit message. Please drop the
-the kernel version from the subject. You should create the patch against
-the wireless-drivers tree and indicate the patch is for 4.11, ie.
-"[PATCH for-4.11] brcmfmac: fix use-after-free of wireless_dev
-instance". Also add as much useful information in the commit message as
-possible like the proper KASAN report or at least mention that
-brcmf_remove_interface() does an unregister_netdev() which results in
-freeing the wireless_dev through netdev destructor callback.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Regards,
-Arend
+5caa7f384629 mwifiex: fix kernel crash after shutdown command timeout
 
-> Regards,
-> Arend
-> 
-> [1] http://marc.info/?l=linux-netdev&m=148878437808750&w=2
-> 
->> vmlinux, cfg80211.o, brcmfmac.o and config are in the same path; this
->> is against v4.9.13 stock.
-> 
+-- 
+https://patchwork.kernel.org/patch/9629349/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
