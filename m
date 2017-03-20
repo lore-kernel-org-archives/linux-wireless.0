@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36131 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752086AbdCXH27 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50906 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753188AbdCTRJD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 03:28:59 -0400
-From: Pushkar Jambhlekar <pushkar.iit@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org,
-        Pushkar Jambhlekar <pushkar.iit@gmail.com>
-Subject: [PATCH] drivers/staging/wilc1000: Using __func__ instead of hardcoded function name
-Date: Fri, 24 Mar 2017 12:58:45 +0530
-Message-Id: <1490340525-9458-1-git-send-email-pushkar.iit@gmail.com> (sfid-20170324_082920_851702_36B1437C)
+        Mon, 20 Mar 2017 13:09:03 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: send fewer channels to scan while connected
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1489661171-29796-1-git-send-email-akarwar@marvell.com>
+References: <1489661171-29796-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20170320170902.19A4260795@smtp.codeaurora.org> (sfid-20170320_180910_436027_E7C0F32B)
+Date: Mon, 20 Mar 2017 17:09:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_err: replacing hardcoded function name with '%s' and __func__
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Application triggers periodic background scans when device is connected.
+> We will scan less number of channels per scan command so that data
+> traffic won't get affected.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Pushkar Jambhlekar <pushkar.iit@gmail.com>
----
- drivers/staging/wilc1000/wilc_sdio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index ad4eb0f..ce6c3b4 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -74,7 +74,7 @@ static int wilc_sdio_cmd52(struct wilc *wilc, struct sdio_cmd52 *cmd)
- 	sdio_release_host(func);
- 
- 	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
-+		dev_err(&func->dev, "%s..failed, err(%d)\n", __func__, ret);
- 	return ret;
- }
- 
-@@ -103,7 +103,7 @@ static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
- 	sdio_release_host(func);
- 
- 	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
-+		dev_err(&func->dev, "%s..failed, err(%d)\n", __func__,  ret);
- 
- 	return ret;
- }
+0a5cc49750b8 mwifiex: send fewer channels to scan while connected
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9627821/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
