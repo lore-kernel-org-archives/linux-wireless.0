@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:38621 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935428AbdCVRfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 13:35:03 -0400
-From: "Shevchenko, Andriy" <andriy.shevchenko@intel.com>
-To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-        "sameo@linux.intel.com" <sameo@linux.intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v1 1/2] NFC: pn544: Request GPIOs with proper connection
- IDs
-Date: Wed, 22 Mar 2017 17:34:58 +0000
-Message-ID: <1490204097.19767.176.camel@intel.com> (sfid-20170322_183538_613487_E8A75603)
-References: <20170307101230.23062-1-andriy.shevchenko@linux.intel.com>
-         <1488881748.20145.102.camel@linux.intel.com>
-In-Reply-To: <1488881748.20145.102.camel@linux.intel.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:33081 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756006AbdCTXo7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Mar 2017 19:44:59 -0400
+Received: by mail-pg0-f51.google.com with SMTP id n190so84775219pga.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 16:44:58 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Andy Gross <andy.gross@linaro.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Brown <david.brown@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>, linux-bluetooth@vger.kernel.org,
+        linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org
+Subject: [PATCH 3/3] soc: qcom: smd-rpm: Add msm8996 compatibility
+Date: Mon, 20 Mar 2017 16:35:44 -0700
+Message-Id: <20170320233544.1656-3-bjorn.andersson@linaro.org> (sfid-20170321_004526_689651_0A1CD362)
+In-Reply-To: <20170320233544.1656-1-bjorn.andersson@linaro.org>
+References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE3LTAzLTA3IGF0IDEyOjE1ICswMjAwLCBBbmR5IFNoZXZjaGVua28gd3JvdGU6
-DQo+IE9uIFR1ZSwgMjAxNy0wMy0wNyBhdCAxMjoxMiArMDIwMCwgQW5keSBTaGV2Y2hlbmtvIHdy
-b3RlOg0KPiA+IFNpbmNlIEFDUEkgZG9lcyBzdXBwb3J0IF9EU0Qgd2UgbWlnaHQgaGF2ZSBhIGZp
-cm13YXJlIHRoYXQgcHJvdmlkZXMNCj4gPiBhDQo+ID4gR1BJTyBtYXBwaW5nIGluIERTRFQuIFdo
-ZW4gR1BJTyBpcyByZXF1ZXN0ZWQgdGhlIGNvcmUgd2lsbCBjaGVjayBmb3INCj4gPiBwcm9wZXJ0
-eSB3aXRoIGdpdmVuIG5hbWUuIFRoYXQncyB3aHkgd2UgaGF2ZSB0byBmb2xsb3cgdGhlIHN0YW5k
-YXJkDQo+ID4gbmFtZXMgd2hpY2ggYXJlIGFscmVhZHkgaW4gdXNlIGluIERUIGNhc2UuDQo+ID4g
-DQo+ID4gUmVxdWVzdCBHUElPcyB3aXRoIHByb3BlciBjb25uZWN0aW9uIElEcywgaS5lLiB1c2Ug
-c2FtZSBuYW1lcyBhcw0KPiA+IHVzZWQNCj4gPiBmb3IgRFQgY2FzZS4NCj4gPiANCj4gPiBJbiB0
-aGUgZnV0dXJlIEFDUEkgYW5kIERUIGNhc2VzIG1pZ2h0IGJlIHVuaWZpZWQuDQo+IA0KPiBEaXNj
-YXJkIHRoaXMgc2VyaWVzLCBpdCBzaG91bGQgYmUgdjIsIGp1c3QgcmVzZW50Lg0KDQpXaGlsZSBJ
-J20gcHJlcGFyaW5nIHYyLCB0aGVyZSBpcyBhIG1vc3QgaW1wb3J0YW50IHF1ZXN0aW9uIGhhcyBh
-cmlzZW4uDQoNCkRvIHdlIGhhdmUgYW55IGV2aWRlbmNlIG9mIE5YUDU0NDAgKEFDUEkgSUQpIGlu
-ICpyZWFsKiB3b3JsZD8NCg0KVG8gbWUgaXQgKHRoZSBJRCBpdHNlbGYpIHNvdW5kcyBhcnRpZmlj
-aWFsIGFuZCB3aWxmdWxseSBpbnZlbnRlZC4gSW4NCmNhc2UgSSdtIHJpZ2h0IGl0IG11c3QgYmUg
-cmVtb3ZlZCBmcm9tIHRoZSBkcml2ZXIuIE90aGVyd2lzZSwgSSB3b3VsZA0KbGlrZSB0byBzZWUg
-ZG9jdW1lbnRhdGlvbiBvciBhbGlrZSB3aXRoIERTRFQgZXhjZXJwdCBhbmQgbW9kZWwgb2YgdGhl
-DQpyZWFsIGRldmljZSB3aGljaCBoYXMgaXQuDQoNCi0tIA0KQW5keSBTaGV2Y2hlbmtvIDxhbmRy
-aXkuc2hldmNoZW5rb0BpbnRlbC5jb20+DQpJbnRlbCBGaW5sYW5kIE95IC0gQklDIDAzNTc2MDYt
-NCAtIFdlc3RlbmRpbmthdHUgNywgMDIxNjAgRXNwb28=
+With the RPM driver transitioned to RPMSG we can reuse the SMD-RPM
+driver ontop of GLINK for 8996, without any modifications.
+
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/soc/qcom/smd-rpm.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/soc/qcom/smd-rpm.c b/drivers/soc/qcom/smd-rpm.c
+index 0dcf1bf33126..c2346752b3ea 100644
+--- a/drivers/soc/qcom/smd-rpm.c
++++ b/drivers/soc/qcom/smd-rpm.c
+@@ -225,6 +225,7 @@ static const struct of_device_id qcom_smd_rpm_of_match[] = {
+ 	{ .compatible = "qcom,rpm-apq8084" },
+ 	{ .compatible = "qcom,rpm-msm8916" },
+ 	{ .compatible = "qcom,rpm-msm8974" },
++	{ .compatible = "qcom,rpm-msm8996" },
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, qcom_smd_rpm_of_match);
+-- 
+2.12.0
