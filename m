@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35088 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750919AbdCPB5j (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35706 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753826AbdCTPYo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 21:57:39 -0400
-Received: by mail-pf0-f194.google.com with SMTP id x63so3859522pfx.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Mar 2017 18:57:38 -0700 (PDT)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH 1/2] nl80211: Use signed function for a signed variable
-Date: Thu, 16 Mar 2017 10:57:17 +0900
-Message-Id: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com> (sfid-20170316_025742_756338_EB201ADE)
+        Mon, 20 Mar 2017 11:24:44 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: Fix typo in wmi header file
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1489491204-20855-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1489491204-20855-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <27b179f0f5b841ffbda2ff9f3113b0a6@euamsexm01a.eu.qualcomm.com> (sfid-20170320_162810_996806_33BE4225)
+Date: Mon, 20 Mar 2017 16:24:10 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rssi_threshold is defined as s32.
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> 
+> Fix typo(spelling mistake) in wmi.h
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b15903b..bd5959f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5714,7 +5714,7 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 		       cur_params.dot11MeshGateAnnouncementProtocol) ||
- 	    nla_put_u8(msg, NL80211_MESHCONF_FORWARDING,
- 		       cur_params.dot11MeshForwarding) ||
--	    nla_put_u32(msg, NL80211_MESHCONF_RSSI_THRESHOLD,
-+	    nla_put_s32(msg, NL80211_MESHCONF_RSSI_THRESHOLD,
- 			cur_params.rssi_threshold) ||
- 	    nla_put_u32(msg, NL80211_MESHCONF_HT_OPMODE,
- 			cur_params.ht_opmode) ||
+0a7d88e432e7 ath10k: fix typo in wmi header file
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9623069/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
