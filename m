@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:33076 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751346AbdCSBaU (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35738 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754229AbdCTPLA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Mar 2017 21:30:20 -0400
-Received: by mail-it0-f66.google.com with SMTP id g138so10827308itb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 18:28:53 -0700 (PDT)
-Subject: Re: [NetDev-tech] [NetDev] ANNOUNCE: New sponsor Netronome
-To: Amine Aouled Hamed <amine.ahd@gmail.com>,
-        Jamal Hadi Salim <hadi@mojatatu.com>
-References: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
- <CAMXA6B1noOrAFxzy7YhEW+oNvDFLk3+JcTvjorYfKkuZp5xk=w@mail.gmail.com>
- <2b522b0c-fdd8-a9e8-bbbd-1bd48881bb08@mojatatu.com>
- <2099393925.18313.1489875757778.JavaMail.zimbra@efficios.com>
- <ea392711-26b0-4d82-d86e-2adf8365b024@mojatatu.com>
- <CAAFAkD9uG2UUxxLPDF8fuWCP4gxEmozfw3giOSViaWRE38UhFQ@mail.gmail.com>
- <CAMXA6B0B4q__gYbRM8ksBr3-g1PhjYkk68z9w-gp96h1YZp0FQ@mail.gmail.com>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        tech-committee <tech-committee@netdevconf.org>,
-        linux-wireless@vger.kernel.org, Heri Muhero <hmuhero@gmail.com>,
-        people@netdevconf.org, netfilter@vger.kernel.org,
-        netfilter-devel@vger.kernel.org
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Message-ID: <5ce34c9c-29c6-4b59-1fc9-f0b5425a8347@mojatatu.com> (sfid-20170319_023113_943474_FE8D8015)
-Date: Sat, 18 Mar 2017 21:21:05 -0400
+        Mon, 20 Mar 2017 11:11:00 -0400
+Received: by mail-oi0-f53.google.com with SMTP id a94so23799473oic.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 08:10:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAMXA6B0B4q__gYbRM8ksBr3-g1PhjYkk68z9w-gp96h1YZp0FQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <34e317ae-a112-79bc-41ef-c18433e8cc49@lwfinger.net>
+References: <CADND2bqVLdSmmY=RG7m8r2maWyc7yGgvKUO4O4YGPLVnMx0pqg@mail.gmail.com>
+ <34e317ae-a112-79bc-41ef-c18433e8cc49@lwfinger.net>
+From: Fernanda Vejar <fvejar85@gmail.com>
+Date: Mon, 20 Mar 2017 12:10:06 -0300
+Message-ID: <CADND2bprCVNThAWVp-De7W3uRvKNDxGrxEond2ANZ+=2akKB_Q@mail.gmail.com> (sfid-20170320_161559_882581_A009FF07)
+Subject: Re: Wireless failed
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-03-18 08:07 PM, Amine Aouled Hamed wrote:
-> Im subscribed to netfilter and netfilter-dev but does it matter? you
-> are spamming on multiple lists about something not related to the list
-> subject.
-> People subscribe to the list to exchange information and discuss
-> relevant subjects not to get ads...
+Hello Larry,
 
-Netfilter is certainly part of the event.
+thank you very much for your response.
 
-> If you are trying to bring people to your event than I guess you are
-> doing the exact opposite by spamming in all these lists.
+I'm using "Trisquel 7.0 LTS Belenos" since a few days.
+My kernel version is acoording to "uname -r" : "3.13.0-112-lowlatency".
+By "lspci --n"n I have found : "01:00.0 Network controller [0280]:
+Intel Corporation Centrino Wireless-N 2230 [8086:0887] (rev c4)".
+There is no evidence of iwlwifi by running" lsmod".
+According to "dmesg | less", I've found: "Linux version
+3.13.0-112-lowlatency (pbuilder@devel.trisquel.info) (gcc version
+4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.3) ) #159+7.0trisquel2 SMP PREEMPT
+Mon Mar 13 13:58:08 UTC 2017 (Ubuntu
+3.13.0-112.159+7.0trisquel2-lowlatency 3.13.11-ckt39-gnu)", I think it
+could clarify a little more. But I can't see more relevant issue given
+by this command.
+
+I don't know if the problem is to be solved. Maybe I should try a new distr=
+o.
+
+Fernanda.
+
+2017-03-19 23:03 GMT-03:00 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/19/2017 12:15 PM, Fernanda Vejar wrote:
+>>
+>> Dear Sir or Madam, I am writing you because I cannot make the wireless
+>> connection work. I have just installed a new Linux operative system
+>> which has no driver for the wireless card. I have the device "Intel
+>> Centrino Wireless-N 2230" into my computer and I have been trying to
+>> follow the instructions given by "wireless.wiki.kernel" with the
+>> following steps: 1) I installed the corresponding firmware
+>> "iwlwifi-2030-ucode-18.168.6.1.". 2) I installed the driver LinuxCore5
+>> as indicated and rebooted. 3) As I found no change, I have noted that
+>> the hostap was absent. Than I cloned it. 4) Since it also didn't work,
+>> I took "linux-firmware" and I installed "-9 ucode: 7260, 3160, 7265"
+>> at /lib/firmware. I think I maybe did something wrong, but I don't
+>> know how can I undo all these steps and try again. I really hope you
+>> can give me some hint. Thank you very much in advance. Best Regards,
+>> Fernand Vejar
 >
-
-Lets hear if more people want netfilter lists or any other lists
-removed.
-
-cheers,
-jamal
+>
+> I have nothing to do with any Intel wireless drivers, but I will give you
+> some advice regarding your problem.
+>
+> Whenever you are reporting a problem, you must ABSOLUTELY specify the dis=
+tro
+> and version of your Linux. You should also specify the kernel version as
+> shown by the "uname -r" command. It is also helpful if you specify the
+> wireless hardware by posting the appropriate stanza from the "lspci -nn"
+> command.
+>
+> The above will verify what device you have, but the most probable driver =
+is
+> iwlwifi, which has been in the kernel for a very long time. I would be ve=
+ry
+> surprised if any distributed kernel did not have this driver available. Y=
+ou
+> can run the lsmod command to see if the driver is loaded. You should also
+> check the log using "dmesg | less" to see if the firmware is missing.
+>
+> Larry
+>
+> --
+> If I was stranded on an island and the only way to get off
+> the island was to make a pretty UI, I=E2=80=99d die there.
+>
+> Linus Torvalds
