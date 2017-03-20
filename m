@@ -1,71 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51840 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752820AbdCPWmT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52954 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754843AbdCTROU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 18:42:19 -0400
-Message-ID: <58CB1714.8000305@candelatech.com> (sfid-20170316_234229_672244_FE351310)
-Date: Thu, 16 Mar 2017 15:52:04 -0700
-From: Ben Greear <greearb@candelatech.com>
+        Mon, 20 Mar 2017 13:14:20 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-        netdev <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: netdev level filtering? perhaps pushing socket filters down?
-References: <1489703635.3930.5.camel@sipsolutions.net>
-In-Reply-To: <1489703635.3930.5.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: brcmfmac: always print error when PSM's watchdog fires
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170224163246.7748-1-zajec5@gmail.com>
+References: <20170224163246.7748-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20170320171402.33B39609F7@smtp.codeaurora.org> (sfid-20170320_181425_324136_43E42487)
+Date: Mon, 20 Mar 2017 17:14:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2017 03:33 PM, Johannes Berg wrote:
-> Hi all,
->
-> Occasionally - we just had another case - people want to hook into
-> packets received and processed by the mac80211 stack, but because they
-> don't need all of them (e.g. not data packets), even adding a monitor
-> interface and bringing it up has too high a cost because SKBs need to
-> be prepared to send them to the monitor interface, even if no socket is
-> consuming them.
->
-> Ideally, we'd be able to detect that there are filter programs attached
-> to the socket(s) that are looking at the frames coming in on the
-> monitor interface, and we could somehow magically run those before we
-> create a new SKB.
-> One problem here is that we wouldn't really want to prepare all the
-> radiotap header just to throw it away, so we'd have to be able to
-> analyse the filter program to make sure it doesn't access anything but
-> the radiotap header length, and that only in order to jump over it.
-> That seems ... difficult, but we don't even know the header length -
-> although we could fudge that and make a very long constant-size header,
-> which might make it possible to do such analysis, or handle it by
-> trapping on such access. But it seems rather difficult to implement
-> this.
->
-> The next best thing would be to install a filter program on the virtual
-> monitor *interface* (netdev), but say that it doesn't get frames with
-> radiotap, but pure 802.11 frames. We already have those in SKB format
-> at this point, so it'd be simple to run such a program and only pass
-> the SKB to the monitor netdev's RX when the program asked to do that.
->
-> This now seems a bit like XDP, but for XDP this header difference
-> doesn't seem appropriate either.
->
-> Anyone have any other thoughts?
+Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> So far we were attaching BRCMF_E_PSM_WATCHDOG event listener in
+> brcmf_debug_attach which gets compiled only with CONFIG_BRCMDBG. This
+> event means something went wrong and firmware / hardware usually can't
+> be expected to work (reliably).
+> 
+> Such a problem is significant for user experience so I believe we should
+> print an error unconditionally (even with debugging disabled). What can
+> be indeed optional is dumping bus memory as this is clearly part of
+> debugging process.
+> 
+> In the future we may also try to extend this listener by trying to
+> recover from the error or at least signal it to the cfg80211.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 
-Attach at just above the driver, before it ever gets to stations/vdevs,
-and ignore radiotap headers and/or add special processing for metadata like
-rx-info?
+Patch applied to wireless-drivers-next.git, thanks.
 
-Thanks,
-Ben
-
->
-> Thanks,
-> johannes
->
-
+f1ac3aa212af brcmfmac: always print error when PSM's watchdog fires
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+https://patchwork.kernel.org/patch/9590763/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
