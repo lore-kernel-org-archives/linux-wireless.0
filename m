@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:51210 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933153AbdCaRYJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36030 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753230AbdCTQpV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 13:24:09 -0400
-Message-ID: <1490981039.27353.12.camel@perches.com> (sfid-20170331_192458_435706_C1447A7C)
-Subject: Re: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
-From: Joe Perches <joe@perches.com>
-To: Steve deRosier <derosier@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Fri, 31 Mar 2017 10:23:59 -0700
-In-Reply-To: <CALLGbR+szcYFdbdh_0qBS4B_X6YQvU6CDFpR-XZvc7p3zA+ZdQ@mail.gmail.com>
-References: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com>
-         <CALLGbR+szcYFdbdh_0qBS4B_X6YQvU6CDFpR-XZvc7p3zA+ZdQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Mon, 20 Mar 2017 12:45:21 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [3/3] mwifiex: wake system up when receives a wake irq
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1487917471-5501-3-git-send-email-jeffy.chen@rock-chips.com>
+References: <1487917471-5501-3-git-send-email-jeffy.chen@rock-chips.com>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Rajat Jain <rajatja@google.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>
+Message-Id: <20170320164421.2735E60DAF@smtp.codeaurora.org> (sfid-20170320_174812_770936_35509E8D)
+Date: Mon, 20 Mar 2017 16:44:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-31 at 10:19 -0700, Steve deRosier wrote:
-> On Thu, Mar 30, 2017 at 3:57 PM, Joe Perches <joe@perches.com> wrote:
-> > Fix fallout too.
-[]
-> My only question is why bother doing a format check on something
-> that's going to be compiled out anyway?
+Jeffy Chen <jeffy.chen@rock-chips.com> wrote:
+> Currrently we are disabling this wake irq after receiving it. If this
+> happens before we finish suspend and the pm event check is disabled,
+> the system will continue suspending, and this irq would not work again.
+> 
+> We may need to abort system suspend to avoid that.
+> 
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 
-To avoid introducing defects when writing new code
-and not using the debugging code path.
+Patch applied to wireless-drivers-next.git, thanks.
+
+ef7e07147425 mwifiex: wake system up when receives a wake irq
+
+-- 
+https://patchwork.kernel.org/patch/9589459/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
