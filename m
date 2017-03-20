@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:33887 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751307AbdCRMLD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53162 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754960AbdCTROi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Mar 2017 08:11:03 -0400
-Received: by mail-it0-f67.google.com with SMTP id r141so8678292ita.1
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Mar 2017 05:10:31 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: New sponsor Netronome
-To: people@netdevconf.org
-Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
-        Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Heri Muhero <hmuhero@gmail.com>
-Message-ID: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com> (sfid-20170318_131116_065382_545A7DA5)
-Date: Sat, 18 Mar 2017 08:10:29 -0400
+        Mon, 20 Mar 2017 13:14:38 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v3,1/3] brcmfmac: Do not print the firmware version as an error
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170308135017.29867-1-hdegoede@redhat.com>
+References: <20170308135017.29867-1-hdegoede@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Message-Id: <20170320171437.3C88960854@smtp.codeaurora.org> (sfid-20170320_181456_202744_45C83D84)
+Date: Mon, 20 Mar 2017 17:14:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The organizing committee would like to announce a new silver sponsor,
-Netronome.
+Hans de Goede <hdegoede@redhat.com> wrote:
+> Using pr_err for things which are not errors is a bad idea. E.g. it
+> will cause the plymouth bootsplash screen to drop back to the text
+> console so that the user can see the error, which is not what we
+> normally want to happen.
+> 
+> Instead add a new brcmf_info macro and use that.
+> 
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Netronome is a returning silver sponsor. The netdev community
-appreciates their support once again!
+3 patches applied to wireless-drivers-next.git, thanks.
 
-cheers,
-jamal
+d79fe4cb70d8 brcmfmac: Do not print the firmware version as an error
+26e537884a8e brcmfmac: Do not complain about country code "00"
+b9472a2e3e45 brcmfmac: Handle status == BRCMF_E_STATUS_ABORT in cfg80211_escan_handler
+
+-- 
+https://patchwork.kernel.org/patch/9611177/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
