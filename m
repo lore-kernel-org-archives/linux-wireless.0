@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33517 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751023AbdCQTtZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 15:49:25 -0400
-Received: by mail-lf0-f67.google.com with SMTP id r36so6193797lfi.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 12:49:24 -0700 (PDT)
-Subject: Re: [RFC v4 06/21] ath10k: sdio support
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
- <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
- <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
- <871su52th2.fsf@kamboji.qca.qualcomm.com>
- <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
- <877f3qyc5g.fsf@kamboji.qca.qualcomm.com>
- <29c3dd40-c3ac-746e-d8ef-cb072c58578a@gmail.com>
- <87y3w5tvkq.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <feaa5932-4a2b-d801-9226-5532cea93a14@gmail.com> (sfid-20170317_204959_026669_2313D166)
-Date: Fri, 17 Mar 2017 16:54:08 +0100
+Received: from mail.kernel.org ([198.145.29.136]:51176 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757172AbdCUNBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Mar 2017 09:01:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <87y3w5tvkq.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1919994.musG4GLznX@bentobox>
+References: <20170310080615.22958-1-sven.eckelmann@openmesh.com>
+ <20170320150733.25bufnzrhh7xabml@rob-hp-laptop> <1919994.musG4GLznX@bentobox>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 21 Mar 2017 08:00:34 -0500
+Message-ID: <CAL_Jsq+aEdjq9MR--Hyrw17KoKv=uZ7OBsAqX1_0+Djpw+QUCg@mail.gmail.com> (sfid-20170321_140148_637244_F5D8C195)
+Subject: Re: [PATCH 1/2] dt: bindings: add new dt entry for ath10k calibration variant
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        ext.waldemar.rymarkiewicz@tieto.com,
+        Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 2017-03-16 10:33, Kalle Valo wrote:
-> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
->
->>> There seems to be same pattern for reading four bytes, what if we should
->>> add a helper for that? Something like ath10k_sdio_read32()? It could
->>> handle the kmalloc and switch endianess also.
->>>
->>> But please don't make any chances to sdio.c for the moment, let me
->>> submit v5 first.
->>>
->> I notice that you have submitted v5 (and v6) of the sdio patches. Great!
+On Mon, Mar 20, 2017 at 11:28 AM, Sven Eckelmann
+<sven.eckelmann@openmesh.com> wrote:
+> On Montag, 20. März 2017 10:07:33 CET Rob Herring wrote:
+>> On Fri, Mar 10, 2017 at 09:06:14AM +0100, Sven Eckelmann wrote:
+>> > The bus + bmi-chip-id + bmi-board-id is not enough to identify the correct
+>> > board data file on QCA4019 based devices. Multiple different boards share
+>> > the same values. Only the original reference designs can currently be
+>> > identified and loaded from the board-2.bin. But these will not result in
+>> > the correct calibration data when combined with the pre-calibration data
+>> > from the device.
+>> >
+>> > An additional "variant" information has to be provided (via SMBIOS or DT)
+>> > to select the correct board data for a design which was modified by an ODM.
+>> >
+>> > Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+>> > ---
+>> > Since RFC:
+>> >
+>> >  - Split patch in DT doc and ath10k part (thanks Christian Lamparter)
+>> >  - Remove the words "bmi-chip-id" and "bmi-board-id" and replace them with
+>> >    more generic "device specific ids"
+>> > ---
+>> >  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 3 +++
+>> >  1 file changed, 3 insertions(+)
+>> >
+>> > diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> > index 74d7f0af209c..3d2a031217da 100644
+>> > --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> > +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> > @@ -41,6 +41,9 @@ Optional properties:
+>> >  - qcom,msi_addr: MSI interrupt address.
+>> >  - qcom,msi_base: Base value to add before writing MSI data into
+>> >             MSI address register.
+>> > +- qcom,ath10k-calibration-variant: string to search for in the board-2.bin
+>> > +                              variant list with the same bus and device
+>> > +                              specific ids
 >>
->> I assume you will add them to master-pending soon so I will try out
->> everything (usb too) as soon as they are on master-pending.
+>> Sounds like you should use a more specific compatible string.
 >
-> v6 is now in master-pending.
+> Hm, this would require that each calibration data has an own compatibility
+> string - which then has to be supported by ath10k, right? Doesn't sound like
+> it would work well when each vendor (with an own calibration variant) would
+> have to modify ath10k to get it working. This sounds especially odd because
+> nothing else in ath10k has to be changed. Only the board data files which will
+> be selected by ath10k are different on these devices.
 >
+> It would then up with something like this as compatibility string:
+>
+>  * qcom,ipq4019-wifi-asus-rt-ac58u
+>  * qcom,ipq4019-wifi-fritzbox-4040
+>  * qcom,ipq4019-wifi-netgear-whatever
+>  * qcom,ipq4019-wifi-openmesh-i-have-no-idea
+>  * ...
 
-I have added my usb patches on top of sdio v6 and everything works as expected
-(both usb and sdio).
+Are these all the same board design or variations? In the latter case,
+you should have specific compatibles anyway. Now if the variants are
+the same hardware, but different configurations say for different
+regions or something, then I'd say a separate property is fine.
 
-Your changes does not seem to have broken anything.
+We already have a "firmware-name" property. Would that work for you?
+
+Rob
