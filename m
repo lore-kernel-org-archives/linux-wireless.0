@@ -1,119 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52184 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753546AbdCOOrH (ORCPT
+Received: from mail-qt0-f178.google.com ([209.85.216.178]:34664 "EHLO
+        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932411AbdCUN5C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 10:47:07 -0400
-Subject: [PATCH v5 03/10] ath10k: htc: move htc ctrl ep connect to htc_init
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 15 Mar 2017 16:46:54 +0200
-Message-ID: <148958921420.25727.14261861155277006455.stgit@potku.adurom.net> (sfid-20170315_154831_538444_22C3C2ED)
-In-Reply-To: <148958913141.25727.15769281552095255609.stgit@potku.adurom.net>
-References: <148958913141.25727.15769281552095255609.stgit@potku.adurom.net>
+        Tue, 21 Mar 2017 09:57:02 -0400
+Received: by mail-qt0-f178.google.com with SMTP id n21so131334141qta.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Mar 2017 06:57:01 -0700 (PDT)
+Subject: Re: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the
+ __brcmf_err
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <20170202213321.11591-1-zajec5@gmail.com>
+ <20170202213321.11591-4-zajec5@gmail.com>
+ <2812805e-9108-284f-2165-34624d603364@broadcom.com>
+ <CACna6rzxbgkuvHWEk=7CgCzSeDfyR-RT_gHY=rwoZW_yC=LdOQ@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <76a76500-c673-78b6-a3f3-3cba68d21da8@broadcom.com> (sfid-20170321_145707_956485_1B616033)
+Date: Tue, 21 Mar 2017 14:49:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CACna6rzxbgkuvHWEk=7CgCzSeDfyR-RT_gHY=rwoZW_yC=LdOQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+On 23-2-2017 22:41, Rafał Miłecki wrote:
+> Hey Arend,
+> 
+> On 8 February 2017 at 10:54, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 2-2-2017 22:33, Rafał Miłecki wrote:
+>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>
+>>> This will allow getting struct device reference from the passed
+>>> brcmf_pub for the needs of dev_err. More detailed messages are really
+>>> important for home routers which frequently have 2 (or even 3) wireless
+>>> cards supported by brcmfmac.
+>>>
+>>> Note that all calls are yet to be updated as for now brcmf_err macro
+>>> always passes NULL. This will be handled in following patch to make this
+>>> change easier to review.
+>>
+>> I prefer brcmf_err() to have struct device reference directly instead of
+>> using brcmf_pub. That would remove the need for patches 5 till 7 as bus
+>> specific code already has struct device. So I have acked the first three
+>> patches, but would like to revise 8 and 9.
+> 
+> I wanted to have some better perspective so I analyzed few upstream
+> Linux wireless drivers. It seems to be a pretty common pattern to have
+> one struct describing hardware that gets passed across the whole
+> driver. This way you can access any important info from any place of
+> the driver & some will probably say it also simplifies a driver.
+> 
+> For example following drivers use following struct in almost every
+> part of their code (across multiple files):
+> ath9k: struct ath_hw
+> ath10k: struct ath10k
+> iwlmvm: struct iwl_mvm
+> mt7601u: struct mt7601u_dev
+> mwifiex: struct mwifiex_private
+> rt2x00: struct rt2x00_dev
+> 
+> The most common / generic struct I found in brcmfmac was struct
+> brcmf_pub. That's why I tried to use it for the commonly used
+> brcmf_err.
+> 
+> What's the reason for hiding this struct from few random parts of the
+> code? Is there any real gain from this?
 
-This patch moves the HTC ctrl service connect from
-htc_wait_target to htc_init.
+Hi Rafał,
 
-This is done in order to make sure the htc ctrl service
-is setup properly before hif_start is called.
+Time flies when you are ... well, me apparently. I realized I did not
+get back on this and looked at it myself. In brcmfmac we have layering
+with a common layer and bus specific layer. The interface between those
+layers is in bus.h, ie. struct brcmf_bus which holds reference to struct
+device. So I would think using struct brcmf_bus in brcmf_err() would be
+best fit. I also looked at doing some type introspection using
+__builtin_types_compatible_p() which is built-in function available in
+both GCC and Clang. Might be worth exploring.
 
-The reason for this is that we want the HTC ctrl service
-callback to be initialized before the target sends the
-HTC ready message.
-
-The ready message will always be transmitted on endpoint 0
-(which is always assigned to the HTC control service) so it
-makes more sense if HTC control has been connected before the
-ready message is received.
-
-Since the service to pipe mapping is done as a part of
-the service connect, the get_default_pipe call is redundant
-and was removed.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   39 ++++++++++++++-------------------
- 1 file changed, 17 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index fd5be4484984..92d5ac45327a 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -586,8 +586,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 	struct ath10k *ar = htc->ar;
- 	int i, status = 0;
- 	unsigned long time_left;
--	struct ath10k_htc_svc_conn_req conn_req;
--	struct ath10k_htc_svc_conn_resp conn_resp;
- 	struct ath10k_htc_msg *msg;
- 	u16 message_id;
- 	u16 credit_count;
-@@ -650,22 +648,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 		return -ECOMM;
- 	}
- 
--	/* setup our pseudo HTC control endpoint connection */
--	memset(&conn_req, 0, sizeof(conn_req));
--	memset(&conn_resp, 0, sizeof(conn_resp));
--	conn_req.ep_ops.ep_tx_complete = ath10k_htc_control_tx_complete;
--	conn_req.ep_ops.ep_rx_complete = ath10k_htc_control_rx_complete;
--	conn_req.max_send_queue_depth = ATH10K_NUM_CONTROL_TX_BUFFERS;
--	conn_req.service_id = ATH10K_HTC_SVC_ID_RSVD_CTRL;
--
--	/* connect fake service */
--	status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
--	if (status) {
--		ath10k_err(ar, "could not connect to htc service (%d)\n",
--			   status);
--		return status;
--	}
--
- 	return 0;
- }
- 
-@@ -875,8 +857,10 @@ int ath10k_htc_start(struct ath10k_htc *htc)
- /* registered target arrival callback from the HIF layer */
- int ath10k_htc_init(struct ath10k *ar)
- {
--	struct ath10k_htc_ep *ep = NULL;
-+	int status;
- 	struct ath10k_htc *htc = &ar->htc;
-+	struct ath10k_htc_svc_conn_req conn_req;
-+	struct ath10k_htc_svc_conn_resp conn_resp;
- 
- 	spin_lock_init(&htc->tx_lock);
- 
-@@ -884,10 +868,21 @@ int ath10k_htc_init(struct ath10k *ar)
- 
- 	htc->ar = ar;
- 
--	/* Get HIF default pipe for HTC message exchange */
--	ep = &htc->endpoint[ATH10K_HTC_EP_0];
-+	/* setup our pseudo HTC control endpoint connection */
-+	memset(&conn_req, 0, sizeof(conn_req));
-+	memset(&conn_resp, 0, sizeof(conn_resp));
-+	conn_req.ep_ops.ep_tx_complete = ath10k_htc_control_tx_complete;
-+	conn_req.ep_ops.ep_rx_complete = ath10k_htc_control_rx_complete;
-+	conn_req.max_send_queue_depth = ATH10K_NUM_CONTROL_TX_BUFFERS;
-+	conn_req.service_id = ATH10K_HTC_SVC_ID_RSVD_CTRL;
- 
--	ath10k_hif_get_default_pipe(ar, &ep->ul_pipe_id, &ep->dl_pipe_id);
-+	/* connect fake service */
-+	status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
-+	if (status) {
-+		ath10k_err(ar, "could not connect to htc service (%d)\n",
-+			   status);
-+		return status;
-+	}
- 
- 	init_completion(&htc->ctl_resp);
- 
+Regards,
+Arend
