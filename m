@@ -1,147 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:33639 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967082AbdCXTd1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39935 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751212AbdCUFgO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 15:33:27 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2OJOo3Y074329
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Mar 2017 15:33:26 -0400
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29cxex88b3-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Mar 2017 15:33:25 -0400
-Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-        Fri, 24 Mar 2017 15:33:24 -0400
-Date: Fri, 24 Mar 2017 12:33:22 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+        Tue, 21 Mar 2017 01:36:14 -0400
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-        Nicolai Stange <nicstange@gmail.com>,
-        gregkh <gregkh@linuxfoundation.org>, sharon.dvir@intel.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: deadlock in synchronize_srcu() in debugfs?
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <1490280886.2766.4.camel@sipsolutions.net>
- <1490282991.2766.7.camel@sipsolutions.net>
- <1490345799.2766.15.camel@sipsolutions.net>
- <1490347486.2766.17.camel@sipsolutions.net>
- <20170324174542.GH3637@linux.vnet.ibm.com>
- <1490381507.9586.1.camel@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: RE: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
+ offload
+Date: Tue, 21 Mar 2017 05:36:05 +0000
+Message-ID: <fbc82bc9af344237bd5cd3210d9d012e@aphydexm01f.ap.qualcomm.com> (sfid-20170321_063618_271406_70FCAB26)
+References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
+         <1488544754.25750.8.camel@sipsolutions.net>
+         <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
+         <1489008812.7127.9.camel@sipsolutions.net>
+         <828dd0c9cb0d409eb4d3aadc7f585a69@aphydexm01f.ap.qualcomm.com>
+ <1489500692.10872.11.camel@sipsolutions.net>
+In-Reply-To: <1489500692.10872.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1490381507.9586.1.camel@sipsolutions.net>
-Message-Id: <20170324193322.GL3637@linux.vnet.ibm.com> (sfid-20170324_203539_315051_7E1FAC5A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 24, 2017 at 07:51:47PM +0100, Johannes Berg wrote:
-> 
-> > Yes.  CPU2 has a pre-existing reader that CPU1's synchronize_srcu()
-> > must wait for.  But CPU2's reader cannot end until CPU1 releases
-> > its lock, which it cannot do until after CPU2's reader ends.  Thus,
-> > as you say, deadlock.
-> > 
-> > The rule is that if you are within any kind of RCU read-side critical
-> > section, you cannot directly or indirectly wait for a grace period
-> > from that same RCU flavor.
-> 
-> Right. This is indirect then, in a way.
-
-Agreed, in a way.  ;-)
-
-> > There are some challenges, though.  This is OK:
-> > 
-> >	CPU1				CPU2
-> >	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
-> >	mutex_lock(&my_lock);		i = srcu_read_lock(&mysrcu);
-> >	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
-> >	mutex_unlock(&my_lock);		srcu_read_unlock(&mysrcu, i);
-> > 
-> > 	CPU3
-> > 	synchronize_srcu(&mylock);
-> > 
-> > This could be a deadlock for reader-writer locking, but not for SRCU.
-> 
-> Hmm, yes, that's a good point. If srcu_read_lock() was read_lock, and
-> synchronize_srcu() was write_lock(), then the write_lock() could stop
-> CPU2's read_lock() from acquiring the lock, and thus cause a deadlock.
-
-Yes.
-
-> However, I'm not convinced that lockdep handles reader/writer locks
-> correctly to start with, right now, since it *didn't* actually trigger
-> any warnings when I annotated SRCU as a reader/writer lock.
-
-I haven't looked into lockdep enough to know either way.
-
-> > This is also OK:
-> >	CPU1				CPU2
-> >	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
-> >	mutex_lock(&my_lock);		synchronize_srcu(&yoursrc
-> u);
-> >	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
-> >	mutex_unlock(&my_lock);
-> > 
-> > Here CPU1's read-side critical sections are for mysrcu, which is
-> > independent of CPU2's grace period for yoursrcu.
-> 
-> Right, but that's already covered by having separate a lockdep_map for
-> each SRCU subsystem (mysrcu, yoursrcu).
-
-I hope so, but haven't proved that this would work in all possible cases.
-
-> > So you could flag any lockdep cycle that contained a reader and a
-> > synchronous grace period for the same flavor of RCU, where for SRCU
-> > the identity of the srcu_struct structure is part of the flavor.
-> 
-> Right. Basically, I think SRCU should be like a reader/writer lock
-> (perhaps fixed to work right). The only difference seems to be the
-> scenario you outlined above (first of the two)?
-> 
-> Actually, given the scenario above, for lockdep purposes the
-> reader/writer lock is actually the same as a recursive lock, I guess?
-
-Except that a recursive reader/writer lock can still have deadlocks
-involving the outermost reader that would not be deadlocks for the
-equivalent SRCU scenarios.
-
-> You outlined a scenario in which the reader gets blocked due to a
-> writer (CPU3 doing a write_lock()) so the reader can still participate
-> in a deadlock cycle since it can - without any other locks being held
-> by CPU3 that participate - cause a deadlock between CPU1 and CPU2 here.
-> For lockdep then, even seeing the CPU1 and CPU2 scenarios should be
-> sufficient to flag a deadlock (*).
-
-Might this be one of the reasons why lockdep has problems with
-reader-writer locks?
-
-> This part then isn't true for SRCU, because there forward progress will
-> still be made. So for SRCU, the "reader" side really needs to be
-> connected with a "writer" side to form a deadlock cycle, unlike for a
-> reader/writer lock.
-
-Yes, for SRCU, srcu_read_lock() itself never blocks, so it never
-participates directly in a deadlock cycle.  It has to be the case
-that something within the SRCU read-side critical section blocks
-and takes its place in the deadlock cycle.
-
-Then again, if you didn't have something blocking within your SRCU
-read-side critical section, why would you be using SRCU instead of
-just plain RCU?  ;-)
-
-> johannes
-> 
-> (*) technically only after checking that write_lock() is ever used, but
-> ... seems reasonable enough to assume that it will be used, since why
-> would anyone ever use a reader/writer lock if there are only readers?
-> That's a no-op.
-
-Makes sense to me!  The only reasons I can come up with are things like
-shutting lockdep up when it wants a given lock read-held or some such.
-
-							Thanx, Paul
+SGksDQoNCj5bTWFuaWthbnRhXSBJbiB0aGF0IGNhc2UgSSB3aWxsIGtlZXAgdGhpcyBjaGFuZ2Us
+IHNob3VsZCB3ZSBjb25zaWRlciBhIHNlcGFyYXRlDQo+ZHJpdmVyIGhvb2sgZm9yIGxlZ2FjeS9t
+Z210IHR4IGxpa2UgZHJ2X3R4XzgwMjM/Pw0KPj4gSG93IGFib3V0IGhhdmluZyB3YWtlX3R4X3F1
+ZXVlXzgwMjMgYW5kIGllZWU4MDIxMV90eF9kZXF1ZXVlXzgwMjMNCj5zbw0KPj4gdGhhdCBFdGhl
+cm5ldCB0cmFuc21pdCBwYXRoIGlzIHRvdGFsbHkgZXhjbHVzaXZlLiBUaG91Z2h0cz8/DQo+DQo+
+SSdtIG5vdCBzdXJlIHRoaXMgd2lsbCB3b3JrIHdlbGwuIFRoZSBkcml2ZXIgbWlnaHQgaGF2ZSBt
+b3JlIHNwYWNlIGZvciBzZW5kaW5nDQo+dG8gYSBzcGVjaWZpYyBzdGF0aW9uLCBidXQgZG9lc24n
+dCByZWFsbHkga25vdyB3aGljaCBmcmFtZXMgc2hvdWxkIGdvIGZpcnN0LiBTbw0KPmVpdGhlciBp
+dCdkIGhhdmUgdG8gY2FsbCBib3RoIChkZXF1ZXVlXzgwMjMgZm9sbG93ZWQgYnkgZGVxdWV1ZSkg
+d2l0aA0KPm1hYzgwMjExIHNvcnRpbmcgb3V0IHdoYXQgdG8gZG8sIG9yIHdlIHNob3VsZCBrZWVw
+IGl0IGNvbWJpbmVkLiBJIHRoaW5rDQo+bWFjODAyMTEgc29ydGluZyBvdXQgdGhlIHByaW9yaXR5
+IGhlcmUgZXRjLg0KPndvdWxkIGJlIGZhciBtb3JlIGNvbXBsZXggdGhhbiB0aGlzLg0KPg0KW01h
+bmlrYW50YV0gSG1tbS4NCg0KPj4gW01hbmlrYW50YV0gSG1tbSwgSSB3b3VsZCBsaWtlIHRvIGhh
+dmUgaWVlZTgwMjExX3R4X3N0YXR1c184MDIzIGZvcg0KPj4gbm93IGFuZCBnbyB3aXRoIGEgVE9E
+TyBmb3Igc2luZ2xlIHR4IHJlcG9ydGluZyBtZWNoYW5pc20gZm9yIGJvdGgNCj4+IEV0aGVybmV0
+IGFuZCA4MDIuMTEgdHggZm9ybWF0cy4gQW55IHRob3VnaHRzPw0KPg0KPlRoZXJlJ3MgYW4gYWRk
+aXRpb25hbCB3cmlua2xlIGJ0dyAtIHdlIGN1cnJlbnRseSByZXBvcnQgdGhlIDgwMi4xMSBmcmFt
+ZSB0bw0KPnRoZSBtb25pdG9yIGludGVyZmFjZSwgaWYgYWN0aXZlLiBOb3Qgc3VyZSB3ZSBjYW4g
+a2VlcCB0aGF0LCBidXQgaXQncyBzb21ldGhpbmcNCj50byB0aGluayBhYm91dC4NCj4NCltNYW5p
+a2FudGFdIEdvb2QgcG9pbnQsIHRoaXMgaXMgc29tZXRoaW5nIHdlIGhhdmUgdG8gdGhpbmsgYWJv
+dXQuIEkgYmVsaWV2ZSB0aGlzIG9uZSBpcyB0cmlja3ksIGRvIHdlIG5lZWQgdG8gYWRkIHRoZSAu
+MTEgaGVhZGVyIGp1c3QgYmVmb3JlIGdpdmluZyB0byBtb25pdG9yIGludGVyZmFjZXM/DQpIb3cg
+aW1wb3J0YW50IHdpbGwgdGhpcyBiZSBmb3IgRXRoZXJuZXQgdHggY2hhbmdlcz8gSSBhbSBydW5u
+aW5nIG91dCBvZiB0aG91Z2h0cy4NCg0KPj4gPiBUaGUgb25seSByZWFsIGFsdGVybmF0aXZlIEkg
+c2VlLCB3aGljaCBtaWdodCBiZSBwcmVmZXJhYmxlLCBpcyBmb3INCj4+ID4gdGhlIGRyaXZlciB0
+byBhZHZlcnRpc2UgYSBiaXRtYXAgb2YgaW50ZXJmYWNlIHR5cGVzIHRoYXQgaXQgd2FudHMgdG8N
+Cj4+ID4gdXNlIGV0aGVybmV0IGZyYW1pbmcgd2l0aC4NCj4+ID4NCj4+DQo+PiBbTWFuaWthbnRh
+XSBDb3JyZWN0LCB0aGlzIHdvdWxkIGJlIGEgb25ldGltZSByZWdpc3RyYXRpb24uIElzbid0IGl0
+ID8NCj4+IEkgYW0ganVzdCBjdXJpb3VzIHRvIGtub3cgd2hldGhlciB0aGUgc3VwcG9ydGVkIHZp
+ZiB0eXBlcyBmb3IgZXRoZXJuZXQNCj4+IGZyYW1pbmcgY2FuIGNoYW5nZSBkeW5hbWljYWxseSwg
+aXMgdGhpcyBwb3NzaWJsZT8NCj4NCj5JIGRvbid0IHNlZSB3aHkgaXQgd291bGQgY2hhbmdlLiBJ
+IGd1ZXNzIHRoZXJlJ3MgYSBzbWFsbCBjaGFuY2UgdGhhdCB5b3UgbWlnaHQNCj5kZXNpZ24gdGhl
+IEhXIGluIGEgd2F5IHRoYXQgaXQgb25seSBoYXMgZW5vdWdoIEhXIHJlc291cmNlcyB0byBkbyBo
+ZWFkZXINCj5mb3JtYXQgY29udmVyc2lvbiBmb3IgYSBsaW1pdGVkIG51bWJlciBvZiBpbnRlcmZh
+Y2VzLCBidXQgaWYgdGhhdCBlbmRzIHVwIGJlaW5nDQo+YSBwcm9ibGVtIHdlIGNhbiBwZXJoYXBz
+IGFkZCBtb3JlIG90aGVyIGNhcGFiaWxpdGllcy4NCj4NCj5UaGUgd2F5IHdlJ3JlIGxvb2tpbmcg
+YXQgaXQgd2lsbCBiZSB0eXBlL2hlYWRlciBmb3JtYXQgZGVwZW5kZW50LCBub3RoaW5nDQo+ZWxz
+ZS4NCj4NCltNYW5pa2FudGFdIEhtbW0gb2theS4NCg0KTWFuaWthbnRhDQo=
