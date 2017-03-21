@@ -1,73 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr10103.outbound.protection.outlook.com ([40.107.1.103]:8480
-        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751882AbdCCQ2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 11:28:23 -0500
-Subject: Re: [PATCH 01/26] compiler: introduce noinline_for_kasan annotation
-To: Arnd Bergmann <arnd@arndb.de>, <kasan-dev@googlegroups.com>
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-2-arnd@arndb.de>
-CC: Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        <kernel-build-reports@lists.linaro.org>,
-        "David S . Miller" <davem@davemloft.net>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <7e7a62de-3b79-6044-72fa-4ade418953d1@virtuozzo.com> (sfid-20170303_172905_840241_F2CD8B41)
-Date: Fri, 3 Mar 2017 16:50:20 +0300
+Received: from mail-it0-f65.google.com ([209.85.214.65]:33865 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756711AbdCUPY6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Mar 2017 11:24:58 -0400
+Received: by mail-it0-f65.google.com with SMTP id z70so1926377itb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Mar 2017 08:24:58 -0700 (PDT)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: [Netdev ANNOUNCE]: Two new talks on network emulators and zero copy
+ sendmsg
+To: people@netdevconf.org
+Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
+        Brenda Butler <bjb@mojatatu.com>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Heri Muhero <hmuhero@gmail.com>
+Message-ID: <cfc3bb6e-67c0-2ab5-283a-b534836dcbc0@mojatatu.com> (sfid-20170321_162545_112584_62D0FEBC)
+Date: Tue, 21 Mar 2017 11:15:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170302163834.2273519-2-arnd@arndb.de>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The tech committee would like to announce two new accepted talks.
 
+The first one is a talk on container based network emulators by
+Brian Linkletter and the second one is by Willem de Bruijn
+on zero copy sendmsg.
 
-On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
-> When CONFIG_KASAN is set, we can run into some code that uses incredible
-> amounts of kernel stack:
-> 
-> drivers/staging/dgnc/dgnc_neo.c:1056:1: error: the frame size of 11112 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
-> drivers/media/i2c/cx25840/cx25840-core.c:4960:1: error: the frame size of 94000 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
-> drivers/media/dvb-frontends/stv090x.c:3430:1: error: the frame size of 5312 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-> 
-> This happens when a sanitizer uses stack memory each time an inline function
-> gets called. This introduces a new annotation for those functions to make
-> them either 'inline' or 'noinline' dependning on the CONFIG_KASAN symbol.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  include/linux/compiler.h | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/include/linux/compiler.h b/include/linux/compiler.h
-> index f8110051188f..56b90897a459 100644
-> --- a/include/linux/compiler.h
-> +++ b/include/linux/compiler.h
-> @@ -416,6 +416,17 @@ static __always_inline void __write_once_size(volatile void *p, void *res, int s
->   */
->  #define noinline_for_stack noinline
->  
-> +/*
-> + * CONFIG_KASAN can lead to extreme stack usage with certain patterns when
-> + * one function gets inlined many times and each instance requires a stack
-> + * ckeck.
-> + */
-> +#ifdef CONFIG_KASAN
-> +#define noinline_for_kasan noinline __maybe_unused
+Details are as follows:
 
+1) Investigating Linux Network Behaviour Using Open-Source Network
+Emulators (Brian Linkletter)
 
-noinline_iff_kasan might be a better name.  noinline_for_kasan gives the impression
-that we always noinline function for the sake of kasan, while noinline_iff_kasan
-clearly indicates that function is noinline only if kasan is used.
+----
+There are several open source, GUI based, network emulation tools that
+  are based on linux containers that could be used to replicate network
+scenarios including failures. This talk will be taking a trouble-
+shooting approach to introduce a sample of these tools.
 
-> +#else
-> +#define noinline_for_kasan inline
-> +#endif
-> +
->  #ifndef __always_inline
->  #define __always_inline inline
->  #endif
-> 
+* Show how a complex virtual network topology of virtual bridges, Linux
+hosts, and Linux routers can be created in an ad-hoc fashion in minutes
+using Linux containers and Linux bridging in a GUI-based network
+emulator such as the CORE Network Emulator
+
+*Create a troubleshooting scenario in the emulated network caused by one 
+or more problems (for example: by interfering with traffic on links
+in  the virtual network, or by incorrectly configuring routers in the
+network) and show how the network emulator integrates with commonly
+used tools, such as Wireshark, to evaluate and identify the problem.
+
+*Show how the network emulation scenario setup may be automated using
+  Python scripts and APIs
+
+*Briefly show that the CORE network emulation tool, and similar tools, 
+may be extended to add new functionality.
+
+*Briefly show a general overview of other open-source network emulation
+tools that use virtualized Linux nodes to emulate networks, emphasizing
+the use-cases where each is best suited, based in hypervisor or
+container technology used, scripting language used, available API's,
+and integration with complementary tools.
+
+At the end of the talk, developers would have an appreciation of the 
+open-source network emulation projects available and how to use them to 
+replicate network behavior while testing or debugging network 
+applications or applications that use a network.
+----
+
+2)  sendmsg copy avoidance with MSG_ZEROCOPY (Willem de Bruijn)
+---
+  Linux offers various copy avoidance mechanisms, such as sendfile,
+vmsplice and tun zerocopy. In this talk I will give an overview of
+current interfaces and introduce a new MSG_ZEROCOPY extension to the
+socket API. Processes converted to the interface see a cycle reduction
+ranging from 90% of process cycles (62% systemwide) for a netperf micro-
+benchmark to 5-8% for lightly modified production machine learning and
+CDN workloads.
+
+The feature combines a send() flag with a completion notification
+channel over the socket error queue. Aside from introducing the
+interface, the talk will focus on technical constraints. Primarily,
+supporting complex protocols like TCP, where segmentation,
+retransmission and reordering introduce a non-trivial relationship
+between user buffers and packets on the wire. To handle these,
+completion notification requires careful reference counting across the
+transmit stack. Other concerns are bounding notification latency and
+working set size, avoiding TOCTTOU attacks with shared read-write page
+mappings and amortizing the cost of notification processing over the
+socket error queue.
+----
+
+cheers,
+jamal
