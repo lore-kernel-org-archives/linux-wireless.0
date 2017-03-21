@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34995 "EHLO
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36588 "EHLO
         mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932932AbdC3KQD (ORCPT
+        with ESMTP id S1757263AbdCUOny (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 06:16:03 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 0/8] NFC: fix device allocation and nfcmrvl crashes
-Date: Thu, 30 Mar 2017 12:15:34 +0200
-Message-Id: <20170330101542.15384-1-johan@kernel.org> (sfid-20170330_122449_510708_992B8ABE)
+        Tue, 21 Mar 2017 10:43:54 -0400
+Received: by mail-lf0-f67.google.com with SMTP id g70so13199608lfh.3
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Mar 2017 07:43:53 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: update BRCMFMAC symbol description
+Date: Tue, 21 Mar 2017 15:43:39 +0100
+Message-Id: <20170321144339.1709-1-zajec5@gmail.com> (sfid-20170321_154418_615861_69281E6D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This started out with the observation that the nfcmrvl_uart driver
-unconditionally dereferenced the tty class device despite the fact that
-not every tty has an associated struct device (Unix98 ptys). Some
-further changes were needed in the common nfcmrvl code to fully address
-this, some of which also incidentally fixed a few related bugs (e.g.
-resource leaks in error paths).
+From: Rafał Miłecki <rafal@milecki.pl>
 
-While fixing this I stumbled over a regression in NFC core that lead to
-broken registration error paths and misnamed workqueues.
+For quite some time now brcmfmac supports 802.11ac chipsets and it's
+not limited to embedded devices only. There are even standalone PCIe
+cards based on BCM43602 or BCM4366.
 
-Note that this has only been tested by configuring the n_hci line
-discipline for different ttys without any actual NFC hardware connected.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/Kconfig | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Johan
-
-
-Changes in v2
- - fix typo in commit message (1/8)
- - release reset gpio in error paths (3/8)
- - fix description of patch impact (3/8)
- - allow gpio 0 to be used for reset signalling (8/8, new)
-
-
-Johan Hovold (8):
-  NFC: fix broken device allocation
-  NFC: nfcmrvl_uart: add missing tty-device sanity check
-  NFC: nfcmrvl: do not use device-managed resources
-  NFC: nfcmrvl: use nfc-device for firmware download
-  NFC: nfcmrvl: fix firmware-management initialisation
-  NFC: nfcmrvl_uart: fix device-node leak during probe
-  NFC: nfcmrvl_usb: use interface as phy device
-  NFC: nfcmrvl: allow gpio 0 for reset signalling
-
- drivers/nfc/nfcmrvl/fw_dnld.c         |  7 ++++--
- drivers/nfc/nfcmrvl/main.c            | 40 +++++++++++++++++++----------------
- drivers/nfc/nfcmrvl/uart.c            | 11 ++++++----
- drivers/nfc/nfcmrvl/usb.c             |  4 +---
- include/linux/platform_data/nfcmrvl.h |  2 +-
- net/nfc/core.c                        | 31 +++++++++++++++------------
- net/nfc/nci/core.c                    |  3 +--
- 7 files changed, 55 insertions(+), 43 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+index d93561f6ef97..817cb28f518f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
++++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+@@ -18,14 +18,14 @@ config BRCMSMAC
+ 	  module, the driver will be called brcmsmac.ko.
+ 
+ config BRCMFMAC
+-	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
++	tristate "Broadcom IEEE802.11n WLAN driver"
+ 	depends on CFG80211
+ 	select BRCMUTIL
+ 	---help---
+-	  This module adds support for embedded wireless adapters based on
+-	  Broadcom IEEE802.11n FullMAC chipsets. It has to work with at least
+-	  one of the bus interface support. If you choose to build a module,
+-	  it'll be called brcmfmac.ko.
++	  This module adds support for wireless adapters based on Broadcom
++	  FullMAC chipsets. It has to work with at least one of the bus
++	  interface support. If you choose to build a module, it'll be called
++	  brcmfmac.ko.
+ 
+ config BRCMFMAC_PROTO_BCDC
+ 	bool
 -- 
-2.12.2
+2.11.0
