@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:63034 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755154AbdCGKOh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:14:37 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 4/6] NFC: st21nfca: Get rid of "interesting" use of interrupt polarity
-Date: Tue,  7 Mar 2017 12:13:59 +0200
-Message-Id: <20170307101401.23182-4-andriy.shevchenko@linux.intel.com> (sfid-20170307_111806_832040_0941073F)
-In-Reply-To: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
-References: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34635 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757233AbdCUVYz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Mar 2017 17:24:55 -0400
+Received: by mail-oi0-f66.google.com with SMTP id w81so7286411oig.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Mar 2017 14:24:54 -0700 (PDT)
+MIME-Version: 1.0
+From: Ajay Ramakrishnan <ajayrama93@gmail.com>
+Date: Wed, 22 Mar 2017 02:54:53 +0530
+Message-ID: <CABpfVq7N=CgfSjFHU8r98+y9z-+t0mt5hFqEUhkPcMewhp51Xg@mail.gmail.com> (sfid-20170321_222503_227192_B9DE6ED5)
+Subject: Gsoc 2017 - Availability of porjects in Linux Wireless
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I2C framework followed by IRQ framework does set interrupt polarity
-correctly if it's properly specified in firmware (ACPI or DT).
+Hi all.
 
-Get rid of the redundant trick when requesting interrupt.
+I would like to work on the GSOC in the Linux Wireless module. I would
+like to know what are the available projects upon which I could work
+on.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/st21nfca/i2c.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+>From the to-do page, I found this: 11v and I would like to work on the below:
+1. 11v DMS support:
+    In AP mode, the packets needs to be saved in a queue and then need
+to be sent as unicast to sleeping clients.
+    STA should receive these packets after waking up listening to beacons.
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index d9ed6a279283..c98199c2b8a0 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -68,7 +68,6 @@ struct st21nfca_i2c_phy {
- 	struct nfc_hci_dev *hdev;
- 
- 	unsigned int gpio_ena;
--	unsigned int irq_polarity;
- 
- 	struct st21nfca_se_status se_status;
- 
-@@ -520,8 +519,6 @@ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
- 
- 	phy->gpio_ena = desc_to_gpio(gpiod_ena);
- 
--	phy->irq_polarity = irq_get_trigger_type(client->irq);
--
- 	phy->se_status.is_ese_present = false;
- 	phy->se_status.is_uicc_present = false;
- 
-@@ -566,8 +563,6 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
- 
- 	phy->gpio_ena = gpio;
- 
--	phy->irq_polarity = irq_get_trigger_type(client->irq);
--
- 	phy->se_status.is_ese_present =
- 				of_property_read_bool(pp, "ese-present");
- 	phy->se_status.is_uicc_present =
-@@ -630,7 +625,7 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
- 
- 	r = devm_request_threaded_irq(&client->dev, client->irq, NULL,
- 				st21nfca_hci_irq_thread_fn,
--				phy->irq_polarity | IRQF_ONESHOT,
-+				IRQF_ONESHOT,
- 				ST21NFCA_HCI_I2C_DRIVER_NAME, phy);
- 	if (r < 0) {
- 		nfc_err(&client->dev, "Unable to register IRQ handler\n");
--- 
-2.11.0
+Test equipments: 1 device as AP and 2 device as STA (to check the DMS support)
+
+2. 11v BSS Transition Management support:
+    In AP neighbor AP list needs to be sent to the client on request.
+The action frames would be prepared at the mac80211 and given to the
+driver. The driver just needs to send the packet out. Neighbor list
+can be prepared based on a polling mechanism. Each AP can send the
+data and during offchannel scan the AP learns details about other APs.
+    The STA should be able to process this neighbor list and then scan
+in those channel alone. This is a network assisted roaming. Once the
+packet is received by the driver and received at mac80211, the packet
+is parsed and the 11v BTM request frame is identified and neighbor
+possible parent list is identified.
+Based on this list, roaming is to be done and scanning is done on
+those channels alone.
+
+Test equipments: 2 or more devices as APs(to check if neighbor list is
+being prepared correctly) and 1 device as STA to validate the message
+exchanges
+
+
+Could you please let me know if these are already implemented in the
+Linux Wireless. If someone from the Linux foundation team/Linux
+Wireless team is working on this, maybe we can discuss regarding the
+available projects and I would like to work on wireless networks.
+
+Thanks,
+Arun
