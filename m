@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39691 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753550AbdCTPMR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53704 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932549AbdCUQh2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 11:12:17 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 21 Mar 2017 12:37:28 -0400
+Subject: Re: Dell DW1601 (WIL6210)
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Konstantin Koslowski <konstantin.koslowski@gmail.com>
+References: <17d816d3dafddb3447e21808c130f596@rainloop.xkonni.de>
+ <87var26cre.fsf@kamboji.qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        wil6210 <wil6210@qca.qualcomm.com>
+From: Lior David <liord@codeaurora.org>
+Message-ID: <70a1a2e0-dcde-ed26-4993-a93453e5cb2f@codeaurora.org> (sfid-20170321_174238_488205_D353CDC9)
+Date: Tue, 21 Mar 2017 18:02:41 +0200
 MIME-Version: 1.0
-Subject: Re: [4.11] ath10k: fix incorrect wlan_mac_base in qca6174_regs
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1489445343-8719-1-git-send-email-ryanhsu@qca.qualcomm.com>
-References: <1489445343-8719-1-git-send-email-ryanhsu@qca.qualcomm.com>
-To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <ryanhsu@qca.qualcomm.com>
-Message-ID: <61056b2da2f84bc0bc1def2646729c2c@euamsexm01a.eu.qualcomm.com> (sfid-20170320_161240_518917_6F7A6575)
-Date: Mon, 20 Mar 2017 16:12:09 +0100
+In-Reply-To: <87var26cre.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ryan Hsu <ryanhsu@qca.qualcomm.com> wrote:
-> From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+On 3/21/2017 2:21 PM, Kalle Valo wrote:
+> (adding wil6210 list)
 > 
-> In the 'commit ebee76f7fa46 ("ath10k: allow setting coverage class")',
-> it inherits the design and the address offset from ath9k, but the address
-> is not applicable to QCA6174, which leads to a random crash while doing the
-> resume() operation, since the set_coverage_class.ops will be called from
-> ieee80211_reconfig() when resume() (if the wow is not configured).
+> "Konstantin Koslowski" <konstantin.koslowski@gmail.com> writes:
 > 
-> Fix the incorrect address offset here to avoid the random crash.
+>> I recently acquired a few Dell DW1601 cards and after a few initial
+>> searches it sounded like they could be used to connect to each other.
+>> Now it seems that they do not have the wifi connectivity enabled, just WBE.
+>>
+>> relevant lspci output:
+>> 03:00.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 PCI Express Root Port
+>> [1ae9:0101] (rev 04)
+>> 04:00.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 PCI Express Port [1ae9:0200] (rev 04)
+>> 04:02.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 Wireless PCI Express
+>> Port [1ae9:0201] (rev 14)
+>> 04:03.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 Wireless PCI Express
+>> Port [1ae9:0201] (rev 14)
+>> 05:00.0 Network controller [0280]: Qualcomm Atheros AR9462 Wireless
+>> Network Adapter [168c:0034] (rev 01)
+>>
+>> So the wifi device does not show up. Seems it needs a different firmware.
 > 
-> Verified on QCA6174/hw3.0 with firmware WLAN.RM.4.4-00022-QCARMSWPZ-2.
+> I was told that this an older device and it only supports WBE, not
+> Wi-Fi. So it's not actually supported by wil6210.
 > 
-> Fixes: ebee76f7fa46 ("ath10k: allow setting coverage class")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Here are some alternative devices which have 11ad chip supported by wil6210 driver:
+Acer has a few laptops with a compatible 11ad chip. You can go to this site:
+http://www.acer.com/ac/en/US/content/professional-models/laptops/travelmatep6
+Currently the 11ad models do not appear there but I hope it is just a temporary
+shortage.
+The TP-LINK AD7200 and NETGEAR NightHawk X10 routers contain 11ad which is
+supported by wil6210:
+http://www.tp-link.com/us/products/details/cat-5506_AD7200.html
+https://www.netgear.com/landings/ad7200/
 
-Patch applied to ath-current branch of ath.git, thanks.
-
-6be3b6cce1e2 ath10k: fix incorrect wlan_mac_base in qca6174_regs
-
--- 
-https://patchwork.kernel.org/patch/9622251/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks,
+Lior
