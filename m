@@ -1,84 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36428 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752668AbdCPSdV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 14:33:21 -0400
-Received: by mail-pf0-f196.google.com with SMTP id r137so2782945pfr.3
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 11:33:20 -0700 (PDT)
-Date: Thu, 16 Mar 2017 11:33:17 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        briannorris@chromium.org
-Subject: Re: [PATCH v2] mwifiex: fix kernel crash after shutdown command
- timeout
-Message-ID: <20170316183317.GA2935@dtor-ws> (sfid-20170316_193404_545080_CDCA1C13)
-References: <1489660132-27352-1-git-send-email-akarwar@marvell.com>
+Received: from mga03.intel.com ([134.134.136.65]:38621 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935428AbdCVRfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 13:35:03 -0400
+From: "Shevchenko, Andriy" <andriy.shevchenko@intel.com>
+To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+        "sameo@linux.intel.com" <sameo@linux.intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v1 1/2] NFC: pn544: Request GPIOs with proper connection
+ IDs
+Date: Wed, 22 Mar 2017 17:34:58 +0000
+Message-ID: <1490204097.19767.176.camel@intel.com> (sfid-20170322_183538_613487_E8A75603)
+References: <20170307101230.23062-1-andriy.shevchenko@linux.intel.com>
+         <1488881748.20145.102.camel@linux.intel.com>
+In-Reply-To: <1488881748.20145.102.camel@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1489660132-27352-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 16, 2017 at 03:58:52PM +0530, Amitkumar Karwar wrote:
-> We observed a SHUTDOWN command timeout during reboot stress test
-> due to a corner case firmware bug. It leads to use-after-free on
-> adapter structure pointer and crash.
-> 
-> Let's add MWIFIEX_IFACE_WORK_DONT_RUN work flag to avoid executing
-> any work scheduled after cancel_work_sync() call in teardown path
-> to resolve the issue.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
-> v2: New work_flag has been added to resolve the issue cleanly as per
-> Brian's suggestion.
-> ---
->  drivers/net/wireless/marvell/mwifiex/main.h | 1 +
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 4 ++++
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++++
->  3 files changed, 9 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> index 5c82972..d5b1fd6 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> @@ -510,6 +510,7 @@ struct mwifiex_roc_cfg {
->  enum mwifiex_iface_work_flags {
->  	MWIFIEX_IFACE_WORK_DEVICE_DUMP,
->  	MWIFIEX_IFACE_WORK_CARD_RESET,
-> +	MWIFIEX_IFACE_WORK_DONT_RUN,
->  };
->  
->  struct mwifiex_private {
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index a0d9180..bb3d798 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -294,6 +294,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
->  	if (!adapter || !adapter->priv_num)
->  		return;
->  
-> +	set_bit(MWIFIEX_IFACE_WORK_DONT_RUN, &card->work_flags);
->  	cancel_work_sync(&card->work);
->  
->  	reg = card->pcie.reg;
-> @@ -2721,6 +2722,9 @@ static void mwifiex_pcie_work(struct work_struct *work)
->  	struct pcie_service_card *card =
->  		container_of(work, struct pcie_service_card, work);
->  
-> +	if (test_bit(MWIFIEX_IFACE_WORK_DONT_RUN, &card->work_flags))
-> +		return;
-
-I do not see how this could possible prevent use-after-free, assuming
-that the "card" memory is gone by the time mwifiex_pcie_work() gets to
-run. You need to check this flag before queueing firmware dump work, and
-make sure it is not racy with setting this flag in mwifiex_pcie_remove()
-(and sdio).
-
-Thanks.
-
--- 
-Dmitry
+T24gVHVlLCAyMDE3LTAzLTA3IGF0IDEyOjE1ICswMjAwLCBBbmR5IFNoZXZjaGVua28gd3JvdGU6
+DQo+IE9uIFR1ZSwgMjAxNy0wMy0wNyBhdCAxMjoxMiArMDIwMCwgQW5keSBTaGV2Y2hlbmtvIHdy
+b3RlOg0KPiA+IFNpbmNlIEFDUEkgZG9lcyBzdXBwb3J0IF9EU0Qgd2UgbWlnaHQgaGF2ZSBhIGZp
+cm13YXJlIHRoYXQgcHJvdmlkZXMNCj4gPiBhDQo+ID4gR1BJTyBtYXBwaW5nIGluIERTRFQuIFdo
+ZW4gR1BJTyBpcyByZXF1ZXN0ZWQgdGhlIGNvcmUgd2lsbCBjaGVjayBmb3INCj4gPiBwcm9wZXJ0
+eSB3aXRoIGdpdmVuIG5hbWUuIFRoYXQncyB3aHkgd2UgaGF2ZSB0byBmb2xsb3cgdGhlIHN0YW5k
+YXJkDQo+ID4gbmFtZXMgd2hpY2ggYXJlIGFscmVhZHkgaW4gdXNlIGluIERUIGNhc2UuDQo+ID4g
+DQo+ID4gUmVxdWVzdCBHUElPcyB3aXRoIHByb3BlciBjb25uZWN0aW9uIElEcywgaS5lLiB1c2Ug
+c2FtZSBuYW1lcyBhcw0KPiA+IHVzZWQNCj4gPiBmb3IgRFQgY2FzZS4NCj4gPiANCj4gPiBJbiB0
+aGUgZnV0dXJlIEFDUEkgYW5kIERUIGNhc2VzIG1pZ2h0IGJlIHVuaWZpZWQuDQo+IA0KPiBEaXNj
+YXJkIHRoaXMgc2VyaWVzLCBpdCBzaG91bGQgYmUgdjIsIGp1c3QgcmVzZW50Lg0KDQpXaGlsZSBJ
+J20gcHJlcGFyaW5nIHYyLCB0aGVyZSBpcyBhIG1vc3QgaW1wb3J0YW50IHF1ZXN0aW9uIGhhcyBh
+cmlzZW4uDQoNCkRvIHdlIGhhdmUgYW55IGV2aWRlbmNlIG9mIE5YUDU0NDAgKEFDUEkgSUQpIGlu
+ICpyZWFsKiB3b3JsZD8NCg0KVG8gbWUgaXQgKHRoZSBJRCBpdHNlbGYpIHNvdW5kcyBhcnRpZmlj
+aWFsIGFuZCB3aWxmdWxseSBpbnZlbnRlZC4gSW4NCmNhc2UgSSdtIHJpZ2h0IGl0IG11c3QgYmUg
+cmVtb3ZlZCBmcm9tIHRoZSBkcml2ZXIuIE90aGVyd2lzZSwgSSB3b3VsZA0KbGlrZSB0byBzZWUg
+ZG9jdW1lbnRhdGlvbiBvciBhbGlrZSB3aXRoIERTRFQgZXhjZXJwdCBhbmQgbW9kZWwgb2YgdGhl
+DQpyZWFsIGRldmljZSB3aGljaCBoYXMgaXQuDQoNCi0tIA0KQW5keSBTaGV2Y2hlbmtvIDxhbmRy
+aXkuc2hldmNoZW5rb0BpbnRlbC5jb20+DQpJbnRlbCBGaW5sYW5kIE95IC0gQklDIDAzNTc2MDYt
+NCAtIFdlc3RlbmRpbmthdHUgNywgMDIxNjAgRXNwb28=
