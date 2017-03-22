@@ -1,47 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:47385 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752370AbdCIAse (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 19:48:34 -0500
-Date: Thu, 9 Mar 2017 00:54:22 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] rt2x00: fix TX_PWR_CFG_4 register definition
-Message-ID: <20170308235412.GA22227@makrotopia.org> (sfid-20170309_014913_870472_7C42D32D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga06.intel.com ([134.134.136.31]:10169 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750937AbdCVT6O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 15:58:14 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/5] NFC: pn544: Get rid of platform data
+Date: Wed, 22 Mar 2017 21:57:48 +0200
+Message-Id: <20170322195752.33291-1-andriy.shevchenko@linux.intel.com> (sfid-20170322_205831_024989_46D28F01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of the macros used to describe the TX_PWR_CFG_4 register accidentally
-refer to TX_PWR_CFG_3, probably a copy&paste error. Fix that.
+Legacy platform data must go away. We are on the safe side here since
+there are no users of it in the kernel.
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+If anyone by any odd reason needs it the GPIO lookup tables and
+built-in device properties at your service.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/nfc/pn544/i2c.c             | 43 ++++++-------------------------------
+ include/linux/platform_data/pn544.h | 43 -------------------------------------
+ 2 files changed, 6 insertions(+), 80 deletions(-)
+ delete mode 100644 include/linux/platform_data/pn544.h
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 480b08601785..fd1dbd956bad 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -1171,10 +1171,10 @@
- #define TX_PWR_CFG_4_UKNOWN7		FIELD32(0x00000f00)
- #define TX_PWR_CFG_4_UKNOWN8		FIELD32(0x0000f000)
- /* bits for 3T devices */
--#define TX_PWR_CFG_3_STBC4_CH0		FIELD32(0x0000000f)
--#define TX_PWR_CFG_3_STBC4_CH1		FIELD32(0x000000f0)
--#define TX_PWR_CFG_3_STBC6_CH0		FIELD32(0x00000f00)
--#define TX_PWR_CFG_3_STBC6_CH1		FIELD32(0x0000f000)
-+#define TX_PWR_CFG_4_STBC4_CH0		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_4_STBC4_CH1		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_4_STBC6_CH0		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_4_STBC6_CH1		FIELD32(0x0000f000)
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index f837c39a8017..41e518ee148e 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -31,7 +31,7 @@
+ #include <linux/nfc.h>
+ #include <linux/firmware.h>
+ #include <linux/gpio/consumer.h>
+-#include <linux/platform_data/pn544.h>
++
+ #include <asm/unaligned.h>
  
- /*
-  * TX_PIN_CFG:
+ #include <net/nfc/hci.h>
+@@ -973,7 +973,6 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 			       const struct i2c_device_id *id)
+ {
+ 	struct pn544_i2c_phy *phy;
+-	struct pn544_nfc_platform_data *pdata;
+ 	int r = 0;
+ 
+ 	dev_dbg(&client->dev, "%s\n", __func__);
+@@ -995,32 +994,13 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 	phy->i2c_dev = client;
+ 	i2c_set_clientdata(client, phy);
+ 
+-	pdata = client->dev.platform_data;
+-
+ 	/* No platform data, using device tree. */
+-	if (!pdata && client->dev.of_node) {
++	if (client->dev.of_node) {
+ 		r = pn544_hci_i2c_of_request_resources(client);
+ 		if (r) {
+ 			nfc_err(&client->dev, "No DT data\n");
+ 			return r;
+ 		}
+-	/* Using platform data. */
+-	} else if (pdata) {
+-
+-		if (pdata->request_resources == NULL) {
+-			nfc_err(&client->dev, "request_resources() missing\n");
+-			return -EINVAL;
+-		}
+-
+-		r = pdata->request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev,
+-				"Cannot get platform resources\n");
+-			return r;
+-		}
+-
+-		phy->gpio_en = pdata->get_gpio(NFC_GPIO_ENABLE);
+-		phy->gpio_fw = pdata->get_gpio(NFC_GPIO_FW_RESET);
+ 	/* Using ACPI */
+ 	} else if (ACPI_HANDLE(&client->dev)) {
+ 		r = pn544_hci_i2c_acpi_request_resources(client);
+@@ -1057,12 +1037,8 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 	free_irq(client->irq, phy);
+ 
+ err_rti:
+-	if (!pdata) {
+-		gpio_free(phy->gpio_en);
+-		gpio_free(phy->gpio_fw);
+-	} else if (pdata->free_resources) {
+-		pdata->free_resources();
+-	}
++	gpio_free(phy->gpio_en);
++	gpio_free(phy->gpio_fw);
+ 
+ 	return r;
+ }
+@@ -1070,7 +1046,6 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ static int pn544_hci_i2c_remove(struct i2c_client *client)
+ {
+ 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct pn544_nfc_platform_data *pdata = client->dev.platform_data;
+ 
+ 	dev_dbg(&client->dev, "%s\n", __func__);
+ 
+@@ -1085,14 +1060,8 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
+ 
+ 	free_irq(client->irq, phy);
+ 
+-	/* No platform data, GPIOs have been requested by this driver */
+-	if (!pdata) {
+-		gpio_free(phy->gpio_en);
+-		gpio_free(phy->gpio_fw);
+-	/* Using platform data */
+-	} else if (pdata->free_resources) {
+-		pdata->free_resources();
+-	}
++	gpio_free(phy->gpio_en);
++	gpio_free(phy->gpio_fw);
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/platform_data/pn544.h b/include/linux/platform_data/pn544.h
+deleted file mode 100644
+index 5ce1ab983f44..000000000000
+--- a/include/linux/platform_data/pn544.h
++++ /dev/null
+@@ -1,43 +0,0 @@
+-/*
+- * Driver include for the PN544 NFC chip.
+- *
+- * Copyright (C) Nokia Corporation
+- *
+- * Author: Jari Vanhala <ext-jari.vanhala@nokia.com>
+- * Contact: Matti Aaltoenn <matti.j.aaltonen@nokia.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * version 2 as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+- */
+-
+-#ifndef _PN544_H_
+-#define _PN544_H_
+-
+-#include <linux/i2c.h>
+-
+-enum {
+-	NFC_GPIO_ENABLE,
+-	NFC_GPIO_FW_RESET,
+-	NFC_GPIO_IRQ
+-};
+-
+-/* board config */
+-struct pn544_nfc_platform_data {
+-	int (*request_resources) (struct i2c_client *client);
+-	void (*free_resources) (void);
+-	void (*enable) (int fw);
+-	int (*test) (void);
+-	void (*disable) (void);
+-	int (*get_gpio)(int type);
+-};
+-
+-#endif /* _PN544_H_ */
 -- 
-2.11.1
+2.11.0
