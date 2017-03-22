@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45946 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750954AbdCKPE7 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35006 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759293AbdCVMsX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Mar 2017 10:04:59 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v4 06/21] ath10k: sdio support
-Date: Sat, 11 Mar 2017 15:04:42 +0000
-Message-ID: <87innfq2gp.fsf@qca.qualcomm.com> (sfid-20170311_160503_233197_B98DF404)
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
-        <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
-        <871su52th2.fsf@kamboji.qca.qualcomm.com>
-        <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
-        <0d331e5f-7868-ed9a-7506-eecd1e8b9df6@gmail.com>
-In-Reply-To: <0d331e5f-7868-ed9a-7506-eecd1e8b9df6@gmail.com> (Erik
-        Stromdahl's message of "Sat, 11 Mar 2017 11:36:21 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+        Wed, 22 Mar 2017 08:48:23 -0400
+Date: Wed, 22 Mar 2017 13:45:48 +0100
+From: Johan Hovold <johan@kernel.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johan Hovold <johan@kernel.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [2/2] zd1211rw: fix NULL-deref at probe
+Message-ID: <20170322124548.GC10130@localhost> (sfid-20170322_135046_633752_E3DF57C3)
+References: <20170313124421.28587-2-johan@kernel.org>
+ <20170322090415.BE414609FF@smtp.codeaurora.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170322090415.BE414609FF@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+On Wed, Mar 22, 2017 at 09:04:15AM +0000, Kalle Valo wrote:
+> Johan Hovold <johan@kernel.org> wrote:
+> > Make sure to check the number of endpoints to avoid dereferencing a
+> > NULL-pointer or accessing memory beyond the endpoint array should a
+> > malicious device lack the expected endpoints.
+> > 
+> > Fixes: a1030e92c150 ("[PATCH] zd1211rw: Convert installer CDROM device into WLAN device")
+> > Cc: Daniel Drake <dsd@gentoo.org>
+> > Signed-off-by: Johan Hovold <johan@kernel.org>
+> 
+> Patch applied to wireless-drivers-next.git, thanks.
+> 
+> ca260ece6a57 zd1211rw: fix NULL-deref at probe
 
->> You are right, there is definitely a memory leak (and there are similar =
-problems
->> in a couple of other functions as well as you have pointed out).
->>
->> This was introduced in version 3 of the
->> RFC when I removed the bounce buffer from ath6kl. Instead I introduced a=
- bunch of
->> local "bounce" buffers in order to make sure that the buffers passed to =
-the sdio
->> subsystem is dma-able (malloc'ed buffer instead of stack allocated).
->>
->> Regarding endianess: That particular code construct is an artifact from =
-ath6kl.
->> I am not sure it makes any sense to use a u32 in that particular case.
->> A u8 array is most likely more convenient.
->>
->> It is really nice you have found some time to review the patches!
->
-> After doing some reviewing myself I have found some more endianess relate=
-d issues.
-> I will fix those (and the memory leaks) and submit v5 some time next week=
-.
+What about patch 1/2 which fixes the same bug (literally copied from the
+zd1211rw driver)?
 
-Actually let me send v5 (for the sdio part, I'm ignoring usb for now). I
-have made some small changes while looking at the patches.
+And as these fixes should be backported to stable (I left out the tag
+for networking drivers), why only apply to -next?
 
---=20
-Kalle Valo=
+Thanks,
+Johan
