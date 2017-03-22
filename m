@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:35427 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753188AbdCFL0r (ORCPT
+Received: from mail-ot0-f181.google.com ([74.125.82.181]:33204 "EHLO
+        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752424AbdCVVyG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 06:26:47 -0500
+        Wed, 22 Mar 2017 17:54:06 -0400
+Received: by mail-ot0-f181.google.com with SMTP id a12so106928197ota.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 14:54:05 -0700 (PDT)
+Date: Wed, 22 Mar 2017 16:54:04 -0500
+From: Andy Gross <andy.gross@linaro.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Brown <david.brown@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>, linux-bluetooth@vger.kernel.org,
+        linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org
+Subject: Re: [PATCH 3/3] soc: qcom: smd-rpm: Add msm8996 compatibility
+Message-ID: <20170322215404.GC22585@hector.attlocal.net> (sfid-20170322_225551_896239_E681C6E9)
+References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
+ <20170320233544.1656-3-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a3fNbuPvXt4M5HsXOga5Ay0yN7saewRJUoaAsXLq6AypQ@mail.gmail.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-8-arnd@arndb.de>
- <76733196-0948-8cbf-8b74-c1e3687a8c09@broadcom.com> <CAK8P3a30Ge5gyKco4HKCdKWiJk9ee1PU3_P6THjOQgHm3EQcJw@mail.gmail.com>
- <2dd6ce84-0285-b4c1-97d4-bb41a6ffec04@broadcom.com> <CAK8P3a3fNbuPvXt4M5HsXOga5Ay0yN7saewRJUoaAsXLq6AypQ@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 6 Mar 2017 12:18:33 +0100
-Message-ID: <CAK8P3a12L27jXeshDngcZD9NRF5eSgsjuAwfJMXCPm4x3TU53A@mail.gmail.com> (sfid-20170306_123327_124499_C41E1E41)
-Subject: Re: [PATCH 07/26] brcmsmac: reduce stack size with KASAN
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170320233544.1656-3-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 6, 2017 at 12:16 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Mon, Mar 6, 2017 at 12:02 PM, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 6-3-2017 11:38, Arnd Bergmann wrote:
->>> On Mon, Mar 6, 2017 at 10:16 AM, Arend Van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
+On Mon, Mar 20, 2017 at 04:35:44PM -0700, Bjorn Andersson wrote:
+> With the RPM driver transitioned to RPMSG we can reuse the SMD-RPM
+> driver ontop of GLINK for 8996, without any modifications.
+> 
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 
->> Given the amount of local variables maybe just tag the functions with
->> noinline instead.
->
-> But that would result in less efficient object code without KASAN,
-> as inlining these by default is a good idea when the stack variables
-> all get folded.
-
-Note that David Laight alread suggested renaming noinline_for_kasan
-to noinline_if_stackbloat, which makes it a little more obvious what
-is going on. Would that address your concern as well?
-
-    Arnd
+Acked-by: Andy Gross <andy.gross@linaro.org>
