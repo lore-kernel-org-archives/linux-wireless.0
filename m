@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46700 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753344AbdCFMSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 07:18:35 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] mac80211: copy VHT EXT NSS BW Support/Capable data to station
-Date: Mon,  6 Mar 2017 13:18:29 +0100
-Message-Id: <20170306121829.14613-4-johannes@sipsolutions.net> (sfid-20170306_131927_434187_193EF9D1)
-In-Reply-To: <20170306121829.14613-1-johannes@sipsolutions.net>
-References: <20170306121829.14613-1-johannes@sipsolutions.net>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:33149 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759530AbdCVQI0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 12:08:26 -0400
+Received: by mail-ot0-f196.google.com with SMTP id i50so16579222otd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 09:08:25 -0700 (PDT)
+Subject: Re: [BUG] with a 4.10.x kernel it's impossible to apply country
+ regulatory rules
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+References: <09a819fc-c936-6838-654b-e349c58a09ec@gmail.com>
+ <8c844f92-6148-2ad7-068c-a919891c7a90@lwfinger.net>
+ <1489866302.13995.3.camel@sipsolutions.net>
+ <45449c16-5a51-5cec-3254-6f3ce0b71b8a@lwfinger.net>
+ <20170322151525.GA12702@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Xose Vazquez Perez <xose.vazquez@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <87d7b733-1176-4f18-1fe2-6ccadc5c5576@lwfinger.net> (sfid-20170322_170937_345680_9FC615A9)
+Date: Wed, 22 Mar 2017 11:08:23 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170322151525.GA12702@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/22/2017 10:15 AM, Stanislaw Gruszka wrote:
+> On Sat, Mar 18, 2017 at 04:30:04PM -0500, Larry Finger wrote:
+>> On 03/18/2017 02:45 PM, Johannes Berg wrote:
+>>> On Sat, 2017-03-18 at 12:41 -0500, Larry Finger wrote:
+>>>>
+>>>> I have duplicated your bug and I have bisected it to
+>>>>
+>>>> commit 2ae0f17df1cd52aafd1ab0415ea1f1dd56dc0e2a
+>>>> Author: Johannes Berg <johannes.berg@intel.com>
+>>>> Date:   Mon Oct 24 14:40:04 2016 +0200
+>>>>
+>>>>     genetlink: use idr to track families
+>>>>
+>>>> This patch is quite extensive and I have no idea which part is
+>>>> failing, thus all I can do is report this confirmation.
+>>>
+>>> I don't think that makes any sense - have you verified that reverting
+>>> that makes it go away?
+>>
+>> Due to conflicts, I cannot simply revert it; however if I check out
+>> the previous commit 489111e5c25b93be80340c3113d71903d7c82136
+>> ("genetlink: statically initialize families"), then the kernel is
+>> OK.
+>
+> I just posted a patch which most likely fixes this problem. I have some
+> other issue on my setup, but seems this issue is also caused by the
+> same bug in 2ae0f17df1cd52aafd1ab0415ea1f1dd56dc0e2a.
 
-When taking VHT capabilities for a station, copy the new
-fields if we support them as a transmitter. Also adjust
-the maximum bandwidth the station supports appropriately.
+Stanislaw,
 
-Also, since it was missing, copy tx_highest and rx_highest.
+Your patch does fix this problem. Thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/vht.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 19ec2189d3ac..b7b240ca61ed 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -231,6 +231,13 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	memcpy(&vht_cap->vht_mcs, &vht_cap_ie->supp_mcs,
- 	       sizeof(struct ieee80211_vht_mcs_info));
- 
-+	/* copy EXT_NSS_BW Support value or remove the capability */
-+	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_VHT_EXT_NSS_BW))
-+		vht_cap->cap |= (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
-+	else
-+		vht_cap->vht_mcs.tx_highest &=
-+			~cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
-+
- 	/* but also restrict MCSes */
- 	for (i = 0; i < 8; i++) {
- 		u16 own_rx, own_tx, peer_rx, peer_tx;
-@@ -294,6 +301,18 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 		break;
- 	default:
- 		sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_80;
-+
-+		if (!(vht_cap->vht_mcs.tx_highest &
-+				cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE)))
-+			break;
-+
-+		/*
-+		 * If this is non-zero, then it does support 160 MHz after all,
-+		 * in one form or the other. We don't distinguish here (or even
-+		 * above) between 160 and 80+80 yet.
-+		 */
-+		if (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
-+			sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_160;
- 	}
- 
- 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
--- 
-2.11.0
+Larry
