@@ -1,71 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:34980 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751037AbdCQISj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 04:18:39 -0400
-Received: by mail-qt0-f181.google.com with SMTP id x35so56803071qtc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 01:18:07 -0700 (PDT)
-Subject: Re: Fw: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless
- adapter does not work
-To: Stephen Hemminger <stephen@networkplumber.org>,
-        linux-wireless@vger.kernel.org
-References: <20170316224743.2723cf14@xeon-e3>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6932c361-4ca1-8d81-3e32-2bee1b62dd81@broadcom.com> (sfid-20170317_091941_987969_A18FCD73)
-Date: Fri, 17 Mar 2017 09:18:02 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170316224743.2723cf14@xeon-e3>
-Content-Type: text/plain; charset=windows-1252
+Received: from mx1.redhat.com ([209.132.183.28]:38690 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759905AbdCVPIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 11:08:50 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Xose Vazquez Perez <xose.vazquez@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 4.11] genetlink: fix counting regression on ctrl_dumpfamily()
+Date: Wed, 22 Mar 2017 16:08:33 +0100
+Message-Id: <1490195313-13272-1-git-send-email-sgruszka@redhat.com> (sfid-20170322_160930_547274_B3A5EF84)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-3-2017 6:47, Stephen Hemminger wrote:
-> 
+Commit 2ae0f17df1cd ("genetlink: use idr to track families") replaced
 
-Hi Stephen,
+	if (++n < fams_to_skip)
+		continue;
+into:
 
-The issue here is with an out-of-tree driver, ie. broadcom-wl, so not
-really a kernel issue. Anyway, I asked for more info in bugzilla to
-determine whether using the brcmfmac driver, which is supported
-upstream, is an option.
+	if (n++ < fams_to_skip)
+		continue;
 
-Regards,
-Arend
+This subtle change cause that on retry ctrl_dumpfamily() call we omit
+one family that failed to do ctrl_fill_info() on previous call, because
+cb->args[0] = n number counts also family that failed to do
+ctrl_fill_info().
 
-> Begin forwarded message:
-> 
-> Date: Fri, 17 Mar 2017 02:22:58 +0000
-> From: bugzilla-daemon@bugzilla.kernel.org
-> To: stephen@networkplumber.org
-> Subject: [Bug 194903] New: After updating Kernel to 4.9.9 my wireless adapter does not work
-> 
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=194903
-> 
->             Bug ID: 194903
->            Summary: After updating Kernel to 4.9.9 my wireless adapter
->                     does not work
->            Product: Networking
->            Version: 2.5
->     Kernel Version: 4.9.9
->           Hardware: x86-64
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: blocking
->           Priority: P1
->          Component: IPV4
->           Assignee: stephen@networkplumber.org
->           Reporter: jemel.robinson@icloud.com
->         Regression: No
-> 
-> I have a Macbook Pro 13" (7, 1) and when I updated my kernel version to 4.9.9
-> (F25), my broadcom wireless adapter is no longer detected. I have since updated
-> to the latest kernel and have gotten the same result. As of now, I am currently
-> operating at the kernel version prior to 4.9.9 (4.8.6-300.fc25.x86_64
-> ) and I am able to use WiFi with no issues. I have tried uninstalling and
-> reinstalling the broadcom -wl driver to no avail. I narrowed the issue down to
-> the kernel simply by updating the kernel only and after reboot, wireless was
-> gone.
-> 
+Patch fixes the problem and avoid confusion in the future just decrease
+n counter when ctrl_fill_info() fail.
+
+User visible problem caused by this bug is failure to get access to
+some genetlink family i.e. nl80211. However problem is reproducible
+only if number of registered genetlink families is big enough to
+cause second call of ctrl_dumpfamily().
+
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Fixes: 2ae0f17df1cd ("genetlink: use idr to track families")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+Dave, please also target this for 4.10+ -stable.
+
+ net/netlink/genetlink.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+index fb6e10f..92e0981 100644
+--- a/net/netlink/genetlink.c
++++ b/net/netlink/genetlink.c
+@@ -783,8 +783,10 @@ static int ctrl_dumpfamily(struct sk_buff *skb, struct netlink_callback *cb)
+ 
+ 		if (ctrl_fill_info(rt, NETLINK_CB(cb->skb).portid,
+ 				   cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-				   skb, CTRL_CMD_NEWFAMILY) < 0)
++				   skb, CTRL_CMD_NEWFAMILY) < 0) {
++			n--;
+ 			break;
++		}
+ 	}
+ 
+ 	cb->args[0] = n;
+-- 
+1.7.1
