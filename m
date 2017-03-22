@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48858 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750703AbdCBLA4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 06:00:56 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-03-02
-Date: Thu,  2 Mar 2017 11:34:42 +0100
-Message-Id: <20170302103443.18251-1-johannes@sipsolutions.net> (sfid-20170302_120119_721499_38C8F8B0)
+Received: from coyote.holtmann.net ([212.227.132.17]:54415 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935003AbdCVTYO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 15:24:14 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd to
+ rpmsg
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20170322.114439.679826829857326050.davem@davemloft.net>
+Date: Wed, 22 Mar 2017 20:23:15 +0100
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
+        "Gustavo F. Padovan" <gustavo@padovan.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>, arnd@arndb.de,
+        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-soc@vger.kernel.org
+Message-Id: <21FCFC89-07EE-49EE-81C2-A138DD4C5F99@holtmann.org> (sfid-20170322_204006_728406_D16FFC8D)
+References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
+ <20170322.114439.679826829857326050.davem@davemloft.net>
+To: "David S. Miller" <davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi Dave,
 
-As I mentioned in my other pull request, here's the change
-for the average.h to make the precision easier to use.
+>> By moving these client drivers to use RPMSG instead of the direct SMD
+>> API we can reuse them ontop of the newly added GLINK wire-protocol
+>> support found in the 820 and 835 Qualcomm platforms.
+>> 
+>> As the new (RPMSG-based) and old SMD implementations are mutually
+>> exclusive we have to change all client drivers in one commit, to make
+>> sure we have a working system before and after this transition.
+>> 
+>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> ---
+>> 
+>> Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
+>> (https://lkml.org/lkml/2017/3/20/1038).
+> 
+> Just some questions since I'm supposed to merge this into my net-next
+> tree.
+> 
+> What is the status of the Kconfig dependency fix and how will I be
+> getting it?
 
-Please pull and let me know if there's any problem.
+I acked that one separately and added you:
 
-Thanks,
-johannes
+[PATCH v2] Bluetooth: btqcomsmd: fix compile-test dependency
 
+> Second, should I merge all three of these patches to net-next or just
+> this one?
 
+I think you have to take all 3 patches. Otherwise it will break.
 
-The following changes since commit 48cac18ecf1de82f76259a54402c3adb7839ad01:
+Regards
 
-  ipv6: orphan skbs in reassembly unit (2017-03-01 20:55:57 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-03-02
-
-for you to fetch changes up to eb1e011a14748a1d9df9a7d7df9a5711721a1bdb:
-
-  average: change to declare precision, not factor (2017-03-02 08:32:46 +0100)
-
-----------------------------------------------------------------
-This contains just the average.h change in order to get it
-into the tree before adding new users through -next trees.
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      average: change to declare precision, not factor
-
- drivers/net/virtio_net.c                    |  2 +-
- drivers/net/wireless/ath/ath5k/ath5k.h      |  2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00.h |  2 +-
- include/linux/average.h                     | 61 +++++++++++++++++++----------
- net/batman-adv/types.h                      |  2 +-
- net/mac80211/ieee80211_i.h                  |  2 +-
- net/mac80211/sta_info.h                     |  2 +-
- 7 files changed, 47 insertions(+), 26 deletions(-)
+Marcel
