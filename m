@@ -1,176 +1,348 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:61179 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752971AbdCFE6x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Mar 2017 23:58:53 -0500
-Subject: Re: Hostapd driver issues in orange pi Zero
-To: ravin goyal <ravirocks1021@gmail.com>, Jouni Malinen <j@w1.fi>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        wpa_supplicant <hostap@lists.infradead.org>
-References: <CANU0Mn1D8pccK6QgZe1TuayFNbYHEXCJYJXZH8Z1dX6N6qhK1g@mail.gmail.com>
-From: Oleksij Rempel <fishor@gmx.net>
-Message-ID: <ba6f80ea-49fc-ea59-69f3-92eb11ab7eca@gmx.net> (sfid-20170306_055954_162629_342439B7)
-Date: Mon, 6 Mar 2017 05:50:23 +0100
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:34853 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935002AbdCVTcX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 15:32:23 -0400
+Received: by mail-wm0-f54.google.com with SMTP id u132so45872766wmg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 12:32:22 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: make PCIe bus support a separated module
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170321144841.3537-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d8fc5f50-fd3f-b268-6c6d-47a6f38baded@broadcom.com> (sfid-20170322_203353_317742_05993E92)
+Date: Wed, 22 Mar 2017 20:32:17 +0100
 MIME-Version: 1.0
-In-Reply-To: <CANU0Mn1D8pccK6QgZe1TuayFNbYHEXCJYJXZH8Z1dX6N6qhK1g@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="ViKMuj2ucAUgaqccF53OfVfneSW95e5w6"
+In-Reply-To: <20170321144841.3537-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ViKMuj2ucAUgaqccF53OfVfneSW95e5w6
-Content-Type: multipart/mixed; boundary="GGCOPhG0MEmNo8xfxpNhAeuncLQWdfal2"
-From: Oleksij Rempel <fishor@gmx.net>
-To: ravin goyal <ravirocks1021@gmail.com>, Jouni Malinen <j@w1.fi>,
- linux-wireless <linux-wireless@vger.kernel.org>,
- Arend Van Spriel <arend.vanspriel@broadcom.com>,
- wpa_supplicant <hostap@lists.infradead.org>
-Message-ID: <ba6f80ea-49fc-ea59-69f3-92eb11ab7eca@gmx.net>
-Subject: Re: Hostapd driver issues in orange pi Zero
-References: <CANU0Mn1D8pccK6QgZe1TuayFNbYHEXCJYJXZH8Z1dX6N6qhK1g@mail.gmail.com>
-In-Reply-To: <CANU0Mn1D8pccK6QgZe1TuayFNbYHEXCJYJXZH8Z1dX6N6qhK1g@mail.gmail.com>
+On 21-3-2017 15:48, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Right now whole brcmfmac is a single module. Enabling one bus support
+> increases brcmfmac.ko size which may be unwanted for some embedded
+> devices like home routers. With this change brcmfmac gets modularized.
+> It's possible to build brcmfmac without PCIe support and when required
+> just install/load a proper module.
+> 
+> A similar modification of SDIO and USB support should follow.
 
---GGCOPhG0MEmNo8xfxpNhAeuncLQWdfal2
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Not sure I see much benefit in this. Please note that the individual bus
+support can already be selected through Kconfig to reduce the module
+size for embedded devices. When using this module approach you have to
+export symbols which also have a price when it comes to module size.
 
-Hi
+Regards,
+Arend
 
-Am 05.03.2017 um 08:38 schrieb ravin goyal:
-> Hi all,
->=20
-> I am running hostapd 2.5 on orange pi zero running debian jessie and
-> my wireless driver is xradio_wlan.
-
-if i see it correctly, your wifi controller is Allwiner XR819. It looks
-like SDIO device with own ram and firmware loaded to it. I don't have
-specs for it, but i assume there is not enough RAM to work with more
-then 9 devices.
-
-> First it was running fine when I was testing without bridge settings
-> in hostapd.conf.
->=20
-> But when I set bridge=3Dbr0 in  hostapd.conf and restart the process, a=
-s
-> the number of STA's are getting connected to the hostapd access point.
->=20
-> I noticed driver error allover in syslog and dmesg, I am sharing few
-> logs from dmesg as below:
->=20
-> [Sun Mar  5 07:46:46 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 07:46:52 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:47:48 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:48:16 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 07:49:56 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:51:14 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 07:51:57 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:52:07 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:52:14 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:52:18 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 07:53:30 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:56:09 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 07:59:00 2017] [BH_WRN] miss interrupt!
-> [Sun Mar  5 08:00:00 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 08:00:38 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:01:16 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:01:48 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 08:02:21 2017] [STA_WRN] Inactivity Event Recieved for link=
-_id 1
-> [Sun Mar  5 08:02:21 2017] [STA_WRN]  Inactivity Deauth Frame sent for
-> MAC SA 88:79:7e:13:5e:ce      and DA dc:44:6d:6b:43:18
-> [Sun Mar  5 08:02:31 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 08:03:09 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:03:56 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:04:52 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:04:54 2017] [STA_WRN] Inactivity Event Recieved for link=
-_id 3
-> [Sun Mar  5 08:04:54 2017] [STA_WRN]  Inactivity Deauth Frame sent for
-> MAC SA 88:79:7e:13:5e:ce      and DA dc:44:6d:6b:43:18
-> [Sun Mar  5 08:04:59 2017] [AP_WRN] Multicast delivery timeout.
-> [Sun Mar  5 08:05:44 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:06:50 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:07:11 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:07:26 2017] [BH_WRN] miss interrupt!
-> [Sun Mar  5 08:08:02 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:08:16 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:08:48 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:10:04 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:10:26 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:11:22 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:12:31 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:17:18 2017] [BH_WRN] miss interrupt!
-> [Sun Mar  5 08:18:52 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:21:28 2017] [STA_WRN] Inactivity Event Recieved for link=
-_id 4
-> [Sun Mar  5 08:21:28 2017] [STA_WRN]  Inactivity Deauth Frame sent for
-> MAC SA 88:79:7e:13:5e:ce      and DA dc:44:6d:6b:43:18
-> [Sun Mar  5 08:22:30 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:23:22 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:24:00 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:24:14 2017] [WSM_ERR] wsm_flush_tx:No pengding, but
-> hw_bufs_used=3D1
-> [Sun Mar  5 08:24:23 2017] [BH_WRN] miss interrupt!
->=20
-> Internet is working fine on the connected devices but these errors are
-> keep coming in syslog which are hard to ignore.
-> Any idea about this ?
->=20
-> Moreover One more thing I noticed is that I can connect atmost 9-10
-> clients( I get to know this by running hostapd_cli all_sta) afterwards
-> it just keeps showing status connecting... when a new clients try to
-> connect until unless one or more clients that are already connected
-> gets disconnected.
-> I even has set max_num_sta=3D255 but no help ?
->=20
-> Regards
-> Ravin
->=20
-
-
-
---GGCOPhG0MEmNo8xfxpNhAeuncLQWdfal2--
-
---ViKMuj2ucAUgaqccF53OfVfneSW95e5w6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAli86pcACgkQHwImuRkmbWlWbgD8Cc9afeeJHo6cl7QxazJQOM3j
-LZbr5rsICcAwyiGRpfoA/jDJCzcwMJM77KExjKm8hR406dq4coFA4wNtDZuvazM5
-=9Eqa
------END PGP SIGNATURE-----
-
---ViKMuj2ucAUgaqccF53OfVfneSW95e5w6--
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/Kconfig               |  2 +-
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile     |  6 ++++--
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       |  5 +++++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     |  5 +++++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c |  2 ++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c       | 10 +++-------
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c   |  3 +++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c     |  1 +
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 11 +++++++++--
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h       |  5 -----
+>  10 files changed, 33 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> index ab42b1fea03c..d93561f6ef97 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> @@ -57,7 +57,7 @@ config BRCMFMAC_USB
+>  	  use the driver for an USB wireless card.
+>  
+>  config BRCMFMAC_PCIE
+> -	bool "PCIE bus interface support for FullMAC driver"
+> +	tristate "Broadcom FullMAC WLAN support for PCIE bus"
+>  	depends on BRCMFMAC
+>  	depends on PCI
+>  	depends on HAS_DMA
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+> index 0383ba559edc..f60e6a9a9a77 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+> @@ -46,11 +46,13 @@ brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
+>  		bcmsdh.o
+>  brcmfmac-$(CONFIG_BRCMFMAC_USB) += \
+>  		usb.o
+> -brcmfmac-$(CONFIG_BRCMFMAC_PCIE) += \
+> -		pcie.o
+>  brcmfmac-$(CONFIG_BRCMDBG) += \
+>  		debug.o
+>  brcmfmac-$(CONFIG_BRCM_TRACING) += \
+>  		tracepoint.o
+>  brcmfmac-$(CONFIG_OF) += \
+>  		of.o
+> +
+> +obj-$(CONFIG_BRCMFMAC_PCIE) += brcmfmac-pcie.o
+> +brcmfmac-pcie-objs += \
+> +		pcie.o
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+> index 05f22ff81d60..536df11f376c 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+> @@ -1095,6 +1095,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+>  	brcmf_chip_detach(&chip->pub);
+>  	return ERR_PTR(err);
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_chip_attach);
+>  
+>  void brcmf_chip_detach(struct brcmf_chip *pub)
+>  {
+> @@ -1109,6 +1110,7 @@ void brcmf_chip_detach(struct brcmf_chip *pub)
+>  	}
+>  	kfree(chip);
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_chip_detach);
+>  
+>  struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *pub, u16 coreid)
+>  {
+> @@ -1122,6 +1124,7 @@ struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *pub, u16 coreid)
+>  
+>  	return NULL;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_chip_get_core);
+>  
+>  struct brcmf_core *brcmf_chip_get_chipcommon(struct brcmf_chip *pub)
+>  {
+> @@ -1176,6 +1179,7 @@ void brcmf_chip_resetcore(struct brcmf_core *pub, u32 prereset, u32 reset,
+>  	core = container_of(pub, struct brcmf_core_priv, pub);
+>  	core->chip->resetcore(core, prereset, reset, postreset);
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_chip_resetcore);
+>  
+>  static void
+>  brcmf_chip_cm3_set_passive(struct brcmf_chip_priv *chip)
+> @@ -1317,6 +1321,7 @@ bool brcmf_chip_set_active(struct brcmf_chip *pub, u32 rstvec)
+>  
+>  	return false;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_chip_set_active);
+>  
+>  bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
+>  {
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> index 7a2b49587b4d..cfe2ee0947b6 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> @@ -51,6 +51,7 @@ MODULE_PARM_DESC(txglomsz, "Maximum tx packet chain size [SDIO]");
+>  int brcmf_msg_level;
+>  module_param_named(debug, brcmf_msg_level, int, S_IRUSR | S_IWUSR);
+>  MODULE_PARM_DESC(debug, "Level of debug output");
+> +EXPORT_SYMBOL_GPL(brcmf_msg_level);
+>  
+>  static int brcmf_p2p_enable;
+>  module_param_named(p2pon, brcmf_p2p_enable, int, 0);
+> @@ -232,6 +233,7 @@ void __brcmf_err(const char *func, const char *fmt, ...)
+>  
+>  	va_end(args);
+>  }
+> +EXPORT_SYMBOL_GPL(__brcmf_err);
+>  #endif
+>  
+>  #if defined(CONFIG_BRCM_TRACING) || defined(CONFIG_BRCMDBG)
+> @@ -249,6 +251,7 @@ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...)
+>  	trace_brcmf_dbg(level, func, &vaf);
+>  	va_end(args);
+>  }
+> +EXPORT_SYMBOL_GPL(__brcmf_dbg);
+>  #endif
+>  
+>  static void brcmf_mp_attach(void)
+> @@ -321,11 +324,13 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
+>  	}
+>  	return settings;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_get_module_param);
+>  
+>  void brcmf_release_module_param(struct brcmf_mp_device *module_param)
+>  {
+>  	kfree(module_param);
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_release_module_param);
+>  
+>  static int __init brcmf_common_pd_probe(struct platform_device *pdev)
+>  {
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c
+> index 7b0e52195a85..b83f169869d5 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/commonring.c
+> @@ -36,6 +36,7 @@ void brcmf_commonring_register_cb(struct brcmf_commonring *commonring,
+>  	commonring->cr_write_wptr = cr_write_wptr;
+>  	commonring->cr_ctx = ctx;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_commonring_register_cb);
+>  
+>  
+>  void brcmf_commonring_config(struct brcmf_commonring *commonring, u16 depth,
+> @@ -56,6 +57,7 @@ void brcmf_commonring_config(struct brcmf_commonring *commonring, u16 depth,
+>  		commonring->cr_write_wptr(commonring->cr_ctx);
+>  	commonring->f_ptr = 0;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_commonring_config);
+>  
+>  
+>  void brcmf_commonring_lock(struct brcmf_commonring *commonring)
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index d2be20627b5c..bf3f5980e31b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -34,7 +34,6 @@
+>  #include "fwil.h"
+>  #include "feature.h"
+>  #include "proto.h"
+> -#include "pcie.h"
+>  #include "common.h"
+>  
+>  #define MAX_WAIT_FOR_8021X_TX			msecs_to_jiffies(950)
+> @@ -920,6 +919,7 @@ int brcmf_attach(struct device *dev, struct brcmf_mp_device *settings)
+>  
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_attach);
+>  
+>  static int brcmf_revinfo_read(struct seq_file *s, void *data)
+>  {
+> @@ -1047,6 +1047,7 @@ int brcmf_bus_started(struct device *dev)
+>  
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_bus_started);
+>  
+>  void brcmf_bus_add_txhdrlen(struct device *dev, uint len)
+>  {
+> @@ -1112,6 +1113,7 @@ void brcmf_detach(struct device *dev)
+>  	bus_if->drvr = NULL;
+>  	kfree(drvr);
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_detach);
+>  
+>  s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len)
+>  {
+> @@ -1169,9 +1171,6 @@ static void brcmf_driver_register(struct work_struct *work)
+>  #ifdef CONFIG_BRCMFMAC_USB
+>  	brcmf_usb_register();
+>  #endif
+> -#ifdef CONFIG_BRCMFMAC_PCIE
+> -	brcmf_pcie_register();
+> -#endif
+>  }
+>  static DECLARE_WORK(brcmf_driver_work, brcmf_driver_register);
+>  
+> @@ -1193,8 +1192,5 @@ void __exit brcmf_core_exit(void)
+>  #ifdef CONFIG_BRCMFMAC_USB
+>  	brcmf_usb_exit();
+>  #endif
+> -#ifdef CONFIG_BRCMFMAC_PCIE
+> -	brcmf_pcie_exit();
+> -#endif
+>  }
+>  
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> index c7c1e9906500..dd26cf4e1ab7 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+> @@ -434,6 +434,7 @@ void brcmf_fw_nvram_free(void *nvram)
+>  {
+>  	kfree(nvram);
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_fw_nvram_free);
+>  
+>  struct brcmf_fw {
+>  	struct device *dev;
+> @@ -562,6 +563,7 @@ int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+>  	return brcmf_fw_get_firmwares_pcie(dev, flags, code, nvram, fw_cb, 0,
+>  					   0);
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_fw_get_firmwares_pcie);
+>  
+>  int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+>  			      struct brcmf_firmware_mapping mapping_table[],
+> @@ -604,4 +606,5 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+>  
+>  	return 0;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_fw_map_chip_to_name);
+>  
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+> index d2c834c3b2fc..06a8fd60d78a 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+> @@ -1317,6 +1317,7 @@ int brcmf_proto_msgbuf_rx_trigger(struct device *dev)
+>  
+>  	return 0;
+>  }
+> +EXPORT_SYMBOL_GPL(brcmf_proto_msgbuf_rx_trigger);
+>  
+>  
+>  void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid)
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> index 6fae4cf3f6ab..1c133c0a77d0 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> @@ -40,6 +40,8 @@
+>  #include "core.h"
+>  #include "common.h"
+>  
+> +MODULE_AUTHOR("Broadcom Corporation");
+> +MODULE_LICENSE("Dual BSD/GPL");
+>  
+>  enum brcmf_pcie_state {
+>  	BRCMFMAC_PCIE_STATE_DOWN,
+> @@ -1981,7 +1983,7 @@ static struct pci_driver brcmf_pciedrvr = {
+>  };
+>  
+>  
+> -void brcmf_pcie_register(void)
+> +static int __init brcmf_pcie_init(void)
+>  {
+>  	int err;
+>  
+> @@ -1989,11 +1991,16 @@ void brcmf_pcie_register(void)
+>  	err = pci_register_driver(&brcmf_pciedrvr);
+>  	if (err)
+>  		brcmf_err("PCIE driver registration failed, err=%d\n", err);
+> +
+> +	return err;
+>  }
+>  
+>  
+> -void brcmf_pcie_exit(void)
+> +static void __exit brcmf_pcie_exit(void)
+>  {
+>  	brcmf_dbg(PCIE, "Enter\n");
+>  	pci_unregister_driver(&brcmf_pciedrvr);
+>  }
+> +
+> +module_init(brcmf_pcie_init);
+> +module_exit(brcmf_pcie_exit);
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h
+> index 6edaaf8ef5ce..e259c32fd6bf 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.h
+> @@ -21,9 +21,4 @@ struct brcmf_pciedev {
+>  	struct brcmf_pciedev_info *devinfo;
+>  };
+>  
+> -
+> -void brcmf_pcie_exit(void);
+> -void brcmf_pcie_register(void);
+> -
+> -
+>  #endif /* BRCMFMAC_PCIE_H */
+> 
