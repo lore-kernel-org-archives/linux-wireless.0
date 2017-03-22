@@ -1,95 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48254 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753895AbdC2Kqu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 06:46:50 -0400
-Message-ID: <1490784401.13345.6.camel@coelho.fi> (sfid-20170329_124929_586104_5E61E596)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 29 Mar 2017 13:46:41 +0300
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-dJSSyJXvbdY13XlkDvpf"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2017-03-29
+Received: from mga06.intel.com ([134.134.136.31]:10169 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751218AbdCVT6Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 15:58:16 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 5/5] NFC: pn544: Get rid of code duplication in ->probe()
+Date: Wed, 22 Mar 2017 21:57:52 +0200
+Message-Id: <20170322195752.33291-5-andriy.shevchenko@linux.intel.com> (sfid-20170322_205826_887634_DDAEBA0F)
+In-Reply-To: <20170322195752.33291-1-andriy.shevchenko@linux.intel.com>
+References: <20170322195752.33291-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Since OF and ACPI case almost the same get rid of code duplication
+by moving gpiod_get() calls directly to ->probe().
 
---=-dJSSyJXvbdY13XlkDvpf
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ The patch depends on early sent http://marc.info/?l=linux-wireless&m=149021085530803&w=2
 
-Hi Kalle,
+ drivers/nfc/pn544/i2c.c | 84 ++++++++++---------------------------------------
+ 1 file changed, 17 insertions(+), 67 deletions(-)
 
-Here are some fixes for 4.11.  More details in the tag description.
-
-I have sent this out before and kbuildbot didn't find any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 6be3b6cce1e225f189b68b4e84fc711d19b4277b=
-:
-
-  ath10k: fix incorrect wlan_mac_base in qca6174_regs (2017-03-20 17:11:31 =
-+0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
-ags/iwlwifi-for-kalle-2017-03-29
-
-for you to fetch changes up to 4d339989acd730f17bc814b5ddb9c54e405766b6:
-
-  iwlwifi: mvm: support ibss in dqa mode (2017-03-24 17:15:25 +0200)
-
-----------------------------------------------------------------
-iwlwifi fixes for 4.11
-
-Here are three patches intended for 4.11.  The first one is an RCU fix
-by Sari.  The second one is a fix for a potential out-of-bounds access
-crash by Dan.  And finally, the third and bigger one, is a fix for
-IBSS, which has been broken since DQA was enabled in the driver.
-
-----------------------------------------------------------------
-Dan Carpenter (1):
-      iwlwifi: mvm: writing zero bytes to debugfs causes a crash
-
-Liad Kaufman (1):
-      iwlwifi: mvm: support ibss in dqa mode
-
-Sara Sharon (1):
-      iwlwifi: mvm: fix accessing fw_id_to_mac_id
-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 9 ++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 7 +++++--
- 5 files changed, 16 insertions(+), 7 deletions(-)
---=-dJSSyJXvbdY13XlkDvpf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAljbkJEACgkQoUecoho8
-xfoG5w/+MJqZLKaWG4GsBDgCUiO4WIUTk97UvaN14DBzhRTCGmcl+vymBQI9ildq
-QIdDcJDic3/iJtAWeZNmO25z2TRPO52NHARl2m5GMVVPdwjd/XcQSgWuCnTedAf3
-/dO69QIhTj0ACxDXd5/aExanLKd9lMJKignlOr7X/rZcu1OIYF94/rHg9qku+Iox
-P/nBRBqQjihubJNnbhe6Ig4janVf8OtGhNb0pMwUlcCG33HuUfGKhQOjk6yoK9LY
-U66SGKtgA6/XTmyVUrP6I7vaVsy4fg3pll570MFXdMY7kR8bGczbx7+XxwvTxj4/
-kL47vKGFqf29q/iyJ5eQiFVC3U736t7uNt+UWdg2D0iIdaJkB9zAuR+cWXweH7TW
-VpqZ2rHsbzjpwmJpcAfe5ga9GaX7WkujWZSVNYY4ZDj7LePjNR3lnwbE9FXsJflp
-YiY2uxfmHd8fkTmtX48naBp8bohNlrFARWQoFvGtRPCfqe2RbNUviJKTNcxmZmmk
-wVuXYl38gRxn+57QdTM/eFUi559LHnQ3tMPdIdLXCaAzZWxfInjAMyCa1ype3q+a
-/wv/xvwxJc7z50obh4MhVeCwBxrc3xQB9UP/hZRD31yy2kwLLWBP4k3JHrI6sEQY
-k1ecudm5hQ/dI7QUhtXKUNLc+ug9zAhcH7HTLKuaC7R/o/19TQg=
-=TFSP
------END PGP SIGNATURE-----
-
---=-dJSSyJXvbdY13XlkDvpf--
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index 6226d220f1d0..daa48531b7ae 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -879,58 +879,10 @@ static const struct acpi_gpio_mapping acpi_pn544_gpios[] = {
+ 	{ },
+ };
+ 
+-static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
+-{
+-	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-	int ret;
+-
+-	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
+-	if (ret)
+-		return ret;
+-
+-	/* Get EN GPIO from ACPI */
+-	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_en)) {
+-		nfc_err(dev, "Unable to get EN GPIO\n");
+-		return PTR_ERR(phy->gpiod_en);
+-	}
+-
+-	/* Get FW GPIO from ACPI */
+-	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_fw)) {
+-		nfc_err(dev, "Unable to get FW GPIO\n");
+-		return PTR_ERR(phy->gpiod_fw);
+-	}
+-
+-	return 0;
+-}
+-
+-static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
+-{
+-	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-
+-	/* Obtaining EN GPIO from device tree */
+-	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_en)) {
+-		nfc_err(dev, "Failed to get EN gpio\n");
+-		return PTR_ERR(phy->gpiod_en);
+-	}
+-
+-	/* Obtaining FW GPIO from device tree */
+-	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_fw)) {
+-		nfc_err(dev, "Failed to get FW gpio\n");
+-		return PTR_ERR(phy->gpiod_fw);
+-	}
+-
+-	return 0;
+-}
+-
+ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 			       const struct i2c_device_id *id)
+ {
++	struct device *dev = &client->dev;
+ 	struct pn544_i2c_phy *phy;
+ 	int r = 0;
+ 
+@@ -953,24 +905,22 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 	phy->i2c_dev = client;
+ 	i2c_set_clientdata(client, phy);
+ 
+-	/* No platform data, using device tree. */
+-	if (client->dev.of_node) {
+-		r = pn544_hci_i2c_of_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev, "No DT data\n");
+-			return r;
+-		}
+-	/* Using ACPI */
+-	} else if (ACPI_HANDLE(&client->dev)) {
+-		r = pn544_hci_i2c_acpi_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev,
+-				"Cannot get ACPI data\n");
+-			return r;
+-		}
+-	} else {
+-		nfc_err(&client->dev, "No platform data\n");
+-		return -EINVAL;
++	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
++	if (r)
++		nfc_dbg(dev, "Unable to add GPIO mapping table\n");
++
++	/* Get EN GPIO */
++	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
++	if (IS_ERR(phy->gpiod_en)) {
++		nfc_err(dev, "Unable to get EN GPIO\n");
++		return PTR_ERR(phy->gpiod_en);
++	}
++
++	/* Get FW GPIO */
++	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
++	if (IS_ERR(phy->gpiod_fw)) {
++		nfc_err(dev, "Unable to get FW GPIO\n");
++		return PTR_ERR(phy->gpiod_fw);
+ 	}
+ 
+ 	pn544_hci_i2c_platform_init(phy);
+-- 
+2.11.0
