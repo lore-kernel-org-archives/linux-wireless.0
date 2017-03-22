@@ -1,80 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:15450 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754738AbdC1I63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 04:58:29 -0400
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
-        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
-        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
-        matanb@mellanox.com, leonro@mellanox.com,
-        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
-        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 10/16] drivers, net: convert masces_rx_sc.refcnt from atomic_t to refcount_t
-Date: Tue, 28 Mar 2017 11:56:37 +0300
-Message-Id: <1490691403-4016-11-git-send-email-elena.reshetova@intel.com> (sfid-20170328_110903_816701_77758D67)
-In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54706 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751630AbdCVNE7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 09:04:59 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johan Hovold <johan@kernel.org>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [2/2] zd1211rw: fix NULL-deref at probe
+References: <20170313124421.28587-2-johan@kernel.org>
+        <20170322090415.BE414609FF@smtp.codeaurora.org>
+        <20170322124548.GC10130@localhost>
+Date: Wed, 22 Mar 2017 15:02:12 +0200
+In-Reply-To: <20170322124548.GC10130@localhost> (Johan Hovold's message of
+        "Wed, 22 Mar 2017 13:45:48 +0100")
+Message-ID: <87r31p31nv.fsf@kamboji.qca.qualcomm.com> (sfid-20170322_140526_880038_E8C9ED47)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+Johan Hovold <johan@kernel.org> writes:
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- drivers/net/macsec.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> On Wed, Mar 22, 2017 at 09:04:15AM +0000, Kalle Valo wrote:
+>> Johan Hovold <johan@kernel.org> wrote:
+>> > Make sure to check the number of endpoints to avoid dereferencing a
+>> > NULL-pointer or accessing memory beyond the endpoint array should a
+>> > malicious device lack the expected endpoints.
+>> > 
+>> > Fixes: a1030e92c150 ("[PATCH] zd1211rw: Convert installer CDROM
+>> > device into WLAN device")
+>> > Cc: Daniel Drake <dsd@gentoo.org>
+>> > Signed-off-by: Johan Hovold <johan@kernel.org>
+>> 
+>> Patch applied to wireless-drivers-next.git, thanks.
+>> 
+>> ca260ece6a57 zd1211rw: fix NULL-deref at probe
+>
+> What about patch 1/2 which fixes the same bug (literally copied from the
+> zd1211rw driver)?
 
-diff --git a/drivers/net/macsec.c b/drivers/net/macsec.c
-index bc0b00a..1869223 100644
---- a/drivers/net/macsec.c
-+++ b/drivers/net/macsec.c
-@@ -172,7 +172,7 @@ struct macsec_rx_sc {
- 	bool active;
- 	struct macsec_rx_sa __rcu *sa[MACSEC_NUM_AN];
- 	struct pcpu_rx_sc_stats __percpu *stats;
--	atomic_t refcnt;
-+	refcount_t refcnt;
- 	struct rcu_head rcu_head;
- };
- 
-@@ -331,12 +331,12 @@ static void free_rx_sc_rcu(struct rcu_head *head)
- 
- static struct macsec_rx_sc *macsec_rxsc_get(struct macsec_rx_sc *sc)
- {
--	return atomic_inc_not_zero(&sc->refcnt) ? sc : NULL;
-+	return refcount_inc_not_zero(&sc->refcnt) ? sc : NULL;
- }
- 
- static void macsec_rxsc_put(struct macsec_rx_sc *sc)
- {
--	if (atomic_dec_and_test(&sc->refcnt))
-+	if (refcount_dec_and_test(&sc->refcnt))
- 		call_rcu(&sc->rcu_head, free_rx_sc_rcu);
- }
- 
-@@ -1396,7 +1396,7 @@ static struct macsec_rx_sc *create_rx_sc(struct net_device *dev, sci_t sci)
- 
- 	rx_sc->sci = sci;
- 	rx_sc->active = true;
--	atomic_set(&rx_sc->refcnt, 1);
-+	refcount_set(&rx_sc->refcnt, 1);
- 
- 	secy = &macsec_priv(dev)->secy;
- 	rcu_assign_pointer(rx_sc->next, secy->rx_sc);
+I will apply that to my separate ath.git tree, just didn't get to your
+patch yet.
+
+> And as these fixes should be backported to stable (I left out the tag
+> for networking drivers)
+
+Actually for wireless drivers you should add the stable tag.
+
+> why only apply to -next?
+
+I didn't see that the fix was important enough for 4.11.
+
 -- 
-2.7.4
+Kalle Valo
