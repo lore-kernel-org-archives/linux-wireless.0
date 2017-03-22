@@ -1,45 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45224 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751104AbdCPIRY (ORCPT
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:35440 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758961AbdCVJPU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 04:17:24 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 22 Mar 2017 05:15:20 -0400
+Received: by mail-wr0-f169.google.com with SMTP id g10so126253436wrg.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 02:15:19 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Subject: [REGRESSION] mac80211: IBSS vif queue stopped when started after 11s vif
+Date: Wed, 22 Mar 2017 10:15:11 +0100
+Message-ID: <1978424.XTv2Qph05K@bentobox> (sfid-20170322_101600_364232_CA0A885F)
 MIME-Version: 1.0
-Subject: Re: MAINTAINERS: update for mwifiex driver maintainers
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1488288271-10731-1-git-send-email-akarwar@marvell.com>
-References: <1488288271-10731-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20170316081723.3919060DB7@smtp.codeaurora.org> (sfid-20170316_091730_404931_88456949)
-Date: Thu, 16 Mar 2017 08:17:23 +0000 (UTC)
+Content-Type: multipart/signed; boundary="nextPart12317554.V7rrdmb2pt"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Ganapathi & Xinming are starting to take a more active role in the
-> mwifiex driver maintainership here onwards on account of organizational
-> changes.
-> 
-> CC: Xinming Hu <huxm@marvell.com>
-> CC: Ganapathi Bhat <gbhat@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+--nextPart12317554.V7rrdmb2pt
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Patch applied to wireless-drivers.git, thanks.
+Hi,
 
-cf8c44d42c4f MAINTAINERS: update for mwifiex driver maintainers
+I had following "simple" setup with LEDE with a single ath9k phy and multiple 
+vif:
 
--- 
-https://patchwork.kernel.org/patch/9595683/
+ * encrypted AP
+ * encrypted 802.11s meshpoint
+ * encrypted IBSS
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+Everything was started in the order by hostapd/wpa_supplicant (but immediately 
+after each other).
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+The problem which I've experienced was that IBSS was not able to communicate 
+with its link partner. The reason for that problem was that the IBSS 
+interface's queue was stopped (QUEUE_STATE_DRV_XOFF). This problem disappeared 
+when either the IBSS or meshpoint interface was changed to unencrypted (which 
+disables wpa_supplicant in LEDE).
+
+It looks like ieee80211_do_open didn't start the queues via 
+netif_start_subqueue because local->queue_stop_reasons was for all queues set 
+to IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL. This happened because 
+ieee80211_offchannel_stop_vifs was called from somewhere in the scan code at 
+that time and ieee80211_offchannel_return was not yet called.
+
+
+This behavior seems to be introduced by 2b730daacee6 ("mac80211: don't start 
+new netdev queues if driver stopped"). I have therefore chosen to call it for 
+now a regression by this change. Especially because it is rather odd that the 
+commit talked about not starting the queues for AP_VLAN and 2b436312f091 
+("mac80211: fix queue handling crash") introduced extra code to use the old 
+behavior again for AP_VLAN.
+
+But I could be completely wrong about it. It would therefore be interesting 
+for me to know who would be responsible to start the queues when 
+ieee80211_do_open rejected it for IBSS.
+
+I am now simply using this setup with a revert of 
+2b436312f0919c05804fed5aa4b7f255db196e7a and 
+2b730daacee6c318bce7b6373c19909e36a74590.
+
+Kind regards,
+	Sven
+--nextPart12317554.V7rrdmb2pt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAljSQJ8ACgkQXYcKB8Em
+e0a0UxAAok1EvYmt7CdriRQOxdOGq6Ib7X/xoVcrW1ACDDwhjF1s6ke1hARJHT1E
+ASP5IEMsKXyrVWsZNE5Mx9wpp1b0G/QRxs/pZepUyrKMEUngHH2Vo4oZfV1lhOa5
+6/tM/Pm54ARd9Sv7ZdelCUI2LVKftLMDXbPeyXD7sPaQVE+v8y6Td0gystIyuvND
+wcbmYLLZ/Nv+YDB068XghjNLb9SnPDQNjvQFlIHxqOjraHjZ4vjKGcw6nEmjT6Ru
+Uge7vjnUa2EMQ/8xq2Qr1ICRqJurYR/h+LR6T2TfgGOWvSKN2Sk/Bi0qzHu5tP6T
+HD32VD4eSyziUuKDwr9k0BWzOTdPWw9ruf9/y54q/gQyT8XzRPyXqSAMsD8hi5oI
+Hjv6eY5sCa4aBV68rhHCzzvpvdsEC7G0ijt/dUxgD6ozLoh0ll9zymrp6mzb/PNA
+o40xMAiidZuzz0vcNTrIeGxiwdcgoMeNH0ES7UcxMAlsl3UPzkhEjtM7UOf6YaV4
+sHGfUmSsyd5sz/Rsm1G8j+4Cn1P0K3GpAfM75lsPMJfNkOVX1sz8XCE89VhhZ4Rb
+1SujUm3GPKXzehmPO5bk27LMHwdkcTs6+zO4b1Z/R1nG33QhaxbE4H84SAQv0vwG
+TMS8sbIoRMfUHUAikTb9rMJhOUkCPQL4J96J3xcXcMrSD1F5yQw=
+=JpAT
+-----END PGP SIGNATURE-----
+
+--nextPart12317554.V7rrdmb2pt--
