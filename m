@@ -1,82 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f172.google.com ([209.85.128.172]:34566 "EHLO
-        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751230AbdCGK1Y (ORCPT
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:35054 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759168AbdCVTkG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:27:24 -0500
-Received: by mail-wr0-f172.google.com with SMTP id l37so135795803wrc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Mar 2017 02:25:44 -0800 (PST)
-Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an
- error
-To: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wed, 22 Mar 2017 15:40:06 -0400
+Received: by mail-wr0-f180.google.com with SMTP id u1so795204wra.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 12:38:44 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: update BRCMFMAC symbol description
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>
-References: <20170227214539.16422-1-hdegoede@redhat.com>
-Cc: Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
+References: <20170321144339.1709-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com> (sfid-20170307_112747_222259_79CC2731)
-Date: Tue, 7 Mar 2017 10:59:08 +0100
+Message-ID: <90f2fa7c-4bb7-7f1a-0641-19ff1e21e64c@broadcom.com> (sfid-20170322_204210_277130_4A935816)
+Date: Wed, 22 Mar 2017 20:38:41 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170227214539.16422-1-hdegoede@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20170321144339.1709-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-2-2017 22:45, Hans de Goede wrote:
-> Using pr_err for things which are not errors is a bad idea. E.g. it
-> will cause the plymouth bootsplash screen to drop back to the text
-> console so that the user can see the error, which is not what we
-> normally want to happen.
+On 21-3-2017 15:43, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> Instead add a new brcmf_info macro and use that.
-> 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
-> Changes in v2:
-> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 3 +++
->  2 files changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-> index 3e15d64..6d565f1 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-> @@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
->  	strsep(&ptr, "\n");
->  
->  	/* Print fw version info */
-> -	brcmf_err("Firmware version = %s\n", buf);
-> +	brcmf_info("Firmware version = %s\n", buf);
->  
->  	/* locate firmware version number for ethtool */
->  	ptr = strrchr(buf, ' ') + 1;
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> index 6687812..605f260 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> @@ -59,11 +59,14 @@
->  			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
->  	} while (0)
->  #endif
-> +#define brcmf_info(fmt, ...)	pr_info("%s: " fmt, __func__, ##__VA_ARGS__)
+> For quite some time now brcmfmac supports 802.11ac chipsets and it's
+> not limited to embedded devices only. There are even standalone PCIe
+> cards based on BCM43602 or BCM4366.
 
-Prefer using the same style as for brcmf_err, ie. using do {} while (0)
+minor comments below.
+
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/Kconfig | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> index d93561f6ef97..817cb28f518f 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> @@ -18,14 +18,14 @@ config BRCMSMAC
+>  	  module, the driver will be called brcmsmac.ko.
+>  
+>  config BRCMFMAC
+> -	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
+> +	tristate "Broadcom IEEE802.11n WLAN driver"
+
+You still mention 11n. Let's drop the 'n' here or IEEE802.11n entirely
+like below. Would like to keep the term FullMAC though.
 
 Regards,
 Arend
-
->  #else
->  __printf(2, 3)
->  void __brcmf_err(const char *func, const char *fmt, ...);
->  #define brcmf_err(fmt, ...) \
->  	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
-> +/* For tracing purposes treat info messages as errors */
-> +#define brcmf_info brcmf_err
->  #endif
->  
->  #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
-> 
