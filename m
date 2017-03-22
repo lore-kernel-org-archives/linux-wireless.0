@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:34517 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753672AbdCFVey (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33694 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751550AbdCVV5i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 16:34:54 -0500
+        Wed, 22 Mar 2017 17:57:38 -0400
+Received: by mail-pf0-f174.google.com with SMTP id o190so15208400pfo.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 14:57:37 -0700 (PDT)
+Date: Wed, 22 Mar 2017 14:57:33 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: David Miller <davem@davemloft.net>
+Cc: marcel@holtmann.org, gustavo@padovan.org, johan.hedberg@gmail.com,
+        k.eugene.e@gmail.com, kvalo@codeaurora.org, andy.gross@linaro.org,
+        david.brown@linaro.org, arnd@arndb.de,
+        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-soc@vger.kernel.org
+Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd
+ to rpmsg
+Message-ID: <20170322215733.GH20094@minitux> (sfid-20170322_225814_830696_C247A629)
+References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
+ <20170322.114439.679826829857326050.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <87y3wi74y8.fsf@purkki.adurom.net>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-9-arnd@arndb.de>
- <227c8e5a-fa20-0300-1cb0-1d3ef17deb19@broadcom.com> <87y3wi74y8.fsf@purkki.adurom.net>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 6 Mar 2017 22:34:12 +0100
-Message-ID: <CAK8P3a0cemG0=6jZOQEpGN+RG2Be1LM_DE7aJVX18en_i6G7=Q@mail.gmail.com> (sfid-20170306_223549_642246_035BCE72)
-Subject: Re: [PATCH 08/26] brcmsmac: make some local variables 'static const'
- to reduce stack size
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170322.114439.679826829857326050.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 6, 2017 at 5:19 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> On 2-3-2017 17:38, Arnd Bergmann wrote:
->>> With KASAN and a couple of other patches applied, this driver is one
->>> of the few remaining ones that actually use more than 2048 bytes of
->>> kernel stack:
->>>
->>> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy_gainctrl':
->>> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the frame size of 3264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
->>> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
->>> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the frame size of 2864 bytes is larger than 2048 bytes [-Wframe-larger-than=]
->>>
->>> Here, I'm reducing the stack size by marking as many local variables as
->>> 'static const' as I can without changing the actual code.
->>
->> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->
-> Arnd, via which tree are you planning to submit these? I'm not sure
-> what I should do with the wireless drivers patches from this series.
+On Wed 22 Mar 11:44 PDT 2017, David Miller wrote:
 
-I'm not quite sure myself yet. I'd probably want the first few patches that
-do most of the work get merged through Andrew's linux-mm tree once
-we have come to agreement on them. The driver specific patches like
-the brcmsmac ones depend on the introduction of noinline_for_kasan
-or noinline_if_stackbloat and could either go in along with the first
-set, or as a follow-up through the normal maintainer trees.
+> From: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Date: Mon, 20 Mar 2017 16:35:42 -0700
+> 
+> > By moving these client drivers to use RPMSG instead of the direct SMD
+> > API we can reuse them ontop of the newly added GLINK wire-protocol
+> > support found in the 820 and 835 Qualcomm platforms.
+> > 
+> > As the new (RPMSG-based) and old SMD implementations are mutually
+> > exclusive we have to change all client drivers in one commit, to make
+> > sure we have a working system before and after this transition.
+> > 
+> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > ---
+> > 
+> > Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
+> > (https://lkml.org/lkml/2017/3/20/1038).
+> 
+> Just some questions since I'm supposed to merge this into my net-next
+> tree.
+> 
+> What is the status of the Kconfig dependency fix and how will I be
+> getting it?
+> 
 
-       Arnd
+There are two Kconfig dependencies in play here, the first is
+c3104aae5d8c ("remoteproc: qcom: fix QCOM_SMD dependencies"), this was
+picked up by Linus yesterday and will as such be in v4.10-rc4.
+
+The other dependency, is the one Marcel wants you to pick up here is
+https://patchwork.kernel.org/patch/9635385/. It's on LKML, but if you
+want I can resend it with you as direct recipient, with Marcel's ack.
+
+Likely Arnd would like this fix to be sent upstream for v4.11 already.
+
+> Second, should I merge all three of these patches to net-next or just
+> this one?
+> 
+
+I would like all three to be merged in this cycle and in addition I have
+a couple of patches coming up that will cause some minor conflicts with
+patch 2 - so I would prefer if patch 2 was available in a tag I can
+merge into my tree.
+
+Would it be possible for you to prepare merge all 4 (these 3 and the
+bluetooth fix) and prepare a tag for Andy, Marcel and myself to include
+in our trees?
+
+Regards,
+Bjorn
