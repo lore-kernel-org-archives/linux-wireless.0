@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:49982 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933196AbdC3IEO (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:38506 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933919AbdCVHVF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 04:04:14 -0400
-Date: Thu, 30 Mar 2017 09:07:39 +0200
-From: Bastian Bittorf <bb@npl.de>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: Tim Harvey <tharvey@gateworks.com>, linux-wireless@vger.kernel.org,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [RESEND] ath9k failure to authenticate WPA2 client mode
-Message-ID: <20170330070739.GF21227@medion.lan> (sfid-20170330_100420_581692_BDE77AFB)
-References: <CAJ+vNU0gsjJvF34eQFQ48TLHv-t1H8W75R1+FkOzN76-K_N8Rw@mail.gmail.com>
- <CALhHN=oKYS=RRcJ1n2=Se8c0ce1OtYy3LNhmz-DT8EDT+QSSWQ@mail.gmail.com>
+        Wed, 22 Mar 2017 03:21:05 -0400
+Received: by mail-wm0-f52.google.com with SMTP id t189so28842892wmt.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 00:20:31 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: Rob Herring <robh@kernel.org>
+Cc: ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        ext.waldemar.rymarkiewicz@tieto.com,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH 1/2] dt: bindings: add new dt entry for ath10k calibration variant
+Date: Wed, 22 Mar 2017 08:20:25 +0100
+Message-ID: <5711518.JB9VTipMpE@bentobox> (sfid-20170322_084019_803846_D501FBA1)
+In-Reply-To: <CAL_JsqKSBA8WcR9Q8+6+kVfYoPggZ83yQ_47LWf971Aegqv4yA@mail.gmail.com>
+References: <20170310080615.22958-1-sven.eckelmann@openmesh.com> <5158144.BXJK97egUR@bentobox> <CAL_JsqKSBA8WcR9Q8+6+kVfYoPggZ83yQ_47LWf971Aegqv4yA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALhHN=oKYS=RRcJ1n2=Se8c0ce1OtYy3LNhmz-DT8EDT+QSSWQ@mail.gmail.com>
+Content-Type: multipart/signed; boundary="nextPart3699751.HZgdfZs6TO"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Janusz Dziedzic <janusz.dziedzic@tieto.com> [30.03.2017 08:26]:
-> On 29 March 2017 at 19:03, Tim Harvey <tharvey@gateworks.com> wrote:
-> > I don't know when ath9k last worked honestly. I usually use them under
-> > OpenWrt which has its own patches against periodic updates of linux
-> > backports. I noticed this first with Ubuntu 16.04 with the Ubuntu 4.4
-> > kernel, saw it still with the Ubuntu 4.8 kernel, then repeated the
-> > issue in wireless-next.
-> >
-> > Any ideas?
-> >
-> Interesting. Are you sure wlan0 is ath9k and wlan1 is ath10k?
+--nextPart3699751.HZgdfZs6TO
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
 
-an easy check for that is:
+On Dienstag, 21. M=E4rz 2017 21:56:54 CET Rob Herring wrote:
+[...]
+> Is this always the case? There's never some variation beyond the
+> reference design that a BDF difference can't handle?
 
-# root@box:~ DEV=wlan0; basename $(readlink /sys/class/net/$DEV/device/driver)
-iwlwifi
+I have no knowledge about anything which isn't handled directly by the BDF
+variants. But maybe Kalle can correct me here.
 
-# output is e.g. ath10k_pci or ath9k
+[...]
+> > They are basically "qcom,ipq4019-wifi" + a product specific string. The=
+ first
+> > part is therefore the string which identifies the wifi device(s) in the
+> > QCA4018/4019 SoC. The product specific string is simply the part (or a
+> > variation of it) which would been used before in
+> > "qcom,ath10k-calibration-variant" - just to make it "use a more specific
+> > compatible string".
+>=20
+> It would probably be more like: "asus,rt-ac58u-wifi", "qcom,ipq4019-wifi"
+>=20
+> A more specific compatible is insurance that at some later point in
+> time you can distinguish between 2 boards due to some difference even
+> if now you believe they are "the same".
+[...]
+> I think the separate property is fine if this is the only one you
+> envision needing to add. If there's 10 more properties, then I'd feel
+> more strongly towards a board specific compatible string.
 
-bye, bastian
+Thank you. Let's wait a little bit in case someone from QCA/Codeaurora
+has some additional input.
+
+But your comments were really helpful.
+
+Kind regards,
+	Sven
+--nextPart3699751.HZgdfZs6TO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAljSJbkACgkQXYcKB8Em
+e0YAtw/+JLz5VKGHwT9O6oee8MuqnlBySVGeANdvMn3FwArtMZJj0SMG2qmGd7tm
+evKgmYWjzGo7ipyVbSm6d8DxmMpVmW++EPj27Tr8SqyWBkgkcI0d2Zy5/3GQGXBM
+JN/sc9IbbaiSdRuKTudL9OgugtDstDnahpeYVVajEutgjFi8+ctg1x4LNy7cnia3
+B+BQCtU1Z8ZHNotaTQfFt/+a9Opf88T3zz/OvVg8e5ToGL2wSympcEsKU+5elLYk
+b7Kli4IKoSSGG4NQyC3/rufOm5bDCor9xO6HI8GX6cxZKI+JqfjUlQ2fcEg1JpOp
+2LSPcisHaEM/B3hBPD/Er2tOCwiA93uiaIiW8QV/Jth56FDi5zH4ssUEKrdVmlfV
+wmkyYXQeAZJjRU93CulTStl+XFXa3kyvIH/8StnqkwVMqxUW0vkE5+xgJdNmaiZc
+sMRlss77gCzBFrJKdtakVztrnVVDIRMrLLDTdMqfjOOnxOSSJO4J7eN0ef2SSkYd
+m3xgSf6PXh4qm/1M6HoMEXJb2W66ybhoYjCYm7FqqJiZN9E+Vcnj2rC/N4EyQhbz
+zjHsgR3Kbp+qCTuZz1PBKRqEfdtmDYrO9c1RsAxTWDucAnusl10g89Ud+xdTJiOT
+WdayFuu7glJ8DJ1K9dgAFkCfGSy7QzLy2+mgskdJafpJ8J7GjDU=
+=un15
+-----END PGP SIGNATURE-----
+
+--nextPart3699751.HZgdfZs6TO--
