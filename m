@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41934 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751037AbdCPKQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 06:16:40 -0400
-Message-ID: <1489659397.2370.8.camel@sipsolutions.net> (sfid-20170316_111643_645407_542886C7)
-Subject: Re: [PATCH v2] mac80211: Jitter HWMP MPATH reply frames to reduce
- collision on dense networks.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: agreen@cococorp.com, linux-wireless@vger.kernel.org
-Cc: Jesse Jones <jjones@cococorp.com>
-Date: Thu, 16 Mar 2017 11:16:37 +0100
-In-Reply-To: <58B09082.7020704@cococorp.com> (sfid-20170224_205905_277542_E6C0402D)
-References: <58B09082.7020704@cococorp.com>
-         (sfid-20170224_205905_277542_E6C0402D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ot0-f176.google.com ([74.125.82.176]:35629 "EHLO
+        mail-ot0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758779AbdCVI7D (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Mar 2017 04:59:03 -0400
+Received: by mail-ot0-f176.google.com with SMTP id y88so10753238ota.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 01:58:43 -0700 (PDT)
+MIME-Version: 1.0
+From: Ajay Ramakrishnan <ajayrama93@gmail.com>
+Date: Wed, 22 Mar 2017 14:28:42 +0530
+Message-ID: <CABpfVq5mJ4CaSBW2CqSmdi=WrTVyGV8CNvtDc0UMtU6B87MpuA@mail.gmail.com> (sfid-20170322_095909_403006_1047E256)
+Subject: Gsoc 2017 - Availability of porjects in Linux Wireless
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi all.
 
-So I guess after all the discussion, you should amend the commit log a
-bit, certainly at least to mention the hidden-node issue.
+I would like to work on the GSOC in the Linux Wireless module. I would
+like to know what are the available projects upon which I could work
+on.
 
-Regarding the patch itself, I'm not super happy with how big it is,
-some additional comments below:
+>From the to-do page, I found this: 11v and I would like to work on the below:
+1. 11v DMS support:
+    In AP mode, the packets needs to be saved in a queue and then need
+to be sent as unicast to sleeping clients.
+    STA should receive these packets after waking up listening to beacons.
 
-> +struct mesh_tx_queue {
-> +	struct list_head list;
-> +	struct sk_buff *skb;
-> +};
+Test equipments: 1 device as AP and 2 device as STA (to check the DMS support)
 
-This seems awkward, what's wrong with using an SKB list (struct
-sk_buff_head, skb_queue_* etc)?
+2. 11v BSS Transition Management support:
+    In AP neighbor AP list needs to be sent to the client on request.
+The action frames would be prepared at the mac80211 and given to the
+driver. The driver just needs to send the packet out. Neighbor list
+can be prepared based on a polling mechanism. Each AP can send the
+data and during offchannel scan the AP learns details about other APs.
+    The STA should be able to process this neighbor list and then scan
+in those channel alone. This is a network assisted roaming. Once the
+packet is received by the driver and received at mac80211, the packet
+is parsed and the 11v BTM request frame is identified and neighbor
+possible parent list is identified.
+Based on this list, roaming is to be done and scanning is done on
+those channels alone.
 
-> +	/* Spinlock for trasmitted MPATH frames */
-> +	spinlock_t mesh_tx_queue_lock;
+Test equipments: 2 or more devices as APs(to check if neighbor list is
+being prepared correctly) and 1 device as STA to validate the message
+exchanges
 
-That would also contain the extra spinlock.
 
-> +	struct mesh_tx_queue tx_queue;
+Could you please let me know if these are already implemented in the
+Linux Wireless. If someone from the Linux foundation team/Linux
+Wireless team is working on this, maybe we can discuss regarding the
+available projects and I would like to work on wireless networks.
 
-This was always a bad idea, since you never need the skb pointer here -
-should've just used struct list_head.
-
-> +	int tx_queue_len;
-
-Also contained in the skb queue.
-
-> +	struct delayed_work tx_work;
-
-I don't really see any value here for a delayed work - a pure timer
-would work just as well?
-
-Also, these fields should be in ifmsh, I think?
-
-johannes
+Thanks,
+Arun
