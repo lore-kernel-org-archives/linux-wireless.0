@@ -1,137 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:10169 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751218AbdCVT6Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 15:58:16 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33241 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933084AbdCWK3k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Mar 2017 06:29:40 -0400
+Received: by mail-lf0-f68.google.com with SMTP id r36so16367092lfi.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Mar 2017 03:29:39 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
         linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 5/5] NFC: pn544: Get rid of code duplication in ->probe()
-Date: Wed, 22 Mar 2017 21:57:52 +0200
-Message-Id: <20170322195752.33291-5-andriy.shevchenko@linux.intel.com> (sfid-20170322_205826_887634_DDAEBA0F)
-In-Reply-To: <20170322195752.33291-1-andriy.shevchenko@linux.intel.com>
-References: <20170322195752.33291-1-andriy.shevchenko@linux.intel.com>
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2] brcmfmac: update BRCMFMAC symbol description
+Date: Thu, 23 Mar 2017 11:29:28 +0100
+Message-Id: <20170323102928.11413-1-zajec5@gmail.com> (sfid-20170323_113005_677707_C31C5A96)
+In-Reply-To: <20170321144339.1709-1-zajec5@gmail.com>
+References: <20170321144339.1709-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since OF and ACPI case almost the same get rid of code duplication
-by moving gpiod_get() calls directly to ->probe().
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+For quite some time now brcmfmac supports 802.11ac chipsets and it's
+not limited to embedded devices only. There are even standalone PCIe
+cards based on BCM43602 or BCM4366.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- The patch depends on early sent http://marc.info/?l=linux-wireless&m=149021085530803&w=2
+V2: Drop "IEEE802.11n" part instead of "FullMAC" part, thanks Arend
+---
+ drivers/net/wireless/broadcom/brcm80211/Kconfig | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- drivers/nfc/pn544/i2c.c | 84 ++++++++++---------------------------------------
- 1 file changed, 17 insertions(+), 67 deletions(-)
-
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 6226d220f1d0..daa48531b7ae 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -879,58 +879,10 @@ static const struct acpi_gpio_mapping acpi_pn544_gpios[] = {
- 	{ },
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+index d93561f6ef97..4e5df0e15197 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
++++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+@@ -18,14 +18,14 @@ config BRCMSMAC
+ 	  module, the driver will be called brcmsmac.ko.
  
--static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
--{
--	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--	int ret;
--
--	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
--	if (ret)
--		return ret;
--
--	/* Get EN GPIO from ACPI */
--	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_en)) {
--		nfc_err(dev, "Unable to get EN GPIO\n");
--		return PTR_ERR(phy->gpiod_en);
--	}
--
--	/* Get FW GPIO from ACPI */
--	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_fw)) {
--		nfc_err(dev, "Unable to get FW GPIO\n");
--		return PTR_ERR(phy->gpiod_fw);
--	}
--
--	return 0;
--}
--
--static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
--{
--	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--
--	/* Obtaining EN GPIO from device tree */
--	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_en)) {
--		nfc_err(dev, "Failed to get EN gpio\n");
--		return PTR_ERR(phy->gpiod_en);
--	}
--
--	/* Obtaining FW GPIO from device tree */
--	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_fw)) {
--		nfc_err(dev, "Failed to get FW gpio\n");
--		return PTR_ERR(phy->gpiod_fw);
--	}
--
--	return 0;
--}
--
- static int pn544_hci_i2c_probe(struct i2c_client *client,
- 			       const struct i2c_device_id *id)
- {
-+	struct device *dev = &client->dev;
- 	struct pn544_i2c_phy *phy;
- 	int r = 0;
+ config BRCMFMAC
+-	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
++	tristate "Broadcom FullMAC WLAN driver"
+ 	depends on CFG80211
+ 	select BRCMUTIL
+ 	---help---
+-	  This module adds support for embedded wireless adapters based on
+-	  Broadcom IEEE802.11n FullMAC chipsets. It has to work with at least
+-	  one of the bus interface support. If you choose to build a module,
+-	  it'll be called brcmfmac.ko.
++	  This module adds support for wireless adapters based on Broadcom
++	  FullMAC chipsets. It has to work with at least one of the bus
++	  interface support. If you choose to build a module, it'll be called
++	  brcmfmac.ko.
  
-@@ -953,24 +905,22 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
- 	phy->i2c_dev = client;
- 	i2c_set_clientdata(client, phy);
- 
--	/* No platform data, using device tree. */
--	if (client->dev.of_node) {
--		r = pn544_hci_i2c_of_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev, "No DT data\n");
--			return r;
--		}
--	/* Using ACPI */
--	} else if (ACPI_HANDLE(&client->dev)) {
--		r = pn544_hci_i2c_acpi_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev,
--				"Cannot get ACPI data\n");
--			return r;
--		}
--	} else {
--		nfc_err(&client->dev, "No platform data\n");
--		return -EINVAL;
-+	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
-+	if (r)
-+		nfc_dbg(dev, "Unable to add GPIO mapping table\n");
-+
-+	/* Get EN GPIO */
-+	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
-+	if (IS_ERR(phy->gpiod_en)) {
-+		nfc_err(dev, "Unable to get EN GPIO\n");
-+		return PTR_ERR(phy->gpiod_en);
-+	}
-+
-+	/* Get FW GPIO */
-+	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
-+	if (IS_ERR(phy->gpiod_fw)) {
-+		nfc_err(dev, "Unable to get FW GPIO\n");
-+		return PTR_ERR(phy->gpiod_fw);
- 	}
- 
- 	pn544_hci_i2c_platform_init(phy);
+ config BRCMFMAC_PROTO_BCDC
+ 	bool
 -- 
 2.11.0
