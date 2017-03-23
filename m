@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18232 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50261 "EHLO
         wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751027AbdCBLtE (ORCPT
+        with ESMTP id S965361AbdCWQLK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 06:49:04 -0500
-From: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: RE: [PATCHv2 3/4] cfg80211: Add Support set btcoex priority value
-Date: Thu, 2 Mar 2017 11:48:48 +0000
-Message-ID: <b55e902d1a5445feb3058cee1118ae39@aphydexm01f.ap.qualcomm.com> (sfid-20170302_124908_604043_883BC4DC)
-References: <1488029873-14600-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1488029873-14600-4-git-send-email-c_traja@qti.qualcomm.com>
- <1488444659.8390.8.camel@sipsolutions.net>
-In-Reply-To: <1488444659.8390.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Thu, 23 Mar 2017 12:11:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v4 06/21] ath10k: sdio support
+Date: Thu, 23 Mar 2017 16:10:45 +0000
+Message-ID: <878tnwynwb.fsf@kamboji.qca.qualcomm.com> (sfid-20170323_171123_105578_CCD3780E)
+References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
+        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
+        <8760jh2uy8.fsf@kamboji.qca.qualcomm.com>
+        <871su52th2.fsf@kamboji.qca.qualcomm.com>
+        <2528f323-6ec7-915c-d98b-615db04510e9@gmail.com>
+        <877f3qyc5g.fsf@kamboji.qca.qualcomm.com>
+        <29c3dd40-c3ac-746e-d8ef-cb072c58578a@gmail.com>
+        <87y3w5tvkq.fsf@kamboji.qca.qualcomm.com>
+        <feaa5932-4a2b-d801-9226-5532cea93a14@gmail.com>
+In-Reply-To: <feaa5932-4a2b-d801-9226-5532cea93a14@gmail.com> (Erik
+        Stromdahl's message of "Fri, 17 Mar 2017 16:54:08 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBJcyB0aGVyZSBtdWNoIHBvaW50IGluIGhhdmluZyA0IHJhdGhlciB0aGFuIGp1c3QgMiBwYXRj
-aGVzPw0KPg0KW1RhbWl6aF0gWWVzLCBJIGFncmVlIHRvIGl0LiANCj4gDQo+ID4gKwlpbnTCoMKg
-wqDCoMKgKCpzZXRfYnRjb2V4KShzdHJ1Y3Qgd2lwaHkgKndpcGh5LCBib29sIGVuYWJsZWQsDQo+
-ID4gKwkJCcKgwqDCoMKgwqDCoGludCBidGNvZXhfcHJpb3JpdHkpOw0KPiANCj4gU2hvdWxkbid0
-IHRoYXQgYmUgdTMyIGFzIGEgYml0bWFwPw0KPiANCltUYW1pemhdIFllcy4NCg0KPiA+ICsJYm9v
-bCBidGNvZXhfcHJpb3JpdHlfc3VwcG9ydDsNCj4gDQo+IFdoeSBub3QgdXNlIGFuIGV4dGVuZGVk
-IG5sODAyMTEgZmVhdHVyZSBmbGFnIGRpcmVjdGx5Pw0KPiANCltUYW1pemhdIE9rIHN1cmUuIEkn
-bGwgdXNlIGV4dGVuZGVkIG5sODAyMTEgZmVhdHVyZSBmbGFnLg0KDQo+ID4gKyAqIEBOTDgwMjEx
-X0FUVFJfQlRDT0VYX1BSSU9SSVRZOiBUaGlzIGlzIGZvciB0aGUgZHJpdmVyIHdoaWNoDQo+ID4g
-KyAqwqDCoMKgwqDCoHN1cHBvcnQgYnRjb2V4IHByaW9yaXR5IGZlYXR1cmUuIEl0IHVzZWQgd2l0
-aA0KPiA+ICVOTDgwMjExX0NNRF9TRVRfQlRDT0VYLg0KPiA+ICsgKsKgwqDCoMKgwqBUaGlzIHdp
-bGwgaGF2ZSB1MzIgQklUTUFQIHZhbHVlIHdoaWNoIHJlcHJlc2VudHMNCj4gPiArICrCoMKgwqDC
-oMKgZnJhbWUoYmssIGJlLCB2aSwgdm8sIG1nbXQsIGJlYWNvbikgdHlwZSBhbmQgdGhhdCB3aWxs
-IGhhdmUNCj4gPiBtb3JlDQo+ID4gKyAqwqDCoMKgwqDCoHByaW9yaXR5IHRoYW4gYSBCVCB0cmFm
-ZmljLg0KPiANCj4gSSB0aGluayB5b3UgbmVlZCB0byBkZWZpbmUgdGhlIGJpdHMgc29tZXdoZXJl
-IGluIGFuIGVudW0gLSBpLmUuIHdoaWNoIG9uZSBpcyBWTywNCj4gVkksIC4uLg0KPg0KW1RhbWl6
-aF0gb2sgc3VyZS4gSXMgdGhpcyBmb3IgZG9jdW1lbnRhdGlvbiBwdXJwb3NlIG9yIGRvIHlvdSB3
-YW50IG1lIHRvIHVzZSB0aGF0IA0KZW51bSBmb3Igc29tZXRoaW5nIGVsc2U/DQogDQo+ID4gKwlp
-bnQgYnRjb2V4X3ByaW9yaXR5ID0gLTE7DQo+IA0KPiBUaGF0IC0xIGlzIHByZXR0eSB1c2VsZXNz
-LCBpZiB0aGUgZHJpdmVyIGRvZXNuJ3Qgc3VwcG9ydCBpdCwgaG9wZWZ1bGx5IGl0IHdvbid0IGxv
-b2sNCj4gYXQgdGhlIHZhbHVlIGF0IGFsbD8NCj4gDQpbVGFtaXpoXSBPayBzdXJlDQo=
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+
+> On 2017-03-16 10:33, Kalle Valo wrote:
+>> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+>>
+>>>> There seems to be same pattern for reading four bytes, what if we shou=
+ld
+>>>> add a helper for that? Something like ath10k_sdio_read32()? It could
+>>>> handle the kmalloc and switch endianess also.
+>>>>
+>>>> But please don't make any chances to sdio.c for the moment, let me
+>>>> submit v5 first.
+>>>>
+>>> I notice that you have submitted v5 (and v6) of the sdio patches. Great=
+!
+>>>
+>>> I assume you will add them to master-pending soon so I will try out
+>>> everything (usb too) as soon as they are on master-pending.
+>>
+>> v6 is now in master-pending.
+>>
+>
+> I have added my usb patches on top of sdio v6 and everything works as exp=
+ected
+> (both usb and sdio).
+>
+> Your changes does not seem to have broken anything.
+
+Great, thanks for testing. I'll try to send v7 tomorrow and hopefully
+you have time to test that also. And naturally others are also welcome
+to provide feedback and test results.
+
+--=20
+Kalle Valo=
