@@ -1,54 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:36662 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753971AbdC2UVg (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:55744 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751995AbdCWX00 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 16:21:36 -0400
-Received: by mail-wr0-f174.google.com with SMTP id w11so30621952wrc.3
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Mar 2017 13:21:34 -0700 (PDT)
-Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Dennis New <dennisn@dennisn.mooo.com>,
-        linux-wireless@vger.kernel.org
-References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
- <1490772890.18052.8.camel@sipsolutions.net>
- <20170329062808.032e71a5327f3405f82df4b2@dennisn.mooo.com>
- <1490788146.7948.19.camel@sipsolutions.net>
- <20170329153623.4a65bcf647c899f6bc5995ee@dennisn.mooo.com>
- <e2dc8492-1f48-07a4-da56-6b602da9ea2b@lwfinger.net>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d54502ba-668b-fea4-f19c-bf438adc019d@broadcom.com> (sfid-20170329_222235_750957_B070C7B7)
-Date: Wed, 29 Mar 2017 22:21:33 +0200
-MIME-Version: 1.0
-In-Reply-To: <e2dc8492-1f48-07a4-da56-6b602da9ea2b@lwfinger.net>
-Content-Type: text/plain; charset=utf-8
+        Thu, 23 Mar 2017 19:26:26 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 3/4] mac80211-hwsim: add rate-limited debugging for rx-netlink
+Date: Thu, 23 Mar 2017 16:26:17 -0700
+Message-Id: <1490311578-18926-3-git-send-email-greearb@candelatech.com> (sfid-20170324_002702_542505_82F93D00)
+In-Reply-To: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
+References: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
+This makes it easier to understand why wmediumd (or similar)
+is getting errors when sending frames to the kernel.
 
-On 29-3-2017 22:15, Larry Finger wrote:
-> On 03/29/2017 02:36 PM, Dennis New wrote:
->> global
->> country 00: DFS-UNSET
->>         (2402 - 2472 @ 92), (N/A, 20), (N/A)
->>         (2457 - 2482 @ 92), (N/A, 20), (N/A), PASSIVE-SCAN
->>         (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
->>         (5170 - 5250 @ 160), (N/A, 20), (N/A), PASSIVE-SCAN
->>         (5250 - 5330 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
->>         (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
->>         (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
->>         (57240 - 63720 @ 2160), (N/A, 0), (N/A)
-> 
-> That "country 00" looks like commit
-> 1d2a6a5e4bf2921531071fcff8538623dce74efa
-> Author: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date:   Wed Mar 22 16:08:33 2017 +0100
-> 
->     genetlink: fix counting regression on ctrl_dumpfamily()
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 55 +++++++++++++++++++++++++++--------
+ 1 file changed, 43 insertions(+), 12 deletions(-)
 
-I am more confused about "(2402 - 2472 @ 92)". That is some seriously
-strange bandwidth :-p
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 234df8c..84dcddf 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -137,6 +137,12 @@ static int regtest = HWSIM_REGTEST_DISABLED;
+ module_param(regtest, int, 0444);
+ MODULE_PARM_DESC(regtest, "The type of regulatory test we want to run");
+ 
++DEFINE_RATELIMIT_STATE(hwsim_ratelimit_state, 5 * HZ, 10);
++int hwsim_ratelimit(void)
++{
++	return __ratelimit(&hwsim_ratelimit_state);
++}
++
+ static const char *hwsim_alpha2s[] = {
+ 	"FI",
+ 	"AL",
+@@ -1649,7 +1655,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if (conf->chandef.chan)
+ 		wiphy_debug(hw->wiphy,
+-			    "%s (freq=%d(%d - %d)/%s idle=%d ps=%d smps=%s)\n",
++			    "%s (chandef-chan freq=%d(%d - %d)/%s idle=%d ps=%d smps=%s)\n",
+ 			    __func__,
+ 			    conf->chandef.chan->center_freq,
+ 			    conf->chandef.center_freq1,
+@@ -1660,7 +1666,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 			    smps_modes[conf->smps_mode]);
+ 	else
+ 		wiphy_debug(hw->wiphy,
+-			    "%s (freq=0 idle=%d ps=%d smps=%s)\n",
++			    "%s (no-chandef-chan freq=0 idle=%d ps=%d smps=%s)\n",
+ 			    __func__,
+ 			    !!(conf->flags & IEEE80211_CONF_IDLE),
+ 			    !!(conf->flags & IEEE80211_CONF_PS),
+@@ -3072,8 +3078,11 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
+ 	    !info->attrs[HWSIM_ATTR_FRAME] ||
+ 	    !info->attrs[HWSIM_ATTR_RX_RATE] ||
+-	    !info->attrs[HWSIM_ATTR_SIGNAL])
++	    !info->attrs[HWSIM_ATTR_SIGNAL]) {
++		if (hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: Missing required attribute\n");
+ 		goto out;
++	}
+ 
+ 	dst = (void *)nla_data(info->attrs[HWSIM_ATTR_ADDR_RECEIVER]);
+ 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
+@@ -3081,29 +3090,53 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 
+ 	/* Allocate new skb here */
+ 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
+-	if (skb == NULL)
+-		goto err;
++	if (skb == NULL) {
++		if (hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
++			       frame_data_len);
++		goto out;
++	}
+ 
+-	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
+-		goto err;
++	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
++		if (hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
++			       frame_data_len, IEEE80211_MAX_DATA_LEN);
++		goto out;
++	}
+ 
+ 	/* Copy the data */
+ 	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
+ 
+ 	data2 = get_hwsim_data_ref_from_addr(dst);
+-	if (!data2)
++
++	if (!data2) {
++		if (hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: Cannot find radio %pM\n",
++			       dst);
+ 		goto out;
++	}
+ 
+ 	if (hwsim_net_get_netgroup(genl_info_net(info)) != data2->netgroup)
+ 		goto out;
+ 
+-	if (info->snd_portid != data2->wmediumd)
++	if (info->snd_portid != data2->wmediumd) {
++		if (hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: portid mismatch, snd_portid: %d  portid %d\n",
++			       info->snd_portid, data2->wmediumd);
+ 		goto out;
++	}
+ 
+ 	/* check if radio is configured properly */
+ 
+-	if (data2->idle || !data2->started)
++	if (data2->idle || !data2->started) {
++		static unsigned int cnt = 0;
++		/* This is fairly common, and usually not a bug.  So, print errors
++		   rarely. */
++		if (((cnt++ & 0x3FF) == 0x3FF) && hwsim_ratelimit())
++			printk(KERN_DEBUG " hwsim rx-nl: radio %pM idle: %d or not started: %d cnt: %d\n",
++			       dst, data2->idle, !data2->started, cnt);
+ 		goto out;
++	}
+ 
+ 	/* A frame is received from user space */
+ 	memset(&rx_status, 0, sizeof(rx_status));
+@@ -3136,8 +3169,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	ieee80211_rx_irqsafe(data2->hw, skb);
+ 
+ 	return 0;
+-err:
+-	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
+ out:
+ 	dev_kfree_skb(skb);
+ 	return -EINVAL;
+-- 
+2.4.11
