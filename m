@@ -1,135 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50923 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932510AbdCXRqD (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:53364 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753467AbdCWNay (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 13:46:03 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2OHiLS0104243
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Mar 2017 13:45:47 -0400
-Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29cwbueur0-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Mar 2017 13:45:47 -0400
-Received: from localhost
-        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-        Fri, 24 Mar 2017 13:45:46 -0400
-Date: Fri, 24 Mar 2017 10:45:42 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-        Nicolai Stange <nicstange@gmail.com>,
-        gregkh <gregkh@linuxfoundation.org>, sharon.dvir@intel.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: deadlock in synchronize_srcu() in debugfs?
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <1490280886.2766.4.camel@sipsolutions.net>
- <1490282991.2766.7.camel@sipsolutions.net>
- <1490345799.2766.15.camel@sipsolutions.net>
- <1490347486.2766.17.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1490347486.2766.17.camel@sipsolutions.net>
-Message-Id: <20170324174542.GH3637@linux.vnet.ibm.com> (sfid-20170324_184705_952899_80B4BB2B)
+        Thu, 23 Mar 2017 09:30:54 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        Ben Greear <greearb@candelatech.com>,
+        Julian Calaby <julian.calaby@gmail.com>,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH v2 1/3] ath9k: Support channels in licensed bands
+Date: Thu, 23 Mar 2017 14:30:46 +0100
+Message-Id: <20170323133048.30062-2-sw@simonwunderlich.de> (sfid-20170323_143058_309283_A46EB4D2)
+In-Reply-To: <20170323133048.30062-1-sw@simonwunderlich.de>
+References: <20170323133048.30062-1-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 24, 2017 at 10:24:46AM +0100, Johannes Berg wrote:
-> Hi,
-> 
-> On Fri, 2017-03-24 at 09:56 +0100, Johannes Berg wrote:
-> > On Thu, 2017-03-23 at 16:29 +0100, Johannes Berg wrote:
-> > > Isn't it possible for the following to happen?
-> > > 
-> > > CPU1					CPU2
-> > > 
-> > > mutex_lock(&M); // acquires mutex
-> > > 					full_proxy_xyz();
-> > > 					srcu_read_lock(&debugfs_srcu);
-> > > 					real_fops->xyz();
-> > > 					mutex_lock(&M); // waiting for mutex
-> > > debugfs_remove(F);
-> > > synchronize_srcu(&debugfs_srcu);
-> 
-> > So I'm pretty sure that this can happen. I'm not convinced that it's
-> > happening here, but still.
-> 
-> I'm a bit confused, in that SRCU, of course, doesn't wait until all the
-> readers are done - that'd be a regular reader/writer lock or something.
+From: Ben Greear <greearb@candelatech.com>
 
-Agreed, synchronize_srcu()  does not have to wait for new readers
-(as a reader/writer lock would), but it -does- have have to wait for
-pre-existing readers, like the one shown in your example above.
+Many chips support channels in licensed bands. Add support for those,
+along with a corresponding kernel config option to disable them by
+default. Note that these channels are not selectable even if the
+option has been compiled unless the user modifies the regulatory
+database to explicitly enable the corresponding channels.
 
-> However, it does (have to) wait until all the currently active read-
-> side sections have terminated, which still leads to a deadlock in the
-> example above, I think?
+NOTE:  These channels must not be used in most regulatory
+domains unless you have a license from the FCC or similar!
 
-Yes.  CPU2 has a pre-existing reader that CPU1's synchronize_srcu()
-must wait for.  But CPU2's reader cannot end until CPU1 releases
-its lock, which it cannot do until after CPU2's reader ends.  Thus,
-as you say, deadlock.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+[Hide this support behind a Kconfig option]
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+[only use the 20 mhz channels, add 5 ghz, change to 4.9ghz to licensed bands, simplify]
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+---
+Changes to PATCHv1:
+ * fix bug reported by Zefir, and simplify patch more
+---
+ drivers/net/wireless/ath/ath9k/Kconfig       | 20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common-init.c | 15 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h          |  4 ++++
+ 3 files changed, 39 insertions(+)
 
-The rule is that if you are within any kind of RCU read-side critical
-section, you cannot directly or indirectly wait for a grace period from
-that same RCU flavor.
-
-> In his 2006 LWN article Paul wrote:
-> 
->     The designer of a given subsystem is responsible for: (1) ensuring
->     that SRCU read-side sleeping is bounded and (2) limiting the amount
->     of memory waiting for synchronize_srcu(). [1]
-> 
-> In the case of debugfs files acquiring locks, (1) can't really be
-> guaranteed, especially if those locks can be held while doing
-> synchronize_srcu() [via debugfs_remove], so I still think the lockdep
-> annotation needs to be changed to at least have some annotation at
-> synchronize_srcu() time so we can detect this.
-
-That would be very nice!
-
-There are some challenges, though.  This is OK:
-
-	CPU1				CPU2
-	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
-	mutex_lock(&my_lock);		i = srcu_read_lock(&mysrcu);
-	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
-	mutex_unlock(&my_lock);		srcu_read_unlock(&mysrcu, i);
-
-	CPU3
-	synchronize_srcu(&mylock);
-
-This could be a deadlock for reader-writer locking, but not for SRCU.
-
-This is also OK:
-
-	CPU1				CPU2
-	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
-	mutex_lock(&my_lock);		synchronize_srcu(&yoursrcu);
-	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
-	mutex_unlock(&my_lock);
-
-Here CPU1's read-side critical sections are for mysrcu, which is
-independent of CPU2's grace period for yoursrcu.
-
-So you could flag any lockdep cycle that contained a reader and a
-synchronous grace period for the same flavor of RCU, where for SRCU the
-identity of the srcu_struct structure is part of the flavor.
-
-> Now, I still suspect there's some other bug here in the case that I'm
-> seeing, because I don't actually see the "mutex_lock(&M); // waiting"
-> piece in the traces. I'll need to run this with some tracing on Monday
-> when the test guys are back from the weekend.
-> 
-> I'm also not sure how I can possibly fix this in debugfs in mac80211
-> and friends, but that's perhaps a different story. Clearly, this
-> debugfs patch is a good thing - the code will likely have had use-
-> after-free problems in this situation without it. But flagging the
-> potential deadlocks would make it a lot easier to find them.
-
-No argument here!
-
-							Thanx, Paul
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 783a38f1a626..23b8abf4449a 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -116,6 +116,26 @@ config ATH9K_DFS_CERTIFIED
+ 	  developed. At this point enabling this option won't do anything
+ 	  except increase code size.
+ 
++config ATH9K_LICENSED_CHAN
++	bool "Support channels in licensed bands"
++	depends on ATH9K && CFG80211_CERTIFICATION_ONUS
++	default n
++	---help---
++	  This option enables support for licensed channels on such as
++          4.9 GHz (public safety).
++
++	  These are PUBLIC SAFETY CHANNELS and MUST NOT BE USED in most
++	  regulatory domains UNLESS YOU HAVE A FULL LICENSE for their use from
++	  your local radio regulator, e.g. the FCC or equivalent. Using these
++	  channels without proper authorisation may result in serious legal
++	  consequences.
++
++	  You will also have to build a regulatory database with these channels
++	  enabled to actually use them.
++
++	  If you are a distro kernel builder or have any doubt whatsoever about
++	  your legal ability to use these channels, say N.
++
+ config ATH9K_DYNACK
+ 	bool "Atheros ath9k ACK timeout estimation algorithm (EXPERIMENTAL)"
+ 	depends on ATH9K
+diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
+index 8b4f7fdabf58..3d65dce13048 100644
+--- a/drivers/net/wireless/ath/ath9k/common-init.c
++++ b/drivers/net/wireless/ath/ath9k/common-init.c
+@@ -86,6 +86,21 @@ static const struct ieee80211_channel ath9k_5ghz_chantable[] = {
+ 	CHAN5G(5785, 35), /* Channel 157 */
+ 	CHAN5G(5805, 36), /* Channel 161 */
+ 	CHAN5G(5825, 37), /* Channel 165 */
++
++#ifdef CONFIG_ATH9K_LICENSED_CHAN
++	/* 4.9Ghz channels, public safety channels, license is required in US
++	 * and most other regulatory domains!
++	 */
++	/* 802.11j 4.9 GHz (20 MHz) */
++	CHAN5G(4920, 38), /* channel 184 */
++	CHAN5G(4940, 39), /* channel 188 */
++	CHAN5G(4960, 40), /* channel 192 */
++	CHAN5G(4980, 41), /* channel 196 */
++	/* 802.11j 5.030 - 5.080 GHz (20 MHz) */
++	CHAN5G(5040, 42), /* channel 8 */
++	CHAN5G(5060, 43), /* channel 12 */
++	CHAN5G(5080, 44), /* channel 16 */
++#endif
+ };
+ 
+ /* Atheros hardware rate code addition for short premble */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9cbca1229bac..2166f644599d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -73,7 +73,11 @@
+ 
+ #define ATH9K_RSSI_BAD			-128
+ 
++#ifdef CONFIG_ATH9K_LICENSED_CHAN
++#define ATH9K_NUM_CHANNELS	45
++#else
+ #define ATH9K_NUM_CHANNELS	38
++#endif
+ 
+ /* Register read/write primitives */
+ #define REG_WRITE(_ah, _reg, _val) \
+-- 
+2.11.0
