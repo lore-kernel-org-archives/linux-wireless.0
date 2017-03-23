@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge01.uni-rostock.de ([139.30.8.12]:9602 "EHLO
-        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751981AbdCAOqG (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35429 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751506AbdCWKpV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2017 09:46:06 -0500
-Subject: Re: [PATCH 2/2][RFC] mac80211_hwsim: Report radio addresses in
- NEW_RADIO/GET_RADIO
-To: Ben Greear <greearb@candelatech.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>
-References: <20170223120211.22358-1-andrew.zaborowski@intel.com>
- <20170223120211.22358-2-andrew.zaborowski@intel.com>
- <1488202062.28431.7.camel@sipsolutions.net>
- <CAOq732JzrGxFUa5BiuO=Sz7gscRV7PFxOOyy1xf6mtmQfUqkaA@mail.gmail.com>
- <2155efb0-1325-0089-fbb1-cc63cc289745@candelatech.com>
- <CAOq732+MZt=mytXrZko0uw=EsBWvQpZ49wg3CxFPVn0uGGNyog@mail.gmail.com>
- <4549b209-df6c-0eaa-65e6-72562c61bf4b@candelatech.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <4efcd470-86ee-2f3d-bbe2-1d82874edffd@uni-rostock.de> (sfid-20170301_154637_987641_A08F2FE7)
-Date: Wed, 1 Mar 2017 15:33:55 +0100
+        Thu, 23 Mar 2017 06:45:21 -0400
+Subject: Re: [PATCH 4.11] genetlink: fix counting regression on
+ ctrl_dumpfamily()
+To: Stanislaw Gruszka <sgruszka@redhat.com>, netdev@vger.kernel.org
+References: <1490195313-13272-1-git-send-email-sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Xose Vazquez Perez <xose.vazquez@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Johannes Berg <johannes@sipsolutions.net>
+From: poma <pomidorabelisima@gmail.com>
+Message-ID: <c591cfc3-76a0-adb7-13ef-f1feb9290782@gmail.com> (sfid-20170323_114527_816853_2D2F65C3)
+Date: Thu, 23 Mar 2017 11:45:17 +0100
 MIME-Version: 1.0
-In-Reply-To: <4549b209-df6c-0eaa-65e6-72562c61bf4b@candelatech.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1490195313-13272-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> You can specify the MAC address and name (ie, wiphy0) when creating a
-> hwsim radio.
-> You cannot specify the index.  So, from a user-space perspective,
-> I think the name and MAC is more important than the index.
->
-That is actually not possible. The permanent MAC-Addresses of hwsim
-radios are directly created by there internal ID, which is only
-increased for new radios and definitely not reassigned. 
+On 22.03.2017 16:08, Stanislaw Gruszka wrote:
+> Commit 2ae0f17df1cd ("genetlink: use idr to track families") replaced
+> 
+> 	if (++n < fams_to_skip)
+> 		continue;
+> into:
+> 
+> 	if (n++ < fams_to_skip)
+> 		continue;
+> 
+> This subtle change cause that on retry ctrl_dumpfamily() call we omit
+> one family that failed to do ctrl_fill_info() on previous call, because
+> cb->args[0] = n number counts also family that failed to do
+> ctrl_fill_info().
+> 
+> Patch fixes the problem and avoid confusion in the future just decrease
+> n counter when ctrl_fill_info() fail.
+> 
+> User visible problem caused by this bug is failure to get access to
+> some genetlink family i.e. nl80211. However problem is reproducible
+> only if number of registered genetlink families is big enough to
+> cause second call of ctrl_dumpfamily().
+> 
+> Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Fixes: 2ae0f17df1cd ("genetlink: use idr to track families")
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+> Dave, please also target this for 4.10+ -stable.
+> 
+>  net/netlink/genetlink.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+> index fb6e10f..92e0981 100644
+> --- a/net/netlink/genetlink.c
+> +++ b/net/netlink/genetlink.c
+> @@ -783,8 +783,10 @@ static int ctrl_dumpfamily(struct sk_buff *skb, struct netlink_callback *cb)
+>  
+>  		if (ctrl_fill_info(rt, NETLINK_CB(cb->skb).portid,
+>  				   cb->nlh->nlmsg_seq, NLM_F_MULTI,
+> -				   skb, CTRL_CMD_NEWFAMILY) < 0)
+> +				   skb, CTRL_CMD_NEWFAMILY) < 0) {
+> +			n--;
+>  			break;
+> +		}
+>  	}
+>  
+>  	cb->args[0] = n;
+> 
 
-But I would be happy, if this were possible, since it would make some
-simulation related stuff easier (currently we need to unload and load
-the hwsim module over and over again for every run).
 
+Thanks Stanislaw, Larry!
 
+Tested-by: poma <poma@gmail.com>
 
--- 
-M.Sc. Benjamin Beichler
-
-Universität Rostock, Fakultät für Informatik und Elektrotechnik
-Institut für Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Straße 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+Ref.
+https://bugzilla.redhat.com/show_bug.cgi?id=1422247
