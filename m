@@ -1,102 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41341 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754572AbdC1KoC (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:46868 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754010AbdCWCXm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 06:44:02 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/5] brcmfmac: wrap brcmf_fws_init into bcdc layer
-Date: Tue, 28 Mar 2017 11:43:24 +0100
-Message-Id: <1490697808-5538-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_124744_160193_DEF2D286)
-In-Reply-To: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 22 Mar 2017 22:23:42 -0400
+Date: Wed, 22 Mar 2017 19:23:04 -0700 (PDT)
+Message-Id: <20170322.192304.1068066587902221771.davem@davemloft.net> (sfid-20170323_032402_818855_7BFF5B35)
+To: marcel@holtmann.org
+Cc: bjorn.andersson@linaro.org, gustavo@padovan.org,
+        johan.hedberg@gmail.com, k.eugene.e@gmail.com,
+        kvalo@codeaurora.org, andy.gross@linaro.org,
+        david.brown@linaro.org, arnd@arndb.de,
+        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-soc@vger.kernel.org
+Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd
+ to rpmsg
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <21FCFC89-07EE-49EE-81C2-A138DD4C5F99@holtmann.org>
+References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
+        <20170322.114439.679826829857326050.davem@davemloft.net>
+        <21FCFC89-07EE-49EE-81C2-A138DD4C5F99@holtmann.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
+From: Marcel Holtmann <marcel@holtmann.org>
+Date: Wed, 22 Mar 2017 20:23:15 +0100
 
-Create a new protocol layer interface brcmf_proto_init_cb for protocol
-layer to finish initialzation after core module components(fweh and
-etc.) are initialized.
+> Hi Dave,
+> 
+>>> By moving these client drivers to use RPMSG instead of the direct SMD
+>>> API we can reuse them ontop of the newly added GLINK wire-protocol
+>>> support found in the 820 and 835 Qualcomm platforms.
+>>> 
+>>> As the new (RPMSG-based) and old SMD implementations are mutually
+>>> exclusive we have to change all client drivers in one commit, to make
+>>> sure we have a working system before and after this transition.
+>>> 
+>>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>>> ---
+>>> 
+>>> Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
+>>> (https://lkml.org/lkml/2017/3/20/1038).
+>> 
+>> Just some questions since I'm supposed to merge this into my net-next
+>> tree.
+>> 
+>> What is the status of the Kconfig dependency fix and how will I be
+>> getting it?
+> 
+> I acked that one separately and added you:
+> 
+> [PATCH v2] Bluetooth: btqcomsmd: fix compile-test dependency
 
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-Change-Id: I560d2478a7c09766cf07b20d74b31dff5ca6ac7b
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/8156
-Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
-Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c  | 7 +++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c  | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h | 9 +++++++++
- 3 files changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-index 92eafcc..bc24b00 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-@@ -417,6 +417,12 @@ static void brcmf_proto_bcdc_rxreorder(struct brcmf_if *ifp,
- 	brcmf_fws_reset_interface(ifp);
- }
- 
-+static int
-+brcmf_proto_bcdc_init_done(struct brcmf_pub *drvr)
-+{
-+	return brcmf_fws_init(drvr);
-+}
-+
- int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
- {
- 	struct brcmf_bcdc *bcdc;
-@@ -443,6 +449,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
- 	drvr->proto->add_if = brcmf_proto_bcdc_add_if;
- 	drvr->proto->del_if = brcmf_proto_bcdc_del_if;
- 	drvr->proto->reset_if = brcmf_proto_bcdc_reset_if;
-+	drvr->proto->init_done = brcmf_proto_bcdc_init_done;
- 	drvr->proto->pd = bcdc;
- 
- 	drvr->hdrlen += BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTES;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 60c6c78..9886280 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -986,7 +986,7 @@ int brcmf_bus_started(struct device *dev)
- 	}
- 	brcmf_feat_attach(drvr);
- 
--	ret = brcmf_fws_init(drvr);
-+	ret = brcmf_proto_init_done(drvr);
- 	if (ret < 0)
- 		goto fail;
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-index 3048ed5..600fd33 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-@@ -47,6 +47,7 @@ struct brcmf_proto {
- 	void (*add_if)(struct brcmf_if *ifp);
- 	void (*del_if)(struct brcmf_if *ifp);
- 	void (*reset_if)(struct brcmf_if *ifp);
-+	int (*init_done)(struct brcmf_pub *drvr);
- 	void *pd;
- };
- 
-@@ -145,4 +146,12 @@ static inline bool brcmf_proto_is_reorder_skb(struct sk_buff *skb)
- 	drvr->proto->reset_if(ifp);
- }
- 
-+static inline int
-+brcmf_proto_init_done(struct brcmf_pub *drvr)
-+{
-+	if (!drvr->proto->init_done)
-+		return 0;
-+	return drvr->proto->init_done(drvr);
-+}
-+
- #endif /* BRCMFMAC_PROTO_H */
--- 
-1.9.1
+I applied this to my 'net' tree, thanks.
