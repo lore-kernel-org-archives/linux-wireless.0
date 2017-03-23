@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55866 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755335AbdCTRR2 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47476 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753765AbdCWMZ6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 13:17:28 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rt2x00: fix TX_PWR_CFG_4 register definition
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170308235412.GA22227@makrotopia.org>
-References: <20170308235412.GA22227@makrotopia.org>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Message-Id: <20170320171727.22CCA60BF7@smtp.codeaurora.org> (sfid-20170320_181801_562248_D77B34EB)
-Date: Mon, 20 Mar 2017 17:17:22 +0000 (UTC)
+        Thu, 23 Mar 2017 08:25:58 -0400
+Message-ID: <1490271944.2700.63.camel@coelho.fi> (sfid-20170323_132618_708467_FE133D08)
+From: Luca Coelho <luca@coelho.fi>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Golan Ben-Ami <golan.ben.ami@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Ido Yariv <ido@wizery.com>, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Date: Thu, 23 Mar 2017 14:25:44 +0200
+In-Reply-To: <20170323104000.GB20154@mwanda>
+References: <20170323104000.GB20154@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: mvm: writing zero bytes to debugfs causes a
+ crash
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Golle <daniel@makrotopia.org> wrote:
-> Some of the macros used to describe the TX_PWR_CFG_4 register accidentally
-> refer to TX_PWR_CFG_3, probably a copy&paste error. Fix that.
+On Thu, 2017-03-23 at 13:40 +0300, Dan Carpenter wrote:
+> This is a static analysis fix.  The warning is:
 > 
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> 	drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c:912 iwl_mvm_fw_dbg_collect()
+> 	warn: integer overflows 'sizeof(*desc) + len'
+> 
+> I guess this code is supposed to take a NUL character, but if we write
+> zero bytes then it tries to write -1 characters and crashes.
+> 
+> Fixes: c91b865cb14d ("iwlwifi: mvm: support description for user triggered fw dbg collection")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> index a260cd503200..077bfd8f4c0c 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> @@ -1056,6 +1056,8 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
+>  
+>  	if (ret)
+>  		return ret;
+> +	if (count == 0)
+> +		return 0;
+>  
+>  	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, buf,
+>  			       (count - 1), NULL);
 
-Patch applied to wireless-drivers-next.git, thanks.
+Thanks! I'm going to push this via our internal tree.
 
-5ce33b603063 rt2x00: fix TX_PWR_CFG_4 register definition
-
--- 
-https://patchwork.kernel.org/patch/9612163/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--
+Cheers,
+Luca.
