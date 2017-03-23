@@ -1,97 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:64799 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754641AbdC1I63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 04:58:29 -0400
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
-        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
-        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
-        matanb@mellanox.com, leonro@mellanox.com,
-        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
-        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 05/16] drivers, net, mlx4: convert mlx4_srq.refcount from atomic_t to refcount_t
-Date: Tue, 28 Mar 2017 11:56:32 +0300
-Message-Id: <1490691403-4016-6-git-send-email-elena.reshetova@intel.com> (sfid-20170328_110903_276213_17E6939B)
-In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+Received: from shards.monkeyblade.net ([184.105.139.130]:59742 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751477AbdCWX4P (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Mar 2017 19:56:15 -0400
+Date: Thu, 23 Mar 2017 16:56:13 -0700 (PDT)
+Message-Id: <20170323.165613.802100008000968298.davem@davemloft.net> (sfid-20170324_005749_764769_3ACEC7F1)
+To: bjorn.andersson@linaro.org
+Cc: marcel@holtmann.org, gustavo@padovan.org, johan.hedberg@gmail.com,
+        k.eugene.e@gmail.com, kvalo@codeaurora.org, andy.gross@linaro.org,
+        david.brown@linaro.org, arnd@arndb.de,
+        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-soc@vger.kernel.org
+Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd
+ to rpmsg
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170322215733.GH20094@minitux>
+References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
+        <20170322.114439.679826829857326050.davem@davemloft.net>
+        <20170322215733.GH20094@minitux>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Date: Wed, 22 Mar 2017 14:57:33 -0700
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- drivers/net/ethernet/mellanox/mlx4/srq.c | 8 ++++----
- include/linux/mlx4/device.h              | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+> On Wed 22 Mar 11:44 PDT 2017, David Miller wrote:
+> 
+>> From: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> Date: Mon, 20 Mar 2017 16:35:42 -0700
+>> 
+>> What is the status of the Kconfig dependency fix and how will I be
+>> getting it?
+>> 
+> 
+> There are two Kconfig dependencies in play here, the first is
+> c3104aae5d8c ("remoteproc: qcom: fix QCOM_SMD dependencies"), this was
+> picked up by Linus yesterday and will as such be in v4.10-rc4.
+> 
+> The other dependency, is the one Marcel wants you to pick up here is
+> https://patchwork.kernel.org/patch/9635385/. It's on LKML, but if you
+> want I can resend it with you as direct recipient, with Marcel's ack.
+> 
+> Likely Arnd would like this fix to be sent upstream for v4.11 already.
+> 
+>> Second, should I merge all three of these patches to net-next or just
+>> this one?
+>> 
+> 
+> I would like all three to be merged in this cycle and in addition I have
+> a couple of patches coming up that will cause some minor conflicts with
+> patch 2 - so I would prefer if patch 2 was available in a tag I can
+> merge into my tree.
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/srq.c b/drivers/net/ethernet/mellanox/mlx4/srq.c
-index f44d089..3369f65 100644
---- a/drivers/net/ethernet/mellanox/mlx4/srq.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/srq.c
-@@ -49,7 +49,7 @@ void mlx4_srq_event(struct mlx4_dev *dev, u32 srqn, int event_type)
- 	srq = radix_tree_lookup(&srq_table->tree, srqn & (dev->caps.num_srqs - 1));
- 	rcu_read_unlock();
- 	if (srq)
--		atomic_inc(&srq->refcount);
-+		refcount_inc(&srq->refcount);
- 	else {
- 		mlx4_warn(dev, "Async event for bogus SRQ %08x\n", srqn);
- 		return;
-@@ -57,7 +57,7 @@ void mlx4_srq_event(struct mlx4_dev *dev, u32 srqn, int event_type)
- 
- 	srq->event(srq, event_type);
- 
--	if (atomic_dec_and_test(&srq->refcount))
-+	if (refcount_dec_and_test(&srq->refcount))
- 		complete(&srq->free);
- }
- 
-@@ -203,7 +203,7 @@ int mlx4_srq_alloc(struct mlx4_dev *dev, u32 pdn, u32 cqn, u16 xrcd,
- 	if (err)
- 		goto err_radix;
- 
--	atomic_set(&srq->refcount, 1);
-+	refcount_set(&srq->refcount, 1);
- 	init_completion(&srq->free);
- 
- 	return 0;
-@@ -232,7 +232,7 @@ void mlx4_srq_free(struct mlx4_dev *dev, struct mlx4_srq *srq)
- 	radix_tree_delete(&srq_table->tree, srq->srqn);
- 	spin_unlock_irq(&srq_table->lock);
- 
--	if (atomic_dec_and_test(&srq->refcount))
-+	if (refcount_dec_and_test(&srq->refcount))
- 		complete(&srq->free);
- 	wait_for_completion(&srq->free);
- 
-diff --git a/include/linux/mlx4/device.h b/include/linux/mlx4/device.h
-index 756ca22..8998807 100644
---- a/include/linux/mlx4/device.h
-+++ b/include/linux/mlx4/device.h
-@@ -766,7 +766,7 @@ struct mlx4_srq {
- 	int			max_gs;
- 	int			wqe_shift;
- 
--	atomic_t		refcount;
-+	refcount_t		refcount;
- 	struct completion	free;
- };
- 
--- 
-2.7.4
+I should have all the dependencies in net-next now, but when I apply
+this series I get undefined symbols:
+
+[davem@localhost net-next]$ time make -s -j8
+Kernel: arch/x86/boot/bzImage is ready  (#578)
+ERROR: "qcom_rpm_smd_write" [drivers/regulator/qcom_smd-regulator.ko] undefined!
+ERROR: "qcom_wcnss_open_channel" [drivers/net/wireless/ath/wcn36xx/wcn36xx.ko] undefined!
+ERROR: "qcom_rpm_smd_write" [drivers/clk/qcom/clk-smd-rpm.ko] undefined!
+ERROR: "qcom_wcnss_open_channel" [drivers/bluetooth/btqcomsmd.ko] undefined!
+scripts/Makefile.modpost:91: recipe for target '__modpost' failed
+
+Please fix this up.
