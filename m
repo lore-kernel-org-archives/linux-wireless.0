@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42134 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751136AbdCPKij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 06:38:39 -0400
-Message-ID: <1489659530.2370.10.camel@sipsolutions.net> (sfid-20170316_113842_231793_22A77A3C)
-Subject: Re: [PATCH v2] mac80211: Jitter HWMP MPATH reply frames to reduce
- collision on dense networks.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: agreen@cococorp.com, linux-wireless@vger.kernel.org
-Cc: Jesse Jones <jjones@cococorp.com>
-Date: Thu, 16 Mar 2017 11:18:50 +0100
-In-Reply-To: <58B09082.7020704@cococorp.com> (sfid-20170224_205905_277542_E6C0402D)
-References: <58B09082.7020704@cococorp.com>
-         (sfid-20170224_205905_277542_E6C0402D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from packetmixer.de ([79.140.42.25]:52408 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754504AbdCWJAa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Mar 2017 05:00:30 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: ath10k@lists.infradead.org
+Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        ath9k-devel@qca.qualcomm.com,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] ath10k: add support for channels in licensed bands
+Date: Thu, 23 Mar 2017 10:00:00 +0100
+Message-ID: <1665455.SGOqsfShXJ@prime> (sfid-20170323_100200_115570_A531ED3C)
+In-Reply-To: <327a5fe1-a4f2-6252-9dee-e4b6e79aa5ac@dd-wrt.com>
+References: <20170316151337.24163-1-sw@simonwunderlich.de> <20170316151337.24163-3-sw@simonwunderlich.de> <327a5fe1-a4f2-6252-9dee-e4b6e79aa5ac@dd-wrt.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart2035315.s67eRDaNyR"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry - this is the other half of my reply that I accidentally deleted
-before sending...
- 
-> +static void flush_tx_skbs(struct ieee80211_sub_if_data *sdata)
-> +{
-> +	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> +	struct mesh_tx_queue *tx_node;
-> +
-> +	spin_lock_bh(&ifmsh->mesh_tx_queue_lock);
-> +
-> +	/* Note that this check is important because of the two-
-> stage
-> +	 * way that ieee80211_if_mesh is initialized.
-> +	 */
+--nextPart2035315.s67eRDaNyR
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-I think you should fix that rather than work around it. If this is
-called with iftype != mesh then this is super problematic anyway, since
-ifmsh->tx_queue_len would alias some other variable (there's a union).
+On Friday, March 17, 2017 7:49:55 PM CET Sebastian Gottschall wrote:
+> you may quickly realize that this patch cannot be a solution
+> example:
+> 
+> -	if (channel >= 1 && channel <= 14) {
+> +	if (channel >= 1 && channel <= 7) {
+>   		status->band = NL80211_BAND_2GHZ;
+> 
+> 
+> do you you really want to limit the 2.4 channels for all users?
 
-> +	if (ifmsh->tx_queue_len > 0) {
-> +		mhwmp_dbg(sdata, "flushing %d skbs", ifmsh-
-> >tx_queue_len);
-> +
-> +		while (!list_empty(&ifmsh->tx_queue.list)) {
-> +			tx_node = list_last_entry(&ifmsh-
-> >tx_queue.list,
-> +						  struct
-> mesh_tx_queue, list);
-> +			kfree_skb(tx_node->skb);
-> +			list_del(&tx_node->list);
-> +			kfree(tx_node);
-> +		}
-> +		ifmsh->tx_queue_len = 0;
-> +	}
-> +
-> +	spin_unlock_bh(&ifmsh->mesh_tx_queue_lock);
-> +}
+Hi Sebastian,
 
-All of this also gets *vastly* simpler if it's just skb_queue_purge()
-:)
+you are right, this seems to be too limiting. I'll rework this part.
 
-> +	spin_lock_bh(&ifmsh->mesh_tx_queue_lock);
-> +
-> +	list_for_each_entry(tx_node, &ifmsh->tx_queue.list, list) {
-> +		ieee80211_tx_skb(sdata, tx_node->skb);
-> +	}
+Cheers,
+     Simon
 
-I don't think you should hold the lock across _tx_skb(), ISTR problems
-with that - particularly with the STA lock, so this might be OK, but it
-might also cause lock ordering issues. It's easy to avoid anyway, so
-better not to do it.
+--nextPart2035315.s67eRDaNyR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-johannes
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE1ilQI7G+y+fdhnrfoSvjmEKSnqEFAljTjpAACgkQoSvjmEKS
+nqEx2w//Rt8uPSRTwU+sBOh9zLWPG3lzB15SjJCWE9ai3ESd2MRaDl+cGrwY2pfP
+5scWcFCLpafcX4/AurXAKkpJnRx6fymT/3WEH9vp1f5D7etFvXOCf3gk89SJJPSH
+lVmE8m9kbuhl1reG3y/FOAf7BlfQnaOHt/ywnrNMSfmgb51fdeFPaaoibfEfTFad
+f7jSK0y2L9Qf28WW6yAzYOvnvYILikfYhdmTuBg1ZgIDHJur1n2QFgU0BUrUsAgJ
+X93v+/OZYavCRJsOdOb/kbgHga60XR7eXdJwFBmSP1p+jUWGvz9RWnkgSK3CUG4d
+nvl71BwwJTEydkIVLro9JJqtGMqG5sFQ5gzsrCD0JxEDYpHDOJv+7XETsqxz5dlg
+F1sZDDnwbtx1uMxeruHHvnREfDqiJKZ3gl7mOLKfkicxQf4vQ1+9RDXiU2YtxjRu
+vbgzx4J9gOorigCOUNLLJN14VWtCfFzjatDFykV1Tiv0xgI5j/pvmiN1fLByGf+W
+gszCs5msflGabtlc36e0VJMvdjKVOWsnYLan77YuMRXrneD2Hll5kIxFjKEFlWXu
+Rh/2v+y/p0EzWbaS1dj9b76OZD+qhEER5GvXxSIi9Sgt4lwXgFZzsEN/64pKDF30
+4kzuBoU3KG7lTH5BmMgjS1YHpVq2wMqDRBNLb7nXdYfRIWHWjd4=
+=kzqC
+-----END PGP SIGNATURE-----
+
+--nextPart2035315.s67eRDaNyR--
