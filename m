@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33781 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755160AbdCTQQk (ORCPT
+Received: from mail-it0-f44.google.com ([209.85.214.44]:36121 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936549AbdCXP4e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 12:16:40 -0400
-Received: by mail-oi0-f66.google.com with SMTP id a94so4268623oic.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 09:16:12 -0700 (PDT)
-Subject: Re: Wireless failed
-To: Fernanda Vejar <fvejar85@gmail.com>
-References: <CADND2bqVLdSmmY=RG7m8r2maWyc7yGgvKUO4O4YGPLVnMx0pqg@mail.gmail.com>
- <34e317ae-a112-79bc-41ef-c18433e8cc49@lwfinger.net>
- <CADND2bprCVNThAWVp-De7W3uRvKNDxGrxEond2ANZ+=2akKB_Q@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <20064021-fcca-4092-e6ec-5ce7f964a0c1@lwfinger.net> (sfid-20170320_171958_102886_DC15E225)
-Date: Mon, 20 Mar 2017 10:50:21 -0500
+        Fri, 24 Mar 2017 11:56:34 -0400
+Received: by mail-it0-f44.google.com with SMTP id w124so12171725itb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Mar 2017 08:56:33 -0700 (PDT)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: [Netdev ANNOUNCE]: New talk accepted debug pipe
+To: people@netdevconf.org
+Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
+        Brenda Butler <bjb@mojatatu.com>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Heri Muhero <hmuhero@gmail.com>
+Message-ID: <0edc0f79-c960-5f26-efea-4a26455f5747@mojatatu.com> (sfid-20170324_170245_988119_D7FF73CE)
+Date: Fri, 24 Mar 2017 11:56:30 -0400
 MIME-Version: 1.0
-In-Reply-To: <CADND2bprCVNThAWVp-De7W3uRvKNDxGrxEond2ANZ+=2akKB_Q@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2017 10:10 AM, Fernanda Vejar wrote:
-> Hello Larry,
->
-> thank you very much for your response.
->
-> I'm using "Trisquel 7.0 LTS Belenos" since a few days.
-> My kernel version is acoording to "uname -r" : "3.13.0-112-lowlatency".
-> By "lspci --n"n I have found : "01:00.0 Network controller [0280]:
-> Intel Corporation Centrino Wireless-N 2230 [8086:0887] (rev c4)".
-> There is no evidence of iwlwifi by running" lsmod".
-> According to "dmesg | less", I've found: "Linux version
-> 3.13.0-112-lowlatency (pbuilder@devel.trisquel.info) (gcc version
-> 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.3) ) #159+7.0trisquel2 SMP PREEMPT
-> Mon Mar 13 13:58:08 UTC 2017 (Ubuntu
-> 3.13.0-112.159+7.0trisquel2-lowlatency 3.13.11-ckt39-gnu)", I think it
-> could clarify a little more. But I can't see more relevant issue given
-> by this command.
->
-> I don't know if the problem is to be solved. Maybe I should try a new distro.
+The tech committee would like to announce a new accepted talk.
 
-Kernel 3.13 is quite old; however according to 
-https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#firmware, the driver 
-for the 2230 has been in the kernel since version 3.2. That reference also tells 
-you what firmware is needed.
+Arkadi Sharshevski will give a talk on the new dpipe tool.
 
-To resolve this, first check that the driver is available. If the command 
-"modinfo iwlwifi" returns an ERROR, then your kernel configuration does not 
-contain the driver. You will also need iwldvm to be configured.
+Details are as follows:
+-----
+While doing the hardware offloading process much of the hardware
+specifics cannot be presented. One example for such is the routing LPM
+algorithm used in Mellanox Spectrum ASIC which differs in hardware
+implementation from the kernel software implementation. The only
+information the user receives is whether specific route is offloaded or
+not, but he cannot really understand the underlying implementation nor
+get the specific statistics related to that process.
 
-Larry
+Another example is TC classification-action offload which in hardware
+commonly implemented using TCAM memory. Currently there is no
+capability to gain visibility into the TCAM structure and to debug
+sub-optimal resource allocation.
+
+The new dpipe interface introduces capability for exporting the ASICs
+pipeline abstraction via devlink infrastructure, which should serve as
+an complementary tool. This infrastructure allows the user to get
+visibility into the ASIC by modeling it as a set of match/action tables.
+
+-----
+
+cheers,
+jamal
