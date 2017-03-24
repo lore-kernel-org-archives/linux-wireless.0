@@ -1,73 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0172.hostedemail.com ([216.40.44.172]:38138 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752744AbdC3W5d (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 18:57:33 -0400
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
-Date: Thu, 30 Mar 2017 15:57:23 -0700
-Message-Id: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com> (sfid-20170331_005808_962979_775BFD57)
+Received: from mga05.intel.com ([192.55.52.43]:57096 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757511AbdCXQd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Mar 2017 12:33:26 -0400
+Message-ID: <1490373202.21738.21.camel@linux.intel.com> (sfid-20170324_173335_078670_DF217295)
+Subject: Re: Is NFC subsystem abandoned?
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>
+Date: Fri, 24 Mar 2017 18:33:22 +0200
+In-Reply-To: <20170324162749.GA30988@zurbaran.ger.intel.com>
+References: <1490371835.21738.15.camel@linux.intel.com>
+         <20170324162749.GA30988@zurbaran.ger.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix fallout too.
+On Fri, 2017-03-24 at 17:31 +0100, Samuel Ortiz wrote:
+> Hi Andy,
+> 
+> It's not abandoned. I just got swamped for the past 3 months but
+> things
+> are slowing down now.
+> I'll go through my patches backlog during the next 10 days.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath6kl/debug.h    | 2 ++
- drivers/net/wireless/ath/ath6kl/htc_pipe.c | 2 +-
- drivers/net/wireless/ath/ath6kl/wmi.c      | 2 +-
- 3 files changed, 4 insertions(+), 2 deletions(-)
+Ah, okay. Thanks for information!
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index 0614393dd7ae..94297572914f 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -63,6 +63,7 @@ int ath6kl_read_tgt_stats(struct ath6kl *ar, struct ath6kl_vif *vif);
- 
- #ifdef CONFIG_ATH6KL_DEBUG
- 
-+__printf(2, 3)
- void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
- void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
- 		     const char *msg, const char *prefix,
-@@ -83,6 +84,7 @@ int ath6kl_debug_init_fs(struct ath6kl *ar);
- void ath6kl_debug_cleanup(struct ath6kl *ar);
- 
- #else
-+__printf(2, 3)
- static inline void ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
- 			      const char *fmt, ...)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-index ca1a18c86c0d..d127a08d60df 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-@@ -995,7 +995,7 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
- 
- 	if (netlen < (payload_len + HTC_HDR_LENGTH)) {
- 		ath6kl_dbg(ATH6KL_DBG_HTC,
--			   "HTC Rx: insufficient length, got:%d expected =%u\n",
-+			   "HTC Rx: insufficient length, got:%d expected =%zu\n",
- 			   netlen, payload_len + HTC_HDR_LENGTH);
- 		status = -EINVAL;
- 		goto free_skb;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 84a6d12c3f8a..a082de81ec4c 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1596,7 +1596,7 @@ static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
- 	rate = le32_to_cpu(ev->rate);
- 	pkts = le32_to_cpu(ev->pkts);
- 
--	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d% pkts %d intvl %ds\n",
-+	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d%% pkts %d intvl %ds\n",
- 		   vif->bssid, rate, pkts, vif->txe_intvl);
- 
- 	cfg80211_cqm_txe_notify(vif->ndev, vif->bssid, pkts,
+> Apologies for the delays.
+
+NP.
+
 -- 
-2.10.0.rc2.1.g053435c
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
