@@ -1,105 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:32875 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933040AbdC3KQE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2017 06:16:04 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Vincent Cuissard <cuissard@marvell.com>
-Subject: [PATCH v2 3/8] NFC: nfcmrvl: do not use device-managed resources
-Date: Thu, 30 Mar 2017 12:15:37 +0200
-Message-Id: <20170330101542.15384-4-johan@kernel.org> (sfid-20170330_122346_795210_CBF2F2F7)
-In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
-References: <20170330101542.15384-1-johan@kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56156 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965834AbdCXSwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Mar 2017 14:52:04 -0400
+Message-ID: <1490381507.9586.1.camel@sipsolutions.net> (sfid-20170324_195255_193872_3E6F362B)
+Subject: Re: deadlock in synchronize_srcu() in debugfs?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: paulmck@linux.vnet.ibm.com
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+        Nicolai Stange <nicstange@gmail.com>,
+        gregkh <gregkh@linuxfoundation.org>, sharon.dvir@intel.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 24 Mar 2017 19:51:47 +0100
+In-Reply-To: <20170324174542.GH3637@linux.vnet.ibm.com>
+References: <1490280886.2766.4.camel@sipsolutions.net>
+         <1490282991.2766.7.camel@sipsolutions.net>
+         <1490345799.2766.15.camel@sipsolutions.net>
+         <1490347486.2766.17.camel@sipsolutions.net>
+         <20170324174542.GH3637@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This specifically fixes resource leaks in the registration error paths.
 
-Device-managed resources is a bad fit for this driver as devices can be
-registered from the n_nci line discipline. Firstly, a tty may not even
-have a corresponding device (should it be part of a Unix98 pty)
-something which would lead to a NULL-pointer dereference when
-registering resources.
+> Yes.  CPU2 has a pre-existing reader that CPU1's synchronize_srcu()
+> must wait for.  But CPU2's reader cannot end until CPU1 releases
+> its lock, which it cannot do until after CPU2's reader ends.  Thus,
+> as you say, deadlock.
+> 
+> The rule is that if you are within any kind of RCU read-side critical
+> section, you cannot directly or indirectly wait for a grace period
+> from that same RCU flavor.
 
-Secondly, if the tty has a class device, its lifetime exceeds that of
-the line discipline, which means that resources would leak every time
-the line discipline is closed (or if registration fails).
+Right. This is indirect then, in a way.
 
-Currently, the devres interface was only being used to request a reset
-gpio despite the fact that it was already explicitly freed in
-nfcmrvl_nci_unregister_dev() (along with the private data), something
-which also prevented the resource leak at close.
+> There are some challenges, though.  This is OK:
+> 
+>	CPU1				CPU2
+>	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
+>	mutex_lock(&my_lock);		i = srcu_read_lock(&mysrcu);
+>	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
+>	mutex_unlock(&my_lock);		srcu_read_unlock(&mysrcu, i);
+> 
+> 	CPU3
+> 	synchronize_srcu(&mylock);
+> 
+> This could be a deadlock for reader-writer locking, but not for SRCU.
 
-Note that the driver treats gpio number 0 as invalid despite it being
-perfectly valid. This will be addressed in a follow-up patch.
+Hmm, yes, that's a good point. If srcu_read_lock() was read_lock, and
+synchronize_srcu() was write_lock(), then the write_lock() could stop
+CPU2's read_lock() from acquiring the lock, and thus cause a deadlock.
 
-Fixes: b2fe288eac72 ("NFC: nfcmrvl: free reset gpio")
-Fixes: 4a2b947f56b3 ("NFC: nfcmrvl: add chip reset management")
-Cc: stable <stable@vger.kernel.org>     # 4.2: b2fe288eac72
-Cc: Vincent Cuissard <cuissard@marvell.com>
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- drivers/nfc/nfcmrvl/main.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+However, I'm not convinced that lockdep handles reader/writer locks
+correctly to start with, right now, since it *didn't* actually trigger
+any warnings when I annotated SRCU as a reader/writer lock.
 
-diff --git a/drivers/nfc/nfcmrvl/main.c b/drivers/nfc/nfcmrvl/main.c
-index 51c8240a1672..3e3fc9588f10 100644
---- a/drivers/nfc/nfcmrvl/main.c
-+++ b/drivers/nfc/nfcmrvl/main.c
-@@ -124,12 +124,13 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
- 	memcpy(&priv->config, pdata, sizeof(*pdata));
- 
- 	if (priv->config.reset_n_io) {
--		rc = devm_gpio_request_one(dev,
--					   priv->config.reset_n_io,
--					   GPIOF_OUT_INIT_LOW,
--					   "nfcmrvl_reset_n");
--		if (rc < 0)
-+		rc = gpio_request_one(priv->config.reset_n_io,
-+				      GPIOF_OUT_INIT_LOW,
-+				      "nfcmrvl_reset_n");
-+		if (rc < 0) {
-+			priv->config.reset_n_io = 0;
- 			nfc_err(dev, "failed to request reset_n io\n");
-+		}
- 	}
- 
- 	if (phy == NFCMRVL_PHY_SPI) {
-@@ -154,7 +155,7 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
- 	if (!priv->ndev) {
- 		nfc_err(dev, "nci_allocate_device failed\n");
- 		rc = -ENOMEM;
--		goto error;
-+		goto error_free_gpio;
- 	}
- 
- 	nci_set_drvdata(priv->ndev, priv);
-@@ -179,7 +180,9 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
- 
- error_free_dev:
- 	nci_free_device(priv->ndev);
--error:
-+error_free_gpio:
-+	if (priv->config.reset_n_io)
-+		gpio_free(priv->config.reset_n_io);
- 	kfree(priv);
- 	return ERR_PTR(rc);
- }
-@@ -195,7 +198,7 @@ void nfcmrvl_nci_unregister_dev(struct nfcmrvl_private *priv)
- 	nfcmrvl_fw_dnld_deinit(priv);
- 
- 	if (priv->config.reset_n_io)
--		devm_gpio_free(priv->dev, priv->config.reset_n_io);
-+		gpio_free(priv->config.reset_n_io);
- 
- 	nci_unregister_device(ndev);
- 	nci_free_device(ndev);
--- 
-2.12.2
+> This is also OK:
+>	CPU1				CPU2
+>	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
+>	mutex_lock(&my_lock);		synchronize_srcu(&yoursrc
+u);
+>	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
+>	mutex_unlock(&my_lock);
+> 
+> Here CPU1's read-side critical sections are for mysrcu, which is
+> independent of CPU2's grace period for yoursrcu.
+
+Right, but that's already covered by having separate a lockdep_map for
+each SRCU subsystem (mysrcu, yoursrcu).
+
+> So you could flag any lockdep cycle that contained a reader and a
+> synchronous grace period for the same flavor of RCU, where for SRCU
+> the identity of the srcu_struct structure is part of the flavor.
+
+Right. Basically, I think SRCU should be like a reader/writer lock
+(perhaps fixed to work right). The only difference seems to be the
+scenario you outlined above (first of the two)?
+
+Actually, given the scenario above, for lockdep purposes the
+reader/writer lock is actually the same as a recursive lock, I guess?
+
+You outlined a scenario in which the reader gets blocked due to a
+writer (CPU3 doing a write_lock()) so the reader can still participate
+in a deadlock cycle since it can - without any other locks being held
+by CPU3 that participate - cause a deadlock between CPU1 and CPU2 here.
+For lockdep then, even seeing the CPU1 and CPU2 scenarios should be
+sufficient to flag a deadlock (*).
+
+This part then isn't true for SRCU, because there forward progress will
+still be made. So for SRCU, the "reader" side really needs to be
+connected with a "writer" side to form a deadlock cycle, unlike for a
+reader/writer lock.
+
+johannes
+
+(*) technically only after checking that write_lock() is ever used, but
+... seems reasonable enough to assume that it will be used, since why
+would anyone ever use a reader/writer lock if there are only readers?
+That's a no-op.
