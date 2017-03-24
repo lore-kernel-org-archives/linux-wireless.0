@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:33208 "EHLO
-        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752476AbdCAKiJ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47644 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S936302AbdCXPh3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2017 05:38:09 -0500
-Received: by mail-qk0-f179.google.com with SMTP id n127so63087881qkf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Mar 2017 02:37:28 -0800 (PST)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Gery Kahn <gery.kahn@broadcom.com>, Jouni Malinen <j@w1.fi>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: FILS offloading
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Message-ID: <d4fb8ca8-9632-3154-488e-5d7232601ed6@broadcom.com> (sfid-20170301_113922_671761_13E99A85)
-Date: Wed, 1 Mar 2017 11:28:48 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Fri, 24 Mar 2017 11:37:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Dan Carpenter <dan.carpenter@oracle.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Mar 2017 17:37:13 +0200
+Message-Id: <20170324153714.8880-3-luca@coelho.fi> (sfid-20170324_163805_492649_CCDEAE1C)
+In-Reply-To: <20170324153714.8880-1-luca@coelho.fi>
+References: <20170324153714.8880-1-luca@coelho.fi>
+Subject: [PATCH 2/3] iwlwifi: mvm: writing zero bytes to debugfs causes a crash
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hoi Jouni,
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Not sure which email address to use ;-) I noticed a while ago that FILS
-offloading was on the agenda of wireless workshop in Santa Fe. Recently,
-looked at the FILS patches that were applied upstream and noticed:
+This is a static analysis fix.  The warning is:
 
-static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
-				    enum nl80211_auth_type auth_type,
-				    enum nl80211_commands cmd)
-{
-	...
-	switch (cmd) {
-	...
-	case NL80211_CMD_CONNECT:
-	case NL80211_CMD_START_AP:
-		/* SAE not supported yet */
-		if (auth_type == NL80211_AUTHTYPE_SAE)
-			return false;
-		/* FILS not supported yet */
-		if (auth_type == NL80211_AUTHTYPE_FILS_SK ||
-		    auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
-		    auth_type == NL80211_AUTHTYPE_FILS_PK)
-			return false;
-		return true;
-	default:
-		return false;
-	}
-}
+	drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c:912 iwl_mvm_fw_dbg_collect()
+	warn: integer overflows 'sizeof(*desc) + len'
 
-Are there any plans on QCA side to add FILS support for fullmac devices,
-ie. supporting CONNECT command.
+I guess this code is supposed to take a NUL character, but if we write
+zero bytes then it tries to write -1 characters and crashes.
 
-Regards,
-Arend
+Fixes: c91b865cb14d ("iwlwifi: mvm: support description for user triggered fw dbg collection")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index a260cd503200..077bfd8f4c0c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1056,6 +1056,8 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
+ 
+ 	if (ret)
+ 		return ret;
++	if (count == 0)
++		return 0;
+ 
+ 	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, buf,
+ 			       (count - 1), NULL);
+-- 
+2.11.0
