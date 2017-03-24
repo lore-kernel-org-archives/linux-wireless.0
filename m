@@ -1,58 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48860 "EHLO sipsolutions.net"
+Received: from mga05.intel.com ([192.55.52.43]:47230 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750703AbdCBLA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 06:00:57 -0500
-Message-ID: <1488444909.8390.11.camel@sipsolutions.net> (sfid-20170302_120120_845285_5A283FA6)
-Subject: Re: Usage of WoWLAN with iwlwifi driver (Device phy0 failed to
- suspend async: error -16)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oliver Freyermuth <o.freyermuth@googlemail.com>,
-        linux-wireless@vger.kernel.org
-Date: Thu, 02 Mar 2017 09:55:09 +0100
-In-Reply-To: <6337fa40-adcc-b889-1842-16e0f316ea3e@googlemail.com> (sfid-20170224_221653_742300_1279B3C9)
-References: <cc035655-0869-f7d7-bdb4-61e7a38b7fc8@googlemail.com>
-         <1487938277.2540.13.camel@sipsolutions.net>
-         <5d69cf9b-1113-835a-8423-3796586eae20@googlemail.com>
-         <1487965047.30601.2.camel@sipsolutions.net>
-         <6337fa40-adcc-b889-1842-16e0f316ea3e@googlemail.com>
-         (sfid-20170224_221653_742300_1279B3C9)
+        id S1751874AbdCXQLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Mar 2017 12:11:25 -0400
+Message-ID: <1490371609.21738.12.camel@linux.intel.com> (sfid-20170324_171840_363600_0D73AB28)
+Subject: Re: [PATCH v2 5/5] NFC: pn544: Get rid of code duplication in
+ ->probe()
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Date: Fri, 24 Mar 2017 18:06:49 +0200
+In-Reply-To: <201703242337.3VFJCE9V%fengguang.wu@intel.com>
+References: <201703242337.3VFJCE9V%fengguang.wu@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> > Oh. Can you see if you have CONFIG_IWLWIFI_PCIE_RTPM enabled in
-> > your configuration? If you do, please turn it off and see if that
-> > fixes it.
+On Fri, 2017-03-24 at 23:50 +0800, kbuild test robot wrote:
+> Hi Andy,
 > 
-> Indeed, you got it! 
-> I had it on, and turning that off lets me suspend just fine after
-> activating WoWLAN!
-
-[snip]
-
-> The problem is that it seems I cannot actually wake the machine
-> anymore afterwards... 
-> While in the suspend procedure, I see:
-> [12385.893568] iwlwifi 0000:0a:00.0: System wakeup enabled by ACPI
-> as expected, I could neither get it to make a tcp connection in tcp-
-> connection mode,
-> nor could I wake the machine via magic packet in magic-packet mode. 
+> [auto build test ERROR on linus/master]
+> [also build test ERROR on v4.11-rc3 next-20170324]
+> [if your patch is applied to the wrong git tree, please drop us a note
+> to help improve the system]
 > 
-> Could that be some hardware / system firmware limitation, e.g. if my
-> UEFI does not support actually powering
-> the WiFi hardware if I am in S3?
+> url:    https://github.com/0day-ci/linux/commits/Andy-Shevchenko/NFC-p
+> n544-Get-rid-of-platform-data/20170324-232445
+> config: i386-randconfig-x078-201712 (attached as .config)
+> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=i386 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    drivers/nfc/pn544/i2c.c: In function 'pn544_hci_i2c_probe':
+> > > drivers/nfc/pn544/i2c.c:910:3: error: implicit declaration of
+> > > function 'nfc_dbg' [-Werror=implicit-function-declaration]
+> 
+>       nfc_dbg(dev, "Unable to add GPIO mapping table\n");
+>       ^~~~~~~
 
-Yes. Does it print something to that effect at resume time? I think it
-should.
+Yes, there is a dependency patch. Since I have heard nothing from NFC
+maintainers (subsystem seems abandoned) and taking into consideration
+removal of such macro back in 2011 I'll probably replace nfc_* by dev_*
+in the driver.
 
-> At least, the suspend problem seems to be clearly related to some
-> path only used if CONFIG_IWLWIFI_PCIE_RTPM is on. 
+>    Cyclomatic Complexity 5 include/linux/compiler.h:__write_once_size
+>    Cyclomatic Complexity 1 include/uapi/linux/swab.h:__swab16p
+>    Cyclomatic Complexity 1 include/uapi/linux/swab.h:__swab32p
+>    Cyclomatic Complexity 1
+> include/uapi/linux/byteorder/little_endian.h:__be32_to_cpup
+>    Cyclomatic Complexity 1
+> include/uapi/linux/byteorder/little_endian.h:__be16_to_cpup
+>    Cyclomatic Complexity 1 include/linux/list.h:INIT_LIST_HEAD
+>    Cyclomatic Complexity 1 include/linux/err.h:PTR_ERR
+>    Cyclomatic Complexity 1 include/linux/workqueue.h:__init_work
+>    Cyclomatic Complexity 1 include/linux/device.h:dev_get_drvdata
+>    Cyclomatic Complexity 1 include/linux/device.h:dev_set_drvdata
+>    Cyclomatic Complexity 1 include/linux/i2c.h:i2c_get_clientdata
+>    Cyclomatic Complexity 1 include/linux/i2c.h:i2c_set_clientdata
+>    Cyclomatic Complexity 1 include/linux/i2c.h:i2c_get_functionality
+>    Cyclomatic Complexity 1 include/linux/i2c.h:i2c_check_functionality
+>    Cyclomatic Complexity 2
+> include/linux/acpi.h:acpi_dev_remove_driver_gpios
+>    Cyclomatic Complexity 1
+> include/linux/unaligned/access_ok.h:get_unaligned_be16
+>    Cyclomatic Complexity 1
+> include/linux/unaligned/access_ok.h:get_unaligned_be32
+>    Cyclomatic Complexity 1
+> include/linux/unaligned/access_ok.h:put_unaligned_be16
+>    Cyclomatic Complexity 3 include/linux/err.h:IS_ERR_OR_NULL
+>    Cyclomatic Complexity 3 include/acpi/acpi_bus.h:is_acpi_device_node
+>    Cyclomatic Complexity 2 include/acpi/acpi_bus.h:to_acpi_device_node
+>    Cyclomatic Complexity 1 include/linux/err.h:IS_ERR
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_disable
+>    Cyclomatic Complexity 2
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_work_complete
+>    Cyclomatic Complexity 4
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_remove
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_enable_mode
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_enable
+>    Cyclomatic Complexity 1 include/linux/workqueue.h:queue_work
+>    Cyclomatic Complexity 1 include/linux/workqueue.h:schedule_work
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_download
+>    Cyclomatic Complexity 3 drivers/nfc/pn544/i2c.c:check_crc
+>    Cyclomatic Complexity 3
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_check_cmd
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_add_len_crc
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_remove_len_crc
+>    Cyclomatic Complexity 6 drivers/nfc/pn544/i2c.c:pn544_hci_i2c_write
+>    Cyclomatic Complexity 16
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_read_status
+>    Cyclomatic Complexity 1 include/linux/skbuff.h:alloc_skb
+>    Cyclomatic Complexity 8 drivers/nfc/pn544/i2c.c:pn544_hci_i2c_read
+>    Cyclomatic Complexity 11
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_irq_thread_fn
+>    Cyclomatic Complexity 4
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_write_cmd
+>    Cyclomatic Complexity 2
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_write_chunk
+>    Cyclomatic Complexity 4
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_secure_write_frame_cmd
+>    Cyclomatic Complexity 9
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_secure_write_frame
+>    Cyclomatic Complexity 23
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_fw_work
+>    Cyclomatic Complexity 1 include/linux/device.h:devm_kzalloc
+>    Cyclomatic Complexity 6
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_platform_init
+>    Cyclomatic Complexity 10
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_probe
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_driver_init
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:pn544_hci_i2c_driver_exit
+>    Cyclomatic Complexity 1
+> drivers/nfc/pn544/i2c.c:_GLOBAL__sub_I_65535_0_i2c.c
+>    cc1: some warnings being treated as errors
+> 
+> vim +/nfc_dbg +910 drivers/nfc/pn544/i2c.c
+> 
+>    904	
+>    905		phy->i2c_dev = client;
+>    906		i2c_set_clientdata(client, phy);
+>    907	
+>    908		r =
+> acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
+>    909		if (r)
+>  > 910			nfc_dbg(dev, "Unable to add GPIO mapping
+> table\n");
+>    911	
+>    912		/* Get EN GPIO */
+>    913		phy->gpiod_en = devm_gpiod_get(dev, "enable",
+> GPIOD_OUT_LOW);
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology
+> Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel
+> Corporation
 
-Would you mind filing a bug on bugzilla.kernel.org (and adding linuxwif
-i@intel.com as the assignee or at least in Cc)? I think we really ought
-to sort out the issues with the RTPM stuff.
-
-johannes
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
