@@ -1,103 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56156 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965834AbdCXSwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 14:52:04 -0400
-Message-ID: <1490381507.9586.1.camel@sipsolutions.net> (sfid-20170324_195255_193872_3E6F362B)
-Subject: Re: deadlock in synchronize_srcu() in debugfs?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: paulmck@linux.vnet.ibm.com
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-        Nicolai Stange <nicstange@gmail.com>,
-        gregkh <gregkh@linuxfoundation.org>, sharon.dvir@intel.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 24 Mar 2017 19:51:47 +0100
-In-Reply-To: <20170324174542.GH3637@linux.vnet.ibm.com>
-References: <1490280886.2766.4.camel@sipsolutions.net>
-         <1490282991.2766.7.camel@sipsolutions.net>
-         <1490345799.2766.15.camel@sipsolutions.net>
-         <1490347486.2766.17.camel@sipsolutions.net>
-         <20170324174542.GH3637@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from [195.159.176.226] ([195.159.176.226]:51436 "EHLO
+        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S936370AbdCYBkp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Mar 2017 21:40:45 -0400
+Received: from list by blaine.gmane.org with local (Exim 4.84_2)
+        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
+        id 1cragW-0002Zo-A6
+        for linux-wireless@vger.kernel.org; Sat, 25 Mar 2017 02:40:04 +0100
+To: linux-wireless@vger.kernel.org
+From: Dennis New <dennisn@dennisn.mooo.com>
+Subject: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
+Date: Fri, 24 Mar 2017 21:32:37 -0400
+Message-ID: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com> (sfid-20170325_024055_755712_8E7A9C9D)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ever since I upgraded to the 4.10 kernels (I don't think this behavior
+existed in the 4.8 series), after I startup my laptop (either from cold
+boot, or from standby), my wlan0 interface keeps deauthenticating
 
-> Yes.  CPU2 has a pre-existing reader that CPU1's synchronize_srcu()
-> must wait for.  But CPU2's reader cannot end until CPU1 releases
-> its lock, which it cannot do until after CPU2's reader ends.  Thus,
-> as you say, deadlock.
-> 
-> The rule is that if you are within any kind of RCU read-side critical
-> section, you cannot directly or indirectly wait for a grace period
-> from that same RCU flavor.
+19:24:29 kernel: wlan0: deauthenticating from 00:11:22:33:44:55 by
+local choice (Reason: 3=DEAUTH_LEAVING)
 
-Right. This is indirect then, in a way.
+usually exactly 60 seconds after it authenticates/associates (to my
+open wifi access point), but not always 60 seconds after -- sometimes
+it happens in less than 60 seconds. Although, if it somehow manages to
+pass the 60 second mark without deauthenticating, it remains stable --
+unless I decide to /etc/init.d/net.wlan0 restart it :s. I'm not sure
+what makes makes the deauthentications suddenly stop, but after various
+incantations and module unloading/reloading and a fair amount of
+cursing, or possibly just waiting some random amount of time, the
+problem goes away for the day ... and returns the next day when I boot
+up again, and I have to go through this torturous process all over
+again, of praying and restarting my wlan0 interface.
 
-> There are some challenges, though.  This is OK:
-> 
->	CPU1				CPU2
->	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
->	mutex_lock(&my_lock);		i = srcu_read_lock(&mysrcu);
->	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
->	mutex_unlock(&my_lock);		srcu_read_unlock(&mysrcu, i);
-> 
-> 	CPU3
-> 	synchronize_srcu(&mylock);
-> 
-> This could be a deadlock for reader-writer locking, but not for SRCU.
+Here's a snippet of my messages log, of the usual 60 second deauth:
 
-Hmm, yes, that's a good point. If srcu_read_lock() was read_lock, and
-synchronize_srcu() was write_lock(), then the write_lock() could stop
-CPU2's read_lock() from acquiring the lock, and thus cause a deadlock.
+...
+19:23:29 kernel: wlan0: authenticate with 00:11:22:33:44:55
+19:23:29 kernel: ------------[ cut here ]------------
+19:23:29 kernel: WARNING: CPU: 0 PID: 18925 at net/mac80211/mlme.c:287 ieee80211_determine_chantype+0x12e/0x380
+19:23:29 kernel: Modules linked in: b43 [last unloaded: b43]
+19:23:29 kernel: Hardware name: Acer, inc. Ferrari 4000
+19:23:29 kernel: Call Trace:
+19:23:29 kernel:  ? __warn+0xdd/0x100
+19:23:29 kernel:  ? ieee80211_determine_chantype+0x12e/0x380
+19:23:29 kernel:  ? ieee80211_prep_connection+0x121/0x8a0
+19:23:29 kernel:  ? printk+0x42/0x4a
+19:23:29 kernel:  ? ieee80211_mgd_auth+0x247/0x3a0
+19:23:29 kernel:  ? cfg80211_get_bss+0x1bb/0x230
+19:23:29 kernel:  ? cfg80211_mlme_auth+0x11a/0x180
+19:23:29 kernel:  ? nl80211_authenticate+0x2e2/0x340
+19:23:29 kernel:  ? genl_family_rcv_msg+0x196/0x390
+19:23:29 kernel:  ? genl_rcv_msg+0x3e/0x90
+19:23:29 kernel:  ? genl_family_rcv_msg+0x390/0x390
+19:23:29 kernel:  ? netlink_rcv_skb+0x8f/0xb0
+19:23:29 kernel:  ? genl_rcv+0x1f/0x30
+19:23:29 kernel:  ? netlink_unicast+0x12f/0x1d0
+19:23:29 kernel:  ? netlink_sendmsg+0x2e1/0x380
+19:23:29 kernel:  ? rw_copy_check_uvector+0x51/0x100
+19:23:29 kernel:  ? sock_sendmsg+0xe/0x20
+19:23:29 kernel:  ? ___sys_sendmsg+0x26b/0x280
+19:23:29 kernel:  ? core_sys_select+0x232/0x320
+19:23:29 kernel:  ? _copy_to_user+0x25/0x30
+19:23:29 kernel:  ? sock_getsockopt+0x10d/0x720
+19:23:29 kernel:  ? unix_ioctl+0x43/0x50
+19:23:29 kernel:  ? sock_do_ioctl.constprop.17+0x19/0x60
+19:23:29 kernel:  ? sock_ioctl+0x1dd/0x2b0
+19:23:29 kernel:  ? __sys_sendmsg+0x47/0x80
+19:23:29 kernel:  ? entry_SYSCALL_64_fastpath+0x13/0x93
+19:23:29 kernel: ---[ end trace 17d46d9355f2a966 ]---
+19:23:29 kernel: wlan0: send auth to 00:11:22:33:44:55 (try 1/3)
+19:23:29 kernel: wlan0: authenticated
+19:23:29 kernel: wlan0: associate with 00:11:22:33:44:55 (try 1/3)
+19:23:29 kernel: wlan0: RX AssocResp from 00:11:22:33:44:55 (capab=0x401 status=0 aid=1)
+19:23:29 kernel: wlan0: associated
 
-However, I'm not convinced that lockdep handles reader/writer locks
-correctly to start with, right now, since it *didn't* actually trigger
-any warnings when I annotated SRCU as a reader/writer lock.
+19:24:29 kernel: wlan0: deauthenticating from 00:11:22:33:44:55 by local choice (Reason: 3=DEAUTH_LEAVING)
+19:24:30 kernel: wlan0: authenticate with 00:11:22:33:44:55
+19:24:30 kernel: ------------[ cut here ]------------
+19:24:30 kernel: WARNING: CPU: 0 PID: 18925 at net/mac80211/mlme.c:287 ieee80211_determine_chantype+0x12e/0x380
+19:24:30 kernel: Modules linked in: b43 [last unloaded: b43]
+19:24:30 kernel: Hardware name: Acer, inc. Ferrari 4000
+19:24:30 kernel: Call Trace:
+19:24:30 kernel:  ? __warn+0xdd/0x100
+19:24:30 kernel:  ? ieee80211_determine_chantype+0x12e/0x380
+19:24:30 kernel:  ? ieee80211_prep_connection+0x121/0x8a0
+19:24:30 kernel:  ? printk+0x42/0x4a
+19:24:30 kernel:  ? ieee80211_mgd_auth+0x247/0x3a0
+19:24:30 kernel:  ? cfg80211_get_bss+0x1bb/0x230
+19:24:30 kernel:  ? cfg80211_mlme_auth+0x11a/0x180
+19:24:30 kernel:  ? nl80211_authenticate+0x2e2/0x340
+19:24:30 kernel:  ? genl_family_rcv_msg+0x196/0x390
+19:24:30 kernel:  ? genl_rcv_msg+0x3e/0x90
+19:24:30 kernel:  ? genl_family_rcv_msg+0x390/0x390
+19:24:30 kernel:  ? netlink_rcv_skb+0x8f/0xb0
+19:24:30 kernel:  ? genl_rcv+0x1f/0x30
+19:24:30 kernel:  ? netlink_unicast+0x12f/0x1d0
+19:24:30 kernel:  ? netlink_sendmsg+0x2e1/0x380
+19:24:30 kernel:  ? rw_copy_check_uvector+0x51/0x100
+19:24:30 kernel:  ? sock_sendmsg+0xe/0x20
+19:24:30 kernel:  ? ___sys_sendmsg+0x26b/0x280
+19:24:30 kernel:  ? core_sys_select+0x232/0x320
+19:24:30 kernel:  ? _copy_to_user+0x25/0x30
+19:24:30 kernel:  ? sock_getsockopt+0x10d/0x720
+19:24:30 kernel:  ? unix_ioctl+0x43/0x50
+19:24:30 kernel:  ? sock_do_ioctl.constprop.17+0x19/0x60
+19:24:30 kernel:  ? sock_ioctl+0x1dd/0x2b0
+19:24:30 kernel:  ? _copy_to_user+0x25/0x30
+19:24:30 kernel:  ? __sys_sendmsg+0x47/0x80
+19:24:30 kernel:  ? entry_SYSCALL_64_fastpath+0x13/0x93
+19:24:30 kernel: ---[ end trace 17d46d9355f2a967 ]---
+19:24:30 kernel: wlan0: send auth to 00:11:22:33:44:55 (try 1/3)
+19:24:30 kernel: wlan0: authenticated
+19:24:30 kernel: wlan0: associate with 00:11:22:33:44:55 (try 1/3)
+19:24:30 kernel: wlan0: RX AssocResp from 00:11:22:33:44:55 (capab=0x401 status=0 aid=1)
+19:24:30 kernel: wlan0: associated
 
-> This is also OK:
->	CPU1				CPU2
->	i = srcu_read_lock(&mysrcu);	mutex_lock(&my_lock);
->	mutex_lock(&my_lock);		synchronize_srcu(&yoursrc
-u);
->	srcu_read_unlock(&mysrcu, i);	mutex_unlock(&my_lock);
->	mutex_unlock(&my_lock);
-> 
-> Here CPU1's read-side critical sections are for mysrcu, which is
-> independent of CPU2's grace period for yoursrcu.
-
-Right, but that's already covered by having separate a lockdep_map for
-each SRCU subsystem (mysrcu, yoursrcu).
-
-> So you could flag any lockdep cycle that contained a reader and a
-> synchronous grace period for the same flavor of RCU, where for SRCU
-> the identity of the srcu_struct structure is part of the flavor.
-
-Right. Basically, I think SRCU should be like a reader/writer lock
-(perhaps fixed to work right). The only difference seems to be the
-scenario you outlined above (first of the two)?
-
-Actually, given the scenario above, for lockdep purposes the
-reader/writer lock is actually the same as a recursive lock, I guess?
-
-You outlined a scenario in which the reader gets blocked due to a
-writer (CPU3 doing a write_lock()) so the reader can still participate
-in a deadlock cycle since it can - without any other locks being held
-by CPU3 that participate - cause a deadlock between CPU1 and CPU2 here.
-For lockdep then, even seeing the CPU1 and CPU2 scenarios should be
-sufficient to flag a deadlock (*).
-
-This part then isn't true for SRCU, because there forward progress will
-still be made. So for SRCU, the "reader" side really needs to be
-connected with a "writer" side to form a deadlock cycle, unlike for a
-reader/writer lock.
-
-johannes
-
-(*) technically only after checking that write_lock() is ever used, but
-... seems reasonable enough to assume that it will be used, since why
-would anyone ever use a reader/writer lock if there are only readers?
-That's a no-op.
+19:25:30 kernel: wlan0: deauthenticating from 00:11:22:33:44:55 by local choice (Reason: 3=DEAUTH_LEAVING)
+...
