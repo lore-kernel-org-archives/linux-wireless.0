@@ -1,231 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.161.174]:33127 "EHLO
-        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752082AbdCCSwK (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:47222 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751306AbdCYHZI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 13:52:10 -0500
-Received: by mail-yw0-f174.google.com with SMTP id s15so63811311ywg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 10:51:57 -0800 (PST)
+        Sat, 25 Mar 2017 03:25:08 -0400
+To: Christian Lamparter <chunkeey@googlemail.com>
+References: <3243718.FYinmXYgr7@debian64>
+ <4960795b-028f-27b1-8bdf-6c9fb2242f5f@dd-wrt.com>
+ <3143301.IOZImBPhRt@debian64>
+Cc: ath10k@lists.infradead.org,
+        ath10k-devel <ath10k-devel@qca.qualcomm.com>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        "linux-wireless (linux-wireless@vger.kernel.org)"
+        <linux-wireless@vger.kernel.org>, hannu.nyman@iki.fi,
+        Adrian Chadd <adrian@freebsd.org>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <20d2aa5c-c0a6-f14b-9694-4e4384299d25@dd-wrt.com> (sfid-20170325_082517_929826_ED1EF208)
+Date: Sat, 25 Mar 2017 08:24:59 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170303063833.20466-1-zajec5@gmail.com>
-References: <20170227124251.30338-1-zajec5@gmail.com> <20170303063833.20466-1-zajec5@gmail.com>
-From: Franky Lin <franky.lin@broadcom.com>
-Date: Fri, 3 Mar 2017 10:51:36 -0800
-Message-ID: <CA+8PC_e+zkdRCbSs+xo_ar=O5kn7ekPVTLh0jRjcvuU_1nTP9Q@mail.gmail.com> (sfid-20170303_195259_091503_E5ACB3FD)
-Subject: Re: [PATCH 4.12 V2] brcmfmac: move brcmf_txcomplete function to fwsignal.c
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <3143301.IOZImBPhRt@debian64>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: QCA9984 bmi identification failure
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafal,
+Am 24.03.2017 um 16:01 schrieb Christian Lamparter:
+> On Friday, March 24, 2017 11:09:03 AM CET Sebastian Gottschall wrote:
+>> i have a r7800 running. consider to use the board.bin file which is
+>> stored in flash memory of the r7800.
+> Well, this is a bit beside the point. But what makes you think that
+> what is stored in the flash memory of R7800 is the "board.bin"?
+i dont know how to answer this question without getting rude. i'm 
+developing dd-wrt which is a alternate firmware like lede/openwrt for 
+many hundrets of different routers.this is my job since more than 10 years.
+so my primary job is reverse engineering all the vendor stuff they wont 
+tell you in a easy way but on the other hands vendors do also share such 
+informations with me if i kindly ask them
+the board.bin has a specific file format this can be easily detected. 
+the flash memory contains 2 board.bin files, for each of the both cards.
+since the mtd partition where this all is stored is named art there is 
+also another indicator. you may not know it, but the name of the 
+qca/atheros calibration software is "art".
 
-On Thu, Mar 2, 2017 at 10:38 PM, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>=
- wrote:
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> I know that Netgear provided a myriad of different board data files
+> with in there GPL drop:
+you can ignore them. use the files stored in flash memory. this board 
+data is the calibration data which is different for each device you buy. 
+its precalibrated and stored in flash memory.
+a normal wifi card has a own eeprom on it which stores this data. but on 
+embedded devices the routers own flash memory is used for storing this data.
+this case is mainly ignored by drivers like ath10k, so patches are 
+required right now until ath10k does officially support these conditions
+> Here's a link:
+> <https://github.com/paul-chambers/netgear-r7800/tree/master/git_home/madwifi-11n.git/halphy_tools/host/eepromUtil/release_qca9984/hw1>
+i know the gpl tree
+> So, does the data in your flash matches any of those files 1:1 or not?
+nope. these files are just default files shipped with the driver by qca
+> (Note: From what I know, it's the caldata that's in the flash.
+> caldata ≈ cal+board. But I'm asking why ath10k's bmi identification
+> isn't working for those chips right now. And judging from your logs,
+> you are using probably a similar WA to the
+> 936-ath10k_skip_otp_check.patch out of necessity as well.)
+the board.bin is the caldata and configuration set for the card.
+the skip otp check patch is required in any way since the cards has no 
+on board eeprom
+if bmi identification fails, the api 1 board-2.bin file is loaded as 
+alternate variant and this is exactly the data which is stored in flash 
+memory.
+>> there are 2 stored for both cards. you need to patch ath10k to use
+>> different board.bin files for each card.
+> Exactly. Why do you (or anyone for that matter) need to patch ath10k?
+> The driver is supposed to support the QCA9984 out of the box, right?
+it is supposed, but thats not the case. ath10k mainly supports cards 
+with own on board eeprom.
+embedded routers can be very specific and nonstandard, so customizations 
+are required sometimes.
+you may not like it, but i know this device very well and also others. 
+consider how the skip otp patch was created.
+its a workaround which is only required for routers.
+> And I know, that the bmi identification is supposed to work, as
+> somebody posted the following log:
+> <http://lists.infradead.org/pipermail/lede-dev/2016-December/004987.html>
 >
-> This function is called by USB and SDIO only, both using BCDC & FW
-> Signalling. Move it out of core.c to make this file more generic and
-> allow making fwsignal optional in the future.
+> [  379.392210] ath10k_pci 0002:01:00.0: boot upload otp to 0x1234 len 9000 for board id
+> [  379.399945] ath10k_pci 0002:01:00.0: bmi fast download address 0x1234 buffer 0xe1676038 length 9000
+> [  379.408977] ath10k_pci 0002:01:00.0: bmi lz stream start address 0x1234
+> [  379.415603] ath10k_pci 0002:01:00.0: bmi lz data buffer 0xe1676038 length 9000
+> [  379.451626] ath10k_pci 0002:01:00.0: bmi lz stream start address 0x0
+> [  379.457985] ath10k_pci 0002:01:00.0: bmi execute address 0x1234 param 0x10
+> [  380.857006] ath10k_pci 0002:01:00.0: bmi execute result 0x400
+> [  380.862749] ath10k_pci 0002:01:00.0: boot get otp board id result 0x00000400 board_id 1 chip_id 0
+> [  380.871603] ath10k_pci 0002:01:00.0: boot using board name 'bus=pci,bmi-chip-id=0,bmi-board-id=1'
+> [  380.880468] ath10k_pci 0002:01:00.0: board name
+> [  380.884999] ath10k_pci 0002:01:00.0: 00000000: 62 75 73 3d 70 63 69 2c 62 6d 69 2d 63 68 69 70  bus=pci,bmi-chip
+> [  380.895159] ath10k_pci 0002:01:00.0: 00000010: 2d 69 64 3d 30 2c 62 6d 69 2d 62 6f 61 72 64 2d  -id=0,bmi-board-
+> [  380.905317] ath10k_pci 0002:01:00.0: 00000020: 69 64 3d 31                                      id=1
+> [  380.914436] ath10k_pci 0002:01:00.0: boot found match for name 'bus=pci,bmi-chip-id=0,bmi-board-id=1'
+> [  380.923640] ath10k_pci 0002:01:00.0: boot found board data for 'bus=pci,bmi-chip-id=0,bmi-board-id=1'
+> [  380.932845] ath10k_pci 0002:01:00.0: using board api 2
+> ...
+>
+> The board name for the QCA9984 is supposed to look like
+> "'bus=pci,bmi-chip-id=0,bmi-board-id=1'"
+>
+> and not like (from your log):
+sure. you can load wrong board data into your card this may result in 
+the following situation a 5 ghz card is shown as 2.4 ghz card and vice 
+versa or even dualband also if the card is not supporting this. this may 
+not be the case on the r7800 but i know another device where this is the 
+bevaviour. power calibration set is wrong in any way so output power may 
+be lower as expected.
+and the resulting operation state will not work in best way. lede does 
+not support this device in correct way.
+wrong board data can also destroy the hardware. this may not happen 
+fast, but using wrong power calibration data may destroy the phy over 
+time by overheating
 
-Same with the brcmf_txflowblock patch, it would be better to wrap
-fwsignal in bcdc
-as a protocol feature. I am preparing a train to do that for these two
-functions along
-with others. Hopefully we will post them next week after internal review.
+take a look on your router. especially on mtd3
+mtd3: 00140000 00020000 "art"
 
-Again, sorry for the stall on this.
+dump this partition and take a look inside and take a guess what you 
+will find. offset 0x1000 is first board data. offset 0x5000 is second 
+board data
+this is common for almost all wireless routers on the market. i dont 
+know a single router with a qca or atheros chipset on the market which 
+does not have stored the board data in flash memory
 
-Thanks,
-Franky
 
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> ---
-> V2: Make code with this patch compile when not based on top of (to be dro=
-pped)
-> [PATCH 4.12] brcmfmac: get rid of brcmf_txflowblock helper function
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  3 ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/core.c    | 18 ------------=
-------
->  .../wireless/broadcom/brcm80211/brcmfmac/fwsignal.c    | 18 ++++++++++++=
-++++++
->  .../wireless/broadcom/brcm80211/brcmfmac/fwsignal.h    |  9 +++++++++
->  .../net/wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  3 ++-
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  3 ++-
->  6 files changed, 31 insertions(+), 23 deletions(-)
+>> bus=pci,vendor=168c,device=0046,subsystem-vendor=168c,subsystem-device=cafe
+>> from ath10k/QCA9984/hw1.0/board-2.bin
+>> the failed to fetch board data error is normal.
+> I don't think it is. I think it's a regression.
+ahm no. you dont know what you're dealing with.
 >
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-> index 76693df34742..059e40fdc3d5 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-> @@ -232,9 +232,6 @@ void brcmf_dev_reset(struct device *dev);
->  /* Indication from bus module to change flow-control state */
->  void brcmf_txflowblock(struct device *dev, bool state);
+> Thanks,
+> Christian
 >
-> -/* Notify the bus has transferred the tx packet to firmware */
-> -void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool succ=
-ess);
-> -
->  /* Configure the "global" bus state used by upper layers */
->  void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state =
-state);
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/dr=
-ivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> index 2f2f3a5ad86a..45ed24049b37 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -393,24 +393,6 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct s=
-k_buff *txp, bool success)
->         brcmu_pkt_buf_free_skb(txp);
->  }
->
-> -void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool succ=
-ess)
-> -{
-> -       struct brcmf_bus *bus_if =3D dev_get_drvdata(dev);
-> -       struct brcmf_pub *drvr =3D bus_if->drvr;
-> -       struct brcmf_if *ifp;
-> -
-> -       /* await txstatus signal for firmware if active */
-> -       if (brcmf_fws_fc_active(drvr->fws)) {
-> -               if (!success)
-> -                       brcmf_fws_bustxfail(drvr->fws, txp);
-> -       } else {
-> -               if (brcmf_proto_hdrpull(drvr, false, txp, &ifp))
-> -                       brcmu_pkt_buf_free_skb(txp);
-> -               else
-> -                       brcmf_txfinalize(ifp, txp, success);
-> -       }
-> -}
-> -
->  static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
->                                     struct ethtool_drvinfo *info)
->  {
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c =
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-> index 5f1a5929cb30..07f0b3cfd59c 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-> @@ -2445,6 +2445,24 @@ bool brcmf_fws_fc_active(struct brcmf_fws_info *fw=
-s)
->         return fws->fcmode !=3D BRCMF_FWS_FCMODE_NONE;
->  }
->
-> +void brcmf_fws_txcomplete(struct device *dev, struct sk_buff *txp, bool =
-success)
-> +{
-> +       struct brcmf_bus *bus_if =3D dev_get_drvdata(dev);
-> +       struct brcmf_pub *drvr =3D bus_if->drvr;
-> +       struct brcmf_if *ifp;
-> +
-> +       /* await txstatus signal for firmware if active */
-> +       if (brcmf_fws_fc_active(drvr->fws)) {
-> +               if (!success)
-> +                       brcmf_fws_bustxfail(drvr->fws, txp);
-> +       } else {
-> +               if (brcmf_proto_hdrpull(drvr, false, txp, &ifp))
-> +                       brcmu_pkt_buf_free_skb(txp);
-> +               else
-> +                       brcmf_txfinalize(ifp, txp, success);
-> +       }
-> +}
-> +
->  void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb=
-)
->  {
->         u32 hslot;
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h =
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-> index 96df66073b2a..d534164785de 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-> @@ -18,6 +18,10 @@
->  #ifndef FWSIGNAL_H_
->  #define FWSIGNAL_H_
->
-> +struct brcmf_fws_info;
-> +struct brcmf_if;
-> +struct brcmf_pub;
-> +
->  int brcmf_fws_init(struct brcmf_pub *drvr);
->  void brcmf_fws_deinit(struct brcmf_pub *drvr);
->  bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws);
-> @@ -28,6 +32,11 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct=
- sk_buff *skb);
->  void brcmf_fws_reset_interface(struct brcmf_if *ifp);
->  void brcmf_fws_add_interface(struct brcmf_if *ifp);
->  void brcmf_fws_del_interface(struct brcmf_if *ifp);
-> +
-> +/* Notify the bus has transferred the tx packet to firmware */
-> +void brcmf_fws_txcomplete(struct device *dev, struct sk_buff *txp,
-> +                         bool success);
-> +
->  void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb=
-);
->  void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked);
->  void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb);
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/dr=
-ivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index c5744b45ec8f..22d21643ed8c 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -42,6 +42,7 @@
->  #include "sdio.h"
->  #include "chip.h"
->  #include "firmware.h"
-> +#include "fwsignal.h"
->  #include "core.h"
->  #include "common.h"
->
-> @@ -2265,7 +2266,7 @@ static int brcmf_sdio_txpkt(struct brcmf_sdio *bus,=
- struct sk_buff_head *pktq,
->                 bus->tx_seq =3D (bus->tx_seq + pktq->qlen) % SDPCM_SEQ_WR=
-AP;
->         skb_queue_walk_safe(pktq, pkt_next, tmp) {
->                 __skb_unlink(pkt_next, pktq);
-> -               brcmf_txcomplete(bus->sdiodev->dev, pkt_next, ret =3D=3D =
-0);
-> +               brcmf_fws_txcomplete(bus->sdiodev->dev, pkt_next, ret =3D=
-=3D 0);
->         }
->         return ret;
->  }
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> index d93ebbdc7737..676c28081dc5 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> @@ -26,6 +26,7 @@
->  #include "bus.h"
->  #include "debug.h"
->  #include "firmware.h"
-> +#include "fwsignal.h"
->  #include "usb.h"
->  #include "core.h"
->  #include "common.h"
-> @@ -482,7 +483,7 @@ static void brcmf_usb_tx_complete(struct urb *urb)
->                   req->skb);
->         brcmf_usb_del_fromq(devinfo, req);
->
-> -       brcmf_txcomplete(devinfo->dev, req->skb, urb->status =3D=3D 0);
-> +       brcmf_fws_txcomplete(devinfo->dev, req->skb, urb->status =3D=3D 0=
-);
->         req->skb =3D NULL;
->         brcmf_usb_enq(devinfo, &devinfo->tx_freeq, req, &devinfo->tx_free=
-count);
->         spin_lock_irqsave(&devinfo->tx_flowblock_lock, flags);
-> --
-> 2.11.0
->
+
+
+-- 
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
