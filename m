@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50650 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932813AbdCWKkY (ORCPT
+Received: from [195.159.176.226] ([195.159.176.226]:36333 "EHLO
+        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1751454AbdCZRoB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2017 06:40:24 -0400
-Date: Thu, 23 Mar 2017 13:40:00 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Golan Ben-Ami <golan.ben.ami@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Ido Yariv <ido@wizery.com>, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] iwlwifi: mvm: writing zero bytes to debugfs causes a crash
-Message-ID: <20170323104000.GB20154@mwanda> (sfid-20170323_114032_193280_6FB7E507)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Sun, 26 Mar 2017 13:44:01 -0400
+Received: from list by blaine.gmane.org with local (Exim 4.84_2)
+        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
+        id 1csCCY-0001zT-Bo
+        for linux-wireless@vger.kernel.org; Sun, 26 Mar 2017 19:43:38 +0200
+To: linux-wireless@vger.kernel.org
+From: Dennis New <dennisn@dennisn.mooo.com>
+Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
+Date: Sun, 26 Mar 2017 13:43:24 -0400
+Message-ID: <20170326134324.046ad0d4cc3c7dd9da5c56b1@dennisn.mooo.com> (sfid-20170326_194526_880064_2594FB0D)
+References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
+        <77d7e7a0-b529-ad29-9584-da51c68a5917@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <77d7e7a0-b529-ad29-9584-da51c68a5917@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a static analysis fix.  The warning is:
+On Sun, 26 Mar 2017 11:00:12 -0500, Larry Finger wrote:
+> ...  provide information regarding what specific card you have. The
+> appropriate stanza from "lspci -nn" has that information.
+> 
+> I do not normally run a b43 wireless NIC, but I did pull out an
+> ancient laptop that uses the PCMCIA version of a BCM4318 with PCI ID
+> of 14e4:4318. Running kernel 4.10.0, I do see periodic drops. My
+> period is 120 sec and the drop is a reason 7, not reason 3 as you
+> see. Another difference is that I see the drops with kernel 4.8.0 as
+> well. With the earlier kernel, the drop period is closer to 60 sec,
+> but it is not as regular.
 
-	drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c:912 iwl_mvm_fw_dbg_collect()
-	warn: integer overflows 'sizeof(*desc) + len'
+Huh. I also have that BCM4318 card, but not PCMCIA.
 
-I guess this code is supposed to take a NUL character, but if we write
-zero bytes then it tries to write -1 characters and crashes.
+06:02.0 Network controller [0280]: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller [14e4:4318] (rev 02)
+        Subsystem: AMBIT Microsystem Corp. Aspire 3022WLMi, 5024WLMi, 5020 [1468:0311]
+        Flags: bus master, fast devsel, latency 64, IRQ 9
+        Memory at c0304000 (32-bit, non-prefetchable) [size=8K]
+        Kernel driver in use: b43-pci-bridge
 
-Fixes: c91b865cb14d ("iwlwifi: mvm: support description for user triggered fw dbg collection")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index a260cd503200..077bfd8f4c0c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1056,6 +1056,8 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
- 
- 	if (ret)
- 		return ret;
-+	if (count == 0)
-+		return 0;
- 
- 	iwl_mvm_fw_dbg_collect(mvm, FW_DBG_TRIGGER_USER, buf,
- 			       (count - 1), NULL);
+These past few days I seem to have had some "success" by simply
+putting a 60 second sleep in my bootup scripts before bringing up
+my wlan0 interface. (Ie. I haven't been getting any deauths after
+doing this.)
