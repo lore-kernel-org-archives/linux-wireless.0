@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:36364 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753429AbdC1F0p (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 01:26:45 -0400
-Received: by mail-pg0-f50.google.com with SMTP id g2so61245720pge.3
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 22:26:44 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Andy Gross <andy.gross@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Brown <david.brown@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>, linux-bluetooth@vger.kernel.org,
-        linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org
-Subject: [PATCH v2 3/3] soc: qcom: smd-rpm: Add msm8996 compatibility
-Date: Mon, 27 Mar 2017 22:26:35 -0700
-Message-Id: <20170328052635.26670-3-bjorn.andersson@linaro.org> (sfid-20170328_072903_202060_9EF508CB)
-In-Reply-To: <20170328052635.26670-1-bjorn.andersson@linaro.org>
-References: <20170328052635.26670-1-bjorn.andersson@linaro.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:46440 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751821AbdC0LSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Mar 2017 07:18:35 -0400
+Message-ID: <1490613502.3393.2.camel@sipsolutions.net> (sfid-20170327_131930_605582_01B720C7)
+Subject: Re: deadlock in synchronize_srcu() in debugfs?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: paulmck@linux.vnet.ibm.com
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+        Nicolai Stange <nicstange@gmail.com>,
+        gregkh <gregkh@linuxfoundation.org>, sharon.dvir@intel.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 27 Mar 2017 13:18:22 +0200
+In-Reply-To: <20170324202033.GA24098@linux.vnet.ibm.com>
+References: <1490280886.2766.4.camel@sipsolutions.net>
+         <1490282991.2766.7.camel@sipsolutions.net>
+         <1490345799.2766.15.camel@sipsolutions.net>
+         <1490347486.2766.17.camel@sipsolutions.net>
+         <20170324174542.GH3637@linux.vnet.ibm.com>
+         <1490381507.9586.1.camel@sipsolutions.net>
+         <20170324193322.GL3637@linux.vnet.ibm.com>
+         <20170324202033.GA24098@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the RPM driver transitioned to RPMSG we can reuse the SMD-RPM
-driver ontop of GLINK for 8996, without any modifications.
+On Fri, 2017-03-24 at 13:20 -0700, Paul E. McKenney wrote:
+> 
+> And I cannot resist adding this one:
+> 
+> 	CPU 1				CPU 2
+> 	i = srcu_read_lock(&s1);	mutex_lock(&l1);
+> 	mutex_lock(&l1);		synchronize_srcu(&s2);
+> 	mutex_unlock(&l1);		mutex_unlock(&l1);
+> 	srcu_read_unlock(&s1, i);
+> 
+> 	CPU 3				CPU 4
+> 	i = srcu_read_lock(&s2);	mutex_lock(&l2);
+> 	mutex_lock(&l2);		synchronize_srcu(&s1);
+> 	mutex_unlock(&l2);		mutex_unlock(&l2);
+> 	srcu_read_unlock(&s2, i);
+> 
+> Removing the SRCU statements from any of these CPU would break the
+> deadlock.  This can be easily extended to a deadlock cycle involving
+> any number of srcu_struct structures.
+> 
+> But this would still be a cycle involving an srcu_read_lock() and a
+> synchronize_srcu() on the same srcu_struct, which is reassuring.
 
-Acked-by: Andy Gross <andy.gross@linaro.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/soc/qcom/smd-rpm.c | 1 +
- 1 file changed, 1 insertion(+)
+Right, you can cycle this indefinitely. lockdep has some kind of
+maximum chain length I think. :)
 
-diff --git a/drivers/soc/qcom/smd-rpm.c b/drivers/soc/qcom/smd-rpm.c
-index 0dcf1bf33126..c2346752b3ea 100644
---- a/drivers/soc/qcom/smd-rpm.c
-+++ b/drivers/soc/qcom/smd-rpm.c
-@@ -225,6 +225,7 @@ static const struct of_device_id qcom_smd_rpm_of_match[] = {
- 	{ .compatible = "qcom,rpm-apq8084" },
- 	{ .compatible = "qcom,rpm-msm8916" },
- 	{ .compatible = "qcom,rpm-msm8974" },
-+	{ .compatible = "qcom,rpm-msm8996" },
- 	{}
- };
- MODULE_DEVICE_TABLE(of, qcom_smd_rpm_of_match);
--- 
-2.12.0
+johannes
