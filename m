@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48264 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752485AbdC2LA2 (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:33682 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751574AbdC0QLu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 07:00:28 -0400
-Message-ID: <1490785225.13345.8.camel@coelho.fi> (sfid-20170329_130244_272663_381B9D15)
-From: Luca Coelho <luca@coelho.fi>
-To: "Artem S. Tashkinov" <t.artem@lycos.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 29 Mar 2017 14:00:25 +0300
-In-Reply-To: <910ef9cb656db856dd78a919803860b8@lycos.com>
-References: <910ef9cb656db856dd78a919803860b8@lycos.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Please release/publish iwlwifi-7265D-26.ucode
- iwlwifi-7265D-25.ucode iwlwifi-7265D-24.ucode iwlwifi-7265D-23.ucode
+        Mon, 27 Mar 2017 12:11:50 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Alban <albeu@free.fr>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        John Crispin <john@phrozen.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        m@kresin.me
+Subject: Re: [PATCH 1/7] Documentation: dt: net: Update the ath9k binding for SoC devices
+Date: Mon, 27 Mar 2017 18:11:15 +0200
+Message-ID: <1897671.fKa4XTnU1K@debian64> (sfid-20170327_181609_860067_395AEC14)
+In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr>
+References: <1489439116-4233-1-git-send-email-albeu@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-03-27 at 16:53 +0500, Artem S. Tashkinov wrote:
-> Hi,
+On Monday, March 13, 2017 10:05:09 PM CEST Alban wrote:
+> The current binding only cover PCI devices so extend it for SoC devices.
 > 
-> New versions of iwlwifi require the firmware files which have never been 
-> released by Intel.
-> 
-> Please fix this bummer.
-> 
-> iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-7265D-26.ucode 
-> failed with error -2
-> iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-7265D-25.ucode 
-> failed with error -2
-> iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-7265D-24.ucode 
-> failed with error -2
-> iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-7265D-23.ucode 
-> failed with error -2
-> iwlwifi 0000:02:00.0: loaded firmware version 22.361476.0 op_mode iwlmvm
+> Most SoC platforms use an MTD partition for the calibration data
+> instead of an EEPROM. The qca,no-eeprom property was added to allow
+> loading the EEPROM content using firmware loading. This new binding
+> replace this hack with NVMEM cells, so we also mark the qca,no-eeprom
+> property as deprecated in case anyone ever used it.
 
-We always keep our mainline driver very close to our development trees. 
-In the development trees we are updating the versions periodically and
-we don't know which ones we are going to release publicly.
+Please don't mark "qca,no-eeprom" as deprecated then.
+If some devices geniously need to rely on userspace for extracting 
+and processing the calibration data, it should be stay a
+optional properties.
 
-If we don't try to load newer versions when a kernel version is
-released, and later decide to publish the newer firmware versions, it
-won't work.  This is the explanation. :)
+For example: A device that can't do easily without "qca,no-eeprom" is
+the AVM FRITZ!WLAN Repeater 300E. For this device, the caldata 
+is stored in the flash, however for whatever reason the vendor
+choose to "reverse" it. (like completely back to front, not byteswapped
+or something). So an extra "unreversing step" is required. So, it would
+require some sort of a special nvmem-provider-processor as an 
+alternative.
 
-And actually, we try to load these newer firmwares, but if they are not
-present, we fall back to the older one.  You can see that we correctly
-loaded version 22 (the last line in your traces).
+> Signed-off-by: Alban <albeu@free.fr>
+> ---
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+> index b7396c8..61f5f6d 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+> @@ -27,16 +27,34 @@ Required properties:
+>  			- 0034 for AR9462
+>  			- 0036 for AR9565
+>  			- 0037 for AR9485
+> +		For SoC devices the compatible should be "qca,<soctype>-wmac"
+> +		and one of the following fallbacks:
+> +			- "qca,ar9100-wmac"
+> +			- "qca,ar9330-wmac"
+> +			- "qca,ar9340-wmac"
+> +			- "qca,qca9550-wmac"
+> +			- "qca,qca9530-wmac"
+>  - reg: Address and length of the register set for the device.
+>  
+> +Required properties for SoC devices:
+> +- interrupt-parent: phandle of the parent interrupt controller.
+> +- interrupts: Interrupt specifier for the controllers interrupt.
+> +
+>  Optional properties:
+> +- mac-address: See ethernet.txt in the parent directory
+> +- local-mac-address: See ethernet.txt in the parent directory
+> +- clock-names: has to be "ref"
+> +- clocks: phandle of the reference clock
+> +- resets: phandle of the reset line
+> +- nvmem-cell-names: has to be "eeprom" and/or "address"
+> +- nvmem-cells: phandle to the eeprom nvmem cell and/or to the mac address
+> +		nvmem cell.
+> +
+> +Deprecated properties:
+>  - qca,no-eeprom: Indicates that there is no physical EEPROM connected to the
+>  			ath9k wireless chip (in this case the calibration /
+>  			EEPROM data will be loaded from userspace using the
+>  			kernel firmware loader).
+> -- mac-address: See ethernet.txt in the parent directory
+> -- local-mac-address: See ethernet.txt in the parent directory
+> -
+It sounds like you want to deprecate mac-address and local-mac-address as well.
+If so you sould add this to the commit as well. From my point of view, people
+mostly flat-out patched the eeprom-image if they wanted to set the mac-address.
+However, this was an extra step, if nvmem does away with it, I'm completely
+fine with deprecating these properties.
 
-Now, these error messages to look annoying.  But fortunately Luis
-Rodriguez is already attempting to fix that in another patch series.
-
-HTH.
-
---
-Cheers,
-Luca.
+Thanks,
+Christian
