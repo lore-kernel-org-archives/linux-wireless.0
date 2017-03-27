@@ -1,109 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f195.google.com ([209.85.217.195]:33329 "EHLO
-        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751595AbdCCJHA (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38741 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752176AbdC0NAC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 04:07:00 -0500
-Received: by mail-ua0-f195.google.com with SMTP id f54so13114380uaa.0
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Mar 2017 01:06:22 -0800 (PST)
+        Mon, 27 Mar 2017 09:00:02 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2RD00dY030119
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 06:00:00 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 29f247g8yy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 06:00:00 -0700
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v2] mwifiex: Support USB interrupt endpoint for command response/event
+Date: Mon, 27 Mar 2017 18:27:44 +0530
+Message-ID: <1490619464-14844-1-git-send-email-gbhat@marvell.com> (sfid-20170327_150018_939561_5D710F7B)
 MIME-Version: 1.0
-In-Reply-To: <04d7fcd5-52eb-760d-a74b-c93756321c9e@broadcom.com>
-References: <CANU0Mn0MbLW8JypG7_CFtAjeb6uY+EmBT-+sfu5y3=vKj6UYRA@mail.gmail.com>
- <20170225080233.GC4073@w1.fi> <CANU0Mn1pr6DMnAVKHEL63=8DU9CB=-srHzpmY166ZXmBKZs=uA@mail.gmail.com>
- <CANU0Mn17uPo15RrVF-rpTXi1zKwwfC+xuT-dDD0vn-QHZ1Ng6g@mail.gmail.com>
- <20170228222851.GA28908@w1.fi> <3a810235-736d-733a-b647-5b62fef5672f@broadcom.com>
- <CANU0Mn0yHhf+wjmTfo5-KPbqcWZMDOfs32ZWQndhftyQRFDBUw@mail.gmail.com> <04d7fcd5-52eb-760d-a74b-c93756321c9e@broadcom.com>
-From: ravin goyal <ravirocks1021@gmail.com>
-Date: Fri, 3 Mar 2017 10:32:58 +0530
-Message-ID: <CANU0Mn2kzZ8HXB_kvqtw+0QzCiSh++p6cA+GQmSZT90EHWDJPw@mail.gmail.com> (sfid-20170303_101025_808857_BAA94726)
-Subject: Re: Hostapd de-auth connected clients
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Jouni Malinen <j@w1.fi>,
-        wpa_supplicant <hostap@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, I think I need to mention the hardware specification
-I was first trying on banana pi m2+ which has WLAN chip AP6212(ampak)
-here is the link to it: http://linux-sunxi.org/Wifi#Ampak
-I tried both raspbian and debian jessie on it both distros has
-wireless driver bcmhd linked to the wifi chip.
-Both these distros has flaws in its wireless driver when it comes to
-run hostapd on it.
+USB firmware added support for sending command response/event through
+interrupt endpoint, to enhance RX throughput. Added corresponding changes
+required to support this feature. This change takes care of backward
+compatibility with older firmware.
 
-Then I tired on orange pi zero running debian jessie and its wifi
-chipset is XR819 and wlan driver is xradio_wlan
-http://linux-sunxi.org/Wifi#Allwinner
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+v2: Fixed typo in commit message
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 45 +++++++++++++++++++++++-------
+ drivers/net/wireless/marvell/mwifiex/usb.h |  4 +++
+ 2 files changed, 39 insertions(+), 10 deletions(-)
 
-This driver seems to be working fine with hostapd so far.
-I hope the confusion is clear now.
-
-Regards,
-Ravin
-
-On 2 March 2017 at 18:07, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> + linux-wireless
->
-> On 2-3-2017 10:28, ravin goyal wrote:
->> Hi Arend
->>
->> Thanks, I will certainly try with brcmfmac if you say so.
->> Currently I am testing hostapd on orange pi zero board running debian
->> jessie and its wlan driver is xradio_wlan and it is working fine.
->> I don't know why raspbian and debian have introduced bcmdhd for WLAN
->> in their distros.
->> I have filed bug on raspbian but received on response yet.
->
-> Now it gets confusing. From what I found xradio_wlan is for some
-> Allwinner flavor based on ST/Ericsson chipset with sdio id 0020:2281.
-> That would not be a device that bcmdhd would try to bind to.
->
-> Regards,
-> Arend
->
->> Regards
->> Ravin
->>
->> On 1 March 2017 at 18:59, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>> On 28-2-2017 23:28, Jouni Malinen wrote:
->>>> On Tue, Feb 28, 2017 at 04:06:48PM +0530, ravin goyal wrote:
->>>>> I am sharing link to recent debug log related to de-auth messages in
->>>>> hostapd, I hope it might help to figure out what's really happening
->>>>> and to know whether it is due to driver or hostapd.
->>>>>
->>>>> Please take a look at this.
->>>>>
->>>>> link to log file: https://clbin.com/0flGD
->>>>
->>>> It looks like number of the disconnections in the two logs are triggered
->>>> by station inactivity check:
->>>>
->>>> 1488275056.529235: wlan0: Station 00:73:8d:43:87:2e has been inactive too long: 308 sec, max allowed: 300
->>>> 1488275056.529389:   Polling STA
->>>> 1488275056.529457: nl80211: send_mlme - da= 00:73:8d:43:87:2e noack=0 freq=0 no_cck=0 offchanok=0 wait_time=0 fc=0x248 (WLAN_FC_STYPE_NULLFUNC) nlmode=3
->>>> 1488275056.529574: nl80211: Use bss->freq=2442
->>>> 1488275056.529634: nl80211: CMD_FRAME freq=2442 wait=0 no_cck=0 no_ack=0 offchanok=0
->>>> 1488275056.529711: CMD_FRAME - hexdump(len=24): 48 02 00 00 00 73 8d 43 87 2e 02 1a 11 f5 47 06 02 1a 11 f5 47 06 00 00
->>>> 1488275056.530129: nl80211: Frame command failed: ret=-22 (Invalid argument) (freq=2442 wait=0)
->>>> 1488275056.530231: nl80211_send_null_frame: Failed to send poll frame
->>>> 1488275056.530295: ap_handle_timer: register ap_handle_timer timeout for 00:73:8d:43:87:2e (1 seconds - AP_DISASSOC_DELAY)
->>>>
->>>>
->>>> This code should not have been triggered at all if the driver reported
->>>> activity in the expected way, so I'm assuming the driver does not
->>>> support that.. And then it does not support sending out the poll frame
->>>> to check whether the STA is still there.
->>>>
->>>> You might be able to work around this by setting a significantly larger
->>>> ap_max_inactivity value in hostapd.conf, but for a proper fix, someone
->>>> more familiar with the particular driver would need to take a look at
->>>> what's happening and why the driver does not indicate station activity.
->>>
->>> I would suggest trying brcmfmac instead of bcmdhd. The bcmdhd is
->>> specifically for Android and verification is done on Android targets.
->>> Not saying your problems will be gone, but at least you can ask me for help.
->>>
->>> Regards,
->>> Arend
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 9cf3334..2f7705c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -306,9 +306,17 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
+ 		}
+ 	}
+ 
+-	usb_fill_bulk_urb(ctx->urb, card->udev,
+-			  usb_rcvbulkpipe(card->udev, ctx->ep), ctx->skb->data,
+-			  size, mwifiex_usb_rx_complete, (void *)ctx);
++	if (card->rx_cmd_ep == ctx->ep &&
++	    card->rx_cmd_ep_type == USB_ENDPOINT_XFER_INT)
++		usb_fill_int_urb(ctx->urb, card->udev,
++				 usb_rcvintpipe(card->udev, ctx->ep),
++				 ctx->skb->data, size, mwifiex_usb_rx_complete,
++				 (void *)ctx, card->rx_cmd_interval);
++	else
++		usb_fill_bulk_urb(ctx->urb, card->udev,
++				  usb_rcvbulkpipe(card->udev, ctx->ep),
++				  ctx->skb->data, size, mwifiex_usb_rx_complete,
++				  (void *)ctx);
+ 
+ 	if (card->rx_cmd_ep == ctx->ep)
+ 		atomic_inc(&card->rx_cmd_urb_pending);
+@@ -424,10 +432,13 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 		epd = &iface_desc->endpoint[i].desc;
+ 		if (usb_endpoint_dir_in(epd) &&
+ 		    usb_endpoint_num(epd) == MWIFIEX_USB_EP_CMD_EVENT &&
+-		    usb_endpoint_xfer_bulk(epd)) {
+-			pr_debug("info: bulk IN: max pkt size: %d, addr: %d\n",
++		    (usb_endpoint_xfer_bulk(epd) ||
++		     usb_endpoint_xfer_int(epd))) {
++			card->rx_cmd_ep_type = usb_endpoint_type(epd);
++			card->rx_cmd_interval = epd->bInterval;
++			pr_debug("info: Rx CMD/EVT:: max pkt size: %d, addr: %d, ep_type: %d\n",
+ 				 le16_to_cpu(epd->wMaxPacketSize),
+-				 epd->bEndpointAddress);
++				 epd->bEndpointAddress, card->rx_cmd_ep_type);
+ 			card->rx_cmd_ep = usb_endpoint_num(epd);
+ 			atomic_set(&card->rx_cmd_urb_pending, 0);
+ 		}
+@@ -461,10 +472,16 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 		}
+ 		if (usb_endpoint_dir_out(epd) &&
+ 		    usb_endpoint_num(epd) == MWIFIEX_USB_EP_CMD_EVENT &&
+-		    usb_endpoint_xfer_bulk(epd)) {
++		    (usb_endpoint_xfer_bulk(epd) ||
++		     usb_endpoint_xfer_int(epd))) {
++			card->tx_cmd_ep_type = usb_endpoint_type(epd);
++			card->tx_cmd_interval = epd->bInterval;
+ 			pr_debug("info: bulk OUT: max pkt size: %d, addr: %d\n",
+ 				 le16_to_cpu(epd->wMaxPacketSize),
+ 				 epd->bEndpointAddress);
++			pr_debug("info: Tx CMD:: max pkt size: %d, addr: %d, ep_type: %d\n",
++				 le16_to_cpu(epd->wMaxPacketSize),
++				 epd->bEndpointAddress, card->tx_cmd_ep_type);
+ 			card->tx_cmd_ep = usb_endpoint_num(epd);
+ 			atomic_set(&card->tx_cmd_urb_pending, 0);
+ 			card->bulk_out_maxpktsize =
+@@ -884,9 +901,17 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 	context->skb = skb;
+ 	tx_urb = context->urb;
+ 
+-	usb_fill_bulk_urb(tx_urb, card->udev, usb_sndbulkpipe(card->udev, ep),
+-			  data, skb->len, mwifiex_usb_tx_complete,
+-			  (void *)context);
++	if (ep == card->tx_cmd_ep &&
++	    card->tx_cmd_ep_type == USB_ENDPOINT_XFER_INT)
++		usb_fill_int_urb(tx_urb, card->udev,
++				 usb_sndintpipe(card->udev, ep), data,
++				 skb->len, mwifiex_usb_tx_complete,
++				 (void *)context, card->tx_cmd_interval);
++	else
++		usb_fill_bulk_urb(tx_urb, card->udev,
++				  usb_sndbulkpipe(card->udev, ep), data,
++				  skb->len, mwifiex_usb_tx_complete,
++				  (void *)context);
+ 
+ 	tx_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
+index 16017ae..e36bd63 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.h
++++ b/drivers/net/wireless/marvell/mwifiex/usb.h
+@@ -90,6 +90,10 @@ struct usb_card_rec {
+ 	struct urb_context tx_cmd;
+ 	u8 mc_resync_flag;
+ 	struct usb_tx_data_port port[MWIFIEX_TX_DATA_PORT];
++	int rx_cmd_ep_type;
++	u8 rx_cmd_interval;
++	int tx_cmd_ep_type;
++	u8 tx_cmd_interval;
+ };
+ 
+ struct fw_header {
+-- 
+1.9.1
