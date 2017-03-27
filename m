@@ -1,57 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:33237 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752187AbdCJIGz (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33586 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751930AbdC0I07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 03:06:55 -0500
-Received: by mail-wm0-f52.google.com with SMTP id v203so1728362wmg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Mar 2017 00:06:30 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        robh+dt@kernel.org, mark.rutland@arm.com,
-        ext.waldemar.rymarkiewicz@tieto.com, kvalo@codeaurora.org,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 1/2] dt: bindings: add new dt entry for ath10k calibration variant
-Date: Fri, 10 Mar 2017 09:06:14 +0100
-Message-Id: <20170310080615.22958-1-sven.eckelmann@openmesh.com> (sfid-20170310_090736_398375_17450E8B)
+        Mon, 27 Mar 2017 04:26:59 -0400
+MIME-Version: 1.0
+From: Nathan Royce <nroycea+kernel@gmail.com>
+Date: Mon, 27 Mar 2017 03:26:38 -0500
+Message-ID: <CALaQ_hrEk5_iHQ7TPXe3+6LKDfuqXVfmYNGW3Jb0hqwnL4up-A@mail.gmail.com> (sfid-20170327_102742_647554_E84FFA91)
+Subject: ath: firmware panic! exccause: 0x0000000d
+To: linux-kernel@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The bus + bmi-chip-id + bmi-board-id is not enough to identify the correct
-board data file on QCA4019 based devices. Multiple different boards share
-the same values. Only the original reference designs can currently be
-identified and loaded from the board-2.bin. But these will not result in
-the correct calibration data when combined with the pre-calibration data
-from the device.
+I find that every time all of the cpu cores are being used, when
+compiling the kernel source for example, I end up losing my wireless
+adapter.
+It seems to be an old issue: https://bbs.archlinux.org/viewtopic.php?id=182173
 
-An additional "variant" information has to be provided (via SMBIOS or DT)
-to select the correct board data for a design which was modified by an ODM.
+ARM ODroid XU4
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
-Since RFC:
+$ uname -a
+Linux server 4.11.0-rc1-00315-g106e4da60209-dirty #1 SMP Sun Mar 12
+16:44:41 CDT 2017 armv7l GNU/Linux
 
- - Split patch in DT doc and ath10k part (thanks Christian Lamparter)
- - Remove the words "bmi-chip-id" and "bmi-board-id" and replace them with
-   more generic "device specific ids"
----
- Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 3 +++
- 1 file changed, 3 insertions(+)
+$ lsusb
+...
+Bus 003 Device 009: ID 0cf3:7015 Qualcomm Atheros Communications
+TP-Link TL-WN821N v3 / TL-WN822N v2 802.11n [Atheros A
+R7010+AR9287]
+...
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-index 74d7f0af209c..3d2a031217da 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-@@ -41,6 +41,9 @@ Optional properties:
- - qcom,msi_addr: MSI interrupt address.
- - qcom,msi_base: Base value to add before writing MSI data into
- 		MSI address register.
-+- qcom,ath10k-calibration-variant: string to search for in the board-2.bin
-+				   variant list with the same bus and device
-+				   specific ids
- - qcom,ath10k-calibration-data : calibration data + board specific data
- 				 as an array, the length can vary between
- 				 hw versions.
--- 
-2.11.0
+*****
+Mar 27 02:48:49 server kernel: usb 3-1.2.4: ath: firmware panic!
+exccause: 0x0000000d; pc: 0x0090ae81; badvaddr: 0x10ff4038
+Mar 27 02:48:49 server kernel: usb 3-1.2.4: USB disconnect, device number 7
+Mar 27 02:48:49 server kernel: ath: phy0: Chip reset failed
+Mar 27 02:48:49 server kernel: ath: phy0: Unable to reset channel
+(2442 Mhz) reset status -22
+Mar 27 02:48:49 server kernel: ath: phy0: Unable to set channel
+Mar 27 02:48:49 server kernel: ath: phy0: RX failed to go idle in 10
+ms RXSM=0x4ceb
+Mar 27 02:48:49 server kernel: ath: phy0: Failed to wakeup in 500us
+Mar 27 02:48:49 server kernel: ath: phy0: RX failed to go idle in 10
+ms RXSM=0x4ceb
+Mar 27 02:48:49 server kernel: ath: phy0: Failed to wakeup in 500us
+Mar 27 02:48:50 server kernel: br0: port 2(custom_wlan0) entered disabled state
+Mar 27 02:48:50 server audit: ANOM_PROMISCUOUS dev=custom_wlan0 prom=0
+old_prom=256 auid=4294967295 uid=0 gid=0 ses=4294967
+Mar 27 02:48:50 server kernel: device custom_wlan0 left promiscuous mode
+Mar 27 02:48:50 server kernel: br0: port 2(custom_wlan0) entered disabled state
+Mar 27 02:48:50 server hostapd[422]: custom_wlan0: AP-STA-DISCONNECTED
+<sanitized>
+Mar 27 02:48:50 server systemd-networkd[414]: custom_wlan0: Lost carrier
+Mar 27 02:48:50 server hostapd[422]: Failed to set beacon parameters
+Mar 27 02:48:50 server hostapd[422]: custom_wlan0: INTERFACE-DISABLED
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: ath9k_htc: USB layer deinitialized
+Mar 27 02:48:50 server systemd[1]: Starting Load/Save RF Kill Switch Status...
+-- Subject: Unit systemd-rfkill.service has begun start-up
+-- Defined-By: systemd
+-- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
+--
+-- Unit systemd-rfkill.service has begun starting up.
+Mar 27 02:48:50 server systemd[1]: Started Load/Save RF Kill Switch Status.
+-- Subject: Unit systemd-rfkill.service has finished start-up
+-- Defined-By: systemd
+-- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
+--
+-- Unit systemd-rfkill.service has finished starting up.
+--
+-- The start-up result is done.
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: new high-speed USB device
+number 9 using xhci-hcd
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: New USB device found,
+idVendor=0cf3, idProduct=7015
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: New USB device strings:
+Mfr=16, Product=32, SerialNumber=48
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: Product: USB WLAN
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: Manufacturer: ATHEROS
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: SerialNumber: 12345
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: ath9k_htc: Firmware
+ath9k_htc/htc_7010-1.4.0.fw requested
+Mar 27 02:48:50 server kernel: usb 3-1.2.4: ath9k_htc: Transferred FW:
+ath9k_htc/htc_7010-1.4.0.fw, size: 72812
+Mar 27 02:48:50 server kernel: ath9k_htc 3-1.2.4:1.0: ath9k_htc: HTC
+initialized with 45 credits
+Mar 27 02:48:50 server kernel: ath9k_htc 3-1.2.4:1.0: ath9k_htc: FW Version: 1.4
+...
+*****
