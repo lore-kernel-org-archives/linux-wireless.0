@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:46868 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754010AbdCWCXm (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42829 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752145AbdC0NHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 22:23:42 -0400
-Date: Wed, 22 Mar 2017 19:23:04 -0700 (PDT)
-Message-Id: <20170322.192304.1068066587902221771.davem@davemloft.net> (sfid-20170323_032402_818855_7BFF5B35)
-To: marcel@holtmann.org
-Cc: bjorn.andersson@linaro.org, gustavo@padovan.org,
-        johan.hedberg@gmail.com, k.eugene.e@gmail.com,
-        kvalo@codeaurora.org, andy.gross@linaro.org,
-        david.brown@linaro.org, arnd@arndb.de,
-        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-soc@vger.kernel.org
-Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd
- to rpmsg
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <21FCFC89-07EE-49EE-81C2-A138DD4C5F99@holtmann.org>
-References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
-        <20170322.114439.679826829857326050.davem@davemloft.net>
-        <21FCFC89-07EE-49EE-81C2-A138DD4C5F99@holtmann.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 27 Mar 2017 09:07:43 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2RD5EjR002049
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 06:07:17 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0b-0016f401.pphosted.com with ESMTP id 29exna8ybq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 06:07:17 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: enable auto deep sleep mode for USB chipsets
+Date: Mon, 27 Mar 2017 18:36:51 +0530
+Message-ID: <1490620012-2733-1-git-send-email-akarwar@marvell.com> (sfid-20170327_150929_771068_DA9A6374)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marcel Holtmann <marcel@holtmann.org>
-Date: Wed, 22 Mar 2017 20:23:15 +0100
+Chip goes into low power state when this feature is enabled.
+This was already enabled for SDIO and PCIe interface based
+chipsets.
 
-> Hi Dave,
-> 
->>> By moving these client drivers to use RPMSG instead of the direct SMD
->>> API we can reuse them ontop of the newly added GLINK wire-protocol
->>> support found in the 820 and 835 Qualcomm platforms.
->>> 
->>> As the new (RPMSG-based) and old SMD implementations are mutually
->>> exclusive we have to change all client drivers in one commit, to make
->>> sure we have a working system before and after this transition.
->>> 
->>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->>> ---
->>> 
->>> Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
->>> (https://lkml.org/lkml/2017/3/20/1038).
->> 
->> Just some questions since I'm supposed to merge this into my net-next
->> tree.
->> 
->> What is the status of the Kconfig dependency fix and how will I be
->> getting it?
-> 
-> I acked that one separately and added you:
-> 
-> [PATCH v2] Bluetooth: btqcomsmd: fix compile-test dependency
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-I applied this to my 'net' tree, thanks.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index f6056ab..83916c1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -2364,8 +2364,7 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
+ 	if (ret)
+ 		return -1;
+ 
+-	if (!disable_auto_ds &&
+-	    first_sta && priv->adapter->iface_type != MWIFIEX_USB &&
++	if (!disable_auto_ds && first_sta &&
+ 	    priv->bss_type != MWIFIEX_BSS_TYPE_UAP) {
+ 		/* Enable auto deep sleep */
+ 		auto_ds.auto_ds = DEEP_SLEEP_ON;
+-- 
+1.9.1
