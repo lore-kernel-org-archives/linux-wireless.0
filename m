@@ -1,58 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f176.google.com ([74.125.82.176]:35629 "EHLO
-        mail-ot0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758779AbdCVI7D (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 04:59:03 -0400
-Received: by mail-ot0-f176.google.com with SMTP id y88so10753238ota.2
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 01:58:43 -0700 (PDT)
-MIME-Version: 1.0
-From: Ajay Ramakrishnan <ajayrama93@gmail.com>
-Date: Wed, 22 Mar 2017 14:28:42 +0530
-Message-ID: <CABpfVq5mJ4CaSBW2CqSmdi=WrTVyGV8CNvtDc0UMtU6B87MpuA@mail.gmail.com> (sfid-20170322_095909_403006_1047E256)
-Subject: Gsoc 2017 - Availability of porjects in Linux Wireless
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:30539 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754838AbdC1I6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 04:58:32 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 14/16] drivers, net, ppp: convert syncppp.refcnt from atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 11:56:41 +0300
+Message-Id: <1490691403-4016-15-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112614_796738_45A31A2A)
+In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-I would like to work on the GSOC in the Linux Wireless module. I would
-like to know what are the available projects upon which I could work
-on.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/net/ppp/ppp_synctty.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
->From the to-do page, I found this: 11v and I would like to work on the below:
-1. 11v DMS support:
-    In AP mode, the packets needs to be saved in a queue and then need
-to be sent as unicast to sleeping clients.
-    STA should receive these packets after waking up listening to beacons.
-
-Test equipments: 1 device as AP and 2 device as STA (to check the DMS support)
-
-2. 11v BSS Transition Management support:
-    In AP neighbor AP list needs to be sent to the client on request.
-The action frames would be prepared at the mac80211 and given to the
-driver. The driver just needs to send the packet out. Neighbor list
-can be prepared based on a polling mechanism. Each AP can send the
-data and during offchannel scan the AP learns details about other APs.
-    The STA should be able to process this neighbor list and then scan
-in those channel alone. This is a network assisted roaming. Once the
-packet is received by the driver and received at mac80211, the packet
-is parsed and the 11v BTM request frame is identified and neighbor
-possible parent list is identified.
-Based on this list, roaming is to be done and scanning is done on
-those channels alone.
-
-Test equipments: 2 or more devices as APs(to check if neighbor list is
-being prepared correctly) and 1 device as STA to validate the message
-exchanges
-
-
-Could you please let me know if these are already implemented in the
-Linux Wireless. If someone from the Linux foundation team/Linux
-Wireless team is working on this, maybe we can discuss regarding the
-available projects and I would like to work on wireless networks.
-
-Thanks,
-Arun
+diff --git a/drivers/net/ppp/ppp_synctty.c b/drivers/net/ppp/ppp_synctty.c
+index 9ae5398..4a643f8 100644
+--- a/drivers/net/ppp/ppp_synctty.c
++++ b/drivers/net/ppp/ppp_synctty.c
+@@ -46,6 +46,7 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/slab.h>
++#include <linux/refcount.h>
+ #include <asm/unaligned.h>
+ #include <linux/uaccess.h>
+ 
+@@ -72,7 +73,7 @@ struct syncppp {
+ 
+ 	struct tasklet_struct tsk;
+ 
+-	atomic_t	refcnt;
++	refcount_t	refcnt;
+ 	struct completion dead_cmp;
+ 	struct ppp_channel chan;	/* interface to generic ppp layer */
+ };
+@@ -141,14 +142,14 @@ static struct syncppp *sp_get(struct tty_struct *tty)
+ 	read_lock(&disc_data_lock);
+ 	ap = tty->disc_data;
+ 	if (ap != NULL)
+-		atomic_inc(&ap->refcnt);
++		refcount_inc(&ap->refcnt);
+ 	read_unlock(&disc_data_lock);
+ 	return ap;
+ }
+ 
+ static void sp_put(struct syncppp *ap)
+ {
+-	if (atomic_dec_and_test(&ap->refcnt))
++	if (refcount_dec_and_test(&ap->refcnt))
+ 		complete(&ap->dead_cmp);
+ }
+ 
+@@ -182,7 +183,7 @@ ppp_sync_open(struct tty_struct *tty)
+ 	skb_queue_head_init(&ap->rqueue);
+ 	tasklet_init(&ap->tsk, ppp_sync_process, (unsigned long) ap);
+ 
+-	atomic_set(&ap->refcnt, 1);
++	refcount_set(&ap->refcnt, 1);
+ 	init_completion(&ap->dead_cmp);
+ 
+ 	ap->chan.private = ap;
+@@ -232,7 +233,7 @@ ppp_sync_close(struct tty_struct *tty)
+ 	 * our channel ops (i.e. ppp_sync_send/ioctl) are in progress
+ 	 * by the time it returns.
+ 	 */
+-	if (!atomic_dec_and_test(&ap->refcnt))
++	if (!refcount_dec_and_test(&ap->refcnt))
+ 		wait_for_completion(&ap->dead_cmp);
+ 	tasklet_kill(&ap->tsk);
+ 
+-- 
+2.7.4
