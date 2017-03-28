@@ -1,90 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f178.google.com ([209.85.216.178]:34664 "EHLO
-        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932411AbdCUN5C (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 09:57:02 -0400
-Received: by mail-qt0-f178.google.com with SMTP id n21so131334141qta.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Mar 2017 06:57:01 -0700 (PDT)
-Subject: Re: [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the
- __brcmf_err
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <20170202213321.11591-1-zajec5@gmail.com>
- <20170202213321.11591-4-zajec5@gmail.com>
- <2812805e-9108-284f-2165-34624d603364@broadcom.com>
- <CACna6rzxbgkuvHWEk=7CgCzSeDfyR-RT_gHY=rwoZW_yC=LdOQ@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <76a76500-c673-78b6-a3f3-3cba68d21da8@broadcom.com> (sfid-20170321_145707_956485_1B616033)
-Date: Tue, 21 Mar 2017 14:49:10 +0100
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzxbgkuvHWEk=7CgCzSeDfyR-RT_gHY=rwoZW_yC=LdOQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mga03.intel.com ([134.134.136.65]:4447 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755085AbdC1I6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 04:58:49 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 15/16] drivers, net, intersil: convert hostap_cmd_queue.usecnt from atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 11:56:42 +0300
+Message-Id: <1490691403-4016-16-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112614_368293_F2578E8E)
+In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23-2-2017 22:41, Rafał Miłecki wrote:
-> Hey Arend,
-> 
-> On 8 February 2017 at 10:54, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 2-2-2017 22:33, Rafał Miłecki wrote:
->>> From: Rafał Miłecki <rafal@milecki.pl>
->>>
->>> This will allow getting struct device reference from the passed
->>> brcmf_pub for the needs of dev_err. More detailed messages are really
->>> important for home routers which frequently have 2 (or even 3) wireless
->>> cards supported by brcmfmac.
->>>
->>> Note that all calls are yet to be updated as for now brcmf_err macro
->>> always passes NULL. This will be handled in following patch to make this
->>> change easier to review.
->>
->> I prefer brcmf_err() to have struct device reference directly instead of
->> using brcmf_pub. That would remove the need for patches 5 till 7 as bus
->> specific code already has struct device. So I have acked the first three
->> patches, but would like to revise 8 and 9.
-> 
-> I wanted to have some better perspective so I analyzed few upstream
-> Linux wireless drivers. It seems to be a pretty common pattern to have
-> one struct describing hardware that gets passed across the whole
-> driver. This way you can access any important info from any place of
-> the driver & some will probably say it also simplifies a driver.
-> 
-> For example following drivers use following struct in almost every
-> part of their code (across multiple files):
-> ath9k: struct ath_hw
-> ath10k: struct ath10k
-> iwlmvm: struct iwl_mvm
-> mt7601u: struct mt7601u_dev
-> mwifiex: struct mwifiex_private
-> rt2x00: struct rt2x00_dev
-> 
-> The most common / generic struct I found in brcmfmac was struct
-> brcmf_pub. That's why I tried to use it for the commonly used
-> brcmf_err.
-> 
-> What's the reason for hiding this struct from few random parts of the
-> code? Is there any real gain from this?
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Hi Rafał,
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/net/wireless/intersil/hostap/hostap_hw.c   | 12 ++++++------
+ drivers/net/wireless/intersil/hostap/hostap_wlan.h |  3 ++-
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-Time flies when you are ... well, me apparently. I realized I did not
-get back on this and looked at it myself. In brcmfmac we have layering
-with a common layer and bus specific layer. The interface between those
-layers is in bus.h, ie. struct brcmf_bus which holds reference to struct
-device. So I would think using struct brcmf_bus in brcmf_err() would be
-best fit. I also looked at doing some type introspection using
-__builtin_types_compatible_p() which is built-in function available in
-both GCC and Clang. Might be worth exploring.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+index 04dfd040..d4f0b73 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+@@ -190,7 +190,7 @@ static inline void __hostap_cmd_queue_free(local_info_t *local,
+ 		}
+ 	}
+ 
+-	if (atomic_dec_and_test(&entry->usecnt) && entry->del_req)
++	if (refcount_dec_and_test(&entry->usecnt) && entry->del_req)
+ 		kfree(entry);
+ }
+ 
+@@ -228,7 +228,7 @@ static void prism2_clear_cmd_queue(local_info_t *local)
+ 	spin_lock_irqsave(&local->cmdlock, flags);
+ 	list_for_each_safe(ptr, n, &local->cmd_queue) {
+ 		entry = list_entry(ptr, struct hostap_cmd_queue, list);
+-		atomic_inc(&entry->usecnt);
++		refcount_inc(&entry->usecnt);
+ 		printk(KERN_DEBUG "%s: removed pending cmd_queue entry "
+ 		       "(type=%d, cmd=0x%04x, param0=0x%04x)\n",
+ 		       local->dev->name, entry->type, entry->cmd,
+@@ -350,7 +350,7 @@ static int hfa384x_cmd(struct net_device *dev, u16 cmd, u16 param0,
+ 	if (entry == NULL)
+ 		return -ENOMEM;
+ 
+-	atomic_set(&entry->usecnt, 1);
++	refcount_set(&entry->usecnt, 1);
+ 	entry->type = CMD_SLEEP;
+ 	entry->cmd = cmd;
+ 	entry->param0 = param0;
+@@ -516,7 +516,7 @@ static int hfa384x_cmd_callback(struct net_device *dev, u16 cmd, u16 param0,
+ 	if (entry == NULL)
+ 		return -ENOMEM;
+ 
+-	atomic_set(&entry->usecnt, 1);
++	refcount_set(&entry->usecnt, 1);
+ 	entry->type = CMD_CALLBACK;
+ 	entry->cmd = cmd;
+ 	entry->param0 = param0;
+@@ -666,7 +666,7 @@ static void prism2_cmd_ev(struct net_device *dev)
+ 	if (!list_empty(&local->cmd_queue)) {
+ 		entry = list_entry(local->cmd_queue.next,
+ 				   struct hostap_cmd_queue, list);
+-		atomic_inc(&entry->usecnt);
++		refcount_inc(&entry->usecnt);
+ 		list_del_init(&entry->list);
+ 		local->cmd_queue_len--;
+ 
+@@ -718,7 +718,7 @@ static void prism2_cmd_ev(struct net_device *dev)
+ 			entry = NULL;
+ 		}
+ 		if (entry)
+-			atomic_inc(&entry->usecnt);
++			refcount_inc(&entry->usecnt);
+ 	}
+ 	spin_unlock(&local->cmdlock);
+ 
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_wlan.h b/drivers/net/wireless/intersil/hostap/hostap_wlan.h
+index ca25283..5352adb 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_wlan.h
++++ b/drivers/net/wireless/intersil/hostap/hostap_wlan.h
+@@ -6,6 +6,7 @@
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+ #include <linux/mutex.h>
++#include <linux/refcount.h>
+ #include <net/iw_handler.h>
+ #include <net/ieee80211_radiotap.h>
+ #include <net/lib80211.h>
+@@ -557,7 +558,7 @@ struct hostap_cmd_queue {
+ 	u16 resp0, res;
+ 	volatile int issued, issuing;
+ 
+-	atomic_t usecnt;
++	refcount_t usecnt;
+ 	int del_req;
+ };
+ 
+-- 
+2.7.4
