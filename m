@@ -1,35 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f176.google.com ([74.125.82.176]:33250 "EHLO
-        mail-ot0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751158AbdCNVzI (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:55761 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754783AbdC1I63 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 17:55:08 -0400
-Received: by mail-ot0-f176.google.com with SMTP id 19so152050174oti.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2017 14:55:08 -0700 (PDT)
-MIME-Version: 1.0
-From: Daniel Drake <drake@endlessm.com>
-Date: Tue, 14 Mar 2017 15:55:07 -0600
-Message-ID: <CAD8Lp45k01+rN8RXdvPthEDeJj7p-a-Lk5A1AQWXJBGezxQpaA@mail.gmail.com> (sfid-20170314_225511_779616_6CBBF4D6)
-Subject: Where is wil6210.fw / wil6210.brd?
-To: qca_merez@qca.qualcomm.com, wil6210@qca.qualcomm.com
+        Tue, 28 Mar 2017 04:58:29 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Chris Chiu <chiu@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+        Daniel J Blueman <daniel@quora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.11 2/2] cfg80211: check rdev resume callback only for registered wiphy
+Date: Tue, 28 Mar 2017 09:11:31 +0100
+Message-Id: <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_112615_711798_FE2BF116)
+In-Reply-To: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+We got the following use-after-free KASAN report:
 
-We are working with a new consumer laptop model that includes a
-wil6210 wireless adapter.
+ BUG: KASAN: use-after-free in wiphy_resume+0x591/0x5a0 [cfg80211]
+	 at addr ffff8803fc244090
+ Read of size 8 by task kworker/u16:24/2587
+ CPU: 6 PID: 2587 Comm: kworker/u16:24 Tainted: G    B 4.9.13-debug+
+ Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 1.2.19 12/22/2016
+ Workqueue: events_unbound async_run_entry_fn
+  ffff880425d4f9d8 ffffffffaeedb541 ffff88042b80ef00 ffff8803fc244088
+  ffff880425d4fa00 ffffffffae84d7a1 ffff880425d4fa98 ffff8803fc244080
+  ffff88042b80ef00 ffff880425d4fa88 ffffffffae84da3a ffffffffc141f7d9
+ Call Trace:
+  [<ffffffffaeedb541>] dump_stack+0x85/0xc4
+  [<ffffffffae84d7a1>] kasan_object_err+0x21/0x70
+  [<ffffffffae84da3a>] kasan_report_error+0x1fa/0x500
+  [<ffffffffc141f7d9>] ? cfg80211_bss_age+0x39/0xc0 [cfg80211]
+  [<ffffffffc141f83a>] ? cfg80211_bss_age+0x9a/0xc0 [cfg80211]
+  [<ffffffffae48d46d>] ? trace_hardirqs_on+0xd/0x10
+  [<ffffffffc13fb1c0>] ? wiphy_suspend+0xc70/0xc70 [cfg80211]
+  [<ffffffffae84def1>] __asan_report_load8_noabort+0x61/0x70
+  [<ffffffffc13fb100>] ? wiphy_suspend+0xbb0/0xc70 [cfg80211]
+  [<ffffffffc13fb751>] ? wiphy_resume+0x591/0x5a0 [cfg80211]
+  [<ffffffffc13fb751>] wiphy_resume+0x591/0x5a0 [cfg80211]
+  [<ffffffffc13fb1c0>] ? wiphy_suspend+0xc70/0xc70 [cfg80211]
+  [<ffffffffaf3b206e>] dpm_run_callback+0x6e/0x4f0
+  [<ffffffffaf3b31b2>] device_resume+0x1c2/0x670
+  [<ffffffffaf3b367d>] async_resume+0x1d/0x50
+  [<ffffffffae3ee84e>] async_run_entry_fn+0xfe/0x610
+  [<ffffffffae3d0666>] process_one_work+0x716/0x1a50
+  [<ffffffffae3d05c9>] ? process_one_work+0x679/0x1a50
+  [<ffffffffafdd7b6d>] ? _raw_spin_unlock_irq+0x3d/0x60
+  [<ffffffffae3cff50>] ? pwq_dec_nr_in_flight+0x2b0/0x2b0
+  [<ffffffffae3d1a80>] worker_thread+0xe0/0x1460
+  [<ffffffffae3d19a0>] ? process_one_work+0x1a50/0x1a50
+  [<ffffffffae3e54c2>] kthread+0x222/0x2e0
+  [<ffffffffae3e52a0>] ? kthread_park+0x80/0x80
+  [<ffffffffae3e52a0>] ? kthread_park+0x80/0x80
+  [<ffffffffae3e52a0>] ? kthread_park+0x80/0x80
+  [<ffffffffafdd86aa>] ret_from_fork+0x2a/0x40
+ Object at ffff8803fc244088, in cache kmalloc-1024 size: 1024
+ Allocated:
+ PID = 71
+  save_stack_trace+0x1b/0x20
+  save_stack+0x46/0xd0
+  kasan_kmalloc+0xad/0xe0
+  kasan_slab_alloc+0x12/0x20
+  __kmalloc_track_caller+0x134/0x360
+  kmemdup+0x20/0x50
+  brcmf_cfg80211_attach+0x10b/0x3a90 [brcmfmac]
+  brcmf_bus_start+0x19a/0x9a0 [brcmfmac]
+  brcmf_pcie_setup+0x1f1a/0x3680 [brcmfmac]
+  brcmf_fw_request_nvram_done+0x44c/0x11b0 [brcmfmac]
+  request_firmware_work_func+0x135/0x280
+  process_one_work+0x716/0x1a50
+  worker_thread+0xe0/0x1460
+  kthread+0x222/0x2e0
+  ret_from_fork+0x2a/0x40
+ Freed:
+ PID = 2568
+  save_stack_trace+0x1b/0x20
+  save_stack+0x46/0xd0
+  kasan_slab_free+0x71/0xb0
+  kfree+0xe8/0x2e0
+  brcmf_cfg80211_detach+0x62/0xf0 [brcmfmac]
+  brcmf_detach+0x14a/0x2b0 [brcmfmac]
+  brcmf_pcie_remove+0x140/0x5d0 [brcmfmac]
+  brcmf_pcie_pm_leave_D3+0x198/0x2e0 [brcmfmac]
+  pci_pm_resume+0x186/0x220
+  dpm_run_callback+0x6e/0x4f0
+  device_resume+0x1c2/0x670
+  async_resume+0x1d/0x50
+  async_run_entry_fn+0xfe/0x610
+  process_one_work+0x716/0x1a50
+  worker_thread+0xe0/0x1460
+  kthread+0x222/0x2e0
+  ret_from_fork+0x2a/0x40
+ Memory state around the buggy address:
+  ffff8803fc243f80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+  ffff8803fc244000: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ >ffff8803fc244080: fc fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                          ^
+  ffff8803fc244100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  ffff8803fc244180: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
 
-It is not usable on current Linux distros because the firmware is not
-present. It's not in linux-firmware and we can't even find any
-download links when searching the web.
+What is happening is that brcmf_pcie_resume() detects a device that
+is no longer responsive and it decides to unbind resulting in a
+wiphy_unregister() and wiphy_free() call. Now the wiphy instance
+remains allocated, because PM needs to call wiphy_resume() for it.
+However, brcmfmac already does a kfree() for the struct
+cfg80211_registered_device::ops field. Changing the checks in
+wiphy_resume() to only access the struct cfg80211_registered_device::ops
+when the wiphy instance is registered.
 
-Could you please send a copy of the required firmware to linux-firmware?
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+Cc: stable@vger.kernel.org # 4.10.x, 4.9.x
+Reported-by: Daniel J Blueman <daniel@quora.org>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ net/wireless/sysfs.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-Thanks
-Daniel
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 16b6b59..570a2b6 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -132,12 +132,10 @@ static int wiphy_resume(struct device *dev)
+ 	/* Age scan results with time spent in suspend */
+ 	cfg80211_bss_age(rdev, get_seconds() - rdev->suspend_at);
+ 
+-	if (rdev->ops->resume) {
+-		rtnl_lock();
+-		if (rdev->wiphy.registered)
+-			ret = rdev_resume(rdev);
+-		rtnl_unlock();
+-	}
++	rtnl_lock();
++	if (rdev->wiphy.registered && rdev->ops->resume)
++		ret = rdev_resume(rdev);
++	rtnl_unlock();
+ 
+ 	return ret;
+ }
+-- 
+1.9.1
