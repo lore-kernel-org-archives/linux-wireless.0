@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:33387 "EHLO
-        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbdCPJw5 (ORCPT
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:34787 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753072AbdC1Ft1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 05:52:57 -0400
-Received: by mail-vk0-f47.google.com with SMTP id d188so20992407vka.0
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2017 02:52:56 -0700 (PDT)
+        Tue, 28 Mar 2017 01:49:27 -0400
+Received: by mail-pg0-f48.google.com with SMTP id 21so62218783pgg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 22:49:26 -0700 (PDT)
+Date: Mon, 27 Mar 2017 22:49:22 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: David Miller <davem@davemloft.net>
+Cc: marcel@holtmann.org, gustavo@padovan.org, johan.hedberg@gmail.com,
+        k.eugene.e@gmail.com, kvalo@codeaurora.org, andy.gross@linaro.org,
+        david.brown@linaro.org, arnd@arndb.de,
+        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-soc@vger.kernel.org
+Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd
+ to rpmsg
+Message-ID: <20170328054922.GH70446@Bjorns-MacBook-Pro-2.local> (sfid-20170328_075043_068231_673BDBD0)
+References: <20170322215733.GH20094@minitux>
+ <20170323.165613.802100008000968298.davem@davemloft.net>
+ <20170327225836.GL20094@minitux>
+ <20170327.160400.1285256003980361221.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <02e3d7706b82480d86fb2fcff76969b3@euamsexm01a.eu.qualcomm.com>
-References: <CAPXt_dabk8KNL0HTHZJfoHT+93ZS+3R31tVEPb4zpKJWE65cMw@mail.gmail.com>
- <02e3d7706b82480d86fb2fcff76969b3@euamsexm01a.eu.qualcomm.com>
-From: Rostyslav Khudolii <rkhudolii@airtame.com>
-Date: Thu, 16 Mar 2017 10:46:18 +0100
-Message-ID: <CAPXt_db72TErN5CcAfVj7FC+F5eTajqwOTgK2PkNnqQC-=QvOQ@mail.gmail.com> (sfid-20170316_105300_714339_9F71163C)
-Subject: Re: ath6kl: Remove old 802.11a-only channels
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Attila Sukosd <attila@airtame.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170327.160400.1285256003980361221.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 March 2017 at 10:36, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Rostyslav Khudolii <rkhudolii@airtame.com> wrote:
->> Channels 34/38/42/46 can only be used for compatibility with
->> old devices sold in Japan. Modern products, such as AR6003/AR6004
->> don't support these channels.
->> Keeping them in the upstream is error prone and requires full
->> network stack support.
->> A custom patch should be used in case such compatibility is required.
->>
->> Signed-off-by: Rostyslav Khudolii <rkhudolii@airtame.com>
->> Cc: Attila Sukosd <attila@airtame.com>
->
-> For some reason the patch didn't apply to ath.git, I had manually recreate it.
-> Please review carefully that the patch is correct now:
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=cd63adf640e39c2ba013cba91b29700f3f593b9c
->
-> Also I added your description of the bug to the commit log.
->
-> --
-> https://patchwork.kernel.org/patch/9615199/
->
-> Documentation about submitting wireless patches and checking status
-> from patchwork:
->
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
->
+On Mon 27 Mar 16:04 PDT 2017, David Miller wrote:
 
-It's correct.
+> From: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Date: Mon, 27 Mar 2017 15:58:37 -0700
+> 
+> > I'm sorry, but I can't figure out how to reproduce this.
+> 
+> All of my builds are "make allmodconfig" so it should be easy to reproduce.
+
+Thanks, turns out that while it was possible to select CONFIG_SMD_RPM
+and CONFIG_QCOM_WCNSS_CTRL drivers/soc/Makefile does not traverse into
+qcom/ unless CONFIG_ARCH_QCOM was set.
+
+So I just sent out version 2 of the three patches, where I add an
+explicit dependency on ARCH_QCOM for those two options.
+
+Regards,
+Bjorn
