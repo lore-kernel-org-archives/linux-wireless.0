@@ -1,83 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39694 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751757AbdCCNa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 08:30:56 -0500
-Message-ID: <1488544081.25750.5.camel@sipsolutions.net> (sfid-20170303_143234_785561_6143C689)
-Subject: Re: [RFC] cfg80211: Add support for FILS shared key authentication
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
-Date: Fri, 03 Mar 2017 13:28:01 +0100
-In-Reply-To: <1488542006-11776-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1488542006-11776-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36077 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754514AbdC1Oq4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 10:46:56 -0400
+Received: by mail-wm0-f51.google.com with SMTP id o81so552264wmb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Mar 2017 07:46:50 -0700 (PDT)
+Subject: Re: [PATCH for-4.11 2/2] cfg80211: check rdev resume callback only
+ for registered wiphy
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com>
+ <1490704473.18052.1.camel@sipsolutions.net>
+ <0ad46312-df78-4d80-8526-1a33e1e86acf@broadcom.com>
+ <1490711151.18052.2.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Daniel J Blueman <daniel@quora.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d2985a7e-5d11-284d-25f8-c4a255c24da6@broadcom.com> (sfid-20170328_164753_815473_A7BB14CC)
+Date: Tue, 28 Mar 2017 16:46:47 +0200
+MIME-Version: 1.0
+In-Reply-To: <1490711151.18052.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
->  struct cfg80211_pmksa {
->  	const u8 *bssid;
->  	const u8 *pmkid;
-> +	const u8 *pmk;
-> +	size_t pmk_len;
-> +	const u8 *ssid;
-> +	size_t ssid_len;
-> +	u16 cache_id;
->  };
 
-So how does that work - from a flow perspective?
+On 28-3-2017 16:25, Johannes Berg wrote:
+> 
+>>>> -	if (rdev->ops->resume) {
+>>>> -		rtnl_lock();
+>>>> -		if (rdev->wiphy.registered)
+>>>> -			ret = rdev_resume(rdev);
+>>>> -		rtnl_unlock();
+>>>> -	}
+>>>> +	rtnl_lock();
+>>>> +	if (rdev->wiphy.registered && rdev->ops->resume)
+>>>> +		ret = rdev_resume(rdev);
+>>>> +	rtnl_unlock();
+>>>
+>>> Hmm? Commit message seems ... old perhaps?
+>>
+>> Hmmm, why? Before the patch rdev->ops was accessed before checking
+>> rdev->wiphy.registered. When rdev->wiphy.registers is false we no
+>> longer access rdev->ops after the patch. So a driver doing a
+>> wiphy_unregister() can safely kfree() the callback struct after it.
+> 
+> Oh, right. Looks like I misinterpreted things.
 
-> +void cfg80211_connect_done(struct net_device *dev, const u8 *bssid,
-> +			   struct cfg80211_bss *bss, const u8
-> *req_ie,
-> +			   size_t req_ie_len, const u8 *resp_ie,
-> +			   size_t resp_ie_len, const u8 *fils_kek,
-> +			   size_t fils_kek_len, bool
-> update_erp_seq_num,
-> +			   u16 fils_erp_seq_num, const u8 *pmk,
-> size_t pmk_len,
-> +			   const u8 *pmkid, int status, gfp_t gfp,
-> +			   enum nl80211_timeout_reason
-> timeout_reason);
+So apparently my choice of words was poor. Do you want me to rephrase?
 
-Ouch. Please declare most of those (perhaps other than dev) as a
-structure and pass a pointer here.
-
-Also, why require the BSSID when BSS is set? Seems you could say one or
-the other.
-
-Also, what do you need the PMK for? If you have all of this stuff
-offloaded, why does the host need to know the PMK?
-
-> @@ -227,6 +227,13 @@ struct cfg80211_event {
->  			size_t req_ie_len;
->  			size_t resp_ie_len;
->  			struct cfg80211_bss *bss;
-> +			const u8 *kek;
-> +			size_t kek_len;
-> +			bool update_erp_seq_num;
-> +			u16 fils_erp_seq_num;
-> +			const u8 *pmk;
-> +			size_t pmk_len;
-> +			const u8 *pmkid;
->  			int status; /* -1 = failed; 0..65535 =
-> status code */
->  			enum nl80211_timeout_reason timeout_reason;
->  		} cr;
-
-Could probably use the new struct from cfg80211.h that I asked to add
-here then.
-
-
-Other than that, most of the patch seems mechanical - I think it'd be
-good to have a DOC: section or so somewhere (nl80211.h?) that explains
-how this is intended to be used? I've already migrated the
-documentation to the new rst/sphinx format so we can generate it nicely
-and that would be a good addition - I'll probably do some more
-additions too.
-
-johannes
+Regards,
+Arend
