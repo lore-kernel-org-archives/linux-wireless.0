@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45926 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932864AbdCaMmX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 08:42:23 -0400
-Message-ID: <1490964139.6288.15.camel@sipsolutions.net> (sfid-20170331_144225_611639_989AFF1C)
-Subject: Re: [RFC v2 2/2] cfg80211: support 4-way handshake offloading for
- 802.1X
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>
-Date: Fri, 31 Mar 2017 14:42:19 +0200
-In-Reply-To: <91ed1c3e-f28a-b591-344d-e59765a9b944@broadcom.com> (sfid-20170331_143947_688137_97C2CDA0)
-References: <20170221123758.5339-1-johannes@sipsolutions.net>
-         <20170221123758.5339-2-johannes@sipsolutions.net>
-         <5274c4b4-9bce-208c-e3f2-640d54b81a30@broadcom.com>
-         <1490961001.6288.8.camel@sipsolutions.net>
-         <91ed1c3e-f28a-b591-344d-e59765a9b944@broadcom.com>
-         (sfid-20170331_143947_688137_97C2CDA0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f52.google.com ([209.85.214.52]:35680 "EHLO
+        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755801AbdC1T1g (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 15:27:36 -0400
+Received: by mail-it0-f52.google.com with SMTP id y18so126423832itc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Mar 2017 12:27:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANr77M0xc=zD17HK1Gu2GT7Y_P=QC65UrHkvwj+JntenHSHNSA@mail.gmail.com>
+References: <CANr77M0xc=zD17HK1Gu2GT7Y_P=QC65UrHkvwj+JntenHSHNSA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 29 Mar 2017 00:57:09 +0530
+Message-ID: <CABPxzYKF4+M_cooukAA5oKJu0quB4CjOHaRr1qQjHMRYAPhE4A@mail.gmail.com> (sfid-20170328_212809_365083_EB0CE98C)
+Subject: Re: Formatting of db.txt
+To: Matthew Stanger <matthew_stanger@trimble.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-31 at 14:39 +0200, Arend Van Spriel wrote:
-> 
-> Ok. Just wondering. I am ok with the proposal with the addition of
-> authorized flag in connect event. So do you expect these to come as
-> non-rfc patches any time soon?
-> 
+On Tue, Mar 28, 2017 at 10:41 PM, Matthew Stanger
+<matthew_stanger@trimble.com> wrote:
+> Hi,
+>
+> I'm trying to set antenna gain in the db.txt following the
+> documentation from:
+> https://wireless.wiki.kernel.org/en/developers/regulatory/processing_rules
+>
+> If I copy the example exactly show in the link:
+>
+> country CR:
+>         (2402 - 2482 @ 40), (N/A, 20)
+>         (5170 - 5250 @ 20), (3, 17)
+>         (5250 - 5330 @ 20), (3, 23), DFS
+>         (5735 - 5835 @ 20), (3, 30)
+>
+> and do a make I get a parsing error:
+> dbparse.SyntaxError: Syntax error in line 288 (invalid power data)
+> make: *** [regulatory.bin] Error 1
+>
+>  I can change freq and power levels and other settings and everything
+> builds fine. What am I missing about setting antenna gain?
+the (max_eirp, pwr) is an old syntax which is deprecated by commit
+https://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git/commit/?id=e56cd9618e3e5bf8ff96b799544b85170e34d9c3
 
-Hmm. I need to find time to look at it, but I'll be travelling next
-week for netconf/netdev.
-
-If you wanted to pick up anything here I won't stop you :)
-
-johannes
+May be we should update the doc.
