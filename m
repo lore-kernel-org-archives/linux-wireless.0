@@ -1,93 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49510 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751217AbdCHKff (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41343 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754572AbdC1KoG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 05:35:35 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH v2 1/4] brcmfmac: Do not print the firmware version as an error
-References: <20170227214539.16422-1-hdegoede@redhat.com>
-        <5f6bb4d4-1bf1-cd5b-96ba-fc45e641aa95@broadcom.com>
-        <6c1dd576-7571-e85f-ee43-8e9e69a76679@redhat.com>
-        <ecb4cc58-8cf5-1ca6-7649-fe4e97ac2149@broadcom.com>
-Date: Wed, 08 Mar 2017 11:57:06 +0200
-In-Reply-To: <ecb4cc58-8cf5-1ca6-7649-fe4e97ac2149@broadcom.com> (Arend Van
-        Spriel's message of "Wed, 8 Mar 2017 10:28:10 +0100")
-Message-ID: <87a88w851p.fsf@kamboji.qca.qualcomm.com> (sfid-20170308_113845_062457_44B9737E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 28 Mar 2017 06:44:06 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 4/5] brcmfmac: restore bus state when enter_D3 fails
+Date: Tue, 28 Mar 2017 11:43:27 +0100
+Message-Id: <1490697808-5538-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_124744_732258_52872A1D)
+In-Reply-To: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+In brcmf_pcie_suspend() we inform the firmware on the device that
+it will enter in D3 state. Before this is done we already bring down
+the bus state. However, When entering D3 fails we abort the suspend
+and the bus state need to be restored.
 
-> On 8-3-2017 9:23, Hans de Goede wrote:
->> Hi,
->> 
->> On 07-03-17 10:59, Arend Van Spriel wrote:
->>> On 27-2-2017 22:45, Hans de Goede wrote:
->>>> Using pr_err for things which are not errors is a bad idea. E.g. it
->>>> will cause the plymouth bootsplash screen to drop back to the text
->>>> console so that the user can see the error, which is not what we
->>>> normally want to happen.
->>>>
->>>> Instead add a new brcmf_info macro and use that.
->>>>
->>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>>> ---
->>>> Changes in v2:
->>>> -Fix brcm_err typo (should be brcmf_err) in CONFIG_BRCM_TRACING case
->>>> ---
->>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
->>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 3 +++
->>>>  2 files changed, 4 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git
->>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->>>> index 3e15d64..6d565f1 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->>>> @@ -161,7 +161,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
->>>>      strsep(&ptr, "\n");
->>>>
->>>>      /* Print fw version info */
->>>> -    brcmf_err("Firmware version = %s\n", buf);
->>>> +    brcmf_info("Firmware version = %s\n", buf);
->>>>
->>>>      /* locate firmware version number for ethtool */
->>>>      ptr = strrchr(buf, ' ') + 1;
->>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
->>>> index 6687812..605f260 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
->>>> @@ -59,11 +59,14 @@
->>>>              pr_err("%s: " fmt, __func__, ##__VA_ARGS__);    \
->>>>      } while (0)
->>>>  #endif
->>>> +#define brcmf_info(fmt, ...)    pr_info("%s: " fmt, __func__,
->>>> ##__VA_ARGS__)
->>>
->>> Prefer using the same style as for brcmf_err, ie. using do {} while (0)
->> 
->> OK, v3 with this fixed coming up.
->
-> I think Kalle prefers the whole series to be resubmitted.
->
-> Kalle,
->
-> Can you confirm (or deny)?
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Change-Id: I837664ac9e06303b3a9596096f0f7c2bf7636b9a
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/8160
+Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Exactly, I want to apply the full series (with the highest version
-number). Not waste time guessing what patches I should take and what to
-drop, with the increased risk of guessing wrong.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 6fae4cf..f36b96d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1877,6 +1877,7 @@ static int brcmf_pcie_pm_enter_D3(struct device *dev)
+ 			   BRCMF_PCIE_MBDATA_TIMEOUT);
+ 	if (!devinfo->mbdata_completed) {
+ 		brcmf_err("Timeout on response for entering D3 substate\n");
++		brcmf_bus_change_state(bus, BRCMF_BUS_UP);
+ 		return -EIO;
+ 	}
+ 
 -- 
-Kalle Valo
+1.9.1
