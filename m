@@ -1,156 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43994 "EHLO sipsolutions.net"
+Received: from mga11.intel.com ([192.55.52.93]:63575 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753014AbdCHNVQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 08:21:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: kirtika@google.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211: reject/clear user rate mask if not usable
-Date: Wed,  8 Mar 2017 14:20:22 +0100
-Message-Id: <20170308132022.4216-1-johannes@sipsolutions.net> (sfid-20170308_142122_587641_AAD67C42)
+        id S1754440AbdC1JiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 05:38:15 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 5/5] NFC: pn544: Get rid of code duplication in ->probe()
+Date: Tue, 28 Mar 2017 12:36:39 +0300
+Message-Id: <20170328093639.53481-5-andriy.shevchenko@linux.intel.com> (sfid-20170328_113943_762750_B340CCA0)
+In-Reply-To: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
+References: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Since OF and ACPI case almost the same get rid of code duplication
+by moving gpiod_get() calls directly to ->probe().
 
-If the user rate mask results in no (basic) rates being usable,
-clear it. Also, if we're already operating when it's set, reject
-it instead.
-
-Technically, selecting basic rates as the criterion is a bit too
-restrictive, but calculating the usable rates over all stations
-(e.g. in AP mode) is harder, and all stations must support the
-basic rates. Similarly, in client mode, the basic rates will be
-used anyway for control frames.
-
-This fixes the "no supported rates (...) in rate_mask ..." warning
-that occurs on TX when you've selected a rate mask that's not
-compatible with the connection (e.g. an AP that enables only the
-rates 36, 48, 54 and you've selected only 6, 9, 12.)
-
-Reported-by: Kirtika Ruchandani <kirtika@google.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- net/mac80211/cfg.c  | 18 +++++++++++++++++-
- net/mac80211/mlme.c |  2 ++
- net/mac80211/rate.c | 27 +++++++++++++++++++++++++++
- net/mac80211/rate.h |  2 ++
- 4 files changed, 48 insertions(+), 1 deletion(-)
+ v3: use dev_dbg() instead of nfc_dbg()
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9c7490cb2243..8bc3d3669348 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-- * Copyright (C) 2015-2016 Intel Deutschland GmbH
-+ * Copyright (C) 2015-2017 Intel Deutschland GmbH
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-@@ -2042,6 +2042,7 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 					 params->basic_rates_len,
- 					 &sdata->vif.bss_conf.basic_rates);
- 		changed |= BSS_CHANGED_BASIC_RATES;
-+		ieee80211_check_rate_mask(sdata);
- 	}
+ drivers/nfc/pn544/i2c.c | 84 ++++++++++---------------------------------------
+ 1 file changed, 17 insertions(+), 67 deletions(-)
+
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index 6226d220f1d0..7a2910f12aab 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -879,58 +879,10 @@ static const struct acpi_gpio_mapping acpi_pn544_gpios[] = {
+ 	{ },
+ };
  
- 	if (params->ap_isolate >= 0) {
-@@ -2685,6 +2686,21 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 			return ret;
- 	}
+-static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
+-{
+-	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-	int ret;
+-
+-	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
+-	if (ret)
+-		return ret;
+-
+-	/* Get EN GPIO from ACPI */
+-	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_en)) {
+-		nfc_err(dev, "Unable to get EN GPIO\n");
+-		return PTR_ERR(phy->gpiod_en);
+-	}
+-
+-	/* Get FW GPIO from ACPI */
+-	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_fw)) {
+-		nfc_err(dev, "Unable to get FW GPIO\n");
+-		return PTR_ERR(phy->gpiod_fw);
+-	}
+-
+-	return 0;
+-}
+-
+-static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
+-{
+-	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-
+-	/* Obtaining EN GPIO from device tree */
+-	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_en)) {
+-		nfc_err(dev, "Failed to get EN gpio\n");
+-		return PTR_ERR(phy->gpiod_en);
+-	}
+-
+-	/* Obtaining FW GPIO from device tree */
+-	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_fw)) {
+-		nfc_err(dev, "Failed to get FW gpio\n");
+-		return PTR_ERR(phy->gpiod_fw);
+-	}
+-
+-	return 0;
+-}
+-
+ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 			       const struct i2c_device_id *id)
+ {
++	struct device *dev = &client->dev;
+ 	struct pn544_i2c_phy *phy;
+ 	int r = 0;
  
-+	/*
-+	 * If active validate the setting and reject it if it doesn't leave
-+	 * at least one basic rate usable, since we really have to be able
-+	 * to send something, and if we're an AP we have to be able to do
-+	 * so at a basic rate so that all clients can receive it.
-+	 */
-+	if (rcu_access_pointer(sdata->vif.chanctx_conf) &&
-+	    sdata->vif.bss_conf.chandef.chan) {
-+		u32 basic_rates = sdata->vif.bss_conf.basic_rates;
-+		enum nl80211_band band = sdata->vif.bss_conf.chandef.chan->band;
+@@ -953,24 +905,22 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 	phy->i2c_dev = client;
+ 	i2c_set_clientdata(client, phy);
+ 
+-	/* No platform data, using device tree. */
+-	if (client->dev.of_node) {
+-		r = pn544_hci_i2c_of_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev, "No DT data\n");
+-			return r;
+-		}
+-	/* Using ACPI */
+-	} else if (ACPI_HANDLE(&client->dev)) {
+-		r = pn544_hci_i2c_acpi_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev,
+-				"Cannot get ACPI data\n");
+-			return r;
+-		}
+-	} else {
+-		nfc_err(&client->dev, "No platform data\n");
+-		return -EINVAL;
++	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
++	if (r)
++		dev_dbg(dev, "Unable to add GPIO mapping table\n");
 +
-+		if (!(mask->control[band].legacy & basic_rates))
-+			return -EINVAL;
++	/* Get EN GPIO */
++	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
++	if (IS_ERR(phy->gpiod_en)) {
++		nfc_err(dev, "Unable to get EN GPIO\n");
++		return PTR_ERR(phy->gpiod_en);
 +	}
 +
- 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
- 		struct ieee80211_supported_band *sband = wiphy->bands[i];
- 		int j;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4b4d29edec09..24d69bcf71ad 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1908,6 +1908,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	sdata->u.mgd.associated = cbss;
- 	memcpy(sdata->u.mgd.bssid, cbss->bssid, ETH_ALEN);
++	/* Get FW GPIO */
++	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
++	if (IS_ERR(phy->gpiod_fw)) {
++		nfc_err(dev, "Unable to get FW GPIO\n");
++		return PTR_ERR(phy->gpiod_fw);
+ 	}
  
-+	ieee80211_check_rate_mask(sdata);
-+
- 	sdata->u.mgd.flags |= IEEE80211_STA_RESET_SIGNAL_AVE;
- 
- 	if (sdata->vif.p2p ||
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 094c15645228..3bddd9bbb76f 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -2,6 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright (c) 2006 Jiri Benc <jbenc@suse.cz>
-+ * Copyright 2017	Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -241,6 +242,32 @@ static void rate_control_free(struct ieee80211_local *local,
- 	kfree(ctrl_ref);
- }
- 
-+void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	u32 user_mask, basic_rates = sdata->vif.bss_conf.basic_rates;
-+	enum nl80211_band band;
-+
-+	if (WARN_ON(!sdata->vif.bss_conf.chandef.chan))
-+		return;
-+
-+	if (WARN_ON_ONCE(!basic_rates))
-+		return;
-+
-+	band = sdata->vif.bss_conf.chandef.chan->band;
-+	user_mask = sdata->rc_rateidx_mask[band];
-+	sband = local->hw.wiphy->bands[band];
-+
-+	if (user_mask & basic_rates)
-+		return;
-+
-+	sdata_dbg(sdata,
-+		  "no overlap between basic rates (0x%x) and user mask (0x%x on band %d) - clearing the latter",
-+		  basic_rates, user_mask, band);
-+	sdata->rc_rateidx_mask[band] = (1 << sband->n_bitrates) - 1;
-+}
-+
- static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
- {
- 	struct sk_buff *skb = txrc->skb;
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index d51a1cce4d4a..f7825ef5f871 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -110,6 +110,8 @@ static inline void rate_control_remove_sta_debugfs(struct sta_info *sta)
- #endif
- }
- 
-+void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata);
-+
- /* Get a reference to the rate control algorithm. If `name' is NULL, get the
-  * first available algorithm. */
- int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ 	pn544_hci_i2c_platform_init(phy);
 -- 
 2.11.0
