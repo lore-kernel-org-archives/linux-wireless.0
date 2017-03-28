@@ -1,73 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:36833 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751980AbdCAABa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2017 19:01:30 -0500
-Received: by mail-pg0-f48.google.com with SMTP id s67so12426929pgb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2017 16:00:12 -0800 (PST)
-Received: from [10.4.0.31] ([67.137.71.162])
-        by smtp.gmail.com with ESMTPSA id c64sm6246458pfa.45.2017.02.28.15.50.53
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 28 Feb 2017 15:50:53 -0800 (PST)
-From: Alexis Green <agreen@uniumwifi.com>
-Reply-To: agreen@cococorp.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] iw: Add support for
- NL80211_MESHCONF_HWMP_ALWAYS_MAX_DISCOVERIES netlink attribute
-Message-ID: <58B60CD9.9050507@cococorp.com> (sfid-20170301_010247_660133_09DA8EB5)
-Date: Tue, 28 Feb 2017 15:50:49 -0800
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mga07.intel.com ([134.134.136.100]:38842 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755306AbdC1JAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 05:00:43 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 04/16] drivers, net, mlx4: convert mlx4_qp.refcount from atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 11:56:31 +0300
+Message-Id: <1490691403-4016-5-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112614_509781_37BAE0B0)
+In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-This attributes allows configuring mesh to either do only minimum
-number of discovery attempts (up to MaxPREretries) or always do
-MaxPREretries number of tries even when getting responses.
-
-Signed-off-by: Alexis Green <agreen@uniumwifi.com>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- mesh.c    | 3 +++
- nl80211.h | 3 +++
- 2 files changed, 6 insertions(+)
+ drivers/net/ethernet/mellanox/mlx4/qp.c | 8 ++++----
+ include/linux/mlx4/device.h             | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/mesh.c b/mesh.c
-index 97f236b..b828408 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -264,6 +264,9 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
- 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
- 	{"mesh_plink_timeout", NL80211_MESHCONF_PLINK_TIMEOUT,
- 	_my_nla_put_u32, _parse_u32, _print_u32_in_seconds},
-+	{"mesh_hwmp_always_max_discoveries",
-+	NL80211_MESHCONF_HWMP_ALWAYS_MAX_DISCOVERIES,
-+	_my_nla_put_u8, _parse_u8_as_bool, _print_u8},
+diff --git a/drivers/net/ethernet/mellanox/mlx4/qp.c b/drivers/net/ethernet/mellanox/mlx4/qp.c
+index 2d6abd4..6017316 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/qp.c
++++ b/drivers/net/ethernet/mellanox/mlx4/qp.c
+@@ -55,7 +55,7 @@ void mlx4_qp_event(struct mlx4_dev *dev, u32 qpn, int event_type)
+ 
+ 	qp = __mlx4_qp_lookup(dev, qpn);
+ 	if (qp)
+-		atomic_inc(&qp->refcount);
++		refcount_inc(&qp->refcount);
+ 
+ 	spin_unlock(&qp_table->lock);
+ 
+@@ -66,7 +66,7 @@ void mlx4_qp_event(struct mlx4_dev *dev, u32 qpn, int event_type)
+ 
+ 	qp->event(qp, event_type);
+ 
+-	if (atomic_dec_and_test(&qp->refcount))
++	if (refcount_dec_and_test(&qp->refcount))
+ 		complete(&qp->free);
+ }
+ 
+@@ -406,7 +406,7 @@ int mlx4_qp_alloc(struct mlx4_dev *dev, int qpn, struct mlx4_qp *qp, gfp_t gfp)
+ 	if (err)
+ 		goto err_icm;
+ 
+-	atomic_set(&qp->refcount, 1);
++	refcount_set(&qp->refcount, 1);
+ 	init_completion(&qp->free);
+ 
+ 	return 0;
+@@ -500,7 +500,7 @@ EXPORT_SYMBOL_GPL(mlx4_qp_remove);
+ 
+ void mlx4_qp_free(struct mlx4_dev *dev, struct mlx4_qp *qp)
+ {
+-	if (atomic_dec_and_test(&qp->refcount))
++	if (refcount_dec_and_test(&qp->refcount))
+ 		complete(&qp->free);
+ 	wait_for_completion(&qp->free);
+ 
+diff --git a/include/linux/mlx4/device.h b/include/linux/mlx4/device.h
+index 5fea001..756ca22 100644
+--- a/include/linux/mlx4/device.h
++++ b/include/linux/mlx4/device.h
+@@ -754,7 +754,7 @@ struct mlx4_qp {
+ 
+ 	int			qpn;
+ 
+-	atomic_t		refcount;
++	refcount_t		refcount;
+ 	struct completion	free;
  };
  
- static void print_all_mesh_param_descr(void)
-diff --git a/nl80211.h b/nl80211.h
-index 56368e9..bb53e8b 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -3352,6 +3352,8 @@ enum nl80211_mesh_power_mode {
-  *	established peering with for longer than this time (in seconds), then
-  *	remove it from the STA's list of peers. You may set this to 0 to disable
-  *	the removal of the STA. Default is 30 minutes.
-+ * @NL80211_MESHCONF_HWMP_ALWAYS_MAX_DISCOVERIES: whether to always perform
-+ *	number of discovery attempts equal to MaxPREQretries (default is FALSE)
-  *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
-  */
-@@ -3385,6 +3387,7 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_POWER_MODE,
- 	NL80211_MESHCONF_AWAKE_WINDOW,
- 	NL80211_MESHCONF_PLINK_TIMEOUT,
-+	NL80211_MESHCONF_HWMP_ALWAYS_MAX_DISCOVERIES,
- 
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
 -- 
-2.5.0.rc3
+2.7.4
