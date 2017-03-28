@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3732 "EHLO mga11.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:50113 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751061AbdCQPuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 11:50:18 -0400
-Message-ID: <1489765790.19767.62.camel@linux.intel.com> (sfid-20170317_165114_475662_BF039160)
-Subject: Re: [PATCH v2 1/5] NFC: st21nfca: Fix obvious typo when check error
- code
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Date: Fri, 17 Mar 2017 17:49:50 +0200
-In-Reply-To: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
-References: <20170307102546.32224-1-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751903AbdC1OAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 10:00:09 -0400
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+To: David Laight <David.Laight@ACULAB.COM>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
+        "linux-ppp@vger.kernel.org" <linux-ppp@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
+        "nbd@openwrt.org" <nbd@openwrt.org>,
+        "blogic@openwrt.org" <blogic@openwrt.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "yishaih@mellanox.com" <yishaih@mellanox.com>,
+        "saeedm@mellanox.com" <saeedm@mellanox.com>,
+        "matanb@mellanox.com" <matanb@mellanox.com>,
+        "leonro@mellanox.com" <leonro@mellanox.com>,
+        "ajk@comnets.uni-bremen.de" <ajk@comnets.uni-bremen.de>,
+        "paulus@samba.org" <paulus@samba.org>, "j@w1.fi" <j@w1.fi>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "keescook@chromium.org" <keescook@chromium.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        "David Windsor" <dwindsor@gmail.com>
+Subject: RE: [PATCH 06/16] drivers, net, mlx5: convert mlx5_cq.refcount from
+ atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 14:00:01 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C82E54@IRSMSX102.ger.corp.intel.com> (sfid-20170328_160120_812065_69EEBCEE)
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+ <1490691403-4016-7-git-send-email-elena.reshetova@intel.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFFBE8AF@AcuExch.aculab.com>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFFBE8AF@AcuExch.aculab.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-03-07 at 12:25 +0200, Andy Shevchenko wrote:
-> We return -ENODEV if ACPI provides a GPIO resource. Looks really
-> wrong.
-> If it has even been tested?
 
-Any comments on this clean up?
+> From: Elena Reshetova
+> > Sent: 28 March 2017 09:57
+> >
+> > refcount_t type and corresponding API should be
+> > used instead of atomic_t when the variable is used as
+> > a reference counter. This allows to avoid accidental
+> > refcounter overflows that might lead to use-after-free
+> > situations.
+> 
+> I can't help feeling that you ought to find a scheme
+> that will detect extra decrements and extra increments
+> before the counter wraps 32 bits.
+> 
+> If an extra reference is requested every 100us it takes 4.8 days
+> for the counter to increment back to zero.
+> Simple tests aren't doing to find that - but it can easily happen
+> on a system that is running for several years.
 
-Next patch which is dependent to this is related to ACPI enumeration.
-After GPIO ACPI library gets stricter the driver wouldn't work without
-ACPI related changes.
+So, you are proposing to try detecting this case instead of preventing overflows?
+Not sure how this would look like in a generic form...
 
-By the way, is this device have ever been enumerated via ACPI?
+
 
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/nfc/st21nfca/i2c.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-> index 5a82f553906c..737384d287aa 100644
-> --- a/drivers/nfc/st21nfca/i2c.c
-> +++ b/drivers/nfc/st21nfca/i2c.c
-> @@ -514,9 +514,9 @@ static int
-> st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
->  	/* Get EN GPIO from ACPI */
->  	gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN,
-> 1,
->  					 GPIOD_OUT_LOW);
-> -	if (!IS_ERR(gpiod_ena)) {
-> +	if (IS_ERR(gpiod_ena)) {
->  		nfc_err(dev, "Unable to get ENABLE GPIO\n");
-> -		return -ENODEV;
-> +		return PTR_ERR(gpiod_ena);
->  	}
->  
->  	phy->gpio_ena = desc_to_gpio(gpiod_ena);
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+> 	David
