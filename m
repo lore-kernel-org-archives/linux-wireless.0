@@ -1,68 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:37536 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750788AbdCNMlG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 08:41:06 -0400
-Received: by mail-wm0-f46.google.com with SMTP id n11so62781831wma.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2017 05:41:05 -0700 (PDT)
-Subject: Re: brcmfmac and WIPHY_FLAG_NETNS_OK
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Mark Asselstine <mark.asselstine@windriver.com>
-References: <2253234.njokx7NVYT@yow-masselst-lx1>
- <df16691e-62f7-4c95-0534-48d1dea4f5ba@broadcom.com>
- <1489490906.28373.3.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6d879e70-b75a-4708-78fc-ee25c0ffa67c@broadcom.com> (sfid-20170314_134123_874978_C2D4D73E)
-Date: Tue, 14 Mar 2017 13:41:02 +0100
-MIME-Version: 1.0
-In-Reply-To: <1489490906.28373.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mga07.intel.com ([134.134.136.100]:38842 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755256AbdC1JAf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 05:00:35 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 00/16] Networking drivers refcount conversions
+Date: Tue, 28 Mar 2017 11:56:27 +0300
+Message-Id: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112614_651952_849E22F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-3-2017 12:28, Johannes Berg wrote:
-> 
->> It never came up with any projects so far. I doubt that the patch
->> below is sufficient. I suspect something more is needed. Using git
->> blame I ended up finding these commits:
->>
->> a272a72 mac80211: allow using network namespaces
-> 
-> This is needed in brcm drivers.
-> 
->> 463d018 cfg80211: make aware of net namespaces
-> 
-> This has no impact on brcm drivers :)
-> 
->> 5061b0c mac80211: cooperate more with network namespaces
-> 
-> This shouldn't be needed, you're not referring to init_net in brcm
-> drivers.
-> 
->> I think what is required from brcmfmac is to set netns for each
->> netdev that we create to the same netns as the wiphy instance using
->> wiphy_net().
-> 
-> Yes, like the mac80211 patch above.
-> 
->> Not sure if there is more to consider, but hopefully Johannes can
->> comment on this although the mentioned commits have been around for a
->> while.
-> 
-> I don't think there's anything else.
-> 
->>>         wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
->>>                         WIPHY_FLAG_OFFCHAN_TX |
->>> -                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
->>> +                       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
->>> +                       WIPHY_FLAG_NETNS_OK;
-> 
-> This is not sufficient, you still have to set the netns for newly
-> created netdevs.
+This series, for various different networking drivers, replaces atomic_t reference
+counters with the new refcount_t type and API (see include/linux/refcount.h).
+By doing this we prevent intentional or accidental
+underflows or overflows that can led to use-after-free vulnerabilities.
 
-Thanks for confirming my suspicion.
+The below patches are fully independent and can be cherry-picked separately.
+Since we convert all kernel subsystems in the same fashion, resulting
+in about 300 patches, we have to group them for sending at least in some
+fashion to be manageable. Please excuse the long cc list.
 
-Regards,
-Arend
+If there are no objections to these patches, please take them
+through the relevant trees.
+
+Elena Reshetova (16):
+  drivers, net, ethernet: convert clip_entry.refcnt from atomic_t to
+    refcount_t
+  drivers, net, ethernet: convert mtk_eth.dma_refcnt from atomic_t to
+    refcount_t
+  drivers, net, mlx4: convert mlx4_cq.refcount from atomic_t to
+    refcount_t
+  drivers, net, mlx4: convert mlx4_qp.refcount from atomic_t to
+    refcount_t
+  drivers, net, mlx4: convert mlx4_srq.refcount from atomic_t to
+    refcount_t
+  drivers, net, mlx5: convert mlx5_cq.refcount from atomic_t to
+    refcount_t
+  drivers, net, mlx5: convert fs_node.refcount from atomic_t to
+    refcount_t
+  drivers, net, hamradio: convert sixpack.refcnt from atomic_t to
+    refcount_t
+  drivers, net: convert masces_rx_sa.refcnt from atomic_t to refcount_t
+  drivers, net: convert masces_rx_sc.refcnt from atomic_t to refcount_t
+  drivers, net: convert masces_tx_sa.refcnt from atomic_t to refcount_t
+  drivers, net, ppp: convert asyncppp.refcnt from atomic_t to refcount_t
+  drivers, net, ppp: convert ppp_file.refcnt from atomic_t to refcount_t
+  drivers, net, ppp: convert syncppp.refcnt from atomic_t to refcount_t
+  drivers, net, intersil: convert hostap_cmd_queue.usecnt from atomic_t
+    to refcount_t
+  drivers, net, intersil: convert request_context.refcount from atomic_t
+    to refcount_t
+
+ drivers/net/ethernet/chelsio/cxgb4/clip_tbl.c      | 13 ++++++-----
+ drivers/net/ethernet/chelsio/cxgb4/clip_tbl.h      |  4 +++-
+ drivers/net/ethernet/mediatek/mtk_eth_soc.c        |  8 ++++---
+ drivers/net/ethernet/mediatek/mtk_eth_soc.h        |  4 +++-
+ drivers/net/ethernet/mellanox/mlx4/cq.c            |  8 +++----
+ drivers/net/ethernet/mellanox/mlx4/qp.c            |  8 +++----
+ drivers/net/ethernet/mellanox/mlx4/srq.c           |  8 +++----
+ drivers/net/ethernet/mellanox/mlx5/core/cq.c       | 16 +++++++-------
+ drivers/net/ethernet/mellanox/mlx5/core/fs_core.c  | 24 ++++++++++-----------
+ drivers/net/ethernet/mellanox/mlx5/core/fs_core.h  |  3 ++-
+ drivers/net/hamradio/6pack.c                       | 12 +++++------
+ drivers/net/macsec.c                               | 25 +++++++++++-----------
+ drivers/net/ppp/ppp_async.c                        | 10 ++++-----
+ drivers/net/ppp/ppp_generic.c                      | 17 ++++++++-------
+ drivers/net/ppp/ppp_synctty.c                      | 11 +++++-----
+ drivers/net/wireless/intersil/hostap/hostap_hw.c   | 12 +++++------
+ drivers/net/wireless/intersil/hostap/hostap_wlan.h |  3 ++-
+ .../net/wireless/intersil/orinoco/orinoco_usb.c    | 15 +++++++------
+ include/linux/mlx4/device.h                        |  8 +++----
+ include/linux/mlx5/cq.h                            |  4 ++--
+ 20 files changed, 112 insertions(+), 101 deletions(-)
+
+-- 
+2.7.4
