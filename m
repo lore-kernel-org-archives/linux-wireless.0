@@ -1,137 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38741 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752176AbdC0NAC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Mar 2017 09:00:02 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2RD00dY030119
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 06:00:00 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0a-0016f401.pphosted.com with ESMTP id 29f247g8yy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2017 06:00:00 -0700
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v2] mwifiex: Support USB interrupt endpoint for command response/event
-Date: Mon, 27 Mar 2017 18:27:44 +0530
-Message-ID: <1490619464-14844-1-git-send-email-gbhat@marvell.com> (sfid-20170327_150018_939561_5D710F7B)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:63081 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754722AbdC1I63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 04:58:29 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 06/16] drivers, net, mlx5: convert mlx5_cq.refcount from atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 11:56:33 +0300
+Message-Id: <1490691403-4016-7-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112613_787673_D2534E29)
+In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-USB firmware added support for sending command response/event through
-interrupt endpoint, to enhance RX throughput. Added corresponding changes
-required to support this feature. This change takes care of backward
-compatibility with older firmware.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
-v2: Fixed typo in commit message
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 45 +++++++++++++++++++++++-------
- drivers/net/wireless/marvell/mwifiex/usb.h |  4 +++
- 2 files changed, 39 insertions(+), 10 deletions(-)
+ drivers/net/ethernet/mellanox/mlx5/core/cq.c | 16 ++++++++--------
+ include/linux/mlx5/cq.h                      |  4 ++--
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 9cf3334..2f7705c 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -306,9 +306,17 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
- 		}
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/cq.c b/drivers/net/ethernet/mellanox/mlx5/core/cq.c
+index 336d473..1016e05 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/cq.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/cq.c
+@@ -58,7 +58,7 @@ void mlx5_cq_tasklet_cb(unsigned long data)
+ 				 tasklet_ctx.list) {
+ 		list_del_init(&mcq->tasklet_ctx.list);
+ 		mcq->tasklet_ctx.comp(mcq);
+-		if (atomic_dec_and_test(&mcq->refcount))
++		if (refcount_dec_and_test(&mcq->refcount))
+ 			complete(&mcq->free);
+ 		if (time_after(jiffies, end))
+ 			break;
+@@ -80,7 +80,7 @@ static void mlx5_add_cq_to_tasklet(struct mlx5_core_cq *cq)
+ 	 * still arrive.
+ 	 */
+ 	if (list_empty_careful(&cq->tasklet_ctx.list)) {
+-		atomic_inc(&cq->refcount);
++		refcount_inc(&cq->refcount);
+ 		list_add_tail(&cq->tasklet_ctx.list, &tasklet_ctx->list);
  	}
+ 	spin_unlock_irqrestore(&tasklet_ctx->lock, flags);
+@@ -94,7 +94,7 @@ void mlx5_cq_completion(struct mlx5_core_dev *dev, u32 cqn)
+ 	spin_lock(&table->lock);
+ 	cq = radix_tree_lookup(&table->tree, cqn);
+ 	if (likely(cq))
+-		atomic_inc(&cq->refcount);
++		refcount_inc(&cq->refcount);
+ 	spin_unlock(&table->lock);
  
--	usb_fill_bulk_urb(ctx->urb, card->udev,
--			  usb_rcvbulkpipe(card->udev, ctx->ep), ctx->skb->data,
--			  size, mwifiex_usb_rx_complete, (void *)ctx);
-+	if (card->rx_cmd_ep == ctx->ep &&
-+	    card->rx_cmd_ep_type == USB_ENDPOINT_XFER_INT)
-+		usb_fill_int_urb(ctx->urb, card->udev,
-+				 usb_rcvintpipe(card->udev, ctx->ep),
-+				 ctx->skb->data, size, mwifiex_usb_rx_complete,
-+				 (void *)ctx, card->rx_cmd_interval);
-+	else
-+		usb_fill_bulk_urb(ctx->urb, card->udev,
-+				  usb_rcvbulkpipe(card->udev, ctx->ep),
-+				  ctx->skb->data, size, mwifiex_usb_rx_complete,
-+				  (void *)ctx);
+ 	if (!cq) {
+@@ -106,7 +106,7 @@ void mlx5_cq_completion(struct mlx5_core_dev *dev, u32 cqn)
  
- 	if (card->rx_cmd_ep == ctx->ep)
- 		atomic_inc(&card->rx_cmd_urb_pending);
-@@ -424,10 +432,13 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 		epd = &iface_desc->endpoint[i].desc;
- 		if (usb_endpoint_dir_in(epd) &&
- 		    usb_endpoint_num(epd) == MWIFIEX_USB_EP_CMD_EVENT &&
--		    usb_endpoint_xfer_bulk(epd)) {
--			pr_debug("info: bulk IN: max pkt size: %d, addr: %d\n",
-+		    (usb_endpoint_xfer_bulk(epd) ||
-+		     usb_endpoint_xfer_int(epd))) {
-+			card->rx_cmd_ep_type = usb_endpoint_type(epd);
-+			card->rx_cmd_interval = epd->bInterval;
-+			pr_debug("info: Rx CMD/EVT:: max pkt size: %d, addr: %d, ep_type: %d\n",
- 				 le16_to_cpu(epd->wMaxPacketSize),
--				 epd->bEndpointAddress);
-+				 epd->bEndpointAddress, card->rx_cmd_ep_type);
- 			card->rx_cmd_ep = usb_endpoint_num(epd);
- 			atomic_set(&card->rx_cmd_urb_pending, 0);
- 		}
-@@ -461,10 +472,16 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 		}
- 		if (usb_endpoint_dir_out(epd) &&
- 		    usb_endpoint_num(epd) == MWIFIEX_USB_EP_CMD_EVENT &&
--		    usb_endpoint_xfer_bulk(epd)) {
-+		    (usb_endpoint_xfer_bulk(epd) ||
-+		     usb_endpoint_xfer_int(epd))) {
-+			card->tx_cmd_ep_type = usb_endpoint_type(epd);
-+			card->tx_cmd_interval = epd->bInterval;
- 			pr_debug("info: bulk OUT: max pkt size: %d, addr: %d\n",
- 				 le16_to_cpu(epd->wMaxPacketSize),
- 				 epd->bEndpointAddress);
-+			pr_debug("info: Tx CMD:: max pkt size: %d, addr: %d, ep_type: %d\n",
-+				 le16_to_cpu(epd->wMaxPacketSize),
-+				 epd->bEndpointAddress, card->tx_cmd_ep_type);
- 			card->tx_cmd_ep = usb_endpoint_num(epd);
- 			atomic_set(&card->tx_cmd_urb_pending, 0);
- 			card->bulk_out_maxpktsize =
-@@ -884,9 +901,17 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	context->skb = skb;
- 	tx_urb = context->urb;
+ 	cq->comp(cq);
  
--	usb_fill_bulk_urb(tx_urb, card->udev, usb_sndbulkpipe(card->udev, ep),
--			  data, skb->len, mwifiex_usb_tx_complete,
--			  (void *)context);
-+	if (ep == card->tx_cmd_ep &&
-+	    card->tx_cmd_ep_type == USB_ENDPOINT_XFER_INT)
-+		usb_fill_int_urb(tx_urb, card->udev,
-+				 usb_sndintpipe(card->udev, ep), data,
-+				 skb->len, mwifiex_usb_tx_complete,
-+				 (void *)context, card->tx_cmd_interval);
-+	else
-+		usb_fill_bulk_urb(tx_urb, card->udev,
-+				  usb_sndbulkpipe(card->udev, ep), data,
-+				  skb->len, mwifiex_usb_tx_complete,
-+				  (void *)context);
+-	if (atomic_dec_and_test(&cq->refcount))
++	if (refcount_dec_and_test(&cq->refcount))
+ 		complete(&cq->free);
+ }
  
- 	tx_urb->transfer_flags |= URB_ZERO_PACKET;
+@@ -119,7 +119,7 @@ void mlx5_cq_event(struct mlx5_core_dev *dev, u32 cqn, int event_type)
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
-index 16017ae..e36bd63 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.h
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.h
-@@ -90,6 +90,10 @@ struct usb_card_rec {
- 	struct urb_context tx_cmd;
- 	u8 mc_resync_flag;
- 	struct usb_tx_data_port port[MWIFIEX_TX_DATA_PORT];
-+	int rx_cmd_ep_type;
-+	u8 rx_cmd_interval;
-+	int tx_cmd_ep_type;
-+	u8 tx_cmd_interval;
- };
+ 	cq = radix_tree_lookup(&table->tree, cqn);
+ 	if (cq)
+-		atomic_inc(&cq->refcount);
++		refcount_inc(&cq->refcount);
  
- struct fw_header {
+ 	spin_unlock(&table->lock);
+ 
+@@ -130,7 +130,7 @@ void mlx5_cq_event(struct mlx5_core_dev *dev, u32 cqn, int event_type)
+ 
+ 	cq->event(cq, event_type);
+ 
+-	if (atomic_dec_and_test(&cq->refcount))
++	if (refcount_dec_and_test(&cq->refcount))
+ 		complete(&cq->free);
+ }
+ 
+@@ -159,7 +159,7 @@ int mlx5_core_create_cq(struct mlx5_core_dev *dev, struct mlx5_core_cq *cq,
+ 	cq->cqn = MLX5_GET(create_cq_out, out, cqn);
+ 	cq->cons_index = 0;
+ 	cq->arm_sn     = 0;
+-	atomic_set(&cq->refcount, 1);
++	refcount_set(&cq->refcount, 1);
+ 	init_completion(&cq->free);
+ 	if (!cq->comp)
+ 		cq->comp = mlx5_add_cq_to_tasklet;
+@@ -222,7 +222,7 @@ int mlx5_core_destroy_cq(struct mlx5_core_dev *dev, struct mlx5_core_cq *cq)
+ 	synchronize_irq(cq->irqn);
+ 
+ 	mlx5_debug_cq_remove(dev, cq);
+-	if (atomic_dec_and_test(&cq->refcount))
++	if (refcount_dec_and_test(&cq->refcount))
+ 		complete(&cq->free);
+ 	wait_for_completion(&cq->free);
+ 
+diff --git a/include/linux/mlx5/cq.h b/include/linux/mlx5/cq.h
+index 9589884..6a57ec2 100644
+--- a/include/linux/mlx5/cq.h
++++ b/include/linux/mlx5/cq.h
+@@ -35,7 +35,7 @@
+ 
+ #include <rdma/ib_verbs.h>
+ #include <linux/mlx5/driver.h>
+-
++#include <linux/refcount.h>
+ 
+ struct mlx5_core_cq {
+ 	u32			cqn;
+@@ -43,7 +43,7 @@ struct mlx5_core_cq {
+ 	__be32		       *set_ci_db;
+ 	__be32		       *arm_db;
+ 	struct mlx5_uars_page  *uar;
+-	atomic_t		refcount;
++	refcount_t		refcount;
+ 	struct completion	free;
+ 	unsigned		vector;
+ 	unsigned int		irqn;
 -- 
-1.9.1
+2.7.4
