@@ -1,76 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48246 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756305AbdCUMRN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 08:17:13 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
-        "Gustavo F. Padovan" <gustavo@padovan.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "open list\:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>, wcn36xx@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org
-Subject: Re: [PATCH 1/3] soc: qcom: smd: Transition client drivers from smd to rpmsg
-References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
-        <3DCEF38C-F8FC-4941-936F-921247E13B78@holtmann.org>
-Date: Tue, 21 Mar 2017 14:17:02 +0200
-In-Reply-To: <3DCEF38C-F8FC-4941-936F-921247E13B78@holtmann.org> (Marcel
-        Holtmann's message of "Tue, 21 Mar 2017 09:20:01 +0100")
-Message-ID: <87zige6czl.fsf@kamboji.qca.qualcomm.com> (sfid-20170321_131751_150003_B39F22D8)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:30539 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754759AbdC1I63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 04:58:29 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 12/16] drivers, net, ppp: convert asyncppp.refcnt from atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 11:56:39 +0300
+Message-Id: <1490691403-4016-13-git-send-email-elena.reshetova@intel.com> (sfid-20170328_110904_888585_B646D641)
+In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcel Holtmann <marcel@holtmann.org> writes:
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
->> By moving these client drivers to use RPMSG instead of the direct SMD
->> API we can reuse them ontop of the newly added GLINK wire-protocol
->> support found in the 820 and 835 Qualcomm platforms.
->> 
->> As the new (RPMSG-based) and old SMD implementations are mutually
->> exclusive we have to change all client drivers in one commit, to make
->> sure we have a working system before and after this transition.
->> 
->> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->> ---
->> 
->> Based on v4.11-rc3 with Arnd's Kconfig dependency fixes for BT_QCOMSMD
->> (https://lkml.org/lkml/2017/3/20/1038).
->> 
->> drivers/bluetooth/Kconfig                  |  2 +-
->> drivers/bluetooth/btqcomsmd.c              | 32 +++++++++----------
->> drivers/net/wireless/ath/wcn36xx/Kconfig   |  2 +-
->> drivers/net/wireless/ath/wcn36xx/main.c    |  6 ++--
->> drivers/net/wireless/ath/wcn36xx/smd.c     | 10 +++---
->> drivers/net/wireless/ath/wcn36xx/smd.h     |  6 ++--
->> drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
->> drivers/soc/qcom/Kconfig                   |  4 +--
->> drivers/soc/qcom/smd-rpm.c                 | 43 +++++++++++++------------
->> drivers/soc/qcom/wcnss_ctrl.c              | 50 +++++++++++++++++-------------
->> include/linux/soc/qcom/wcnss_ctrl.h        | 11 ++++---
->> net/qrtr/Kconfig                           |  2 +-
->> net/qrtr/smd.c                             | 42 ++++++++++++-------------
->> 13 files changed, 108 insertions(+), 104 deletions(-)
->
-> I think that it is best if Dave takes these directly then and I pull
-> them back down later into our trees. Including the Kconfig fix that I
-> will ACK as well.
->
-> Acked-by: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/net/ppp/ppp_async.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Sounds good to me.
-
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
+diff --git a/drivers/net/ppp/ppp_async.c b/drivers/net/ppp/ppp_async.c
+index feb9569..2d08f7e 100644
+--- a/drivers/net/ppp/ppp_async.c
++++ b/drivers/net/ppp/ppp_async.c
+@@ -69,7 +69,7 @@ struct asyncppp {
+ 
+ 	struct tasklet_struct tsk;
+ 
+-	atomic_t	refcnt;
++	refcount_t	refcnt;
+ 	struct semaphore dead_sem;
+ 	struct ppp_channel chan;	/* interface to generic ppp layer */
+ 	unsigned char	obuf[OBUFSIZE];
+@@ -140,14 +140,14 @@ static struct asyncppp *ap_get(struct tty_struct *tty)
+ 	read_lock(&disc_data_lock);
+ 	ap = tty->disc_data;
+ 	if (ap != NULL)
+-		atomic_inc(&ap->refcnt);
++		refcount_inc(&ap->refcnt);
+ 	read_unlock(&disc_data_lock);
+ 	return ap;
+ }
+ 
+ static void ap_put(struct asyncppp *ap)
+ {
+-	if (atomic_dec_and_test(&ap->refcnt))
++	if (refcount_dec_and_test(&ap->refcnt))
+ 		up(&ap->dead_sem);
+ }
+ 
+@@ -185,7 +185,7 @@ ppp_asynctty_open(struct tty_struct *tty)
+ 	skb_queue_head_init(&ap->rqueue);
+ 	tasklet_init(&ap->tsk, ppp_async_process, (unsigned long) ap);
+ 
+-	atomic_set(&ap->refcnt, 1);
++	refcount_set(&ap->refcnt, 1);
+ 	sema_init(&ap->dead_sem, 0);
+ 
+ 	ap->chan.private = ap;
+@@ -234,7 +234,7 @@ ppp_asynctty_close(struct tty_struct *tty)
+ 	 * our channel ops (i.e. ppp_async_send/ioctl) are in progress
+ 	 * by the time it returns.
+ 	 */
+-	if (!atomic_dec_and_test(&ap->refcnt))
++	if (!refcount_dec_and_test(&ap->refcnt))
+ 		down(&ap->dead_sem);
+ 	tasklet_kill(&ap->tsk);
+ 
 -- 
-Kalle Valo
+2.7.4
