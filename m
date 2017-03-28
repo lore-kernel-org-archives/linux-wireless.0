@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:63388 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753074AbdCBQsW (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41457 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754572AbdC1KoV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 11:48:22 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: kasan-dev@googlegroups.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 21/26] drm/bridge: ps8622: reduce stack size for KASAN
-Date: Thu,  2 Mar 2017 17:38:29 +0100
-Message-Id: <20170302163834.2273519-22-arnd@arndb.de> (sfid-20170302_175429_772104_B88907C7)
-In-Reply-To: <20170302163834.2273519-1-arnd@arndb.de>
-References: <20170302163834.2273519-1-arnd@arndb.de>
+        Tue, 28 Mar 2017 06:44:21 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 5/5] brcmfmac: no need for d11inf instance in brcmf_pno_start_sched_scan()
+Date: Tue, 28 Mar 2017 11:43:28 +0100
+Message-Id: <1490697808-5538-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_124745_883678_AC40E948)
+In-Reply-To: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_KASAN is set, each call to ps8622_set() adds an object to the
-stack frame, leading to a warning about possible stack overflow:
+In brcmf_pno_start_sched_scan() a local variable is declared and
+assigned for struct brcmu_d11inf. However, there is no other reference
+to it so it is unnecessary.
 
-drivers/gpu/drm/bridge/parade-ps8622.c: In function 'ps8622_send_config':
-drivers/gpu/drm/bridge/parade-ps8622.c:338:1: error: the frame size of 5872 bytes is larger than 3072 bytes [-Werror=frame-larger-than=]
-
-Marking this as noinline_for_kasan completely avoids the problem.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/gpu/drm/bridge/parade-ps8622.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/gpu/drm/bridge/parade-ps8622.c b/drivers/gpu/drm/bridge/parade-ps8622.c
-index ac8cc5b50d9f..6b995edd2a46 100644
---- a/drivers/gpu/drm/bridge/parade-ps8622.c
-+++ b/drivers/gpu/drm/bridge/parade-ps8622.c
-@@ -79,7 +79,7 @@ static inline struct ps8622_bridge *
- 	return container_of(connector, struct ps8622_bridge, connector);
- }
- 
--static int ps8622_set(struct i2c_client *client, u8 page, u8 reg, u8 val)
-+static noinline_for_kasan int ps8622_set(struct i2c_client *client, u8 page, u8 reg, u8 val)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index 9a25e79..6c3bde8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -182,7 +182,6 @@ int brcmf_pno_clean(struct brcmf_if *ifp)
+ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 			       struct cfg80211_sched_scan_request *req)
  {
- 	int ret;
- 	struct i2c_adapter *adap = client->adapter;
+-	struct brcmu_d11inf *d11inf;
+ 	struct brcmf_pno_config_le pno_cfg;
+ 	struct cfg80211_ssid *ssid;
+ 	u16 chan;
+@@ -209,7 +208,6 @@ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 	}
+ 
+ 	/* configure channels to use */
+-	d11inf = &ifp->drvr->config->d11inf;
+ 	for (i = 0; i < req->n_channels; i++) {
+ 		chan = req->channels[i]->hw_value;
+ 		pno_cfg.channel_list[i] = cpu_to_le16(chan);
 -- 
-2.9.0
+1.9.1
