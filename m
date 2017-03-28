@@ -1,89 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42942 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932271AbdCaHQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 03:16:36 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] Documentation/sphinx: kerneldoc: add "unused-functions"
-Date: Fri, 31 Mar 2017 09:16:31 +0200
-Message-Id: <20170331071632.6209-1-johannes@sipsolutions.net> (sfid-20170331_091641_396897_C1BCC55D)
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41341 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754572AbdC1KoC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 06:44:02 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/5] brcmfmac: wrap brcmf_fws_init into bcdc layer
+Date: Tue, 28 Mar 2017 11:43:24 +0100
+Message-Id: <1490697808-5538-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_124744_160193_DEF2D286)
+In-Reply-To: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1490697808-5538-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Franky Lin <franky.lin@broadcom.com>
 
-When adding functions one by one into documentation, in order to
-order/group things properly, it's easy to miss things. Allow use
-of the kernel-doc directive with "unused-functions" like this
+Create a new protocol layer interface brcmf_proto_init_cb for protocol
+layer to finish initialzation after core module components(fweh and
+etc.) are initialized.
 
-.. kernel-doc:: <filename>
-   :unused-functions:
-
-to output anything previously unused from that file. This allows
-grouping things but still making sure that the documentation has
-all the functions.
-
-Internally this works by collecting (per-file) those functions
-(and enums, structs, doc sections...) that are explicitly used,
-and invoking the kernel-doc script with "-nofunction" later.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+Change-Id: I560d2478a7c09766cf07b20d74b31dff5ca6ac7b
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/8156
+Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- Documentation/sphinx/kerneldoc.py | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c  | 7 +++++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c  | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h | 9 +++++++++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/sphinx/kerneldoc.py b/Documentation/sphinx/kerneldoc.py
-index d15e07f36881..79fc1491348a 100644
---- a/Documentation/sphinx/kerneldoc.py
-+++ b/Documentation/sphinx/kerneldoc.py
-@@ -41,6 +41,9 @@ from sphinx.ext.autodoc import AutodocReporter
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 92eafcc..bc24b00 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -417,6 +417,12 @@ static void brcmf_proto_bcdc_rxreorder(struct brcmf_if *ifp,
+ 	brcmf_fws_reset_interface(ifp);
+ }
  
- __version__  = '1.0'
- 
-+# per-file list
-+_used_fns = {}
++static int
++brcmf_proto_bcdc_init_done(struct brcmf_pub *drvr)
++{
++	return brcmf_fws_init(drvr);
++}
 +
- class KernelDocDirective(Directive):
-     """Extract kernel-doc comments from the specified file"""
-     required_argument = 1
-@@ -50,6 +53,7 @@ class KernelDocDirective(Directive):
-         'functions': directives.unchanged_required,
-         'export': directives.unchanged,
-         'internal': directives.unchanged,
-+        'unused-functions': directives.unchanged,
-     }
-     has_content = False
+ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_bcdc *bcdc;
+@@ -443,6 +449,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ 	drvr->proto->add_if = brcmf_proto_bcdc_add_if;
+ 	drvr->proto->del_if = brcmf_proto_bcdc_del_if;
+ 	drvr->proto->reset_if = brcmf_proto_bcdc_reset_if;
++	drvr->proto->init_done = brcmf_proto_bcdc_init_done;
+ 	drvr->proto->pd = bcdc;
  
-@@ -60,6 +64,10 @@ class KernelDocDirective(Directive):
-         filename = env.config.kerneldoc_srctree + '/' + self.arguments[0]
-         export_file_patterns = []
+ 	drvr->hdrlen += BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTES;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 60c6c78..9886280 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -986,7 +986,7 @@ int brcmf_bus_started(struct device *dev)
+ 	}
+ 	brcmf_feat_attach(drvr);
  
-+        if not filename in _used_fns:
-+            _used_fns[filename] = []
-+        _used_fns_this_file = _used_fns[filename]
+-	ret = brcmf_fws_init(drvr);
++	ret = brcmf_proto_init_done(drvr);
+ 	if (ret < 0)
+ 		goto fail;
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+index 3048ed5..600fd33 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+@@ -47,6 +47,7 @@ struct brcmf_proto {
+ 	void (*add_if)(struct brcmf_if *ifp);
+ 	void (*del_if)(struct brcmf_if *ifp);
+ 	void (*reset_if)(struct brcmf_if *ifp);
++	int (*init_done)(struct brcmf_pub *drvr);
+ 	void *pd;
+ };
+ 
+@@ -145,4 +146,12 @@ static inline bool brcmf_proto_is_reorder_skb(struct sk_buff *skb)
+ 	drvr->proto->reset_if(ifp);
+ }
+ 
++static inline int
++brcmf_proto_init_done(struct brcmf_pub *drvr)
++{
++	if (!drvr->proto->init_done)
++		return 0;
++	return drvr->proto->init_done(drvr);
++}
 +
-         # Tell sphinx of the dependency
-         env.note_dependency(os.path.abspath(filename))
- 
-@@ -73,10 +81,16 @@ class KernelDocDirective(Directive):
-             cmd += ['-internal']
-             export_file_patterns = str(self.options.get('internal')).split()
-         elif 'doc' in self.options:
--            cmd += ['-function', str(self.options.get('doc'))]
-+            f = str(self.options.get('doc'))
-+            cmd += ['-function', f]
-+            _used_fns_this_file.append(f)
-+        elif 'unused-functions' in self.options:
-+            for f in _used_fns_this_file:
-+                cmd += ['-nofunction', f]
-         elif 'functions' in self.options:
-             for f in str(self.options.get('functions')).split():
-                 cmd += ['-function', f]
-+                _used_fns_this_file.append(f)
- 
-         for pattern in export_file_patterns:
-             for f in glob.glob(env.config.kerneldoc_srctree + '/' + pattern):
+ #endif /* BRCMFMAC_PROTO_H */
 -- 
-2.11.0
+1.9.1
