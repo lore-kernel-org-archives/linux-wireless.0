@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:33617 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751648AbdCCPhV (ORCPT
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:33043 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754450AbdC1KvO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 10:37:21 -0500
+        Tue, 28 Mar 2017 06:51:14 -0400
+Received: by mail-qk0-f172.google.com with SMTP id f11so61503761qkb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Mar 2017 03:50:45 -0700 (PDT)
+Subject: Re: [RFC v2 2/2] cfg80211: support 4-way handshake offloading for
+ 802.1X
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170221123758.5339-1-johannes@sipsolutions.net>
+ <20170221123758.5339-2-johannes@sipsolutions.net>
+Cc: Avraham Stern <avraham.stern@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5274c4b4-9bce-208c-e3f2-640d54b81a30@broadcom.com> (sfid-20170328_125400_417188_D9126A2E)
+Date: Tue, 28 Mar 2017 12:50:37 +0200
 MIME-Version: 1.0
-In-Reply-To: <ecea124d-869d-2d62-ef49-34617391d6a2@virtuozzo.com>
-References: <20170302163834.2273519-1-arnd@arndb.de> <20170302163834.2273519-26-arnd@arndb.de>
- <6ada42bd-4cc7-4985-3e3b-705cba6e157d@virtuozzo.com> <CAK8P3a1AT+x9TiCyC56m6DoiZnxCYcMm6ZtLKXa7nfq=f8kWvw@mail.gmail.com>
- <ecea124d-869d-2d62-ef49-34617391d6a2@virtuozzo.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 3 Mar 2017 16:37:20 +0100
-Message-ID: <CAK8P3a3aMQ+q8o2rFEJ+qLQvauJsOi4kYRp41123qa5+hjY8sA@mail.gmail.com> (sfid-20170303_163801_673048_8B5EDCD4)
-Subject: Re: [PATCH 25/26] isdn: eicon: mark divascapi incompatible with kasan
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: kasan-dev <kasan-dev@googlegroups.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170221123758.5339-2-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 3, 2017 at 4:22 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
-> On 03/03/2017 05:54 PM, Arnd Bergmann wrote:
->> On Fri, Mar 3, 2017 at 3:20 PM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
->>> On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
->>>
->>> This is kinda radical solution.
->>> Wouldn't be better to just increase -Wframe-larger-than for this driver through Makefile?
->>
->> I thought about it too, and decided for disabling the driver entirely
->> since I suspected that
->> not only the per-function stack frame is overly large here but also
->> depth of the call chain,
->> which would then lead us to hiding an actual stack overflow.
->>
->
-> No one complained so far ;)
-> Disabling the driver like you did will throw it out from allmodconfig so it will receive less compile-testing.
 
-Good point, I'll add a driver specific flag then and leave it there.
 
->> Note that this driver is almost certainly broken, it hasn't seen any
->> updates other than
->> style and compile-warning fixes in 10 years and doesn't support any of
->> the hardware
->> introduced since 2002 (the company still makes PCIe ISDN adapters, but
->> the driver
->> only supports legacy PCI versions and older buses).
->
-> Which means that it's unlikely that someone will run this driver with KASAN
-and trigger stack overflow (if it's really possible).
+On 21-2-2017 13:37, Johannes Berg wrote:
+> From: Avraham Stern <avraham.stern@intel.com>
+> 
+> Add API for setting the PMK to the driver. For FT support, allow
+> setting also the PMK-R0 Name.
+> 
+> This can be used by drivers that support 4-Way handshake offload
+> while IEEE802.1X authentication is managed by upper layers.
 
-True.
+So looking at wpa_supplicant RFC patches I see that it now diverts
+driver_nl80211_set_key() for ALG_PMK case to the new api. So why not
+extending CMD_NEW_KEY to support ALG_PMK?
 
-   Arnd
+Regards,
+Arend
