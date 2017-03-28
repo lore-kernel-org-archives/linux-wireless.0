@@ -1,85 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:34543 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753805AbdC2Hnb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 03:43:31 -0400
-Received: by mail-wm0-f53.google.com with SMTP id w204so16497324wmd.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Mar 2017 00:43:30 -0700 (PDT)
-Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Dennis New <dennisn@dennisn.mooo.com>,
-        linux-wireless@vger.kernel.org
-References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
- <1490772890.18052.8.camel@sipsolutions.net>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <3320e9f4-21c3-966f-df6e-0bc8292a88a0@broadcom.com> (sfid-20170329_094418_257057_C503D468)
-Date: Wed, 29 Mar 2017 09:43:27 +0200
-MIME-Version: 1.0
-In-Reply-To: <1490772890.18052.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+Received: from mga07.intel.com ([134.134.136.100]:38842 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755257AbdC1JAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 05:00:37 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 03/16] drivers, net, mlx4: convert mlx4_cq.refcount from atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 11:56:30 +0300
+Message-Id: <1490691403-4016-4-git-send-email-elena.reshetova@intel.com> (sfid-20170328_112614_237571_B0508034)
+In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29-3-2017 9:34, Johannes Berg wrote:
-> On Fri, 2017-03-24 at 21:32 -0400, Dennis New wrote:
->> Ever since I upgraded to the 4.10 kernels (I don't think this
->> behavior existed in the 4.8 series), after I startup my laptop
->> (either from cold boot, or from standby), my wlan0 interface keeps
->> deauthenticating
-> 
->> ...
->> 19:23:29 kernel: wlan0: authenticate with 00:11:22:33:44:55
->> 19:23:29 kernel: ------------[ cut here ]------------
->> 19:23:29 kernel: WARNING: CPU: 0 PID: 18925 at
->> net/mac80211/mlme.c:287 ieee80211_determine_chantype+0x12e/0x380
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-284	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
-285					tracking ? 0 :
-286					   IEEE80211_CHAN_DISABLED)) {
-287		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
-288			ret = IEEE80211_STA_DISABLE_HT |
-289			      IEEE80211_STA_DISABLE_VHT;
-290			break;
-291		}
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/net/ethernet/mellanox/mlx4/cq.c | 8 ++++----
+ include/linux/mlx4/device.h             | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-> This is already indicating a severe problem. I don't know how you end
-> up in this situation with b43, since that doesn't have any regulatory
-> magic afaict.
-
-The only way this WARN_ON can kick in is below so may be interesting to
-log the three variables checked in 'if' statement.
-
-161	chandef->chan = channel;
-162	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-163	chandef->center_freq1 = channel->center_freq;
-164	chandef->center_freq2 = 0;
-165
-166	if (!ht_cap || !ht_oper || !sta_ht_cap.ht_supported) {
-167		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
-168		goto out;
-169	}
-170
-171	chandef->width = NL80211_CHAN_WIDTH_20;
-
->> 19:23:29 kernel: wlan0: associated
->>
->> 19:24:29 kernel: wlan0: deauthenticating from 00:11:22:33:44:55 by
->> local choice (Reason: 3=DEAUTH_LEAVING)
->>
-> 
-> I'm convinced that this comes from reg_check_channels().
-> 
-> The above WARN_ON() already told you that the channel was considered
-> invalid.
-> 
-> Do you know what channel your AP is on? Perhaps show the output of "iw
-> wlan0 scan dump" while it's connected (you have 60 seconds :P)
-> 
-> Can you please show the output of "iw list" and "iw phy0 channels"?
-
-Could it be a radar channel and it's waiting for CAC timeout or whatever
-the term is ;-) ?
-
-Regards,
-Arend
+diff --git a/drivers/net/ethernet/mellanox/mlx4/cq.c b/drivers/net/ethernet/mellanox/mlx4/cq.c
+index fa6d235..c58e8b7 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/cq.c
++++ b/drivers/net/ethernet/mellanox/mlx4/cq.c
+@@ -69,7 +69,7 @@ void mlx4_cq_tasklet_cb(unsigned long data)
+ 	list_for_each_entry_safe(mcq, temp, &ctx->process_list, tasklet_ctx.list) {
+ 		list_del_init(&mcq->tasklet_ctx.list);
+ 		mcq->tasklet_ctx.comp(mcq);
+-		if (atomic_dec_and_test(&mcq->refcount))
++		if (refcount_dec_and_test(&mcq->refcount))
+ 			complete(&mcq->free);
+ 		if (time_after(jiffies, end))
+ 			break;
+@@ -92,7 +92,7 @@ static void mlx4_add_cq_to_tasklet(struct mlx4_cq *cq)
+ 	 * still arrive.
+ 	 */
+ 	if (list_empty_careful(&cq->tasklet_ctx.list)) {
+-		atomic_inc(&cq->refcount);
++		refcount_inc(&cq->refcount);
+ 		kick = list_empty(&tasklet_ctx->list);
+ 		list_add_tail(&cq->tasklet_ctx.list, &tasklet_ctx->list);
+ 		if (kick)
+@@ -343,7 +343,7 @@ int mlx4_cq_alloc(struct mlx4_dev *dev, int nent,
+ 	cq->cons_index = 0;
+ 	cq->arm_sn     = 1;
+ 	cq->uar        = uar;
+-	atomic_set(&cq->refcount, 1);
++	refcount_set(&cq->refcount, 1);
+ 	init_completion(&cq->free);
+ 	cq->comp = mlx4_add_cq_to_tasklet;
+ 	cq->tasklet_ctx.priv =
+@@ -385,7 +385,7 @@ void mlx4_cq_free(struct mlx4_dev *dev, struct mlx4_cq *cq)
+ 	    priv->eq_table.eq[MLX4_EQ_ASYNC].irq)
+ 		synchronize_irq(priv->eq_table.eq[MLX4_EQ_ASYNC].irq);
+ 
+-	if (atomic_dec_and_test(&cq->refcount))
++	if (refcount_dec_and_test(&cq->refcount))
+ 		complete(&cq->free);
+ 	wait_for_completion(&cq->free);
+ 
+diff --git a/include/linux/mlx4/device.h b/include/linux/mlx4/device.h
+index 7e66e4f..5fea001 100644
+--- a/include/linux/mlx4/device.h
++++ b/include/linux/mlx4/device.h
+@@ -40,7 +40,7 @@
+ #include <linux/cpu_rmap.h>
+ #include <linux/crash_dump.h>
+ 
+-#include <linux/atomic.h>
++#include <linux/refcount.h>
+ 
+ #include <linux/timecounter.h>
+ 
+@@ -738,7 +738,7 @@ struct mlx4_cq {
+ 	int			cqn;
+ 	unsigned		vector;
+ 
+-	atomic_t		refcount;
++	refcount_t		refcount;
+ 	struct completion	free;
+ 	struct {
+ 		struct list_head list;
+-- 
+2.7.4
