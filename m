@@ -1,25 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42480 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59392 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752737AbdCINFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Mar 2017 08:05:00 -0500
-Date: Thu, 9 Mar 2017 13:58:50 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH] rt2x00: fix TX_PWR_CFG_4 register definition
-Message-ID: <20170309125849.GA32547@redhat.com> (sfid-20170309_140700_061141_6A454A0E)
-References: <20170308235412.GA22227@makrotopia.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170308235412.GA22227@makrotopia.org>
+        id S1752034AbdC1MfP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 08:35:15 -0400
+Message-ID: <1490704473.18052.1.camel@sipsolutions.net> (sfid-20170328_143652_459787_7AB43CDB)
+Subject: Re: [PATCH for-4.11 2/2] cfg80211: check rdev resume callback only
+ for registered wiphy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Daniel J Blueman <daniel@quora.org>
+Date: Tue, 28 Mar 2017 14:34:33 +0200
+In-Reply-To: <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_112615_711798_FE2BF116)
+References: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1490688691-20100-3-git-send-email-arend.vanspriel@broadcom.com>
+         (sfid-20170328_112615_711798_FE2BF116)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 09, 2017 at 12:54:22AM +0100, Daniel Golle wrote:
-> Some of the macros used to describe the TX_PWR_CFG_4 register accidentally
-> refer to TX_PWR_CFG_3, probably a copy&paste error. Fix that.
-> 
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Changing the checks in
+> wiphy_resume() to only access the struct
+> cfg80211_registered_device::ops
+> when the wiphy instance is registered.
+
+[...]
+
+> +++ b/net/wireless/sysfs.c
+> @@ -132,12 +132,10 @@ static int wiphy_resume(struct device *dev)
+>  	/* Age scan results with time spent in suspend */
+>  	cfg80211_bss_age(rdev, get_seconds() - rdev->suspend_at);
+>  
+> -	if (rdev->ops->resume) {
+> -		rtnl_lock();
+> -		if (rdev->wiphy.registered)
+> -			ret = rdev_resume(rdev);
+> -		rtnl_unlock();
+> -	}
+> +	rtnl_lock();
+> +	if (rdev->wiphy.registered && rdev->ops->resume)
+> +		ret = rdev_resume(rdev);
+> +	rtnl_unlock();
+
+Hmm? Commit message seems ... old perhaps?
+
+johannes
