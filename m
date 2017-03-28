@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:37877 "EHLO vps0.lunn.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751306AbdC1PSv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 11:18:51 -0400
-Date: Tue, 28 Mar 2017 17:18:37 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Alban <albeu@free.fr>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        John Crispin <john@phrozen.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        m@kresin.me
-Subject: Re: [PATCH 1/7] Documentation: dt: net: Update the ath9k binding for
- SoC devices
-Message-ID: <20170328151837.GC3152@lunn.ch> (sfid-20170328_172021_896431_EF0D4A4C)
-References: <1489439116-4233-1-git-send-email-albeu@free.fr>
- <1897671.fKa4XTnU1K@debian64>
- <20170328104441.5feedcf4@avionic-0020>
- <2357006.NGKQYCh4BG@debian64>
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:35635 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752407AbdC1OIb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 10:08:31 -0400
+Received: by mail-wr0-f169.google.com with SMTP id u1so107208683wra.2
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Mar 2017 07:08:30 -0700 (PDT)
+Subject: Re: [PATCH for-4.11 0/2] brcmfmac: fixing use-after-free reports
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
+ <87o9wl7gt4.fsf@purkki.adurom.net>
+Cc: linux-wireless@vger.kernel.org, Daniel J Blueman <daniel@quora.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <7e8b6c65-e051-f86b-8b21-dfb0d5b966d3@broadcom.com> (sfid-20170328_160905_311284_C47195D6)
+Date: Tue, 28 Mar 2017 16:08:22 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2357006.NGKQYCh4BG@debian64>
+In-Reply-To: <87o9wl7gt4.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> But LEDE/OpenWRT rely on the firmware loading API more than ever and 
-> currently there is not a replacement for it.
-
-....
-
-
-> I looked into 10-ath9k-eeprom [0] of LEDE's AR71XX target and I noticed
-> that quite a few devices patch the MACs of the wifi.
-> If you look at the code for the Airtight C-55 and C-60, Meraki MR18,
-> Meraki Z1, you'll notice that each one has to add a fixed value (+1,
-> +2, ...) to the extraced MAC-Address. So how would you replicate this,
-> with "nvmem-cell-names = address" without some sort of 
-> nvmem-provider-processor?
-
-...
- 
-> https://github.com/lede-project/source/blob/master/target/linux/ar71xx/files/arch/mips/ath79/dev-eth.c#L1204
+On 28-3-2017 13:59, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 > 
-> and grep lists the following devices:
-> mach-dgl-5500-a1.c, mach-dhp-1565-a1.c, mach-dir-505-a1.c, mach-dir-615-c1.c
-> mach-dir-615-i1.c, mach-dir-825-b1.c, mach-dir-825-c1.c, mach-tew-673gru.c
-> mach-tew-712br.c, mach-tew-732br.c, mach-tew-823dru.c
+>> Two use-after-free issues were found using KASAN and reported by
+>> Daniel J Blueman. One of them was submitted as patch. However, no
+>> response came upon my comments. So decided to push the fixes myself.
+>>
+>> These patches are intended for v4.11 and apply to the master branch of
+>> the wireless-drivers repository.
+>>
+>> Arend van Spriel (2):
+>>   brcmfmac: use local iftype avoiding use-after-free of virtual
+>>     interface
+>>   cfg80211: check rdev resume callback only for registered wiphy
+>>
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  8 +++++---
+>>  net/wireless/sysfs.c                                   | 10 ++++------
+>>  2 files changed, 9 insertions(+), 9 deletions(-)
+> 
+> Why are these in the same patchset, are there any dependencies etc? Or
+> is it safe that Johannes applies the cfg80211 patch to mac80211.git and
+> I apply brcmfmac to wireless-drivers.git?
 
-I would say a big part of the problem is that all of these use cases
-are outside of mainline. Why should mainline support something which
-is not actually used in mainline.
+Yeah. My bad. I just realized while driving to pick up my son from
+school :-p Anyway, these are in the same patchset just because of their
+context and independent so you both can apply them in their respective
+repository.
 
-So i would suggest your first step is to bring some of these devices
-into mainline. Once in mainline, it becomes a mainline issue, and
-people will help get it solved.
-
-       Andrew
+Regards,
+Arend
