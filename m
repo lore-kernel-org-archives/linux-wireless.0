@@ -1,65 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:36801 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751820AbdC2DtO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 23:49:14 -0400
-Received: by mail-qk0-f173.google.com with SMTP id p22so3057420qka.3
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Mar 2017 20:49:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYKF4+M_cooukAA5oKJu0quB4CjOHaRr1qQjHMRYAPhE4A@mail.gmail.com>
-References: <CANr77M0xc=zD17HK1Gu2GT7Y_P=QC65UrHkvwj+JntenHSHNSA@mail.gmail.com>
- <CABPxzYKF4+M_cooukAA5oKJu0quB4CjOHaRr1qQjHMRYAPhE4A@mail.gmail.com>
-From: Matthew Stanger <matthew_stanger@trimble.com>
-Date: Tue, 28 Mar 2017 21:49:12 -0600
-Message-ID: <CANr77M2fspR0fk-kDrfaF6ONcZmdzyVk3G5f6NywZ5-PRkFCwA@mail.gmail.com> (sfid-20170329_054926_640389_BDFEC74B)
-Subject: Re: Formatting of db.txt
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:18380 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754733AbdC1I62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Mar 2017 04:58:28 -0400
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-hams@vger.kernel.org,
+        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ganeshgr@chelsio.com, nbd@openwrt.org, blogic@openwrt.org,
+        matthias.bgg@gmail.com, yishaih@mellanox.com, saeedm@mellanox.com,
+        matanb@mellanox.com, leonro@mellanox.com,
+        ajk@comnets.uni-bremen.de, paulus@samba.org, j@w1.fi,
+        kvalo@codeaurora.org, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 09/16] drivers, net: convert masces_rx_sa.refcnt from atomic_t to refcount_t
+Date: Tue, 28 Mar 2017 11:56:36 +0300
+Message-Id: <1490691403-4016-10-git-send-email-elena.reshetova@intel.com> (sfid-20170328_110900_995942_8D9B84FA)
+In-Reply-To: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I also notice when I run 'iw reg get' it still shows the format which
-seems to support the antenna gain (N/A):
-country US: DFS-FCC
-        (2402 - 2472 @ 40), (N/A, 25), (N/A)
-        (5170 - 5250 @ 80), (N/A, 16), (N/A)
-        (5250 - 5330 @ 80), (N/A, 16), (N/A)
-        (5490 - 5730 @ 160), (N/A, 16), (N/A)
-        (5735 - 5835 @ 80), (N/A, 23), (N/A)
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-If this isn't supported by the .db anymore then maybe this format
-should be updated in configuration utility. Am I on track? I'd be glad
-to attempt a patch if this is of value? Thanks
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/net/macsec.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Cheers,
-
-On Tue, Mar 28, 2017 at 1:27 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Tue, Mar 28, 2017 at 10:41 PM, Matthew Stanger
-> <matthew_stanger@trimble.com> wrote:
->> Hi,
->>
->> I'm trying to set antenna gain in the db.txt following the
->> documentation from:
->> https://wireless.wiki.kernel.org/en/developers/regulatory/processing_rules
->>
->> If I copy the example exactly show in the link:
->>
->> country CR:
->>         (2402 - 2482 @ 40), (N/A, 20)
->>         (5170 - 5250 @ 20), (3, 17)
->>         (5250 - 5330 @ 20), (3, 23), DFS
->>         (5735 - 5835 @ 20), (3, 30)
->>
->> and do a make I get a parsing error:
->> dbparse.SyntaxError: Syntax error in line 288 (invalid power data)
->> make: *** [regulatory.bin] Error 1
->>
->>  I can change freq and power levels and other settings and everything
->> builds fine. What am I missing about setting antenna gain?
-> the (max_eirp, pwr) is an old syntax which is deprecated by commit
-> https://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git/commit/?id=e56cd9618e3e5bf8ff96b799544b85170e34d9c3
->
-> May be we should update the doc.
+diff --git a/drivers/net/macsec.c b/drivers/net/macsec.c
+index ff0a5ed..bc0b00a 100644
+--- a/drivers/net/macsec.c
++++ b/drivers/net/macsec.c
+@@ -16,6 +16,7 @@
+ #include <crypto/aead.h>
+ #include <linux/etherdevice.h>
+ #include <linux/rtnetlink.h>
++#include <linux/refcount.h>
+ #include <net/genetlink.h>
+ #include <net/sock.h>
+ #include <net/gro_cells.h>
+@@ -146,7 +147,7 @@ struct macsec_rx_sa {
+ 	struct macsec_key key;
+ 	spinlock_t lock;
+ 	u32 next_pn;
+-	atomic_t refcnt;
++	refcount_t refcnt;
+ 	bool active;
+ 	struct macsec_rx_sa_stats __percpu *stats;
+ 	struct macsec_rx_sc *sc;
+@@ -314,7 +315,7 @@ static struct macsec_rx_sa *macsec_rxsa_get(struct macsec_rx_sa __rcu *ptr)
+ 	if (!sa || !sa->active)
+ 		return NULL;
+ 
+-	if (!atomic_inc_not_zero(&sa->refcnt))
++	if (!refcount_inc_not_zero(&sa->refcnt))
+ 		return NULL;
+ 
+ 	return sa;
+@@ -350,7 +351,7 @@ static void free_rxsa(struct rcu_head *head)
+ 
+ static void macsec_rxsa_put(struct macsec_rx_sa *sa)
+ {
+-	if (atomic_dec_and_test(&sa->refcnt))
++	if (refcount_dec_and_test(&sa->refcnt))
+ 		call_rcu(&sa->rcu, free_rxsa);
+ }
+ 
+@@ -1324,7 +1325,7 @@ static int init_rx_sa(struct macsec_rx_sa *rx_sa, char *sak, int key_len,
+ 
+ 	rx_sa->active = false;
+ 	rx_sa->next_pn = 1;
+-	atomic_set(&rx_sa->refcnt, 1);
++	refcount_set(&rx_sa->refcnt, 1);
+ 	spin_lock_init(&rx_sa->lock);
+ 
+ 	return 0;
+-- 
+2.7.4
