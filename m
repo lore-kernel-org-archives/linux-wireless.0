@@ -1,74 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47160 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754852AbdCGJoa (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:55757 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754793AbdC1I63 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 04:44:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        kasan-dev <kasan-dev@googlegroups.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-media@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-build-reports@lists.linaro.org,
-        "David S . Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 08/26] brcmsmac: make some local variables 'static const' to reduce stack size
-References: <20170302163834.2273519-1-arnd@arndb.de>
-        <20170302163834.2273519-9-arnd@arndb.de>
-        <227c8e5a-fa20-0300-1cb0-1d3ef17deb19@broadcom.com>
-        <87y3wi74y8.fsf@purkki.adurom.net>
-        <CAK8P3a0cemG0=6jZOQEpGN+RG2Be1LM_DE7aJVX18en_i6G7=Q@mail.gmail.com>
-Date: Tue, 07 Mar 2017 11:44:04 +0200
-In-Reply-To: <CAK8P3a0cemG0=6jZOQEpGN+RG2Be1LM_DE7aJVX18en_i6G7=Q@mail.gmail.com>
-        (Arnd Bergmann's message of "Mon, 6 Mar 2017 22:34:12 +0100")
-Message-ID: <877f414e1n.fsf@codeaurora.org> (sfid-20170307_104654_025119_78DFA0A7)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 28 Mar 2017 04:58:29 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Daniel J Blueman <daniel@quora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.11 1/2] brcmfmac: use local iftype avoiding use-after-free of virtual interface
+Date: Tue, 28 Mar 2017 09:11:30 +0100
+Message-Id: <1490688691-20100-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170328_112615_268270_F767450F)
+In-Reply-To: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1490688691-20100-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+A use-after-free was found using KASAN. In brcmf_p2p_del_if() the virtual
+interface is removed using call to brcmf_remove_interface(). After that
+the virtual interface instance has been freed and should not be referenced.
+Solve this by storing the nl80211 iftype in local variable, which is used
+in a couple of places anyway.
 
-> On Mon, Mar 6, 2017 at 5:19 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
->>
->>> On 2-3-2017 17:38, Arnd Bergmann wrote:
->>>> With KASAN and a couple of other patches applied, this driver is one
->>>> of the few remaining ones that actually use more than 2048 bytes of
->>>> kernel stack:
->>>>
->>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function
->>>> 'wlc_phy_workarounds_nphy_gainctrl':
->>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the
->>>> frame size of 3264 bytes is larger than 2048 bytes
->>>> [-Wframe-larger-than=]
->>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
->>>> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the
->>>> frame size of 2864 bytes is larger than 2048 bytes
->>>> [-Wframe-larger-than=]
->>>>
->>>> Here, I'm reducing the stack size by marking as many local variables as
->>>> 'static const' as I can without changing the actual code.
->>>
->>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>
->> Arnd, via which tree are you planning to submit these? I'm not sure
->> what I should do with the wireless drivers patches from this series.
->
-> I'm not quite sure myself yet. I'd probably want the first few patches that
-> do most of the work get merged through Andrew's linux-mm tree once
-> we have come to agreement on them. The driver specific patches like
-> the brcmsmac ones depend on the introduction of noinline_for_kasan
-> or noinline_if_stackbloat and could either go in along with the first
-> set, or as a follow-up through the normal maintainer trees.
+Cc: stable@vger.kernel.org # 4.10.x, 4.9.x
+Reported-by: Daniel J Blueman <daniel@quora.org>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Either way is fine for me. Just mark clearly if you want the wireless
-drivers patches to go through via my tree, otherwise I'll ignore them.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index de19c7c..85d949e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2238,14 +2238,16 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
+ 	struct brcmf_p2p_info *p2p = &cfg->p2p;
+ 	struct brcmf_cfg80211_vif *vif;
++	enum nl80211_iftype iftype;
+ 	bool wait_for_disable = false;
+ 	int err;
+ 
+ 	brcmf_dbg(TRACE, "delete P2P vif\n");
+ 	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
+ 
++	iftype = vif->wdev.iftype;
+ 	brcmf_cfg80211_arm_vif_event(cfg, vif);
+-	switch (vif->wdev.iftype) {
++	switch (iftype) {
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 		if (test_bit(BRCMF_VIF_STATUS_DISCONNECTING, &vif->sme_state))
+ 			wait_for_disable = true;
+@@ -2275,7 +2277,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 					    BRCMF_P2P_DISABLE_TIMEOUT);
+ 
+ 	err = 0;
+-	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE) {
++	if (iftype != NL80211_IFTYPE_P2P_DEVICE) {
+ 		brcmf_vif_clear_mgmt_ies(vif);
+ 		err = brcmf_p2p_release_p2p_if(vif);
+ 	}
+@@ -2291,7 +2293,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	brcmf_remove_interface(vif->ifp, true);
+ 
+ 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
+-	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
++	if (iftype != NL80211_IFTYPE_P2P_DEVICE)
+ 		p2p->bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = NULL;
+ 
+ 	return err;
 -- 
-Kalle Valo
+1.9.1
