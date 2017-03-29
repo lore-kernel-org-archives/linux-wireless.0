@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr30131.outbound.protection.outlook.com ([40.107.3.131]:33051
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751332AbdCCOUI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 09:20:08 -0500
-Subject: Re: [PATCH 25/26] isdn: eicon: mark divascapi incompatible with kasan
-To: Arnd Bergmann <arnd@arndb.de>, <kasan-dev@googlegroups.com>
-References: <20170302163834.2273519-1-arnd@arndb.de>
- <20170302163834.2273519-26-arnd@arndb.de>
-CC: Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        <kernel-build-reports@lists.linaro.org>,
-        "David S . Miller" <davem@davemloft.net>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <6ada42bd-4cc7-4985-3e3b-705cba6e157d@virtuozzo.com> (sfid-20170303_152114_257804_F6997EFD)
-Date: Fri, 3 Mar 2017 17:20:16 +0300
+Received: from edge01.uni-rostock.de ([139.30.8.12]:56276 "EHLO
+        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755445AbdC2LyF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 07:54:05 -0400
+To: <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Subject: Get Number of Pending Wifi Frames in Mesh ALM calc
+Message-ID: <d3ba693c-796f-88c7-b56e-52a54d228389@uni-rostock.de> (sfid-20170329_135445_884570_5A5ED250)
+Date: Wed, 29 Mar 2017 13:54:02 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170302163834.2273519-26-arnd@arndb.de>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
+
+we investigate a possibility to enrich the ALM with information about a
+possible delay caused by buffering in all nodes along a mesh path. This
+could better reflect the idea of an real "airtime" of a new send frame.
+Therefore I'm searching for a general way to get the number of
+outstanding frames of an mac80211 based wifi-driver.
+
+I think it could be possible to count the number of one of the
+skb_queues in struct ieee80211_local. Maybe there is also a possibility
+to use the new codel infrastructure in mac80211 to get a impression
+about buffered frames of a wiphy, but I think this would only work on
+flow end-points, but we need a metric estimation on every node. Do
+anybody know whether I'm right at this point ?
+
+We will test our implementation on ath9k cards as well as on
+mac80211_hwsim simulation, therefore it should work at least on this
+both :-)
+
+The nice thing could be, to combine end point regulation methods with
+regulating parameters on nodes on the forwarding path to get better
+throughput in mesh networks.
 
 
-On 03/02/2017 07:38 PM, Arnd Bergmann wrote:
-> When CONFIG_KASAN is enabled, we have several functions that use rather
-> large kernel stacks, e.g.
-> 
-> drivers/isdn/hardware/eicon/message.c: In function 'group_optimization':
-> drivers/isdn/hardware/eicon/message.c:14841:1: warning: the frame size of 864 bytes is larger than 500 bytes [-Wframe-larger-than=]
-> drivers/isdn/hardware/eicon/message.c: In function 'add_b1':
-> drivers/isdn/hardware/eicon/message.c:7925:1: warning: the frame size of 1008 bytes is larger than 500 bytes [-Wframe-larger-than=]
-> drivers/isdn/hardware/eicon/message.c: In function 'add_b23':
-> drivers/isdn/hardware/eicon/message.c:8551:1: warning: the frame size of 928 bytes is larger than 500 bytes [-Wframe-larger-than=]
-> drivers/isdn/hardware/eicon/message.c: In function 'sig_ind':
-> drivers/isdn/hardware/eicon/message.c:6113:1: warning: the frame size of 2112 bytes is larger than 500 bytes [-Wframe-larger-than=]
-> 
-> To be on the safe side, and to enable a lower frame size warning limit, let's
-> just mark this driver as broken when KASAN is in use. I have tried to reduce
-> the stack size as I did with dozens of other drivers, but failed to come up
-> with a good solution for this one.
-> 
+kind regards
 
-This is kinda radical solution.
-Wouldn't be better to just increase -Wframe-larger-than for this driver through Makefile?
+-- 
+M.Sc. Benjamin Beichler
 
+Universität Rostock, Fakultät für Informatik und Elektrotechnik
+Institut für Angewandte Mikroelektronik und Datentechnik
 
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/isdn/hardware/eicon/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/isdn/hardware/eicon/Kconfig b/drivers/isdn/hardware/eicon/Kconfig
-> index 6082b6a5ced3..b64496062421 100644
-> --- a/drivers/isdn/hardware/eicon/Kconfig
-> +++ b/drivers/isdn/hardware/eicon/Kconfig
-> @@ -31,6 +31,7 @@ config ISDN_DIVAS_PRIPCI
->  
->  config ISDN_DIVAS_DIVACAPI
->  	tristate "DIVA CAPI2.0 interface support"
-> +	depends on !KASAN || BROKEN
->  	help
->  	  You need this to provide the CAPI interface
->  	  for DIVA Server cards.
-> 
+Richard-Wagner-Straße 31
+18119 Rostock
+Deutschland/Germany
+
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
