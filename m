@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46444 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750957AbdCRUIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Mar 2017 16:08:39 -0400
-Message-ID: <1489866302.13995.3.camel@sipsolutions.net> (sfid-20170318_211217_252907_3CB6736C)
-Subject: Re: [BUG] with a 4.10.x kernel it's impossible to apply country
- regulatory rules
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Xose Vazquez Perez <xose.vazquez@gmail.com>
-Date: Sat, 18 Mar 2017 20:45:02 +0100
-In-Reply-To: <8c844f92-6148-2ad7-068c-a919891c7a90@lwfinger.net> (sfid-20170318_184148_834282_FCD36BD9)
-References: <09a819fc-c936-6838-654b-e349c58a09ec@gmail.com>
-         <8c844f92-6148-2ad7-068c-a919891c7a90@lwfinger.net>
-         (sfid-20170318_184148_834282_FCD36BD9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34738 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932138AbdC2QV5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 12:21:57 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Vincent Cuissard <cuissard@marvell.com>
+Subject: [PATCH 3/7] NFC: nfcmrvl: do not use device-managed resources
+Date: Wed, 29 Mar 2017 18:21:08 +0200
+Message-Id: <20170329162112.18121-4-johan@kernel.org> (sfid-20170329_182420_737086_0605F32E)
+In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
+References: <20170329162112.18121-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-03-18 at 12:41 -0500, Larry Finger wrote:
-> 
-> I have duplicated your bug and I have bisected it to
-> 
-> commit 2ae0f17df1cd52aafd1ab0415ea1f1dd56dc0e2a
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Mon Oct 24 14:40:04 2016 +0200
-> 
->      genetlink: use idr to track families
-> 
-> This patch is quite extensive and I have no idea which part is
-> failing, thus all I can do is report this confirmation.
+This specifically fixes a NULL-pointer dereference when using the n_nci
+line discipline on one end of a Unix98 pty as well as resource leaks in
+the registration error paths.
 
-I don't think that makes any sense - have you verified that reverting
-that makes it go away?
+Device-managed resources is a bad fit for this driver as devices can be
+registered from the n_nci line discipline. Firstly, a tty may not even
+have a corresponding device (should it be part of a Unix98 pty)
+something which would lead to a NULL-pointer dereference when
+registering resources.
 
-johannes
+Secondly, if the tty has a class device, its lifetime exceeds that of
+the line discipline, which means that resources would leak every time
+the line discipline is closed (or if registration fails).
+
+Currently, the devres interface was only being used to request a reset
+gpio despite the fact that it was already explicitly freed in
+nfcmrvl_nci_unregister_dev() (along with the private data), something
+which also prevented the resource leak at close.
+
+Fixes: b2fe288eac72 ("NFC: nfcmrvl: free reset gpio")
+Fixes: 4a2b947f56b3 ("NFC: nfcmrvl: add chip reset management")
+Cc: stable <stable@vger.kernel.org>     # 4.2: b2fe288eac72
+Cc: Vincent Cuissard <cuissard@marvell.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/nfc/nfcmrvl/main.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/nfc/nfcmrvl/main.c b/drivers/nfc/nfcmrvl/main.c
+index 51c8240a1672..8d4294fc3005 100644
+--- a/drivers/nfc/nfcmrvl/main.c
++++ b/drivers/nfc/nfcmrvl/main.c
+@@ -124,10 +124,9 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
+ 	memcpy(&priv->config, pdata, sizeof(*pdata));
+ 
+ 	if (priv->config.reset_n_io) {
+-		rc = devm_gpio_request_one(dev,
+-					   priv->config.reset_n_io,
+-					   GPIOF_OUT_INIT_LOW,
+-					   "nfcmrvl_reset_n");
++		rc = gpio_request_one(priv->config.reset_n_io,
++				      GPIOF_OUT_INIT_LOW,
++				      "nfcmrvl_reset_n");
+ 		if (rc < 0)
+ 			nfc_err(dev, "failed to request reset_n io\n");
+ 	}
+@@ -195,7 +194,7 @@ void nfcmrvl_nci_unregister_dev(struct nfcmrvl_private *priv)
+ 	nfcmrvl_fw_dnld_deinit(priv);
+ 
+ 	if (priv->config.reset_n_io)
+-		devm_gpio_free(priv->dev, priv->config.reset_n_io);
++		gpio_free(priv->config.reset_n_io);
+ 
+ 	nci_unregister_device(ndev);
+ 	nci_free_device(ndev);
+-- 
+2.12.2
