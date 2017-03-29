@@ -1,76 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22104 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752593AbdCHPrL (ORCPT
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:36543 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755718AbdC2MLN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 10:47:11 -0500
-From: "Pubbisetty, Manikanta" <mpubbise@qti.qualcomm.com>
+        Wed, 29 Mar 2017 08:11:13 -0400
+Received: by mail-wr0-f169.google.com with SMTP id w11so12219108wrc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Mar 2017 05:11:12 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-Subject: RE: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
- offload
-Date: Wed, 8 Mar 2017 15:46:57 +0000
-Message-ID: <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com> (sfid-20170308_164752_971510_50535701)
-References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
- <1488544754.25750.8.camel@sipsolutions.net>
-In-Reply-To: <1488544754.25750.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: [REGRESSION] mac80211: IBSS vif queue stopped when started after 11s vif
+Date: Wed, 29 Mar 2017 14:11:08 +0200
+Message-ID: <1889117.GdG6vIS4EM@bentobox> (sfid-20170329_141117_952316_A9137C12)
+In-Reply-To: <1490788386.7948.21.camel@sipsolutions.net>
+References: <1978424.XTv2Qph05K@bentobox> <5090047.94hdUy33Q8@bentobox> <1490788386.7948.21.camel@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart15861504.LmPm9Y6aJZ"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRv
-OmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+U2VudDogRnJpZGF5LCBNYXJjaCAzLCAyMDE3
-IDY6MDkgUE0NCj5UbzogUHViYmlzZXR0eSwgTWFuaWthbnRhIDxtcHViYmlzZUBxdGkucXVhbGNv
-bW0uY29tPg0KPkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IFRoaWFnYXJhamFu
-LCBWYXNhbnRoYWt1bWFyDQo+PHZ0aGlhZ2FyQHF0aS5xdWFsY29tbS5jb20+DQo+U3ViamVjdDog
-UmU6IFtSRkN2MiAyLzJdIG1hYzgwMjExOiBJbXBsZW1lbnQgZGF0YSB4bWl0IGZvciA4MDIuMTEg
-ZW5jYXANCj5vZmZsb2FkDQo+DQo+DQo+PiBUaGVyZSBpcyBhIGZpZWxkLCBub184MDIxMV9lbmNh
-cCwgYWRkZWQgdG8gaWVlZTgwMjExX3R4X2luZm86Y29udHJvbA0KPj4gdG8gbWFyayBpZiB0aGUg
-ODAyLjExIGVuY2Fwc3VsYXRpb24gaXMgb2ZmbG9hZGVkIHRvIGRyaXZlci4NCj4NCj5XaHkgaXMg
-dGhhdCBuZWVkZWQ/IFNpbmNlIHlvdSBoYXZlIGEgc2VwYXJhdGUgVFggcGF0aCAobmRvX3N0YXJ0
-X3htaXQpLA0KPndvdWxkbid0IGl0IG1ha2UgbW9yZSBzZW5zZSB0byBjYWxsIGludG8gYSBkcnZf
-dHhfODAyMygpIG9yIHNvbWV0aGluZyBsaWtlDQo+dGhhdCBpbnN0ZWFkPw0KPg0KW01hbmlrYW50
-YV0gIFllcywgaXQgbWFrZXMgc2Vuc2UgaGF2aW5nIGEgc2VwYXJhdGUgZHJpdmVyIGhvb2sgaW5z
-dGVhZCBvZiB1c2luZyBkcnZfdHgsIGJ1dCBpbiBjYXNlIG9mIGRyaXZlcnMgKGZlIGF0aDEwaykg
-DQp3aGVyZSBlbnF1ZXVpbmcgYW5kIGRlcXVldWluZyB0eCBsb2dpYyAod2FrZV90eF9xdWV1ZSBh
-bmQgaWVlZTgwMjExX3R4X2RlcXVldWUpIGlzIHVzZWQgdGhlcmUgc2hvdWxkIGJlIGEgd2F5DQp0
-byBpbmRpY2F0ZSB0aGF0IHRoZSBwYWNrZXQgaXMgbm90IDgwMjExIGVuY2Fwc3VsYXRlZCwgaXNu
-J3QgaXQ/IENvcnJlY3QgbWUgaWYgSSBhbSBtaXNzaW5nIGFueXRoaW5nLg0KDQo+PiBUaGVyZSBp
-cyBhbHNvIGEgbmV3IGNhbGxiYWNrIGZvciB0eCBjb21wbGV0aW9uIHN0YXR1cyBpbmRpY2F0aW9u
-IHRvDQo+PiBoYW5kbGUgZGF0YSBmcmFtZXMgdXNpbmcgODAyLjExIGVuY2FwIG9mZmxvYWQuDQo+
-DQo+TWF5YmUgeW91IGNvdWxkIGp1c3QgdXNlIF9ub3NrYj8NCj4NCltNYW5pa2FudGFdICBIbW1t
-IHlvdSBhcmUgcmlnaHQuIEkganVzdCB3ZW50IHRocm91Z2ggdGhlIGNvZGUsIHNlZW1zIGllZWU4
-MDIxMV90eF9zdGF0dXNfbm9za2IgZG9lcyBtb3N0IG9mIHRoZW0gd2hhdCBpZWVlODAyMTFfdHhf
-c3RhdHVzXzgwMjMgaXMgZG9pbmcsDQpyZXNldHRpbmcgdGhlIHN0YXRpb24gY29ubmVjdGlvbiBt
-b25pdG9yaW5nIGxvZ2ljIGFuZCB1cGRhdGluZyBsYXN0IGtub3duIHR4IHJhdGUgaXMgbWlzc2lu
-ZyBpbiBfbm9za2IuIFRoZXNlIGFyZSByZXF1aXJlZCwgaXNuJ3QgaXQ/DQoNCj5IYXZlbid0IHJl
-YWxseSBsb29rZWQgYXQgdGhlIHJlc3QgYWxsIHRoYXQgbXVjaCwgZmV3IGNvbW1lbnRzOg0KPg0K
-PiAqIG5vdCBzdXJlIHlvdSdyZSBoYW5kbGluZyBub24tbGluZWFyIGZyYW1lcyByaWdodCwgYXJl
-IHlvdSBhc3N1bWluZw0KPiAgIHRoZSBkcml2ZXIgY2FuIGhhbmRsZSB0aGVtPyBwcm9iYWJseSBh
-IGZhaXIgYXNzdW1wdGlvbiwgYnV0IHNob3VsZA0KPiAgIGJlIGRvY3VtZW50ZWQNCj4NCltNYW5p
-a2FudGFdIFN1cmUNCg0KPiAqIHlvdSBzZWVtIHRvIGFsc28gYmUgYXNzdW1pbmcgdGhhdCB0aGUg
-ZHJpdmVyIG5vdCBvbmx5IGRvZXMgYWxsDQo+ICAgZW5jcnlwdGlvbiBpbiBIVyAod2hpY2ggaXMg
-b2J2aW91c2x5IG5lZWRlZCkgYnV0IGFsc28gZG9lcyBhbGwgdGhlDQo+ICAga2V5IGxvb2t1cHMg
-ZXRjLiAtIGFsc28gc2VlbXMgZmFpciwgYnV0IGFsc28gc2hvdWxkIGJlIGRvY3VtZW50ZWQNCj4N
-CltNYW5pa2FudGFdIEkgd2lsbCBkb2N1bWVudCB0aGVzZSBpbiBteSBuZXh0IHZlcnNpb24uDQoN
-Cj4gKiBzaW1pbGFybHkgZm9yIGEgbG90IG9mIG90aGVywqAoYWxsPykgZmllbGRzIGluIHR4X2lu
-Zm8NCj4gKiB5b3Ugc2VlbSB0byBiZSBhc3N1bWluZyB0aGF0IGlmIGVuY2FwIG9mZmxvYWQgaXMg
-c3VwcG9ydGVkIHRoZW4gaXQncw0KPiAgIGFsc28gKmRlc2lyZWQqIGZvciBBUC9WTEFOIGFuZCBj
-bGllbnQgaW50ZXJmYWNlcywgaWYgbm90IDQtYWRkci4NCj4gICBUaGlzIHNlZW1zIC4uLiBwcm9i
-YWJseSBhYm91dCByaWdodCwgYnV0IGlmIGRyaXZlcnMgZG9uJ3QgYWx3YXlzDQo+ICAgc3VwcG9y
-dCBpdD8gT3Igc3VwcG9ydCBpdCBpbiBtb3JlIGNhc2VzPyBQZXJoYXBzIHdlIGNhbiBtb3ZlIHRo
-ZQ0KPiAgIFNVUFBPUlRTXzgwMjExX0VOQ0FQIGZsYWcgaW50byBhIFZJRiBmbGFnIGluc3RlYWQs
-IHNvIHRoZXkgY2FuIGRvIGl0DQo+ICAgbW9yZSBmaW5lLWdyYWluZWQ/DQo+DQpbTWFuaWthbnRh
-XSBZb3UgYXJlIGNvcnJlY3QuIEl0IGlzIGdvb2QgaWYgZHJpdmVyIGFkdmVydGlzZXMgdGhlIHZp
-ZiB0eXBlcyBpdCBzdXBwb3J0IGluIGVuY2FwIG9mZmxvYWQgbW9kZSwgYnV0IGhvdyBjYW4gd2Ug
-ZGVjaWRlIHRoZSBuZXRkZXZfb3BzIHRvIGJlIHVzZWQgd2hpbGUgY3JlYXRpbmcgdGhlIHZpZj8g
-ZHJ2X2FkZF9pbnRlcmZhY2Ugd2lsbCBiZSBpbnZva2VkIGZyb20gbmRvX29wZW4gYW5kDQpldmVu
-IGJlZm9yZSBpbnZva2luZyBkcml2ZXIgYWRkX2ludGVyZmFjZSB3ZSBoYXZlIHRvIG1ha2UgdGhl
-IGRlY2lzaW9uIG9mIHVzaW5nIEV0aGVybmV0IG1vZGUgbmV0ZGV2X29wcyBvciB0aGUgZGVmYXVs
-dCBuZXRkZXZfb3BzLCBpc24ndCBpdD8NCg0KQ2FuIHdlIGhhdmUgYSBzZXBhcmF0ZSBkcml2ZXIg
-aG9vayB3aGljaCBnaXZlcyB3aGV0aGVyIDgwMjExIGVuY2FwIG9mZmxvYWQgaXMgc3VwcG9ydGVk
-IGZvciB0aGUgZ2l2ZW4gaW50ZXJmYWNlIHR5cGUgYW5kIHRoZW4gZGVjaWRlIHRoZSBuZXRkZXZf
-b3BzIHRvIGJlIGF0dGFjaGVkIGZvciB0aGUgdmlmPw0KLS0NCk1hbmlrYW50YQ0K
+--nextPart15861504.LmPm9Y6aJZ
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+
+On Mittwoch, 29. M=E4rz 2017 13:53:06 CEST Johannes Berg wrote:
+[...]
+> > Not sure whether removing it in ieee80211_propagate_queue_wake will
+> > have other odd side effects with software queuing. Maybe Michal
+> > Kazior can tell us if it is safe to remove it.
+>=20
+> No, it's the other way around.
+>=20
+> Michal's patches correctly added a test for this to
+> __ieee80211_stop_queue(), the only missing thing is that this test
+> should also be in ieee80211_do_open() like this:
+>=20
+> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> index 40813dd3301c..5bb0c5012819 100644
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -718,7 +718,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool=
+ coming_up)
+>  	ieee80211_recalc_ps(local);
+> =20
+>  	if (sdata->vif.type =3D=3D NL80211_IFTYPE_MONITOR ||
+> -	    sdata->vif.type =3D=3D NL80211_IFTYPE_AP_VLAN) {
+> +	    sdata->vif.type =3D=3D NL80211_IFTYPE_AP_VLAN ||
+> +	    local->ops->wake_tx_queue) {
+>  		/* XXX: for AP_VLAN, actually track AP queues */
+>  		netif_tx_start_all_queues(dev);
+>  	} else if (dev) {
+
+Yes, this also works.
+
+Kind regards,
+	Sven
+--nextPart15861504.LmPm9Y6aJZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAljbpFwACgkQXYcKB8Em
+e0ZKyw/8CKOKbDYndWLYWJZ9E4taFtoU9jtSCE9oL2H5jR0iytP5oeHd09CTZtOK
+VRXBvmEvmVj0p+7gIU/7fgZG9yIiJ0yH+kQ/6V6UMvOvuR1jW8uM5A0PVViu7P56
+7Ug+m+b0J58kTvvsam60KVQsUTJyk2MXSeywVh3QAfZRDjkts2VMIWMNWTiQnRf/
+qkhbEAdvtKdseYxS67A75wyUM0qDmsTlAnCPb0jF9aaCGUc7QeN6ZuCwYD7iSyAg
+VnoKRfJWG7DGKSb7QCERDNWlO0qNS5PJSUPUlNypZD/939wxmaA2kPgvZGjCKyXh
+Z/TNV2meKyqsu/AgRNUHktw4KTtGb75zIrUGAw2/OJcREK6pleOa4egkw2iCV01W
+bj+56dQ3VLNVUYxvvFlpfoqCttzX8R28pLpqDYdJmCfk2ffJtGhu1wf1DH/iTkjH
+hF1b+fF65+jzK+orPMPr38Z9dBfsRh6QzeUzDS1OfyXOGalsNrRJiMh0cCwWL53a
+HFU4w5ZU1hpFVToKDKY6LrOMfhzbFdgKmjayWORTyTY8TyPr4Uqp4bv5kRW5sznv
+mlSf/3m0o/VrVNzmldpamCUBj8hvKqH4N53DG/L0NaSJNGmUtFpA8wVh14dIEzyU
+FKuETcHy/5r9bj4TW2g0faYt805J7hD0B+OC1k6TB4iPlwElDBI=
+=xwpE
+-----END PGP SIGNATURE-----
+
+--nextPart15861504.LmPm9Y6aJZ--
