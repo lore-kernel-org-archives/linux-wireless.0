@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f177.google.com ([74.125.82.177]:32860 "EHLO
-        mail-ot0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbdCBRdG (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33274 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753174AbdC2QV7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 12:33:06 -0500
-Received: by mail-ot0-f177.google.com with SMTP id k4so56983360otc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Mar 2017 09:32:16 -0800 (PST)
-From: Jesse Jones <jjones@uniumwifi.com>
-References: <CAEFj984umxKZgMqzgbQvX+VgPjqCW98E17bfED9+Yg3XGzatOw@mail.gmail.com>
-In-Reply-To: <CAEFj984umxKZgMqzgbQvX+VgPjqCW98E17bfED9+Yg3XGzatOw@mail.gmail.com>
-MIME-Version: 1.0
-Date: Thu, 2 Mar 2017 09:32:14 -0800
-Message-ID: <b285e11810b612a6a156693f34e232ac@mail.gmail.com> (sfid-20170302_183311_880293_C994F211)
-Subject: RE: [PATCH v2] mac80211: mesh - always do every discovery retry
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-        linux-wireless@vger.kernel.org, Alexis Green <agreen@cococorp.com>,
-        Alexis Green <agreen@uniumwifi.com>
-Content-Type: text/plain; charset=UTF-8
+        Wed, 29 Mar 2017 12:21:59 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Vincent Cuissard <cuissard@marvell.com>
+Subject: [PATCH 5/7] NFC: nfcmrvl: fix firmware-management initialisation
+Date: Wed, 29 Mar 2017 18:21:10 +0200
+Message-Id: <20170329162112.18121-6-johan@kernel.org> (sfid-20170329_182343_304373_66F3C963)
+In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
+References: <20170329162112.18121-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Instead of stopping path discovery when a path is found continue
-> > attempting to find paths until we hit the dot11MeshHWMPmaxPREQretries
-> > limit.
->
-> I am not too sure whether by simply broadcasting the PREQ frame could
-> actually solve the problem and this may cause problem of PREQ flooding in
-> your network when the number of nodes scale. Please take note that all
-> nodes need to rebroadcast the PREQ frame until target STA.
+The nci-device was never deregistered in the event that
+fw-initialisation failed.
 
-Yes, that is a real issue. We are planning on doing some further work in
-this area to  try to minimize the explosions that can be seen with PREQs in
-larger networks while balancing the need for reliability.
+Fix this by moving the firmware initialisation before device
+registration since the firmware work queue should be available before
+registering.
 
-Path discovery
-> should stop once the path is established. By attempting 2nd, 3rd or 4th
-> doesn't guarantee the next path will be "good".
+Note that this depends on a recent fix that moved device-name
+initialisation back to to nci_allocate_device() as the
+firmware-workqueue name is now derived from the nfc-device name.
 
-It doesn't guarantee anything of course but it does raise the probability
-that the right path will be found. For example take four nodes in a ring
-where the A-B, B-C, C-D links are all good but the A-D link is poor. Poor
-enough that the higher data rates are hosed for that link but the basic rate
-used by management frames is relatively unaffected. If we assume that the
-reliability of management frames is 90% then in order for A to route to D it
-needs to get a PREQ to D and a PREP back. It has two options 1) for A-D the
-reliability will be 0.9^2 = 81% 2) for A-B-C-D the reliability will be 0.9^6
-= 53%.
+Fixes: 3194c6870158 ("NFC: nfcmrvl: add firmware download support")
+Cc: stable <stable@vger.kernel.org>     # 4.4
+Cc: Vincent Cuissard <cuissard@marvell.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/nfc/nfcmrvl/main.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-This isn't a good situation because it makes it much too easy for routing to
-pick a *really* bad path. And we have seen reliability improvements with
-this patch.
-
-We have already made changes to dial way back on the number of PREQs sent
-out so this patch made quite a bit of sense for us. In the default
-configuration where PREQs go out every 4s I don't think we have a good
-solution: picking a bad path, even for 4s, can be a horrible user experience
-but PREQ volumes quickly start consuming too much airtime as network sizes
-increase.
-
-  -- Jesse
+diff --git a/drivers/nfc/nfcmrvl/main.c b/drivers/nfc/nfcmrvl/main.c
+index 8d4294fc3005..f20220bab6b6 100644
+--- a/drivers/nfc/nfcmrvl/main.c
++++ b/drivers/nfc/nfcmrvl/main.c
+@@ -156,26 +156,28 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
+ 		goto error;
+ 	}
+ 
++	rc = nfcmrvl_fw_dnld_init(priv);
++	if (rc) {
++		nfc_err(dev, "failed to initialize FW download %d\n", rc);
++		goto error_free_dev;
++	}
++
+ 	nci_set_drvdata(priv->ndev, priv);
+ 
+ 	rc = nci_register_device(priv->ndev);
+ 	if (rc) {
+ 		nfc_err(dev, "nci_register_device failed %d\n", rc);
+-		goto error_free_dev;
++		goto error_fw_dnld_deinit;
+ 	}
+ 
+ 	/* Ensure that controller is powered off */
+ 	nfcmrvl_chip_halt(priv);
+ 
+-	rc = nfcmrvl_fw_dnld_init(priv);
+-	if (rc) {
+-		nfc_err(dev, "failed to initialize FW download %d\n", rc);
+-		goto error_free_dev;
+-	}
+-
+ 	nfc_info(dev, "registered with nci successfully\n");
+ 	return priv;
+ 
++error_fw_dnld_deinit:
++	nfcmrvl_fw_dnld_deinit(priv);
+ error_free_dev:
+ 	nci_free_device(priv->ndev);
+ error:
+-- 
+2.12.2
