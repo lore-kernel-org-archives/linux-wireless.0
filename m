@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36030 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753230AbdCTQpV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 12:45:21 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [3/3] mwifiex: wake system up when receives a wake irq
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1487917471-5501-3-git-send-email-jeffy.chen@rock-chips.com>
-References: <1487917471-5501-3-git-send-email-jeffy.chen@rock-chips.com>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Rajat Jain <rajatja@google.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>
-Message-Id: <20170320164421.2735E60DAF@smtp.codeaurora.org> (sfid-20170320_174812_770936_35509E8D)
-Date: Mon, 20 Mar 2017 16:44:20 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:40976 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753165AbdC2GZg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 02:25:36 -0400
+Message-ID: <1490768721.18052.4.camel@sipsolutions.net> (sfid-20170329_082546_762214_F913FA8A)
+Subject: Re: Formatting of db.txt
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matthew Stanger <matthew_stanger@trimble.com>,
+        Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 29 Mar 2017 08:25:21 +0200
+In-Reply-To: <CANr77M2fspR0fk-kDrfaF6ONcZmdzyVk3G5f6NywZ5-PRkFCwA@mail.gmail.com> (sfid-20170329_054926_640389_BDFEC74B)
+References: <CANr77M0xc=zD17HK1Gu2GT7Y_P=QC65UrHkvwj+JntenHSHNSA@mail.gmail.com>
+         <CABPxzYKF4+M_cooukAA5oKJu0quB4CjOHaRr1qQjHMRYAPhE4A@mail.gmail.com>
+         <CANr77M2fspR0fk-kDrfaF6ONcZmdzyVk3G5f6NywZ5-PRkFCwA@mail.gmail.com>
+         (sfid-20170329_054926_640389_BDFEC74B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeffy Chen <jeffy.chen@rock-chips.com> wrote:
-> Currrently we are disabling this wake irq after receiving it. If this
-> happens before we finish suspend and the pm event check is disabled,
-> the system will continue suspending, and this irq would not work again.
+On Tue, 2017-03-28 at 21:49 -0600, Matthew Stanger wrote:
+> I also notice when I run 'iw reg get' it still shows the format which
+> seems to support the antenna gain (N/A):
+> country US: DFS-FCC
+>         (2402 - 2472 @ 40), (N/A, 25), (N/A)
+>         (5170 - 5250 @ 80), (N/A, 16), (N/A)
+>         (5250 - 5330 @ 80), (N/A, 16), (N/A)
+>         (5490 - 5730 @ 160), (N/A, 16), (N/A)
+>         (5735 - 5835 @ 80), (N/A, 23), (N/A)
 > 
-> We may need to abort system suspend to avoid that.
-> 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> If this isn't supported by the .db anymore then maybe this format
+> should be updated in configuration utility.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Not really - this tool should still support older kernels.
 
-ef7e07147425 mwifiex: wake system up when receives a wake irq
-
--- 
-https://patchwork.kernel.org/patch/9589459/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
