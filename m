@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49926 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752756AbdCPXKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 19:10:16 -0400
-Message-ID: <1489704244.3930.7.camel@sipsolutions.net> (sfid-20170317_001019_106642_EBFC8F1A)
-Subject: Re: netdev level filtering? perhaps pushing socket filters down?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        netdev <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 16 Mar 2017 23:44:04 +0100
-In-Reply-To: <58CB1714.8000305@candelatech.com>
-References: <1489703635.3930.5.camel@sipsolutions.net>
-         <58CB1714.8000305@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36602 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753309AbdC2QV7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 12:21:59 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        Vincent Cuissard <cuissard@marvell.com>
+Subject: [PATCH 6/7] NFC: nfcmrvl_uart: fix device-node leak during probe
+Date: Wed, 29 Mar 2017 18:21:11 +0200
+Message-Id: <20170329162112.18121-7-johan@kernel.org> (sfid-20170329_182257_386112_2F7A73F5)
+In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
+References: <20170329162112.18121-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Make sure to release the device-node reference when done parsing the
+node.
 
-> Attach at just above the driver, before it ever gets to
-> stations/vdevs, and ignore radiotap headers and/or add special
-> processing for metadata like rx-info?
+Fixes: e097dc624f78 ("NFC: nfcmrvl: add UART driver")
+Cc: Vincent Cuissard <cuissard@marvell.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/nfc/nfcmrvl/uart.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-That'd be a different feature, perhaps more like XDP.
-
-There anyway is no radiotap header at that point, but not changing
-whether or not it makes it to other virtual interfaces is actually not
-what we're looking for here at all.
-
-johannes
+diff --git a/drivers/nfc/nfcmrvl/uart.c b/drivers/nfc/nfcmrvl/uart.c
+index 6c0c301611c4..91162f8e0366 100644
+--- a/drivers/nfc/nfcmrvl/uart.c
++++ b/drivers/nfc/nfcmrvl/uart.c
+@@ -84,6 +84,7 @@ static int nfcmrvl_uart_parse_dt(struct device_node *node,
+ 	ret = nfcmrvl_parse_dt(matched_node, pdata);
+ 	if (ret < 0) {
+ 		pr_err("Failed to get generic entries\n");
++		of_node_put(matched_node);
+ 		return ret;
+ 	}
+ 
+@@ -97,6 +98,8 @@ static int nfcmrvl_uart_parse_dt(struct device_node *node,
+ 	else
+ 		pdata->break_control = 0;
+ 
++	of_node_put(matched_node);
++
+ 	return 0;
+ }
+ 
+-- 
+2.12.2
