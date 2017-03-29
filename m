@@ -1,41 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f179.google.com ([209.85.128.179]:36619 "EHLO
-        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751054AbdCQIqk (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33264 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753144AbdC2QV4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 04:46:40 -0400
-Received: by mail-wr0-f179.google.com with SMTP id u108so47286202wrb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2017 01:46:38 -0700 (PDT)
-Received: from rainloop.xkonni.de (v22016114027340657.bestsrv.de. [37.120.174.147])
-        by smtp.gmail.com with ESMTPSA id g6sm1830109wmc.30.2017.03.17.01.46.36
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 17 Mar 2017 01:46:37 -0700 (PDT)
-Mime-Version: 1.0
-Date: Fri, 17 Mar 2017 08:46:36 +0000
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <17d816d3dafddb3447e21808c130f596@rainloop.xkonni.de> (sfid-20170317_094653_204715_C0CA473E)
-From: "Konstantin Koslowski" <konstantin.koslowski@gmail.com>
-Subject: Dell DW1601 (WIL6210)
-To: linux-wireless@vger.kernel.org
+        Wed, 29 Mar 2017 12:21:56 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>
+Subject: [PATCH 1/7] NFC: fix broken device allocation
+Date: Wed, 29 Mar 2017 18:21:06 +0200
+Message-Id: <20170329162112.18121-2-johan@kernel.org> (sfid-20170329_182501_346699_BEF5FF98)
+In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
+References: <20170329162112.18121-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear linux-wireless developers,=0A=0AI recently acquired a few Dell DW160=
-1 cards and after a few initial searches it sounded like they could be us=
-ed to connect to each other.=0ANow it seems that they do not have the wif=
-i connectivity enabled, just WBE.=0A=0Arelevant lspci output:=0A03:00.0 P=
-CI bridge [0604]: Wilocity Ltd. Wil6200 PCI Express Root Port [1ae9:0101]=
- (rev 04)=0A04:00.0 PCI bridge [0604]: Wilocity Ltd. Wil6200 PCI Express =
-Port [1ae9:0200] (rev 04)=0A04:02.0 PCI bridge [0604]: Wilocity Ltd. Wil6=
-200 Wireless PCI Express Port [1ae9:0201] (rev 14)=0A04:03.0 PCI bridge [=
-0604]: Wilocity Ltd. Wil6200 Wireless PCI Express Port [1ae9:0201] (rev 1=
-4)=0A05:00.0 Network controller [0280]: Qualcomm Atheros AR9462 Wireless =
-Network Adapter [168c:0034] (rev 01)=0A=0ASo the wifi device does not sho=
-w up. Seems it needs a different firmware.=0A=0AThe old linuxwireless wik=
-i [http://linuxwireless.org/en/users/Drivers/wil6210/index.html] tells me=
- that I should contact Wilocity to get the wifi enabled firmware. As they=
- were bought by Qualcomm this is no longer possible,=0AThe current wiki j=
-ust says: "We need to get this publicly available=E2=80=A6"=0A=0AIs there=
- any way to get this firmware and then flash it to the card/load it?=0A=
-=0AThanks a lot!
+Commit 7eda8b8e9677 ("NFC: Use IDR library to assing NFC devices IDs")
+moved device-id allocation and struct-device initialisation from
+nfc_allocate_device() to nfc_register_device().
+
+This broke just about every nfc-device-registration error path, which
+continue to call nfc_free_device() that tries to put the device
+reference of the now uninitialised (but zeroed) struct device:
+
+kobject: '(null)' (ce316420): is not initialized, yet kobject_put() is being called.
+
+The late struct-device initialisation also meant that various work
+queues whose names are derived from the nfc device name were also
+misnamed:
+
+  421 root         0 SW<  [(null)_nci_cmd_]
+  422 root         0 SW<  [(null)_nci_rx_w]
+  423 root         0 SW<  [(null)_nci_tx_w]
+
+Move the id-allocation and struct-device initialisation back to
+nfc_allocate_device() and fix up the single call site which did not use
+nfc_free_device() in its registration error path.
+
+Fixes: 7eda8b8e9677 ("NFC: Use IDR library to assing NFC devices IDs")
+Cc: stable <stable@vger.kernel.org>     # 3.8
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ net/nfc/core.c     | 31 ++++++++++++++++++-------------
+ net/nfc/nci/core.c |  3 +--
+ 2 files changed, 19 insertions(+), 15 deletions(-)
+
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 122bb81da918..5cf33df888c3 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -982,6 +982,8 @@ static void nfc_release(struct device *d)
+ 			kfree(se);
+ 	}
+ 
++	ida_simple_remove(&nfc_index_ida, dev->idx);
++
+ 	kfree(dev);
+ }
+ 
+@@ -1056,6 +1058,7 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
+ 				    int tx_headroom, int tx_tailroom)
+ {
+ 	struct nfc_dev *dev;
++	int rc;
+ 
+ 	if (!ops->start_poll || !ops->stop_poll || !ops->activate_target ||
+ 	    !ops->deactivate_target || !ops->im_transceive)
+@@ -1068,6 +1071,15 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
+ 	if (!dev)
+ 		return NULL;
+ 
++	rc = ida_simple_get(&nfc_index_ida, 0, 0, GFP_KERNEL);
++	if (rc < 0)
++		goto err_free_dev;
++	dev->idx = rc;
++
++	dev->dev.class = &nfc_class;
++	dev_set_name(&dev->dev, "nfc%d", dev->idx);
++	device_initialize(&dev->dev);
++
+ 	dev->ops = ops;
+ 	dev->supported_protocols = supported_protocols;
+ 	dev->tx_headroom = tx_headroom;
+@@ -1090,6 +1102,11 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
+ 	}
+ 
+ 	return dev;
++
++err_free_dev:
++	kfree(dev);
++
++	return ERR_PTR(rc);
+ }
+ EXPORT_SYMBOL(nfc_allocate_device);
+ 
+@@ -1104,14 +1121,6 @@ int nfc_register_device(struct nfc_dev *dev)
+ 
+ 	pr_debug("dev_name=%s\n", dev_name(&dev->dev));
+ 
+-	dev->idx = ida_simple_get(&nfc_index_ida, 0, 0, GFP_KERNEL);
+-	if (dev->idx < 0)
+-		return dev->idx;
+-
+-	dev->dev.class = &nfc_class;
+-	dev_set_name(&dev->dev, "nfc%d", dev->idx);
+-	device_initialize(&dev->dev);
+-
+ 	mutex_lock(&nfc_devlist_mutex);
+ 	nfc_devlist_generation++;
+ 	rc = device_add(&dev->dev);
+@@ -1149,12 +1158,10 @@ EXPORT_SYMBOL(nfc_register_device);
+  */
+ void nfc_unregister_device(struct nfc_dev *dev)
+ {
+-	int rc, id;
++	int rc;
+ 
+ 	pr_debug("dev_name=%s\n", dev_name(&dev->dev));
+ 
+-	id = dev->idx;
+-
+ 	if (dev->rfkill) {
+ 		rfkill_unregister(dev->rfkill);
+ 		rfkill_destroy(dev->rfkill);
+@@ -1179,8 +1186,6 @@ void nfc_unregister_device(struct nfc_dev *dev)
+ 	nfc_devlist_generation++;
+ 	device_del(&dev->dev);
+ 	mutex_unlock(&nfc_devlist_mutex);
+-
+-	ida_simple_remove(&nfc_index_ida, id);
+ }
+ EXPORT_SYMBOL(nfc_unregister_device);
+ 
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 61fff422424f..85a3d9ed4c29 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -1173,8 +1173,7 @@ struct nci_dev *nci_allocate_device(struct nci_ops *ops,
+ 	return ndev;
+ 
+ free_nfc:
+-	kfree(ndev->nfc_dev);
+-
++	nfc_free_device(ndev->nfc_dev);
+ free_nci:
+ 	kfree(ndev);
+ 	return NULL;
+-- 
+2.12.2
