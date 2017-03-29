@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f45.google.com ([74.125.83.45]:33073 "EHLO
-        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752324AbdCBEL0 (ORCPT
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:32903 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755978AbdC2L1X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2017 23:11:26 -0500
-Received: by mail-pg0-f45.google.com with SMTP id 25so27559400pgy.0
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Mar 2017 20:10:51 -0800 (PST)
-Subject: Re: WARNING: CPU: 1 PID: 23668 at
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1539 iwl_mvm_rm_sta+0x3ce/0x450
-To: Luca Coelho <luca@coelho.fi>
-References: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
-Cc: luciano.coelho@intel.com, sara.sharon@intel.com,
-        liad.kaufman@intel.com, linux-wireless@vger.kernel.org
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <05fff778-8703-f429-f555-aa533c2df25f@kernel.dk> (sfid-20170302_051218_828025_01C2A1BA)
-Date: Wed, 1 Mar 2017 21:10:47 -0700
+        Wed, 29 Mar 2017 07:27:23 -0400
+Received: by mail-lf0-f53.google.com with SMTP id h125so6096068lfe.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Mar 2017 04:27:21 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: wrap brcmf_fws_(de)init into bcdc layer
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170321134422.888-1-zajec5@gmail.com>
+ <c5a57e90-8884-8976-fd3f-5b157abb4189@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <fc201610-06ac-ec65-1ec4-7c593a91f935@gmail.com> (sfid-20170329_133000_881887_55639D7D)
+Date: Wed, 29 Mar 2017 13:27:19 +0200
 MIME-Version: 1.0
-In-Reply-To: <f2bedfee-e74f-47d6-9088-94171f0e5538@email.android.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <c5a57e90-8884-8976-fd3f-5b157abb4189@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/01/2017 08:33 PM, Luca Coelho wrote:
-> Hi Jens,
-> 
-> On Mar 1, 2017 20:25, Jens Axboe <axboe@kernel.dk> wrote:
-> 
->     Not that folks have been jumping all over this, but in case someone is
->     curious, it triggered twice here today. For those two times, the value
->     of mvm->pending_frames[sta_id] was 80 and 39, respectively.
-> 
-> Sorry for the delay, I'm on vacation now with limited internet access.
-> But we'll take a look into this early next week at the latest.
-> 
-> Thanks a lot for the detailed report!
+On 03/22/2017 08:43 PM, Arend Van Spriel wrote:
+> On 21-3-2017 14:44, Rafał Miłecki wrote:
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>>
+>> fwsignal is only used by bcdc. Create new protocol interface functions
+>> for core code to perform proto specific (de)initialization. This makes
+>> core agnostic to the protocol which will allow further optimizations.
+>> We will be able to avoid compiling unused protocols or modularize them.
+>
+> Thanks, Rafał
+>
+> Franky had tackled this with two patches, which are queued to be submitted.
 
-No worries, thanks for responding. I just wanted to ensure this wasn't
-dropped on the floor.
+Given that your implementation (you now published) doesn't do any magic, is
+there any real problem with my patch except of /not invented here/?
 
-BTW, a few more values of ->pending_frames[sta_id]:
-
-$ dmesg | grep "ret="
-[ 2334.308254] ret=39
-[ 7915.311828] ret=80
-[31602.317204] ret=41
-[32139.510993] ret=54
-[33292.917759] ret=96
-
-it seems to often happen around resume.
-
--- 
-Jens Axboe
+[0] https://en.wikipedia.org/wiki/Not_invented_here
