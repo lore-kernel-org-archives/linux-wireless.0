@@ -1,59 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34745 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753099AbdC2QV7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 12:21:59 -0400
-From: Johan Hovold <johan@kernel.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>
-Subject: [PATCH 7/7] NFC: nfcmrvl_usb: use interface as phy device
-Date: Wed, 29 Mar 2017 18:21:12 +0200
-Message-Id: <20170329162112.18121-8-johan@kernel.org> (sfid-20170329_182256_330651_7085D504)
-In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
-References: <20170329162112.18121-1-johan@kernel.org>
+Received: from zoot.epublica.de ([78.46.103.157]:53289 "EHLO zoot.epublica.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755295AbdC2KaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 06:30:03 -0400
+Subject: Re: Support of rtl8723bs
+References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
+ <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
+ <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
+ <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de>
+ <1473695458.6389.3.camel@hadess.net> <wrfj4m5lhzja.fsf@redhat.com>
+ <5ff75d7f-3017-1028-eacb-57e37f2c03c1@hanno.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+From: Hanno Zulla <abos@hanno.de>
+Message-ID: <96946491-44ef-98f7-3c63-09c503623d12@hanno.de> (sfid-20170329_123011_206613_5C08BEB3)
+Date: Wed, 29 Mar 2017 12:20:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <5ff75d7f-3017-1028-eacb-57e37f2c03c1@hanno.de>
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the USB-interface rather than parent USB-device device, which is
-what this driver binds to, when registering the nci device.
+Hi,
 
-Note that using the right device is important when dealing with device-
-managed resources as the interface can be unbound independently of the
-parent device.
+it was exciting to see
 
-Also note that private device pointer had already been set by
-nfcmrvl_nci_register_dev() so the redundant assignment can therefore be
-removed.
+https://marc.info/?l=linux-wireless&m=148735587909056&w=2
 
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- drivers/nfc/nfcmrvl/usb.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+So please forgive me for asking about the current state of things.
 
-diff --git a/drivers/nfc/nfcmrvl/usb.c b/drivers/nfc/nfcmrvl/usb.c
-index 585a0f20835b..728b3321842d 100644
---- a/drivers/nfc/nfcmrvl/usb.c
-+++ b/drivers/nfc/nfcmrvl/usb.c
-@@ -341,15 +341,13 @@ static int nfcmrvl_probe(struct usb_interface *intf,
- 	init_usb_anchor(&drv_data->deferred);
- 
- 	priv = nfcmrvl_nci_register_dev(NFCMRVL_PHY_USB, drv_data, &usb_ops,
--					&drv_data->udev->dev, &config);
-+					&intf->dev, &config);
- 	if (IS_ERR(priv))
- 		return PTR_ERR(priv);
- 
- 	drv_data->priv = priv;
- 	drv_data->priv->support_fw_dnld = false;
- 
--	priv->dev = &drv_data->udev->dev;
--
- 	usb_set_intfdata(intf, drv_data);
- 
- 	return 0;
--- 
-2.12.2
+Kind regards,
+
+Hanno
