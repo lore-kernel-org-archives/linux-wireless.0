@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52948 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41900 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932238AbdCFWIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 17:08:39 -0500
+        id S1753716AbdC2HtY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 03:49:24 -0400
+Message-ID: <1490773761.7948.3.camel@sipsolutions.net> (sfid-20170329_095002_716253_BC51FE5F)
+Subject: Re: [REGRESSION] mac80211: IBSS vif queue stopped when started
+ after 11s vif
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: ignore VHT membership selector when parsing rates
-Date: Mon,  6 Mar 2017 23:01:13 +0100
-Message-Id: <20170306220113.4666-1-johannes@sipsolutions.net> (sfid-20170306_230841_676592_1490CE3D)
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Date: Wed, 29 Mar 2017 09:49:21 +0200
+In-Reply-To: <1978424.XTv2Qph05K@bentobox> (sfid-20170322_101600_364232_CA0A885F)
+References: <1978424.XTv2Qph05K@bentobox>
+         (sfid-20170322_101600_364232_CA0A885F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Sven,
 
-There isn't really much harm in not ignoring, since it doesn't
-represent a valid rate, but since we already ignore the HT one
-also ignore VHT. Also simplify the code a bit.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> But I could be completely wrong about it. It would therefore be
+> interesting for me to know who would be responsible to start the
+> queues when ieee80211_do_open rejected it for IBSS.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1568a74757bc..6340127a71c6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2823,15 +2823,15 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
- 			*have_higher_than_11mbit = true;
- 
- 		/*
--		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in 802.11n-2009
--		 * 7.3.2.2 as a magic value instead of a rate. Hence, skip it.
-+		 * Skip HT and VHT BSS membership selectors since they're not
-+		 * rates.
- 		 *
- 		 * Note: Even through the membership selector and the basic
- 		 *	 rate flag share the same bit, they are not exactly
- 		 *	 the same.
- 		 */
--		if (!!(supp_rates[i] & 0x80) &&
--		    (supp_rates[i] & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
-+		if (supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_HT_PHY) ||
-+		    supp_rates[i] == (0x80 | BSS_MEMBERSHIP_SELECTOR_VHT_PHY))
- 			continue;
- 
- 		for (j = 0; j < sband->n_bitrates; j++) {
--- 
-2.11.0
+Well, once ieee80211_offchannel_return() is called, that should do the
+needful and end up in ieee80211_propagate_queue_wake().
+
+Can you check what the IBSS vif's queues are (vif->hw_queue[...])?
+
+However, I also don't understand the difference between encrypted and
+unencrypted here.
+
+johannes
