@@ -1,89 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60056 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751518AbdCCMps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2017 07:45:48 -0500
-From: Jiri Slaby <jslaby@suse.cz>
-To: johannes@sipsolutions.net
-Cc: linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Ond=C5=99ej=20Lyson=C4=9Bk?= <ondrej.lysonek@seznam.cz>,
-        Jiri Slaby <jslaby@suse.cz>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] mac80211: Use setup_timer instead of init_timer
-Date: Fri,  3 Mar 2017 13:45:35 +0100
-Message-Id: <20170303124535.30125-1-jslaby@suse.cz> (sfid-20170303_134658_050256_8BEBE346)
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:36662 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753971AbdC2UVg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 16:21:36 -0400
+Received: by mail-wr0-f174.google.com with SMTP id w11so30621952wrc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Mar 2017 13:21:34 -0700 (PDT)
+Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Dennis New <dennisn@dennisn.mooo.com>,
+        linux-wireless@vger.kernel.org
+References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
+ <1490772890.18052.8.camel@sipsolutions.net>
+ <20170329062808.032e71a5327f3405f82df4b2@dennisn.mooo.com>
+ <1490788146.7948.19.camel@sipsolutions.net>
+ <20170329153623.4a65bcf647c899f6bc5995ee@dennisn.mooo.com>
+ <e2dc8492-1f48-07a4-da56-6b602da9ea2b@lwfinger.net>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d54502ba-668b-fea4-f19c-bf438adc019d@broadcom.com> (sfid-20170329_222235_750957_B070C7B7)
+Date: Wed, 29 Mar 2017 22:21:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <e2dc8492-1f48-07a4-da56-6b602da9ea2b@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ondřej Lysoněk <ondrej.lysonek@seznam.cz>
 
-Use setup_timer() and setup_deferrable_timer() to set the data and
-function timer fields. It makes the code cleaner and will allow for
-easier change of the timer struct internals.
 
-Signed-off-by: Ondřej Lysoněk <ondrej.lysonek@seznam.cz>
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <netdev@vger.kernel.org>
----
- net/mac80211/agg-rx.c | 12 ++++++------
- net/mac80211/agg-tx.c | 12 ++++++------
- 2 files changed, 12 insertions(+), 12 deletions(-)
+On 29-3-2017 22:15, Larry Finger wrote:
+> On 03/29/2017 02:36 PM, Dennis New wrote:
+>> global
+>> country 00: DFS-UNSET
+>>         (2402 - 2472 @ 92), (N/A, 20), (N/A)
+>>         (2457 - 2482 @ 92), (N/A, 20), (N/A), PASSIVE-SCAN
+>>         (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+>>         (5170 - 5250 @ 160), (N/A, 20), (N/A), PASSIVE-SCAN
+>>         (5250 - 5330 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+>>         (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+>>         (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+>>         (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+> 
+> That "country 00" looks like commit
+> 1d2a6a5e4bf2921531071fcff8538623dce74efa
+> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date:   Wed Mar 22 16:08:33 2017 +0100
+> 
+>     genetlink: fix counting regression on ctrl_dumpfamily()
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 4456559cb056..1b7a4daf283c 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -357,14 +357,14 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	spin_lock_init(&tid_agg_rx->reorder_lock);
- 
- 	/* rx timer */
--	tid_agg_rx->session_timer.function = sta_rx_agg_session_timer_expired;
--	tid_agg_rx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
--	init_timer_deferrable(&tid_agg_rx->session_timer);
-+	setup_deferrable_timer(&tid_agg_rx->session_timer,
-+			       sta_rx_agg_session_timer_expired,
-+			       (unsigned long)&sta->timer_to_tid[tid]);
- 
- 	/* rx reorder timer */
--	tid_agg_rx->reorder_timer.function = sta_rx_agg_reorder_timer_expired;
--	tid_agg_rx->reorder_timer.data = (unsigned long)&sta->timer_to_tid[tid];
--	init_timer(&tid_agg_rx->reorder_timer);
-+	setup_timer(&tid_agg_rx->reorder_timer,
-+		    sta_rx_agg_reorder_timer_expired,
-+		    (unsigned long)&sta->timer_to_tid[tid]);
- 
- 	/* prepare reordering buffer */
- 	tid_agg_rx->reorder_buf =
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 45319cc01121..60e2a62f7bef 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -670,14 +670,14 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 	tid_tx->timeout = timeout;
- 
- 	/* response timer */
--	tid_tx->addba_resp_timer.function = sta_addba_resp_timer_expired;
--	tid_tx->addba_resp_timer.data = (unsigned long)&sta->timer_to_tid[tid];
--	init_timer(&tid_tx->addba_resp_timer);
-+	setup_timer(&tid_tx->addba_resp_timer,
-+		    sta_addba_resp_timer_expired,
-+		    (unsigned long)&sta->timer_to_tid[tid]);
- 
- 	/* tx timer */
--	tid_tx->session_timer.function = sta_tx_agg_session_timer_expired;
--	tid_tx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
--	init_timer_deferrable(&tid_tx->session_timer);
-+	setup_deferrable_timer(&tid_tx->session_timer,
-+			       sta_tx_agg_session_timer_expired,
-+			       (unsigned long)&sta->timer_to_tid[tid]);
- 
- 	/* assign a dialog token */
- 	sta->ampdu_mlme.dialog_token_allocator++;
--- 
-2.12.0
+I am more confused about "(2402 - 2472 @ 92)". That is some seriously
+strange bandwidth :-p
+
+Regards,
+Arend
