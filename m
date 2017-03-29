@@ -1,88 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55691 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936013AbdCJMMO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Mar 2017 07:12:14 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v4 06/21] ath10k: sdio support
-Date: Fri, 10 Mar 2017 12:11:40 +0000
-Message-ID: <8760jh2uy8.fsf@kamboji.qca.qualcomm.com> (sfid-20170310_131237_650391_9E78D852)
-References: <1487693741-10042-1-git-send-email-erik.stromdahl@gmail.com>
-        <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
-In-Reply-To: <1487693741-10042-7-git-send-email-erik.stromdahl@gmail.com>
-        (Erik Stromdahl's message of "Tue, 21 Feb 2017 17:15:26 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:45384 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755855AbdC2LxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 07:53:10 -0400
+Message-ID: <1490788386.7948.21.camel@sipsolutions.net> (sfid-20170329_135428_230046_EA0EF7EB)
+Subject: Re: [REGRESSION] mac80211: IBSS vif queue stopped when started
+ after 11s vif
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Michal Kazior <michal.kazior@tieto.com>
+Date: Wed, 29 Mar 2017 13:53:06 +0200
+In-Reply-To: <5090047.94hdUy33Q8@bentobox> (sfid-20170329_130745_753898_724474CD)
+References: <1978424.XTv2Qph05K@bentobox>
+         <1490773761.7948.3.camel@sipsolutions.net> <5090047.94hdUy33Q8@bentobox>
+         (sfid-20170329_130745_753898_724474CD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-> sdio/mailbox HIF implementation.
->
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>     if (local->ops->wake_tx_queue)
+>     		return;
+> 
+> evaluates to true. The rest rest of the function is therefore always
+> skipped for ath9k.
 
-I'm looking at this more carefully now and noticed this:
+Ahh, yes, ok.
 
-> +static int ath10k_sdio_bmi_credits(struct ath10k *ar)
-> +{
-> +	int ret;
-> +	u32 addr, *cmd_credits;
-> +	unsigned long timeout;
-> +
-> +	cmd_credits =3D kzalloc(sizeof(*cmd_credits), GFP_KERNEL);
-> +	if (!cmd_credits) {
-> +		ret =3D -ENOMEM;
-> +		goto err;
-> +	}
-> +
-> +	/* Read the counter register to get the command credits */
-> +	addr =3D MBOX_COUNT_DEC_ADDRESS + ATH10K_HIF_MBOX_NUM_MAX * 4;
-> +
-> +	timeout =3D jiffies + BMI_COMMUNICATION_TIMEOUT_HZ;
-> +	while (time_before(jiffies, timeout) && !*cmd_credits) {
-> +		/* Hit the credit counter with a 4-byte access, the first byte
-> +		 * read will hit the counter and cause a decrement, while the
-> +		 * remaining 3 bytes has no effect. The rationale behind this
-> +		 * is to make all HIF accesses 4-byte aligned.
-> +		 */
-> +		ret =3D ath10k_sdio_read_write_sync(ar, addr,
-> +						  (u8 *)cmd_credits,
-> +						  sizeof(*cmd_credits),
-> +						  HIF_RD_SYNC_BYTE_INC);
-> +		if (ret) {
-> +			ath10k_warn(ar,
-> +				    "Unable to decrement the command credit count register: %d\n",
-> +				    ret);
-> +			goto err_free;
-> +		}
-> +
-> +		/* The counter is only 8 bits.
-> +		 * Ignore anything in the upper 3 bytes
-> +		 */
-> +		*cmd_credits &=3D 0xFF;
-> +	}
-> +
-> +	if (!*cmd_credits) {
-> +		ath10k_warn(ar, "bmi communication timeout\n");
-> +		ret =3D -ETIMEDOUT;
-> +		goto err_free;
-> +	}
-> +
-> +	return 0;
-> +err_free:
-> +	kfree(cmd_credits);
-> +err:
-> +	return ret;
-> +}
+> Removing this is enough to fix the problem. And now you will propably
+> say "hey, this is not my code". And this is the reason why I have now
+> CC'ed the author of 80a83cfc434b ("mac80211: skip netdev queue
+> control with software queuing"). This change in
+> ieee80211_propagate_queue_wake is basically breaking 
+> the (delayed) startup of the ibss netdev queue [1] when the device
+> was offchan during the ieee80211_do_open of the ibss interface.
+> 
+> Not sure whether removing it in ieee80211_propagate_queue_wake will
+> have other odd side effects with software queuing. Maybe Michal
+> Kazior can tell us if it is safe to remove it.
 
-AFAICS we are leaking cmd_credits if there's no error. Or is the buffer
-freed somewhere within the mmc stack or something? The reason why I ask
-is that I saw the same pattern in multiple functions so I'm curious.
+No, it's the other way around.
 
---=20
-Kalle Valo=
+Michal's patches correctly added a test for this to
+__ieee80211_stop_queue(), the only missing thing is that this test
+should also be in ieee80211_do_open() like this:
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 40813dd3301c..5bb0c5012819 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -718,7 +718,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 	ieee80211_recalc_ps(local);
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    local->ops->wake_tx_queue) {
+ 		/* XXX: for AP_VLAN, actually track AP queues */
+ 		netif_tx_start_all_queues(dev);
+ 	} else if (dev) {
+
+johannes
