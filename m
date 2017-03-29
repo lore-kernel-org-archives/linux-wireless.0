@@ -1,40 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:63620 "EHLO
-        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751390AbdCQPAP (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35079 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932111AbdC2Mvf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2017 11:00:15 -0400
-From: Mark Asselstine <mark.asselstine@windriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT] brcmfmac: add support to move wiphy instance into network namespace
-Date: Fri, 17 Mar 2017 09:05:35 -0400
-Message-ID: <4209761.CsxqdDJGls@yow-masselst-lx1> (sfid-20170317_160050_022352_3B4842F2)
-In-Reply-To: <1489755538.2544.11.camel@sipsolutions.net>
-References: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com> <10023407.Rx0XN2k1RN@yow-masselst-lx1> <1489755538.2544.11.camel@sipsolutions.net>
+        Wed, 29 Mar 2017 08:51:35 -0400
+Received: by mail-qk0-f176.google.com with SMTP id r142so11504294qke.2
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Mar 2017 05:51:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Reply-To: walter@strametz.eu
+From: walter strametz <walter@strametz.eu>
+Date: Wed, 29 Mar 2017 14:51:13 +0200
+Message-ID: <CAMFBgyj=A4GmOyO3wkOgVLCOjc35RC4n8yJm+z+cxO3U=OH_qQ@mail.gmail.com> (sfid-20170329_145143_721050_DC1A3DB7)
+Subject: compile driver for rtl8192su
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/mixed; boundary=001a114a82003f12b5054bde09ff
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, March 17, 2017 1:58:58 PM EDT Johannes Berg wrote:
-> > > I guess this is intended behavior?
-> > 
-> > I had thought this was intended behavior as well but I see that a
-> > patch is already prepped and tested to make this not happen. At any
-> > rate it wasn't appearing to affect my usecase.
-> 
-> I can't actually see how it'd affect any usecase, since you really need
-> to check inside the new netns what's going on etc. anyway, and you
-> don't really want to pass such identifiers across the boundaries. But
-> preserving it makes more sense, if only for debugging and making sure
-> we won't run out of numbers :)
+--001a114a82003f12b5054bde09ff
+Content-Type: text/plain; charset=UTF-8
 
-OK, I can see how preserving this makes sense for debugging. Understood and 
-thanks for getting this namespace support in.
+Hi - I try to get my D-Link N300 running and compiled the sources on
+github (chunkeey - rtl8192su).  Other trials also failed, because the
+driver-source is not compatible with the (newer) kernel.
 
-Mark
+See more information in the enclosed textfile .
 
-> 
-> johannes
+Can you help me?
+
+Thx, Walter
+
+--001a114a82003f12b5054bde09ff
+Content-Type: text/plain; charset=UTF-8; name="compileerror.txt"
+Content-Disposition: attachment; filename="compileerror.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_j0uyzhau0
+
+SGkgLSBJIHRyeSB0byBnZXQgbXkgRC1MaW5rIE4zMDAgcnVubmluZyBhbmQgY29tcGlsZWQ6IAoK
+Z3RodWIuY29tL2NodW5rZWV5L3J0bDgxOTJzdQoKd2FsdGVyQHRoaW5rcGFkIH4vcnRsODE5MnN1
+ICQgbWFrZQptYWtlIC1DIC9saWIvbW9kdWxlcy80LjQuMC03MC1nZW5lcmljL2J1aWxkIE09L2hv
+bWUvd2FsdGVyL3J0bDgxOTJzdS9ydGx3aWZpIENPTkZJR19SVExfQ0FSRFM9eSBDT05GSUdfUlRM
+V0lGST1tIENPTkZJR19SVExXSUZJX0RFQlVHPXkgQ09ORklHX1JUTFdJRklfREVCVUdGUz15IENP
+TkZJR19SVExXSUZJX1VTQj1tIENPTkZJR19SVExXSUZJX1BDST1tIENPTkZJR19SVEw4MTkyU1U9
+bSBDT05GSUdfUlRMODE5MlNFPW0gQ09ORklHX1JUTDgxOTJTX0NPTU1PTj1tIENPTkZJR19SVEw4
+MTkyQ1U9biBDT05GSUdfUlRMODE5MkRFPW4gQ09ORklHX1JUTDgxOTJDRT1uIENPTkZJR19SVEw4
+MTkyQ19DT01NT049biBDT05GSUdfUlRMODcyM0FFPW4gQ09ORklHX1JUTDgxODhFRT1uICBFWFRS
+QV9DRkxBR1M9Ii1EREVCVUcgLURDT05GSUdfUlRMV0lGSV9ERUJVR0ZTPW0iCm1ha2VbMV06IEVu
+dGVyaW5nIGRpcmVjdG9yeSAnL3Vzci9zcmMvbGludXgtaGVhZGVycy00LjQuMC03MC1nZW5lcmlj
+JwogIENDIFtNXSAgL2hvbWUvd2FsdGVyL3J0bDgxOTJzdS9ydGx3aWZpL2Jhc2UubwpJbiBmaWxl
+IGluY2x1ZGVkIGZyb20gL2hvbWUvd2FsdGVyL3J0bDgxOTJzdS9ydGx3aWZpL2Jhc2UuYzoyNjow
+OgovaG9tZS93YWx0ZXIvcnRsODE5MnN1L3J0bHdpZmkvd2lmaS5oOjEzNjM6NDA6IGVycm9yOiDi
+gJhOVU1fTkw4MDIxMV9CQU5EU+KAmSB1bmRlY2xhcmVkIGhlcmUgKG5vdCBpbiBhIGZ1bmN0aW9u
+KQogIHN0cnVjdCBpZWVlODAyMTFfc3VwcG9ydGVkX2JhbmQgYmFuZHNbTlVNX05MODAyMTFfQkFO
+RFNdOwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXgovaG9tZS93YWx0
+ZXIvcnRsODE5MnN1L3J0bHdpZmkvYmFzZS5jOiBJbiBmdW5jdGlvbiDigJhydGx3aWZpX3JhdGVf
+bWFwcGluZ+KAmToKL2hvbWUvd2FsdGVyL3J0bDgxOTJzdS9ydGx3aWZpL2Jhc2UuYzo5NjE6MjU6
+IHdhcm5pbmc6IGNvbXBhcmlzb24gYmV0d2VlbiDigJhlbnVtIG5sODAyMTFfYmFuZOKAmSBhbmQg
+4oCYZW51bSBpZWVlODAyMTFfYmFuZOKAmSBbLVdlbnVtLWNvbXBhcmVdCiAgIGlmIChOTDgwMjEx
+X0JBTkRfMkdIWiA9PSBody0+Y29uZi5jaGFuZGVmLmNoYW4tPmJhbmQpIHsKICAgICAgICAgICAg
+ICAgICAgICAgICAgIF4Kc2NyaXB0cy9NYWtlZmlsZS5idWlsZDoyNTg6IHJlY2lwZSBmb3IgdGFy
+Z2V0ICcvaG9tZS93YWx0ZXIvcnRsODE5MnN1L3J0bHdpZmkvYmFzZS5vJyBmYWlsZWQKbWFrZVsy
+XTogKioqIFsvaG9tZS93YWx0ZXIvcnRsODE5MnN1L3J0bHdpZmkvYmFzZS5vXSBFcnJvciAxCk1h
+a2VmaWxlOjE0MjA6IHJlY2lwZSBmb3IgdGFyZ2V0ICdfbW9kdWxlXy9ob21lL3dhbHRlci9ydGw4
+MTkyc3UvcnRsd2lmaScgZmFpbGVkCm1ha2VbMV06ICoqKiBbX21vZHVsZV8vaG9tZS93YWx0ZXIv
+cnRsODE5MnN1L3J0bHdpZmldIEVycm9yIDIKbWFrZVsxXTogTGVhdmluZyBkaXJlY3RvcnkgJy91
+c3Ivc3JjL2xpbnV4LWhlYWRlcnMtNC40LjAtNzAtZ2VuZXJpYycKTWFrZWZpbGU6MjI6IHJlY2lw
+ZSBmb3IgdGFyZ2V0ICdhbGwnIGZhaWxlZAptYWtlOiAqKiogW2FsbF0gRXJyb3IgMgp3YWx0ZXJA
+dGhpbmtwYWQgfi9ydGw4MTkyc3UgJCAKCkhlcmUgaXMgc29tZSBpbmZvIGFib3V0IG15IGVudmly
+b25tZW50OiAKCndhbHRlckB0aGlua3BhZCB+L3J0bDgxOTJzdSAkIGxzdXNiCkJ1cyAwMDIgRGV2
+aWNlIDAwNDogSUQgMjAwMTozMzE5IEQtTGluayBDb3JwLiAKQnVzIDAwMiBEZXZpY2UgMDAyOiBJ
+RCA4MDg3OjAwMjAgSW50ZWwgQ29ycC4gSW50ZWdyYXRlZCBSYXRlIE1hdGNoaW5nIEh1YgpCdXMg
+MDAyIERldmljZSAwMDE6IElEIDFkNmI6MDAwMiBMaW51eCBGb3VuZGF0aW9uIDIuMCByb290IGh1
+YgpCdXMgMDAxIERldmljZSAwMDM6IElEIDBhNWM6MjE3ZiBCcm9hZGNvbSBDb3JwLiBCQ00yMDQ1
+QiAoQkRDLTIuMSkKQnVzIDAwMSBEZXZpY2UgMDAyOiBJRCA4MDg3OjAwMjAgSW50ZWwgQ29ycC4g
+SW50ZWdyYXRlZCBSYXRlIE1hdGNoaW5nIEh1YgpCdXMgMDAxIERldmljZSAwMDE6IElEIDFkNmI6
+MDAwMiBMaW51eCBGb3VuZGF0aW9uIDIuMCByb290IGh1YgoKCndhbHRlckB0aGlua3BhZCB+L3J0
+bDgxOTJzdSAkIGlueGkgIC1GeApTeXN0ZW06ICAgIEhvc3Q6IHRoaW5rcGFkIEtlcm5lbDogNC40
+LjAtNzAtZ2VuZXJpYyB4ODZfNjQgKDY0IGJpdCBnY2M6IDUuNC4wKQogICAgICAgICAgIERlc2t0
+b3A6IENpbm5hbW9uIDMuMC43IChHdGsgMy4xOC45LTF1YnVudHUzLjIpCiAgICAgICAgICAgRGlz
+dHJvOiBMaW51eCBNaW50IDE4IFNhcmFoCk1hY2hpbmU6ICAgU3lzdGVtOiBMRU5PVk8gKHBvcnRh
+YmxlKSBwcm9kdWN0OiAzMjQ5Q1RPIHY6IFRoaW5rUGFkIFgyMDEKICAgICAgICAgICBNb2JvOiBM
+RU5PVk8gbW9kZWw6IDMyNDlDVE8KICAgICAgICAgICBCaW9zOiBMRU5PVk8gdjogNlFFVDYxV1cg
+KDEuMzEgKSBkYXRlOiAxMC8yNi8yMDEwCkNQVTogICAgICAgRHVhbCBjb3JlIEludGVsIENvcmUg
+aTcgTSA2MjAgKC1IVC1NQ1AtKSBjYWNoZTogNDA5NiBLQgogICAgICAgICAgIGZsYWdzOiAobG0g
+bnggc3NlIHNzZTIgc3NlMyBzc2U0XzEgc3NlNF8yIHNzc2UzIHZteCkgYm1pcHM6IDEwNjM5CiAg
+ICAgICAgICAgY2xvY2sgc3BlZWRzOiBtYXg6IDI2NjcgTUh6IDE6IDExOTkgTUh6IDI6IDExOTkg
+TUh6IDM6IDIxMzMgTUh6CiAgICAgICAgICAgNDogMTMzMyBNSHoKR3JhcGhpY3M6ICBDYXJkOiBJ
+bnRlbCBDb3JlIFByb2Nlc3NvciBJbnRlZ3JhdGVkIEdyYXBoaWNzIENvbnRyb2xsZXIKICAgICAg
+ICAgICBidXMtSUQ6IDAwOjAyLjAKICAgICAgICAgICBEaXNwbGF5IFNlcnZlcjogWC5PcmcgMS4x
+OC40IGRyaXZlcnM6IGludGVsICh1bmxvYWRlZDogZmJkZXYsdmVzYSkKICAgICAgICAgICBSZXNv
+bHV0aW9uOiAxMjgweDgwMEA2MC4wMGh6CiAgICAgICAgICAgR0xYIFJlbmRlcmVyOiBNZXNhIERS
+SSBJbnRlbCBJcm9ubGFrZSBNb2JpbGUKICAgICAgICAgICBHTFggVmVyc2lvbjogMi4xIE1lc2Eg
+MTIuMC42IERpcmVjdCBSZW5kZXJpbmc6IFllcwpBdWRpbzogICAgIENhcmQgSW50ZWwgNSBTZXJp
+ZXMvMzQwMCBTZXJpZXMgSGlnaCBEZWZpbml0aW9uIEF1ZGlvCiAgICAgICAgICAgZHJpdmVyOiBz
+bmRfaGRhX2ludGVsIGJ1cy1JRDogMDA6MWIuMAogICAgICAgICAgIFNvdW5kOiBBZHZhbmNlZCBM
+aW51eCBTb3VuZCBBcmNoaXRlY3R1cmUgdjogazQuNC4wLTcwLWdlbmVyaWMKTmV0d29yazogICBD
+YXJkLTE6IEludGVsIDgyNTc3TE0gR2lnYWJpdCBOZXR3b3JrIENvbm5lY3Rpb24KICAgICAgICAg
+ICBkcml2ZXI6IGUxMDAwZSB2OiAzLjIuNi1rIHBvcnQ6IDE4MjAgYnVzLUlEOiAwMDoxOS4wCiAg
+ICAgICAgICAgSUY6IGVucDBzMjUgc3RhdGU6IHVwIHNwZWVkOiAxMDAwIE1icHMgZHVwbGV4OiBm
+dWxsCiAgICAgICAgICAgbWFjOiBmMDpkZTpmMTozYTo1ZTo3ZAogICAgICAgICAgIENhcmQtMjog
+SW50ZWwgQ2VudHJpbm8gV2lyZWxlc3MtTiAxMDAwIFtDb25kb3IgUGVha10KICAgICAgICAgICBk
+cml2ZXI6IGl3bHdpZmkgYnVzLUlEOiAwMjowMC4wCiAgICAgICAgICAgSUY6IHdscDJzMCBzdGF0
+ZTogdXAgbWFjOiA4YzphOTo4MjoxMDpiMjoyYwpEcml2ZXM6ICAgIEhERCBUb3RhbCBTaXplOiAy
+NTAuMUdCICg4MS42JSB1c2VkKQogICAgICAgICAgIElELTE6IC9kZXYvc2RhIG1vZGVsOiBTYW1z
+dW5nX1NTRF84NTAgc2l6ZTogMjUwLjFHQiB0ZW1wOiAwQwpQYXJ0aXRpb246IElELTE6IC8gc2l6
+ZTogMjIyRyB1c2VkOiAxODNHICg4NyUpIGZzOiBleHQ0IGRldjogL2Rldi9zZGExCiAgICAgICAg
+ICAgSUQtMjogc3dhcC0xIHNpemU6IDguMzdHQiB1c2VkOiAwLjAwR0IgKDAlKSBmczogc3dhcCBk
+ZXY6IC9kZXYvc2RhNQpSQUlEOiAgICAgIE5vIFJBSUQgZGV2aWNlczogL3Byb2MvbWRzdGF0LCBt
+ZF9tb2Qga2VybmVsIG1vZHVsZSBwcmVzZW50ClNlbnNvcnM6ICAgU3lzdGVtIFRlbXBlcmF0dXJl
+czogY3B1OiA1Mi4wQyBtb2JvOiAwLjBDCiAgICAgICAgICAgRmFuIFNwZWVkcyAoaW4gcnBtKTog
+Y3B1OiAzMjc2CkluZm86ICAgICAgUHJvY2Vzc2VzOiAyMDAgVXB0aW1lOiA5IG1pbiBNZW1vcnk6
+IDE3NzcuOS83Nzc5LjVNQgogICAgICAgICAgIEluaXQ6IHN5c3RlbWQgcnVubGV2ZWw6IDUgR2Nj
+IHN5czogNS40LjAKICAgICAgICAgICBDbGllbnQ6IFNoZWxsIChiYXNoIDQuMy40MjEpIGlueGk6
+IDIuMi4zNSAKCgoKY2FuIHlvdSBoZWxwIG1lPyAKClRoeCwgV2FsdGVy
+--001a114a82003f12b5054bde09ff--
