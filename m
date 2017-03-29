@@ -1,66 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39782 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45316 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751389AbdCNOLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 10:11:36 -0400
-Message-ID: <1489500692.10872.11.camel@sipsolutions.net> (sfid-20170314_151155_669889_E7E3E83C)
-Subject: Re: [RFCv2 2/2] mac80211: Implement data xmit for 802.11 encap
- offload
+        id S1755543AbdC2LtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Mar 2017 07:49:13 -0400
+Message-ID: <1490788146.7948.19.camel@sipsolutions.net> (sfid-20170329_135101_011909_069F8A0C)
+Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Pubbisetty, Manikanta" <mpubbise@qti.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-Date: Tue, 14 Mar 2017 15:11:32 +0100
-In-Reply-To: <828dd0c9cb0d409eb4d3aadc7f585a69@aphydexm01f.ap.qualcomm.com>
-References: <1488540807-27415-1-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488540807-27415-3-git-send-email-mpubbise@qti.qualcomm.com>
-         <1488544754.25750.8.camel@sipsolutions.net>
-         <30b4079fcf574d6fb62a10d8fa85ac06@aphydexm01f.ap.qualcomm.com>
-         <1489008812.7127.9.camel@sipsolutions.net>
-         <828dd0c9cb0d409eb4d3aadc7f585a69@aphydexm01f.ap.qualcomm.com>
+To: Dennis New <dennisn@dennisn.mooo.com>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 29 Mar 2017 13:49:06 +0200
+In-Reply-To: <20170329062808.032e71a5327f3405f82df4b2@dennisn.mooo.com> (sfid-20170329_122846_570548_1B99027C)
+References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
+         <1490772890.18052.8.camel@sipsolutions.net>
+         <20170329062808.032e71a5327f3405f82df4b2@dennisn.mooo.com>
+         (sfid-20170329_122846_570548_1B99027C)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-[Manikanta] In that case I will keep this change, should we consider
-a separate driver hook for legacy/mgmt tx like drv_tx_8023??
-> How about having wake_tx_queue_8023 and ieee80211_tx_dequeue_8023 so
-> that Ethernet transmit path is totally exclusive. Thoughts??
-
-I'm not sure this will work well. The driver might have more space for
-sending to a specific station, but doesn't really know which frames
-should go first. So either it'd have to call both (dequeue_8023
-followed by dequeue) with mac80211 sorting out what to do, or we should
-keep it combined. I think mac80211 sorting out the priority here etc.
-would be far more complex than this.
-
-> [Manikanta] Hmmm, I would like to have ieee80211_tx_status_8023 for
-> now and go with a TODO for single tx reporting mechanism for both
-> Ethernet and 802.11 tx formats. Any thoughts?
-
-There's an additional wrinkle btw - we currently report the 802.11
-frame to the monitor interface, if active. Not sure we can keep that,
-but it's something to think about.
-
-> > The only real alternative I see, which might be preferable, is for
-> > the driver to advertise a bitmap of interface types that it wants
-> > to use ethernet framing with.
+On Wed, 2017-03-29 at 06:28 -0400, Dennis New wrote:
+> On Wed, 29 Mar 2017 09:34:50 +0200, Johannes Berg wrote:
+> > On Fri, 2017-03-24 at 21:32 -0400, Dennis New wrote:
+> > > Ever since I upgraded to the 4.10 kernels (I don't think this
+> > > behavior existed in the 4.8 series), after I startup my laptop
+> > > (either from cold boot, or from standby), my wlan0 interface
+> > > keeps
+> > > deauthenticating
+> > > ...
+> > > 19:23:29 kernel: wlan0: authenticate with 00:11:22:33:44:55
+> > > 19:23:29 kernel: ------------[ cut here ]------------
+> > > 19:23:29 kernel: WARNING: CPU: 0 PID: 18925 at
+> > > net/mac80211/mlme.c:287 ieee80211_determine_chantype+0x12e/0x380
 > > 
+> > This is already indicating a severe problem. I don't know how you
+> > end
+> > up in this situation with b43, since that doesn't have any
+> > regulatory
+> > magic afaict.
+> > 
+> > > 19:23:29 kernel: wlan0: associated
+> > > 
+> > > 19:24:29 kernel: wlan0: deauthenticating from 00:11:22:33:44:55
+> > > by
+> > > local choice (Reason: 3=DEAUTH_LEAVING)
+> > 
+> > I'm convinced that this comes from reg_check_channels().
+> > 
+> > The above WARN_ON() already told you that the channel was
+> > considered
+> > invalid.
+> > 
+> > Do you know what channel your AP is on?
 > 
-> [Manikanta] Correct, this would be a onetime registration. Isn't it ?
-> I am just curious to know whether the supported vif types for
-> ethernet framing can change dynamically, is this possible?
+> 6
+> 
+> > Perhaps show the output of "iw wlan0 scan dump" while it's
+> 
+> connected (you have 60 seconds :P)
+> 
+> I have been having stable connections for the past few days,
+> simply by putting a 60 second sleep before starting my wlan0.
+> Although
+> if I /etc/init.d/net.wlan0 restart it (without the delay), it will
+> still do this deauth'ing.
 
-I don't see why it would change. I guess there's a small chance that
-you might design the HW in a way that it only has enough HW resources
-to do header format conversion for a limited number of interfaces, but
-if that ends up being a problem we can perhaps add more other
-capabilities.
+Very strange.
 
-The way we're looking at it will be type/header format dependent,
-nothing else.
+> 	* 2437 MHz [6] 
+> 	  Maximum TX power: 20.0 dBm
+> 	  Channel widths:
+
+That's quite odd, why isn't it listing any possible channel widths?!
+
+I get:
+	* 2437 MHz [6] 
+	  Maximum TX power: 15.0 dBm
+	  Channel widths: 20MHz HT40- HT40+
+
+What's "iw reg get"?
 
 johannes
