@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34206 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932085AbdCXEjC (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34745 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753099AbdC2QV7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2017 00:39:02 -0400
-From: Pushkar Jambhlekar <pushkar.iit@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org (open list:STAGING - WILC1000 WIFI
-        DRIVER), devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
-        linux-kernel@vger.kernel.org (open list),
-        Pushkar Jambhlekar <pushkar.iit@gmail.com>
-Subject: [PATCH] drivers/staging/wilc1000: Fixing dev_err and removing dev_dbg calls for tracing
-Date: Fri, 24 Mar 2017 10:08:41 +0530
-Message-Id: <1490330321-7004-1-git-send-email-pushkar.iit@gmail.com> (sfid-20170324_054030_831790_3E5EBF08)
+        Wed, 29 Mar 2017 12:21:59 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>
+Subject: [PATCH 7/7] NFC: nfcmrvl_usb: use interface as phy device
+Date: Wed, 29 Mar 2017 18:21:12 +0200
+Message-Id: <20170329162112.18121-8-johan@kernel.org> (sfid-20170329_182256_330651_7085D504)
+In-Reply-To: <20170329162112.18121-1-johan@kernel.org>
+References: <20170329162112.18121-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_err: replacing function name with '%s' and __func__
-dev_dbg: Removing calls which are used for tracing a function.
+Use the USB-interface rather than parent USB-device device, which is
+what this driver binds to, when registering the nci device.
 
-Signed-off-by: Pushkar Jambhlekar <pushkar.iit@gmail.com>
+Note that using the right device is important when dealing with device-
+managed resources as the interface can be unbound independently of the
+parent device.
+
+Also note that private device pointer had already been set by
+nfcmrvl_nci_register_dev() so the redundant assignment can therefore be
+removed.
+
+Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/staging/wilc1000/wilc_sdio.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/nfc/nfcmrvl/usb.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index ad4eb0f..20dbc21 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -74,7 +74,7 @@ static int wilc_sdio_cmd52(struct wilc *wilc, struct sdio_cmd52 *cmd)
- 	sdio_release_host(func);
+diff --git a/drivers/nfc/nfcmrvl/usb.c b/drivers/nfc/nfcmrvl/usb.c
+index 585a0f20835b..728b3321842d 100644
+--- a/drivers/nfc/nfcmrvl/usb.c
++++ b/drivers/nfc/nfcmrvl/usb.c
+@@ -341,15 +341,13 @@ static int nfcmrvl_probe(struct usb_interface *intf,
+ 	init_usb_anchor(&drv_data->deferred);
  
- 	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
-+		dev_err(&func->dev, "%s..failed, err(%d)\n", __func__, ret);
- 	return ret;
- }
+ 	priv = nfcmrvl_nci_register_dev(NFCMRVL_PHY_USB, drv_data, &usb_ops,
+-					&drv_data->udev->dev, &config);
++					&intf->dev, &config);
+ 	if (IS_ERR(priv))
+ 		return PTR_ERR(priv);
  
-@@ -103,7 +103,7 @@ static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
- 	sdio_release_host(func);
+ 	drv_data->priv = priv;
+ 	drv_data->priv->support_fw_dnld = false;
  
- 	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
-+		dev_err(&func->dev, "%s..failed, err(%d)\n", __func__, ret);
- 
- 	return ret;
- }
-@@ -243,15 +243,11 @@ static void wilc_sdio_disable_interrupt(struct wilc *dev)
- 	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
- 	int ret;
- 
--	dev_dbg(&func->dev, "wilc_sdio_disable_interrupt IN\n");
+-	priv->dev = &drv_data->udev->dev;
 -
- 	sdio_claim_host(func);
- 	ret = sdio_release_irq(func);
- 	if (ret < 0)
- 		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
- 	sdio_release_host(func);
--
--	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
- }
+ 	usb_set_intfdata(intf, drv_data);
  
- /********************************************
+ 	return 0;
 -- 
-2.7.4
+2.12.2
