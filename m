@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f41.google.com ([209.85.213.41]:35828 "EHLO
-        mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751253AbdCRM2E (ORCPT
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:35154 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933426AbdC3OGM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Mar 2017 08:28:04 -0400
+        Thu, 30 Mar 2017 10:06:12 -0400
+Received: by mail-yw0-f196.google.com with SMTP id k13so3598794ywk.2
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2017 07:06:11 -0700 (PDT)
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+References: <20170329174751.13184-1-hdegoede@redhat.com>
+ <2266f69c-2eda-fb94-e1c7-cf1bafeb7ad7@lwfinger.net>
+ <20170330071515.GA4945@kroah.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        Bastien Nocera <hadess@hadess.net>,
+        linux-wireless@vger.kernel.org
+Message-ID: <d4f84482-1ed3-7ba5-10ba-406afbe2a372@gmail.com> (sfid-20170330_160707_133472_7DE0276F)
+Date: Thu, 30 Mar 2017 10:06:09 -0400
 MIME-Version: 1.0
-In-Reply-To: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
-References: <020d0eff-2c5b-aff7-2c51-11398b27dffc@mojatatu.com>
-From: Amine Aouled Hamed <amine.ahd@gmail.com>
-Date: Sat, 18 Mar 2017 13:27:09 +0100
-Message-ID: <CAMXA6B1noOrAFxzy7YhEW+oNvDFLk3+JcTvjorYfKkuZp5xk=w@mail.gmail.com> (sfid-20170318_132916_418096_29D3D14C)
-Subject: Re: ANNOUNCE: New sponsor Netronome
-To: Jamal Hadi Salim <jhs@mojatatu.com>
-Cc: people@netdevconf.org, tech-committee@netdevconf.org,
-        netfilter-devel@vger.kernel.org, Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Heri Muhero <hmuhero@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170330071515.GA4945@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can you stop with the spam?
+On 03/30/2017 03:15 AM, Greg Kroah-Hartman wrote:
+> On Wed, Mar 29, 2017 at 08:20:19PM -0500, Larry Finger wrote:
+>> On 03/29/2017 12:47 PM, Hans de Goede wrote:
+>>> The rtl8723bs is found on quite a few systems used by Linux users,
+>>> such as on Atom systems (Intel Computestick and various other
+>>> Atom based devices) and on many (budget) ARM boards such as
+>>> the CHIP.
+>>>
+>>> The plan moving forward with this is for the new clean,
+>>> written from scratch, rtl8xxxu driver to eventually gain
+>>> support for sdio devices. But there is no clear timeline
+>>> for that, so lets add this driver included in staging for now.
+>>>
+>>> Cc: Bastien Nocera <hadess@hadess.net>
+>>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Cc: Jes Sorensen <jes.sorensen@gmail.com>
+>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>
+>> Hans,
+>>
+>> I am still building the driver on my CherryTrail tablet, but I did see some
+>> warnings and errors listed by Smatch as follows:
+>>
+[snip]
+>> The indent problems can probably be ignored, but many of the others are
+>> serious enough to be addressed now.
+>>
+>> Once this driver is merged into staging, the Outreachy folks will be really busy.
+>>
+>> Thanks for posting this driver,
+>
+> So, no objection from you?  Great, I'll go queue it up later today...
+>
+> thanks,
+>
+> greg k-h
+>
 
-On Sat, Mar 18, 2017 at 1:10 PM, Jamal Hadi Salim <jhs@mojatatu.com> wrote:
-> The organizing committee would like to announce a new silver sponsor,
-> Netronome.
->
-> Netronome is a returning silver sponsor. The netdev community
-> appreciates their support once again!
->
-> cheers,
-> jamal
-> --
-> To unsubscribe from this list: send the line "unsubscribe netfilter" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As much as I hate adding more Realtek vendor code to the kernel, I do 
+agree this is the right thing to do in the interim. Not sure when I'll 
+get to SDIO support in rtl8xxxu, but I will process patches, hint hint :)
+
+Jes
