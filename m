@@ -1,511 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52042 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753696AbdCHOea (ORCPT
+Received: from mail-it0-f43.google.com ([209.85.214.43]:37793 "EHLO
+        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933005AbdC3XtZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 09:34:30 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v28Dnr3H013976
-        for <linux-wireless@vger.kernel.org>; Wed, 8 Mar 2017 05:59:22 -0800
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2913vkx8k2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Mar 2017 05:59:21 -0800
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Devidas Puranik <devidas@marvell.com>
-Subject: [PATCH 3/3] mwifiex: fix for unaligned reads
-Date: Wed, 8 Mar 2017 19:17:09 +0530
-Message-ID: <1488980829-6075-4-git-send-email-gbhat@marvell.com> (sfid-20170308_153508_806836_2ADADD35)
-In-Reply-To: <1488980829-6075-1-git-send-email-gbhat@marvell.com>
-References: <1488980829-6075-1-git-send-email-gbhat@marvell.com>
+        Thu, 30 Mar 2017 19:49:25 -0400
+Received: by mail-it0-f43.google.com with SMTP id 190so3612317itm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2017 16:49:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJ+vNU1HsQFSSDG+0rsnkpF5ao5JP9KkWaosGubUWXnj7E0e1Q@mail.gmail.com>
+References: <CAJ+vNU0gsjJvF34eQFQ48TLHv-t1H8W75R1+FkOzN76-K_N8Rw@mail.gmail.com>
+ <CALhHN=oKYS=RRcJ1n2=Se8c0ce1OtYy3LNhmz-DT8EDT+QSSWQ@mail.gmail.com> <CAJ+vNU1HsQFSSDG+0rsnkpF5ao5JP9KkWaosGubUWXnj7E0e1Q@mail.gmail.com>
+From: Tim Harvey <tharvey@gateworks.com>
+Date: Thu, 30 Mar 2017 16:49:22 -0700
+Message-ID: <CAJ+vNU3d6hg620R3qU=MLeALOz7yTE-+EU_o6jOfToCe-qZdzQ@mail.gmail.com> (sfid-20170331_014929_305001_CCC2001D)
+Subject: Re: [RESEND] ath9k failure to authenticate WPA2 client mode
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Devidas Puranik <devidas@marvell.com>
+On Thu, Mar 30, 2017 at 9:22 AM, Tim Harvey <tharvey@gateworks.com> wrote:
+> On Wed, Mar 29, 2017 at 10:54 PM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+>> On 29 March 2017 at 19:03, Tim Harvey <tharvey@gateworks.com> wrote:
+>>> Greetings,
+>>>
+>>> (resending plaintext - oops)
+>>>
+>>> I'm seeing failures to authenticate with a WPA2 secured AP using ath9k
+>>> based cards on wireless-next:
+>>>
+>>> root@xenial-armhf:~# wpa_passphrase testssid testpass >
+>>> /etc/wpa_supplicant/wpa_supplicant.conf
+>>>
+>>> root@xenial-armhf:~# iw reg get
+>>> country US: DFS-FCC
+>>>         (2402 - 2472 @ 40), (N/A, 30), (N/A)
+>>>         (5170 - 5250 @ 80), (N/A, 17), (N/A)
+>>>         (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS
+>>>         (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+>>>         (5735 - 5835 @ 80), (N/A, 30), (N/A)
+>>>         (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>>>
+>>> root@xenial-armhf:~# wpa_supplicant -i wlan0 -c
+>>> /etc/wpa_supplicant/wpa_supplicant.conf
+>>> Successfully initialized wpa_supplicant
+>>> [ 1882.699010] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>>> nl80211: send_and_recv->nl_recvms[ 1886.262884] wlan0: authenticate
+>>> with 02:1a:11:f2:35:9c
+>>> gs failed: -33
+>>> wlan0: SME: Trying to authenticate with 02:1a:11:f2:35:9c
+>>> (SSID='testssid' freq=2437 MHz)
+>>> [ 1886.280755] wlan0: send auth to 02:1a:11:f2:35:9c (try 1/3)
+>>> [ 1887.033449] wlan0: send auth to 02:1a:11:f2:35:9c (try 2/3)
+>>> [ 1887.993413] wlan0: send auth to 02:1a:11:f2:35:9c (try 3/3)
+>>> [ 1888.953390] wlan0: authentication with 02:1a:11:f2:35:9c timed out
+>>> wlan0: SME: Trying to authenticat[ 1892.507484] wlan0: authenticate
+>>> with 02:1a:11:f2:35:9c
+>>> e with 02:1a:11:f2:35:9c (SSID='testssid' freq=2437 MHz)
+>>> [ 1892.527460] wlan0: send auth to 02:1a:11:f2:35:9c (try 1/3)
+>>> [ 1893.993401] wlan0: send auth to 02:1a:11:f2:35:9c (try 2/3)
+>>> [ 1894.953419] wlan0: send auth to 02:1a:11:f2:35:9c (try 3/3)
+>>> [ 1895.993387] wlan0: authentication with 02:1a:11:f2:35:9c timed out
+>>> wlan0: SME: Trying to authenticat[ 1899.997262] wlan0: authenticate
+>>> with 02:1a:11:f2:35:9c
+>>> e with 02:1a:11:f2:35:9c (SSID='testssid' freq=2437 MHz)
+>>> [ 1900.017252] wlan0: send auth to 02:1a:11:f2:35:9c (try 1/3)
+>>> [ 1901.033259] wlan0: send auth to 02:1a:11:f2:35:9c (try 2/3)
+>>> [ 1901.993345] wlan0: send auth to 02:1a:11:f2:35:9c (try 3/3)
+>>> [ 1902.953270] wlan0: authentication with 02:1a:11:f2:35:9c timed out
+>>> wlan0: SME: Trying to authenticat[ 1907.407446] wlan0: authenticate
+>>> with 02:1a:11:f2:35:9c
+>>> e with 02:1a:11:f2:35:9c (SSID='testssid' freq=2437 MHz)
+>>> [ 1907.427370] wlan0: send auth to 02:1a:11:f2:35:9c (try 1/3)
+>>> [ 1908.003204] wlan0: send auth to 02:1a:11:f2:35:9c (try 2/3)
+>>> [ 1908.953275] wlan0: send auth to 02:1a:11:f2:35:9c (try 3/3)
+>>> [ 1909.993254] wlan0: authentication with 02:1a:11:f2:35:9c timed out
+>>> wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="testssid"
+>>> auth_failures=1 duration=10 reason=CONN_FAILED
+>>> ^Cnl80211: deinit ifname=wlan0 disabled_11b_rates=0
+>>> wlan0: CTRL-EVENT-TERMINATING
+>>>
+>>> I've tried loading ath9k with nohwcrypt=1 and see the same.
+>>>
+>>> I do not have any trouble with an ath10k card in the same system:
+>>>
+>>> root@xenial-armhf:~# wpa_supplicant -i wlan1 -c
+>>> /etc/wpa_supplicant/wpa_supplicant.conf
+>>> Successfully initialized wpa_supplicant
+>>> [  593.401846] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+>>> wlan1: SME: Trying to authenticat[  596.857230] wlan1: authenticate
+>>> with 02:1a:11:f1:b9:02
+>>> e with 02:1a:11:f1:b9:02 (SSID='testssid' freq=2437 MHz)
+>>> [  596.876749] wlan1: send auth to 02:1a:11:f1:b9:02 (try 1/3)
+>>> [  596.886290] wlan1: authenticated
+>>> wlan1: Trying to associate with 02:1a:11:f1:b9:02 (SSID='testssid'
+>>> freq=2437 MHz)
+>>> [  596.909012] wlan1: associate with 02:1a:11:f1:b9:02 (try 1/3)
+>>> [  596.922374] wlan1: RX AssocResp from 02:1a:11:f1:b9:02 (capab=0x411
+>>> status=0 aid=1)
+>>> [  596.940754] wlan1: associated
+>>> [  596.943954] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+>>> wlan1: Associated with 02:1a:11:f1:b9:02
+>>> wlan1: WPA: Key negotiation completed with 02:1a:11:f1:b9:02 [PTK=CCMP GTK=CCMP]
+>>> wlan1: CTRL-EVENT-CONNECTED - Connection to 02:1a:11:f1:b9:02
+>>> completed [id=0 id_str=]
+>>> wlan1: CTRL-EVENT-REGDOM-CHANGE init=COUNTRY_IE type=COUNTRY alpha2=US
+>>> ^^^^ at this point I can dhcp IP config and all is good
+>>>
+>>> Here's the PCI info for the two cards:
+>>>
+>>> 08:00.0 Ethernet controller [0200]: Marvell Technology Group Ltd.
+>>> 88E8057 PCI-E Gigabit Ethernet Controller [11ab:4380]
+>>> 09:00.0 Network controller [0280]: Qualcomm Atheros AR9580 Wireless
+>>> Network Adapter [168c:0033] (rev 01)
+>>>
+>>> I don't know when ath9k last worked honestly. I usually use them under
+>>> OpenWrt which has its own patches against periodic updates of linux
+>>> backports. I noticed this first with Ubuntu 16.04 with the Ubuntu 4.4
+>>> kernel, saw it still with the Ubuntu 4.8 kernel, then repeated the
+>>> issue in wireless-next.
+>>>
+>>> Any ideas?
+>>>
+>> Interesting. Are you sure wlan0 is ath9k and wlan1 is ath10k?
+>> ath9k is quite stable - I have AR9462 and works fine with 4.4 and current.
+>> So, I would suspect some issues with ath10k :)
+>>
+>> What if you will modprobe -r ath10k_pci and next run the test?
+>>
+>
+> It's ath9k for sure... several different ath9k radios fail the same
+> way: WLE350NX, WLE200NX, WPEA-127NE, SR710E. I'm surprised as heck as
+> well. I only put the ath10k radio in to ensure I don't have some
+> configuration issue (and have since removed it and only test with 1
+> card at a time). I've also ensured that a variety of radios/drivers
+> work with the same Ubuntu xenial (16.04) userspace and kernels such as
+> ath10k, carl9170, iwlwifi.
+>
+> Is there some userspace configuration issue I may have related to
+> regdomain on ath9k that perhaps isn't applicable on other drivers?
+>
+> Note that depending on the kernel version I don't always get the same failure.
+>
+> Here is Ubuntu 4.8.0-30-generic which is where I originally saw the
+> issue and started troubleshooting. In this case we auth/assoc and then
+> immediately get disconnected from the AP:
+> root@xenial-armhf:~# uname -a
+> Linux xenial-armhf 4.8.0-30-generic #32~16.04.1-Ubuntu SMP Fri Dec 2
+> 03:46:03 UTC 2016 armv7l armv7l armv7l GNU/Linux
+> root@xenial-armhf:~# wpa_supplicant -i wlan0 -c
+> /etc/wpa_supplicant/wpa_supplicant.conf -D nl80211
+> Successfully initialized wpa_supplicant
+> [  240.086690] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> wlan0: SME: Trying to authenticat[  243.332657] wlan0: authenticate
+> with 02:1a:11:f9:e9:04
+> e with 02:1a:11:f9:e9:04 (SSID='testssid' freq=2437 MHz)
+> [  243.354923] wlan0: send auth to 02:1a:11:f9:e9:04 (try 1/3)
+> [  243.895326] wlan0: send auth to 02:1a:11:f9:e9:04 (try 2/3)
+> [  244.382493] wlan0: authenticated
+> ^^^^ athenticated
+> wlan0: Trying to associate with 02:1a:11:f9:e9:04 (SSID='testssid'
+> freq=2437 MHz)
+> [  244.423275] wlan0: associate with 02:1a:11:f9:e9:04 (try 1/3)
+> [  245.879282] wlan0: associate with 02:1a:11:f9:e9:04 (try 2/3)
+> [  246.462630] wlan0: RX AssocResp from 02:1a:11:f9:e9:04 (capab=0x411
+> status=0 aid=1)
+> [  246.470554] wlan0: associated
+> ^^^^ associated
+> [  246.473628] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> wlan0: Associated with 02:1a:11:f9:e9:04
+> wlan0: CTRL-EVENT-REGDOM-CHANGE init=COUNTRY_IE type=COUNTRY alpha2=US
+> wlan0: CTRL-EVENT-DISCONNECTED bssid=02:1a:11:f9:e9:04 reason=4
+> locally_generated=1
+> ^^^^ disconnected because of no activity? This was within around 1
+> second of the association
+> wlan0: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+> wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="testssid"
+> auth_failures=1 duration=10 reason=WRONG_KEY
+> ^^^^ but we already authenticated???
+> wlan0: CTRL-EVENT-REGDOM-CHANGE init=CORE type=WORLD
+> wlan0: CTRL-EVENT-SSID-REENABLED [  259.744812] wlan0: authenticate
+> with 02:1a:11:f9:e9:04
+> id=0 ssid="testssid"
+> wlan0: SME: Trying to authenticate with 02:1a:11:f9:e9:04
+> (SSID='testssid' freq=2437 MHz)
+> [  259.766920] wlan0: send auth to 02:1a:11:f9:e9:04 (try 1/3)
+> [  260.798457] wlan0: authenticated
+> wlan0: Trying to associate with 02:1a:11:f9:e9:04 (SSID='testssid'
+> freq=2437 MHz)
+> [  260.839297] wlan0: associate with 02:1a:11:f9:e9:04 (try 1/3)
+> [  261.879297] wlan0: associate with 02:1a:11:f9:e9:04 (try 2/3)
+> [  262.878638] wlan0: RX AssocResp from 02:1a:11:f9:e9:04 (capab=0x411
+> status=0 aid=1)
+> [  262.886553] wlan0: associated
+> wlan0: Associated with 02:1a:11:f9:e9:04
+> wlan0: CTRL-EVENT-REGDOM-CHANGE init=COUNTRY_IE type=COUNTRY alpha2=US
+> wlan0: CTRL-EVENT-DISCONNECTED bssid=02:1a:11:f9:e9:04 reason=4
+> locally_generated=1
+> wlan0: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+> wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="testssid"
+> auth_failures=2 duration=23 reason=WRONG_KEY
+> wlan0: CTRL-EVENT-REGDOM-CHANGE init=CORE type=WORLD
+> ^Cnl80211: deinit ifname=wlan0 disabled_11b_rates=0
+> wlan0: CTRL-EVENT-TERMINATING
+>
+> And linux-wireless/master (we never get auuthenticated with ath9k):
+> root@xenial-armhf:~# uname -a
+> Linux xenial-armhf 4.11.0-rc2 #579 SMP Thu Mar 30 07:44:08 PDT 2017
+> armv7l armv7l armv7l GNU/Linux
+> root@xenial-armhf:~# wpa_supplicant -i wlan0 -c
+> /etc/wpa_supplicant/wpa_supplicant.conf -D nl80211
+> Successfully initialized wpa_supplicant
+> [   27.312919] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> wlan0: SME: Trying to authenticat[   30.924677] wlan0: authenticate
+> with 02:1a:11:f9:e9:04
+> e with 02:1a:11:f9:e9:04 (SSID='testssid' freq=2437 MHz)
+> [   30.954609] wlan0: send auth to 02:1a:11:f9:e9:04 (try 1/3)
+> [   32.090557] wlan0: send auth to 02:1a:11:f9:e9:04 (try 2/3)
+> [   33.129011] wlan0: send auth to 02:1a:11:f9:e9:04 (try 3/3)
+> [   34.088942] wlan0: authentication with 02:1a:11:f9:e9:04 timed out
+> wlan0: SME: Trying to authenticat[   37.670515] wlan0: authenticate
+> with 02:1a:11:f9:e9:04
+> e with 02:1a:11:f9:e9:04 (SSID='testssid' freq=2437 MHz)
+> [   37.693822] wlan0: send auth to 02:1a:11:f9:e9:04 (try 1/3)
+> [   39.128907] wlan0: send auth to 02:1a:11:f9:e9:04 (try 2/3)
+> [   40.089009] wlan0: send auth to 02:1a:11:f9:e9:04 (try 3/3)
+> [   41.128974] wlan0: authentication with 02:1a:11:f9:e9:04 timed out
+> wlan0: SME: Trying to authenticat[   45.092584] wlan0: authenticate
+> with 02:1a:11:f9:e9:04
+> e with 02:1a:11:f9:e9:04 (SSID='testssid' freq=2437 MHz)
+> [   45.115914] wlan0: send auth to 02:1a:11:f9:e9:04 (try 1/3)
+> [   46.008936] wlan0: send auth to 02:1a:11:f9:e9:04 (try 2/3)
+> [   46.968911] wlan0: send auth to 02:1a:11:f9:e9:04 (try 3/3)
+> [   48.008849] wlan0: authentication with 02:1a:11:f9:e9:04 timed out
+> wlan0: SME: Trying to authenticat[   52.472625] wlan0: authenticate
+> with 02:1a:11:f9:e9:04
+> e with 02:1a:11:f9:e9:04 (SSID='testssid' freq=2437 MHz)
+> [   52.495857] wlan0: send auth to 02:1a:11:f9:e9:04 (try 1/3)
+> [   53.058850] wlan0: send auth to 02:1a:11:f9:e9:04 (try 2/3)
+> [   54.008860] wlan0: send auth to 02:1a:11:f9:e9:04 (try 3/3)
+> [   54.968960] wlan0: authentication with 02:1a:11:f9:e9:04 timed out
+> wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="testssid"
+> auth_failures=1 duration=10 reason=CONN_FAILED
+> wlan0: CTRL-EVENT-SSID-REENABLED [   71.862102] wlan0: authenticate
+> with 02:1a:11:f9:e9:04
+> id=0 ssid="testssid"
+> wlan0: SME: Trying to authenticate with 02:1a:11:f9:e9:04
+> (SSID='testssid' freq=2437 MHz)
+> [   71.885021] wlan0: send auth to 02:1a:11:f9:e9:04 (try 1/3)
+> [   73.128873] wlan0: send auth to 02:1a:11:f9:e9:04 (try 2/3)
+> [   74.008857] wlan0: send auth to 02:1a:11:f9:e9:04 (try 3/3)
+> [   74.969026] wlan0: authentication with 02:1a:11:f9:e9:04 timed out
+> wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="testssid"
+> auth_failures=2 duration=23 reason=CONN_FAILED
+>
+> Regards,
+>
+> Tim
 
-Using the accessor function e.g. get_unaligned_le32 instead of
-le32_to_cpu to avoid the unaligned access. This is for the
-architectures that don't handle the unaligned memory access
+This turns out to be caused by interrupts not getting caught. The
+target board used here is an IMX6 and its driver and/or PCIe host
+controller apparently doesn't support both MSI and legacy interrupts
+at the same time thus this breakage occured when the kernel started
+enabling MSI by default for IMX6
+(3ee803641e76bea76ec730c80dcc64739a9919ff).
 
-Signed-off-by: Devidas Puranik <devidas@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c      |  4 +--
- drivers/net/wireless/marvell/mwifiex/pcie.c        | 37 ++++++++++------------
- drivers/net/wireless/marvell/mwifiex/sdio.c        | 23 ++++++++------
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 19 +++++------
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  4 +--
- drivers/net/wireless/marvell/mwifiex/sta_event.c   |  8 ++---
- drivers/net/wireless/marvell/mwifiex/tdls.c        | 10 +++---
- drivers/net/wireless/marvell/mwifiex/uap_event.c   |  2 +-
- drivers/net/wireless/marvell/mwifiex/util.c        |  6 ++--
- 9 files changed, 56 insertions(+), 57 deletions(-)
+Can ath9k can be enhanced to use MSI?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 25a7475..0c3b217 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -242,7 +242,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	mwifiex_dbg(adapter, CMD,
- 		    "cmd: DNLD_CMD: %#x, act %#x, len %d, seqno %#x\n",
- 		    cmd_code,
--		    le16_to_cpu(*(__le16 *)((u8 *)host_cmd + S_DS_GEN)),
-+		    get_unaligned_le16((u8 *)host_cmd + S_DS_GEN),
- 		    cmd_size, le16_to_cpu(host_cmd->seq_num));
- 	mwifiex_dbg_dump(adapter, CMD_D, "cmd buffer:", host_cmd, cmd_size);
- 
-@@ -286,7 +286,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 			(adapter->dbg.last_cmd_index + 1) % DBG_CMD_NUM;
- 	adapter->dbg.last_cmd_id[adapter->dbg.last_cmd_index] = cmd_code;
- 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
--			le16_to_cpu(*(__le16 *) ((u8 *) host_cmd + S_DS_GEN));
-+			get_unaligned_le16((u8 *)host_cmd + S_DS_GEN);
- 
- 	/* Clear BSS_NO_BITS from HostCmd */
- 	cmd_code &= HostCmd_CMD_ID_MASK;
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index a0d9180..1ee5189 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -119,7 +119,7 @@ static int mwifiex_read_reg_byte(struct mwifiex_adapter *adapter,
-  */
- static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
- {
--	u32 *cookie_addr;
-+	u32 cookie_value;
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
- 
-@@ -127,11 +127,11 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
- 		return true;
- 
- 	if (card->sleep_cookie_vbase) {
--		cookie_addr = (u32 *)card->sleep_cookie_vbase;
-+		cookie_value = get_unaligned_le32(card->sleep_cookie_vbase);
- 		mwifiex_dbg(adapter, INFO,
- 			    "info: ACCESS_HW: sleep cookie=0x%x\n",
--			    *cookie_addr);
--		if (*cookie_addr == FW_AWAKE_COOKIE)
-+			    cookie_value);
-+		if (cookie_value == FW_AWAKE_COOKIE)
- 			return true;
- 	}
- 
-@@ -447,7 +447,7 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
- 					    sizeof(sleep_cookie),
- 					    PCI_DMA_FROMDEVICE);
- 		buffer = cmdrsp->data;
--		sleep_cookie = READ_ONCE(*(u32 *)buffer);
-+		sleep_cookie = get_unaligned_le32(buffer);
- 
- 		if (sleep_cookie == MWIFIEX_DEF_SLEEP_COOKIE) {
- 			mwifiex_dbg(adapter, INFO,
-@@ -1049,6 +1049,7 @@ static int mwifiex_pcie_delete_cmdrsp_buf(struct mwifiex_adapter *adapter)
- static int mwifiex_pcie_alloc_sleep_cookie_buf(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
-+	u32 tmp;
- 
- 	card->sleep_cookie_vbase = pci_alloc_consistent(card->dev, sizeof(u32),
- 						     &card->sleep_cookie_pbase);
-@@ -1058,11 +1059,12 @@ static int mwifiex_pcie_alloc_sleep_cookie_buf(struct mwifiex_adapter *adapter)
- 		return -ENOMEM;
- 	}
- 	/* Init val of Sleep Cookie */
--	*(u32 *)card->sleep_cookie_vbase = FW_AWAKE_COOKIE;
-+	tmp = FW_AWAKE_COOKIE;
-+	put_unaligned(tmp, card->sleep_cookie_vbase);
- 
- 	mwifiex_dbg(adapter, INFO,
- 		    "alloc_scook: sleep cookie=0x%x\n",
--		    *((u32 *)card->sleep_cookie_vbase));
-+		    get_unaligned(card->sleep_cookie_vbase));
- 
- 	return 0;
- }
-@@ -1223,7 +1225,6 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- 	dma_addr_t buf_pa;
- 	struct mwifiex_pcie_buf_desc *desc = NULL;
- 	struct mwifiex_pfu_buf_desc *desc2 = NULL;
--	__le16 *tmp;
- 
- 	if (!(skb->data && skb->len)) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -1244,10 +1245,8 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- 
- 		adapter->data_sent = true;
- 		payload = skb->data;
--		tmp = (__le16 *)&payload[0];
--		*tmp = cpu_to_le16((u16)skb->len);
--		tmp = (__le16 *)&payload[2];
--		*tmp = cpu_to_le16(MWIFIEX_TYPE_DATA);
-+		put_unaligned_le16((u16)skb->len, payload + 0);
-+		put_unaligned_le16(MWIFIEX_TYPE_DATA, payload + 2);
- 
- 		if (mwifiex_map_pci_memory(adapter, skb, skb->len,
- 					   PCI_DMA_TODEVICE))
-@@ -1376,7 +1375,6 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 		(card->rxbd_rdptr & reg->rx_rollover_ind))) {
- 		struct sk_buff *skb_data;
- 		u16 rx_len;
--		__le16 pkt_len;
- 
- 		rd_index = card->rxbd_rdptr & reg->rx_mask;
- 		skb_data = card->rx_buf_list[rd_index];
-@@ -1393,8 +1391,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 		/* Get data length from interface header -
- 		 * first 2 bytes for len, next 2 bytes is for type
- 		 */
--		pkt_len = *((__le16 *)skb_data->data);
--		rx_len = le16_to_cpu(pkt_len);
-+		rx_len = get_unaligned_le16(skb_data->data);
- 		if (WARN_ON(rx_len <= INTF_HEADER_LEN ||
- 			    rx_len > MWIFIEX_RX_DATA_BUF_SIZE)) {
- 			mwifiex_dbg(adapter, ERROR,
-@@ -1601,8 +1598,8 @@ static int mwifiex_pcie_init_fw_port(struct mwifiex_adapter *adapter)
- 
- 	adapter->cmd_sent = true;
- 
--	*(__le16 *)&payload[0] = cpu_to_le16((u16)skb->len);
--	*(__le16 *)&payload[2] = cpu_to_le16(MWIFIEX_TYPE_CMD);
-+	put_unaligned_le16((u16)skb->len, &payload[0]);
-+	put_unaligned_le16(MWIFIEX_TYPE_CMD, &payload[2]);
- 
- 	if (mwifiex_map_pci_memory(adapter, skb, skb->len, PCI_DMA_TODEVICE))
- 		return -1;
-@@ -1694,7 +1691,6 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 	struct sk_buff *skb = card->cmdrsp_buf;
- 	int count = 0;
- 	u16 rx_len;
--	__le16 pkt_len;
- 
- 	mwifiex_dbg(adapter, CMD,
- 		    "info: Rx CMD Response\n");
-@@ -1714,8 +1710,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 		card->cmd_buf = NULL;
- 	}
- 
--	pkt_len = *((__le16 *)skb->data);
--	rx_len = le16_to_cpu(pkt_len);
-+	rx_len = get_unaligned_le16(skb->data);
- 	skb_put(skb, MWIFIEX_UPLD_SIZE - skb->len);
- 	skb_trim(skb, rx_len);
- 
-@@ -1856,7 +1851,7 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
- 		desc = card->evtbd_ring[rdptr];
- 		memset(desc, 0, sizeof(*desc));
- 
--		event = *(u32 *) &skb_cmd->data[INTF_HEADER_LEN];
-+		event = get_unaligned_le32(&skb_cmd->data[INTF_HEADER_LEN]);
- 		adapter->event_cause = event;
- 		/* The first 4bytes will be the event transfer header
- 		   len is 2 bytes followed by type which is 2 bytes */
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index a4b356d..9f7cabf 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -943,7 +943,7 @@ static int mwifiex_sdio_card_to_host(struct mwifiex_adapter *adapter,
- 		return -1;
- 	}
- 
--	nb = le16_to_cpu(*(__le16 *) (buffer));
-+	nb = get_unaligned_le16((buffer));
- 	if (nb > npayload) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "%s: invalid packet, nb=%d npayload=%d\n",
-@@ -951,7 +951,7 @@ static int mwifiex_sdio_card_to_host(struct mwifiex_adapter *adapter,
- 		return -1;
- 	}
- 
--	*type = le16_to_cpu(*(__le16 *) (buffer + 2));
-+	*type = get_unaligned_le16((buffer + 2));
- 
- 	return ret;
- }
-@@ -1139,7 +1139,8 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
- 				    __func__, blk_num, blk_size, total_pkt_len);
- 			break;
- 		}
--		pkt_len = le16_to_cpu(*(__le16 *)(data + SDIO_HEADER_OFFSET));
-+		pkt_len = get_unaligned_le16((data +
-+					     SDIO_HEADER_OFFSET));
- 		if ((pkt_len + SDIO_HEADER_OFFSET) > blk_size) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "%s: error in pkt_len,\t"
-@@ -1172,10 +1173,11 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 				    struct sk_buff *skb, u32 upld_typ)
- {
- 	u8 *cmd_buf;
--	__le16 *curr_ptr = (__le16 *)skb->data;
--	u16 pkt_len = le16_to_cpu(*curr_ptr);
-+	u16 pkt_len;
- 	struct mwifiex_rxinfo *rx_info;
- 
-+	pkt_len = get_unaligned_le16(skb->data);
-+
- 	if (upld_typ != MWIFIEX_TYPE_AGGR_DATA) {
- 		skb_trim(skb, pkt_len);
- 		skb_pull(skb, INTF_HEADER_LEN);
-@@ -1235,7 +1237,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 	case MWIFIEX_TYPE_EVENT:
- 		mwifiex_dbg(adapter, EVENT,
- 			    "info: --- Rx: Event ---\n");
--		adapter->event_cause = le32_to_cpu(*(__le32 *) skb->data);
-+		adapter->event_cause = get_unaligned_le32(skb->data);
- 
- 		if ((skb->len > 0) && (skb->len  < MAX_EVENT_SIZE))
- 			memcpy(adapter->event_body,
-@@ -1392,8 +1394,8 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
- 			u32 *len_arr = card->mpa_rx.len_arr;
- 
- 			/* get curr PKT len & type */
--			pkt_len = le16_to_cpu(*(__le16 *) &curr_ptr[0]);
--			pkt_type = le16_to_cpu(*(__le16 *) &curr_ptr[2]);
-+			pkt_len = get_unaligned_le16(&curr_ptr[0]);
-+			pkt_type = get_unaligned_le16(&curr_ptr[2]);
- 
- 			/* copy pkt to deaggr buf */
- 			skb_deaggr = mwifiex_alloc_dma_align_buf(len_arr[pind],
-@@ -1874,8 +1876,9 @@ static int mwifiex_sdio_host_to_card(struct mwifiex_adapter *adapter,
- 	/* Allocate buffer and copy payload */
- 	blk_size = MWIFIEX_SDIO_BLOCK_SIZE;
- 	buf_block_len = (pkt_len + blk_size - 1) / blk_size;
--	*(__le16 *)&payload[0] = cpu_to_le16((u16)pkt_len);
--	*(__le16 *)&payload[2] = cpu_to_le16(type);
-+	put_unaligned_le16((u16)pkt_len, payload + 0);
-+	put_unaligned_le16((u32)type, payload + 2);
-+
- 
- 	/*
- 	 * This is SDIO specific header
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index cf9121e..f6056ab 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -130,7 +130,7 @@ static int mwifiex_cmd_802_11_snmp_mib(struct mwifiex_private *priv,
- 	} else if (cmd_action == HostCmd_ACT_GEN_SET) {
- 		snmp_mib->query_type = cpu_to_le16(HostCmd_ACT_GEN_SET);
- 		snmp_mib->buf_size = cpu_to_le16(sizeof(u16));
--		*((__le16 *) (snmp_mib->value)) = cpu_to_le16(*ul_temp);
-+		put_unaligned_le16(*ul_temp, snmp_mib->value);
- 		le16_unaligned_add_cpu(&cmd->size, sizeof(u16));
- 	}
- 
-@@ -138,7 +138,7 @@ static int mwifiex_cmd_802_11_snmp_mib(struct mwifiex_private *priv,
- 		    "cmd: SNMP_CMD: Action=0x%x, OID=0x%x,\t"
- 		    "OIDSize=0x%x, Value=0x%x\n",
- 		    cmd_action, cmd_oid, le16_to_cpu(snmp_mib->buf_size),
--		    le16_to_cpu(*(__le16 *)snmp_mib->value));
-+		    get_unaligned_le16(snmp_mib->value));
- 	return 0;
- }
- 
-@@ -1400,7 +1400,7 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
- 		filter = &mef_entry->filter[i];
- 		if (!filter->filt_type)
- 			break;
--		*(__le32 *)stack_ptr = cpu_to_le32((u32)filter->repeat);
-+		put_unaligned_le32((u32)filter->repeat, stack_ptr);
- 		stack_ptr += 4;
- 		*stack_ptr = TYPE_DNUM;
- 		stack_ptr += 1;
-@@ -1412,8 +1412,7 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
- 		stack_ptr += 1;
- 		*stack_ptr = TYPE_BYTESEQ;
- 		stack_ptr += 1;
--
--		*(__le32 *)stack_ptr = cpu_to_le32((u32)filter->offset);
-+		put_unaligned_le32((u32)filter->offset, stack_ptr);
- 		stack_ptr += 4;
- 		*stack_ptr = TYPE_DNUM;
- 		stack_ptr += 1;
-@@ -1787,7 +1786,7 @@ static int mwifiex_cmd_chan_region_cfg(struct mwifiex_private *priv,
- 			return -ENODATA;
- 		}
- 
--		*(__le16 *)pos = cpu_to_le16(params->capability);
-+		put_unaligned_le16(params->capability, pos);
- 		config_len += sizeof(params->capability);
- 
- 		qos_info = params->uapsd_queues | (params->max_sp << 5);
-@@ -2036,7 +2035,7 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	case HostCmd_CMD_VERSION_EXT:
- 		cmd_ptr->command = cpu_to_le16(cmd_no);
- 		cmd_ptr->params.verext.version_str_sel =
--			(u8) (*((u32 *) data_buf));
-+			(u8)(get_unaligned((u32 *)data_buf));
- 		memcpy(&cmd_ptr->params, data_buf,
- 		       sizeof(struct host_cmd_ds_version_ext));
- 		cmd_ptr->size =
-@@ -2047,7 +2046,8 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	case HostCmd_CMD_MGMT_FRAME_REG:
- 		cmd_ptr->command = cpu_to_le16(cmd_no);
- 		cmd_ptr->params.reg_mask.action = cpu_to_le16(cmd_action);
--		cmd_ptr->params.reg_mask.mask = cpu_to_le32(*(u32 *)data_buf);
-+		cmd_ptr->params.reg_mask.mask = cpu_to_le32(
-+						get_unaligned((u32 *)data_buf));
- 		cmd_ptr->size =
- 			cpu_to_le16(sizeof(struct host_cmd_ds_mgmt_frame_reg) +
- 				    S_DS_GEN);
-@@ -2067,7 +2067,8 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	case HostCmd_CMD_P2P_MODE_CFG:
- 		cmd_ptr->command = cpu_to_le16(cmd_no);
- 		cmd_ptr->params.mode_cfg.action = cpu_to_le16(cmd_action);
--		cmd_ptr->params.mode_cfg.mode = cpu_to_le16(*(u16 *)data_buf);
-+		cmd_ptr->params.mode_cfg.mode = cpu_to_le16(
-+						get_unaligned((u16 *)data_buf));
- 		cmd_ptr->size =
- 			cpu_to_le16(sizeof(struct host_cmd_ds_p2p_mode_cfg) +
- 				    S_DS_GEN);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 8548027..ab75da3 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -183,7 +183,7 @@ static int mwifiex_ret_802_11_snmp_mib(struct mwifiex_private *priv,
- 		    "query_type = %#x, buf size = %#x\n",
- 		    oid, query_type, le16_to_cpu(smib->buf_size));
- 	if (query_type == HostCmd_ACT_GEN_GET) {
--		ul_temp = le16_to_cpu(*((__le16 *) (smib->value)));
-+		ul_temp = get_unaligned_le16(smib->value);
- 		if (data_buf)
- 			*data_buf = ul_temp;
- 		switch (oid) {
-@@ -741,7 +741,7 @@ static int mwifiex_ret_ver_ext(struct mwifiex_private *priv,
- 	struct host_cmd_ds_p2p_mode_cfg *mode_cfg = &resp->params.mode_cfg;
- 
- 	if (data_buf)
--		*((u16 *)data_buf) = le16_to_cpu(mode_cfg->mode);
-+		put_unaligned_le16(le16_to_cpu(mode_cfg->mode), data_buf);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index d63d163..b5b7664 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -670,7 +670,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		adapter->dbg.num_event_deauth++;
- 		if (priv->media_connected) {
- 			reason_code =
--				le16_to_cpu(*(__le16 *)adapter->event_body);
-+				get_unaligned_le16(adapter->event_body);
- 			mwifiex_reset_connect_state(priv, reason_code, true);
- 		}
- 		break;
-@@ -685,7 +685,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		adapter->dbg.num_event_disassoc++;
- 		if (priv->media_connected) {
- 			reason_code =
--				le16_to_cpu(*(__le16 *)adapter->event_body);
-+				get_unaligned_le16(adapter->event_body);
- 			mwifiex_reset_connect_state(priv, reason_code, true);
- 		}
- 		break;
-@@ -695,7 +695,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		adapter->dbg.num_event_link_lost++;
- 		if (priv->media_connected) {
- 			reason_code =
--				le16_to_cpu(*(__le16 *)adapter->event_body);
-+				get_unaligned_le16(adapter->event_body);
- 			mwifiex_reset_connect_state(priv, reason_code, true);
- 		}
- 		break;
-@@ -923,7 +923,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 					      adapter->event_body);
- 		break;
- 	case EVENT_AMSDU_AGGR_CTRL:
--		ctrl = le16_to_cpu(*(__le16 *)adapter->event_body);
-+		ctrl = get_unaligned_le16(adapter->event_body);
- 		mwifiex_dbg(adapter, EVENT,
- 			    "event: AMSDU_AGGR_CTRL %d\n", ctrl);
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
-index df9704de0..e228c03 100644
---- a/drivers/net/wireless/marvell/mwifiex/tdls.c
-+++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
-@@ -857,7 +857,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 	struct mwifiex_sta_node *sta_ptr;
- 	u8 *peer, *pos, *end;
- 	u8 i, action, basic;
--	__le16 cap = 0;
-+	u16 cap = 0;
- 	int ie_len = 0;
- 
- 	if (len < (sizeof(struct ethhdr) + 3))
-@@ -879,7 +879,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 
- 		pos = buf + sizeof(struct ethhdr) + 4;
- 		/* payload 1+ category 1 + action 1 + dialog 1 */
--		cap = cpu_to_le16(*(u16 *)pos);
-+		cap = get_unaligned_le16(pos);
- 		ie_len = len - sizeof(struct ethhdr) - TDLS_REQ_FIX_LEN;
- 		pos += 2;
- 		break;
-@@ -889,7 +889,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 			return;
- 		/* payload 1+ category 1 + action 1 + dialog 1 + status code 2*/
- 		pos = buf + sizeof(struct ethhdr) + 6;
--		cap = cpu_to_le16(*(u16 *)pos);
-+		cap = get_unaligned_le16(pos);
- 		ie_len = len - sizeof(struct ethhdr) - TDLS_RESP_FIX_LEN;
- 		pos += 2;
- 		break;
-@@ -909,7 +909,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 	if (!sta_ptr)
- 		return;
- 
--	sta_ptr->tdls_cap.capab = cap;
-+	sta_ptr->tdls_cap.capab = cpu_to_le16(cap);
- 
- 	for (end = pos + ie_len; pos + 1 < end; pos += 2 + pos[1]) {
- 		if (pos + 2 + pos[1] > end)
-@@ -969,7 +969,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 		case WLAN_EID_AID:
- 			if (priv->adapter->is_hw_11ac_capable)
- 				sta_ptr->tdls_cap.aid =
--					      le16_to_cpu(*(__le16 *)(pos + 2));
-+					get_unaligned_le16((pos + 2));
- 		default:
- 			break;
- 		}
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_event.c b/drivers/net/wireless/marvell/mwifiex/uap_event.c
-index d24eca3..e10b2a5 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_event.c
-@@ -202,7 +202,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 			    "AP EVENT: event id: %#x\n", eventcause);
- 		break;
- 	case EVENT_AMSDU_AGGR_CTRL:
--		ctrl = le16_to_cpu(*(__le16 *)adapter->event_body);
-+		ctrl = get_unaligned_le16(adapter->event_body);
- 		mwifiex_dbg(adapter, EVENT,
- 			    "event: AMSDU_AGGR_CTRL %d\n", ctrl);
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
-index b1ab8da..0cd68ff 100644
---- a/drivers/net/wireless/marvell/mwifiex/util.c
-+++ b/drivers/net/wireless/marvell/mwifiex/util.c
-@@ -274,13 +274,13 @@ int mwifiex_debug_info_to_buffer(struct mwifiex_private *priv, char *buf,
- 				val = *((u8 *)addr);
- 				break;
- 			case 2:
--				val = *((u16 *)addr);
-+				val = get_unaligned((u16 *)addr);
- 				break;
- 			case 4:
--				val = *((u32 *)addr);
-+				val = get_unaligned((u32 *)addr);
- 				break;
- 			case 8:
--				val = *((long long *)addr);
-+				val = get_unaligned((long long *)addr);
- 				break;
- 			default:
- 				val = -1;
--- 
-1.9.1
+How many other cards/drivers out there don't support MSI?
+
+Tim
