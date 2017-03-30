@@ -1,55 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37814 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932333AbdCFOUB (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33207 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932760AbdC3JT5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2017 09:20:01 -0500
-Subject: Re: cfg80211: add set/get link loss profile
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
- <1480344742.8107.63.camel@sipsolutions.net>
- <58a1b983-6688-8b3e-81cb-83c62b46abbf@codeaurora.org>
- <1483353931.4596.3.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-From: "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org>
-Message-ID: <ac1dc46d-25e3-f7a1-0d68-cc2f80515b5a@codeaurora.org> (sfid-20170306_152045_981742_A93975F2)
-Date: Mon, 6 Mar 2017 15:54:14 +0200
-MIME-Version: 1.0
-In-Reply-To: <1483353931.4596.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Thu, 30 Mar 2017 05:19:57 -0400
+Received: by mail-pg0-f66.google.com with SMTP id 79so8614477pgf.0
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2017 02:19:56 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only firmware name
+Date: Thu, 30 Mar 2017 09:19:07 +0000
+Message-Id: <1490865547-10208-3-git-send-email-huxinming820@gmail.com> (sfid-20170330_112020_330089_66BC2552)
+In-Reply-To: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
+References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/2/2017 12:45 PM, Johannes Berg wrote:
-> On Mon, 2016-12-19 at 12:58 +0200, Lazar, Alexei Avshalom wrote:
-> 
->>> What you're doing here is *extremely* vague. No definitions of what
->>> this means, no description of how it's intended to be implemented,
->>> no note even on whether or not this is for full-MAC chips or not,
->>> etc.
->>>
->>
->> The patch is intended for full-MAC chips and I will update the commit
->> message to include more details.
->>
->>> At least for mac80211, we can define signals to userspace regarding
->>> "link quality" and make decisions in wpa_s then?
->>>
->>
->> The policy is offloaded today to the FW and the decision being made
->> by the FW.
->> We are only modifying the behavior and not making the decision.
-> 
-> Fair enough, but I stand by saying that it's extremely vague - how
-> could userspace possibly know what "level" to pick, if you don't give
-> it any information about what the levels really mean?
-> 
-> johannes
-> 
+From: Xinming Hu <huxm@marvell.com>
 
-I have updated the commit message for clarifying what the levels really mean.
+Wifi-only firmware name should be chipset specific.
 
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 8 +++++++-
+ drivers/net/wireless/marvell/mwifiex/pcie.h | 6 ++++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 59cb01a..282aa9a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -351,6 +351,12 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
+ 	struct pcie_service_card *card = pci_get_drvdata(pdev);
+ 	struct mwifiex_adapter *adapter = card->adapter;
+ 
++	if (!card->pcie.flr_support) {
++		pr_err("%s: FLR disabled in current chipset\n", __func__);
++		return;
++	}
++
++	adapter = card->adapter;
+ 	if (!adapter) {
+ 		dev_err(&pdev->dev, "%s: adapter structure is not valid\n",
+ 			__func__);
+@@ -3047,7 +3053,7 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
+ 	 * during pcie FLR, so that bluetooth part of firmware which is
+ 	 * already running doesn't get affected.
+ 	 */
+-	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
++	strcpy(adapter->fw_name, card->pcie.wifi_fw_name);
+ 
+ 	/* tx_buf_size might be changed to 3584 by firmware during
+ 	 * data transfer, we should reset it to default size.
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 00e8ee5..d6c8526 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -285,6 +285,8 @@ struct mwifiex_pcie_device {
+ 	struct memory_type_mapping *mem_type_mapping_tbl;
+ 	u8 num_mem_types;
+ 	bool can_ext_scan;
++	u8 flr_support;
++	char *wifi_fw_name;
+ };
+ 
+ static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
+@@ -293,6 +295,7 @@ struct mwifiex_pcie_device {
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.can_dump_fw = false,
+ 	.can_ext_scan = true,
++	.flr_support = 0,
+ };
+ 
+ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
+@@ -303,6 +306,7 @@ struct mwifiex_pcie_device {
+ 	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
+ 	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
+ 	.can_ext_scan = true,
++	.flr_support = 0,
+ };
+ 
+ static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
+@@ -313,6 +317,8 @@ struct mwifiex_pcie_device {
+ 	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8997,
+ 	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8997),
+ 	.can_ext_scan = true,
++	.flr_support = 1,
++	.wifi_fw_name = "mrvl/pcie8997_wlan_v4.bin",
+ };
+ 
+ struct mwifiex_evt_buf_desc {
 -- 
-Alexei Lazar
-Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc. 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum a Linux Foundation Collaborative Project
+1.8.1.4
