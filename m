@@ -1,67 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f48.google.com ([209.85.214.48]:32908 "EHLO
-        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750915AbdCYPGy (ORCPT
+Received: from smtprelay0172.hostedemail.com ([216.40.44.172]:38138 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752744AbdC3W5d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Mar 2017 11:06:54 -0400
-Received: by mail-it0-f48.google.com with SMTP id w124so10791547itb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Mar 2017 08:06:53 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: [Netdev ANNOUNCE]: New talk accepted
-To: people@netdevconf.org
-Cc: tech-committee@netdevconf.org, netfilter-devel@vger.kernel.org,
-        Brenda Butler <bjb@mojatatu.com>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        netfilter@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Heri Muhero <hmuhero@gmail.com>
-Message-ID: <c82335d3-cd46-a2af-7b4b-4c888ad63999@mojatatu.com> (sfid-20170325_160708_873211_83FEEB3C)
-Date: Sat, 25 Mar 2017 10:59:48 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 30 Mar 2017 18:57:33 -0400
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
+Date: Thu, 30 Mar 2017 15:57:23 -0700
+Message-Id: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com> (sfid-20170331_005808_962979_775BFD57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix fallout too.
 
-The tech committee would like to announce a new accepted talk.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.h    | 2 ++
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c | 2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c      | 2 +-
+ 3 files changed, 4 insertions(+), 2 deletions(-)
 
-Tom Herbert will talk about the need for very critical (life or death!)
-infrastructure need for IOT.
-
-
-More details on the talk:
-
-----
-This talks presents the motivation and direction to support the
-emerging class of IoT applications and protocols that require latencies
-measured in milliseconds on the Internet. These may be thought of as
-"life-critical applications" in the sense that they could be a matter
-of life and death to be correct. For example, a camera monitoring an
-intersection by a school may detect a child darting out into traffic. A
-device attached to the camera may send a warning to an autonomous
-vehicle to apply brakes to avoid hitting the child. The difference in
-reaction time between the an automated system and human is stark--
-about 40 msecs compared to 500 msecs or more for a human.
-
-Real-time IoT protocols need to be implemented with very low latency
-from hazard detection to response, strict latency bounds, be highly
-available, be secure (critical messages can't be spoofed), and be
-resistant to DDOS. A primary use case for such applications, as
-exhibited in the above example, is so-called Vehicle to Infrastructure
-communications (V2X). This implies that communicating devices may be
-highly mobile needing a solution such as ILA or MobileIP. The
-underlying network may also have different flavors including Dedicated
-Short-Range Communications (DSRC) which is standardized as 802.11p, 4G
-or the emerging 5G standard, as well as traditional WIFI.
-
-In order to achieve the tight latency bounds the application, network
-stack, network, scheduling, must all be tightly coordinated.
-Information is usually time sensitive with deadlines of usefulness such
-that techniques such as forward error correction are more likely to be
-used than traditional reliable protocols such as TCP. DTLS handshake
-must also be low latency, as well as any hand-off for implemented
-MobileIP.
------
-
-
-cheers,
-jamal
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index 0614393dd7ae..94297572914f 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -63,6 +63,7 @@ int ath6kl_read_tgt_stats(struct ath6kl *ar, struct ath6kl_vif *vif);
+ 
+ #ifdef CONFIG_ATH6KL_DEBUG
+ 
++__printf(2, 3)
+ void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
+ void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
+ 		     const char *msg, const char *prefix,
+@@ -83,6 +84,7 @@ int ath6kl_debug_init_fs(struct ath6kl *ar);
+ void ath6kl_debug_cleanup(struct ath6kl *ar);
+ 
+ #else
++__printf(2, 3)
+ static inline void ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
+ 			      const char *fmt, ...)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index ca1a18c86c0d..d127a08d60df 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -995,7 +995,7 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
+ 
+ 	if (netlen < (payload_len + HTC_HDR_LENGTH)) {
+ 		ath6kl_dbg(ATH6KL_DBG_HTC,
+-			   "HTC Rx: insufficient length, got:%d expected =%u\n",
++			   "HTC Rx: insufficient length, got:%d expected =%zu\n",
+ 			   netlen, payload_len + HTC_HDR_LENGTH);
+ 		status = -EINVAL;
+ 		goto free_skb;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 84a6d12c3f8a..a082de81ec4c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1596,7 +1596,7 @@ static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 	rate = le32_to_cpu(ev->rate);
+ 	pkts = le32_to_cpu(ev->pkts);
+ 
+-	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d% pkts %d intvl %ds\n",
++	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d%% pkts %d intvl %ds\n",
+ 		   vif->bssid, rate, pkts, vif->txe_intvl);
+ 
+ 	cfg80211_cqm_txe_notify(vif->ndev, vif->bssid, pkts,
+-- 
+2.10.0.rc2.1.g053435c
