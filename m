@@ -1,34 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46656 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750736AbdCNWTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2017 18:19:32 -0400
-Message-ID: <1489529967.10872.16.camel@sipsolutions.net> (sfid-20170314_231935_637157_B95B1FB7)
-Subject: Re: [RFT] brcmfmac: add support to move wiphy instance into network
- namespace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Mark Asselstine <mark.asselstine@windriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 14 Mar 2017 23:19:27 +0100
-In-Reply-To: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170314_225203_353339_3E88A6E0)
-References: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
-         (sfid-20170314_225203_353339_3E88A6E0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:32875 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933040AbdC3KQE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Mar 2017 06:16:04 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Vincent Cuissard <cuissard@marvell.com>
+Subject: [PATCH v2 3/8] NFC: nfcmrvl: do not use device-managed resources
+Date: Thu, 30 Mar 2017 12:15:37 +0200
+Message-Id: <20170330101542.15384-4-johan@kernel.org> (sfid-20170330_122346_795210_CBF2F2F7)
+In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
+References: <20170330101542.15384-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-03-14 at 21:51 +0000, Arend van Spriel wrote:
-> To support network namespace the driver must assure all created
-> network interfaces are in the same namespace as the wiphy instance.
+This specifically fixes resource leaks in the registration error paths.
 
-FWIW, looks fine to me.
+Device-managed resources is a bad fit for this driver as devices can be
+registered from the n_nci line discipline. Firstly, a tty may not even
+have a corresponding device (should it be part of a Unix98 pty)
+something which would lead to a NULL-pointer dereference when
+registering resources.
 
->  	memcpy(ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
-> +	wiphy = cfg_to_wiphy(drvr->config);
-> +	dev_net_set(ndev, wiphy_net(wiphy));
+Secondly, if the tty has a class device, its lifetime exceeds that of
+the line discipline, which means that resources would leak every time
+the line discipline is closed (or if registration fails).
 
-You (almost?) don't need the wiphy variable :)
+Currently, the devres interface was only being used to request a reset
+gpio despite the fact that it was already explicitly freed in
+nfcmrvl_nci_unregister_dev() (along with the private data), something
+which also prevented the resource leak at close.
 
-johannes
+Note that the driver treats gpio number 0 as invalid despite it being
+perfectly valid. This will be addressed in a follow-up patch.
+
+Fixes: b2fe288eac72 ("NFC: nfcmrvl: free reset gpio")
+Fixes: 4a2b947f56b3 ("NFC: nfcmrvl: add chip reset management")
+Cc: stable <stable@vger.kernel.org>     # 4.2: b2fe288eac72
+Cc: Vincent Cuissard <cuissard@marvell.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/nfc/nfcmrvl/main.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/nfc/nfcmrvl/main.c b/drivers/nfc/nfcmrvl/main.c
+index 51c8240a1672..3e3fc9588f10 100644
+--- a/drivers/nfc/nfcmrvl/main.c
++++ b/drivers/nfc/nfcmrvl/main.c
+@@ -124,12 +124,13 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
+ 	memcpy(&priv->config, pdata, sizeof(*pdata));
+ 
+ 	if (priv->config.reset_n_io) {
+-		rc = devm_gpio_request_one(dev,
+-					   priv->config.reset_n_io,
+-					   GPIOF_OUT_INIT_LOW,
+-					   "nfcmrvl_reset_n");
+-		if (rc < 0)
++		rc = gpio_request_one(priv->config.reset_n_io,
++				      GPIOF_OUT_INIT_LOW,
++				      "nfcmrvl_reset_n");
++		if (rc < 0) {
++			priv->config.reset_n_io = 0;
+ 			nfc_err(dev, "failed to request reset_n io\n");
++		}
+ 	}
+ 
+ 	if (phy == NFCMRVL_PHY_SPI) {
+@@ -154,7 +155,7 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
+ 	if (!priv->ndev) {
+ 		nfc_err(dev, "nci_allocate_device failed\n");
+ 		rc = -ENOMEM;
+-		goto error;
++		goto error_free_gpio;
+ 	}
+ 
+ 	nci_set_drvdata(priv->ndev, priv);
+@@ -179,7 +180,9 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
+ 
+ error_free_dev:
+ 	nci_free_device(priv->ndev);
+-error:
++error_free_gpio:
++	if (priv->config.reset_n_io)
++		gpio_free(priv->config.reset_n_io);
+ 	kfree(priv);
+ 	return ERR_PTR(rc);
+ }
+@@ -195,7 +198,7 @@ void nfcmrvl_nci_unregister_dev(struct nfcmrvl_private *priv)
+ 	nfcmrvl_fw_dnld_deinit(priv);
+ 
+ 	if (priv->config.reset_n_io)
+-		devm_gpio_free(priv->dev, priv->config.reset_n_io);
++		gpio_free(priv->config.reset_n_io);
+ 
+ 	nci_unregister_device(ndev);
+ 	nci_free_device(ndev);
+-- 
+2.12.2
