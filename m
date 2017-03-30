@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53686 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753162AbdCOP0O (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34995 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932932AbdC3KQD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 11:26:14 -0400
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: Should ath10k enable RX_FLAG_ALLOW_SAME_PN
-Message-ID: <a22597d0-f0b0-9536-5753-c1bed7a5f20d@candelatech.com> (sfid-20170315_162655_105913_E81CBF17)
-Date: Wed, 15 Mar 2017 08:26:12 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 30 Mar 2017 06:16:03 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>
+Subject: [PATCH v2 0/8] NFC: fix device allocation and nfcmrvl crashes
+Date: Thu, 30 Mar 2017 12:15:34 +0200
+Message-Id: <20170330101542.15384-1-johan@kernel.org> (sfid-20170330_122449_510708_992B8ABE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We notice a strange problem when receiving ath10k frames in
-raw mode (with modified firmware).
+This started out with the observation that the nfcmrvl_uart driver
+unconditionally dereferenced the tty class device despite the fact that
+not every tty has an associated struct device (Unix98 ptys). Some
+further changes were needed in the common nfcmrvl code to fully address
+this, some of which also incidentally fixed a few related bugs (e.g.
+resource leaks in error paths).
 
-The very first data message (UDP discovery response) is dropped
-in WPA2 + AES mode, and it appears that if we would set the
-RX_FLAG_ALLOW_SAME_PN it would be accepted.  ath9k in software-crypt
-mode does not have this issue as far as we can tell.
+While fixing this I stumbled over a regression in NFC core that lead to
+broken registration error paths and misnamed workqueues.
 
-So, maybe ath10k should set this flag??
+Note that this has only been tested by configuring the n_hci line
+discipline for different ttys without any actual NFC hardware connected.
 
-Here is commit ID from the logic that introduced this flag, in case
-that helps jog some memory.
+Johan
 
-commit f631a77ba920f7153a1094d09cd8f2ebbffd0328
-Author: Sara Sharon <sara.sharon@intel.com>
-Date:   Tue May 3 15:59:44 2016 +0300
 
-     mac80211: allow same PN for AMSDU sub-frames
+Changes in v2
+ - fix typo in commit message (1/8)
+ - release reset gpio in error paths (3/8)
+ - fix description of patch impact (3/8)
+ - allow gpio 0 to be used for reset signalling (8/8, new)
 
-     Some hardware (iwlwifi an example) de-aggregate AMSDUs and copy the IV
-     as is to the generated MPDUs, so the same PN appears in multiple
-     packets without being a replay attack.  Allow driver to explicitly
-     indicate that a frame is allowed to have the same PN as the previous
-     frame.
 
-Thanks,
-Ben
+Johan Hovold (8):
+  NFC: fix broken device allocation
+  NFC: nfcmrvl_uart: add missing tty-device sanity check
+  NFC: nfcmrvl: do not use device-managed resources
+  NFC: nfcmrvl: use nfc-device for firmware download
+  NFC: nfcmrvl: fix firmware-management initialisation
+  NFC: nfcmrvl_uart: fix device-node leak during probe
+  NFC: nfcmrvl_usb: use interface as phy device
+  NFC: nfcmrvl: allow gpio 0 for reset signalling
+
+ drivers/nfc/nfcmrvl/fw_dnld.c         |  7 ++++--
+ drivers/nfc/nfcmrvl/main.c            | 40 +++++++++++++++++++----------------
+ drivers/nfc/nfcmrvl/uart.c            | 11 ++++++----
+ drivers/nfc/nfcmrvl/usb.c             |  4 +---
+ include/linux/platform_data/nfcmrvl.h |  2 +-
+ net/nfc/core.c                        | 31 +++++++++++++++------------
+ net/nfc/nci/core.c                    |  3 +--
+ 7 files changed, 55 insertions(+), 43 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.12.2
