@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37800 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757502AbdCUNy4 (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35012 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933235AbdC3KQG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2017 09:54:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
+        Thu, 30 Mar 2017 06:16:06 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2017-03-21
-Date: Tue, 21 Mar 2017 15:54:47 +0200
-Message-ID: <87k27i68go.fsf@kamboji.qca.qualcomm.com> (sfid-20170321_145704_110775_2708A97C)
-MIME-Version: 1.0
-Content-Type: text/plain
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>
+Subject: [PATCH v2 7/8] NFC: nfcmrvl_usb: use interface as phy device
+Date: Thu, 30 Mar 2017 12:15:41 +0200
+Message-Id: <20170330101542.15384-8-johan@kernel.org> (sfid-20170330_122206_360030_746C9211)
+In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
+References: <20170330101542.15384-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Use the USB-interface rather than parent USB-device device, which is
+what this driver binds to, when registering the nci device.
 
-few smallish fixes for 4.11. Please let me know if there are any
-problems.
+Note that using the right device is important when dealing with device-
+managed resources as the interface can be unbound independently of the
+parent device.
 
-Kalle
+Also note that private device pointer had already been set by
+nfcmrvl_nci_register_dev() so the redundant assignment can therefore be
+removed.
 
-The following changes since commit 22a0e18eac7a9e986fec76c60fa4a2926d1291e2:
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/nfc/nfcmrvl/usb.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-  net: properly release sk_frag.page (2017-03-15 15:37:45 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-03-21
-
-for you to fetch changes up to 6be3b6cce1e225f189b68b4e84fc711d19b4277b:
-
-  ath10k: fix incorrect wlan_mac_base in qca6174_regs (2017-03-20 17:11:31 +0200)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.11
-
-iwlwifi
-
-* fix a user reported warning in DQA
-
-mwifiex
-
-* fix a potential double free
-* fix lost early debug logs
-* fix init wakeup warning message from device framework
-* add Ganapathi and Xinming as maintainers
-
-ath10k
-
-* fix regression with QCA6174 during resume and firmware crash
-
-----------------------------------------------------------------
-Amitkumar Karwar (1):
-      MAINTAINERS: update for mwifiex driver maintainers
-
-Brian Norris (3):
-      mwifiex: pcie: don't leak DMA buffers when removing
-      mwifiex: set adapter->dev before starting to use mwifiex_dbg()
-      mwifiex: uninit wakeup info when removing device
-
-Ryan Hsu (1):
-      ath10k: fix incorrect wlan_mac_base in qca6174_regs
-
-Sara Sharon (1):
-      iwlwifi: mvm: cleanup pending frames in DQA mode
-
- MAINTAINERS                                       |  2 ++
- drivers/net/wireless/ath/ath10k/hw.c              |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  5 +--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 11 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h      |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 41 ++++++++++-------------
- drivers/net/wireless/marvell/mwifiex/main.c       | 11 +++---
- drivers/net/wireless/marvell/mwifiex/pcie.c       | 38 ++++++++++-----------
- 8 files changed, 57 insertions(+), 55 deletions(-)
+diff --git a/drivers/nfc/nfcmrvl/usb.c b/drivers/nfc/nfcmrvl/usb.c
+index 585a0f20835b..728b3321842d 100644
+--- a/drivers/nfc/nfcmrvl/usb.c
++++ b/drivers/nfc/nfcmrvl/usb.c
+@@ -341,15 +341,13 @@ static int nfcmrvl_probe(struct usb_interface *intf,
+ 	init_usb_anchor(&drv_data->deferred);
+ 
+ 	priv = nfcmrvl_nci_register_dev(NFCMRVL_PHY_USB, drv_data, &usb_ops,
+-					&drv_data->udev->dev, &config);
++					&intf->dev, &config);
+ 	if (IS_ERR(priv))
+ 		return PTR_ERR(priv);
+ 
+ 	drv_data->priv = priv;
+ 	drv_data->priv->support_fw_dnld = false;
+ 
+-	priv->dev = &drv_data->udev->dev;
+-
+ 	usb_set_intfdata(intf, drv_data);
+ 
+ 	return 0;
+-- 
+2.12.2
