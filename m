@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:42928 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756934AbdCHGmC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53796 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932919AbdC3Qn3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2017 01:42:02 -0500
-Subject: Re: rate mask resulting in no usable rates - WARN_ON
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <1488933811.4723.1.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <a1cd3a56-0453-7675-6895-9521a412a9cd@candelatech.com> (sfid-20170308_074303_062859_2F42C612)
-Date: Tue, 7 Mar 2017 17:13:39 -0800
+        Thu, 30 Mar 2017 12:43:29 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1488933811.4723.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: rtlwifi: Fix scheduling while atomic splat
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170321142411.24044-1-Larry.Finger@lwfinger.net>
+References: <20170321142411.24044-1-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Message-Id: <20170330164328.9B06860DB4@smtp.codeaurora.org> (sfid-20170330_184333_520688_9F3FC3FE)
+Date: Thu, 30 Mar 2017 16:43:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2017 04:43 PM, Johannes Berg wrote:
-> Ben, all,
->
-> There are scenarios where setting a rate mask from userspace will
-> result in no usable rates, e.g. when you set a rate mask of 6,9,12
-> MBps, and the AP reports it only supports 36,48,54 (which some APs do).
-> This results in a WARN_ONCE() hitting since we can't find a usable
-> rate, and then we fall back to 1 or 6 MBps, which is a mandatory rate
-> but the AP didn't report it as supported (is it thus misbehaving?
-> doesn't matter much though)
->
-> I'd go and reject a setting that results in no usable rates, but
-> because the setting is sticky this is very complicated (it's a good
-> thing I insisted we have very few of these, but some I couldn't get
-> around).
->
-> Would there be any objection to making this setting non-sticky, i.e.
-> always resetting it for a new association? It's kinda designed to be
-> sticky, with the per-band setting, but clearly this is causing big
-> problems.
->
-> Alternatively, the really proper behaviour would be for this setting to
-> actually influence whether or not we can connect to the AP, but that
-> will just lead to massive problems because wpa_s will be unaware and
-> will pick APs that we can't support with the setting etc. Therefore I'm
-> not going to do this.
->
-> I could also reset the setting only when it would result in no usable
-> rates, but that doesn't even give userspace any good way at all to
-> predict it.
->
-> Is anyone - other than ChromeOS, which sets it just after association -
-> actually using this?
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Following commit cceb0a597320 ("rtlwifi: Add work queue for c2h cmd."),
+> the following BUG is reported when rtl8723be is used:
+> 
+> BUG: sleeping function called from invalid context at mm/slab.h:432
+> in_atomic(): 1, irqs_disabled(): 1, pid: 0, name: swapper/0
+> CPU: 0 PID: 0 Comm: swapper/0 Tainted: G        W  O    4.11.0-rc3-wl+ #276
+> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.50   09/29/2014
+> Call Trace:
+>  <IRQ>
+>  dump_stack+0x63/0x89
+>  ___might_sleep+0xe9/0x130
+>  __might_sleep+0x4a/0x90
+>  kmem_cache_alloc_trace+0x19f/0x200
+>  ? rtl_c2hcmd_enqueue+0x3e/0x110 [rtlwifi]
+>  rtl_c2hcmd_enqueue+0x3e/0x110 [rtlwifi]
+>  rtl8723be_c2h_packet_handler+0xac/0xc0 [rtl8723be]
+>  rtl8723be_rx_command_packet+0x37/0x5c [rtl8723be]
+>  _rtl_pci_rx_interrupt+0x200/0x6b0 [rtl_pci]
+>  _rtl_pci_interrupt+0x20c/0x5d0 [rtl_pci]
+>  __handle_irq_event_percpu+0x3f/0x1d0
+>  handle_irq_event_percpu+0x23/0x60
+>  handle_irq_event+0x3c/0x60
+>  handle_fasteoi_irq+0xa2/0x170
+>  handle_irq+0x20/0x30
+>  do_IRQ+0x48/0xd0
+>  common_interrupt+0x89/0x89
+> ...
+> 
+> Although commit cceb0a597320 converted most c2h commands to use a work
+> queue, the Bluetooth coexistence routines can be in atomic mode when
+> they execute such a call.
+> 
+> Fixes: cceb0a597320 ("rtlwifi: Add work queue for c2h cmd.")
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
 
-I know several people who use this and depend on it being sticky.  For that
-matter, I think LEDE and probably OpenWRT uses 'iw' quite a bit to affect rates.   I wrote
-up some patches to help make this less sticky by allowing supplicant to specify
-the (V)HT rates at connect time, but I am pretty sure those were not wanted
-upstream at the time.
+Patch applied to wireless-drivers.git, thanks.
 
-Personally, I'd prefer to be able to specify the advertised and allowed-tx-rates
-at assoc time and drive it from supplicant.
-
-For my needs, you need both advertised (like how the station presents itself)
-as well as the rateset that you want to transmit with.  That allows you to
-configure your station to act like a /b station (advertise 1,2,...11Mbps), but only transmit on
-1Mbps, for instance.
-
-Nice thing about doing it in supplicant is that it has fairly good access to
-the rates the AP is advertising...
-
-Thanks,
-Ben
-
+893dc68f1b18 rtlwifi: Fix scheduling while atomic splat
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+https://patchwork.kernel.org/patch/9636661/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
