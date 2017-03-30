@@ -1,103 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12859 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752577AbdCOOqX (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35005 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933107AbdC3KQF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2017 10:46:23 -0400
-Subject: [PATCH v5 00/10] ath10k: sdio support
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 15 Mar 2017 16:46:12 +0200
-Message-ID: <148958913141.25727.15769281552095255609.stgit@potku.adurom.net> (sfid-20170315_154628_763825_56336181)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Thu, 30 Mar 2017 06:16:05 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Vincent Cuissard <cuissard@marvell.com>
+Subject: [PATCH v2 4/8] NFC: nfcmrvl: use nfc-device for firmware download
+Date: Thu, 30 Mar 2017 12:15:38 +0200
+Message-Id: <20170330101542.15384-5-johan@kernel.org> (sfid-20170330_122203_333338_108AAE77)
+In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
+References: <20170330101542.15384-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I did some changes while reviewing Erik's SDIO patches. Only compile
-tested, I don't have any SDIO boards at the moment.
+Use the nfc- rather than phy-device in firmware-management code that
+needs a valid struct device.
 
-Changes in v5:
+This specifically fixes a NULL-pointer dereference in
+nfcmrvl_fw_dnld_init() during registration when the underlying tty is
+one end of a Unix98 pty.
 
-* promote from RFC to PATCH
+Note that the driver still uses the phy device for any debugging, which
+is fine for now.
 
-* move "ath10k: sdio support" patch to last
-
-* in "ath10k: sdio get target info" fix sparse warning by changing tmp
-  variable to __le32:
-
-drivers/net/wireless/ath/ath10k/bmi.c:145:19: warning: cast to restricted __le32
-
-* fix checkpatch warnings by renaming to struct ath10k_htc_lookahead_bundle:
-
-drivers/net/wireless/ath/ath10k/htc.c:265: line over 90 characters
-drivers/net/wireless/ath/ath10k/htc.c:357: line over 90 characters
-
-* use switch statement in ath10k_core_get_fw_name()
-
-* remove enable of fwlog from ath10k_sdio_extra_initialization(),
-  that's not sdio specific and should be enabled separately (with a
-  module parameter?)
-
-* rename ath10k_sdio_extra_initialization() to ath10k_init_sdio()
-
-* add warning to probe() that sdio support is not complete
-
-* unify error and debug messagess
-
-* whitespace changes
-
-* move variable declarations to the beginning of the function
-
-* remove unnecessary gotos
-
-* small cosmetic changes
-
-* add FIXME comments to unclear cases
-
-still todo:
-
-o fix remaining memory leaks (if any)
-
-o endian support, eg ath10k_sdio_hif_set_mbox_sleep()
-
-o are ath10k_sdio_io() and ath10k_sdio_read_write_sync() really
-  necessary? looks like just an unnecessary abstraction layer
-
-o write commit log for patch "ath10k: sdio support"
-
-o improve Kconfig description
-
-
+Fixes: 3194c6870158 ("NFC: nfcmrvl: add firmware download support")
+Cc: stable <stable@vger.kernel.org>     # 4.4
+Cc: Vincent Cuissard <cuissard@marvell.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
+ drivers/nfc/nfcmrvl/fw_dnld.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Erik Stromdahl (10):
-      ath10k: htc: made static function public
-      ath10k: htc: rx trailer lookahead support
-      ath10k: htc: move htc ctrl ep connect to htc_init
-      ath10k: htc: refactorization
-      ath10k: various sdio related definitions
-      ath10k: add sdio extra initializations
-      ath10k: sdio get target info
-      ath10k: htc: ready_ext msg support
-      ath10k: different fw file names for usb and sdio
-      ath10k: sdio support
-
-
- drivers/net/wireless/ath/ath10k/Kconfig     |    6 
- drivers/net/wireless/ath/ath10k/Makefile    |    3 
- drivers/net/wireless/ath/ath10k/bmi.c       |   71 +
- drivers/net/wireless/ath/ath10k/bmi.h       |    2 
- drivers/net/wireless/ath/ath10k/core.c      |   40 -
- drivers/net/wireless/ath/ath10k/core.h      |    3 
- drivers/net/wireless/ath/ath10k/debug.h     |    2 
- drivers/net/wireless/ath/ath10k/htc.c       |  243 ++-
- drivers/net/wireless/ath/ath10k/htc.h       |   39 -
- drivers/net/wireless/ath/ath10k/hw.h        |   53 +
- drivers/net/wireless/ath/ath10k/sdio.c      | 2102 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/sdio.h      |  263 +++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 
- 13 files changed, 2773 insertions(+), 78 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.c
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.h
+diff --git a/drivers/nfc/nfcmrvl/fw_dnld.c b/drivers/nfc/nfcmrvl/fw_dnld.c
+index f8dcdf4b24f6..af62c4c854f3 100644
+--- a/drivers/nfc/nfcmrvl/fw_dnld.c
++++ b/drivers/nfc/nfcmrvl/fw_dnld.c
+@@ -459,7 +459,7 @@ int	nfcmrvl_fw_dnld_init(struct nfcmrvl_private *priv)
+ 
+ 	INIT_WORK(&priv->fw_dnld.rx_work, fw_dnld_rx_work);
+ 	snprintf(name, sizeof(name), "%s_nfcmrvl_fw_dnld_rx_wq",
+-		 dev_name(priv->dev));
++		 dev_name(&priv->ndev->nfc_dev->dev));
+ 	priv->fw_dnld.rx_wq = create_singlethread_workqueue(name);
+ 	if (!priv->fw_dnld.rx_wq)
+ 		return -ENOMEM;
+@@ -496,6 +496,7 @@ int nfcmrvl_fw_dnld_start(struct nci_dev *ndev, const char *firmware_name)
+ {
+ 	struct nfcmrvl_private *priv = nci_get_drvdata(ndev);
+ 	struct nfcmrvl_fw_dnld *fw_dnld = &priv->fw_dnld;
++	int res;
+ 
+ 	if (!priv->support_fw_dnld)
+ 		return -ENOTSUPP;
+@@ -511,7 +512,9 @@ int nfcmrvl_fw_dnld_start(struct nci_dev *ndev, const char *firmware_name)
+ 	 */
+ 
+ 	/* Retrieve FW binary */
+-	if (request_firmware(&fw_dnld->fw, firmware_name, priv->dev) < 0) {
++	res = request_firmware(&fw_dnld->fw, firmware_name,
++			       &ndev->nfc_dev->dev);
++	if (res < 0) {
+ 		nfc_err(priv->dev, "failed to retrieve FW %s", firmware_name);
+ 		return -ENOENT;
+ 	}
+-- 
+2.12.2
