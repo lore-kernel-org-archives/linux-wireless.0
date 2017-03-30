@@ -1,31 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:36603 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751628AbdCBQiz (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:34314 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932836AbdC3JTm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 11:38:55 -0500
-Received: by mail-it0-f68.google.com with SMTP id w185so8985803ita.3
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Mar 2017 08:37:05 -0800 (PST)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: Netdev 2.1 New Gold Sponsor
-Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-        linux-wireless@vger.kernel.org, tech-committee@netdevconf.org,
-        David Miller <davem@davemloft.net>,
-        Stephen Jaworski <jaws@mojatatu.com>, people@netdevconf.org,
-        Brenda Butler <bjb@mojatatu.com>
-Message-ID: <0d467bce-af29-a4f6-5130-c692d81f338c@mojatatu.com> (sfid-20170302_173859_817348_9BD139B8)
-Date: Thu, 2 Mar 2017 11:36:51 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-To: unlisted-recipients:; (no To-header on input)
+        Thu, 30 Mar 2017 05:19:42 -0400
+Received: by mail-pg0-f68.google.com with SMTP id o123so8600476pga.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2017 02:19:41 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 1/3] mwifiex: remove unnecessary wakeup interrupt number sanity check
+Date: Thu, 30 Mar 2017 09:19:05 +0000
+Message-Id: <1490865547-10208-1-git-send-email-huxinming820@gmail.com> (sfid-20170330_112019_795293_9C0EE8E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Xinming Hu <huxm@marvell.com>
 
+Sanity check of interrupt number in interrupt handler is unnecessary and
+confusion, remove it.
 
-We'd like to announce Mojatatu Networks as our second Gold Sponsor.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Thank you for the continued support!
-
-cheers,
-jamal
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 30f4994..5e82602 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1503,11 +1503,9 @@ static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
+ {
+ 	struct mwifiex_adapter *adapter = priv;
+ 
+-	if (adapter->irq_wakeup >= 0) {
+-		dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
+-		adapter->wake_by_wifi = true;
+-		disable_irq_nosync(irq);
+-	}
++	dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
++	adapter->wake_by_wifi = true;
++	disable_irq_nosync(irq);
+ 
+ 	/* Notify PM core we are wakeup source */
+ 	pm_wakeup_event(adapter->dev, 0);
+-- 
+1.8.1.4
