@@ -1,31 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41756 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751146AbdCPJzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 05:55:22 -0400
-Message-ID: <1489658072.2370.1.camel@sipsolutions.net> (sfid-20170316_105532_101364_E6064328)
-Subject: Re: [PATCH] mac80211: Use setup_timer instead of init_timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ondrej.lysonek@seznam.cz
-Cc: Jiri Slaby <jslaby@suse.cz>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 16 Mar 2017 10:54:32 +0100
-In-Reply-To: <20170309093436.25227-1-ondrej.lysonek@seznam.cz>
-References: <1488803104.5761.6.camel@sipsolutions.net>
-         <20170309093436.25227-1-ondrej.lysonek@seznam.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36512 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933245AbdC3KQG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Mar 2017 06:16:06 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>
+Subject: [PATCH v2 8/8] NFC: nfcmrvl: allow gpio 0 for reset signalling
+Date: Thu, 30 Mar 2017 12:15:42 +0200
+Message-Id: <20170330101542.15384-9-johan@kernel.org> (sfid-20170330_122345_646090_C159F39E)
+In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
+References: <20170330101542.15384-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-03-09 at 10:34 +0100, ondrej.lysonek@seznam.cz wrote:
-> From: Ondřej Lysoněk <ondrej.lysonek@seznam.cz>
-> 
-> Use setup_timer() and setup_deferrable_timer() to set the data and
-> function timer fields. It makes the code cleaner and will allow for
-> easier change of the timer struct internals.
-> 
-Applied, thanks.
+Allow gpio 0 to be used for reset signalling, and instead use negative
+errnos to disable the reset functionality.
 
-johannes
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/nfc/nfcmrvl/main.c            | 9 ++++-----
+ include/linux/platform_data/nfcmrvl.h | 2 +-
+ 2 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/nfc/nfcmrvl/main.c b/drivers/nfc/nfcmrvl/main.c
+index a446590a71ca..838627fa82ee 100644
+--- a/drivers/nfc/nfcmrvl/main.c
++++ b/drivers/nfc/nfcmrvl/main.c
+@@ -123,12 +123,12 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
+ 
+ 	memcpy(&priv->config, pdata, sizeof(*pdata));
+ 
+-	if (priv->config.reset_n_io) {
++	if (gpio_is_valid(priv->config.reset_n_io)) {
+ 		rc = gpio_request_one(priv->config.reset_n_io,
+ 				      GPIOF_OUT_INIT_LOW,
+ 				      "nfcmrvl_reset_n");
+ 		if (rc < 0) {
+-			priv->config.reset_n_io = 0;
++			priv->config.reset_n_io = -EINVAL;
+ 			nfc_err(dev, "failed to request reset_n io\n");
+ 		}
+ 	}
+@@ -183,7 +183,7 @@ struct nfcmrvl_private *nfcmrvl_nci_register_dev(enum nfcmrvl_phy phy,
+ error_free_dev:
+ 	nci_free_device(priv->ndev);
+ error_free_gpio:
+-	if (priv->config.reset_n_io)
++	if (gpio_is_valid(priv->config.reset_n_io))
+ 		gpio_free(priv->config.reset_n_io);
+ 	kfree(priv);
+ 	return ERR_PTR(rc);
+@@ -199,7 +199,7 @@ void nfcmrvl_nci_unregister_dev(struct nfcmrvl_private *priv)
+ 
+ 	nfcmrvl_fw_dnld_deinit(priv);
+ 
+-	if (priv->config.reset_n_io)
++	if (gpio_is_valid(priv->config.reset_n_io))
+ 		gpio_free(priv->config.reset_n_io);
+ 
+ 	nci_unregister_device(ndev);
+@@ -267,7 +267,6 @@ int nfcmrvl_parse_dt(struct device_node *node,
+ 	reset_n_io = of_get_named_gpio(node, "reset-n-io", 0);
+ 	if (reset_n_io < 0) {
+ 		pr_info("no reset-n-io config\n");
+-		reset_n_io = 0;
+ 	} else if (!gpio_is_valid(reset_n_io)) {
+ 		pr_err("invalid reset-n-io GPIO\n");
+ 		return reset_n_io;
+diff --git a/include/linux/platform_data/nfcmrvl.h b/include/linux/platform_data/nfcmrvl.h
+index a6f9d633f5be..9e75ac8d19be 100644
+--- a/include/linux/platform_data/nfcmrvl.h
++++ b/include/linux/platform_data/nfcmrvl.h
+@@ -23,7 +23,7 @@ struct nfcmrvl_platform_data {
+ 	 */
+ 
+ 	/* GPIO that is wired to RESET_N signal */
+-	unsigned int reset_n_io;
++	int reset_n_io;
+ 	/* Tell if transport is muxed in HCI one */
+ 	unsigned int hci_muxed;
+ 
+-- 
+2.12.2
