@@ -1,147 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55744 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751995AbdCWX00 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:32886 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933197AbdC3KQF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2017 19:26:26 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 3/4] mac80211-hwsim: add rate-limited debugging for rx-netlink
-Date: Thu, 23 Mar 2017 16:26:17 -0700
-Message-Id: <1490311578-18926-3-git-send-email-greearb@candelatech.com> (sfid-20170324_002702_542505_82F93D00)
-In-Reply-To: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
-References: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
+        Thu, 30 Mar 2017 06:16:05 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        Vincent Cuissard <cuissard@marvell.com>
+Subject: [PATCH v2 6/8] NFC: nfcmrvl_uart: fix device-node leak during probe
+Date: Thu, 30 Mar 2017 12:15:40 +0200
+Message-Id: <20170330101542.15384-7-johan@kernel.org> (sfid-20170330_122204_431181_39F40379)
+In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
+References: <20170330101542.15384-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Make sure to release the device-node reference when done parsing the
+node.
 
-This makes it easier to understand why wmediumd (or similar)
-is getting errors when sending frames to the kernel.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Fixes: e097dc624f78 ("NFC: nfcmrvl: add UART driver")
+Cc: Vincent Cuissard <cuissard@marvell.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 55 +++++++++++++++++++++++++++--------
- 1 file changed, 43 insertions(+), 12 deletions(-)
+ drivers/nfc/nfcmrvl/uart.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 234df8c..84dcddf 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -137,6 +137,12 @@ static int regtest = HWSIM_REGTEST_DISABLED;
- module_param(regtest, int, 0444);
- MODULE_PARM_DESC(regtest, "The type of regulatory test we want to run");
+diff --git a/drivers/nfc/nfcmrvl/uart.c b/drivers/nfc/nfcmrvl/uart.c
+index 6c0c301611c4..91162f8e0366 100644
+--- a/drivers/nfc/nfcmrvl/uart.c
++++ b/drivers/nfc/nfcmrvl/uart.c
+@@ -84,6 +84,7 @@ static int nfcmrvl_uart_parse_dt(struct device_node *node,
+ 	ret = nfcmrvl_parse_dt(matched_node, pdata);
+ 	if (ret < 0) {
+ 		pr_err("Failed to get generic entries\n");
++		of_node_put(matched_node);
+ 		return ret;
+ 	}
  
-+DEFINE_RATELIMIT_STATE(hwsim_ratelimit_state, 5 * HZ, 10);
-+int hwsim_ratelimit(void)
-+{
-+	return __ratelimit(&hwsim_ratelimit_state);
-+}
-+
- static const char *hwsim_alpha2s[] = {
- 	"FI",
- 	"AL",
-@@ -1649,7 +1655,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if (conf->chandef.chan)
- 		wiphy_debug(hw->wiphy,
--			    "%s (freq=%d(%d - %d)/%s idle=%d ps=%d smps=%s)\n",
-+			    "%s (chandef-chan freq=%d(%d - %d)/%s idle=%d ps=%d smps=%s)\n",
- 			    __func__,
- 			    conf->chandef.chan->center_freq,
- 			    conf->chandef.center_freq1,
-@@ -1660,7 +1666,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 			    smps_modes[conf->smps_mode]);
+@@ -97,6 +98,8 @@ static int nfcmrvl_uart_parse_dt(struct device_node *node,
  	else
- 		wiphy_debug(hw->wiphy,
--			    "%s (freq=0 idle=%d ps=%d smps=%s)\n",
-+			    "%s (no-chandef-chan freq=0 idle=%d ps=%d smps=%s)\n",
- 			    __func__,
- 			    !!(conf->flags & IEEE80211_CONF_IDLE),
- 			    !!(conf->flags & IEEE80211_CONF_PS),
-@@ -3072,8 +3078,11 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
- 	    !info->attrs[HWSIM_ATTR_FRAME] ||
- 	    !info->attrs[HWSIM_ATTR_RX_RATE] ||
--	    !info->attrs[HWSIM_ATTR_SIGNAL])
-+	    !info->attrs[HWSIM_ATTR_SIGNAL]) {
-+		if (hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: Missing required attribute\n");
- 		goto out;
-+	}
+ 		pdata->break_control = 0;
  
- 	dst = (void *)nla_data(info->attrs[HWSIM_ATTR_ADDR_RECEIVER]);
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
-@@ -3081,29 +3090,53 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 
- 	/* Allocate new skb here */
- 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
--	if (skb == NULL)
--		goto err;
-+	if (skb == NULL) {
-+		if (hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: skb alloc failed, len: %d\n",
-+			       frame_data_len);
-+		goto out;
-+	}
- 
--	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
--		goto err;
-+	if (frame_data_len > IEEE80211_MAX_DATA_LEN) {
-+		if (hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: data lenth error: %d  max: %d\n",
-+			       frame_data_len, IEEE80211_MAX_DATA_LEN);
-+		goto out;
-+	}
- 
- 	/* Copy the data */
- 	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
- 
- 	data2 = get_hwsim_data_ref_from_addr(dst);
--	if (!data2)
++	of_node_put(matched_node);
 +
-+	if (!data2) {
-+		if (hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: Cannot find radio %pM\n",
-+			       dst);
- 		goto out;
-+	}
- 
- 	if (hwsim_net_get_netgroup(genl_info_net(info)) != data2->netgroup)
- 		goto out;
- 
--	if (info->snd_portid != data2->wmediumd)
-+	if (info->snd_portid != data2->wmediumd) {
-+		if (hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: portid mismatch, snd_portid: %d  portid %d\n",
-+			       info->snd_portid, data2->wmediumd);
- 		goto out;
-+	}
- 
- 	/* check if radio is configured properly */
- 
--	if (data2->idle || !data2->started)
-+	if (data2->idle || !data2->started) {
-+		static unsigned int cnt = 0;
-+		/* This is fairly common, and usually not a bug.  So, print errors
-+		   rarely. */
-+		if (((cnt++ & 0x3FF) == 0x3FF) && hwsim_ratelimit())
-+			printk(KERN_DEBUG " hwsim rx-nl: radio %pM idle: %d or not started: %d cnt: %d\n",
-+			       dst, data2->idle, !data2->started, cnt);
- 		goto out;
-+	}
- 
- 	/* A frame is received from user space */
- 	memset(&rx_status, 0, sizeof(rx_status));
-@@ -3136,8 +3169,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	ieee80211_rx_irqsafe(data2->hw, skb);
- 
  	return 0;
--err:
--	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
- out:
- 	dev_kfree_skb(skb);
- 	return -EINVAL;
+ }
+ 
 -- 
-2.4.11
+2.12.2
