@@ -1,84 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:44852 "EHLO
-        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752122AbdCPVv6 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36266 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933272AbdCaQsK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 17:51:58 -0400
-From: Mark Asselstine <mark.asselstine@windriver.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT] brcmfmac: add support to move wiphy instance into network namespace
-Date: Thu, 16 Mar 2017 17:51:55 -0400
-Message-ID: <124157392.J1GrpqVLd5@yow-masselst-lx1> (sfid-20170316_225200_872489_76F1BADB)
-In-Reply-To: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1489528312-28304-1-git-send-email-arend.vanspriel@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 31 Mar 2017 12:48:10 -0400
+Received: by mail-oi0-f68.google.com with SMTP id b187so9912520oif.3
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 09:48:09 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 05/12] rtlwifi: btcoex: 23b 2ant: monitor wifi counter for allocate tdma time
+Date: Fri, 31 Mar 2017 11:47:35 -0500
+Message-Id: <20170331164742.22374-6-Larry.Finger@lwfinger.net> (sfid-20170331_184818_718201_E975891B)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, March 14, 2017 9:51:52 PM EDT Arend van Spriel wrote:
-> To support network namespace the driver must assure all created
-> network interfaces are in the same namespace as the wiphy instance.
-> 
-> Reported-by: Mark Asselstine <mark.asselstine@windriver.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
-> Hi Mark,
-> 
-> Please check this patch. I can not say I am an expert when it comes
-> to using namespaces. So let me know if it works and I can change
-> Reported-by into Tested-by.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Seems to pass the tests I threw at it. Seems happy with namespaces.
+If there are too many CRC error packets, it means the wifi is operating
+under low quality circumstances. If so, we need to reallocate the
+resources of wifi and bt
 
-Mark
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 40 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    | 10 ++++++
+ 2 files changed, 50 insertions(+)
 
-> 
-> Regards,
-> Arend
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 5 ++++-
->  2 files changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c index
-> 3856de6..e0d65df 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -6450,7 +6450,8 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy,
-> struct brcmf_if *ifp) BIT(NL80211_BSS_SELECT_ATTR_BAND_PREF) |
->  				    BIT(NL80211_BSS_SELECT_ATTR_RSSI_ADJUST);
-> 
-> -	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
-> +	wiphy->flags |= WIPHY_FLAG_NETNS_OK |
-> +			WIPHY_FLAG_PS_ON_BY_DEFAULT |
->  			WIPHY_FLAG_OFFCHAN_TX |
->  			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
->  	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_TDLS))
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c index
-> 22b4883..74ede27 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -463,6 +463,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
->  int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
->  {
->  	struct brcmf_pub *drvr = ifp->drvr;
-> +	struct wiphy *wiphy;
->  	struct net_device *ndev;
->  	s32 err;
-> 
-> @@ -476,8 +477,10 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool
-> rtnl_locked) ndev->needed_headroom += drvr->hdrlen;
->  	ndev->ethtool_ops = &brcmf_ethtool_ops;
-> 
-> -	/* set the mac address */
-> +	/* set the mac address & netns */
->  	memcpy(ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
-> +	wiphy = cfg_to_wiphy(drvr->config);
-> +	dev_net_set(ndev, wiphy_net(wiphy));
-> 
->  	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
->  	INIT_WORK(&ifp->ndoffload_work, _brcmf_update_ndtable);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 1361788..16759b0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -309,6 +309,43 @@ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
+ }
+ 
++static void btc8723b2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
++{
++	if (coex_sta->under_ips) {
++		coex_sta->crc_ok_cck = 0;
++		coex_sta->crc_ok_11g = 0;
++		coex_sta->crc_ok_11n = 0;
++		coex_sta->crc_ok_11n_agg = 0;
++
++		coex_sta->crc_err_cck = 0;
++		coex_sta->crc_err_11g = 0;
++		coex_sta->crc_err_11n = 0;
++		coex_sta->crc_err_11n_agg = 0;
++	} else {
++		coex_sta->crc_ok_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf88);
++		coex_sta->crc_ok_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf94);
++		coex_sta->crc_ok_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf90);
++		coex_sta->crc_ok_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfb8);
++
++		coex_sta->crc_err_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf84);
++		coex_sta->crc_err_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf96);
++		coex_sta->crc_err_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf92);
++		coex_sta->crc_err_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfba);
++	}
++
++	/* reset counter */
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x1);
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x0);
++}
++
+ static void btc8723b2ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -2875,6 +2912,9 @@ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
+ #if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 0)
+ 	btc8723b2ant_query_bt_info(btcoexist);
+ #else
++	btc8723b2ant_monitor_bt_ctr(btcoexist);
++	btc8723b2ant_monitor_wifi_ctr(btcoexist);
++
+ 	if (btc8723b2ant_is_wifi_status_changed(btcoexist) ||
+ 	    coex_dm->auto_tdma_adjust)
+ 		btc8723b2ant_run_coexist_mechanism(btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index d787ae3..d1bfdbe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -149,6 +149,16 @@ struct coex_sta_8723b_2ant {
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
+ 	u32 pop_event_cnt;
++
++	u32 crc_ok_cck;
++	u32 crc_ok_11g;
++	u32 crc_ok_11n;
++	u32 crc_ok_11n_agg;
++
++	u32 crc_err_cck;
++	u32 crc_err_11g;
++	u32 crc_err_11n;
++	u32 crc_err_11n_agg;
+ };
+ 
+ /*********************************************************************
+-- 
+2.10.2
