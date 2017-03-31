@@ -1,77 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:36516 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751765AbdCDMF7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Mar 2017 07:05:59 -0500
-Received: by mail-qk0-f172.google.com with SMTP id 1so95096154qkl.3
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Mar 2017 04:05:35 -0800 (PST)
+Received: from mga07.intel.com ([134.134.136.100]:15925 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933465AbdCaMyI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Mar 2017 08:54:08 -0400
+From: Jani Nikula <jani.nikula@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 1/2] Documentation/sphinx: kerneldoc: add "unused-functions"
+In-Reply-To: <20170331071632.6209-1-johannes@sipsolutions.net>
+References: <20170331071632.6209-1-johannes@sipsolutions.net>
+Date: Fri, 31 Mar 2017 15:54:04 +0300
+Message-ID: <878tnl38ur.fsf@intel.com> (sfid-20170331_145442_551233_2D519BBB)
 MIME-Version: 1.0
-In-Reply-To: <CAEFj987m=5a6pWZLMtTcVshmVfOmwwbb-+s0FR_+Dz6_xx7Dtw@mail.gmail.com>
-References: <CAEFj984umxKZgMqzgbQvX+VgPjqCW98E17bfED9+Yg3XGzatOw@mail.gmail.com>
- <b285e11810b612a6a156693f34e232ac@mail.gmail.com> <CAEFj9874ynLcjn7AhpB-ajre3twpwHM4iEVN2ozYEGDPGErs0Q@mail.gmail.com>
- <39c846a5bcfa1fff26f69a082466e414@mail.gmail.com> <CAEFj987m=5a6pWZLMtTcVshmVfOmwwbb-+s0FR_+Dz6_xx7Dtw@mail.gmail.com>
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Date: Sat, 4 Mar 2017 20:05:34 +0800
-Message-ID: <CAEFj9868zDVomdjQhrzNKs9ANaRF85wdA49vKwVZJ2dUiTpoVg@mail.gmail.com> (sfid-20170304_130624_088803_E6A37F72)
-Subject: Re: [PATCH v2] mac80211: mesh - always do every discovery retry
-To: Jesse Jones <jjones@uniumwifi.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Alexis Green <agreen@cococorp.com>,
-        Alexis Green <agreen@uniumwifi.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 4, 2017 at 12:01 PM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+On Fri, 31 Mar 2017, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
->>
->> Well A-D is going to have a much smaller RTT than A-B-C-D. And, yes, using
->> multiple hops is going to reduce throughput but I'd much rather use
->> multiple
->> 120 Mbps links than a link that only supports 12 Mbps.
->>
+> When adding functions one by one into documentation, in order to
+> order/group things properly, it's easy to miss things. Allow use
+> of the kernel-doc directive with "unused-functions" like this
 >
-> Airtime link metrics should choose the multiple links if it is good compared
-> to direct link.
+> .. kernel-doc:: <filename>
+>    :unused-functions:
+
+I'm sure the parameter name could be improved to capture what you mean
+better; alas I don't have a suggestion.
+
 >
->> That's why there are link and path metrics.
+> to output anything previously unused from that file. This allows
+> grouping things but still making sure that the documentation has
+> all the functions.
 >
-> I don't think that you don't get this. Every nodes sends out multiple PREQs.
-> Other nodes received it with rebroadcast again. Take note on this.
+> Internally this works by collecting (per-file) those functions
+> (and enums, structs, doc sections...) that are explicitly used,
+> and invoking the kernel-doc script with "-nofunction" later.
+
+A quick thought that I don't have the time to check now, but should be
+checked before merging: Is the order of directive extension execution
+deterministic if the Sphinx run is parallelized (sphinx-build -j)? Is it
+deterministic within an rst file? Surely it's not deterministic when
+called from several rst files? The latter is, perhaps, acceptable, but
+the former not.
+
+BR,
+Jani.
+
+
 >
->> Improving the link metric isn't going to help with PREQ reliability
->> problems.
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  Documentation/sphinx/kerneldoc.py | 16 +++++++++++++++-
+>  1 file changed, 15 insertions(+), 1 deletion(-)
 >
-> PREQ realiabilit? It is broadcast management frame and usually using lowest
-> transmission rate. So it is realiabe.
->
->> Sending more PREQs will.
->
-> So reduce dot11MeshHWMPpreqMinInterval to send out more PREQ works for you?
+> diff --git a/Documentation/sphinx/kerneldoc.py b/Documentation/sphinx/kerneldoc.py
+> index d15e07f36881..79fc1491348a 100644
+> --- a/Documentation/sphinx/kerneldoc.py
+> +++ b/Documentation/sphinx/kerneldoc.py
+> @@ -41,6 +41,9 @@ from sphinx.ext.autodoc import AutodocReporter
+>  
+>  __version__  = '1.0'
+>  
+> +# per-file list
+> +_used_fns = {}
+> +
+>  class KernelDocDirective(Directive):
+>      """Extract kernel-doc comments from the specified file"""
+>      required_argument = 1
+> @@ -50,6 +53,7 @@ class KernelDocDirective(Directive):
+>          'functions': directives.unchanged_required,
+>          'export': directives.unchanged,
+>          'internal': directives.unchanged,
+> +        'unused-functions': directives.unchanged,
+>      }
+>      has_content = False
+>  
+> @@ -60,6 +64,10 @@ class KernelDocDirective(Directive):
+>          filename = env.config.kerneldoc_srctree + '/' + self.arguments[0]
+>          export_file_patterns = []
+>  
+> +        if not filename in _used_fns:
+> +            _used_fns[filename] = []
+> +        _used_fns_this_file = _used_fns[filename]
+> +
+>          # Tell sphinx of the dependency
+>          env.note_dependency(os.path.abspath(filename))
+>  
+> @@ -73,10 +81,16 @@ class KernelDocDirective(Directive):
+>              cmd += ['-internal']
+>              export_file_patterns = str(self.options.get('internal')).split()
+>          elif 'doc' in self.options:
+> -            cmd += ['-function', str(self.options.get('doc'))]
+> +            f = str(self.options.get('doc'))
+> +            cmd += ['-function', f]
+> +            _used_fns_this_file.append(f)
+> +        elif 'unused-functions' in self.options:
+> +            for f in _used_fns_this_file:
+> +                cmd += ['-nofunction', f]
+>          elif 'functions' in self.options:
+>              for f in str(self.options.get('functions')).split():
+>                  cmd += ['-function', f]
+> +                _used_fns_this_file.append(f)
+>  
+>          for pattern in export_file_patterns:
+>              for f in glob.glob(env.config.kerneldoc_srctree + '/' + pattern):
 
-Alright, I think that we have similar lengthy discussion last time.
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/139453
-
-I would suggest the following edition to the commit message:
-
-Instead of stopping path discovery when a path is established, continue the
-attempts to find alternative paths until we hit the dot11MeshHWMPmaxPREQretries
-limit. However, this is not a standard behavior and may easily
-increase the number of
-broadcast PREQ frame in your network. So this feature is turned off by default.
-
-and the remaining are removed due to misleading explanation.
-
-Then, in the mesh_path_timer, I think that only the following is needed:
-
-- if (mpath->flags & MESH_PATH_RESOLVED ||
-- (!(mpath->flags & MESH_PATH_RESOLVING))) {
-+ if (!multiple_discoveries &&
-+    (mpath->flags & MESH_PATH_RESOLVED ||
-+     (!(mpath->flags & MESH_PATH_RESOLVING)))) {
-
-Thanks
-
----
-Chun-Yeow
+-- 
+Jani Nikula, Intel Open Source Technology Center
