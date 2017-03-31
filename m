@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f181.google.com ([74.125.82.181]:33204 "EHLO
-        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752424AbdCVVyG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64095 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752512AbdCaMIV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2017 17:54:06 -0400
-Received: by mail-ot0-f181.google.com with SMTP id a12so106928197ota.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2017 14:54:05 -0700 (PDT)
-Date: Wed, 22 Mar 2017 16:54:04 -0500
-From: Andy Gross <andy.gross@linaro.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Brown <david.brown@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>, linux-bluetooth@vger.kernel.org,
-        linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org
-Subject: Re: [PATCH 3/3] soc: qcom: smd-rpm: Add msm8996 compatibility
-Message-ID: <20170322215404.GC22585@hector.attlocal.net> (sfid-20170322_225551_896239_E681C6E9)
-References: <20170320233544.1656-1-bjorn.andersson@linaro.org>
- <20170320233544.1656-3-bjorn.andersson@linaro.org>
+        Fri, 31 Mar 2017 08:08:21 -0400
+From: <c_mkenna@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <mkenna@codeaurora.org>,
+        "Maharaja Kennadyrajan" <c_mkenna@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix the Transmit Power Control stats display format
+Date: Fri, 31 Mar 2017 17:39:40 +0530
+Message-ID: <1490962180-24054-1-git-send-email-c_mkenna@qti.qualcomm.com> (sfid-20170331_140824_313186_F04C53DF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170320233544.1656-3-bjorn.andersson@linaro.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 20, 2017 at 04:35:44PM -0700, Bjorn Andersson wrote:
-> With the RPM driver transitioned to RPMSG we can reuse the SMD-RPM
-> driver ontop of GLINK for 8996, without any modifications.
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 
-Acked-by: Andy Gross <andy.gross@linaro.org>
+This patch helps to fix TPC stats to display the stats
+properly. Here cosmetic change has been done to print the
+TPC stats for all the cases 1.CDD 2.STBC 3.TXBF
+
+Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 00b424d..1339cc3 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1816,7 +1816,7 @@ static void ath10k_tpc_stats_fill(struct ath10k *ar,
+ 			 tpc_stats->num_tx_chain,
+ 			 tpc_stats->rate_max);
+ 
+-	for (j = 0; j < tpc_stats->num_tx_chain ; j++) {
++	for (j = 0; j < WMI_TPC_FLAG; j++) {
+ 		switch (j) {
+ 		case WMI_TPC_TABLE_TYPE_CDD:
+ 			if (tpc_stats->flag[j] == ATH10K_TPC_TABLE_TYPE_FLAG) {
+-- 
+1.9.1
