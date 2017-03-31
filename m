@@ -1,53 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:34466 "EHLO
-        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753846AbdCTQmc (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35592 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933558AbdCaQsO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 12:42:32 -0400
-Received: by mail-qk0-f179.google.com with SMTP id p64so114894100qke.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 09:41:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <d717a94d5c6632b6665b7ac3b319b726@mail.gmail.com>
-References: <58B09082.7020704@cococorp.com> <1488202227.28431.9.camel@sipsolutions.net>
- <58B487A8.7000602@cococorp.com> <1488443814.8390.3.camel@sipsolutions.net> <d717a94d5c6632b6665b7ac3b319b726@mail.gmail.com>
-From: Thomas Pedersen <thomas@eero.com>
-Date: Mon, 20 Mar 2017 09:41:57 -0700
-Message-ID: <CADjYELzEjOYEVPykd2Oqzk78Kq36zKi0FG_OfGq5u9sp3mp+WQ@mail.gmail.com> (sfid-20170320_174503_960830_ECF31077)
-Subject: Re: [PATCH v2] mac80211: Jitter HWMP MPATH reply frames to reduce
- collision on dense networks.
-To: Jesse Jones <jjones@uniumwifi.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, agreen@cococorp.com,
-        linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
-Content-Type: text/plain; charset=UTF-8
+        Fri, 31 Mar 2017 12:48:14 -0400
+Received: by mail-oi0-f67.google.com with SMTP id d2so2562234oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 09:48:13 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 09/12] rtlwifi: btcoex: 23b 2ant: remove redundant bt stack report
+Date: Fri, 31 Mar 2017 11:47:39 -0500
+Message-Id: <20170331164742.22374-10-Larry.Finger@lwfinger.net> (sfid-20170331_184819_332727_E2ABFC52)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 2, 2017 at 9:41 AM, Jesse Jones <jjones@uniumwifi.com> wrote:
->> Hi Alexis,
->>
->> > This is loosely based on RFC5148, specifically event-triggered message
->> > generation as described in section 5.2.
->>
->> I'm confused. I see how that generally seems to apply to any mobile
->> network, but it *does* state up-front that
->>     In some instances, these problems can be solved in these lower
->>     layers, but in other instances, some help at the network and higher
->>     layers is necessary.
->>
->> I believe 802.11 *does* in fact solve these issues at lower layers. Can
->> you explain how you observed any problem in this area?
->
-> Well it certainly attempts to via stuff like carrier sense. But that is not
-> fool proof and any time two routers hear a frame and both decide to forward
-> it immediately there is a chance that they will both sense the air at the
-> same time, decide that it is clear, and lose both their forwarded frames due
-> to a collision. How often that happens is hard to say but we have observed
-> that exact behavior a few years ago with an 802.11 multicast routing
-> protocol and adding jitter significantly improved reliability.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Have you tried performing RTS/CTS before sending path selection frames
-to manage the hidden node problem?
+New ICs have hardware mailbox to deliver bt information instead of doing
+it by driver itself, so remove them.
 
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c        | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 3bed72e..8e27c1a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -399,11 +399,9 @@ static bool btc8723b2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+-	/*struct btc_stack_info *stack_info = &btcoexist->stack_info;*/
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 
+-#if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 1) /* profile from bt patch */
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
+ 
+ 	bt_link_info->bt_link_exist = coex_sta->bt_link_exist;
+@@ -417,21 +415,7 @@ static void btc8723b2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ 		bt_link_info->pan_exist = true;
+ 		bt_link_info->bt_link_exist = true;
+ 	}
+-#else	/* profile from bt stack */
+-	bt_link_info->bt_link_exist = stack_info->bt_link_exist;
+-	bt_link_info->sco_exist = stack_info->sco_exist;
+-	bt_link_info->a2dp_exist = stack_info->a2dp_exist;
+-	bt_link_info->pan_exist = stack_info->pan_exist;
+-	bt_link_info->hid_exist = stack_info->hid_exist;
+-
+-	/*for win-8 stack HID report error*/
+-	if (!stack_info->hid_exist)
+-		stack_info->hid_exist = coex_sta->hid_exist;
+-	/*sync  BTInfo with BT firmware and stack*/
+-	/* when stack HID report error, here we use the info from bt fw.*/
+-	if (!stack_info->bt_link_exist)
+-		stack_info->bt_link_exist = coex_sta->bt_link_exist;
+-#endif
++
+ 	/* check if Sco only */
+ 	if (bt_link_info->sco_exist && !bt_link_info->a2dp_exist &&
+ 	    !bt_link_info->pan_exist && !bt_link_info->hid_exist)
 -- 
-thomas
+2.10.2
