@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35072 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbdCPIBF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 04:01:05 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mac80211: rt2x00: add support for MT7620
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170311193011.GA6809@makrotopia.org>
-References: <20170311193011.GA6809@makrotopia.org>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org
-Message-Id: <20170316080104.7F55760798@smtp.codeaurora.org> (sfid-20170316_090110_605770_4DE3EF84)
-Date: Thu, 16 Mar 2017 08:01:04 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:42938 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750938AbdCaHQC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Mar 2017 03:16:02 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] cfg80211: add intro to documentation
+Date: Fri, 31 Mar 2017 09:15:56 +0200
+Message-Id: <20170331071556.6121-2-johannes@sipsolutions.net> (sfid-20170331_091610_281232_ADD42457)
+In-Reply-To: <20170331071556.6121-1-johannes@sipsolutions.net>
+References: <20170331071556.6121-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Golle <daniel@makrotopia.org> wrote:
-> From: Roman Yeryomin <roman@advem.lv>
-> 
-> Basic support for MT7620 built-in wireless radio was added to
-> OpenWrt in r41441. It has seen some heavy cleaning and refactoring
-> since in order to match the Kernel's code quality standards.
-> 
-> Signed-off-by: Roman Yeryomin <roman@advem.lv>
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'll remove the "mac80211:" prefix during commit, that should be only used with
-mac80211 patches.
+This introduction section should be used in the documentation,
+do that at the beginning of the cfg80211 chapter.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/driver-api/80211/cfg80211.rst | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/driver-api/80211/cfg80211.rst b/Documentation/driver-api/80211/cfg80211.rst
+index b101bc0c195b..8ffac57e1f5b 100644
+--- a/Documentation/driver-api/80211/cfg80211.rst
++++ b/Documentation/driver-api/80211/cfg80211.rst
+@@ -2,6 +2,9 @@
+ cfg80211 subsystem
+ ==================
+ 
++.. kernel-doc:: include/net/cfg80211.h
++   :doc: Introduction
++
+ Device registration
+ ===================
+ 
 -- 
-https://patchwork.kernel.org/patch/9618995/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
