@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41704 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753643AbdC2Hey (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 03:34:54 -0400
-Message-ID: <1490772890.18052.8.camel@sipsolutions.net> (sfid-20170329_093508_848242_9A16320D)
-Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dennis New <dennisn@dennisn.mooo.com>,
+Received: from mail2.candelatech.com ([208.74.158.173]:59016 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932836AbdCaNd2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Mar 2017 09:33:28 -0400
+Subject: Re: [PATCH v3 1/4] mac80211-hwsim: notify user-space about channel
+ change.
+To: Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless@vger.kernel.org
-Date: Wed, 29 Mar 2017 09:34:50 +0200
-In-Reply-To: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com> (sfid-20170325_024055_755712_8E7A9C9D)
-References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
-         (sfid-20170325_024055_755712_8E7A9C9D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+References: <1490311578-18926-1-git-send-email-greearb@candelatech.com>
+ <1490776922.7948.9.camel@sipsolutions.net>
+ <260bf7e1-5ff2-709a-419b-df54b80c87f0@candelatech.com>
+ <1490806271.7948.22.camel@sipsolutions.net>
+ <6ddd5a26-042b-0eaf-e8f2-11833ede300b@candelatech.com>
+ <1490960938.6288.7.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <16c10539-3ab3-f5ec-38ab-0fc7abca1a94@candelatech.com> (sfid-20170331_153404_662029_99576C7A)
+Date: Fri, 31 Mar 2017 06:33:26 -0700
+MIME-Version: 1.0
+In-Reply-To: <1490960938.6288.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-24 at 21:32 -0400, Dennis New wrote:
-> Ever since I upgraded to the 4.10 kernels (I don't think this
-> behavior existed in the 4.8 series), after I startup my laptop
-> (either from cold boot, or from standby), my wlan0 interface keeps
-> deauthenticating
 
-> ...
-> 19:23:29 kernel: wlan0: authenticate with 00:11:22:33:44:55
-> 19:23:29 kernel: ------------[ cut here ]------------
-> 19:23:29 kernel: WARNING: CPU: 0 PID: 18925 at
-> net/mac80211/mlme.c:287 ieee80211_determine_chantype+0x12e/0x380
 
-This is already indicating a severe problem. I don't know how you end
-up in this situation with b43, since that doesn't have any regulatory
-magic afaict.
+On 03/31/2017 04:48 AM, Johannes Berg wrote:
+>
+>> I really don't understand what change you are suggesting.  Anything
+>> that uses a new API needs to change, and as API is further improved,
+>> then the app will need to change again.  Netlink's saving grace is
+>> that it is easy to add new data members and so support new API in a
+>> forward/backward compatible manner.
+>
+> That's true, but it'd still mean you have to update all the time, and
+> perhaps then we'll find out it'd be easier to break the API, etc.?
 
-> 19:23:29 kernel: wlan0: associated
-> 
-> 19:24:29 kernel: wlan0: deauthenticating from 00:11:22:33:44:55 by
-> local choice (Reason: 3=DEAUTH_LEAVING)
-> 
+In my experience, the big problem with netlink is that if you write
+a patch that cannot make it upstream (or takes forever), then the netlink
+IDs conflict as upstream adds more stuff.
 
-I'm convinced that this comes from reg_check_channels().
+Other than that, it is easy to add new members, or completely new commands.
 
-The above WARN_ON() already told you that the channel was considered
-invalid.
+User-space can drop old API and simply not fully work against older kernels
+if it wants, especially for something as specialized as a simulated
+wifi radio.
 
-Do you know what channel your AP is on? Perhaps show the output of "iw
-wlan0 scan dump" while it's connected (you have 60 seconds :P)
+ >
+> OTOH, supporting (on both sides) channel contexts doesn't seem so hard
+> - perhaps something like
+>  * add chanctx
+>  * remove chanctx
+>  * change chanctx config
+>
+> as hwsim commands, and then we can pretend to add/remove in start/stop
+> if we have non-chanctx-hwsim?
 
-Can you please show the output of "iw list" and "iw phy0 channels"?
+The project I did this work for is basically done and frozen.  I can tweak
+some small API changes to sync up with new netlink ID numbers, but I have no
+time to completely re-do the API (and more importantly, to test it all).
 
-johannes
+So, if my patch can go in as is or with small tweaks, then I'm happy to
+keep working on it.  If it needs a complete re-write, then it will have to
+wait for someone else or some later date.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
