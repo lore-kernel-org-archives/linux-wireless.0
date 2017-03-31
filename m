@@ -1,87 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:34528 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753780AbdC1JiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Mar 2017 05:38:09 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 4/5] NFC: pn544: Add GPIO ACPI mapping table
-Date: Tue, 28 Mar 2017 12:36:38 +0300
-Message-Id: <20170328093639.53481-4-andriy.shevchenko@linux.intel.com> (sfid-20170328_113943_227706_BDE9A2D0)
-In-Reply-To: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
-References: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-wr0-f170.google.com ([209.85.128.170]:32844 "EHLO
+        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933724AbdCaRyO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Mar 2017 13:54:14 -0400
+MIME-Version: 1.0
+In-Reply-To: <1490982307.27353.14.camel@perches.com>
+References: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com>
+ <CALLGbR+szcYFdbdh_0qBS4B_X6YQvU6CDFpR-XZvc7p3zA+ZdQ@mail.gmail.com>
+ <1490981039.27353.12.camel@perches.com> <CALLGbRJRstmGL-o2ds4SQ5hDNVBcfP23JnRt5qRrVg-ix-8Hiw@mail.gmail.com>
+ <1490982307.27353.14.camel@perches.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Fri, 31 Mar 2017 10:54:11 -0700
+Message-ID: <CALLGbRKuy7rOR+_3hAOe_496azQXVeZVUkQpJov-vtgyg1C0-w@mail.gmail.com> (sfid-20170331_195532_383893_86445396)
+Subject: Re: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
+To: Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+On Fri, Mar 31, 2017 at 10:45 AM, Joe Perches <joe@perches.com> wrote:
+> On Fri, 2017-03-31 at 10:34 -0700, Steve deRosier wrote:
+>> On Fri, Mar 31, 2017 at 10:23 AM, Joe Perches <joe@perches.com> wrote:
+>> > On Fri, 2017-03-31 at 10:19 -0700, Steve deRosier wrote:
+>> > > On Thu, Mar 30, 2017 at 3:57 PM, Joe Perches <joe@perches.com> wrote:
+>> > > > Fix fallout too.
+>> >
+>> > []
+>> > > My only question is why bother doing a format check on something
+>> > > that's going to be compiled out anyway?
+>> >
+>> > To avoid introducing defects when writing new code
+>> > and not using the debugging code path.
+>> >
+>>
+>> Fair enough. And I totally agree with the defensive programming here
+>> in that case and feel it's worth the tradeoff (if indeed there really
+>> is any cost, I'm unsure what gcc actually does in this instance).
+>>
+>> For sake of discussion though - shouldn't anything not using the debug
+>> code path in this case always be of the form that compiles out? ie
+>> would be empty functions intended here just to make compilation work
+>> and the code that depends on it simpler? Thus, there really should
+>> never be a risk of introducing said defects. If any "real" code were
+>> put in that else clause, that'd be a big red-flag in the review of
+>> said hypothetical patch.
+>
+> Generically, all debugging forms should strive to avoid side-effects.
+>
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+Yes. Of course. Lightbulb.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- v3: no change
+I wasn't even thinking of the fact someone could load the printf
+arguments with code that might have side-effects instead of simple
+variables to print. I never do it for obvious reasons, but I could see
+it happening.
 
- drivers/nfc/pn544/i2c.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+Thanks for spending the time going back and forth with me about it.
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 5e780e7a28e5..6226d220f1d0 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -870,22 +870,34 @@ static void pn544_hci_i2c_fw_work(struct work_struct *work)
- 	}
- }
- 
-+static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
-+static const struct acpi_gpio_params firmware_gpios = { 2, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_pn544_gpios[] = {
-+	{ "enable-gpios", &enable_gpios, 1 },
-+	{ "firmware-gpios", &firmware_gpios, 1 },
-+	{ },
-+};
-+
- static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct device *dev = &client->dev;
-+	int ret;
-+
-+	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
-+	if (ret)
-+		return ret;
- 
- 	/* Get EN GPIO from ACPI */
--	phy->gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1,
--					     GPIOD_OUT_LOW);
-+	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
- 	if (IS_ERR(phy->gpiod_en)) {
- 		nfc_err(dev, "Unable to get EN GPIO\n");
- 		return PTR_ERR(phy->gpiod_en);
- 	}
- 
- 	/* Get FW GPIO from ACPI */
--	phy->gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2,
--					     GPIOD_OUT_LOW);
-+	phy->gpiod_fw = devm_gpiod_get(dev, "firmware", GPIOD_OUT_LOW);
- 	if (IS_ERR(phy->gpiod_fw)) {
- 		nfc_err(dev, "Unable to get FW GPIO\n");
- 		return PTR_ERR(phy->gpiod_fw);
-@@ -997,6 +1009,7 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
- 	if (phy->powered)
- 		pn544_hci_i2c_disable(phy);
- 
-+	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
- 	return 0;
- }
- 
--- 
-2.11.0
+Thanks,
+- Steve
