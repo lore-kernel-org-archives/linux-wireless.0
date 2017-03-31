@@ -1,236 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [195.159.176.226] ([195.159.176.226]:32981 "EHLO
-        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S932124AbdC2K2m (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36277 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933555AbdCaQsM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 06:28:42 -0400
-Received: from list by blaine.gmane.org with local (Exim 4.84_2)
-        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
-        id 1ctApt-0006uZ-A7
-        for linux-wireless@vger.kernel.org; Wed, 29 Mar 2017 12:28:17 +0200
-To: linux-wireless@vger.kernel.org
-From: Dennis New <dennisn@dennisn.mooo.com>
-Subject: Re: wlan0 keeps deauthenticating DEAUTH_LEAVING about every minute
-Date: Wed, 29 Mar 2017 06:28:08 -0400
-Message-ID: <20170329062808.032e71a5327f3405f82df4b2@dennisn.mooo.com> (sfid-20170329_122846_570548_1B99027C)
-References: <20170324213237.6f122a9173fa464a5d936f9d@dennisn.mooo.com>
-        <1490772890.18052.8.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-In-Reply-To: <1490772890.18052.8.camel@sipsolutions.net>
+        Fri, 31 Mar 2017 12:48:12 -0400
+Received: by mail-oi0-f67.google.com with SMTP id b187so9912622oif.3
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 09:48:11 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/12] rtlwifi: btcoex: 23b 2ant: adjust wifi duration for bt a2dp
+Date: Fri, 31 Mar 2017 11:47:37 -0500
+Message-Id: <20170331164742.22374-8-Larry.Finger@lwfinger.net> (sfid-20170331_184849_083991_2F68033E)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 29 Mar 2017 09:34:50 +0200, Johannes Berg wrote:
-> On Fri, 2017-03-24 at 21:32 -0400, Dennis New wrote:
-> > Ever since I upgraded to the 4.10 kernels (I don't think this
-> > behavior existed in the 4.8 series), after I startup my laptop
-> > (either from cold boot, or from standby), my wlan0 interface keeps
-> > deauthenticating
-> 
-> > ...
-> > 19:23:29 kernel: wlan0: authenticate with 00:11:22:33:44:55
-> > 19:23:29 kernel: ------------[ cut here ]------------
-> > 19:23:29 kernel: WARNING: CPU: 0 PID: 18925 at
-> > net/mac80211/mlme.c:287 ieee80211_determine_chantype+0x12e/0x380
-> 
-> This is already indicating a severe problem. I don't know how you end
-> up in this situation with b43, since that doesn't have any regulatory
-> magic afaict.
-> 
-> > 19:23:29 kernel: wlan0: associated
-> > 
-> > 19:24:29 kernel: wlan0: deauthenticating from 00:11:22:33:44:55 by
-> > local choice (Reason: 3=DEAUTH_LEAVING)
-> 
-> I'm convinced that this comes from reg_check_channels().
-> 
-> The above WARN_ON() already told you that the channel was considered
-> invalid.
-> 
-> Do you know what channel your AP is on?
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-6
+The larger the bt a2dp bit pool is, the more time bt needs to receive
+them. If we do not adjust the wifi duration, the voice quality will be
+low. Hence we reduce the time that wifi holds, to improve the a2dp
+service.
 
-> Perhaps show the output of "iw wlan0 scan dump" while it's
-connected (you have 60 seconds :P)
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 72 +++++++++++++++++++---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  3 +
+ 2 files changed, 65 insertions(+), 10 deletions(-)
 
-I have been having stable connections for the past few days,
-simply by putting a 60 second sleep before starting my wlan0. Although
-if I /etc/init.d/net.wlan0 restart it (without the delay), it will
-still do this deauth'ing.
-
-
-> Can you please show the output of "iw list" and "iw phy0 channels"?
-
-"iw phy7 channels":
-Band 1:
-	* 2412 MHz [1] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2417 MHz [2] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2422 MHz [3] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2427 MHz [4] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2432 MHz [5] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2437 MHz [6] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2442 MHz [7] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2447 MHz [8] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2452 MHz [9] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2457 MHz [10] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2462 MHz [11] 
-	  Maximum TX power: 20.0 dBm
-	  Channel widths:
-	* 2467 MHz [12] 
-	  Maximum TX power: 20.0 dBm
-	  No IR
-	  Channel widths:
-	* 2472 MHz [13] 
-	  Maximum TX power: 20.0 dBm
-	  No IR
-	  Channel widths:
-	* 2484 MHz [14] 
-	  Maximum TX power: 20.0 dBm
-	  No IR
-	  Channel widths: 20MHz
-
-
-"iw list":
-Wiphy phy7
-	max # scan SSIDs: 4
-	max scan IEs length: 2285 bytes
-	max # sched scan SSIDs: 0
-	max # match sets: 0
-	max # scan plans: 1
-	max scan plan interval: -1
-	max scan plan iterations: 0
-	Retry short limit: 7
-	Retry long limit: 4
-	Coverage class: 0 (up to 0m)
-	Device supports RSN-IBSS.
-	Supported Ciphers:
-		* WEP40 (00-0f-ac:1)
-		* WEP104 (00-0f-ac:5)
-		* TKIP (00-0f-ac:2)
-		* CCMP-128 (00-0f-ac:4)
-		* CCMP-256 (00-0f-ac:10)
-		* GCMP-128 (00-0f-ac:8)
-		* GCMP-256 (00-0f-ac:9)
-	Available Antennas: TX 0 RX 0
-	Supported interface modes:
-		 * IBSS
-		 * managed
-		 * AP
-		 * AP/VLAN
-		 * monitor
-	Band 1:
-		Bitrates (non-HT):
-			* 1.0 Mbps
-			* 2.0 Mbps (short preamble supported)
-			* 5.5 Mbps (short preamble supported)
-			* 11.0 Mbps (short preamble supported)
-			* 6.0 Mbps
-			* 9.0 Mbps
-			* 12.0 Mbps
-			* 18.0 Mbps
-			* 24.0 Mbps
-			* 36.0 Mbps
-			* 48.0 Mbps
-			* 54.0 Mbps
-		Frequencies:
-			* 2412 MHz [1] (20.0 dBm)
-			* 2417 MHz [2] (20.0 dBm)
-			* 2422 MHz [3] (20.0 dBm)
-			* 2427 MHz [4] (20.0 dBm)
-			* 2432 MHz [5] (20.0 dBm)
-			* 2437 MHz [6] (20.0 dBm)
-			* 2442 MHz [7] (20.0 dBm)
-			* 2447 MHz [8] (20.0 dBm)
-			* 2452 MHz [9] (20.0 dBm)
-			* 2457 MHz [10] (20.0 dBm)
-			* 2462 MHz [11] (20.0 dBm)
-			* 2467 MHz [12] (20.0 dBm) (no IR)
-			* 2472 MHz [13] (20.0 dBm) (no IR)
-			* 2484 MHz [14] (20.0 dBm) (no IR)
-	Supported commands:
-		 * new_interface
-		 * set_interface
-		 * new_key
-		 * start_ap
-		 * new_station
-		 * set_bss
-		 * authenticate
-		 * associate
-		 * deauthenticate
-		 * disassociate
-		 * join_ibss
-		 * set_tx_bitrate_mask
-		 * frame
-		 * frame_wait_cancel
-		 * set_wiphy_netns
-		 * set_channel
-		 * set_wds_peer
-		 * probe_client
-		 * set_noack_map
-		 * register_beacons
-		 * start_p2p_device
-		 * set_mcast_rate
-		 * connect
-		 * disconnect
-		 * set_qos_map
-	Supported TX frame types:
-		 * IBSS: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-		 * managed: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-		 * AP: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-		 * AP/VLAN: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-		 * mesh point: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-		 * P2P-client: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-		 * P2P-GO: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-		 * P2P-device: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-	Supported RX frame types:
-		 * IBSS: 0x40 0xb0 0xc0 0xd0
-		 * managed: 0x40 0xd0
-		 * AP: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-		 * AP/VLAN: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-		 * mesh point: 0xb0 0xc0 0xd0
-		 * P2P-client: 0x40 0xd0
-		 * P2P-GO: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-		 * P2P-device: 0x40 0xd0
-	software interface modes (can always be added):
-		 * AP/VLAN
-		 * monitor
-	interface combinations are not supported
-	HT Capability overrides:
-		 * MCS: ff ff ff ff ff ff ff ff ff ff
-		 * maximum A-MSDU length
-		 * supported channel width
-		 * short GI for 40 MHz
-		 * max A-MPDU length exponent
-		 * min MPDU start spacing
-	Device supports TX status socket option.
-	Device supports HT-IBSS.
-	Device supports SAE with AUTHENTICATE command
-	Device supports low priority scan.
-	Device supports scan flush.
-	Device supports AP scan.
-	Device supports per-vif TX power setting
-	Driver supports full state transitions for AP/GO clients
-	Driver supports a userspace MPM
-	Device supports configuring vdev MAC-addr on create.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index ebf989f..65497ab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1134,6 +1134,7 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
++	s8 wifi_duration_adjust = 0x0;
+ 	u8 tdma_byte4_modify = 0x0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -1156,6 +1157,36 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 			return;
+ 	}
+ 
++	if (coex_sta->scan_ap_num <= 5) {
++		if (coex_sta->a2dp_bit_pool >= 45)
++			wifi_duration_adjust = -15;
++		else if (coex_sta->a2dp_bit_pool >= 35)
++			wifi_duration_adjust = -10;
++		else
++			wifi_duration_adjust = 5;
++	} else if (coex_sta->scan_ap_num <= 20) {
++		if (coex_sta->a2dp_bit_pool >= 45)
++			wifi_duration_adjust = -15;
++		else if (coex_sta->a2dp_bit_pool >= 35)
++			wifi_duration_adjust = -10;
++		else
++			wifi_duration_adjust = 0;
++	} else if (coex_sta->scan_ap_num <= 40) {
++		if (coex_sta->a2dp_bit_pool >= 45)
++			wifi_duration_adjust = -15;
++		else if (coex_sta->a2dp_bit_pool >= 35)
++			wifi_duration_adjust = -10;
++		else
++			wifi_duration_adjust = -5;
++	} else {
++		if (coex_sta->a2dp_bit_pool >= 45)
++			wifi_duration_adjust = -15;
++		else if (coex_sta->a2dp_bit_pool >= 35)
++			wifi_duration_adjust = -10;
++		else
++			wifi_duration_adjust = -10;
++	}
++
+ 	if ((bt_link_info->slave_role) && (bt_link_info->a2dp_exist))
+ 		/* 0x778 = 0x1 at wifi slot (no blocking BT Low-Pri pkts) */
+ 		tdma_byte4_modify = 0x1;
+@@ -1204,8 +1235,9 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 9:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1a,
+-						    0x1a, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x3c + wifi_duration_adjust,
++				0x03, 0xf1, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 10:
+ 			btc8723b2ant_set_fw_ps_tdma(
+@@ -1247,8 +1279,8 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 						    0x2f, 0x60, 0x90);
+ 			break;
+ 		case 18:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x5,
+-						    0x5, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x5, 0x5,
++						    0xe1, 0x90);
+ 			break;
+ 		case 19:
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x25,
+@@ -1263,8 +1295,25 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 						    0x03, 0x70, 0x90);
+ 			break;
+ 		case 71:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1a,
+-						    0x1a, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x3c + wifi_duration_adjust,
++				0x03, 0xf1, 0x90);
++			break;
++		case 101:
++		case 105:
++		case 113:
++		case 171:
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xd3, 0x3a + wifi_duration_adjust,
++				0x03, 0x70, 0x50 | tdma_byte4_modify);
++			break;
++		case 102:
++		case 106:
++		case 110:
++		case 114:
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xd3, 0x2d + wifi_duration_adjust,
++				0x03, 0x70, 0x50 | tdma_byte4_modify);
+ 			break;
+ 		}
+ 	} else {
+@@ -1733,7 +1782,6 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
+ 		/* for HID quality & wifi performance balance at 11n mode */
+ 		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 9);
+ 
+-
+ 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+ 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 9);
+@@ -2448,7 +2496,6 @@ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist)
+ 		 ((wifi_traffic_dir == BTC_WIFI_TRAFFIC_TX) ?
+ 		  "uplink" : "downlink")));
+ 
+-
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = %d / %d / %d / %d",
+ 		 "SCO/HID/PAN/A2DP",
+ 		 bt_link_info->sco_exist, bt_link_info->hid_exist,
+@@ -2636,6 +2683,8 @@ void ex_btc8723b2ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ 	else if (BTC_SCAN_FINISH == type)
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], SCAN FINISH notify\n");
++		btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM,
++				   &coex_sta->scan_ap_num);
+ }
+ 
+ void ex_btc8723b2ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+@@ -2746,8 +2795,11 @@ void ex_btc8723b2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 		coex_sta->bt_rssi =
+ 			coex_sta->bt_info_c2h[rsp_source][3] * 2 + 10;
+ 
+-		coex_sta->bt_info_ext =
+-			coex_sta->bt_info_c2h[rsp_source][4];
++		if (coex_sta->bt_info_c2h[rsp_source][1] == 0x49)
++			coex_sta->a2dp_bit_pool =
++				coex_sta->bt_info_c2h[rsp_source][6];
++		else
++			coex_sta->a2dp_bit_pool = 0;
+ 
+ 		/* Here we need to resend some wifi info to BT
+ 		 * because BT is reset and loss of the info.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index d1bfdbe..e36ab42 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -149,6 +149,7 @@ struct coex_sta_8723b_2ant {
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
+ 	u32 pop_event_cnt;
++	u8 scan_ap_num;
+ 
+ 	u32 crc_ok_cck;
+ 	u32 crc_ok_11g;
+@@ -159,6 +160,8 @@ struct coex_sta_8723b_2ant {
+ 	u32 crc_err_11g;
+ 	u32 crc_err_11n;
+ 	u32 crc_err_11n_agg;
++
++	u8 a2dp_bit_pool;
+ };
+ 
+ /*********************************************************************
+-- 
+2.10.2
