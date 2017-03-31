@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:43228 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751059AbdCSGdr (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:35608 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933217AbdCaRe4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Mar 2017 02:33:47 -0400
-Date: Sun, 19 Mar 2017 07:02:57 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: mac80211: rt2x00: add support for MT7620
-Message-ID: <20170319060256.GC1706@makrotopia.org> (sfid-20170319_093705_667604_138BFF18)
-References: <20170311193011.GA6809@makrotopia.org>
- <20170316080104.4949C60DA6@smtp.codeaurora.org>
+        Fri, 31 Mar 2017 13:34:56 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170316080104.4949C60DA6@smtp.codeaurora.org>
+In-Reply-To: <1490981039.27353.12.camel@perches.com>
+References: <e4556e95a5935f591fdff67c6fb2f7ef5c7fd04f.1490914618.git.joe@perches.com>
+ <CALLGbR+szcYFdbdh_0qBS4B_X6YQvU6CDFpR-XZvc7p3zA+ZdQ@mail.gmail.com> <1490981039.27353.12.camel@perches.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Fri, 31 Mar 2017 10:34:53 -0700
+Message-ID: <CALLGbRJRstmGL-o2ds4SQ5hDNVBcfP23JnRt5qRrVg-ix-8Hiw@mail.gmail.com> (sfid-20170331_193548_381655_563AB014)
+Subject: Re: [PATCH] ath6kl: Add __printf verification to ath6kl_dbg
+To: Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 16, 2017 at 08:01:04AM +0000, Kalle Valo wrote:
-> Daniel Golle <daniel@makrotopia.org> wrote:
-> > From: Roman Yeryomin <roman@advem.lv>
-> > 
-> > Basic support for MT7620 built-in wireless radio was added to
-> > OpenWrt in r41441. It has seen some heavy cleaning and refactoring
-> > since in order to match the Kernel's code quality standards.
-> > 
-> > Signed-off-by: Roman Yeryomin <roman@advem.lv>
-> > Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> > Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> 
-> I'll remove the "mac80211:" prefix during commit, that should be only used with
-> mac80211 patches.
+On Fri, Mar 31, 2017 at 10:23 AM, Joe Perches <joe@perches.com> wrote:
+> On Fri, 2017-03-31 at 10:19 -0700, Steve deRosier wrote:
+>> On Thu, Mar 30, 2017 at 3:57 PM, Joe Perches <joe@perches.com> wrote:
+>> > Fix fallout too.
+> []
+>> My only question is why bother doing a format check on something
+>> that's going to be compiled out anyway?
+>
+> To avoid introducing defects when writing new code
+> and not using the debugging code path.
+>
 
-Thanks, I forgot about changing the subject line for v2.
-Also make sure that https://patchwork.kernel.org/patch/9612163/ gets
-applied before this one, because it doesn't apply cleanly otherwise.
+Fair enough. And I totally agree with the defensive programming here
+in that case and feel it's worth the tradeoff (if indeed there really
+is any cost, I'm unsure what gcc actually does in this instance).
 
+For sake of discussion though - shouldn't anything not using the debug
+code path in this case always be of the form that compiles out? ie
+would be empty functions intended here just to make compilation work
+and the code that depends on it simpler? Thus, there really should
+never be a risk of introducing said defects. If any "real" code were
+put in that else clause, that'd be a big red-flag in the review of
+said hypothetical patch.
 
-> 
-> -- 
-> https://patchwork.kernel.org/patch/9618995/
-> 
-> Documentation about submitting wireless patches and checking status
-> from patchwork:
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-> 
+Thanks,
+- Steve
