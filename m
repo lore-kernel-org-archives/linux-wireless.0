@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42666 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754184AbdC2I0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2017 04:26:47 -0400
-Message-ID: <1490776004.7948.6.camel@sipsolutions.net> (sfid-20170329_102739_627240_660799C4)
-Subject: Re: [PATCH 2/2] mac80211: Drop new node with weak power
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 29 Mar 2017 10:26:44 +0200
-In-Reply-To: <c95cce88-d02f-8ef3-a848-0a8a3de6296b@gmail.com> (sfid-20170320_073906_323967_73B5ACF2)
-References: <1489629438-7087-1-git-send-email-masashi.honma@gmail.com>
-         <1489629438-7087-2-git-send-email-masashi.honma@gmail.com>
-         <1489658630.2370.4.camel@sipsolutions.net>
-         <d0eb6984-6ae7-d984-b61a-0c98603294ae@gmail.com>
-         <1489753692.2544.9.camel@sipsolutions.net>
-         <c95cce88-d02f-8ef3-a848-0a8a3de6296b@gmail.com>
-         (sfid-20170320_073906_323967_73B5ACF2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:32855 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753839AbdCaUVu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Mar 2017 16:21:50 -0400
+Received: by mail-pg0-f49.google.com with SMTP id x125so80746158pgb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 13:21:50 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [RFC PATCH] Revert "mwifiex: fix system hang problem after resume"
+Date: Fri, 31 Mar 2017 13:21:36 -0700
+Message-Id: <20170331202136.100342-1-briannorris@chromium.org> (sfid-20170331_222224_815368_71F9E593)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This reverts commit 437322ea2a36d112e20aa7282c869bf924b3a836.
 
-> But we still needs this patch for a special case on SAE. Some
-> hardware can use hardware encryption for mesh SAE. Then the hardware
-> has a limitation of key registration. For example, some hardware
-> could only save keys for 8 stations. So we need to drop stations
-> itself with weak signal instead of the pathes to its.
+This above-mentioned "fix" does not actually do anything to prevent a
+race condition. It simply papers over it so that the issue doesn't
+appear.
 
-Fair enough. I've added that to the ocmmit message and applied the
-patch.
+If this is a real problem, it should be explained better than the above
+commit does, and an alternative, non-racy solution should be found.
 
-johannes
+For further reason to revert this: there's ot reason we can't try
+resetting the card when it's *actually* stuck in host-sleep mode. So
+instead, this is unnecessarily creating scenarios where we can't recover
+Wifi.
+
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+Amit, please take a look. AIUI, your "fix" is wrong, and quite racy. If you
+still think it's needed, can you please propose an alternative? Or at least
+explain more why this is needed? Thanks.
+
+ drivers/net/wireless/marvell/mwifiex/init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 756948385b60..0dab77b526de 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -60,7 +60,7 @@ static void wakeup_timer_fn(unsigned long data)
+ 	adapter->hw_status = MWIFIEX_HW_STATUS_RESET;
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 
+-	if (adapter->if_ops.card_reset && !adapter->hs_activated)
++	if (adapter->if_ops.card_reset)
+ 		adapter->if_ops.card_reset(adapter);
+ }
+ 
+-- 
+2.12.2.564.g063fe858b8-goog
