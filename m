@@ -1,38 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39138 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42942 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751037AbdCPGzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2017 02:55:47 -0400
-Message-ID: <1489647339.2370.0.camel@sipsolutions.net> (sfid-20170316_075600_059606_EF2585CA)
-Subject: Re: [PATCH] nl80211: fix dumpit error path RTNL deadlocks
+        id S932271AbdCaHQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Mar 2017 03:16:36 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        sowmini.varadhan@oracle.com, dvyukov@google.com
-Date: Thu, 16 Mar 2017 07:55:39 +0100
-In-Reply-To: <20170315.145902.1038598966216203408.davem@davemloft.net>
-References: <20170315132913.26088-1-johannes@sipsolutions.net>
-         <20170315.145902.1038598966216203408.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] Documentation/sphinx: kerneldoc: add "unused-functions"
+Date: Fri, 31 Mar 2017 09:16:31 +0200
+Message-Id: <20170331071632.6209-1-johannes@sipsolutions.net> (sfid-20170331_091641_396897_C1BCC55D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-03-15 at 14:59 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Wed, 15 Mar 2017 14:29:13 +0100
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Sowmini pointed out Dmitry's RTNL deadlock report to me, and it
-> turns out
-> > to be perfectly accurate - there are various error paths that miss
-> unlock
-> > of the RTNL.
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Johannes, I assume I will get this in a future pull request?
+When adding functions one by one into documentation, in order to
+order/group things properly, it's easy to miss things. Allow use
+of the kernel-doc directive with "unused-functions" like this
 
-Sure, coming to a tree near you ... today I guess. Just didn't want to
-send it out entirely unreviewed, although I checked it with sparse.
+.. kernel-doc:: <filename>
+   :unused-functions:
 
-johannes
+to output anything previously unused from that file. This allows
+grouping things but still making sure that the documentation has
+all the functions.
+
+Internally this works by collecting (per-file) those functions
+(and enums, structs, doc sections...) that are explicitly used,
+and invoking the kernel-doc script with "-nofunction" later.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/sphinx/kerneldoc.py | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/sphinx/kerneldoc.py b/Documentation/sphinx/kerneldoc.py
+index d15e07f36881..79fc1491348a 100644
+--- a/Documentation/sphinx/kerneldoc.py
++++ b/Documentation/sphinx/kerneldoc.py
+@@ -41,6 +41,9 @@ from sphinx.ext.autodoc import AutodocReporter
+ 
+ __version__  = '1.0'
+ 
++# per-file list
++_used_fns = {}
++
+ class KernelDocDirective(Directive):
+     """Extract kernel-doc comments from the specified file"""
+     required_argument = 1
+@@ -50,6 +53,7 @@ class KernelDocDirective(Directive):
+         'functions': directives.unchanged_required,
+         'export': directives.unchanged,
+         'internal': directives.unchanged,
++        'unused-functions': directives.unchanged,
+     }
+     has_content = False
+ 
+@@ -60,6 +64,10 @@ class KernelDocDirective(Directive):
+         filename = env.config.kerneldoc_srctree + '/' + self.arguments[0]
+         export_file_patterns = []
+ 
++        if not filename in _used_fns:
++            _used_fns[filename] = []
++        _used_fns_this_file = _used_fns[filename]
++
+         # Tell sphinx of the dependency
+         env.note_dependency(os.path.abspath(filename))
+ 
+@@ -73,10 +81,16 @@ class KernelDocDirective(Directive):
+             cmd += ['-internal']
+             export_file_patterns = str(self.options.get('internal')).split()
+         elif 'doc' in self.options:
+-            cmd += ['-function', str(self.options.get('doc'))]
++            f = str(self.options.get('doc'))
++            cmd += ['-function', f]
++            _used_fns_this_file.append(f)
++        elif 'unused-functions' in self.options:
++            for f in _used_fns_this_file:
++                cmd += ['-nofunction', f]
+         elif 'functions' in self.options:
+             for f in str(self.options.get('functions')).split():
+                 cmd += ['-function', f]
++                _used_fns_this_file.append(f)
+ 
+         for pattern in export_file_patterns:
+             for f in glob.glob(env.config.kerneldoc_srctree + '/' + pattern):
+-- 
+2.11.0
