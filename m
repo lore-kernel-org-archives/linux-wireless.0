@@ -1,71 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:35310 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754066AbdCBOkM (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35607 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933566AbdCaQsQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2017 09:40:12 -0500
-Message-ID: <58B82B8F.2020603@candelatech.com> (sfid-20170302_154027_613466_9B9DB94E)
-Date: Thu, 02 Mar 2017 06:26:23 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 099/306] mac80211-hwsim: notify user-space about channel
- change.
-References: <1487896109-23851-1-git-send-email-greearb@candelatech.com>  <1487918197.2540.1.camel@sipsolutions.net>      <03ca5a0f-0ab0-76a4-06f3-ead61ab73c94@candelatech.com> <1488443884.8390.4.camel@sipsolutions.net>
-In-Reply-To: <1488443884.8390.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 31 Mar 2017 12:48:16 -0400
+Received: by mail-oi0-f67.google.com with SMTP id d2so2562404oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 09:48:15 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 11/12] rtlwifi: btcoex: 23b 2ant: add comments to describe how duration adjusted
+Date: Fri, 31 Mar 2017 11:47:41 -0500
+Message-Id: <20170331164742.22374-12-Larry.Finger@lwfinger.net> (sfid-20170331_184819_933040_31465991)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/02/2017 12:38 AM, Johannes Berg wrote:
-> On Mon, 2017-02-27 at 12:48 -0800, Ben Greear wrote:
->> On 02/23/2017 10:36 PM, Johannes Berg wrote:
->>>
->>>
->>>> +	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
->>>> +			       HWSIM_CMD_NOTIFY);
->>>
->>> I think you should use a more specific command name.
->>>
->>>> +	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER,
->>>> +		    ETH_ALEN, data->addresses[1].addr))
->>>> +		goto nla_put_failure;
->>>
->>> and at least also add a more specific identifier like the radio ID.
->>>
->>>> +	if (data->channel)
->>>> +		center_freq = data->channel->center_freq;
->>>> +
->>>> +	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, center_freq))
->>>> +		goto nla_put_failure;
->>>
->>> and have the full channel definition
->>
->> You want chandef.center_freq1,
->> 	 chandef.center_freq2,
->> 	 chandef.width?
->>
->>
->> Anything else?
->
-> The control channel center_freq is already there so that should be the
-> full chandef. I guess center_freq2 should be conditional on being non-
-> zero.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-I posted a new patch series a day or two ago...please let me know
-if that looks right to you.  I un-conditionally included freq2, but
-I think that is cleaner code all around.  Still, I'll make it conditional
-if that is important to you.
+Since btcoex uses static variables to store the cumulative information
+on the wifi status, some tricks are used that are a bit obscure. We add
+some comments about the criteria we use to adjust wifi duration.
 
-Thanks,
-Ben
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c       | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
->
-> johannes
->
-
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index ac4074c..c349675 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1622,6 +1622,9 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 				dn = 0;
+ 
+ 			if (up >= n) {
++				/* if retry count during continuous n*2
++				 * seconds is 0, enlarge WiFi duration
++				 */
+ 				wait_count = 0;
+ 				n = 3;
+ 				up = 0;
+@@ -1638,12 +1641,20 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 				up = 0;
+ 
+ 			if (dn == 2) {
++				/* if continuous 2 retry count(every 2
++				 * seconds) >0 and < 3, reduce WiFi duration
++				 */
+ 				if (wait_count <= 2)
++					/* avoid loop between the two levels */
+ 					m++;
+ 				else
+ 					m = 1;
+ 
+ 				if (m >= 20)
++					/* maximum of m = 20 ' will recheck if
++					 * need to adjust wifi duration in
++					 * maximum time interval 120 seconds
++					 */
+ 					m = 20;
+ 
+ 				n = 3 * m;
+@@ -1655,12 +1666,20 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 					 "[BTCoex], Decrease wifi duration for retry_counter<3!!\n");
+ 			}
+ 		} else {
++			/* retry count > 3, once retry count > 3, to reduce
++			 *  WiFi duration
++			 */
+ 			if (wait_count == 1)
++				/* to avoid loop between the two levels */
+ 				m++;
+ 			else
+ 				m = 1;
+ 
+ 			if (m >= 20)
++				/* maximum of m = 20 ' will recheck if need to
++				 * adjust wifi duration in maximum time interval
++				 * 120 seconds
++				 */
+ 				m = 20;
+ 
+ 			n = 3 * m;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.10.2
