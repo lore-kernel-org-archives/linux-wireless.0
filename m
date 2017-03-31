@@ -1,62 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39892 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753850AbdDZGKV (ORCPT
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:33505 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751263AbdCaWu2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 02:10:21 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Andi Kleen <andi@firstfloor.org>, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: 4.11-rc* iwlwifi instable
-References: <20170424005400.GK22592@two.firstfloor.org>
-        <1493016631.31741.139.camel@coelho.fi>
-        <20170424124017.GL22592@two.firstfloor.org>
-        <1493059948.31741.161.camel@coelho.fi>
-Date: Wed, 26 Apr 2017 09:10:16 +0300
-In-Reply-To: <1493059948.31741.161.camel@coelho.fi> (Luca Coelho's message of
-        "Mon, 24 Apr 2017 21:52:28 +0300")
-Message-ID: <87zif3aed3.fsf@purkki.adurom.net> (sfid-20170426_081025_523186_192A3586)
+        Fri, 31 Mar 2017 18:50:28 -0400
+Received: by mail-pg0-f42.google.com with SMTP id x125so83293260pgb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 15:50:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
+References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com> <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
+From: Dmitry Torokhov <dtor@google.com>
+Date: Fri, 31 Mar 2017 15:50:27 -0700
+Message-ID: <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com> (sfid-20170401_005031_853840_5698375E)
+Subject: Re: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only firmware name
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
-
->> > https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-7265D-27.ucode
->> > 
->> > We have loads of fixes and improvements in this new version.  And
->> > hopefully it will make your problems go away. ;)
->> > 
->> > Please try it and let me know how it goes.
->> 
->> This is -27, but the driver looks for -28
->> 
->> [12382.760671] iwlwifi 0000:03:00.0: Direct firmware load for
->> iwlwifi-7265D-28.ucode failed with error -2
->> 
->> Where is version -28?
+On Thu, Mar 30, 2017 at 2:19 AM, Xinming Hu <huxinming820@gmail.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
 >
-> TL;DR: this error message is harmless and the driver tries to load -27
-> if -28 is not available.
+> Wifi-only firmware name should be chipset specific.
 >
-> Long story: We upstream driver patches from our internal tree constantly
-> and, at that point, we don't know which FW version will pass all the
-> quality gates to be released officially.  The driver in 4.11 supports up
-> to version -28.  We haven't release -28 yet, though (and maybe won't),
-> so you get this error message when we try to load it.  But if it fails
-> to load, we try to load the one immediately below it and so on, until we
-> reach the minimum API version we support.
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 8 +++++++-
+>  drivers/net/wireless/marvell/mwifiex/pcie.h | 6 ++++++
+>  2 files changed, 13 insertions(+), 1 deletion(-)
 >
-> These errors are definitely annoying and confusing, but I don't know how
-> to work around them.  Luckily Luis is working on the firmware class[1]
-> and part of his work will make these messages go away.
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 59cb01a..282aa9a 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -351,6 +351,12 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
+>         struct pcie_service_card *card = pci_get_drvdata(pdev);
+>         struct mwifiex_adapter *adapter = card->adapter;
+>
+> +       if (!card->pcie.flr_support) {
+> +               pr_err("%s: FLR disabled in current chipset\n", __func__);
+> +               return;
+> +       }
+> +
+> +       adapter = card->adapter;
+>         if (!adapter) {
+>                 dev_err(&pdev->dev, "%s: adapter structure is not valid\n",
+>                         __func__);
+> @@ -3047,7 +3053,7 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
+>          * during pcie FLR, so that bluetooth part of firmware which is
+>          * already running doesn't get affected.
+>          */
+> -       strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
+> +       strcpy(adapter->fw_name, card->pcie.wifi_fw_name);
+>
+>         /* tx_buf_size might be changed to 3584 by firmware during
+>          * data transfer, we should reset it to default size.
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> index 00e8ee5..d6c8526 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> @@ -285,6 +285,8 @@ struct mwifiex_pcie_device {
+>         struct memory_type_mapping *mem_type_mapping_tbl;
+>         u8 num_mem_types;
+>         bool can_ext_scan;
+> +       u8 flr_support;
 
-FWIW, we got frustrated with the same problem in ath10k and switched to
-request_firmware_direct() to get rid of the warning:
+This sounds like a boolean, but given that you can key off
+wifi_fw_name being NULL I am not sure it is needed.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9f5bcfe93315d75da4cc46bd30b536966559359a
+> +       char *wifi_fw_name;
+
+const char *.
+
+That said, I consider the whole wifi-only firmware business is quite
+fragile. Can we have unified firmware and have driver figure out what
+part shoudl be [re]loaded?
+
+>  };
+>
+>  static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
+> @@ -293,6 +295,7 @@ struct mwifiex_pcie_device {
+>         .tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+>         .can_dump_fw = false,
+>         .can_ext_scan = true,
+> +       .flr_support = 0,
+>  };
+>
+>  static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
+> @@ -303,6 +306,7 @@ struct mwifiex_pcie_device {
+>         .mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
+>         .num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
+>         .can_ext_scan = true,
+> +       .flr_support = 0,
+>  };
+>
+>  static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
+> @@ -313,6 +317,8 @@ struct mwifiex_pcie_device {
+>         .mem_type_mapping_tbl = mem_type_mapping_tbl_w8997,
+>         .num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8997),
+>         .can_ext_scan = true,
+> +       .flr_support = 1,
+> +       .wifi_fw_name = "mrvl/pcie8997_wlan_v4.bin",
+>  };
+>
+>  struct mwifiex_evt_buf_desc {
+> --
+> 1.8.1.4
+>
+
+Thanks.
 
 -- 
-Kalle Valo
+Dmitry
