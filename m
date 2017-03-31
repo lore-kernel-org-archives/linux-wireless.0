@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:33092 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42494 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754929AbdCGKPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Mar 2017 05:15:07 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 2/6] NFC: st21nfca: Fix typo in copy pasted macro
-Date: Tue,  7 Mar 2017 12:13:57 +0200
-Message-Id: <20170307101401.23182-2-andriy.shevchenko@linux.intel.com> (sfid-20170307_111806_240916_ECF1B9E6)
-In-Reply-To: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
-References: <20170307101401.23182-1-andriy.shevchenko@linux.intel.com>
+        id S1751347AbdCaGdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Mar 2017 02:33:05 -0400
+Message-ID: <1490941983.24283.3.camel@sipsolutions.net> (sfid-20170331_083309_613606_FAA0DA0B)
+Subject: Re: [PATCH 2/2] cfg80211: Add support for FILS shared key
+ authentication offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
+Date: Fri, 31 Mar 2017 08:33:03 +0200
+In-Reply-To: <1490908954-5412-2-git-send-email-jouni@qca.qualcomm.com>
+References: <1490908954-5412-1-git-send-email-jouni@qca.qualcomm.com>
+         <1490908954-5412-2-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seems this driver has never been even compile tested.
+On Fri, 2017-03-31 at 00:22 +0300, Jouni Malinen wrote:
+> From: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
+> 
+> Enhance nl80211 and cfg80211 connect request and response APIs to
+> support FILS shared key authentication offload. The new nl80211
+> attributes can be used to provide additional information to the
+> driver
+> to establish a FILS connection. Also enhance the set/del PMKSA to
+> allow
+> support for adding and deleting PMKSA based on FILS cache identifier.
+> 
+> Add a new feature flag that drivers can use to advertize support for
+> FILS shared key authentication and association in station mode when
+> using their own SME.
+> 
 
-Fix obvious typo in macro to make it defined.
+Also applied.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/st21nfca/i2c.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 737384d287aa..7f68a5fe15d8 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -286,7 +286,7 @@ static int check_crc(u8 *buf, int buflen)
- 	crc = ~crc;
- 
- 	if (buf[buflen - 2] != (crc & 0xff) || buf[buflen - 1] != (crc >> 8)) {
--		pr_err(ST21NFCA_HCI_DRIVER_NAME
-+		pr_err(ST21NFCA_HCI_I2C_DRIVER_NAME
- 		       ": CRC error 0x%x != 0x%x 0x%x\n", crc, buf[buflen - 1],
- 		       buf[buflen - 2]);
- 
-@@ -672,7 +672,7 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
- 	r = devm_request_threaded_irq(&client->dev, client->irq, NULL,
- 				st21nfca_hci_irq_thread_fn,
- 				phy->irq_polarity | IRQF_ONESHOT,
--				ST21NFCA_HCI_DRIVER_NAME, phy);
-+				ST21NFCA_HCI_I2C_DRIVER_NAME, phy);
- 	if (r < 0) {
- 		nfc_err(&client->dev, "Unable to register IRQ handler\n");
- 		return r;
-@@ -701,7 +701,7 @@ static int st21nfca_hci_i2c_remove(struct i2c_client *client)
- }
- 
- static struct i2c_device_id st21nfca_hci_i2c_id_table[] = {
--	{ST21NFCA_HCI_DRIVER_NAME, 0},
-+	{ST21NFCA_HCI_I2C_DRIVER_NAME, 0},
- 	{}
- };
- MODULE_DEVICE_TABLE(i2c, st21nfca_hci_i2c_id_table);
--- 
-2.11.0
+johannes
