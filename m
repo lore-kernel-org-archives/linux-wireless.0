@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:36832 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752569AbdCTRsY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43151 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932858AbdCaL6G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2017 13:48:24 -0400
-Received: by mail-oi0-f45.google.com with SMTP id r203so21801618oib.3
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2017 10:47:29 -0700 (PDT)
+        Fri, 31 Mar 2017 07:58:06 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Remove obselete Copy Engine comments
+Date: Fri, 31 Mar 2017 17:30:44 +0530
+Message-ID: <1490961644-375-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170331_135831_344513_E3FDB19F)
 MIME-Version: 1.0
-In-Reply-To: <70ad78bc-2a94-3391-797b-d7f074ccd4fa@lwfinger.net>
-References: <CADND2bqVLdSmmY=RG7m8r2maWyc7yGgvKUO4O4YGPLVnMx0pqg@mail.gmail.com>
- <34e317ae-a112-79bc-41ef-c18433e8cc49@lwfinger.net> <CADND2bprCVNThAWVp-De7W3uRvKNDxGrxEond2ANZ+=2akKB_Q@mail.gmail.com>
- <20064021-fcca-4092-e6ec-5ce7f964a0c1@lwfinger.net> <CADND2br8jjW1jmuW3e4Jg4CxVaHCDEs2M4PHNtUuh9uMaC4BCQ@mail.gmail.com>
- <70ad78bc-2a94-3391-797b-d7f074ccd4fa@lwfinger.net>
-From: Fernanda Vejar <fvejar85@gmail.com>
-Date: Mon, 20 Mar 2017 14:47:28 -0300
-Message-ID: <CADND2bpeRx6OGc=ZZXmPnCzoW0-kigibSuzoD751C9QqROAQDw@mail.gmail.com> (sfid-20170320_184835_430969_B7378FF7)
-Subject: Re: Wireless failed
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Larry,
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-ok thank you, I will consider your advice.
+Remove obselete Copy Engine comments referring to the function
+ath10k_ce_sendlist_send as this function was removed long time back
+by the commit 2e761b5a5222 ("ath10k: remove ce_sendlist_send").
 
-I run:  "cp iwlwifi-2030-6.ucode /lib/firmware". I checked it out and
-it was right copied into the folder.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Fernanda
-
-
-2017-03-20 14:33 GMT-03:00 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 03/20/2017 11:46 AM, Fernanda Vejar wrote:
->>
->> Hello Larry,
->>
->> thank you very much for your fast answer.
->>
->> Buy running "modinfo iwlwifi":
->> filename:
->>
->> /lib/modules/3.13.0-112-lowlatency/updates/drivers/net/wireless/iwlwifi/iwlwifi.ko
->> version:        iwlwifi-stack-public:release/LinuxCore5:3714:27076532
->> license:        GPL
->> author:         Copyright(c) 2003- 2014 Intel Corporation
->> <ilw@linux.intel.com>
->> version:        in-tree:d
->> description:    Intel(R) Wireless WiFi driver for Linux
->> firmware:       iwlwifi-7265-8.ucode
->> firmware:       iwlwifi-3160-8.ucode
->> firmware:       iwlwifi-7260-8.ucode
->> firmware:       iwlwifi-8000-8.ucode
->> srcversion:     6E29C5B96E10698E38DC01F
->> ....
->>
->> According to the reference
->> (https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#firmware) I
->> need  the iwlwifi-2030-6.ucode. I tried to install it previously as a
->> first step, but It didn't work. I don't understand what I did wrong.
->
->
-> On this list, please do not top post. When you put your information at the
-> top, then the reader has to go all the way to the bottom, then back to the
-> top. Having everything in chronological order is easier.
->
-> The driver is in your kernel. All we need now is the firmware. Where did you
-> put the file? It should have been in /lib/firmware.
->
-> Larry
->
->
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 4045657..9ac0a73 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -261,8 +261,7 @@ static inline void ath10k_ce_engine_int_status_clear(struct ath10k *ar,
+ }
+ 
+ /*
+- * Guts of ath10k_ce_send, used by both ath10k_ce_send and
+- * ath10k_ce_sendlist_send.
++ * Guts of ath10k_ce_send.
+  * The caller takes responsibility for any needed locking.
+  */
+ int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+-- 
+1.9.1
