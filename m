@@ -1,109 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51216 "EHLO sipsolutions.net"
+Received: from mga11.intel.com ([192.55.52.93]:63489 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756021AbdDGS01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 14:26:27 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/3] genetlink: pass extended error report down
-Date: Fri,  7 Apr 2017 20:26:19 +0200
-Message-Id: <20170407182620.6438-3-johannes@sipsolutions.net> (sfid-20170407_202643_528286_A7ED8AF0)
-In-Reply-To: <20170407182620.6438-1-johannes@sipsolutions.net>
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
+        id S1751987AbdDAWW6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Apr 2017 18:22:58 -0400
+Date: Sun, 2 Apr 2017 00:22:44 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-kernel@vger.kernel.org, kbuild test robot <lkp@intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] nfc: don't be making arch specific unaligned
+ decisions at driver level.
+Message-ID: <20170401222244.GF22034@zurbaran.ger.intel.com> (sfid-20170402_002328_317224_54D6778B)
+References: <201701090839.5u37Hdez%fengguang.wu@intel.com>
+ <20170109175222.3162-1-paul.gortmaker@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170109175222.3162-1-paul.gortmaker@windriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Paul,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/genetlink.h | 27 +++++++++++++++++++++++++++
- net/netlink/genetlink.c |  6 ++++--
- 2 files changed, 31 insertions(+), 2 deletions(-)
+On Mon, Jan 09, 2017 at 12:52:22PM -0500, Paul Gortmaker wrote:
+> Currently ia64 fails building allmodconfig with variations of:
+> 
+>    In file included from drivers/nfc/nxp-nci/i2c.c:39:0:
+>    ./include/linux/unaligned/access_ok.h:62:29: error: redefinition of ‘put_unaligned_be64’
+>     static __always_inline void put_unaligned_be64(u64 val, void *p)
+>                                 ^~~~~~~~~~~~~~~~~~
+>    In file included from ./arch/ia64/include/asm/unaligned.h:5:0,
+>                     from ./arch/ia64/include/asm/io.h:22,
+>                     from ./arch/ia64/include/asm/smp.h:20,
+>                     from ./include/linux/smp.h:59,
+>                     from ./include/linux/topology.h:33,
+>                     from ./include/linux/gfp.h:8,
+>                     from ./include/linux/slab.h:14,
+>                     from ./include/linux/resource_ext.h:19,
+>                     from ./include/linux/acpi.h:26,
+>                     from drivers/nfc/nxp-nci/i2c.c:28:
+>    ./include/linux/unaligned/be_byteshift.h:65:20: note: previous definition of ‘put_unaligned_be64’ was here
+>     static inline void put_unaligned_be64(u64 val, void *p)
+>                        ^~~~~~~~~~~~~~~~~~
+>    scripts/Makefile.build:293: recipe for target 'drivers/nfc/nxp-nci/i2c.o' failed
+> 
+> The easiest explanation for this is to look at the non-arch users in
+> the following output:
+> 
+>    linux$git grep include.*access_ok.h
+>    arch/arm64/crypto/crc32-arm64.c:#include <linux/unaligned/access_ok.h>
+>    arch/cris/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+>    arch/m68k/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+>    arch/mn10300/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+>    arch/powerpc/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+>    arch/s390/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+>    arch/x86/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+>    drivers/nfc/nfcmrvl/fw_dnld.c:#include <linux/unaligned/access_ok.h>
+>    drivers/nfc/nxp-nci/firmware.c:#include <linux/unaligned/access_ok.h>
+>    drivers/nfc/nxp-nci/i2c.c:#include <linux/unaligned/access_ok.h>
+>    include/asm-generic/unaligned.h:# include <linux/unaligned/access_ok.h>
+> 
+> Note that nfc is essentially the only non-arch user in the above.
+> When it forces use of access_ok.h, it will break any arch that has
+> already selected be_byteshift.h (or other conflicting implementations)
+> at the arch level.
+> 
+> The decision of what variant for unaligned access to use needs to be
+> left to the arch level and not used at the driver level.  Since not
+> all arch will have sourced asm/unaligned.h already, we need to call
+> it out and then the arch can give us just the one definition that
+> is needed.
+> 
+> See commit 064106a91be5 ("kernel: add common infrastructure for
+> unaligned access") as a reference.
+> 
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Cc: Tony Luck <tony.luck@intel.com>
+> Cc: Fenghua Yu <fenghua.yu@intel.com>
+> Cc: linux-ia64@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> ---
+> 
+> [v2: explicitly include asm/uaccess.h since some arch won't be
+>  getting any variant of an unaligned access header without it.
+>  Build test allmodconfig on x86-64, i386, arm64, ia64. ]
+> 
+>  drivers/nfc/nfcmrvl/fw_dnld.c  | 2 +-
+>  drivers/nfc/nxp-nci/firmware.c | 2 +-
+>  drivers/nfc/nxp-nci/i2c.c      | 2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
+This build issue is now fixed in nfc-next with a couple of different
+patches.
 
-diff --git a/include/net/genetlink.h b/include/net/genetlink.h
-index a34275be3600..67ad2326cfa6 100644
---- a/include/net/genetlink.h
-+++ b/include/net/genetlink.h
-@@ -84,6 +84,7 @@ struct nlattr **genl_family_attrbuf(const struct genl_family *family);
-  * @attrs: netlink attributes
-  * @_net: network namespace
-  * @user_ptr: user pointers
-+ * @exterr: extended error report struct
-  */
- struct genl_info {
- 	u32			snd_seq;
-@@ -94,6 +95,7 @@ struct genl_info {
- 	struct nlattr **	attrs;
- 	possible_net_t		_net;
- 	void *			user_ptr[2];
-+	struct netlink_ext_err *exterr;
- };
- 
- static inline struct net *genl_info_net(struct genl_info *info)
-@@ -106,6 +108,31 @@ static inline void genl_info_net_set(struct genl_info *info, struct net *net)
- 	write_pnet(&info->_net, net);
- }
- 
-+static inline int genl_err_str(struct genl_info *info, int err,
-+			       const char *msg)
-+{
-+	info->exterr->msg = msg;
-+
-+	return err;
-+}
-+
-+static inline int genl_err_attr(struct genl_info *info, int err,
-+				u16 attr)
-+{
-+	info->exterr->attr = attr;
-+
-+	return err;
-+}
-+
-+static inline int genl_err_str_attr(struct genl_info *info, int err,
-+				    const char *msg, u16 attr)
-+{
-+	info->exterr->msg = msg;
-+	info->exterr->attr = attr;
-+
-+	return err;
-+}
-+
- /**
-  * struct genl_ops - generic netlink operations
-  * @cmd: command identifier
-diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
-index 48f21dc467a7..39182d6a990e 100644
---- a/net/netlink/genetlink.c
-+++ b/net/netlink/genetlink.c
-@@ -497,7 +497,8 @@ static int genl_lock_done(struct netlink_callback *cb)
- 
- static int genl_family_rcv_msg(const struct genl_family *family,
- 			       struct sk_buff *skb,
--			       struct nlmsghdr *nlh)
-+			       struct nlmsghdr *nlh,
-+			       struct netlink_ext_err *exterr)
- {
- 	const struct genl_ops *ops;
- 	struct net *net = sock_net(skb->sk);
-@@ -584,6 +585,7 @@ static int genl_family_rcv_msg(const struct genl_family *family,
- 	info.genlhdr = nlmsg_data(nlh);
- 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
- 	info.attrs = attrbuf;
-+	info.exterr = exterr;
- 	genl_info_net_set(&info, net);
- 	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
- 
-@@ -618,7 +620,7 @@ static int genl_rcv_msg(struct sk_buff *skb, struct nlmsghdr *nlh,
- 	if (!family->parallel_ops)
- 		genl_lock();
- 
--	err = genl_family_rcv_msg(family, skb, nlh);
-+	err = genl_family_rcv_msg(family, skb, nlh, exterr);
- 
- 	if (!family->parallel_ops)
- 		genl_unlock();
--- 
-2.11.0
+Cheers,
+Samuel.
