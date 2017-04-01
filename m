@@ -1,80 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51828 "EHLO sipsolutions.net"
+Received: from mga06.intel.com ([134.134.136.31]:37179 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933841AbdDGT0k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:26:40 -0400
-Message-ID: <1491593195.5800.11.camel@sipsolutions.net> (sfid-20170407_212755_867645_BFFC58BA)
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, jiri@resnulli.us
-Date: Fri, 07 Apr 2017 21:26:35 +0200
-In-Reply-To: <20170407.122053.201153373954521345.davem@davemloft.net>
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
-         <20170407.115315.23470877439489670.davem@davemloft.net>
-         <1491591552.5800.1.camel@sipsolutions.net>
-         <20170407.122053.201153373954521345.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751931AbdDAWL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Apr 2017 18:11:27 -0400
+Date: Sun, 2 Apr 2017 00:11:17 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Vincent Cuissard <cuissard@marvell.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] NFC: nfcmrvl: double free on error path
+Message-ID: <20170401221117.GD22034@zurbaran.ger.intel.com> (sfid-20170402_001136_166111_47D95906)
+References: <20170308052237.GA14542@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170308052237.GA14542@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-04-07 at 12:20 -0700, David Miller wrote:
+Hi Dan,
 
-> But what it lacks fundamentally is context.  Therefore it can't be
-> used to provide the offset or the bad attribute number.  So it can't
-> meet our requirements.
-
-Yes, it doesn't address the requirements here, and in a sense I suspect
-this will be true anywhere else too - perhaps that's the reason why it
-was never applied even over in perf. I've not gotten a good answer for
-that question yet :)
-
-> We've passed down new arguments into core method call chains for much
-> less useful facilitites than this.  So that doesn't bother me.  And
-> as that is a kernel internal matter, we can refine it later.
-
-Yes, both are true.
-
-> Wrt. nla_parse(), we can solve that problem as follow-on patches too.
-
-Yes. I just want to be sure we can solve it, but OTOH we're not locking
-down anything but the UAPI so whatever way we find to solve it, even if
-it requires a complete rearchitecture internally, it still doesn't
-matter.
-
-> So I consider this change ready as far as the implementation is
-> concerned.
-
-Fair enough. I still do need to test it though :)
-
-> Ok, Jiri, start reading.  I will try to make you happy here.
+On Wed, Mar 08, 2017 at 08:22:37AM +0300, Dan Carpenter wrote:
+> The nci_spi_send() function calls kfree_skb(skb) on both error and
+> success so this extra kfree_skb() is a double free.
 > 
-> Let's just discuss the UAPI, since people complain we don't talk
-> about that enough :-)  For those playing at home it is three new
-> attributes returned in a netlink ACK when the application asks
-> for the extended response:
-> 
->         NLMSGERR_ATTR_MSG       string  Extended error string
->         NLMSGERR_ATTR_OFFS      u32     Byte offset to netlink
-> element causing error
->         NLMSGERR_ATTR_CODE      u32     Subsystem specific error code
->         NLMSGERR_ATTR_ATTR      u16     Netlink attribute triggering
-> error or missing
+> Fixes: caf6e49bf6d0 ("NFC: nfcmrvl: add spi driver")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Static analysis.  Not tested.
+Applied to nfc-next, thanks.
 
-That's four ;-)
-
-Since you're carefully listing it here, you should also say that
-
- * the new behaviour is entirely optional, enabled by a new netlink
-   socket option
- * the ACK message format ends up being
-   [nlmsg header]
-   [ack header including errno]
-   [request message nlmsg hdr]
-   [request message payload - optional, controlled by socket option,
-    aligned to 4 byte length if present]
-   [new TLVs - optional, controlled by socket option]
-
-johannes
+Cheers,
+Samuel.
