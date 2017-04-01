@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4686 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2999010AbdDZLI1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 07:08:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michael Mera <dev@michaelmera.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RESEND] ath10k: fix out of bounds access to local buffer
-Date: Wed, 26 Apr 2017 11:08:22 +0000
-Message-ID: <87r30fxw7u.fsf@kamboji.qca.qualcomm.com> (sfid-20170426_130831_364239_8A7F9B1E)
-References: <20170424071157.6979-1-dev@michaelmera.com>
-        <0a7aa133740b4488a19bd95115831988@euamsexm01a.eu.qualcomm.com>
-        <87a873wjak.fsf@michaelmera.com>
-In-Reply-To: <87a873wjak.fsf@michaelmera.com> (Michael Mera's message of "Wed,
-        26 Apr 2017 19:32:51 +0900")
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mga05.intel.com ([192.55.52.43]:54575 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751997AbdDAWhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Apr 2017 18:37:09 -0400
+Date: Sun, 2 Apr 2017 00:37:06 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nfc: fdp: fix NULL pointer dereference
+Message-ID: <20170401223706.GI22034@zurbaran.ger.intel.com> (sfid-20170402_003736_689823_FFD3BAD6)
+References: <1482268144-14028-1-git-send-email-sudipm.mukherjee@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1482268144-14028-1-git-send-email-sudipm.mukherjee@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Mera <dev@michaelmera.com> writes:
+Hi Sudip,
 
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->> I fixed a checkpatch warning in the pending branch:
->>
->> drivers/net/wireless/ath/ath10k/debug.c:636: spaces preferred around
->> that '-' (ctx:VxV)
->
-> Hum... but then you will have a line longer than 80 characters (81), so
-> another warning.
+On Tue, Dec 20, 2016 at 09:09:04PM +0000, Sudip Mukherjee wrote:
+> We are checking phy after dereferencing it. We can print the debug
+> information after checking it. If phy is NULL then we will get a good
+> stack trace to tell us that we are in this irq handler.
+> 
+> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+> ---
+>  drivers/nfc/fdp/i2c.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+Applied to nfc-next, thanks.
 
-I have extended the line length in my check script to 90 chars just
-because of cases like this:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checki=
-ng_code
-
-> I prefered this version since I feel that splitting this line would hurt
-> readability and on the other hand the expression is clearly delimited
-> by the spaces around the ',' so I don't think spaces around the operator
-> add any value (except for compliance with the coding style that is).
-
-I actually guessed why you did that. But I want to keep the output of my
-test script clean, makes review a lot easier. Making exceptions to the
-script is more work for me.
-
-Anyway, I already did the change in my pending branch and will apply the
-patch in few days. Thanks for the fix.
-
---=20
-Kalle Valo=
+Cheers,
+Samuel.
