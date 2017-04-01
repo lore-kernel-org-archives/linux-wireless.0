@@ -1,221 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36126 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751370AbdDCBOk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Apr 2017 21:14:40 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so17392278oif.3
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Apr 2017 18:14:40 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 10/12] rtlwifi: btcoex: 23b 2ant: finer bt power adjustment
-Date: Sun,  2 Apr 2017 20:14:20 -0500
-Message-Id: <20170403011428.6156-10-Larry.Finger@lwfinger.net> (sfid-20170403_031446_315862_852A73FD)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+Received: from mga14.intel.com ([192.55.52.115]:27204 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751933AbdDAVvJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Apr 2017 17:51:09 -0400
+Date: Sat, 1 Apr 2017 23:51:05 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Tobias Klauser <tklauser@distanz.ch>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Vincent Cuissard <cuissard@marvell.com>
+Subject: Re: [PATCH] NFC: nfcmrvl: Include unaligned.h instead of access_ok.h
+Message-ID: <20170401215045.GB22034@zurbaran.ger.intel.com> (sfid-20170401_235203_244821_E3DBAD2E)
+References: <20161026090012.29747-1-tklauser@distanz.ch>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026090012.29747-1-tklauser@distanz.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi Tobias,
 
-The bt can specify a power level to decrease. Rather than decreasing by a
-fixed value (usually 2), this change makes the driver fit to the
-environment more quickly.
+On Wed, Oct 26, 2016 at 11:00:12AM +0200, Tobias Klauser wrote:
+> Including linux/unaligned/access_ok.h causes the allmodconfig build on
+> ia64 (and maybe others) to fail with the following warnings:
+> 
+> include/linux/unaligned/access_ok.h:7:19: error: redefinition of 'get_unaligned_le16'
+> include/linux/unaligned/access_ok.h:12:19: error: redefinition of 'get_unaligned_le32'
+> include/linux/unaligned/access_ok.h:17:19: error: redefinition of 'get_unaligned_le64'
+> include/linux/unaligned/access_ok.h:22:19: error: redefinition of 'get_unaligned_be16'
+> include/linux/unaligned/access_ok.h:27:19: error: redefinition of 'get_unaligned_be32'
+> include/linux/unaligned/access_ok.h:32:19: error: redefinition of 'get_unaligned_be64'
+> include/linux/unaligned/access_ok.h:37:20: error: redefinition of 'put_unaligned_le16'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_le32'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_le64'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_be16'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_be32'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_be64'
+> 
+> Fix these by including asm/unaligned.h instead and leave it up to the
+> architecture to decide how to implement unaligned accesses.
+> 
+> Fixes: 3194c6870158 ("NFC: nfcmrvl: add firmware download support")
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Link: https://lkml.org/lkml/2016/10/22/247
+> Cc: Vincent Cuissard <cuissard@marvell.com>
+> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+> ---
+>  drivers/nfc/nfcmrvl/fw_dnld.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+Applied, with Guenter's patches as well.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - No changes.
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 52 ++++++++++------------
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  4 +-
- 2 files changed, 25 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 8e27c1a05065..ac4074c67b3e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -660,44 +660,40 @@ static void btc8723b2ant_set_fw_dac_swing_level(struct btc_coexist *btcoexist,
- }
- 
- static void btc8723b2ant_set_fw_dec_bt_pwr(struct btc_coexist *btcoexist,
--					   bool dec_bt_pwr)
-+					   u8 dec_bt_pwr_lvl)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	u8 h2c_parameter[1] = {0};
- 
--	h2c_parameter[0] = 0;
--
--	if (dec_bt_pwr)
--		h2c_parameter[0] |= BIT1;
-+	h2c_parameter[0] = dec_bt_pwr_lvl;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--		 "[BTCoex], decrease Bt Power : %s, FW write 0x62=0x%x\n",
--		    (dec_bt_pwr ? "Yes!!" : "No!!"), h2c_parameter[0]);
-+		 "[BTCoex], decrease Bt Power Level : %u\n", dec_bt_pwr_lvl);
- 
- 	btcoexist->btc_fill_h2c(btcoexist, 0x62, 1, h2c_parameter);
- }
- 
- static void btc8723b2ant_dec_bt_pwr(struct btc_coexist *btcoexist,
--				    bool force_exec, bool dec_bt_pwr)
-+				    bool force_exec, u8 dec_bt_pwr_lvl)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--		 "[BTCoex], %s Dec BT power = %s\n",
--		    force_exec ? "force to" : "", dec_bt_pwr ? "ON" : "OFF");
--	coex_dm->cur_dec_bt_pwr = dec_bt_pwr;
-+		 "[BTCoex], Dec BT power level = %u\n", dec_bt_pwr_lvl);
-+	coex_dm->cur_dec_bt_pwr_lvl = dec_bt_pwr_lvl;
- 
- 	if (!force_exec) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], bPreDecBtPwr=%d, bCurDecBtPwr=%d\n",
--			    coex_dm->pre_dec_bt_pwr, coex_dm->cur_dec_bt_pwr);
-+			 "[BTCoex], PreDecBtPwrLvl=%d, CurDecBtPwrLvl=%d\n",
-+			    coex_dm->pre_dec_bt_pwr_lvl,
-+			    coex_dm->cur_dec_bt_pwr_lvl);
- 
--		if (coex_dm->pre_dec_bt_pwr == coex_dm->cur_dec_bt_pwr)
-+		if (coex_dm->pre_dec_bt_pwr_lvl == coex_dm->cur_dec_bt_pwr_lvl)
- 			return;
- 	}
--	btc8723b2ant_set_fw_dec_bt_pwr(btcoexist, coex_dm->cur_dec_bt_pwr);
-+	btc8723b2ant_set_fw_dec_bt_pwr(btcoexist, coex_dm->cur_dec_bt_pwr_lvl);
- 
--	coex_dm->pre_dec_bt_pwr = coex_dm->cur_dec_bt_pwr;
-+	coex_dm->pre_dec_bt_pwr_lvl = coex_dm->cur_dec_bt_pwr_lvl;
- }
- 
- static void btc8723b2ant_fw_dac_swing_lvl(struct btc_coexist *btcoexist,
-@@ -1340,7 +1336,7 @@ static void btc8723b2ant_coex_alloff(struct btc_coexist *btcoexist)
- 	/* fw all off */
- 	btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
--	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	/* sw all off */
- 	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
-@@ -1356,7 +1352,7 @@ static void btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
- 
- 	btc8723b2ant_ps_tdma(btcoexist, FORCE_EXEC, false, 1);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, FORCE_EXEC, 6);
--	btc8723b2ant_dec_bt_pwr(btcoexist, FORCE_EXEC, false);
-+	btc8723b2ant_dec_bt_pwr(btcoexist, FORCE_EXEC, 0);
- 
- 	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
- 
-@@ -1381,7 +1377,7 @@ static void btc8723b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
- 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 	}
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, FORCE_EXEC, 6);
--	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
- }
-@@ -1413,7 +1409,7 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
- 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 		btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 		btc8723b2ant_sw_mechanism(btcoexist, false, false, false,
- 					  false);
-@@ -1439,8 +1435,7 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 			btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 			btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC,
- 						      0xb);
--			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC,
--						false);
-+			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 			btc8723b2ant_sw_mechanism(btcoexist, false, false,
- 						  false, false);
-@@ -1467,8 +1462,7 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 			btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
- 			btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC,
- 						      0xb);
--			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC,
--						false);
-+			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 			btc8723b2ant_sw_mechanism(btcoexist, true, false,
- 						  false, false);
-@@ -1988,7 +1982,7 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
- 	    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, true);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
- 	btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
-@@ -2033,7 +2027,7 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 
-@@ -2088,7 +2082,7 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
-@@ -2156,7 +2150,7 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
--		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 
-@@ -2541,7 +2535,7 @@ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist)
- 		 ps_tdma_case, coex_dm->auto_tdma_adjust);
- 
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = %d/ %d ",
--		 "DecBtPwr/ IgnWlanAct", coex_dm->cur_dec_bt_pwr,
-+		 "DecBtPwr/ IgnWlanAct", coex_dm->cur_dec_bt_pwr_lvl,
- 		 coex_dm->cur_ignore_wlan_act);
- 
- 	/* Hw setting */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-index e36ab4205771..746930d0d244 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-@@ -75,8 +75,8 @@ enum BT_8723B_2ANT_COEX_ALGO {
- 
- struct coex_dm_8723b_2ant {
- 	/* fw mechanism */
--	bool pre_dec_bt_pwr;
--	bool cur_dec_bt_pwr;
-+	bool pre_dec_bt_pwr_lvl;
-+	bool cur_dec_bt_pwr_lvl;
- 	u8 pre_fw_dac_swing_lvl;
- 	u8 cur_fw_dac_swing_lvl;
- 	bool cur_ignore_wlan_act;
--- 
-2.12.0
+Cheers,
+Samuel.
