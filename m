@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:36422 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751606AbdDIIBs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1604 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751168AbdDCNVO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Apr 2017 04:01:48 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH] net: rfkill: gpio: Add OBDA8723 ACPI HID
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20170408210520.2799-1-hdegoede@redhat.com>
-Date: Sun, 9 Apr 2017 10:01:45 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org
-Message-Id: <D47F8D1B-8EE0-4754-A0F2-EC823A9BDA11@holtmann.org> (sfid-20170409_100234_456745_71D4EA8C)
-References: <20170408210520.2799-1-hdegoede@redhat.com>
-To: Hans de Goede <hdegoede@redhat.com>
+        Mon, 3 Apr 2017 09:21:14 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johan Hovold <johan@kernel.org>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] wireless: ath9k_htc: fix NULL-deref at probe
+Date: Mon, 3 Apr 2017 13:21:08 +0000
+Message-ID: <87fuhpmxto.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_152155_706693_EE72B085)
+References: <20170313124421.28587-1-johan@kernel.org>
+        <20170403084213.GE25742@localhost>      <87shlpomvx.fsf@kamboji.qca.qualcomm.com>
+        <87k271myos.fsf@kamboji.qca.qualcomm.com>       <20170403131616.GA3119@localhost>
+In-Reply-To: <20170403131616.GA3119@localhost> (Johan Hovold's message of
+        "Mon, 3 Apr 2017 15:16:16 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hans,
+Johan Hovold <johan@kernel.org> writes:
 
-> The OBDA8723 ACPI HID is used on quite a few Bay Trail based tablets
-> for bluetooth rfkill functionality.
-> 
-> Tested-by: russianneuromancer@ya.ru <russianneuromancer@ya.ru>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
-> net/rfkill/rfkill-gpio.c | 1 +
-> 1 file changed, 1 insertion(+)
-> 
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index 76c01cb..50ca65e 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -163,6 +163,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
-> static const struct acpi_device_id rfkill_acpi_match[] = {
-> 	{ "BCM4752", RFKILL_TYPE_GPS },
-> 	{ "LNV4752", RFKILL_TYPE_GPS },
-> +	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
-> 	{ },
-> };
+> On Mon, Apr 03, 2017 at 01:02:28PM +0000, Kalle Valo wrote:
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>=20
+>> > Johan Hovold <johan@kernel.org> writes:
+>> >
+>> >> On Mon, Mar 13, 2017 at 01:44:20PM +0100, Johan Hovold wrote:
+>> >>> Make sure to check the number of endpoints to avoid dereferencing a
+>> >>> NULL-pointer or accessing memory beyond the endpoint array should a
+>> >>> malicious device lack the expected endpoints.
+>> >>>=20
+>> >>> Fixes: 36bcce430657 ("ath9k_htc: Handle storage devices")
+>> >>> Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+>> >>> Signed-off-by: Johan Hovold <johan@kernel.org>
+>> >>
+>> >> Is this one still in your queue, Kalle?
+>> >
+>> > Yes, I'm just lacking behing:
+>> >
+>> > https://patchwork.kernel.org/patch/9620723/
+>>=20
+>> Meant "lagging" of course. Mondays..
+>>=20
+>> >> As I mentioned earlier, I should have added a
+>> >>
+>> >> Cc: stable <stable@vger.kernel.org>     # 2.6.39
+>> >>
+>> >> but left it out as I mistakingly thought the net recommendations to d=
+o
+>> >> so applied also to wireless.
+>> >
+>> > Ok, I'll add that.
+>>=20
+>> But is 2.6.39 really correct? Shouldn't it be 2.6.39+ so that it means
+>> all versions since 2.6.39?
+>
+> Either way is fine, the stable maintainers apply them to all later
+> versions.
+>
+> I notice now that adding a plus sign is more common, but it's still a
+> 1:2 ratio judging from quick grep, while the stable-kernel-rules.rst
+> actually uses a minus sign...
 
-NAK. We are integrating these with hci_bcm.c or hci_intel.c drivers.
+Heh, quite confusing :) I added the plus sign already to the patch in my
+pending branch so unless you object I'll keep it.
 
-Regards
-
-Marcel
+--=20
+Kalle Valo=
