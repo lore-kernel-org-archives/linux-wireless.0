@@ -1,126 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:43741 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1040602AbdDUVCY (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:32791 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752306AbdDCSl7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 17:02:24 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC] cfg80211: add control port state to struct cfg80211_connect_resp_params
-Date: Fri, 21 Apr 2017 22:01:47 +0100
-Message-Id: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170421_230229_136776_B4899204)
+        Mon, 3 Apr 2017 14:41:59 -0400
+Received: by mail-oi0-f66.google.com with SMTP id f193so21147336oib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:59 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 09/12] rtlwifi: btcoex: 23b 2ant: remove redundant bt stack report
+Date: Mon,  3 Apr 2017 13:41:39 -0500
+Message-Id: <20170403184147.18409-9-Larry.Finger@lwfinger.net> (sfid-20170403_204220_590596_4590EBF5)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the driver supports offloading of the PTK/GTK handshakes
-completion of that during connect changes the layer 2 control
-port state to authorized. This patch allows the driver to pass
-that state in cfg80211_connect_done() resulting in adding the
-new flag NL80211_ATTR_PORT_AUTHORIZED in the NL80211_CMD_CONNECT
-notification.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+New ICs have hardware mailbox to deliver bt information instead of doing
+it by driver itself, so remove them.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
-Hi Johannes, Jouni, et al
-
-I have been working on 4-way handshake offloading and one of the
-things discussed was the addition of PORT_AUTHORIZED flag. So
-this is what I came up with, but I suppose wpa_supplicant wants
-to know whether it can expect this attribute or not. One option
-is to have PORT_UNAUTHORIZED flag instead. Another option would
-be introducing it as nl80211 protocol feature although not sure
-if it could be considered as such. What do you guys think?
-
-Regards,
-Arend
+v2 - No changes.
+v3 - No changes.
 ---
- include/net/cfg80211.h       | 9 +++++++++
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/nl80211.c       | 2 ++
- net/wireless/sme.c           | 1 +
- 4 files changed, 15 insertions(+)
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c        | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bdc4424..f416d55 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5236,6 +5236,12 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
- #define CFG80211_TESTMODE_DUMP(cmd)
- #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 4139ddf6022b..e72baa00b42f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -399,11 +399,9 @@ static bool btc8723b2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
  
-+enum cfg80211_control_port_state {
-+	CONTROL_PORT_STATE_UNSPECIFIED,
-+	CONTROL_PORT_STATE_UNAUTHORIZED,
-+	CONTROL_PORT_STATE_AUTHORIZED
-+};
+ static void btc8723b2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+-	/*struct btc_stack_info *stack_info = &btcoexist->stack_info;*/
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 
+-#if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 1) /* profile from bt patch */
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
+ 
+ 	bt_link_info->bt_link_exist = coex_sta->bt_link_exist;
+@@ -417,21 +415,7 @@ static void btc8723b2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ 		bt_link_info->pan_exist = true;
+ 		bt_link_info->bt_link_exist = true;
+ 	}
+-#else	/* profile from bt stack */
+-	bt_link_info->bt_link_exist = stack_info->bt_link_exist;
+-	bt_link_info->sco_exist = stack_info->sco_exist;
+-	bt_link_info->a2dp_exist = stack_info->a2dp_exist;
+-	bt_link_info->pan_exist = stack_info->pan_exist;
+-	bt_link_info->hid_exist = stack_info->hid_exist;
+-
+-	/*for win-8 stack HID report error*/
+-	if (!stack_info->hid_exist)
+-		stack_info->hid_exist = coex_sta->hid_exist;
+-	/*sync  BTInfo with BT firmware and stack*/
+-	/* when stack HID report error, here we use the info from bt fw.*/
+-	if (!stack_info->bt_link_exist)
+-		stack_info->bt_link_exist = coex_sta->bt_link_exist;
+-#endif
 +
- /**
-  * struct cfg80211_connect_resp_params - Connection response params
-  * @status: Status code, %WLAN_STATUS_SUCCESS for successful connection, use
-@@ -5271,6 +5277,8 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
-  *	not known. This value is used only if @status < 0 to indicate that the
-  *	failure is due to a timeout and not due to explicit rejection by the AP.
-  *	This value is ignored in other cases (@status >= 0).
-+ * @port_state: Indicates whether the connection is ready to transport
-+ *	data packets (see &enum cfg80211_control_port_state).
-  */
- struct cfg80211_connect_resp_params {
- 	int status;
-@@ -5288,6 +5296,7 @@ struct cfg80211_connect_resp_params {
- 	size_t pmk_len;
- 	const u8 *pmkid;
- 	enum nl80211_timeout_reason timeout_reason;
-+	enum cfg80211_control_port_state port_state;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 087493d..34738df 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2106,6 +2106,8 @@ enum nl80211_commands {
-  *	in %NL80211_CMD_CONNECT to indicate that for 802.1X authentication it
-  *	wants to use the supported offload.
-  * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-+ * @NL80211_ATTR_PORT_AUTHORIZED: flag attribute used in %NL80211_CMD_CONNECT
-+ *	notification indicating 4-way handshake offload finished successfully.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -2531,6 +2533,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_WANT_1X_OFFLOAD,
- 	NL80211_ATTR_PMKR0_NAME,
-+	NL80211_ATTR_PORT_AUTHORIZED,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e08c0d3..7fff668 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13745,6 +13745,8 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
- 	     (nla_put_flag(msg, NL80211_ATTR_TIMED_OUT) ||
- 	      nla_put_u32(msg, NL80211_ATTR_TIMEOUT_REASON,
- 			  cr->timeout_reason))) ||
-+	    (cr->port_state != CONTROL_PORT_STATE_UNAUTHORIZED &&
-+	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)) ||
- 	    (cr->req_ie &&
- 	     nla_put(msg, NL80211_ATTR_REQ_IE, cr->req_ie_len, cr->req_ie)) ||
- 	    (cr->resp_ie &&
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 6459bb7..a0d4010 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -860,6 +860,7 @@ void cfg80211_connect_done(struct net_device *dev,
- 	ev->cr.bss = params->bss;
- 	ev->cr.status = params->status;
- 	ev->cr.timeout_reason = params->timeout_reason;
-+	ev->cr.port_state = params->port_state;
- 
- 	spin_lock_irqsave(&wdev->event_lock, flags);
- 	list_add_tail(&ev->list, &wdev->event_list);
+ 	/* check if Sco only */
+ 	if (bt_link_info->sco_exist && !bt_link_info->a2dp_exist &&
+ 	    !bt_link_info->pan_exist && !bt_link_info->hid_exist)
 -- 
-1.9.1
+2.12.0
