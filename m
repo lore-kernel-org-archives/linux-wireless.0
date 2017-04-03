@@ -1,36 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38234 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933758AbdDSLkM (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34076 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752766AbdDCSl6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 07:40:12 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: only build fwsignal module for
- CONFIG_BRCMFMAC_PROTO_BCDC
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1492205257-18578-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492205257-18578-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170419114011.661C161152@smtp.codeaurora.org> (sfid-20170419_134035_742362_6F81EDF5)
-Date: Wed, 19 Apr 2017 11:40:11 +0000 (UTC)
+        Mon, 3 Apr 2017 14:41:58 -0400
+Received: by mail-oi0-f66.google.com with SMTP id s11so4976520oie.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:58 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 08/12] rtlwifi: btcoex: 23b 2ant: coex table fine tune
+Date: Mon,  3 Apr 2017 13:41:38 -0500
+Message-Id: <20170403184147.18409-8-Larry.Finger@lwfinger.net> (sfid-20170403_204240_015133_3414BABB)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> The fwsignal module is only referenced by the bcdc module and part of the
-> bcdc protocol. So only build it when CONFIG_BRCMFMAC_PROTO_BCDC is selected.
-> 
-> Fixes: acf8ac41dd73 ("brcmfmac: remove reference to fwsignal data from struct brcmf_pub")
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+set coex table fine tune, for register settings
 
-26ecfe017903 brcmfmac: only build fwsignal module for CONFIG_BRCMFMAC_PROTO_BCDC
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - No changes.
+v3 - No changes.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 52 +++++++++++++---------
+ 1 file changed, 32 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 57eed18e19c8..4139ddf6022b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -915,55 +915,67 @@ static void btc8723b2ant_coex_table_with_type(struct btc_coexist *btcoexist,
+ 	switch (type) {
+ 	case 0:
+ 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55555555,
+-					0x55555555, 0xffff, 0x3);
++					0x55555555, 0xffffff, 0x3);
+ 		break;
+ 	case 1:
+ 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55555555,
+-					0x5afa5afa, 0xffff, 0x3);
++					0x5afa5afa, 0xffffff, 0x3);
+ 		break;
+ 	case 2:
+-		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
+-					0x5a5a5a5a, 0xffff, 0x3);
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5ada5ada,
++					0x5ada5ada, 0xffffff, 0x3);
+ 		break;
+ 	case 3:
+ 		btc8723b2ant_coex_table(btcoexist, force_exec, 0xaaaaaaaa,
+-					0xaaaaaaaa, 0xffff, 0x3);
++					0xaaaaaaaa, 0xffffff, 0x3);
+ 		break;
+ 	case 4:
+ 		btc8723b2ant_coex_table(btcoexist, force_exec, 0xffffffff,
+-					0xffffffff, 0xffff, 0x3);
++					0xffffffff, 0xffffff, 0x3);
+ 		break;
+ 	case 5:
+ 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
+-					0x5fff5fff, 0xffff, 0x3);
++					0x5fff5fff, 0xffffff, 0x3);
+ 		break;
+ 	case 6:
+ 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
+-					0x5a5a5a5a, 0xffff, 0x3);
++					0x5a5a5a5a, 0xffffff, 0x3);
+ 		break;
+ 	case 7:
+-		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
+-					0x5afa5afa, 0xffff, 0x3);
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
++					0x5ada5ada, 0xffffff, 0x3);
+ 		break;
+ 	case 8:
+-		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5aea5aea,
+-					0x5aea5aea, 0xffff, 0x3);
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
++					0x5ada5ada, 0xffffff, 0x3);
+ 		break;
+ 	case 9:
+-		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
+-					0x5aea5aea, 0xffff, 0x3);
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
++					0x5ada5ada, 0xffffff, 0x3);
+ 		break;
+ 	case 10:
+-		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
+-					0x5aff5aff, 0xffff, 0x3);
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
++					0x5ada5ada, 0xffffff, 0x3);
+ 		break;
+ 	case 11:
+-		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
+-					0x5a5f5a5f, 0xffff, 0x3);
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
++					0x5ada5ada, 0xffffff, 0x3);
+ 		break;
+ 	case 12:
+-		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
+-					0x5f5f5f5f, 0xffff, 0x3);
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
++					0x5ada5ada, 0xffffff, 0x3);
++		break;
++	case 13:
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
++					0xaaaaaaaa, 0xffffff, 0x3);
++		break;
++	case 14:
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
++					0x5ada5ada, 0xffffff, 0x3);
++		break;
++	case 15:
++		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
++					0xaaaaaaaa, 0xffffff, 0x3);
+ 		break;
+ 	default:
+ 		break;
 -- 
-https://patchwork.kernel.org/patch/9681805/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
