@@ -1,100 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63489 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751987AbdDAWW6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Apr 2017 18:22:58 -0400
-Date: Sun, 2 Apr 2017 00:22:44 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-kernel@vger.kernel.org, kbuild test robot <lkp@intel.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] nfc: don't be making arch specific unaligned
- decisions at driver level.
-Message-ID: <20170401222244.GF22034@zurbaran.ger.intel.com> (sfid-20170402_002328_317224_54D6778B)
-References: <201701090839.5u37Hdez%fengguang.wu@intel.com>
- <20170109175222.3162-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20170109175222.3162-1-paul.gortmaker@windriver.com>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34067 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752163AbdDCSl4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Apr 2017 14:41:56 -0400
+Received: by mail-oi0-f67.google.com with SMTP id s11so4976416oie.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:56 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 06/12] rtlwifi: btcoex: 23b 2ant: less sensitive to tx rate penalty
+Date: Mon,  3 Apr 2017 13:41:36 -0500
+Message-Id: <20170403184147.18409-6-Larry.Finger@lwfinger.net> (sfid-20170403_204239_897458_96047122)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-On Mon, Jan 09, 2017 at 12:52:22PM -0500, Paul Gortmaker wrote:
-> Currently ia64 fails building allmodconfig with variations of:
-> 
->    In file included from drivers/nfc/nxp-nci/i2c.c:39:0:
->    ./include/linux/unaligned/access_ok.h:62:29: error: redefinition of ‘put_unaligned_be64’
->     static __always_inline void put_unaligned_be64(u64 val, void *p)
->                                 ^~~~~~~~~~~~~~~~~~
->    In file included from ./arch/ia64/include/asm/unaligned.h:5:0,
->                     from ./arch/ia64/include/asm/io.h:22,
->                     from ./arch/ia64/include/asm/smp.h:20,
->                     from ./include/linux/smp.h:59,
->                     from ./include/linux/topology.h:33,
->                     from ./include/linux/gfp.h:8,
->                     from ./include/linux/slab.h:14,
->                     from ./include/linux/resource_ext.h:19,
->                     from ./include/linux/acpi.h:26,
->                     from drivers/nfc/nxp-nci/i2c.c:28:
->    ./include/linux/unaligned/be_byteshift.h:65:20: note: previous definition of ‘put_unaligned_be64’ was here
->     static inline void put_unaligned_be64(u64 val, void *p)
->                        ^~~~~~~~~~~~~~~~~~
->    scripts/Makefile.build:293: recipe for target 'drivers/nfc/nxp-nci/i2c.o' failed
-> 
-> The easiest explanation for this is to look at the non-arch users in
-> the following output:
-> 
->    linux$git grep include.*access_ok.h
->    arch/arm64/crypto/crc32-arm64.c:#include <linux/unaligned/access_ok.h>
->    arch/cris/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
->    arch/m68k/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
->    arch/mn10300/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
->    arch/powerpc/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
->    arch/s390/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
->    arch/x86/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
->    drivers/nfc/nfcmrvl/fw_dnld.c:#include <linux/unaligned/access_ok.h>
->    drivers/nfc/nxp-nci/firmware.c:#include <linux/unaligned/access_ok.h>
->    drivers/nfc/nxp-nci/i2c.c:#include <linux/unaligned/access_ok.h>
->    include/asm-generic/unaligned.h:# include <linux/unaligned/access_ok.h>
-> 
-> Note that nfc is essentially the only non-arch user in the above.
-> When it forces use of access_ok.h, it will break any arch that has
-> already selected be_byteshift.h (or other conflicting implementations)
-> at the arch level.
-> 
-> The decision of what variant for unaligned access to use needs to be
-> left to the arch level and not used at the driver level.  Since not
-> all arch will have sourced asm/unaligned.h already, we need to call
-> it out and then the arch can give us just the one definition that
-> is needed.
-> 
-> See commit 064106a91be5 ("kernel: add common infrastructure for
-> unaligned access") as a reference.
-> 
-> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> Cc: Tony Luck <tony.luck@intel.com>
-> Cc: Fenghua Yu <fenghua.yu@intel.com>
-> Cc: linux-ia64@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> ---
-> 
-> [v2: explicitly include asm/uaccess.h since some arch won't be
->  getting any variant of an unaligned access header without it.
->  Build test allmodconfig on x86-64, i386, arm64, ia64. ]
-> 
->  drivers/nfc/nfcmrvl/fw_dnld.c  | 2 +-
->  drivers/nfc/nxp-nci/firmware.c | 2 +-
->  drivers/nfc/nxp-nci/i2c.c      | 2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
-This build issue is now fixed in nfc-next with a couple of different
-patches.
+modify h2c parameter so that the rate suffers less penalty from retry
 
-Cheers,
-Samuel.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - No changes.
+v3 - No changes.
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index e9c692a5b13e..2264b24fea9a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -754,9 +754,9 @@ static void btc8723b_set_penalty_txrate(struct btc_coexist *btcoexist,
+ 		h2c_parameter[1] |= BIT0;
+ 		/* normal rate except MCS7/6/5, OFDM54/48/36 */
+ 		h2c_parameter[2] = 0x00;
+-		h2c_parameter[3] = 0xf7; /* MCS7 or OFDM54 */
+-		h2c_parameter[4] = 0xf8; /* MCS6 or OFDM48 */
+-		h2c_parameter[5] = 0xf9; /* MCS5 or OFDM36 */
++		h2c_parameter[3] = 0xf4; /* MCS7 or OFDM54 */
++		h2c_parameter[4] = 0xf5; /* MCS6 or OFDM48 */
++		h2c_parameter[5] = 0xf6; /* MCS5 or OFDM36 */
+ 	}
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-- 
+2.12.0
