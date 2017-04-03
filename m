@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54318 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1954311AbdDYU35 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48536 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751803AbdDCL5U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 16:29:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 25 Apr 2017 23:22:42 +0300
-Message-Id: <20170425202243.7844-25-luca@coelho.fi> (sfid-20170425_223010_834260_72646A19)
-In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
-References: <20170425202243.7844-1-luca@coelho.fi>
-Subject: [PATCH 24/25] iwlwifi: pcie: apply no-reclaim logic only to group 0
+        Mon, 3 Apr 2017 07:57:20 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+        prameela.garnepudi@redpinesignals.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] rsi: Rename the file rsi_91x_pkt.c to rsi_91x_hal.c
+References: <1490867055-2625-1-git-send-email-prameela.j04cs@gmail.com>
+Date: Mon, 03 Apr 2017 14:57:15 +0300
+In-Reply-To: <1490867055-2625-1-git-send-email-prameela.j04cs@gmail.com>
+        (Prameela Rani Garnepudi's message of "Thu, 30 Mar 2017 15:14:15
+        +0530")
+Message-ID: <87r319n1pg.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_135745_933550_035162A6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
++ linux-wireless
 
-When applying no-reclaim logic to commands other than the group
-zero for legacy commands, commands such as 0x1c (TX_CMD in group
-0) can't be used in any other group. Fix that by applying this
-logic only for group 0 - it's not and should never be needed for
-any other groups.
+Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
 
-Reported-by: Sharon Dvir <sharon.dvir@intel.com>
-Reported-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The file rsi_91x_hal.c will contain new firmware loading method for
+> RSI 9113 chipset. So this file will have device specific operations.
+> As the file 'rsi_91x_pkt.c' contains code for preparing device
+> (frimware understandable) specific descriptors for the transmit frames,
+> it is moved to 'rsi_91x_hal.c'
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index f98f2d2b8a1b..1da2de205cdf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1147,7 +1147,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 		 * Ucode should set SEQ_RX_FRAME bit if ucode-originated,
- 		 *   but apparently a few don't get set; catch them here. */
- 		reclaim = !(pkt->hdr.sequence & SEQ_RX_FRAME);
--		if (reclaim) {
-+		if (reclaim && !pkt->hdr.group_id) {
- 			int i;
- 
- 			for (i = 0; i < trans_pcie->n_no_reclaim_cmds; i++) {
+Always remember CC linux-wireless for wireless patches. So please
+resend.
+
 -- 
-2.11.0
+Kalle Valo
