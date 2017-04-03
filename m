@@ -1,57 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37758 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753491AbdDLO1l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 10:27:41 -0400
-Message-ID: <1492007254.2855.10.camel@sipsolutions.net> (sfid-20170412_162805_680364_6876F6CE)
-Subject: Re: [RFC 1/3] bpf/wireless: add wifimon program type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Daniel Borkmann <daniel@iogearbox.net>,
-        Alexei Starovoitov <ast@kernel.org>
-Date: Wed, 12 Apr 2017 16:27:34 +0200
-In-Reply-To: <20170412110726.9689-1-johannes@sipsolutions.net> (sfid-20170412_130910_059795_2268F0CA)
-References: <20170412110726.9689-1-johannes@sipsolutions.net>
-         (sfid-20170412_130910_059795_2268F0CA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:43992 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751403AbdDCJED (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Apr 2017 05:04:03 -0400
+Date: Mon, 3 Apr 2017 19:03:59 +1000
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Wolfram Sang <wsa@the-dreams.de>, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        devel@linuxdriverproject.org, Tycho Andersen <tycho@tycho.ws>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC] remove custom Michael MIC implementation
+Message-ID: <20170403090359.GK3755@eros> (sfid-20170403_110443_199887_6C46BAD5)
+References: <1490935659-7196-1-git-send-email-me@tobin.cc>
+ <20170331075851.GB1435@katana>
+ <20170331102113.GA2930@eros>
+ <87fuhq6par.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87fuhq6par.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-04-12 at 13:07 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Apr 03, 2017 at 08:19:40AM +0300, Kalle Valo wrote:
+> + linux-wireless
 > 
-> Add a new program type for wifi monitor interfaces. This program
-> type can
->  * access __sk_buff, but only skb->len
->  * call bpf_skb_load_bytes()
+> "Tobin C. Harding" <me@tobin.cc> writes:
 > 
-> The program type is only enabled when something selects the new
-> Kconfig symbol WANT_BPF_WIFIMON, which will be done by mac80211
-> in a follow-up patch.
+> > On Fri, Mar 31, 2017 at 09:58:51AM +0200, Wolfram Sang wrote:
+> >> 
+> >> > The code is untested, I have hardware in the mail.
+> >> 
+> >> Cool!
+> >
+> > The card I have is a Spectec FCC ID: S2Y-WLAN-11B-G which I believe is
+> > a SDW-823 and should use the ks7010 driver. I am going to attempt to
+> > get it running on a Raspberry Pi B+. I ordered the wrong size break
+> > out board originally so waiting on the new one now.
+> >
+> >> 
+> >> > If any one is interested and has any comments I would really like to
+> >> > hear them. I am open to all suggestions (even down to trivial coding
+> >> > style issues).
+> >> 
+> >> I'll just repeat that the key move to get this driver out of staging is
+> >> to get away from the WEXT interface to CFG80211. Otherwise no chance
+> >> that wireless maintainers will even look at it. This is a huge change
+> >> but once it is done, features like Michael MIC come with it for free
+> >> (from what I recall, I am not a wireless expert myself).
+> >
+> > That would explain why I could not find more than the Orinoco driver
+> > using the Michael MIC module directly.
+> 
+> I think cfg80211 and mac80211 got mixed up. mac80211 (the full IEEE
+> 802.11 stack for "softmac" devices) provides Michael MIC implementation,
+> but cfg80211 (for "hardmac" devices) does not.
 
-This works. An example BPF program is here:
-https://p.sipsolutions.net/ca32264f2b705e5e.txt
+Cool, thanks for clarifying. Hilariously I was just sitting down
+trying to figure out what was up after a day spent trying to merge
+ideas from ath6kl (fullmac) and ks7010. I finally spent some time
+reading the cw1200 driver (softmac) for further inspiration.
 
-I haven't really done any performance measurements and only tested it
-in a virtual environment, but it's nice to see that in principle I can
-get it working relatively easily.
+> >> Without the CFG80211 conversion, replacing the Michael custom
+> >> implementation with the in-kernel one makes the driver a tad better and
+> >> is good exercise. However, it will sadly not help to get the driver out
+> >> of staging.
+> >
+> > I'll drop it then. Could you please tell me, is there any thing else
+> > more I need to do to let LKML know that this RFC is dropped? Or is
+> > this reply enough. I don't want to use any ones time unnecessarily.
+> >
+> >> 
+> >> But if you want a clean WEXT driver first, this is a step in the right
+> >> direction.
+> >
+> > Let's go for a CFG80211 driver and get out of staging :) So next step
+> > is I guess study the ath6kl driver, learn how CFG80211 is done and
+> > implement that interface in ks7010? Oh, and test that it works.
+> 
+> Please keep linux-wireless list in loop so that people on that list can
+> help.
 
-One thing I'm not so sure about is the usage of __sk_buff.
+How newbie friendly is the linux-wireless list please? I am having
+trouble separating the data path code from the control path. I think I
+will spend a few more days on it though before asking any questions.
 
-Clearly, I need to pass the struct sk_buff internally for
-bpf_skb_load_bytes() to work. However, using __sk_buff seems a bit
-strange since I only let the program access the len field.
+Except one: do you know off the top of your head of a canonical
+implementation of a softmac wi-fi driver.
 
-Perhaps adding a __wifi_sk_buff would work, but then clang will
-probably complain if you pass that to bpf_skb_load_bytes().
-
-The alternative will be to add any wifi fields we might need eventually
-to __sk_buff, which perhaps isn't such a big deal since accesses are
-optimized away anyway through convert_ctx_access.
-
-Instead it may make more sense to just have a "wifi_info(skb, info)"
-function you can call, e.g. with a structure that has various fields
-and flags to see which you care about.
-
-johannes
+thanks,
+Tobin.
