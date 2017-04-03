@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22152 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751220AbdDEHgd (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36066 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750992AbdDCBO3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 03:36:33 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: fix station nss computation
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1490342248-6213-1-git-send-email-c_vnaral@qti.qualcomm.com>
-References: <1490342248-6213-1-git-send-email-c_vnaral@qti.qualcomm.com>
-To: <c_vnaral@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Venkateswara Rao Naralasetty <c_vnaral@qti.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <1078a1d3e46744f4bf0ff96e047c54c5@euamsexm01a.eu.qualcomm.com> (sfid-20170405_093637_005669_ACD71BF0)
-Date: Wed, 5 Apr 2017 09:36:26 +0200
+        Sun, 2 Apr 2017 21:14:29 -0400
+Received: by mail-oi0-f65.google.com with SMTP id b187so17391858oif.3
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Apr 2017 18:14:29 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 00/12] rtlwifi: btcoex: Improve Bluetooth coexistence
+Date: Sun,  2 Apr 2017 20:14:10 -0500
+Message-Id: <20170331164742.22374-1-Larry.Finger@lwfinger.net> (sfid-20170403_031433_836682_4C6B28F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-c_vnaral@qti.qualcomm.com wrote:
-> From: Venkateswara Rao Naralasetty <c_vnaral@qti.qualcomm.com>
-> 
-> If station advertises diffferent NSS capabilities in Rx_mcs set
-> of HT and VHT IEs in assoc req, the current NSS computation
-> logic configures the NSS support only based on Rx_mcs set of
-> HT capabilities in the driver. This is configuring the station
-> NSS capabilities incorreclty in the target.
-> 
-> For example, if station advertise Rx_mcs set as 2 spatial streams
-> in HT capabilities and 1 spatial streams in VHT capabilities in
-> assoc request, as per current logic we are calculating nss from
-> HT capabilities and the driver sets peer_num_spatial_streams as
-> 2 for the station which is configured in VHT 1*1.
-> 
-> This patchs fix this issue by calculating the nss from VHT cap if
-> station supports vht.
-> 
-> Signed-off-by: Venkateswara Rao Naralasetty <c_vnaral@qti.qualcomm.com>
+In previous submissions that were rejected, there were attempts to update
+the BT coexistence routines. Those patches were essentially too large to
+review. This time the changes have been reduced to smaller pieces, and
+the documentation has been improved.
 
-Patch applied to ath-next branch of ath.git, thanks.
+All of this material is intended for kernel 4.12.
 
-fefcd11535ab ath10k: fix station nss computation
+v2 - Fix build errors from first two patches.
+
+Larry
+
+Yan-Hsuan Chuang (12):
+  rtlwifi: btcoex: remove unused functions
+  rtlwifi: btcoex: follow linux coding style
+  rtlwifi: btcoex: 23b 2ant: add btc8723b2ant_limited_rx to reduce agg size
+  rtlwifi: btcoex: 23b 2ant: detect if bt is slave, and modify tdma
+  rtlwifi: btcoex: 23b 2ant: monitor wifi counter for allocate tdma time
+  rtlwifi: btcoex: 23b 2ant: less sensitive to tx rate penalty
+  rtlwifi: btcoex: 23b 2ant: adjust wifi duration for bt a2dp
+  rtlwifi: btcoex: 23b 2ant: coex table fine tune
+  rtlwifi: btcoex: 23b 2ant: remove redundant bt stack report
+  rtlwifi: btcoex: 23b 2ant: finer bt power adjustment
+  rtlwifi: btcoex: 23b 2ant: add comments to describe how duration adjusted
+  rtlwifi: btcoex: 23b 2ant: new fw use h2c to control GNT_BT
+
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 2468 ++++++++------------
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   24 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 1005 +-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 1655 ++++---------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   18 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 1470 +++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |    2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 2306 ++++++------------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |    2 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |    3 +-
+ 10 files changed, 2841 insertions(+), 6112 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/9642345/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.10.2
