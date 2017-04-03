@@ -1,142 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:53491 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751615AbdDJMIj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28892 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751759AbdDCTaa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 08:08:39 -0400
-Date: Mon, 10 Apr 2017 14:08:27 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2] rt2x00: reverse external PA capability flag logic
-Message-ID: <20170410120822.GA1833@makrotopia.org> (sfid-20170410_141004_355856_152D1A5F)
-References: <201704101003.oA28M6Nz%fengguang.wu@intel.com>
+        Mon, 3 Apr 2017 15:30:30 -0400
+From: qca_dlansky <qca_dlansky@qualcomm.com>
+To: David Binderman <dcb314@hotmail.com>,
+        qca_merez <qca_merez@qca.qualcomm.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        wil6210 <wil6210@qca.qualcomm.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: linux-4.11-rc5/drivers/net/wireless/ath/wil6210/pmc.c: 2 * poor
+ place for limits check ?
+Date: Mon, 3 Apr 2017 19:30:23 +0000
+Message-ID: <d2d7047c4e7b4931b77a82aaf43e2abb@euamsexm01b.eu.qualcomm.com> (sfid-20170403_213039_135506_8B3CDF72)
+References: <HE1PR0801MB1865948355B11C9E63315D2F9C080@HE1PR0801MB1865.eurprd08.prod.outlook.com>
+In-Reply-To: <HE1PR0801MB1865948355B11C9E63315D2F9C080@HE1PR0801MB1865.eurprd08.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201704101003.oA28M6Nz%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Consequently refer to external PA instead of inverting the logic and
-use an internal PA capability flag which is a bit confusing.
-Currently this is used for Rt3352 only, but MT7620A also allows for an
-external PA which will be supported by a follow up patch.
+From: David Binderman [mailto:dcb314@hotmail.com]=20
+Sent: Monday, April 3, 2017 2:16 PM
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
-v2: replace remaining use of int_pa_* variables
+>
+> Hello there,
+>
+> 1.
+>
+> linux-4.11-rc5/drivers/net/wireless/ath/wil6210/pmc.c:188]: (style) Array=
+ index 'i' is used before limits check.
 
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 40 +++++++++++++-------------
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  4 +--
- 2 files changed, 22 insertions(+), 22 deletions(-)
+Thanks for letting us know.
+We'll upload a fix soon.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 201b12ed90c6..3e7d84efcfc5 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -7014,9 +7014,9 @@ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- {
--	int tx0_int_pa = test_bit(CAPABILITY_INTERNAL_PA_TX0,
-+	int tx0_ext_pa = test_bit(CAPABILITY_EXTERNAL_PA_TX0,
- 				  &rt2x00dev->cap_flags);
--	int tx1_int_pa = test_bit(CAPABILITY_INTERNAL_PA_TX1,
-+	int tx1_ext_pa = test_bit(CAPABILITY_EXTERNAL_PA_TX1,
- 				  &rt2x00dev->cap_flags);
- 	u8 rfcsr;
- 
-@@ -7056,9 +7056,9 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
- 	rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
- 	rfcsr = 0x01;
--	if (!tx0_int_pa)
-+	if (tx0_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR34_TX0_EXT_PA, 1);
--	if (!tx1_int_pa)
-+	if (tx1_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR34_TX1_EXT_PA, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 34, rfcsr);
- 	rt2800_rfcsr_write(rt2x00dev, 35, 0x03);
-@@ -7068,13 +7068,13 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 39, 0xc5);
- 	rt2800_rfcsr_write(rt2x00dev, 40, 0x33);
- 	rfcsr = 0x52;
--	if (tx0_int_pa) {
-+	if (!tx0_ext_pa) {
- 		rt2x00_set_field8(&rfcsr, RFCSR41_BIT1, 1);
- 		rt2x00_set_field8(&rfcsr, RFCSR41_BIT4, 1);
- 	}
- 	rt2800_rfcsr_write(rt2x00dev, 41, rfcsr);
- 	rfcsr = 0x52;
--	if (tx1_int_pa) {
-+	if (!tx1_ext_pa) {
- 		rt2x00_set_field8(&rfcsr, RFCSR42_BIT1, 1);
- 		rt2x00_set_field8(&rfcsr, RFCSR42_BIT4, 1);
- 	}
-@@ -7087,19 +7087,19 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 48, 0x14);
- 	rt2800_rfcsr_write(rt2x00dev, 49, 0x00);
- 	rfcsr = 0x2d;
--	if (!tx0_int_pa)
-+	if (tx0_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR50_TX0_EXT_PA, 1);
--	if (!tx1_int_pa)
-+	if (tx1_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR50_TX1_EXT_PA, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 50, rfcsr);
--	rt2800_rfcsr_write(rt2x00dev, 51, (tx0_int_pa ? 0x7f : 0x52));
--	rt2800_rfcsr_write(rt2x00dev, 52, (tx0_int_pa ? 0x00 : 0xc0));
--	rt2800_rfcsr_write(rt2x00dev, 53, (tx0_int_pa ? 0x52 : 0xd2));
--	rt2800_rfcsr_write(rt2x00dev, 54, (tx0_int_pa ? 0x1b : 0xc0));
--	rt2800_rfcsr_write(rt2x00dev, 55, (tx1_int_pa ? 0x7f : 0x52));
--	rt2800_rfcsr_write(rt2x00dev, 56, (tx1_int_pa ? 0x00 : 0xc0));
--	rt2800_rfcsr_write(rt2x00dev, 57, (tx0_int_pa ? 0x52 : 0x49));
--	rt2800_rfcsr_write(rt2x00dev, 58, (tx1_int_pa ? 0x1b : 0xc0));
-+	rt2800_rfcsr_write(rt2x00dev, 51, (tx0_ext_pa ? 0x52 : 0x72));
-+	rt2800_rfcsr_write(rt2x00dev, 52, (tx0_ext_pa ? 0xc0 : 0x00));
-+	rt2800_rfcsr_write(rt2x00dev, 53, (tx0_ext_pa ? 0xd2 : 0x52));
-+	rt2800_rfcsr_write(rt2x00dev, 54, (tx0_ext_pa ? 0xc0 : 0x1b));
-+	rt2800_rfcsr_write(rt2x00dev, 55, (tx1_ext_pa ? 0x52 : 0x7f));
-+	rt2800_rfcsr_write(rt2x00dev, 56, (tx1_ext_pa ? 0xc0 : 0x00));
-+	rt2800_rfcsr_write(rt2x00dev, 57, (tx0_ext_pa ? 0x49 : 0x52));
-+	rt2800_rfcsr_write(rt2x00dev, 58, (tx1_ext_pa ? 0xc0 : 0x1b));
- 	rt2800_rfcsr_write(rt2x00dev, 59, 0x00);
- 	rt2800_rfcsr_write(rt2x00dev, 60, 0x00);
- 	rt2800_rfcsr_write(rt2x00dev, 61, 0x00);
-@@ -8782,13 +8782,13 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
- 
- 	if (rt2x00_rt(rt2x00dev, RT3352)) {
--		if (!rt2x00_get_field16(eeprom,
-+		if (rt2x00_get_field16(eeprom,
- 		    EEPROM_NIC_CONF1_EXTERNAL_TX0_PA_3352))
--		    __set_bit(CAPABILITY_INTERNAL_PA_TX0,
-+		    __set_bit(CAPABILITY_EXTERNAL_PA_TX0,
- 			      &rt2x00dev->cap_flags);
--		if (!rt2x00_get_field16(eeprom,
-+		if (rt2x00_get_field16(eeprom,
- 		    EEPROM_NIC_CONF1_EXTERNAL_TX1_PA_3352))
--		    __set_bit(CAPABILITY_INTERNAL_PA_TX1,
-+		    __set_bit(CAPABILITY_EXTERNAL_PA_TX1,
- 			      &rt2x00dev->cap_flags);
- 	}
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 8fdd2f9726ee..1bc353eafe37 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -719,8 +719,8 @@ enum rt2x00_capability_flags {
- 	CAPABILITY_DOUBLE_ANTENNA,
- 	CAPABILITY_BT_COEXIST,
- 	CAPABILITY_VCO_RECALIBRATION,
--	CAPABILITY_INTERNAL_PA_TX0,
--	CAPABILITY_INTERNAL_PA_TX1,
-+	CAPABILITY_EXTERNAL_PA_TX0,
-+	CAPABILITY_EXTERNAL_PA_TX1,
- };
- 
- /*
--- 
-2.12.1
+Thanks,
+ Dedy.
