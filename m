@@ -1,59 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50756 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751797AbdDKMki (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34218 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751454AbdDCBOg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 08:40:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 11 Apr 2017 15:37:27 +0300
-Message-Id: <20170411123742.12214-11-luca@coelho.fi> (sfid-20170411_145544_692214_665B21BF)
-In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
-References: <20170411123742.12214-1-luca@coelho.fi>
-Subject: [PATCH 10/25] iwlwifi: use upper_32_bits/lower_32_bits where appropriate
+        Sun, 2 Apr 2017 21:14:36 -0400
+Received: by mail-oi0-f68.google.com with SMTP id s11so1229023oie.1
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Apr 2017 18:14:36 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 05/12] rtlwifi: btcoex: 23b 2ant: monitor wifi counter for allocate tdma time
+Date: Sun,  2 Apr 2017 20:14:15 -0500
+Message-Id: <20170403011428.6156-5-Larry.Finger@lwfinger.net> (sfid-20170403_031456_114163_D53CD008)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-That's a bit nicer than open-coding it.
+If there are too many CRC error packets, it means the wifi is operating
+under low quality circumstances. If so, we need to reallocate the
+resources of wifi and bt
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h | 2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-io.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+v2 - No changes.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 40 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    | 10 ++++++
+ 2 files changed, 50 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-index 33ef5372d195..361fc25e8618 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-@@ -647,7 +647,7 @@ struct iwl_rb_status {
- 
- static inline u8 iwl_get_dma_hi_addr(dma_addr_t addr)
- {
--	return (sizeof(addr) > sizeof(u32) ? (addr >> 16) >> 16 : 0) & 0xF;
-+	return (sizeof(addr) > sizeof(u32) ? upper_32_bits(addr) : 0) & 0xF;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 1361788cf150..16759b028dff 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -309,6 +309,43 @@ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
  }
- /**
-  * struct iwl_tfd_tb transmit buffer descriptor within transmit frame descriptor
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index a9f69fdd170b..0f893ae6e715 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -54,8 +54,8 @@ IWL_EXPORT_SYMBOL(iwl_write32);
- void iwl_write64(struct iwl_trans *trans, u64 ofs, u64 val)
- {
- 	trace_iwlwifi_dev_iowrite64(trans->dev, ofs, val);
--	iwl_trans_write32(trans, ofs, val & 0xffffffff);
--	iwl_trans_write32(trans, ofs + 4, val >> 32);
-+	iwl_trans_write32(trans, ofs, lower_32_bits(val));
-+	iwl_trans_write32(trans, ofs + 4, upper_32_bits(val));
- }
- IWL_EXPORT_SYMBOL(iwl_write64);
  
++static void btc8723b2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
++{
++	if (coex_sta->under_ips) {
++		coex_sta->crc_ok_cck = 0;
++		coex_sta->crc_ok_11g = 0;
++		coex_sta->crc_ok_11n = 0;
++		coex_sta->crc_ok_11n_agg = 0;
++
++		coex_sta->crc_err_cck = 0;
++		coex_sta->crc_err_11g = 0;
++		coex_sta->crc_err_11n = 0;
++		coex_sta->crc_err_11n_agg = 0;
++	} else {
++		coex_sta->crc_ok_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf88);
++		coex_sta->crc_ok_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf94);
++		coex_sta->crc_ok_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf90);
++		coex_sta->crc_ok_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfb8);
++
++		coex_sta->crc_err_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf84);
++		coex_sta->crc_err_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf96);
++		coex_sta->crc_err_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf92);
++		coex_sta->crc_err_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfba);
++	}
++
++	/* reset counter */
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x1);
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x0);
++}
++
+ static void btc8723b2ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -2875,6 +2912,9 @@ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
+ #if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 0)
+ 	btc8723b2ant_query_bt_info(btcoexist);
+ #else
++	btc8723b2ant_monitor_bt_ctr(btcoexist);
++	btc8723b2ant_monitor_wifi_ctr(btcoexist);
++
+ 	if (btc8723b2ant_is_wifi_status_changed(btcoexist) ||
+ 	    coex_dm->auto_tdma_adjust)
+ 		btc8723b2ant_run_coexist_mechanism(btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index d787ae3bced2..d1bfdbec82b0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -149,6 +149,16 @@ struct coex_sta_8723b_2ant {
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
+ 	u32 pop_event_cnt;
++
++	u32 crc_ok_cck;
++	u32 crc_ok_11g;
++	u32 crc_ok_11n;
++	u32 crc_ok_11n_agg;
++
++	u32 crc_err_cck;
++	u32 crc_err_11g;
++	u32 crc_err_11n;
++	u32 crc_err_11n_agg;
+ };
+ 
+ /*********************************************************************
 -- 
-2.11.0
+2.12.0
