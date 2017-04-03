@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:47934 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754919AbdDQTcV (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:54109 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751194AbdDCJPc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 15:32:21 -0400
-Date: Mon, 17 Apr 2017 21:32:12 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 2/2] rt2800: do VCO calibration after programming ALC
-Message-ID: <20170417193200.GA3446@makrotopia.org> (sfid-20170417_213224_682846_B4220344)
+        Mon, 3 Apr 2017 05:15:32 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wlcore: fix spelling mistake in wl1271_warning 'iligal' -> 'illegal'
+Date: Mon,  3 Apr 2017 10:15:30 +0100
+Message-Id: <20170403091530.18564-1-colin.king@canonical.com> (sfid-20170403_111605_929707_329E5A22)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somehow AP doesn't come up and the first scan fails if we don't do
-VCO calibration every time.
-The vendor driver duplicates the VCO calibration function into the
-channel switching logic, we can do the same with less duplication.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+trivial fix to spelling mistake in wl1271_warning error message
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ti/wlcore/debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 7135519a638c..870bf315f98b 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -3407,6 +3407,8 @@ static void rt2800_config_alc(struct rt2x00_dev *rt2x00dev,
- 			rt2800_rfcsr_write(rt2x00dev, 42, 0x5b);
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 58e148d7bc7b..416080adc181 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -1249,7 +1249,7 @@ static ssize_t fw_logger_write(struct file *file,
  	}
- 	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, mac_sys_ctrl);
-+
-+	rt2800_vco_calibration(rt2x00dev);
- }
  
- static void rt2800_bbp_write_with_rx_chain(struct rt2x00_dev *rt2x00dev,
+ 	if (wl->conf.fwlog.output == 0) {
+-		wl1271_warning("iligal opperation - fw logger disabled by default, please change mode via wlconf");
++		wl1271_warning("illegal opperation - fw logger disabled by default, please change mode via wlconf");
+ 		return -EINVAL;
+ 	}
+ 
 -- 
-2.12.2
+2.11.0
