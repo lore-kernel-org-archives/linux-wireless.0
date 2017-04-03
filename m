@@ -1,27 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35437 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932072AbdDDQuM (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33778 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752306AbdDCSly (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 12:50:12 -0400
-Received: by mail-oi0-f67.google.com with SMTP id d2so18371711oig.2
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:12 -0700 (PDT)
+        Mon, 3 Apr 2017 14:41:54 -0400
+Received: by mail-oi0-f68.google.com with SMTP id f193so21146962oib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:54 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
         Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 00/13] rtlwifi: btcoex: More improvements to Bluetooth Coexistence for 23b
-Date: Tue,  4 Apr 2017 11:49:53 -0500
-Message-Id: <20170404165006.14329-1-Larry.Finger@lwfinger.net> (sfid-20170404_185016_181025_618BC897)
+Subject: [PATCH v3 04/12] rtlwifi: btcoex: 23b 2ant: detect if bt is slave, and modify tdma
+Date: Mon,  3 Apr 2017 13:41:34 -0500
+Message-Id: <20170403184147.18409-4-Larry.Finger@lwfinger.net> (sfid-20170403_204240_797301_AEE1CFF7)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches, which should be applied after the 12 patches submitted
-with cover title "rtlwifi: btcoex: Improve Bluetooth coexistence", offers
-more updates to driver btcoex for the RTL8723BE device.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+if the bt is slave, it may receive packet at any time, so we
+need to mark them as high priority packets to avoid packet loss.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
@@ -29,28 +32,187 @@ Cc: Pkshih <pkshih@realtek.com>
 Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
 Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - No changes.
+v3 - No changes.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 91 +++++++++++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  1 +
+ 2 files changed, 62 insertions(+), 30 deletions(-)
 
-Yan-Hsuan Chuang (13):
-  rtlwifi: btcoex: 23b 2ant: check PS state before setting tdma duration
-  rtlwifi: btcoex: 23b 2ant: rename tdma_adj_type to ps_tdma_du_adj_type
-  rtlwifi: btcoex: 23b 2ant: detect ap num and set GNT_BT properly
-  rtlwifi: btcoex: 23b 2ant: more cases for adjusting tdma duration
-  rtlwifi: btcoex: 23b 2ant: fix PTA unstable problem when hw init
-  rtlwifi: btcoex: 23b 2ant: add pnp notidy to avoid LPS/IPS mismatch
-  rtlwifi: btcoex: 23b 2ant: check more cases when bt is quering
-  rtlwifi: btcoex: 23b 2ant: workaround for bt a2dp and hid
-  rtlwifi: btcoex: 23b 2ant: tell fw external or internal switch is
-    equipped
-  rtlwifi: btcoex: 23b 2ant: let bt transmit when hw initialisation
-  rtlwifi: btcoex: 23b 2ant: turn off ps and tdma mechanism when in
-    concurrent mode
-  rtlwifi: btcoex: 23b 2ant: turn off antenna when rssi is too high/low
-  rtlwifi: btcoex: 23b 2ant: set coex table when wifi is linking
-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 1467 ++++++++++++++++++--
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   18 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |    1 +
- 3 files changed, 1362 insertions(+), 124 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index b182c61edf91..2c9f626c3ec7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -266,6 +266,7 @@ void btc8723b2ant_limited_rx(struct btc_coexist *btcoexist, bool force_exec,
+ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u32 reg_hp_txrx, reg_lp_txrx, u32tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0;
+ 	u32 reg_lp_tx = 0, reg_lp_rx = 0;
+@@ -286,6 +287,17 @@ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 	coex_sta->low_priority_tx = reg_lp_tx;
+ 	coex_sta->low_priority_rx = reg_lp_rx;
+ 
++	if ((coex_sta->low_priority_tx > 1050) &&
++	    (!coex_sta->c2h_bt_inquiry_page))
++		coex_sta->pop_event_cnt++;
++
++	if ((coex_sta->low_priority_rx >= 950) &&
++	    (coex_sta->low_priority_rx >= coex_sta->low_priority_tx) &&
++	    (!coex_sta->under_ips))
++		bt_link_info->slave_role = true;
++	else
++		bt_link_info->slave_role = false;
++
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], High Priority Tx/Rx(reg 0x%x)=0x%x(%d)/0x%x(%d)\n",
+ 		 reg_hp_txrx, reg_hp_tx, reg_hp_tx, reg_hp_rx, reg_hp_rx);
+@@ -1084,6 +1096,8 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 				 bool turn_on, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
++	u8 tdma_byte4_modify = 0x0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn %s PS TDMA, type=%d\n",
+@@ -1104,75 +1118,92 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 		    (coex_dm->pre_ps_tdma == coex_dm->cur_ps_tdma))
+ 			return;
+ 	}
++
++	if ((bt_link_info->slave_role) && (bt_link_info->a2dp_exist))
++		/* 0x778 = 0x1 at wifi slot (no blocking BT Low-Pri pkts) */
++		tdma_byte4_modify = 0x1;
++
+ 	if (turn_on) {
+ 		switch (type) {
+ 		case 1:
+ 		default:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1a,
+-						    0x1a, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x3c,
++				0x03, 0xf1, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 2:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x12,
+-						    0x12, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x2d,
++				0x03, 0xf1, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 3:
+-			/* This call breaks BT when wireless is active -
+-			 * comment it out for now until a better fix is found:
+-			 * btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1c,
+-			 *			    0x3, 0xf1, 0x90);
+-			 */
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1c,
++						    0x3, 0xf1,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 4:
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x10,
+-						    0x03, 0xf1, 0x90);
++						    0x03, 0xf1,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 5:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1a,
+-						    0x1a, 0x60, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x3c,
++				0x3, 0x70, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 6:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x12,
+-						    0x12, 0x60, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x2d,
++				0x3, 0x70, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 7:
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1c,
+-						    0x3, 0x70, 0x90);
++						    0x3, 0x70,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 8:
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xa3, 0x10,
+-						    0x3, 0x70, 0x90);
++						    0x3, 0x70,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 9:
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1a,
+ 						    0x1a, 0xe1, 0x90);
+ 			break;
+ 		case 10:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x12,
+-						    0x12, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x2d,
++				0x03, 0xf1, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 11:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0xa,
+-						    0xa, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1c,
++						    0x3, 0xf1,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 12:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x5,
+-						    0x5, 0xe1, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x10,
++						    0x3, 0xf1,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 13:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1a,
+-						    0x1a, 0x60, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x3c,
++				0x3, 0x70, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 14:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x12,
+-						    0x12, 0x60, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(
++				btcoexist, 0xe3, 0x2d,
++				0x3, 0x70, 0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 15:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0xa,
+-						    0xa, 0x60, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1c,
++						    0x3, 0x70,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 16:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x5,
+-						    0x5, 0x60, 0x90);
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x10,
++						    0x3, 0x70,
++						    0x90 | tdma_byte4_modify);
+ 			break;
+ 		case 17:
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xa3, 0x2f,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index f74864f54edb..d7ba6ad1e66f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -459,6 +459,7 @@ struct btc_bt_link_info {
+ 	bool hid_only;
+ 	bool pan_exist;
+ 	bool pan_only;
++	bool slave_role;
+ };
+ 
+ enum btc_antenna_pos {
 -- 
-2.10.2
+2.12.0
