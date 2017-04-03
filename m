@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:59684 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756124AbdDGTWY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35846 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750830AbdDCLi6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:22:24 -0400
-Date: Fri, 07 Apr 2017 12:22:23 -0700 (PDT)
-Message-Id: <20170407.122223.385211483743191711.davem@davemloft.net> (sfid-20170407_212435_599296_FA57D028)
-To: johannes@sipsolutions.net
-Cc: pablo@netfilter.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1491592185.5800.7.camel@sipsolutions.net>
-References: <1491591552.5800.1.camel@sipsolutions.net>
-        <20170407190601.GA22991@salvia>
-        <1491592185.5800.7.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 3 Apr 2017 07:38:58 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-hams@vger.kernel.org, linux-ppp@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ganeshgr@chelsio.com,
+        nbd@openwrt.org, blogic@openwrt.org, matthias.bgg@gmail.com,
+        yishaih@mellanox.com, saeedm@mellanox.com, matanb@mellanox.com,
+        leonro@mellanox.com, ajk@comnets.uni-bremen.de, paulus@samba.org,
+        j@w1.fi, peterz@infradead.org, keescook@chromium.org,
+        gregkh@linuxfoundation.org, Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: Re: [PATCH 15/16] drivers, net, intersil: convert hostap_cmd_queue.usecnt from atomic_t to refcount_t
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+        <1490691403-4016-16-git-send-email-elena.reshetova@intel.com>
+Date: Mon, 03 Apr 2017 14:38:49 +0300
+In-Reply-To: <1490691403-4016-16-git-send-email-elena.reshetova@intel.com>
+        (Elena Reshetova's message of "Tue, 28 Mar 2017 11:56:42 +0300")
+Message-ID: <874ly5oh4m.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_133955_197928_FB4AE1BD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 07 Apr 2017 21:09:45 +0200
+Elena Reshetova <elena.reshetova@intel.com> writes:
 
-> On Fri, 2017-04-07 at 21:06 +0200, Pablo Neira Ayuso wrote:
->> On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
->> [...]
->> > Heh. I think I really want to solve - at least partially -
->> > nla_parse()
->> > to see that it can be done this way. It'd be nice to even transform
->> > all
->> > the callers (I generated half of these patches with spatch anyway)
->> > to
->> > have at least that.
->> 
->> We can just have a modified version of nla_parse that deals with
->> this.
-> 
-> Yes, but we need to figure out a good way to have the offset.
-> 
-> We also need to see if we want to *force* having the offset. In some
-> sense that'd be useful, in another it might be very complicated to fill
-> it in at all times, if for example errors come from lower layers like
-> drivers.
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+>
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> ---
+>  drivers/net/wireless/intersil/hostap/hostap_hw.c   | 12 ++++++------
+>  drivers/net/wireless/intersil/hostap/hostap_wlan.h |  3 ++-
+>  2 files changed, 8 insertions(+), 7 deletions(-)
 
-It has to be optional, some kinds of errors don't have an exact
-context per-se.
+The prefix should be "hostap:", I'll fix that.
 
-Also another way to look at this is that we're providing a lot of
-new power and expressability.  So even if only one aspect of the
-new error reporting is used it's a positive step forward.
-
-So allow offset "0" meaning "unspecified".
+-- 
+Kalle Valo
