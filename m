@@ -1,61 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:34296 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751520AbdDRTO7 (ORCPT
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:33767 "EHLO
+        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751920AbdDCJCn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 15:14:59 -0400
-Received: by mail-pg0-f50.google.com with SMTP id s64so868447pgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Apr 2017 12:14:59 -0700 (PDT)
-Subject: Re: [PATCH V2 02/10] nl80211: allow multiple active scheduled scan
- requests
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
- <1492085196-4574-3-git-send-email-arend.vanspriel@broadcom.com>
- <1492505589.2472.2.camel@sipsolutions.net>
- <1492505735.2472.3.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <ae245fa9-8415-5f23-f0c7-a4f95680bc3a@broadcom.com> (sfid-20170418_211502_996440_D64EAB73)
-Date: Tue, 18 Apr 2017 21:14:51 +0200
+        Mon, 3 Apr 2017 05:02:43 -0400
+Received: by mail-lf0-f45.google.com with SMTP id h125so68424185lfe.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 02:02:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1492505735.2472.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: Adrien Decostre <ad.decostre@gmail.com>
+Date: Mon, 3 Apr 2017 11:02:01 +0200
+Message-ID: <CAOtFK_Xr50=9h+McOY1sg41=jPry5n80u-+M=S4tGSpme8Qjhg@mail.gmail.com> (sfid-20170403_110247_353857_33A60A09)
+Subject: Question about ath9k compliancy with upcoming EN 301 893 v2.0.7
+To: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+        kvalo@adurom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dear all,
 
+ETSI is publishing in the coming months an update of the EN 301 893
+standard with major changes on the adaptivity and receiver blocking
+tests behavior (https://www.nts.com/ntsblog/upcoming-changes-for-wireless-equipment-in-the-5-ghz-band-en-301-893/).
+The adaptivity test requirements will now require the 802.11 link
+being stopped in the case of some particular OFDM interference signal.
+I was looking on the mailing list archive for information about the
+modifications required in the ath9k in order to keep compliancy but I
+did not found any relevant discussion. Would someone know if the ath9k
+driver can be configured to break connection at the detection of high
+enough OFDM signal not compliant with the 802.11 standard?
 
-On 4/18/2017 10:55 AM, Johannes Berg wrote:
-> On Tue, 2017-04-18 at 10:53 +0200, Johannes Berg wrote:
->> Hi Arend,
->>
->> Overall this looks good, and I've almost applied it - but I have a
->> question on this patch.
->>
->> You have this list:
->>
->>> +	struct list_head sched_scan_req_list;
->>>   	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
->>
->> but you kept this. In fact, it's even still *used*. I don't
->> understand
->> that part.
->>
->> Also, you used RCU primitives for the new list, but you never
->> actually
->> used them - except in one place (in nl80211_stop_sched_scan) where
->> it's
->> actually not needed at all and the _rcu should be removed (since it
->> holds the lock)
->>
->> What's up with that?
-> 
-> Actually, I think I see what's up - you simply forgot to remove the
-> sched_scan_req member, and then didn't realize that it was still used
-> in nl80211_netlink_notify(), and that's the place that *does* need the
-> RCU stuff.
+Many thanks in advance for any help
 
-Yes. Sorry for screwing it up. Will rebase the series and fix it.
-
-Regards,
-Arend
+Best regards
