@@ -1,11 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35593 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932205AbdDDQua (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:32803 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752225AbdDCSmB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 12:50:30 -0400
-Received: by mail-oi0-f65.google.com with SMTP id d2so18373360oig.2
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:29 -0700 (PDT)
+        Mon, 3 Apr 2017 14:42:01 -0400
+Received: by mail-oi0-f67.google.com with SMTP id f193so21147432oib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:42:01 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
@@ -13,20 +13,19 @@ Cc: linux-wireless@vger.kernel.org,
         Larry Finger <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 07/13] rtlwifi: btcoex: 23b 2ant: check more cases when bt is queuing
-Date: Tue,  4 Apr 2017 11:50:00 -0500
-Message-Id: <20170404165006.14329-8-Larry.Finger@lwfinger.net> (sfid-20170404_185049_356878_8DE23CBA)
-In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
-References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+Subject: [PATCH v3 11/12] rtlwifi: btcoex: 23b 2ant: add comments to describe how duration adjusted
+Date: Mon,  3 Apr 2017 13:41:41 -0500
+Message-Id: <20170403184147.18409-11-Larry.Finger@lwfinger.net> (sfid-20170403_204222_037358_7A2D2233)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-If bt is queing, we need to set the packet priority properly.
-Originally we only consider if wifi was connected or not, but now we
-also consider if bt is under abnormal scan or wifi is scanning, roaming
-or linking, and set the coex table.
+Since btcoex uses static variables to store the cumulative information
+on the wifi status, some tricks are used that are a bit obscure. We add
+some comments about the criteria we use to adjust wifi duration.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
@@ -35,64 +34,67 @@ Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
 Cc: Steven Ting <steventing@realtek.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 24 +++++++++++++++++++---
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  1 +
- 2 files changed, 22 insertions(+), 3 deletions(-)
+v2 - No changes.
+v3 - No changes.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c       | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 735bba9..8b2bef8 100644
+index b1a4c8466bc6..fb72bcd4090c 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1464,17 +1464,35 @@ static void btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
+@@ -1622,6 +1622,9 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 				dn = 0;
  
- static void btc8723b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
- {
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	bool wifi_connected = false;
- 	bool low_pwr_disable = true;
-+	bool scan = false, link = false, roam = false;
+ 			if (up >= n) {
++				/* if retry count during continuous n*2
++				 * seconds is 0, enlarge WiFi duration
++				 */
+ 				wait_count = 0;
+ 				n = 3;
+ 				up = 0;
+@@ -1638,12 +1641,20 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 				up = 0;
  
- 	btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
- 			   &low_pwr_disable);
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
- 			   &wifi_connected);
+ 			if (dn == 2) {
++				/* if continuous 2 retry count(every 2
++				 * seconds) >0 and < 3, reduce WiFi duration
++				 */
+ 				if (wait_count <= 2)
++					/* avoid loop between the two levels */
+ 					m++;
+ 				else
+ 					m = 1;
  
--	if (wifi_connected) {
--		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
--		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 3);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_LINK, &link);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_ROAM, &roam);
-+
-+	btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
-+
-+	if (coex_sta->bt_abnormal_scan) {
-+		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
-+		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 3);
-+	} else if (scan || link || roam) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], Wifi link process + BT Inq/Page!!\n");
-+		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 15);
-+		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 22);
-+	} else if (wifi_connected) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], Wifi connected + BT Inq/Page!!\n");
-+		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 15);
-+		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 22);
- 	} else {
- 		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
- 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-index 57eac22..f5e091f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-@@ -137,6 +137,7 @@ struct coex_sta_8723b_2ant {
- 	bool a2dp_exist;
- 	bool hid_exist;
- 	bool pan_exist;
-+	bool bt_abnormal_scan;
+ 				if (m >= 20)
++					/* maximum of m = 20 ' will recheck if
++					 * need to adjust wifi duration in
++					 * maximum time interval 120 seconds
++					 */
+ 					m = 20;
  
- 	bool under_lps;
- 	bool under_ips;
+ 				n = 3 * m;
+@@ -1655,12 +1666,20 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 					 "[BTCoex], Decrease wifi duration for retry_counter<3!!\n");
+ 			}
+ 		} else {
++			/* retry count > 3, once retry count > 3, to reduce
++			 *  WiFi duration
++			 */
+ 			if (wait_count == 1)
++				/* to avoid loop between the two levels */
+ 				m++;
+ 			else
+ 				m = 1;
+ 
+ 			if (m >= 20)
++				/* maximum of m = 20 ' will recheck if need to
++				 * adjust wifi duration in maximum time interval
++				 * 120 seconds
++				 */
+ 				m = 20;
+ 
+ 			n = 3 * m;
 -- 
-2.10.2
+2.12.0
