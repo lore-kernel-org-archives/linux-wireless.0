@@ -1,61 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9671 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428701AbdDYVUD (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36128 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751329AbdDCBOl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 17:20:03 -0400
-From: <ryanhsu@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC: <ryanhsu@qti.qualcomm.com>
-Subject: [PATCH] ath10k: append the wmi_op_version to testmode get_version cmd
-Date: Tue, 25 Apr 2017 14:19:16 -0700
-Message-ID: <1493155156-22697-1-git-send-email-ryanhsu@qti.qualcomm.com> (sfid-20170425_232007_062370_493CB047)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 2 Apr 2017 21:14:41 -0400
+Received: by mail-oi0-f67.google.com with SMTP id b187so17392297oif.3
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Apr 2017 18:14:41 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 11/12] rtlwifi: btcoex: 23b 2ant: add comments to describe how duration adjusted
+Date: Sun,  2 Apr 2017 20:14:21 -0500
+Message-Id: <20170403011428.6156-11-Larry.Finger@lwfinger.net> (sfid-20170403_031454_415473_74127375)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-QCA9xxx and QCA61x4/QCA93xx are using different wmi operation, in order
-for userspace to differentiate it, appends the wmi_op_version information
-alone with the get_version command.
+Since btcoex uses static variables to store the cumulative information
+on the wifi status, some tricks are used that are a bit obscure. We add
+some comments about the criteria we use to adjust wifi duration.
 
-Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/ath/ath10k/testmode.c   | 7 +++++++
- drivers/net/wireless/ath/ath10k/testmode_i.h | 1 +
- 2 files changed, 8 insertions(+)
+v2 - No changes.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c       | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index ed85f93..eaf4a4b 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -137,6 +137,13 @@ static int ath10k_tm_cmd_get_version(struct ath10k *ar, struct nlattr *tb[])
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index ac4074c67b3e..c349675d971a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1622,6 +1622,9 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 				dn = 0;
  
-+	ret = nla_put_u32(skb, ATH10K_TM_ATTR_WMI_OP_VERSION,
-+			  ar->normal_mode_fw.fw_file.wmi_op_version);
-+	if (ret) {
-+		kfree_skb(skb);
-+		return ret;
-+	}
-+
- 	return cfg80211_testmode_reply(skb);
- }
+ 			if (up >= n) {
++				/* if retry count during continuous n*2
++				 * seconds is 0, enlarge WiFi duration
++				 */
+ 				wait_count = 0;
+ 				n = 3;
+ 				up = 0;
+@@ -1638,12 +1641,20 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 				up = 0;
  
-diff --git a/drivers/net/wireless/ath/ath10k/testmode_i.h b/drivers/net/wireless/ath/ath10k/testmode_i.h
-index ba81bf6..191a8f3 100644
---- a/drivers/net/wireless/ath/ath10k/testmode_i.h
-+++ b/drivers/net/wireless/ath/ath10k/testmode_i.h
-@@ -33,6 +33,7 @@ enum ath10k_tm_attr {
- 	ATH10K_TM_ATTR_WMI_CMDID	= 3,
- 	ATH10K_TM_ATTR_VERSION_MAJOR	= 4,
- 	ATH10K_TM_ATTR_VERSION_MINOR	= 5,
-+	ATH10K_TM_ATTR_WMI_OP_VERSION	= 6,
+ 			if (dn == 2) {
++				/* if continuous 2 retry count(every 2
++				 * seconds) >0 and < 3, reduce WiFi duration
++				 */
+ 				if (wait_count <= 2)
++					/* avoid loop between the two levels */
+ 					m++;
+ 				else
+ 					m = 1;
  
- 	/* keep last */
- 	__ATH10K_TM_ATTR_AFTER_LAST,
+ 				if (m >= 20)
++					/* maximum of m = 20 ' will recheck if
++					 * need to adjust wifi duration in
++					 * maximum time interval 120 seconds
++					 */
+ 					m = 20;
+ 
+ 				n = 3 * m;
+@@ -1655,12 +1666,20 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 					 "[BTCoex], Decrease wifi duration for retry_counter<3!!\n");
+ 			}
+ 		} else {
++			/* retry count > 3, once retry count > 3, to reduce
++			 *  WiFi duration
++			 */
+ 			if (wait_count == 1)
++				/* to avoid loop between the two levels */
+ 				m++;
+ 			else
+ 				m = 1;
+ 
+ 			if (m >= 20)
++				/* maximum of m = 20 ' will recheck if need to
++				 * adjust wifi duration in maximum time interval
++				 * 120 seconds
++				 */
+ 				m = 20;
+ 
+ 			n = 3 * m;
 -- 
-1.9.1
+2.12.0
