@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:26092 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55112 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754592AbdDEIQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 04:16:12 -0400
-Date: Wed, 5 Apr 2017 10:16:07 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Subject: Re: [PATCH v1] NFC: netlink: Use error code from
- nfc_activate_target()
-Message-ID: <20170405081544.GC2136@zurbaran.ger.intel.com> (sfid-20170405_102010_874281_6EBBBFCD)
-References: <20170322192058.30193-1-andriy.shevchenko@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20170322192058.30193-1-andriy.shevchenko@linux.intel.com>
+        id S1751692AbdDCT7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Apr 2017 15:59:38 -0400
+Message-ID: <1491249573.4714.3.camel@sipsolutions.net> (sfid-20170403_215941_597752_06BD0940)
+Subject: Re: [PATCH 1/2] Documentation/sphinx: kerneldoc: add
+ "unused-functions"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jani Nikula <jani.nikula@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org
+Date: Mon, 03 Apr 2017 21:59:33 +0200
+In-Reply-To: <878tnl38ur.fsf@intel.com>
+References: <20170331071632.6209-1-johannes@sipsolutions.net>
+         <878tnl38ur.fsf@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andy,
-
-On Wed, Mar 22, 2017 at 09:20:58PM +0200, Andy Shevchenko wrote:
-> It looks like a typo to assign a return code to a variable which is not
-> used. Found due to a compiler warning:
+On Fri, 2017-03-31 at 15:54 +0300, Jani Nikula wrote:
 > 
-> net/nfc/netlink.c: In function ‘nfc_genl_activate_target’:
-> net/nfc/netlink.c:903:6: warning: variable ‘rc’ set but not used [-Wunused-but-set-variable]
->   int rc;
->         ^~
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  net/nfc/netlink.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-Applied, thanks.
+> I'm sure the parameter name could be improved to capture what you
+> mean better; alas I don't have a suggestion.
 
-Cheers,
-Samuel.
+Yes, that's a fair point - perhaps "functions-not-linked" or something
+like that.
+
+> > Internally this works by collecting (per-file) those functions
+> > (and enums, structs, doc sections...) that are explicitly used,
+> > and invoking the kernel-doc script with "-nofunction" later.
+> 
+> A quick thought that I don't have the time to check now, but should
+> be checked before merging: Is the order of directive extension
+> execution deterministic if the Sphinx run is parallelized (sphinx-
+> build -j)? Is it deterministic within an rst file? Surely it's not
+> deterministic when called from several rst files? The latter is,
+> perhaps, acceptable, but the former not.
+
+Interesting, TBH I never even considered this. How would I even run it
+that way? Presumably "make htmldocs" doesn't do this?
+
+Sphinx documentation (http://www.sphinx-doc.org/en/stable/extdev/) says
+this:
+
+    The setup() function can return a dictionary. This is treated by
+    Sphinx as metadata of the extension. Metadata keys currently
+    recognized are:
+    [...]
+    'parallel_read_safe': a boolean that specifies if parallel reading
+    of source files can be used when the extension is loaded. It
+    defaults to False, i.e. you have to explicitly specify your
+    extension to be parallel-read-safe after checking that it is.
+
+    We do set this right now, so I guess it'd only be guaranteed to work
+    right within a single rst file, and then I should perhaps consider not
+    making this state global but somehow linking it to the rst file being
+    processed?
+
+    johannes
