@@ -1,64 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:35203 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1951920AbdDYS4H (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36273 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752355AbdDCSlz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 14:56:07 -0400
-Received: by mail-wm0-f47.google.com with SMTP id w64so30995998wma.0
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Apr 2017 11:56:07 -0700 (PDT)
-Subject: Re: [RFC] cfg80211: add control port state to struct
- cfg80211_connect_resp_params
-To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
-References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
- <1493131210.2609.2.camel@sipsolutions.net>
- <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
- <1493145418.2609.5.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com> (sfid-20170425_205704_455520_6098118A)
-Date: Tue, 25 Apr 2017 20:56:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <1493145418.2609.5.camel@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+        Mon, 3 Apr 2017 14:41:55 -0400
+Received: by mail-oi0-f65.google.com with SMTP id b187so21137431oif.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:55 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 05/12] rtlwifi: btcoex: 23b 2ant: monitor wifi counter for allocate tdma time
+Date: Mon,  3 Apr 2017 13:41:35 -0500
+Message-Id: <20170403184147.18409-5-Larry.Finger@lwfinger.net> (sfid-20170403_204220_006490_5D81A867)
+In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-4-2017 20:36, Johannes Berg wrote:
-> On Tue, 2017-04-25 at 20:34 +0200, Arend Van Spriel wrote:
-> 
->>>> +	    (cr->port_state != CONTROL_PORT_STATE_UNAUTHORIZED
->>>> &&
->>>> +	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)) ||
->>>>  	    (cr->req_ie &&
->>>>
->>>
->>> This doesn't really make sense - why does unspecified equal
->>> authorized?
->>
->> I was considering default behavior here for drivers that do not
->> provide this information, ie. drivers not supporting 4-way handshake
->> offload. So wpa_supplicant just looks for the PORT_AUTHORIZED
->> attribute and deals with it without need for checking 4-way handshake
->> offload is supported.
-> 
-> There are two such cases - the driver is old and doesn't provide it,
-> but of course once you see the attribute you know that's not the case.
-> And the case that the driver doesn't support 4-way-HS.
-> 
-> Can you really distinguish these though if you *don't* see the
-> attribute?
-> 
-> But anyway, if it's like mac80211 not providing the data at all, then
-> it would say authorized, which seems wrong since that's clearly not the
-> case for mac80211?
-> 
-> Or maybe I'm just confused.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-You might, but not about this ;-) The other approach I had in mind is to
-only pass the flag for drivers with 4-way-hs support. In that case
-wpa_supp also has to check that to determine whether the flag should be
-taken into account. Assuming the driver supporting 4-way-hs can provide
-the port state info. Otherwise, a new ext_feature flag would be needed.
+If there are too many CRC error packets, it means the wifi is operating
+under low quality circumstances. If so, we need to reallocate the
+resources of wifi and bt
 
-Regards,
-Arend
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - No changes.
+v3 - No changes.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 40 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    | 10 ++++++
+ 2 files changed, 50 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 2c9f626c3ec7..e9c692a5b13e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -309,6 +309,43 @@ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
+ }
+ 
++static void btc8723b2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
++{
++	if (coex_sta->under_ips) {
++		coex_sta->crc_ok_cck = 0;
++		coex_sta->crc_ok_11g = 0;
++		coex_sta->crc_ok_11n = 0;
++		coex_sta->crc_ok_11n_agg = 0;
++
++		coex_sta->crc_err_cck = 0;
++		coex_sta->crc_err_11g = 0;
++		coex_sta->crc_err_11n = 0;
++		coex_sta->crc_err_11n_agg = 0;
++	} else {
++		coex_sta->crc_ok_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf88);
++		coex_sta->crc_ok_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf94);
++		coex_sta->crc_ok_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf90);
++		coex_sta->crc_ok_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfb8);
++
++		coex_sta->crc_err_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf84);
++		coex_sta->crc_err_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf96);
++		coex_sta->crc_err_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf92);
++		coex_sta->crc_err_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfba);
++	}
++
++	/* reset counter */
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x1);
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x0);
++}
++
+ static void btc8723b2ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -2875,6 +2912,9 @@ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
+ #if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 0)
+ 	btc8723b2ant_query_bt_info(btcoexist);
+ #else
++	btc8723b2ant_monitor_bt_ctr(btcoexist);
++	btc8723b2ant_monitor_wifi_ctr(btcoexist);
++
+ 	if (btc8723b2ant_is_wifi_status_changed(btcoexist) ||
+ 	    coex_dm->auto_tdma_adjust)
+ 		btc8723b2ant_run_coexist_mechanism(btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index d787ae3bced2..d1bfdbec82b0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -149,6 +149,16 @@ struct coex_sta_8723b_2ant {
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
+ 	u32 pop_event_cnt;
++
++	u32 crc_ok_cck;
++	u32 crc_ok_11g;
++	u32 crc_ok_11n;
++	u32 crc_ok_11n_agg;
++
++	u32 crc_err_cck;
++	u32 crc_err_11g;
++	u32 crc_err_11n;
++	u32 crc_err_11n_agg;
+ };
+ 
+ /*********************************************************************
+-- 
+2.12.0
