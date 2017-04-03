@@ -1,185 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55068 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S968959AbdD1R5E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 13:57:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59496 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751008AbdDCL0Q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Apr 2017 07:26:16 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
 To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2017-04-28
-Date: Fri, 28 Apr 2017 19:56:57 +0200
-Message-Id: <20170428175658.1961-1-johannes@sipsolutions.net> (sfid-20170428_195726_418785_CDC9D5CC)
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers-next 2017-04-03
+Date: Mon, 03 Apr 2017 14:26:10 +0300
+Message-ID: <87a87xohpp.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_132714_003987_7EB08CFC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi Dave,
 
-Since I had many API changes pending I decided to go ahead and
-take the opportunity to get them before the merge window, which
-is a natural tree synchronization point :)
+here few really small fixes. I'm hoping this to be the last pull request
+for 4.11.
 
-I meant to sent this earlier today but forgot due to some debug
-(unrelated to this code, in our internal tree), sorry about that.
+Please let me if there are any problems.
 
-Please pull and let me know if there's any problem.
+Kalle
 
-Thanks,
-johannes
+The following changes since commit 6be3b6cce1e225f189b68b4e84fc711d19b4277b:
 
-
-
-The following changes since commit 5e1fc7c5ba00599ccd7096eef3e9fd3362c1230f:
-
-  drivers: net: xgene-v2: Fix error return code in xge_mdio_config() (2017-04-25 13:48:06 -0400)
+  ath10k: fix incorrect wlan_mac_base in qca6174_regs (2017-03-20 17:11:31 +0200)
 
 are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2017-04-28
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-04-03
 
-for you to fetch changes up to b34939b9836950d261610132853311054b507247:
+for you to fetch changes up to d77facb88448cdeaaa3adba5b9704a48ac2ac8d6:
 
-  cfg80211: add request id to cfg80211_sched_scan_*() api (2017-04-28 14:51:43 +0200)
-
-----------------------------------------------------------------
-Another set of patches for -next:
- * API support for concurrent scheduled scan requests
- * API changes for roaming reporting
- * BSS max idle support in mac80211
- * API changes for TX status reporting in mac80211
- * API changes for RX rate reporting in mac80211
- * rewrite monitor logic to prepare for BPF filters
- * bugfix for rare devices without 2.4 GHz support
- * a bugfix for recent DFS changes
- * some further cleanups
-
-The API changes are actually at a nice time, since it's
-typically quiet just before the merge window, and trees
-can be synchronized easily during it.
+  brcmfmac: use local iftype avoiding use-after-free of virtual interface (2017-03-30 19:43:51 +0300)
 
 ----------------------------------------------------------------
-Arend Van Spriel (4):
-      nl80211: allow multiple active scheduled scan requests
-      nl80211: add support for BSSIDs in scheduled scan matchsets
-      cfg80211: add request id parameter to .sched_scan_stop() signature
-      cfg80211: add request id to cfg80211_sched_scan_*() api
+wireless-drivers fixes for 4.11
 
-Avraham Stern (2):
-      cfg80211: unify cfg80211_roamed() and cfg80211_roamed_bss()
-      mac80211: Add support for BSS max idle period element
+iwlwifi
 
-Emmanuel Grumbach (1):
-      mac80211: don't parse encrypted management frames in ieee80211_frame_acked
+* an RCU fix
+* a fix for a potential out-of-bounds access crash
+* a fix for IBSS which has been broken since DQA was enabled
 
-Felix Fietkau (3):
-      mac80211: make rate control tx status API more extensible
-      mac80211: move ieee80211_tx_status_noskb below ieee80211_tx_status
-      mac80211: add ieee80211_tx_status_ext
+rtlwifi
 
-Johannes Berg (8):
-      mac80211: rewrite monitor mode delivery logic
-      cfg80211: simplify netlink socket owner interface deletion
-      ieee80211: fix kernel-doc parsing errors
-      mac80211: disentangle iflist_mtx and chanctx_mtx
-      mac80211: clean up rate encoding bits in RX status
-      mac80211: separate encoding/bandwidth from flags
-      mac80211: rename ieee80211_rx_status::vht_nss to just nss
-      mac80211: use bitfield macros for encoded rate
+* fix scheduling while atomic regression
 
-Luca Coelho (3):
-      ieee80211: add SUITE_B AKM selectors
-      ieee80211: add FT-802.1X AKM suite selector
-      mac80211: make multicast variable a bool in ieee80211_accept_frame()
+brcmfmac
 
-Mohammed Shafi Shajakhan (1):
-      mac80211: Fix possible sband related NULL pointer de-reference
+* fix use-after-free bug found by KASAN
 
-Vasanthakumar Thiagarajan (1):
-      cfg80211: Fix dfs state propagation for non-DFS center channel
+----------------------------------------------------------------
+Arend Van Spriel (1):
+      brcmfmac: use local iftype avoiding use-after-free of virtual interface
 
- drivers/net/wireless/ath/ath10k/htt_rx.c           |  48 ++---
- drivers/net/wireless/ath/ath5k/base.c              |   6 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |  16 +-
- drivers/net/wireless/ath/ath6kl/wmi.c              |   2 +-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c        |   7 +-
- drivers/net/wireless/ath/ath9k/common.c            |  11 +-
- drivers/net/wireless/ath/ath9k/debug_sta.c         |   6 +-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c      |   7 +-
- drivers/net/wireless/ath/ath9k/mac.c               |  15 +-
- drivers/net/wireless/ath/ath9k/mac.h               |   4 +-
- drivers/net/wireless/ath/ath9k/recv.c              |   8 +-
- drivers/net/wireless/ath/carl9170/rx.c             |   8 +-
- drivers/net/wireless/ath/wcn36xx/txrx.c            |   2 +-
- drivers/net/wireless/broadcom/b43/xmit.c           |   2 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  25 ++-
- .../wireless/broadcom/brcm80211/brcmsmac/main.c    |  10 +-
- drivers/net/wireless/intel/iwlegacy/3945.c         |   2 +-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c     |   8 +-
- drivers/net/wireless/intel/iwlwifi/dvm/rx.c        |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  26 +--
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  26 +--
- drivers/net/wireless/intersil/p54/txrx.c           |   2 +-
- drivers/net/wireless/mac80211_hwsim.c              |  10 +-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |  10 +-
- drivers/net/wireless/marvell/mwifiex/main.c        |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_event.c   |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |   2 +-
- drivers/net/wireless/marvell/mwl8k.c               |  16 +-
- drivers/net/wireless/mediatek/mt7601u/mac.c        |  12 +-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |   4 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c     |   5 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.h   |   3 +
- drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c |   2 +-
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c |   2 +-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  |  10 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c   |   4 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   |   4 +-
- .../net/wireless/realtek/rtlwifi/rtl8192cu/trx.c   |   8 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/trx.c   |   4 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |   4 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/trx.c   |   4 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/trx.c   |   4 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   |   4 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   |  12 +-
- drivers/net/wireless/rndis_wlan.c                  |  19 +-
- drivers/net/wireless/st/cw1200/txrx.c              |   2 +-
- drivers/net/wireless/ti/wl1251/rx.c                |   2 +-
- drivers/net/wireless/ti/wlcore/main.c              |   2 +-
- drivers/net/wireless/ti/wlcore/rx.c                |   2 +-
- drivers/staging/wlan-ng/cfg80211.c                 |   7 +-
- include/linux/ieee80211.h                          |  67 ++++--
- include/net/cfg80211.h                             | 105 +++++----
- include/net/mac80211.h                             | 172 +++++++++------
- include/uapi/linux/nl80211.h                       |  16 +-
- net/mac80211/cfg.c                                 |  39 ++--
- net/mac80211/ibss.c                                |  10 +-
- net/mac80211/ieee80211_i.h                         |  41 ++--
- net/mac80211/main.c                                |   2 +
- net/mac80211/mesh.c                                |  29 ++-
- net/mac80211/mesh_plink.c                          |  37 +++-
- net/mac80211/mlme.c                                |  28 ++-
- net/mac80211/pm.c                                  |   2 +-
- net/mac80211/rate.c                                |  26 ++-
- net/mac80211/rate.h                                |  44 +---
- net/mac80211/rc80211_minstrel.c                    |   6 +-
- net/mac80211/rc80211_minstrel_ht.c                 |  10 +-
- net/mac80211/rx.c                                  | 234 ++++++++++++---------
- net/mac80211/scan.c                                |  12 +-
- net/mac80211/sta_info.c                            |  39 ++--
- net/mac80211/sta_info.h                            |  83 +++++---
- net/mac80211/status.c                              | 168 ++++++++-------
- net/mac80211/tdls.c                                |  29 ++-
- net/mac80211/tx.c                                  |   5 +-
- net/mac80211/util.c                                |  79 ++++---
- net/wireless/core.c                                |  57 ++---
- net/wireless/core.h                                |  35 ++-
- net/wireless/nl80211.c                             | 143 ++++++++-----
- net/wireless/nl80211.h                             |   5 +-
- net/wireless/rdev-ops.h                            |   8 +-
- net/wireless/reg.c                                 |   3 -
- net/wireless/scan.c                                | 160 ++++++++++----
- net/wireless/sme.c                                 |  90 ++++----
- net/wireless/trace.h                               |  54 +++--
- net/wireless/util.c                                |   4 +-
- 86 files changed, 1323 insertions(+), 936 deletions(-)
+Dan Carpenter (1):
+      iwlwifi: mvm: writing zero bytes to debugfs causes a crash
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2017-03-29' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      rtlwifi: Fix scheduling while atomic splat
+
+Liad Kaufman (1):
+      iwlwifi: mvm: support ibss in dqa mode
+
+Sara Sharon (1):
+      iwlwifi: mvm: fix accessing fw_id_to_mac_id
+
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 8 +++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c       | 2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c      | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c      | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c           | 9 ++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c            | 7 +++++--
+ drivers/net/wireless/realtek/rtlwifi/base.c            | 6 ++++--
+ 7 files changed, 25 insertions(+), 12 deletions(-)
