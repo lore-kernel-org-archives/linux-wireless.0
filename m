@@ -1,91 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:44927 "EHLO
-        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754076AbdDZTyT (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33726 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932072AbdDDQuW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 15:54:19 -0400
-Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
-        by mx08-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3QJo8LA002883
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 20:54:17 +0100
-Received: from mail-wr0-f199.google.com (mail-wr0-f199.google.com [209.85.128.199])
-        by mx08-00252a01.pphosted.com with ESMTP id 2a2ebe0epd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 20:54:17 +0100
-Received: by mail-wr0-f199.google.com with SMTP id j27so1132640wre.3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 12:54:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com>
-References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
- <20170426085337.181AA61493@smtp.codeaurora.org> <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com>
- <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com>
-From: James Hughes <james.hughes@raspberrypi.org>
-Date: Wed, 26 Apr 2017 20:54:15 +0100
-Message-ID: <CAE_XsM+XRcnO+tQEPnntNYVObnpJwimXP1_41aqJPwnxHWxonQ@mail.gmail.com> (sfid-20170426_215424_720510_AB408AF1)
-Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Steve deRosier <derosier@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Tue, 4 Apr 2017 12:50:22 -0400
+Received: by mail-oi0-f65.google.com with SMTP id f193so25703306oib.0
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:21 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/13] rtlwifi: btcoex: 23b 2ant: check PS state before setting tdma duration
+Date: Tue,  4 Apr 2017 11:49:54 -0500
+Message-Id: <20170404165006.14329-2-Larry.Finger@lwfinger.net> (sfid-20170404_185025_895378_13456068)
+In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 April 2017 at 19:03, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
->
->
-> On 26-4-2017 17:44, Steve deRosier wrote:
->> On Wed, Apr 26, 2017 at 1:53 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>>> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
->>>> callback was actually cloned. So instead of checking for sufficient
->>>> headroom it should also be writable. Hence use skb_cow_head() to
->>>> check and expand the headroom appropriately.
->>>>
->>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>
->>> Steve, would you have time to run a quick test with this?
->>>
->>> Patch set to Deferred.
->>>
->>
->> Happy to give it a quick spin on both of my platforms.
->>
->> @Arend: is there some demonstrable before/after that shows a problem I
->> can detect at runtime?  I understand your thought about putting a
->> skb_clone() in there, but what are the expectations?  And is any
->> problem evident without explicitly modding the code with the clone?
->
-> Ok. So the root cause is explained in a email to netdev mailing list,
-> but I can not find it. The sender was probably not a member. I will
-> forward that email to you and cc: linux-wireless. Basically, you need to
-> setup a bridge and run hostapd in bridged mode. Incoming multicast
-> traffic will be cloned by bridge and sent all interfaces in the bridge.
-> If more than one driver puts additional payload in the headroom they are
-> basically mucking about in the same buffer space so packets probably
-> never end up in the devices. In case of ath6kl the patch is in area
-> where driver/device determines IP checksum if it is supported (if I am
-> not mistaken). So not sure how easy it is to replicate without patching
-> it for testing.
->
-> Regards,
-> Arend
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-That was me. The full mechanism can be seen on the Raspberry Pi github
-issue tracker  here
+For time division multiple access, the wifi and bt take turns to
+transmit, but we need to let AP know that wifi is under standby mode by
+sending null data to "pretend" entering power saving state using lps
+rpwm.
 
-https://github.com/raspberrypi/firmware/issues/673
+But, the fw does not know if it is the actual power saving mode or just a
+fake one to cheat to the AP. Hence, before fw setting the tdma duration,
+the fw needs the driver to check the power saving state first.
 
-In brief, when bridging between two devices, if both devices fail to
-'unclone' then
-header corruption could occur if both the devices made header changes
-since they are
-both looking at the same data.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 95 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  6 ++
+ 2 files changed, 101 insertions(+)
 
-The Pi has a smsc9x ethernet device and the Brcm Wireless chip - both
-had the fault, so we
-were getting corrupted headers, and eventual failure of ethernet.
-
-The same fault appears in a large subset of drivers in my brief examinations.
-
-James
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 3b3bdeb..6f00b7e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -978,6 +978,33 @@ static void btc8723b2ant_set_fw_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x63, 1, h2c_parameter);
+ }
+ 
++static void btc8723b2ant_set_lps_rpwm(struct btc_coexist *btcoexist,
++				      u8 lps_val, u8 rpwm_val)
++{
++	u8 lps = lps_val;
++	u8 rpwm = rpwm_val;
++
++	btcoexist->btc_set(btcoexist, BTC_SET_U1_LPS_VAL, &lps);
++	btcoexist->btc_set(btcoexist, BTC_SET_U1_RPWM_VAL, &rpwm);
++}
++
++static void btc8723b2ant_lps_rpwm(struct btc_coexist *btcoexist,
++				  bool force_exec, u8 lps_val, u8 rpwm_val)
++{
++	coex_dm->cur_lps = lps_val;
++	coex_dm->cur_rpwm = rpwm_val;
++
++	if (!force_exec) {
++		if ((coex_dm->pre_lps == coex_dm->cur_lps) &&
++		    (coex_dm->pre_rpwm == coex_dm->cur_rpwm))
++			return;
++	}
++	btc8723b2ant_set_lps_rpwm(btcoexist, lps_val, rpwm_val);
++
++	coex_dm->pre_lps = coex_dm->cur_lps;
++	coex_dm->pre_rpwm = coex_dm->cur_rpwm;
++}
++
+ static void btc8723b2ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 					 bool force_exec, bool enable)
+ {
+@@ -1341,9 +1368,74 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 	coex_dm->pre_ps_tdma = coex_dm->cur_ps_tdma;
+ }
+ 
++static void btc8723b2ant_ps_tdma_check_for_power_save_state(
++		struct btc_coexist *btcoexist, bool new_ps_state)
++{
++	u8 lps_mode = 0x0;
++
++	btcoexist->btc_get(btcoexist, BTC_GET_U1_LPS_MODE, &lps_mode);
++
++	if (lps_mode) {
++		/* already under LPS state */
++		if (new_ps_state) {
++			/* keep state under LPS, do nothing. */
++		} else {
++			/* will leave LPS state, turn off psTdma first */
++			btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
++		}
++	} else {
++		/* NO PS state */
++		if (new_ps_state) {
++			/* will enter LPS state, turn off psTdma first */
++			btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
++		} else {
++			/* keep state under NO PS state, do nothing. */
++		}
++	}
++}
++
++static void btc8723b2ant_power_save_state(struct btc_coexist *btcoexist,
++					  u8 ps_type, u8 lps_val, u8 rpwm_val)
++{
++	bool low_pwr_disable = false;
++
++	switch (ps_type) {
++	case BTC_PS_WIFI_NATIVE:
++		/* recover to original 32k low power setting */
++		low_pwr_disable = false;
++		btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
++				   &low_pwr_disable);
++		btcoexist->btc_set(btcoexist, BTC_SET_ACT_NORMAL_LPS, NULL);
++		coex_sta->force_lps_on = false;
++		break;
++	case BTC_PS_LPS_ON:
++		btc8723b2ant_ps_tdma_check_for_power_save_state(btcoexist,
++								true);
++		btc8723b2ant_lps_rpwm(btcoexist, NORMAL_EXEC, lps_val,
++				      rpwm_val);
++		/* when coex force to enter LPS, do not enter 32k low power */
++		low_pwr_disable = true;
++		btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
++				   &low_pwr_disable);
++		/* power save must executed before psTdma */
++		btcoexist->btc_set(btcoexist, BTC_SET_ACT_ENTER_LPS, NULL);
++		coex_sta->force_lps_on = true;
++		break;
++	case BTC_PS_LPS_OFF:
++		btc8723b2ant_ps_tdma_check_for_power_save_state(btcoexist,
++								false);
++		btcoexist->btc_set(btcoexist, BTC_SET_ACT_LEAVE_LPS, NULL);
++		coex_sta->force_lps_on = false;
++		break;
++	default:
++		break;
++	}
++}
++
+ static void btc8723b2ant_coex_alloff(struct btc_coexist *btcoexist)
+ {
+ 	/* fw all off */
++	btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
+ 	btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
+ 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 	btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+@@ -1359,6 +1451,7 @@ static void btc8723b2ant_coex_alloff(struct btc_coexist *btcoexist)
+ static void btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
+ 	/* force to reset coex mechanism*/
++	btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
+ 
+ 	btc8723b2ant_ps_tdma(btcoexist, FORCE_EXEC, false, 1);
+ 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, FORCE_EXEC, 6);
+@@ -1801,6 +1894,8 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
+ 		/* for HID quality & wifi performance balance at 11n mode */
+ 		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 9);
+ 
++	btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
++
+ 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+ 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 9);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index 746930d..5bcaece 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -122,6 +122,11 @@ struct coex_dm_8723b_2ant {
+ 	u8 bt_status;
+ 	u8 wifi_chnl_info[3];
+ 
++	u8 pre_lps;
++	u8 cur_lps;
++	u8 pre_rpwm;
++	u8 cur_rpwm;
++
+ 	bool need_recover_0x948;
+ 	u16 backup_0x948;
+ };
+@@ -160,6 +165,7 @@ struct coex_sta_8723b_2ant {
+ 	u32 crc_err_11g;
+ 	u32 crc_err_11n;
+ 	u32 crc_err_11n_agg;
++	bool force_lps_on;
+ 
+ 	u8 a2dp_bit_pool;
+ };
+-- 
+2.10.2
