@@ -1,80 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:49392 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1163585AbdD2DmS (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:35317 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752859AbdDDTrO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 23:42:18 -0400
-From: =?big5?B?svir26vF?= <yhchuang@realtek.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Szuyitasi <szuyitasi@realtek.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: RE: [PATCH 06/10] rtlwifi: btcoex: 21a 2ant: run mechanism if status changes or auto adjust is set
-Date: Sat, 29 Apr 2017 03:42:06 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F8401535564@RTITMBSV07.realtek.com.tw> (sfid-20170429_054341_389818_0F64FB7E)
-References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
- <20170416190428.23857-7-Larry.Finger@lwfinger.net>
- <87bmrrbb8q.fsf@purkki.adurom.net>
- <F7CD281DE3E379468C6D07993EA72F8401533A7C@RTITMBSV07.realtek.com.tw>,<d02588ed-bf39-86a5-19ae-bbd3faafb3e7@lwfinger.net>
-In-Reply-To: <d02588ed-bf39-86a5-19ae-bbd3faafb3e7@lwfinger.net>
-Content-Type: text/plain; charset="big5"
+        Tue, 4 Apr 2017 15:47:14 -0400
+Received: by mail-oi0-f46.google.com with SMTP id f193so175962644oib.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 12:47:14 -0700 (PDT)
+Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
+To: Hans de Goede <hdegoede@redhat.com>
+References: <20170329174751.13184-1-hdegoede@redhat.com>
+ <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
+ <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
+Cc: Bastien Nocera <hadess@hadess.net>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <e1b79b4e-e074-50c4-84e6-f40b5fd4117a@lwfinger.net> (sfid-20170404_214719_618554_43BB35CF)
+Date: Tue, 4 Apr 2017 14:47:12 -0500
 MIME-Version: 1.0
+In-Reply-To: <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RGVhciBMYXJyeSwKClRob3VnaCBteSBjb2xsZWFndWUgc2FpZCB0aGF0IHRoZXkgdXN1YWxseSB1
-c2UgQVVUT19SRVBPUlQgPSAxIHRvIHJ1biB0aGUgYnRjb2V4LgpCdXQgSSB0aGluayB5b3VyIHBh
-dGNoIGlzIGJldHRlciBiZWNhdXNlIGlmIHdlIGp1c3QgcmVtb3ZlIHRoZSBsZXNzIHVzZWQgcGFy
-dCB3ZSBuZWVkIHRvIGFkZCB0aGVtIGJhY2sgaW4gdGhlIGZ1dHVyZSBhZ2Fpbi4gU28ganVzdCB1
-c2UgeW91ciBwYXRjaCBidXQgc2V0IHRoZSBBVVRPX1JFUE9SVCBkZWZhdWx0IHRydWUuCgpSZWdh
-cmRzLApUb255Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KsXE6IExh
-cnJ5IEZpbmdlciBbbGFycnkuZmluZ2VyQGdtYWlsLmNvbV0gpU6q7SBMYXJyeSBGaW5nZXIgW0xh
-cnJ5LkZpbmdlckBsd2Zpbmdlci5uZXRdCrFIpfOk6bTBOiAyMDE3pn40pOsyOaTpIKRXpMggMDI6
-NTIKptw6ILL4q9urxTsgU3p1eWl0YXNpCrDGpbs6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
-Lm9yZzsgUGtzaGloOyBCaXJtaW5nIENoaXU7IFNoYW9mdTsgU3RldmVuIFRpbmcKpUSmrjogUmU6
-IFtQQVRDSCAwNi8xMF0gcnRsd2lmaTogYnRjb2V4OiAyMWEgMmFudDogcnVuIG1lY2hhbmlzbSBp
-ZiBzdGF0dXMgY2hhbmdlcyBvciBhdXRvIGFkanVzdCBpcyBzZXQKCk9uIDA0LzIwLzIwMTcgMDg6
-MzAgQU0sILL4q9urxSB3cm90ZToKPiBEZWFyIFNZLAo+Cj4gTGludXgga2VybmVsIHVwc3RyZWFt
-IKRXrbG576nzs2+62CBpZmRlZiCquqTopqGsT6Sju3umUKq6Cj4gr+CnX6XOqOSlTKq6pOimoajT
-pU60wKlPPwo+IKnOrE+nUaXOxdy8xqjTsbGo7qFDCj4KPiCldKV+pnCqR2RlZmF1bHSsT7Zdrf7D
-5KFBrFmkQLj0pXWsT2ZvciBzcGVjaWFsIGNhc2WqurjcCj4gpWmlSKX9p+Ko5KSkpEDD5K6zsbyh
-Qwo+IKX9pFd1cHN0cmVhbSCkp6vhpkGo03JlZmluZQo+Cj4KPiBCZXN0IFJlZ2FyZHMsCj4gVG9u
-eQo+Cj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KPiBGcm9tOiBLYWxsZSBWYWxvIFttYWls
-dG86a3ZhbG9AY29kZWF1cm9yYS5vcmddCj4gU2VudDogVGh1cnNkYXksIEFwcmlsIDIwLCAyMDE3
-IDY6NTQgUE0KPiBUbzogTGFycnkgRmluZ2VyCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
-bmVsLm9yZzsgsvir26vFOyBQa3NoaWg7IEJpcm1pbmcgQ2hpdTsgU2hhb2Z1OyBTdGV2ZW4gVGlu
-Zwo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDYvMTBdIHJ0bHdpZmk6IGJ0Y29leDogMjFhIDJhbnQ6
-IHJ1biBtZWNoYW5pc20gaWYgc3RhdHVzIGNoYW5nZXMgb3IgYXV0byBhZGp1c3QgaXMgc2V0Cj4K
-PiBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+IHdyaXRlczoKPgo+PiBG
-cm9tOiBZYW4tSHN1YW4gQ2h1YW5nIDx5aGNodWFuZ0ByZWFsdGVrLmNvbT4KPj4KPj4gVGhlIGRy
-aXZlciB3aWxsIHBlcmlvZGljYWxseSBhc2sgdGhlIGNvZXgsIGFuZCB0aGUgY29leCBvbmx5IHJ1
-bnMgdGhlCj4+IG1lY2hhbmlzbSB3aGVuIHRoZSBzdGF0dXMgd2FzIGNoYW5nZWQgb3IgdGhlIGF1
-dG8gYWRqdXN0IGlzIHNldC4KPj4KPj4gU2lnbmVkLW9mZi1ieTogWWFuLUhzdWFuIENodWFuZyA8
-eWhjaHVhbmdAcmVhbHRlay5jb20+Cj4+IFNpZ25lZC1vZmYtYnk6IExhcnJ5IEZpbmdlciA8TGFy
-cnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD4KPj4gQ2M6IFBrc2hpaCA8cGtzaGloQHJlYWx0ZWsuY29t
-Pgo+PiBDYzogQmlybWluZyBDaGl1IDxiaXJtaW5nQHJlYWx0ZWsuY29tPgo+PiBDYzogU2hhb2Z1
-IDxzaGFvZnVAcmVhbHRlay5jb20+Cj4+IENjOiBTdGV2ZW4gVGluZyA8c3RldmVudGluZ0ByZWFs
-dGVrLmNvbT4KPgo+IFsuLi5dCj4KPj4gQEAgLTQyMDAsNyArNDIwMCwxNCBAQCB2b2lkIGV4X2J0
-Yzg4MjFhMmFudF9wZXJpb2RpY2FsKHN0cnVjdCBidGNfY29leGlzdCAqYnRjb2V4aXN0KQo+PiAg
-ICAgICAgICAgICAgICAgICAgICAgIltCVENvZXhdLCAqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqXG4iKTsKPj4gICAgICB9Cj4+
-Cj4+ICsjaWZkZWYgQlRfQVVUT19SRVBPUlRfT05MWV84ODIxQV8yQU5UCj4+ICAgICAgYnRjODgy
-MWEyYW50X3F1ZXJ5X2J0X2luZm8oYnRjb2V4aXN0KTsKPj4gKyNlbHNlCj4+ICAgICAgYnRjODgy
-MWEyYW50X21vbml0b3JfYnRfY3RyKGJ0Y29leGlzdCk7Cj4+ICAgICAgYnRjODgyMWEyYW50X21v
-bml0b3Jfd2lmaV9jdHIoYnRjb2V4aXN0KTsKPj4gKwo+PiArICAgIGlmIChidGM4ODIxYTJhbnRf
-aXNfd2lmaV9zdGF0dXNfY2hhbmdlZChidGNvZXhpc3QpIHx8Cj4+ICsgICAgICAgIGNvZXhfZG0t
-PmF1dG9fdGRtYV9hZGp1c3QpCj4+ICsgICAgICAgICAgICBidGM4ODIxYTJhbnRfcnVuX2NvZXhp
-c3RfbWVjaGFuaXNtKGJ0Y29leGlzdCk7Cj4+ICsjZW5kaWYKPgo+IFRoaXMgaWZkZWYgbG9va3Mg
-ZmlzaHkuIFdoeSBpcyBpdCBuZWVkZWQ/Cj4KPiBJbiBnZW5lcmFsIEkgd291bGQgZXhwZWN0IHRv
-IHNlZSBpZmRlZnMgb25seSBmb3IgS2NvbmZpZyBvcHRpb25zIG9yIGRlZmluZXMgd2hpY2ggdmFs
-dWUgY29tZXMgZnJvbSBjb3JlIGtlcm5lbC4KPgo+IC0tCj4gS2FsbGUgVmFsbwoKVG9ueSwKCkFu
-eSByZXNvbHV0aW9uIG9mIHRoaXMgaXNzdWU/IEkgd291bGQgcmVhbGx5IGxpa2UgdG8gYmUgYWJs
-ZSB0byBzdWJtaXQgdGhlIDUwCnBhdGNoZXMgSSBoYXZlIGluIG15IHF1ZXVlLgoKT25lIHRob3Vn
-aHQgSSBoYXZlIGlzIHRvIGFkZCBib29sZWFuIHZhcmlhYmxlcyBhdXRvX3JlcG9ydF8xYW50IGFu
-ZAphdXRvX3JlcG9ydF8yYW50IHRvIHN0cnVjdCBidGNfY29leGlzdC4gVGhlbiB0aGUgdGVzdGlu
-ZyBvZgpCVF9BVVRPX1JFUE9SVF9PTkxZXzg4MjFBXzFBTlQsIGV0Yy4gY2FuIGJlIGRvbmUgd2l0
-aCBhbiBpZiBzdGF0ZW1lbnQsIG5vdCB3aXRoCnRoZSAjaWYgdGhhdCBpcyBjdXJyZW50bHkgcHJl
-c2VudC4KCkF0dGFjaGVkIGlzIGEgcGF0Y2ggdG8gZml4IGhhbGJ0Yzg4MjFhMWFudC4KCkxhcnJ5
-CgoKCgoKLS0tLS0tUGxlYXNlIGNvbnNpZGVyIHRoZSBlbnZpcm9ubWVudCBiZWZvcmUgcHJpbnRp
-bmcgdGhpcyBlLW1haWwuCg==
+On 04/04/2017 01:53 PM, Hans de Goede wrote:
+> Hi,
+>
+> On 04/04/2017 08:31 PM, Larry Finger wrote:
+>> On 03/29/2017 12:47 PM, Hans de Goede wrote:
+>>> The rtl8723bs is found on quite a few systems used by Linux users,
+>>> such as on Atom systems (Intel Computestick and various other
+>>> Atom based devices) and on many (budget) ARM boards such as
+>>> the CHIP.
+>>>
+>>> The plan moving forward with this is for the new clean,
+>>> written from scratch, rtl8xxxu driver to eventually gain
+>>> support for sdio devices. But there is no clear timeline
+>>> for that, so lets add this driver included in staging for now.
+>>
+>> Hans,
+>>
+>> I started looking at the Smatch errors. This one may be the result of a
+>> serious problem:
+>>
+>>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
+>> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info() error:
+>> we previously assumed 'phead' could be null (see line 453)
+>> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info() warn:
+>> variable dereferenced before check 'phead' (see line 454)
+>>
+>> A snippet of the code in question is as follows:
+>>
+>>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+>>         phead = get_list_head(queue);
+>>         plist = phead ? get_next(phead) : NULL;
+>>         plist = get_next(phead);
+>>         if ((!phead) || (!plist)) {
+>>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+>>                 return 0;
+>>         }
+>>
+>> This code comes directly from the hadess repo, but I am suspicious of the
+>> double call to get_next(phead). I cannot imagine any valid reason to skip
+>> every other entry on that list.
+>
+> If you look closer and simplify the first getnext line what is written is:
+>
+>          plist = get_next(phead);
+>          plist = get_next(phead);
+>
+> Which indeed looks like it could use improvement, but I don't
+> think it is seriously broken.
+
+My problem was that I thought that get_next() took an entry off the list. Now 
+that I actually looked, I see that it just gets the next pointer.
+
+Sorry for the noise,
+
+Larry
