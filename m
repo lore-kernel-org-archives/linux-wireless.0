@@ -1,117 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35573 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755198AbdDMSHT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:65167 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751856AbdDDFme (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:07:19 -0400
-Received: by mail-oi0-f65.google.com with SMTP id g204so13596968oib.2
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:18 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 03/19] rtlwifi: btcoex: 21a 2ant: monitor wifi counter to check network status
-Date: Thu, 13 Apr 2017 13:06:54 -0500
-Message-Id: <20170413180710.19953-4-Larry.Finger@lwfinger.net> (sfid-20170413_200801_253951_71311B74)
-In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
-References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+        Tue, 4 Apr 2017 01:42:34 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+        <tamizhchelvam@codeaurora.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHv3 2/2] mac80211: Add support to enable or disable btcoex and set btcoex priority value
+Date: Tue, 4 Apr 2017 11:12:38 +0530
+Message-ID: <1491284558-1915-3-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170404_074237_239017_E3268F67)
+In-Reply-To: <1491284558-1915-1-git-send-email-c_traja@qti.qualcomm.com>
+References: <1491284558-1915-1-git-send-email-c_traja@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-If there are a lot of low-rate packets, then the connection of wifi is
-unstable. If so, we should switch resource to bt to have a higher
-transmission quality, or wifi resource will be wasted
+This patch introduces a new driver call back drv_set_btcoex.
+This API will pass user space value to driver to
+enable or disabe btcoex and set or modify the btcoex priority value.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 38 ++++++++++++++++++++++
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    | 10 ++++++
- 2 files changed, 48 insertions(+)
+ include/net/mac80211.h    |    5 +++++
+ net/mac80211/cfg.c        |    9 +++++++++
+ net/mac80211/driver-ops.h |   15 +++++++++++++++
+ net/mac80211/trace.h      |   20 ++++++++++++++++++++
+ 4 files changed, 49 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 7f685a02d865..e23670a23e4d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -306,6 +306,43 @@ static void btc8821a2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
- 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
- }
- 
-+static void btc8821a2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
-+{
-+	if (coex_sta->under_ips) {
-+		coex_sta->crc_ok_cck = 0;
-+		coex_sta->crc_ok_11g = 0;
-+		coex_sta->crc_ok_11n = 0;
-+		coex_sta->crc_ok_11n_agg = 0;
-+
-+		coex_sta->crc_err_cck = 0;
-+		coex_sta->crc_err_11g = 0;
-+		coex_sta->crc_err_11n = 0;
-+		coex_sta->crc_err_11n_agg = 0;
-+	} else {
-+		coex_sta->crc_ok_cck =
-+			btcoexist->btc_read_4byte(btcoexist, 0xf88);
-+		coex_sta->crc_ok_11g =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf94);
-+		coex_sta->crc_ok_11n =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf90);
-+		coex_sta->crc_ok_11n_agg =
-+			btcoexist->btc_read_2byte(btcoexist, 0xfb8);
-+
-+		coex_sta->crc_err_cck =
-+			btcoexist->btc_read_4byte(btcoexist, 0xf84);
-+		coex_sta->crc_err_11g =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf96);
-+		coex_sta->crc_err_11n =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf92);
-+		coex_sta->crc_err_11n_agg =
-+			btcoexist->btc_read_2byte(btcoexist, 0xfba);
-+	}
-+
-+	/* reset counter */
-+	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x1);
-+	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x0);
-+}
-+
- static void btc8821a2ant_query_bt_info(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -2888,4 +2925,5 @@ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
- 
- 	btc8821a2ant_query_bt_info(btcoexist);
- 	btc8821a2ant_monitor_bt_ctr(btcoexist);
-+	btc8821a2ant_monitor_wifi_ctr(btcoexist);
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-index b4cf1f53d510..ce8e0d719e78 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-@@ -141,6 +141,16 @@ struct coex_sta_8821a_2ant {
- 	bool	c2h_bt_inquiry_page;
- 	u8	bt_retry_cnt;
- 	u8	bt_info_ext;
-+
-+	u32	crc_ok_cck;
-+	u32	crc_ok_11g;
-+	u32	crc_ok_11n;
-+	u32	crc_ok_11n_agg;
-+
-+	u32	crc_err_cck;
-+	u32	crc_err_11g;
-+	u32	crc_err_11n;
-+	u32	crc_err_11n_agg;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b1ac872..7d0f1dd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3453,6 +3453,9 @@ enum ieee80211_reconfig_type {
+  * @del_nan_func: Remove a NAN function. The driver must call
+  *	ieee80211_nan_func_terminated() with
+  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
++ * @set_btcoex_: Called when BTCOEX is enabled/disabled, use
++ *     this callback to enable or disable btcoex and use this callback to
++ *     set btcoex_priority. BTCOEX should be enabled to set this priority.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3734,6 +3737,8 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled,
++			  u32 btcoex_priority);
  };
  
- /*===========================================
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8bc3d366..512e5f7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3617,6 +3617,14 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled,
++				u32 btcoex_priority)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_btcoex(local, enabled, btcoex_priority);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3709,4 +3717,5 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	.add_nan_func = ieee80211_add_nan_func,
+ 	.del_nan_func = ieee80211_del_nan_func,
+ 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
++	.set_btcoex = ieee80211_set_btcoex,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 09f77e4..c420da5 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1248,4 +1248,19 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int drv_set_btcoex(struct ieee80211_local *local,
++				 bool enabled, u32 btcoex_priority)
++{
++	int ret = -EOPNOTSUPP;
++
++	trace_drv_set_btcoex(local, enabled, btcoex_priority);
++	if (local->ops->set_btcoex)
++		ret = local->ops->set_btcoex(&local->hw, enabled,
++					     btcoex_priority);
++
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0d645bc..3a4621e 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -742,6 +742,26 @@
+ 	TP_ARGS(local, value)
+ );
+ 
++TRACE_EVENT(drv_set_btcoex,
++	TP_PROTO(struct ieee80211_local *local, bool enabled,
++		 u32 btcoex_priority),
++	TP_ARGS(local, enabled, btcoex_priority),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(bool, enabled)
++		__field(u32, btcoex_priority)
++	),
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->enabled = enabled;
++		__entry->btcoex_priority = btcoex_priority;
++	),
++	TP_printk(
++		LOCAL_PR_FMT " enabled:%d btcoex_priority :%u",
++		LOCAL_PR_ARG, __entry->enabled, __entry->btcoex_priority
++	)
++);
++
+ TRACE_EVENT(drv_set_coverage_class,
+ 	TP_PROTO(struct ieee80211_local *local, s16 value),
+ 
 -- 
-2.12.0
+1.7.9.5
