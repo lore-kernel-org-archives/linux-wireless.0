@@ -1,45 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:43557 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753728AbdDVNV4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2017 09:21:56 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Tobias Klauser <tklauser@distanz.ch>,
-        Jarod Wilson <jarod@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] orinoco:  fix spelling mistake: "Registerred" -> "Registered"
-Date: Sat, 22 Apr 2017 14:21:49 +0100
-Message-Id: <20170422132149.10901-1-colin.king@canonical.com> (sfid-20170422_152216_952794_ECC11C1C)
+Received: from mga11.intel.com ([192.55.52.93]:43121 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753177AbdDDKJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Apr 2017 06:09:34 -0400
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
+        "linux-ppp@vger.kernel.org" <linux-ppp@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
+        "nbd@openwrt.org" <nbd@openwrt.org>,
+        "blogic@openwrt.org" <blogic@openwrt.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "yishaih@mellanox.com" <yishaih@mellanox.com>,
+        "saeedm@mellanox.com" <saeedm@mellanox.com>,
+        "matanb@mellanox.com" <matanb@mellanox.com>,
+        "leonro@mellanox.com" <leonro@mellanox.com>,
+        "ajk@comnets.uni-bremen.de" <ajk@comnets.uni-bremen.de>,
+        "paulus@samba.org" <paulus@samba.org>, "j@w1.fi" <j@w1.fi>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "keescook@chromium.org" <keescook@chromium.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: RE: [PATCH 16/16] drivers, net, intersil: convert
+ request_context.refcount from atomic_t to refcount_t
+Date: Tue, 4 Apr 2017 10:07:55 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C8741B@IRSMSX102.ger.corp.intel.com> (sfid-20170404_121208_796186_E16CE845)
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+        <1490691403-4016-17-git-send-email-elena.reshetova@intel.com>
+ <87zifxn2gb.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87zifxn2gb.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
 
-trivial fix to spelling mistake in dbg_dbg message
+> Elena Reshetova <elena.reshetova@intel.com> writes:
+>=20
+> > refcount_t type and corresponding API should be
+> > used instead of atomic_t when the variable is used as
+> > a reference counter. This allows to avoid accidental
+> > refcounter overflows that might lead to use-after-free
+> > situations.
+> >
+> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> > Signed-off-by: Kees Cook <keescook@chromium.org>
+> > Signed-off-by: David Windsor <dwindsor@gmail.com>
+> > ---
+> >  drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 15 ++++++++-----=
+--
+> >  1 file changed, 8 insertions(+), 7 deletions(-)
+>=20
+> The prefix should be "orinoco_usb:", I'll fix that.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/intersil/orinoco/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for both! Will you take the patches in?
 
-diff --git a/drivers/net/wireless/intersil/orinoco/main.c b/drivers/net/wireless/intersil/orinoco/main.c
-index 28cf97489001..d9128bb25e85 100644
---- a/drivers/net/wireless/intersil/orinoco/main.c
-+++ b/drivers/net/wireless/intersil/orinoco/main.c
-@@ -2283,7 +2283,7 @@ int orinoco_if_add(struct orinoco_private *priv,
- 	priv->ndev = dev;
- 
- 	/* Report what we've done */
--	dev_dbg(priv->dev, "Registerred interface %s.\n", dev->name);
-+	dev_dbg(priv->dev, "Registered interface %s.\n", dev->name);
- 
- 	return 0;
- 
--- 
-2.11.0
+Best Regards,
+Elena.
+
+>=20
+> --
+> Kalle Valo
