@@ -1,77 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1604 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751168AbdDCNVO (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34421 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932232AbdDDQu2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 09:21:14 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Johan Hovold <johan@kernel.org>
-CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] wireless: ath9k_htc: fix NULL-deref at probe
-Date: Mon, 3 Apr 2017 13:21:08 +0000
-Message-ID: <87fuhpmxto.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_152155_706693_EE72B085)
-References: <20170313124421.28587-1-johan@kernel.org>
-        <20170403084213.GE25742@localhost>      <87shlpomvx.fsf@kamboji.qca.qualcomm.com>
-        <87k271myos.fsf@kamboji.qca.qualcomm.com>       <20170403131616.GA3119@localhost>
-In-Reply-To: <20170403131616.GA3119@localhost> (Johan Hovold's message of
-        "Mon, 3 Apr 2017 15:16:16 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Tue, 4 Apr 2017 12:50:28 -0400
+Received: by mail-oi0-f68.google.com with SMTP id s11so9550260oie.1
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:27 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 05/13] rtlwifi: btcoex: 23b 2ant: fix PTA unstable problem when hw init
+Date: Tue,  4 Apr 2017 11:49:58 -0500
+Message-Id: <20170404165006.14329-6-Larry.Finger@lwfinger.net> (sfid-20170404_185037_806679_6B16D40A)
+In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johan Hovold <johan@kernel.org> writes:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> On Mon, Apr 03, 2017 at 01:02:28PM +0000, Kalle Valo wrote:
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>=20
->> > Johan Hovold <johan@kernel.org> writes:
->> >
->> >> On Mon, Mar 13, 2017 at 01:44:20PM +0100, Johan Hovold wrote:
->> >>> Make sure to check the number of endpoints to avoid dereferencing a
->> >>> NULL-pointer or accessing memory beyond the endpoint array should a
->> >>> malicious device lack the expected endpoints.
->> >>>=20
->> >>> Fixes: 36bcce430657 ("ath9k_htc: Handle storage devices")
->> >>> Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>
->> >>> Signed-off-by: Johan Hovold <johan@kernel.org>
->> >>
->> >> Is this one still in your queue, Kalle?
->> >
->> > Yes, I'm just lacking behing:
->> >
->> > https://patchwork.kernel.org/patch/9620723/
->>=20
->> Meant "lagging" of course. Mondays..
->>=20
->> >> As I mentioned earlier, I should have added a
->> >>
->> >> Cc: stable <stable@vger.kernel.org>     # 2.6.39
->> >>
->> >> but left it out as I mistakingly thought the net recommendations to d=
-o
->> >> so applied also to wireless.
->> >
->> > Ok, I'll add that.
->>=20
->> But is 2.6.39 really correct? Shouldn't it be 2.6.39+ so that it means
->> all versions since 2.6.39?
->
-> Either way is fine, the stable maintainers apply them to all later
-> versions.
->
-> I notice now that adding a plus sign is more common, but it's still a
-> 1:2 ratio judging from quick grep, while the stable-kernel-rules.rst
-> actually uses a minus sign...
+In the hardware initialisation stage, the PTA circuits may be unstable,
+so we reset it after 6 secs to fix the problem.
 
-Heh, quite confusing :) I added the plus sign already to the patch in my
-pending branch so unless you object I'll keep it.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 41 ++++++++--------------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  2 ++
+ 2 files changed, 16 insertions(+), 27 deletions(-)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 1f3c2bc..8d8425d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -3282,12 +3282,14 @@ void ex_btc8723b2ant_init_hwconfig(struct btc_coexist *btcoexist)
+ 	/* Antenna config */
+ 	btc8723b2ant_set_ant_path(btcoexist, BTC_ANT_WIFI_AT_MAIN,
+ 				  true, false);
++	coex_sta->dis_ver_info_cnt = 0;
++
+ 	/* PTA parameter */
+ 	btc8723b2ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
+ 
+ 	/* Enable counter statistics */
+ 	/* 0x76e[3] = 1, WLAN_ACT controlled by PTA */
+-	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
++	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
+ 	btcoexist->btc_write_1byte(btcoexist, 0x778, 0x3);
+ 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
+ }
+@@ -3827,36 +3829,21 @@ void ex_btc8723b2ant_halt_notify(struct btc_coexist *btcoexist)
+ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-	struct btc_board_info *board_info = &btcoexist->board_info;
+-	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+-	static u8 dis_ver_info_cnt;
+-	u32 fw_ver = 0, bt_patch_ver = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], ==========================Periodical===========================\n");
+ 
+-	if (dis_ver_info_cnt <= 5) {
+-		dis_ver_info_cnt += 1;
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], Ant PG Num/ Ant Mech/ Ant Pos = %d/ %d/ %d\n",
+-			      board_info->pg_ant_num,
+-			      board_info->btdm_ant_num,
+-			      board_info->btdm_ant_pos);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], BT stack/ hci ext ver = %s / %d\n",
+-			      stack_info->profile_notified ? "Yes" : "No",
+-			      stack_info->hci_version);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_BT_PATCH_VER,
+-				   &bt_patch_ver);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], CoexVer/ fw_ver/ PatchVer = %d_%x/ 0x%x/ 0x%x(%d)\n",
+-			      glcoex_ver_date_8723b_2ant, glcoex_ver_8723b_2ant,
+-			      fw_ver, bt_patch_ver, bt_patch_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
++	if (coex_sta->dis_ver_info_cnt <= 5) {
++		coex_sta->dis_ver_info_cnt += 1;
++		if (coex_sta->dis_ver_info_cnt == 3) {
++			/* Antenna config to set 0x765 = 0x0 (GNT_BT control by
++			 * PTA) after initial
++			 */
++			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++				 "[BTCoex], Set GNT_BT control by PTA\n");
++			btc8723b2ant_set_ant_path(
++				btcoexist, BTC_ANT_WIFI_AT_MAIN, false, false);
++		}
+ 	}
+ 
+ #if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 0)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index 9f41206..57eac22 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -167,6 +167,8 @@ struct coex_sta_8723b_2ant {
+ 	u32 crc_err_11n_agg;
+ 	bool force_lps_on;
+ 
++	u8 dis_ver_info_cnt;
++
+ 	u8 a2dp_bit_pool;
+ };
+ 
+-- 
+2.10.2
