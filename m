@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f48.google.com ([209.85.214.48]:38115 "EHLO
-        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1046499AbdDXLMs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28304 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932072AbdDDQtn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 07:12:48 -0400
-Received: by mail-it0-f48.google.com with SMTP id e132so51794925ite.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 04:12:47 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: Ensure pointer correctly set if skb data
- location changes
-To: James Hughes <james.hughes@raspberrypi.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-References: <20170424105219.18797-1-james.hughes@raspberrypi.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <bb374f51-f0c7-d315-6a82-11400e71625a@broadcom.com> (sfid-20170424_131537_822758_B074E442)
-Date: Mon, 24 Apr 2017 13:10:50 +0200
+        Tue, 4 Apr 2017 12:49:43 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: Fix compile time sanity check for CE4 buffer size
+Date: Tue, 4 Apr 2017 22:22:56 +0530
+Message-ID: <1491324776-8418-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170404_184947_950262_2B40AA2D)
 MIME-Version: 1.0
-In-Reply-To: <20170424105219.18797-1-james.hughes@raspberrypi.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/24/2017 12:52 PM, James Hughes wrote:
-> The incoming skb header may be resized if header space is
-> insufficient, which might change the data adddress in the skb.
-> Ensure that a cached pointer to that data is correctly set by
-> moving assignment to after any possible changes.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Thanks, James
+In 'ath10k_ce_alloc_pipe' the compile time sanity check to
+ensure that there is sufficient buffers in CE4 for HTT Tx
+MSDU descriptors, but this did not take into account of the
+case with 'peer flow control' enabled, fix this.
 
-Minor nit below...
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[thanks to Michal for the suggestion]
 
-You may add my acknowledgement:
+ drivers/net/wireless/ath/ath10k/ce.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-
-[...]
-
-> @@ -229,6 +229,8 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
->   		}
->   	}
->   
-> +	eh = (struct ethhdr *)(skb->data);
-> +
-
-Please move after the length validation below.
-
-Regards,
-Arend
-
->   	/* validate length for ether packet */
->   	if (skb->len < sizeof(*eh)) {
->   		ret = -EINVAL;
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 9ac0a73..ee1090c 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1051,7 +1051,7 @@ int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
+ 	 */
+ 	BUILD_BUG_ON(2 * TARGET_NUM_MSDU_DESC >
+ 		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+-	BUILD_BUG_ON(2 * TARGET_10X_NUM_MSDU_DESC >
++	BUILD_BUG_ON(2 * TARGET_10_4_NUM_MSDU_DESC_PFC >
+ 		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+ 	BUILD_BUG_ON(2 * TARGET_TLV_NUM_MSDU_DESC >
+ 		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+-- 
+1.9.1
