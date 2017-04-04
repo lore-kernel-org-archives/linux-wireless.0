@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36084 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754710AbdDDSxp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 14:53:45 -0400
-Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
-To: Larry Finger <Larry.Finger@lwfinger.net>
-References: <20170329174751.13184-1-hdegoede@redhat.com>
- <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
-Cc: Bastien Nocera <hadess@hadess.net>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com> (sfid-20170404_205351_427988_EAF09808)
-Date: Tue, 4 Apr 2017 20:53:41 +0200
+Received: from mail.aperture-lab.de ([138.201.29.205]:44945 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751002AbdDDFwv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Apr 2017 01:52:51 -0400
+Date: Tue, 4 Apr 2017 07:52:47 +0200
+From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+To: linux-wireless@vger.kernel.org
+Subject: Fwd: [pim] Fwd: [ieee-ietf-coord] draft on Multicast Considerations
+ over IEEE 802 Wireless Media
+Message-ID: <20170404055247.GG16113@otheros> (sfid-20170404_075254_941445_74E5364B)
 MIME-Version: 1.0
-In-Reply-To: <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Since we had some discussions concerning multicast and wireless
+regarding "multicast-to-unicast" just recently, maybe this draft
+is of interest to some people here, too.
 
-On 04/04/2017 08:31 PM, Larry Finger wrote:
-> On 03/29/2017 12:47 PM, Hans de Goede wrote:
->> The rtl8723bs is found on quite a few systems used by Linux users,
->> such as on Atom systems (Intel Computestick and various other
->> Atom based devices) and on many (budget) ARM boards such as
->> the CHIP.
->>
->> The plan moving forward with this is for the new clean,
->> written from scratch, rtl8xxxu driver to eventually gain
->> support for sdio devices. But there is no clear timeline
->> for that, so lets add this driver included in staging for now.
->
-> Hans,
->
-> I started looking at the Smatch errors. This one may be the result of a serious problem:
->
->   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
-> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info() error: we previously assumed 'phead' could be null (see line 453)
-> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info() warn: variable dereferenced before check 'phead' (see line 454)
->
-> A snippet of the code in question is as follows:
->
->         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
->         phead = get_list_head(queue);
->         plist = phead ? get_next(phead) : NULL;
->         plist = get_next(phead);
->         if ((!phead) || (!plist)) {
->                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
->                 return 0;
->         }
->
-> This code comes directly from the hadess repo, but I am suspicious of the double call to get_next(phead). I cannot imagine any valid reason to skip every other entry on that list.
+Regards, Linus
 
-If you look closer and simplify the first getnext line what is written is:
 
-          plist = get_next(phead);
-          plist = get_next(phead);
+----- Forwarded message from "Alvaro Retana (aretana)" <aretana@cisco.com> -----
 
-Which indeed looks like it could use improvement, but I don't
-think it is seriously broken.
+Date: Fri, 31 Mar 2017 13:37:53 +0000
+From: "Alvaro Retana (aretana)" <aretana@cisco.com>
+To: "pim@ietf.org" <pim@ietf.org>, "mboned@ietf.org" <mboned@ietf.org>
+Cc: "draft-perkins-intarea-multicast-ieee802@ietf.org" <draft-perkins-intarea-multicast-ieee802@ietf.org>
+Subject: [pim] Fwd: [ieee-ietf-coord] draft on Multicast Considerations over IEEE 802 Wireless Media
 
-Regards,
+FYI.
 
-Hans
+This topic was discussed previously in pim/mboned.  Please take a look and follow the discussion on int-area.  I also cc'd the authors.
+
+Alvaro.
+
+Thumb-typed and autocorrected..
+
+Begin forwarded message:
+
+From: Juan Carlos Zuniga <j.c.zuniga@ieee.org<mailto:j.c.zuniga@ieee.org>>
+Date: March 31, 2017 at 8:33:01 AM CDT
+To: ieee-ietf-coord@ietf.org<mailto:ieee-ietf-coord@ietf.org>, Juan Carlos Zuniga <juancarlos.zuniga@sigfox.com<mailto:juancarlos.zuniga@sigfox.com>>
+Subject: [ieee-ietf-coord] draft on Multicast Considerations over IEEE 802 Wireless Media
+
+Hello all,
+
+This is the draft that I mentioned during the meeting. Please take a look and provide inputs either here or in the IntArea WG list (int-area@ietf.org<mailto:int-area@ietf.org>):
+
+https://tools.ietf.org/html/draft-perkins-intarea-multicast-ieee802-02
+
+Best,
+
+Juan Carlos
+_______________________________________________
+ieee-ietf-coord mailing list
+ieee-ietf-coord@ietf.org<mailto:ieee-ietf-coord@ietf.org>
+https://www.ietf.org/mailman/listinfo/ieee-ietf-coord
+
+_______________________________________________
+pim mailing list
+pim@ietf.org
+https://www.ietf.org/mailman/listinfo/pim
+
+
+----- End forwarded message -----
