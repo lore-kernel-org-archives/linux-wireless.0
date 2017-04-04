@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-11.163.com ([220.181.12.11]:60973 "EHLO m12-11.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163769AbdDXAko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Apr 2017 20:40:44 -0400
-From: Pan Bian <bianpan201603@163.com>
-To: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
-Subject: [PATCH 1/1] rndis_wlan: add return value validation
-Date: Mon, 24 Apr 2017 08:40:28 +0800
-Message-Id: <1492994428-16090-1-git-send-email-bianpan201603@163.com> (sfid-20170424_024132_232521_95E80D24)
+Received: from smtp.codeaurora.org ([198.145.29.96]:38936 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932191AbdDDRsn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Apr 2017 13:48:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2017-04-03
+References: <87a87xohpp.fsf@kamboji.qca.qualcomm.com>
+        <20170404.103144.1438343234401389523.davem@davemloft.net>
+Date: Tue, 04 Apr 2017 20:48:35 +0300
+In-Reply-To: <20170404.103144.1438343234401389523.davem@davemloft.net> (David
+        Miller's message of "Tue, 04 Apr 2017 10:31:44 -0700 (PDT)")
+Message-ID: <87r318jc7g.fsf@kamboji.qca.qualcomm.com> (sfid-20170404_194911_040584_7737DFE4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pan Bian <bianpan2016@163.com>
+David Miller <davem@davemloft.net> writes:
 
-Function create_singlethread_workqueue() will return a NULL pointer if
-there is no enough memory, and its return value should be validated
-before using. However, in function rndis_wlan_bind(), its return value
-is not checked. This may cause NULL dereference bugs. This patch fixes
-it.
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Mon, 03 Apr 2017 14:26:10 +0300
+>
+>> here few really small fixes. I'm hoping this to be the last pull request
+>> for 4.11.
+>> 
+>> Please let me if there are any problems.
+>
+> Pulled, thanks.
+>
+> But I will warn you, you say fixes, but your Subject line and
+> GIT tag says "-next" so I pulled it into net-next.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/net/wireless/rndis_wlan.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Sorry, I used the wrong pull request template and that's why I had the
+wrong subject in this pull request. So actually this was supposed to be
+for net, not net-next. Any chance you could also pull this to net so
+that we can still get the fixes to 4.11?
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 785334f..92a1bde 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -3427,6 +3427,10 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
- 
- 	/* because rndis_command() sleeps we need to use workqueue */
- 	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
-+	if (!priv->workqueue) {
-+		wiphy_free(wiphy);
-+		return -ENOMEM;
-+	}
- 	INIT_WORK(&priv->work, rndis_wlan_worker);
- 	INIT_DELAYED_WORK(&priv->dev_poller_work, rndis_device_poller);
- 	INIT_DELAYED_WORK(&priv->scan_work, rndis_get_scan_results);
+My tree setup is like this:
+
+wireless-drivers -> net
+wireless-drivers-next -> net-next
+
 -- 
-1.9.1
+Kalle Valo
