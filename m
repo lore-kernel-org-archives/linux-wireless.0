@@ -1,58 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34023 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754953AbdDOUcS (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32781 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932277AbdDDQuc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Apr 2017 16:32:18 -0400
-Received: by mail-oi0-f67.google.com with SMTP id t14so12826120oif.1
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:18 -0700 (PDT)
+        Tue, 4 Apr 2017 12:50:32 -0400
+Received: by mail-oi0-f68.google.com with SMTP id f193so25704247oib.0
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:31 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
         Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>
-Subject: [PATCH 13/14] rtlwifi: btcoex: 21a 2ant: just return when wifi is under ips
-Date: Sat, 15 Apr 2017 15:31:59 -0500
-Message-Id: <20170415203200.22979-14-Larry.Finger@lwfinger.net> (sfid-20170415_223232_537677_5290FD04)
-In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 09/13] rtlwifi: btcoex: 23b 2ant: tell fw if external or internal switch is used
+Date: Tue,  4 Apr 2017 11:50:02 -0500
+Message-Id: <20170404165006.14329-10-Larry.Finger@lwfinger.net> (sfid-20170404_185041_431361_4A016E02)
+In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-If wifi is in power saving mode, do nothing.
+Some chips use an external antenna switch, but fw may not realize it.
+Here we tell fw exactly that which type of switch we are using.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: Pkshih <pkshih@realtek.com>
 Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
-  ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 22cb8aa8208d..0aa36247e402 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3483,6 +3483,12 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 		return;
- 	}
- 
-+	if (coex_sta->under_ips) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], wifi is under IPS !!!\n");
-+		return;
-+	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 8098676..2cdcf82 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1106,14 +1106,19 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
+ 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT) {
+ 			/* tell firmware "no antenna inverse" */
+ 			h2c_parameter[0] = 0;
+-			h2c_parameter[1] = 1;  /* ext switch type */
+-			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
+-						h2c_parameter);
+-			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
+ 		} else {
+ 			/* tell firmware "antenna inverse" */
+ 			h2c_parameter[0] = 1;
+ 		}
 +
- 	algorithm = btc8821a2ant_action_algorithm(btcoexist);
- 	if (coex_sta->c2h_bt_inquiry_page &&
- 	    (BT_8821A_2ANT_COEX_ALGO_PANHS != algorithm)) {
++		if (use_ext_switch) {
++			/* ext switch type */
++			h2c_parameter[1] = 1;
++		} else {
++			/* int switch type */
++			h2c_parameter[1] = 0;
++		}
++		btcoexist->btc_fill_h2c(btcoexist, 0x65, 2, h2c_parameter);
+ 	} else {
+ 		if (fw_ver >= 0x180000) {
+ 			/* Use H2C to set GNT_BT to "Control by PTA"*/
 -- 
-2.12.0
+2.10.2
