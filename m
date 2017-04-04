@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34133 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751894AbdDQAHF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:07:05 -0400
-Received: by mail-oi0-f65.google.com with SMTP id t14so15960169oif.1
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:04 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 00/13] rtlwifi: btcoex: Second set of 21a 1ant changes
-Date: Sun, 16 Apr 2017 19:06:47 -0500
-Message-Id: <20170417000700.29057-1-Larry.Finger@lwfinger.net> (sfid-20170417_020722_536008_CBD2C2BE)
+Received: from mx1.redhat.com ([209.132.183.28]:36084 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754710AbdDDSxp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Apr 2017 14:53:45 -0400
+Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
+To: Larry Finger <Larry.Finger@lwfinger.net>
+References: <20170329174751.13184-1-hdegoede@redhat.com>
+ <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
+Cc: Bastien Nocera <hadess@hadess.net>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        linux-wireless@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com> (sfid-20170404_205351_427988_EAF09808)
+Date: Tue, 4 Apr 2017 20:53:41 +0200
+MIME-Version: 1.0
+In-Reply-To: <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches finishes the changes for btcoexist/halbtc8821a1ant.c.
+Hi,
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+On 04/04/2017 08:31 PM, Larry Finger wrote:
+> On 03/29/2017 12:47 PM, Hans de Goede wrote:
+>> The rtl8723bs is found on quite a few systems used by Linux users,
+>> such as on Atom systems (Intel Computestick and various other
+>> Atom based devices) and on many (budget) ARM boards such as
+>> the CHIP.
+>>
+>> The plan moving forward with this is for the new clean,
+>> written from scratch, rtl8xxxu driver to eventually gain
+>> support for sdio devices. But there is no clear timeline
+>> for that, so lets add this driver included in staging for now.
+>
+> Hans,
+>
+> I started looking at the Smatch errors. This one may be the result of a serious problem:
+>
+>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
+> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info() error: we previously assumed 'phead' could be null (see line 453)
+> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info() warn: variable dereferenced before check 'phead' (see line 454)
+>
+> A snippet of the code in question is as follows:
+>
+>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+>         phead = get_list_head(queue);
+>         plist = phead ? get_next(phead) : NULL;
+>         plist = get_next(phead);
+>         if ((!phead) || (!plist)) {
+>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+>                 return 0;
+>         }
+>
+> This code comes directly from the hadess repo, but I am suspicious of the double call to get_next(phead). I cannot imagine any valid reason to skip every other entry on that list.
 
-Yan-Hsuan Chuang (13):
-  rtlwifi: btcoex: 21a 1ant: set tdma and coex table when wifi is idle
-  rtlwifi: btcoex: 21a 1ant: more bt profiling when wifi receives
-    special packet
-  rtlwifi: btcoex: 21a 1ant: shorten wifi slot when connected scan
-  rtlwifi: btcoex: 21a 1ant: react to special packet when wifi is not
-    scanning
-  rtlwifi: btcoex: 21a 1ant: coex table and tdma settings for softap
-    mode
-  rtlwifi: btcoex: 21a 1ant: wifi slot time adjustment
-  rtlwifi: btcoex: 21a 1ant: normal mode for retry limit when connected
-  rtlwifi: btcoex: 21a 1ant: mark packet high priority when scanning
-  rtlwifi: btcoex: 21a 1ant: use default value when initiating coex
-  rtlwifi: btcoex: 21a 1ant: re-init coex after wifi leaves IPS
-  rtlwifi: btcoex: 21a 1ant: treat ARP as special packet
-  rtlwifi: btcoex: 21a 1ant: fix some coding style issues
-  rtlwifi: btcoex: 21a 1ant: add bt_tx_rx_mask into bt info
+If you look closer and simplify the first getnext line what is written is:
 
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 257 +++++++++++++++------
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +
- 2 files changed, 186 insertions(+), 73 deletions(-)
+          plist = get_next(phead);
+          plist = get_next(phead);
 
--- 
-2.12.0
+Which indeed looks like it could use improvement, but I don't
+think it is seriously broken.
+
+Regards,
+
+Hans
