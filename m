@@ -1,57 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52888 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755192AbdDRWWc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:22:32 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:25 +0300
-Message-Id: <20170418221729.28372-22-luca@coelho.fi> (sfid-20170419_002241_807163_73CACFF7)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 21/25] iwlwifi: mvm: flip address 4 of AMSDU frames
+Received: from mail5.windriver.com ([192.103.53.11]:44668 "EHLO mail5.wrs.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751362AbdDDBzP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Apr 2017 21:55:15 -0400
+Date: Mon, 3 Apr 2017 21:55:08 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+CC: <linux-kernel@vger.kernel.org>, kbuild test robot <lkp@intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        <linux-ia64@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH v2] nfc: don't be making arch specific unaligned
+ decisions at driver level.
+Message-ID: <20170404015508.GS2713@windriver.com> (sfid-20170404_035546_059735_C931C06D)
+References: <201701090839.5u37Hdez%fengguang.wu@intel.com>
+ <20170109175222.3162-1-paul.gortmaker@windriver.com>
+ <20170401222244.GF22034@zurbaran.ger.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20170401222244.GF22034@zurbaran.ger.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+[Re: [PATCH v2] nfc: don't be making arch specific unaligned decisions at driver level.] On 02/04/2017 (Sun 00:22) Samuel Ortiz wrote:
 
-Address 4 is reversed as well.
+> Hi Paul,
+> 
+> On Mon, Jan 09, 2017 at 12:52:22PM -0500, Paul Gortmaker wrote:
+> > Currently ia64 fails building allmodconfig with variations of:
+> > 
+> >    In file included from drivers/nfc/nxp-nci/i2c.c:39:0:
+> >    ./include/linux/unaligned/access_ok.h:62:29: error: redefinition of ‘put_unaligned_be64’
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+[...]
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 0f74a200e812..24c4fbe139a3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -925,7 +925,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		 * Our hardware de-aggregates AMSDUs but copies the mac header
- 		 * as it to the de-aggregated MPDUs. We need to turn off the
- 		 * AMSDU bit in the QoS control ourselves.
--		 * In addition, HW reverses addr3 - reverse it back.
-+		 * In addition, HW reverses addr3 and addr4 - reverse it back.
- 		 */
- 		if ((desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU) &&
- 		    !WARN_ON(!ieee80211_is_data_qos(hdr->frame_control))) {
-@@ -938,6 +938,13 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			for (i = 0; i < ETH_ALEN; i++)
- 				mac_addr[i] = hdr->addr3[ETH_ALEN - i - 1];
- 			ether_addr_copy(hdr->addr3, mac_addr);
-+
-+			if (ieee80211_has_a4(hdr->frame_control)) {
-+				for (i = 0; i < ETH_ALEN; i++)
-+					mac_addr[i] =
-+						hdr->addr4[ETH_ALEN - i - 1];
-+				ether_addr_copy(hdr->addr4, mac_addr);
-+			}
- 		}
- 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID) {
- 			u32 reorder_data = le32_to_cpu(desc->reorder_data);
--- 
-2.11.0
+> > 
+> > The decision of what variant for unaligned access to use needs to be
+> > left to the arch level and not used at the driver level.  Since not
+> > all arch will have sourced asm/unaligned.h already, we need to call
+> > it out and then the arch can give us just the one definition that
+> > is needed.
+> > 
+> > See commit 064106a91be5 ("kernel: add common infrastructure for
+> > unaligned access") as a reference.
+> > 
+
+[...]
+
+> This build issue is now fixed in nfc-next with a couple of different
+> patches.
+
+I added nfc-next as a remote and saw you pulled similar commits out of
+the NFC backlog just recently:
+
+commit 2eee74b7e2a496dea49847c36fd09320505f45b7
+Author:     Guenter Roeck <linux@roeck-us.net>
+AuthorDate: Sat Aug 1 06:59:29 2015 -0700
+Commit:     Samuel Ortiz <sameo@linux.intel.com>
+CommitDate: Sat Apr 1 23:52:25 2017 +0200
+
+    NFC: nxp-nci: Include unaligned.h instead of access_ok.h
+
+...and...
+
+commit d916d923724d59cde99ee588f15eec59dd863bbd
+Author:     Tobias Klauser <tklauser@distanz.ch>
+AuthorDate: Wed Oct 26 11:00:12 2016 +0200
+Commit:     Samuel Ortiz <sameo@linux.intel.com>
+CommitDate: Sat Apr 1 23:45:31 2017 +0200
+
+    NFC: nfcmrvl: Include unaligned.h instead of access_ok.h
+
+Thanks for finding those in the backlog and folding them in; presumably
+the backlog was related to the MAINTAINERS change on the same branch.
+
+Anyway, they appear to be the same as the change I proposed, and I build
+tested nfc-next on ia64 and x86-64 without issue.  So it looks good.
+
+One thing I did notice, is that nfc-next doesn't appear to be merged
+into the linux-next trees, which explains why I didn't see a conflict
+with my patch against your two new commits.  Given the recent maintainer
+change you added, it seems your nfc-next is now the unconditional source
+for NFC changes.  So maybe you want to ask Stephen (Cc:'d) to add your
+tree to the daily linux-next coverage?
+
+All he needs is the repo and branch, which I assume are:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git #master
+
+Well, that and the request for it really should come from you... :)
+
+Thanks,
+Paul.
+--
+
+> 
+> Cheers,
+> Samuel.
