@@ -1,63 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60064 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756128AbdDGTez (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36714 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752770AbdDDXlE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:34:55 -0400
-Date: Fri, 07 Apr 2017 12:34:53 -0700 (PDT)
-Message-Id: <20170407.123453.846031355373739122.davem@davemloft.net> (sfid-20170407_213627_704477_06C2D28B)
-To: pablo@netfilter.org
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170407192714.GA23349@salvia>
-References: <1491592185.5800.7.camel@sipsolutions.net>
-        <20170407.122223.385211483743191711.davem@davemloft.net>
-        <20170407192714.GA23349@salvia>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Tue, 4 Apr 2017 19:41:04 -0400
+Received: by mail-oi0-f66.google.com with SMTP id b187so27282732oif.3
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 16:41:04 -0700 (PDT)
+Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
+To: Hans de Goede <hdegoede@redhat.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+References: <20170329174751.13184-1-hdegoede@redhat.com>
+ <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
+ <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
+ <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com>
+ <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
+Cc: Bastien Nocera <hadess@hadess.net>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net> (sfid-20170405_014132_814274_891C83B6)
+Date: Tue, 4 Apr 2017 18:41:02 -0500
+MIME-Version: 1.0
+In-Reply-To: <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-Date: Fri, 7 Apr 2017 21:27:14 +0200
+On 04/04/2017 04:53 PM, Hans de Goede wrote:
+> Hi,
+>
+> On 04/04/2017 11:38 PM, Arend Van Spriel wrote:
+>>
+>>
+>> On 4-4-2017 20:53, Hans de Goede wrote:
+>>> Hi,
+>>>
+>>> On 04/04/2017 08:31 PM, Larry Finger wrote:
+>>>> On 03/29/2017 12:47 PM, Hans de Goede wrote:
+>>>>> The rtl8723bs is found on quite a few systems used by Linux users,
+>>>>> such as on Atom systems (Intel Computestick and various other
+>>>>> Atom based devices) and on many (budget) ARM boards such as
+>>>>> the CHIP.
+>>>>>
+>>>>> The plan moving forward with this is for the new clean,
+>>>>> written from scratch, rtl8xxxu driver to eventually gain
+>>>>> support for sdio devices. But there is no clear timeline
+>>>>> for that, so lets add this driver included in staging for now.
+>>>>
+>>>> Hans,
+>>>>
+>>>> I started looking at the Smatch errors. This one may be the result of
+>>>> a serious problem:
+>>>>
+>>>>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
+>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info()
+>>>> error: we previously assumed 'phead' could be null (see line 453)
+>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info()
+>>>> warn: variable dereferenced before check 'phead' (see line 454)
+>>>>
+>>>> A snippet of the code in question is as follows:
+>>>>
+>>>>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>>         phead = get_list_head(queue);
+>>>>         plist = phead ? get_next(phead) : NULL;
+>>>>         plist = get_next(phead);
+>>>>         if ((!phead) || (!plist)) {
+>>>>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>>                 return 0;
+>>>>         }
+>>>>
+>>>> This code comes directly from the hadess repo, but I am suspicious of
+>>>> the double call to get_next(phead). I cannot imagine any valid reason
+>>>> to skip every other entry on that list.
+>>>
+>>> If you look closer and simplify the first getnext line what is written is:
+>>>
+>>>          plist = get_next(phead);
+>>>          plist = get_next(phead);
+>>>
+>>> Which indeed looks like it could use improvement, but I don't
+>>> think it is seriously broken.
+>>
+>> So get_list_head(queue) can never return NULL?
+>
+> I don't know.
+>
+>> Otherwise I don't know
+>> how close I need to get for a simplified look ;-)
+>
+> I simplified things so as to make clear that Larry's worry was
+> not really a problem, I do agree the smatch complaint is valid.
 
-> On Fri, Apr 07, 2017 at 12:22:23PM -0700, David Miller wrote:
->> From: Johannes Berg <johannes@sipsolutions.net>
->> Date: Fri, 07 Apr 2017 21:09:45 +0200
->> 
->> > On Fri, 2017-04-07 at 21:06 +0200, Pablo Neira Ayuso wrote:
->> >> On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
->> >> [...]
->> >> > Heh. I think I really want to solve - at least partially -
->> >> > nla_parse()
->> >> > to see that it can be done this way. It'd be nice to even transform
->> >> > all
->> >> > the callers (I generated half of these patches with spatch anyway)
->> >> > to
->> >> > have at least that.
->> >> 
->> >> We can just have a modified version of nla_parse that deals with
->> >> this.
->> > 
->> > Yes, but we need to figure out a good way to have the offset.
->> > 
->> > We also need to see if we want to *force* having the offset. In some
->> > sense that'd be useful, in another it might be very complicated to fill
->> > it in at all times, if for example errors come from lower layers like
->> > drivers.
->> 
->> It has to be optional, some kinds of errors don't have an exact
->> context per-se.
->> 
->> Also another way to look at this is that we're providing a lot of
->> new power and expressability.  So even if only one aspect of the
->> new error reporting is used it's a positive step forward.
->> 
->> So allow offset "0" meaning "unspecified".
-> 
-> Instead, we can just not send the offset attribute to userspace if
-> it's not specified. So missing attribute means "unspecified".
+I think the following fixes the problem:
 
-Agreed, not providing the attribute to indicate this is fine.
+diff --git a/drivers/staging/rtl8723bs/core/rtw_debug.c 
+b/drivers/staging/rtl8723bs/core/rtw_debug.c
+index d34747b29309..51cef55d3f76 100644
+--- a/drivers/staging/rtl8723bs/core/rtw_debug.c
++++ b/drivers/staging/rtl8723bs/core/rtw_debug.c
+@@ -451,7 +451,6 @@ int proc_get_survey_info(struct seq_file *m, void *v)
+         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+         phead = get_list_head(queue);
+         plist = phead ? get_next(phead) : NULL;
+-       plist = get_next(phead);
+         if ((!phead) || (!plist)) {
+                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+                 return 0;
+
+Pointer plist is set in the 3rd line, thus the second set of it can be removed.
+
+Larry
