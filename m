@@ -1,101 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:38153 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S946817AbdDTTWM (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32773 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932072AbdDDQub (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 15:22:12 -0400
-Received: by mail-wm0-f46.google.com with SMTP id r190so809976wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2017 12:22:11 -0700 (PDT)
-Subject: Re: [PATCH] brcm80211: brcmfmac: Ensure header writes are on writable
- skb
-To: James Hughes <james.hughes@raspberrypi.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-References: <20170420154704.32144-1-james.hughes@raspberrypi.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f2c96267-8fec-f878-760d-90e93323d807@broadcom.com> (sfid-20170420_212216_111414_EFA0C07D)
-Date: Thu, 20 Apr 2017 21:22:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170420154704.32144-1-james.hughes@raspberrypi.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 4 Apr 2017 12:50:31 -0400
+Received: by mail-oi0-f65.google.com with SMTP id f193so25704197oib.0
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:31 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 08/13] rtlwifi: btcoex: 23b 2ant: workaround for bt a2dp and hid
+Date: Tue,  4 Apr 2017 11:50:01 -0500
+Message-Id: <20170404165006.14329-9-Larry.Finger@lwfinger.net> (sfid-20170404_185036_181038_7FACDE12)
+In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/20/2017 5:47 PM, James Hughes wrote:
-> Driver was writing to skb header area without ensuring it was
-> writable i.e. uncloned.
-> 
-> Used skb_cow_header to ensure that header buffer is large enough
-> and is uncloned.
-> 
-> Detected when, in combination with the smsc85xx driver, both drivers
-> attempted to write different headers to the same header buffer.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-I guess this patch is limited to one file to address the comment from 
-Eric Dumazet. I prefer to talk through the initial patch you sent. Just 
-a procedural remark or two here. 1) Please drop 'brcm80211:' from the 
-Subject as the 'brcmfmac' prefix is sufficient, and 2) despite the 
-change of the Subject you should consider this version 2 of the initial 
-patch so the Subject should read '[PATCH V2] brcmfmac: ....'.
+For a2dp and hid, we need extra process to avoid voice degradation
 
-> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
-> ---
-Related to remark 2) above you should provide a changelog here listing 
-what is changed compared to the initial patch.
-
-Regards,
-Arend
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c | 15 +++++++++++++--
->   1 file changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-> index 038a960..b9d7d08 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-> @@ -249,14 +249,19 @@ brcmf_proto_bcdc_set_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
->   	return ret;
->   }
->   
-> -static void
-> +static int
->   brcmf_proto_bcdc_hdrpush(struct brcmf_pub *drvr, int ifidx, u8 offset,
->   			 struct sk_buff *pktbuf)
->   {
->   	struct brcmf_proto_bcdc_header *h;
-> +	int err;
->   
->   	brcmf_dbg(BCDC, "Enter\n");
->   
-> +	err = skb_cow_head(pktbuf, BCDC_HEADER_LEN);
-> +	if (err)
-> +		return err;
-> +
->   	/* Push BDC header used to convey priority for buses that don't */
->   	skb_push(pktbuf, BCDC_HEADER_LEN);
->   
-> @@ -271,6 +276,8 @@ brcmf_proto_bcdc_hdrpush(struct brcmf_pub *drvr, int ifidx, u8 offset,
->   	h->data_offset = offset;
->   	BCDC_SET_IF_IDX(h, ifidx);
->   	trace_brcmf_bcdchdr(pktbuf->data);
-> +
-> +	return 0;
->   }
->   
->   static int
-> @@ -330,7 +337,11 @@ static int
->   brcmf_proto_bcdc_txdata(struct brcmf_pub *drvr, int ifidx, u8 offset,
->   			struct sk_buff *pktbuf)
->   {
-> -	brcmf_proto_bcdc_hdrpush(drvr, ifidx, offset, pktbuf);
-> +	int err = brcmf_proto_bcdc_hdrpush(drvr, ifidx, offset, pktbuf);
-> +
-> +	if (err)
-> +		return err;
-> +
->   	return brcmf_bus_txdata(drvr->bus_if, pktbuf);
->   }
->   
-> 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 8b2bef8..8098676 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1035,6 +1035,8 @@ static void btc8723b2ant_set_fw_ps_tdma(struct btc_coexist *btcoexist, u8 byte1,
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 h2c_parameter[5];
++	if ((coex_sta->a2dp_exist) && (coex_sta->hid_exist))
++		byte5 = byte5 | 0x1;
+ 
+ 	h2c_parameter[0] = byte1;
+ 	h2c_parameter[1] = byte2;
+-- 
+2.10.2
