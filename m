@@ -1,107 +1,619 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39447 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756747AbdDFIFl (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35629 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932299AbdDDQuf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 04:05:41 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Dmitry Torokhov <dtor@google.com>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>
-Subject: RE: Re: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only firmware
- name
-Date: Thu, 6 Apr 2017 08:05:32 +0000
-Message-ID: <62b2509a7aef40f0aec3b1f0d8c45cd6@SC-EXCH02.marvell.com> (sfid-20170406_100553_971303_EF6B1DD1)
-References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
- <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
- <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com>
-In-Reply-To: <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Tue, 4 Apr 2017 12:50:35 -0400
+Received: by mail-oi0-f67.google.com with SMTP id d2so18373774oig.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:35 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 12/13] rtlwifi: btcoex: 23b 2ant: turn off antenna when rssi is too high/low
+Date: Tue,  4 Apr 2017 11:50:05 -0500
+Message-Id: <20170404165006.14329-13-Larry.Finger@lwfinger.net> (sfid-20170404_185047_458926_3D274118)
+In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRG1pdHJ5LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IERtaXRy
-eSBUb3Jva2hvdiBbbWFpbHRvOmR0b3JAZ29vZ2xlLmNvbV0NCj4gU2VudDogMjAxN+W5tDTmnIgx
-5pelIDY6NTANCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxsZSBW
-YWxvOyBCcmlhbiBOb3JyaXM7IFJhamF0IEphaW47IEFtaXRrdW1hciBLYXJ3YXI7DQo+IENhdGh5
-IEx1bzsgWGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIDMvM10gbXdpZmll
-eDogcGNpZTogYXZvaWQgaGFyZGNvZGUgd2lmaS1vbmx5DQo+IGZpcm13YXJlIG5hbWUNCj4gDQo+
-IEV4dGVybmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IE9uIFRodSwgTWFyIDMwLCAy
-MDE3IGF0IDI6MTkgQU0sIFhpbm1pbmcgSHUgPGh1eGlubWluZzgyMEBnbWFpbC5jb20+DQo+IHdy
-b3RlOg0KPiA+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4NCj4gPiBX
-aWZpLW9ubHkgZmlybXdhcmUgbmFtZSBzaG91bGQgYmUgY2hpcHNldCBzcGVjaWZpYy4NCj4gPg0K
-PiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4gU2ln
-bmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPiAt
-LS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYyB8IDgg
-KysrKysrKy0NCj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5o
-IHwgNiArKysrKysNCj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAxIGRl
-bGV0aW9uKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
-d2lmaWV4L3BjaWUuYw0KPiA+IGluZGV4IDU5Y2IwMWEuLjI4MmFhOWEgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+ICsrKyBi
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9wY2llLmMNCj4gPiBAQCAtMzUx
-LDYgKzM1MSwxMiBAQCBzdGF0aWMgdm9pZCBtd2lmaWV4X3BjaWVfcmVzZXRfbm90aWZ5KHN0cnVj
-dCBwY2lfZGV2DQo+ICpwZGV2LCBib29sIHByZXBhcmUpDQo+ID4gICAgICAgICBzdHJ1Y3QgcGNp
-ZV9zZXJ2aWNlX2NhcmQgKmNhcmQgPSBwY2lfZ2V0X2RydmRhdGEocGRldik7DQo+ID4gICAgICAg
-ICBzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyID0gY2FyZC0+YWRhcHRlcjsNCj4gPg0K
-PiA+ICsgICAgICAgaWYgKCFjYXJkLT5wY2llLmZscl9zdXBwb3J0KSB7DQo+ID4gKyAgICAgICAg
-ICAgICAgIHByX2VycigiJXM6IEZMUiBkaXNhYmxlZCBpbiBjdXJyZW50IGNoaXBzZXRcbiIsIF9f
-ZnVuY19fKTsNCj4gPiArICAgICAgICAgICAgICAgcmV0dXJuOw0KPiA+ICsgICAgICAgfQ0KPiA+
-ICsNCj4gPiArICAgICAgIGFkYXB0ZXIgPSBjYXJkLT5hZGFwdGVyOw0KPiA+ICAgICAgICAgaWYg
-KCFhZGFwdGVyKSB7DQo+ID4gICAgICAgICAgICAgICAgIGRldl9lcnIoJnBkZXYtPmRldiwgIiVz
-OiBhZGFwdGVyIHN0cnVjdHVyZSBpcyBub3QNCj4gdmFsaWRcbiIsDQo+ID4gICAgICAgICAgICAg
-ICAgICAgICAgICAgX19mdW5jX18pOw0KPiA+IEBAIC0zMDQ3LDcgKzMwNTMsNyBAQCBzdGF0aWMg
-dm9pZCBtd2lmaWV4X3BjaWVfdXBfZGV2KHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0
-ZXIpDQo+ID4gICAgICAgICAgKiBkdXJpbmcgcGNpZSBGTFIsIHNvIHRoYXQgYmx1ZXRvb3RoIHBh
-cnQgb2YgZmlybXdhcmUgd2hpY2ggaXMNCj4gPiAgICAgICAgICAqIGFscmVhZHkgcnVubmluZyBk
-b2Vzbid0IGdldCBhZmZlY3RlZC4NCj4gPiAgICAgICAgICAqLw0KPiA+IC0gICAgICAgc3RyY3B5
-KGFkYXB0ZXItPmZ3X25hbWUsIFBDSUU4OTk3X0RFRkFVTFRfV0lGSUZXX05BTUUpOw0KPiA+ICsg
-ICAgICAgc3RyY3B5KGFkYXB0ZXItPmZ3X25hbWUsIGNhcmQtPnBjaWUud2lmaV9md19uYW1lKTsN
-Cj4gPg0KPiA+ICAgICAgICAgLyogdHhfYnVmX3NpemUgbWlnaHQgYmUgY2hhbmdlZCB0byAzNTg0
-IGJ5IGZpcm13YXJlIGR1cmluZw0KPiA+ICAgICAgICAgICogZGF0YSB0cmFuc2Zlciwgd2Ugc2hv
-dWxkIHJlc2V0IGl0IHRvIGRlZmF1bHQgc2l6ZS4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuaA0KPiA+IGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuaA0KPiA+IGluZGV4IDAwZThlZTUuLmQ2Yzg1MjYg
-MTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3Bj
-aWUuaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9wY2ll
-LmgNCj4gPiBAQCAtMjg1LDYgKzI4NSw4IEBAIHN0cnVjdCBtd2lmaWV4X3BjaWVfZGV2aWNlIHsN
-Cj4gPiAgICAgICAgIHN0cnVjdCBtZW1vcnlfdHlwZV9tYXBwaW5nICptZW1fdHlwZV9tYXBwaW5n
-X3RibDsNCj4gPiAgICAgICAgIHU4IG51bV9tZW1fdHlwZXM7DQo+ID4gICAgICAgICBib29sIGNh
-bl9leHRfc2NhbjsNCj4gPiArICAgICAgIHU4IGZscl9zdXBwb3J0Ow0KPiANCj4gVGhpcyBzb3Vu
-ZHMgbGlrZSBhIGJvb2xlYW4sIGJ1dCBnaXZlbiB0aGF0IHlvdSBjYW4ga2V5IG9mZiB3aWZpX2Z3
-X25hbWUgYmVpbmcNCj4gTlVMTCBJIGFtIG5vdCBzdXJlIGl0IGlzIG5lZWRlZC4NCj4gDQo+ID4g
-KyAgICAgICBjaGFyICp3aWZpX2Z3X25hbWU7DQo+IA0KPiBjb25zdCBjaGFyICouDQo+IA0KPiBU
-aGF0IHNhaWQsIEkgY29uc2lkZXIgdGhlIHdob2xlIHdpZmktb25seSBmaXJtd2FyZSBidXNpbmVz
-cyBpcyBxdWl0ZSBmcmFnaWxlLiBDYW4NCj4gd2UgaGF2ZSB1bmlmaWVkIGZpcm13YXJlIGFuZCBo
-YXZlIGRyaXZlciBmaWd1cmUgb3V0IHdoYXQgcGFydCBzaG91ZGwgYmUNCj4gW3JlXWxvYWRlZD8N
-Cj4gDQoNClRoYW5rcyBmb3IgdGhlIHJldmlldywgd2UgaGF2ZSB0cmllZCB0byBleHRyYWN0IHdp
-Zmktb25seSBwYXJ0IGZyb20gY29tYm8gZmlybXdhcmUuDQpUaGUgbmV3IHNvbHV0aW9uIHdpbGwg
-YmUgc2VuZCBpbiBWMiwgaW4gdGhpcyB3YXksIHdlIGRvIG5vdCBuZWVkIHNlcGFyYXRlIHdpZmlf
-ZndfbmFtZSBhbnkgbW9yZS4NCg0KVGhhbmtzDQpTaW1vbg0KDQo+ID4gIH07DQo+ID4NCj4gPiAg
-c3RhdGljIGNvbnN0IHN0cnVjdCBtd2lmaWV4X3BjaWVfZGV2aWNlIG13aWZpZXhfcGNpZTg3NjYg
-PSB7IEBADQo+ID4gLTI5Myw2ICsyOTUsNyBAQCBzdHJ1Y3QgbXdpZmlleF9wY2llX2RldmljZSB7
-DQo+ID4gICAgICAgICAudHhfYnVmX3NpemUgPSBNV0lGSUVYX1RYX0RBVEFfQlVGX1NJWkVfMkss
-DQo+ID4gICAgICAgICAuY2FuX2R1bXBfZncgPSBmYWxzZSwNCj4gPiAgICAgICAgIC5jYW5fZXh0
-X3NjYW4gPSB0cnVlLA0KPiA+ICsgICAgICAgLmZscl9zdXBwb3J0ID0gMCwNCj4gPiAgfTsNCj4g
-Pg0KPiA+ICBzdGF0aWMgY29uc3Qgc3RydWN0IG13aWZpZXhfcGNpZV9kZXZpY2UgbXdpZmlleF9w
-Y2llODg5NyA9IHsgQEANCj4gPiAtMzAzLDYgKzMwNiw3IEBAIHN0cnVjdCBtd2lmaWV4X3BjaWVf
-ZGV2aWNlIHsNCj4gPiAgICAgICAgIC5tZW1fdHlwZV9tYXBwaW5nX3RibCA9IG1lbV90eXBlX21h
-cHBpbmdfdGJsX3c4ODk3LA0KPiA+ICAgICAgICAgLm51bV9tZW1fdHlwZXMgPSBBUlJBWV9TSVpF
-KG1lbV90eXBlX21hcHBpbmdfdGJsX3c4ODk3KSwNCj4gPiAgICAgICAgIC5jYW5fZXh0X3NjYW4g
-PSB0cnVlLA0KPiA+ICsgICAgICAgLmZscl9zdXBwb3J0ID0gMCwNCj4gPiAgfTsNCj4gPg0KPiA+
-ICBzdGF0aWMgY29uc3Qgc3RydWN0IG13aWZpZXhfcGNpZV9kZXZpY2UgbXdpZmlleF9wY2llODk5
-NyA9IHsgQEANCj4gPiAtMzEzLDYgKzMxNyw4IEBAIHN0cnVjdCBtd2lmaWV4X3BjaWVfZGV2aWNl
-IHsNCj4gPiAgICAgICAgIC5tZW1fdHlwZV9tYXBwaW5nX3RibCA9IG1lbV90eXBlX21hcHBpbmdf
-dGJsX3c4OTk3LA0KPiA+ICAgICAgICAgLm51bV9tZW1fdHlwZXMgPSBBUlJBWV9TSVpFKG1lbV90
-eXBlX21hcHBpbmdfdGJsX3c4OTk3KSwNCj4gPiAgICAgICAgIC5jYW5fZXh0X3NjYW4gPSB0cnVl
-LA0KPiA+ICsgICAgICAgLmZscl9zdXBwb3J0ID0gMSwNCj4gPiArICAgICAgIC53aWZpX2Z3X25h
-bWUgPSAibXJ2bC9wY2llODk5N193bGFuX3Y0LmJpbiIsDQo+ID4gIH07DQo+ID4NCj4gPiAgc3Ry
-dWN0IG13aWZpZXhfZXZ0X2J1Zl9kZXNjIHsNCj4gPiAtLQ0KPiA+IDEuOC4xLjQNCj4gPg0KPiAN
-Cj4gVGhhbmtzLg0KPiANCj4gLS0NCj4gRG1pdHJ5DQo=
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+For 2-antenna combo card, the signal of the neighbor antenna could be
+over noise level and cause be severe interference. So we monitor the
+rssi and turn off one of the antennas when the other is transmitting
+and the rssi level is beyond a threshold.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 332 +++++++++++++++++----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   7 +
+ 2 files changed, 282 insertions(+), 57 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 88cd28f..4fec175 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -369,6 +369,8 @@ static bool btc8723b2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ 	static bool pre_bt_hs_on;
+ 	bool wifi_busy = false, under_4way = false, bt_hs_on = false;
+ 	bool wifi_connected = false;
++	u8 wifi_rssi_state = BTC_RSSI_STATE_HIGH;
++	u8 tmp;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+ 			   &wifi_connected);
+@@ -392,6 +394,15 @@ static bool btc8723b2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ 			pre_bt_hs_on = bt_hs_on;
+ 			return true;
+ 		}
++
++		tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++				 coex_dm->switch_thres_offset;
++		wifi_rssi_state =
++		     btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, tmp, 0);
++
++		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
++		    (wifi_rssi_state == BTC_RSSI_STATE_LOW))
++			return true;
+ 	}
+ 
+ 	return false;
+@@ -1186,8 +1197,16 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
++	u8 wifi_rssi_state, bt_rssi_state;
+ 	s8 wifi_duration_adjust = 0x0;
+ 	u8 tdma_byte4_modify = 0x0;
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn %s PS TDMA, type=%d\n",
+@@ -1196,6 +1215,15 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 	coex_dm->cur_ps_tdma_on = turn_on;
+ 	coex_dm->cur_ps_tdma = type;
+ 
++	if (!(BTC_RSSI_HIGH(wifi_rssi_state) &&
++	      BTC_RSSI_HIGH(bt_rssi_state)) && turn_on) {
++		 /* for WiFi RSSI low or BT RSSI low */
++		type = type + 100;
++		coex_dm->is_switch_to_1dot5_ant = true;
++	} else {
++		coex_dm->is_switch_to_1dot5_ant = false;
++	}
++
+ 	if (!force_exec) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], bPrePsTdmaOn = %d, bCurPsTdmaOn = %d!!\n",
+@@ -1346,6 +1374,12 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x15,
+ 						    0x03, 0x70, 0x90);
+ 			break;
++
++		case 23:
++		case 123:
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x35,
++						    0x03, 0x71, 0x10);
++			break;
+ 		case 71:
+ 			btc8723b2ant_set_fw_ps_tdma(
+ 				btcoexist, 0xe3, 0x3c + wifi_duration_adjust,
+@@ -1367,6 +1401,37 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 				btcoexist, 0xd3, 0x2d + wifi_duration_adjust,
+ 				0x03, 0x70, 0x50 | tdma_byte4_modify);
+ 			break;
++		case 103:
++		case 107:
++		case 111:
++		case 115:
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xd3, 0x1c,
++						    0x03, 0x70,
++						    0x50 | tdma_byte4_modify);
++			break;
++		case 104:
++		case 108:
++		case 112:
++		case 116:
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xd3, 0x10,
++						    0x03, 0x70,
++						    0x50 | tdma_byte4_modify);
++			break;
++		case 109:
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x3c,
++						    0x03, 0xf1,
++						    0x90 | tdma_byte4_modify);
++			break;
++		case 121:
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x15,
++						    0x03, 0x70,
++						    0x90 | tdma_byte4_modify);
++			break;
++		case 22:
++		case 122:
++			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x35,
++						    0x03, 0x71, 0x11);
++			break;
+ 		}
+ 	} else {
+ 		/* disable PS tdma */
+@@ -2634,17 +2699,25 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ /* SCO only or SCO+PAN(HS) */
+ static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state;
++	u8 wifi_rssi_state, bt_rssi_state;
+ 	u32 wifi_bw;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(
++		btcoexist, 2, BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++					       coex_dm->switch_thres_offset,
++		0);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+ 	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 4);
+ 
++	if (BTC_RSSI_HIGH(bt_rssi_state))
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++	else
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ 
+ 	if (BTC_WIFI_BW_LEGACY == wifi_bw)
+@@ -2683,16 +2756,22 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
+ {
+ 	u8 wifi_rssi_state, bt_rssi_state;
+ 	u32 wifi_bw;
++	u8 tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
+-	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+-	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
++	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
++	if (BTC_RSSI_HIGH(bt_rssi_state))
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++	else
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ 
+ 	if (wifi_bw == BTC_WIFI_BW_LEGACY)
+@@ -2738,12 +2817,12 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 ap_num = 0;
++	u8 tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
+-	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist,
+-							1, 2, 40, 0);
+-	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2, 40, 0);
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM, &ap_num);
+ 
+@@ -2774,7 +2853,20 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 
+ 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+-	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++	if (BTC_RSSI_HIGH(bt_rssi_state))
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++	else
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	} else {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 13);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
++	}
+ 
+ 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+@@ -2808,18 +2900,37 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
++							tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+ 	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+-	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++	if (BTC_RSSI_HIGH(bt_rssi_state))
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++	else
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	} else {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 13);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
++	}
+ 
+ 	btc8723b2ant_tdma_duration_adjust(btcoexist, false, true, 2);
+ 
+@@ -2848,12 +2959,17 @@ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
+-	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
++							tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+@@ -2865,7 +2981,15 @@ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
+ 	else
+ 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+ 
+-	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 10);
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 10);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	} else {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 13);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
++	}
+ 
+ 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+@@ -2899,20 +3023,25 @@ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
+ /* PAN(HS) only */
+ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
++							tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+ 	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+-	if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-	    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+-		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, true);
++	if (BTC_RSSI_HIGH(bt_rssi_state))
++		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
+ 	else
+ 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+ 
+@@ -2944,12 +3073,17 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
+ /* PAN(EDR) + A2DP */
+ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
+-	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
++							tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+@@ -2961,6 +3095,12 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ 	else
+ 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+ 
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state))
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	else
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ 
+ 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+@@ -3001,12 +3141,17 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+-
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
+-	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
++							tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ 
+ 	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+@@ -3016,27 +3161,32 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ 	else
+ 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+ 
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	} else {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 14);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
++	}
++
+ 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 		if (BTC_WIFI_BW_HT40 == wifi_bw) {
+ 			btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC,
+ 						      3);
+-			btc8723b2ant_coex_table_with_type(btcoexist,
+-							  NORMAL_EXEC, 11);
+ 			btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1,
+ 						  0xfffff, 0x780);
+ 		} else {
+ 			btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC,
+ 						      6);
+-			btc8723b2ant_coex_table_with_type(btcoexist,
+-							  NORMAL_EXEC, 7);
+ 			btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1,
+ 						  0xfffff, 0x0);
+ 		}
+ 		btc8723b2ant_tdma_duration_adjust(btcoexist, true, false, 2);
+ 	} else {
+ 		btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+-		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 11);
+ 		btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff,
+ 					  0x0);
+ 		btc8723b2ant_tdma_duration_adjust(btcoexist, true, true, 2);
+@@ -3067,12 +3217,17 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ /* HID + A2DP + PAN(EDR) */
+ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
+-	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
++							tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, tmp, 0);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+@@ -3084,9 +3239,18 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 	else
+ 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+ 
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	} else {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 14);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
++	}
++
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ 
+-	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+ 
+ 	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+@@ -3124,12 +3288,18 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
++	u8 ap_num = 0;
++	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
++			coex_dm->switch_thres_offset;
+ 
+-	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist,
+-						       0, 2, 15, 0);
+-	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
++	wifi_rssi_state = btc8723b2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
++	wifi_rssi_state1 = btc8723b2ant_wifi_rssi_state(btcoexist, 1, 2,
++							tmp, 0);
++	tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
++			 coex_dm->switch_thres_offset;
++	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 3, tmp, 37);
+ 
+ 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
+ 
+@@ -3138,13 +3308,61 @@ static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ 
+-	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
++		if (BTC_RSSI_HIGH(bt_rssi_state))
++			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else if (BTC_RSSI_MEDIUM(bt_rssi_state))
++			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else
++			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++	} else {
++		/* only 802.11N mode we have to dec bt power to 4 degree */
++		if (BTC_RSSI_HIGH(bt_rssi_state)) {
++			/* need to check ap Number of Not */
++			if (ap_num < 10)
++				btc8723b2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 4);
++			else
++				btc8723b2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 2);
++		} else if (BTC_RSSI_MEDIUM(bt_rssi_state)) {
++			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		} else {
++			btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++		}
++	}
+ 
+-	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+-		btc8723b2ant_tdma_duration_adjust(btcoexist, true, false, 2);
+-	else
+-		btc8723b2ant_tdma_duration_adjust(btcoexist, true, true, 2);
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	} else {
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 14);
++		btc8723b2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
++	}
++
++	if (BTC_RSSI_HIGH(bt_rssi_state)) {
++		if (ap_num < 10)
++			btc8723b2ant_tdma_duration_adjust(btcoexist, true,
++							  false, 1);
++		else
++			btc8723b2ant_tdma_duration_adjust(btcoexist, true,
++							  false, 3);
++	} else {
++		btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 18);
++		btcoexist->btc_write_1byte(btcoexist, 0x456, 0x38);
++		btcoexist->btc_write_2byte(btcoexist, 0x42a, 0x0808);
++		btcoexist->btc_write_4byte(btcoexist, 0x430, 0x0);
++		btcoexist->btc_write_4byte(btcoexist, 0x434, 0x01010000);
++
++		if (ap_num < 10)
++			btc8723b2ant_tdma_duration_adjust(btcoexist, true,
++							  true, 1);
++		else
++			btc8723b2ant_tdma_duration_adjust(btcoexist, true,
++							  true, 3);
++	}
+ 
+ 	/* sw mechanism */
+ 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index f5e091f..2c21134 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -41,6 +41,11 @@
+ 
+ #define BTC_RSSI_COEX_THRESH_TOL_8723B_2ANT		2
+ 
++/* WiFi RSSI Threshold for 2-Ant TDMA/1-Ant PS-TDMA translation */
++#define BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES	42
++/* BT RSSI Threshold for 2-Ant TDMA/1-Ant PS-TDMA translation */
++#define BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES		46
++
+ enum BT_INFO_SRC_8723B_2ANT {
+ 	BT_INFO_SRC_8723B_2ANT_WIFI_FW			= 0x0,
+ 	BT_INFO_SRC_8723B_2ANT_BT_RSP			= 0x1,
+@@ -127,6 +132,8 @@ struct coex_dm_8723b_2ant {
+ 	u8 pre_rpwm;
+ 	u8 cur_rpwm;
+ 
++	bool is_switch_to_1dot5_ant;
++	u8 switch_thres_offset;
+ 	bool need_recover_0x948;
+ 	u16 backup_0x948;
+ };
+-- 
+2.10.2
