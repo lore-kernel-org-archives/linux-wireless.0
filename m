@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:32911 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757002AbdDQAHN (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59612 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751081AbdDDEtB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:07:13 -0400
-Received: by mail-oi0-f67.google.com with SMTP id a189so578922oib.0
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:13 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/13] rtlwifi: btcoex: 21a 1ant: mark packet high priority when scanning
-Date: Sun, 16 Apr 2017 19:06:55 -0500
-Message-Id: <20170417000700.29057-9-Larry.Finger@lwfinger.net> (sfid-20170417_020727_038577_8B22B710)
-In-Reply-To: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
-References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+        Tue, 4 Apr 2017 00:49:01 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v344derJ012774
+        for <linux-wireless@vger.kernel.org>; Mon, 3 Apr 2017 21:49:00 -0700
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 29m4j882cs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 21:49:00 -0700
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: Fix invalid port issue
+Date: Tue, 4 Apr 2017 10:16:28 +0530
+Message-ID: <1491281188-6471-1-git-send-email-gbhat@marvell.com> (sfid-20170404_065037_442970_65D45E2F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+We have to use start port, for TX/RX of single packet,
+instead of current aggregating port. This will fix SDIO
+CMD53(TX/RX) returning -ETIMEDOUT and halting the data path.
 
-When the wifi notifies the coexistence it is going to scan, set the coex
-table to avoid issues when the scan result is empty.
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+fixes: 0cb52aac4 ('mwifiex: do not set multiport flag for tx/rx single packet')
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 5b624e76303d..08bf42e80e83 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -2524,6 +2524,19 @@ void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
- 		return;
- 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 58d3da0..369450a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -1380,7 +1380,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 		}
  
-+	if (type == BTC_SCAN_START) {
-+		coex_sta->wifi_is_high_pri_task = true;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], SCAN START notify\n");
-+
-+		/* Force antenna setup for no scan result issue */
-+		btc8821a1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
-+	} else {
-+		coex_sta->wifi_is_high_pri_task = false;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], SCAN FINISH notify\n");
-+	}
-+
- 	if (coex_sta->bt_disabled)
- 		return;
+ 		if (card->mpa_rx.pkt_cnt == 1)
+-			mport = adapter->ioport + port;
++			mport = adapter->ioport + card->mpa_rx.start_port;
  
+ 		if (mwifiex_read_data_sync(adapter, card->mpa_rx.buf,
+ 					   card->mpa_rx.buf_len, mport, 1))
+@@ -1813,7 +1813,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 		}
+ 
+ 		if (card->mpa_tx.pkt_cnt == 1)
+-			mport = adapter->ioport + port;
++			mport = adapter->ioport + card->mpa_tx.start_port;
+ 
+ 		ret = mwifiex_write_data_to_card(adapter, card->mpa_tx.buf,
+ 						 card->mpa_tx.buf_len, mport);
 -- 
-2.12.0
+1.9.1
