@@ -1,88 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50636 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752700AbdDKMiv (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35593 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932205AbdDDQua (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 08:38:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 11 Apr 2017 15:37:31 +0300
-Message-Id: <20170411123742.12214-15-luca@coelho.fi> (sfid-20170411_144104_524035_530CD72E)
-In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
-References: <20170411123742.12214-1-luca@coelho.fi>
-Subject: [PATCH 14/25] iwlwifi: mvm: optimize reorder timeout frame releasing
+        Tue, 4 Apr 2017 12:50:30 -0400
+Received: by mail-oi0-f65.google.com with SMTP id d2so18373360oig.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:29 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/13] rtlwifi: btcoex: 23b 2ant: check more cases when bt is queuing
+Date: Tue,  4 Apr 2017 11:50:00 -0500
+Message-Id: <20170404165006.14329-8-Larry.Finger@lwfinger.net> (sfid-20170404_185049_356878_8DE23CBA)
+In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Currently we release up to the last expired frame.
-However, if there are consecutive frames after it - we can
-optimize it further and release them as well - until the next
-hole.
+If bt is queing, we need to set the packet priority properly.
+Originally we only consider if wifi was connected or not, but now we
+also consider if bt is under abnormal scan or wifi is scanning, roaming
+or linking, and set the coex table.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 24 +++++++++++++++++++---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  1 +
+ 2 files changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index d79e9c2a2654..85f7c83995b9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -29,7 +29,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -462,6 +462,7 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
- 	int i;
- 	u16 sn = 0, index = 0;
- 	bool expired = false;
-+	bool cont = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 735bba9..8b2bef8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1464,17 +1464,35 @@ static void btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
  
- 	spin_lock(&buf->lock);
+ static void btc8723b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ {
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	bool wifi_connected = false;
+ 	bool low_pwr_disable = true;
++	bool scan = false, link = false, roam = false;
  
-@@ -473,12 +474,21 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
- 	for (i = 0; i < buf->buf_size ; i++) {
- 		index = (buf->head_sn + i) % buf->buf_size;
+ 	btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
+ 			   &low_pwr_disable);
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+ 			   &wifi_connected);
  
--		if (skb_queue_empty(&buf->entries[index]))
-+		if (skb_queue_empty(&buf->entries[index])) {
-+			/*
-+			 * If there is a hole and the next frame didn't expire
-+			 * we want to break and not advance SN
-+			 */
-+			cont = false;
- 			continue;
--		if (!time_after(jiffies, buf->reorder_time[index] +
--				RX_REORDER_BUF_TIMEOUT_MQ))
-+		}
-+		if (!cont && !time_after(jiffies, buf->reorder_time[index] +
-+					 RX_REORDER_BUF_TIMEOUT_MQ))
- 			break;
+-	if (wifi_connected) {
+-		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+-		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 3);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_LINK, &link);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_ROAM, &roam);
 +
- 		expired = true;
-+		/* continue until next hole after this expired frames */
-+		cont = true;
- 		sn = ieee80211_sn_add(buf->head_sn, i + 1);
- 	}
++	btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
++
++	if (coex_sta->bt_abnormal_scan) {
++		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 3);
++	} else if (scan || link || roam) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], Wifi link process + BT Inq/Page!!\n");
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 15);
++		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 22);
++	} else if (wifi_connected) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], Wifi connected + BT Inq/Page!!\n");
++		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 15);
++		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 22);
+ 	} else {
+ 		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
+ 		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index 57eac22..f5e091f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -137,6 +137,7 @@ struct coex_sta_8723b_2ant {
+ 	bool a2dp_exist;
+ 	bool hid_exist;
+ 	bool pan_exist;
++	bool bt_abnormal_scan;
  
+ 	bool under_lps;
+ 	bool under_ips;
 -- 
-2.11.0
+2.10.2
