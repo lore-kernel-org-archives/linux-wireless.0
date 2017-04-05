@@ -1,38 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48570 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1031994AbdDUIMc (ORCPT
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:35815 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752189AbdDEW1C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 04:12:32 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Nishant Sarmukadam" <nishants@marvell.com>,
-        Cathy Luo <cluo@marvell.com>
-Subject: pull-request mwifiex-firmware 2017-04-21
-Date: Fri, 21 Apr 2017 08:12:27 +0000
-Message-ID: <bb71ea53c9a54002addcb69217db10f3@SC-EXCH02.marvell.com> (sfid-20170421_101237_718059_B1976038)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Wed, 5 Apr 2017 18:27:02 -0400
+Received: by mail-pg0-f53.google.com with SMTP id 81so17190642pgh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Apr 2017 15:27:02 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] mwifiex: MAC randomization should not be persistent
+Date: Wed,  5 Apr 2017 15:26:40 -0700
+Message-Id: <20170405222640.4494-1-briannorris@chromium.org> (sfid-20170406_002855_349527_E7D6EBC2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 5e523f5cd672d8fae7cdbb147d0b1fb31119414d:
+nl80211 provides the NL80211_SCAN_FLAG_RANDOM_ADDR for every scan
+request that should be randomized; the absence of such a flag means we
+should not randomize. However, mwifiex was stashing the latest
+randomization request and *always* using it for future scans, even those
+that didn't set the flag.
 
-  linux-firmware: update Marvell SD8887 firmware image (2017-04-19 20:20:13 -0700)
+Let's zero out the randomization info whenever we get a scan request
+without NL80211_SCAN_FLAG_RANDOM_ADDR. I'd prefer to remove
+priv->random_mac entirely (and plumb the randomization MAC properly
+through the call sequence), but the spaghetti is a little difficult to
+unravel here for me.
 
-are available in the git repository at:
+Fixes: c2a8f0ff9c6c ("mwifiex: support random MAC address for scanning")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+Should this be tagged for -stable?
 
-  git://git.marvell.com/mwifiex-firmware.git
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-for you to fetch changes up to c2ff512b4939b2140ed62cc3f60b1a93110764bc:
-
-  linux-firmware: update Marvell SD8897-B0 firmware image (2017-04-21 13:04:39 +0530)
-
-----------------------------------------------------------------
-Ganapathi Bhat (1):
-      linux-firmware: update Marvell SD8897-B0 firmware image
-
- WHENCE                 |   2 +-
- mrvl/sd8897_uapsta.bin | Bin 800344 -> 814048 bytes
- 2 files changed, 1 insertion(+), 1 deletion(-)
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 1e3bd435a694..2d7e8a372bf1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -2528,9 +2528,11 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 			priv->random_mac[i] |= get_random_int() &
+ 					       ~(request->mac_addr_mask[i]);
+ 		}
++		ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
++	} else {
++		eth_zero_addr(priv->random_mac);
+ 	}
+ 
+-	ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
+ 	user_scan_cfg->num_ssids = request->n_ssids;
+ 	user_scan_cfg->ssid_list = request->ssids;
+ 
+-- 
+2.12.2.715.g7642488e1d-goog
