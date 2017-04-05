@@ -1,156 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59758 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1038733AbdDUMFS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932930AbdDEL60 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 08:05:18 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 2/9] nl80211: add support for BSSIDs in scheduled scan matchsets
-Date: Fri, 21 Apr 2017 13:05:01 +0100
-Message-Id: <1492776308-15120-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170421_140544_122238_BE8A5168)
-In-Reply-To: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 5 Apr 2017 07:58:26 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 04/11] wil6210: align to latest auto generated wmi.h
+Date: Wed,  5 Apr 2017 14:58:07 +0300
+Message-Id: <1491393494-11816-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_140200_989658_35E35910)
+In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows for the scheduled scan request to specify matchsets
-for specific BSSIDs.
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Align to latest version of the auto generated wmi file
+describing the interface with FW
+
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- include/net/cfg80211.h       |  6 +++++-
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/nl80211.c       | 41 +++++++++++++++++++++++++++++++----------
- 3 files changed, 38 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.h | 73 ++++++++++++++++++++++++----------
+ 1 file changed, 52 insertions(+), 21 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7721a9b..2142800 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1613,11 +1613,15 @@ static inline void get_random_mask_addr(u8 *buf, const u8 *addr, const u8 *mask)
- /**
-  * struct cfg80211_match_set - sets of attributes to match
-  *
-- * @ssid: SSID to be matched; may be zero-length for no match (RSSI only)
-+ * @ssid: SSID to be matched; may be zero-length in case of BSSID match
-+ *	or no match (RSSI only)
-+ * @bssid: BSSID to be matched; may be all-zero BSSID in case of SSID match
-+ *	or no match (RSSI only)
-  * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
-  */
- struct cfg80211_match_set {
- 	struct cfg80211_ssid ssid;
-+	u8 bssid[ETH_ALEN];
- 	s32 rssi_thold;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 7c9fee5..f7f5f4f 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -58,6 +58,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_MGMT_RETRY_LIMIT	= 3,
+ 	WMI_FW_CAPABILITY_DISABLE_AP_SME	= 4,
+ 	WMI_FW_CAPABILITY_WMI_ONLY		= 5,
++	WMI_FW_CAPABILITY_THERMAL_THROTTLING	= 7,
+ 	WMI_FW_CAPABILITY_MAX,
  };
  
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f34127d..925eb38 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3209,6 +3209,7 @@ enum nl80211_reg_rule_attr {
-  *	BSS-es in the specified band is to be adjusted before doing
-  *	RSSI-based BSS selection. The attribute value is a packed structure
-  *	value as specified by &struct nl80211_bss_select_rssi_adjust.
-+ * @NL80211_SCHED_SCAN_MATCH_ATTR_BSSID: BSSID to be used for matching.
-  * @NL80211_SCHED_SCAN_MATCH_ATTR_MAX: highest scheduled scan filter
-  *	attribute number currently defined
-  * @__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST: internal use
-@@ -3220,6 +3221,7 @@ enum nl80211_sched_scan_match_attr {
- 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI,
- 	NL80211_SCHED_SCAN_MATCH_ATTR_RELATIVE_RSSI,
- 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI_ADJUST,
-+	NL80211_SCHED_SCAN_MATCH_ATTR_BSSID,
+@@ -142,8 +143,6 @@ enum wmi_command_id {
+ 	WMI_MAINTAIN_RESUME_CMDID			= 0x851,
+ 	WMI_RS_MGMT_CMDID				= 0x852,
+ 	WMI_RF_MGMT_CMDID				= 0x853,
+-	WMI_THERMAL_THROTTLING_CTRL_CMDID		= 0x854,
+-	WMI_THERMAL_THROTTLING_GET_STATUS_CMDID		= 0x855,
+ 	WMI_OTP_READ_CMDID				= 0x856,
+ 	WMI_OTP_WRITE_CMDID				= 0x857,
+ 	WMI_LED_CFG_CMDID				= 0x858,
+@@ -192,6 +191,8 @@ enum wmi_command_id {
+ 	WMI_GET_MGMT_RETRY_LIMIT_CMDID			= 0x931,
+ 	WMI_NEW_STA_CMDID				= 0x935,
+ 	WMI_DEL_STA_CMDID				= 0x936,
++	WMI_SET_THERMAL_THROTTLING_CFG_CMDID		= 0x940,
++	WMI_GET_THERMAL_THROTTLING_CFG_CMDID		= 0x941,
+ 	WMI_TOF_SESSION_START_CMDID			= 0x991,
+ 	WMI_TOF_GET_CAPABILITIES_CMDID			= 0x992,
+ 	WMI_TOF_SET_LCR_CMDID				= 0x993,
+@@ -438,16 +439,6 @@ struct wmi_rf_mgmt_cmd {
+ 	__le32 rf_mgmt_type;
+ } __packed;
  
- 	/* keep last */
- 	__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fe03d42..19cc70a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -497,6 +497,8 @@ enum nl80211_multicast_groups {
- nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
- 	[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] = { .type = NLA_BINARY,
- 						 .len = IEEE80211_MAX_SSID_LEN },
-+	[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID] = { .type = NLA_BINARY,
-+						  .len = ETH_ALEN },
- 	[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI] = { .type = NLA_U32 },
- };
+-/* WMI_THERMAL_THROTTLING_CTRL_CMDID */
+-#define THERMAL_THROTTLING_USE_DEFAULT_MAX_TXOP_LENGTH	(0xFFFFFFFF)
+-
+-/* WMI_THERMAL_THROTTLING_CTRL_CMDID */
+-struct wmi_thermal_throttling_ctrl_cmd {
+-	__le32 time_on_usec;
+-	__le32 time_off_usec;
+-	__le32 max_txop_length_usec;
+-} __packed;
+-
+ /* WMI_RF_RX_TEST_CMDID */
+ struct wmi_rf_rx_test_cmd {
+ 	__le32 sector;
+@@ -549,7 +540,7 @@ struct wmi_pcp_start_cmd {
+ 	u8 hidden_ssid;
+ 	u8 is_go;
+ 	u8 reserved0[5];
+-	/* abft_len override if non-0 */
++	/* A-BFT length override if non-0 */
+ 	u8 abft_len;
+ 	u8 disable_ap_sme;
+ 	u8 network_type;
+@@ -910,6 +901,39 @@ struct wmi_set_mgmt_retry_limit_cmd {
+ 	u8 reserved[3];
+ } __packed;
  
-@@ -7056,8 +7058,15 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
- 					       NULL);
- 			if (err)
- 				return ERR_PTR(err);
++/* Zones: HIGH, MAX, CRITICAL */
++#define WMI_NUM_OF_TT_ZONES	(3)
 +
-+			/* SSID and BSSID are mutually exclusive */
-+			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] &&
-+			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID])
-+				return ERR_PTR(-EINVAL);
++struct wmi_tt_zone_limits {
++	/* Above this temperature this zone is active */
++	u8 temperature_high;
++	/* Below this temperature the adjacent lower zone is active */
++	u8 temperature_low;
++	u8 reserved[2];
++} __packed;
 +
- 			/* add other standalone attributes here */
--			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID]) {
-+			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] ||
-+			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID]) {
- 				n_match_sets++;
- 				continue;
- 			}
-@@ -7228,7 +7237,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
- 		nla_for_each_nested(attr,
- 				    attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
- 				    tmp) {
--			struct nlattr *ssid, *rssi;
-+			struct nlattr *ssid, *bssid, *rssi;
- 
- 			err = nla_parse_nested(tb,
- 					       NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
-@@ -7237,7 +7246,8 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
- 			if (err)
- 				goto out_free;
- 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
--			if (ssid) {
-+			bssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID];
-+			if (ssid || bssid) {
- 				if (WARN_ON(i >= n_match_sets)) {
- 					/* this indicates a programming error,
- 					 * the loop above should have verified
-@@ -7247,14 +7257,25 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
- 					goto out_free;
- 				}
- 
--				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
--					err = -EINVAL;
--					goto out_free;
-+				if (ssid) {
-+					if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
-+						err = -EINVAL;
-+						goto out_free;
-+					}
-+					memcpy(request->match_sets[i].ssid.ssid,
-+					       nla_data(ssid), nla_len(ssid));
-+					request->match_sets[i].ssid.ssid_len =
-+						nla_len(ssid);
-+				}
-+				if (bssid) {
-+					if (nla_len(bssid) != ETH_ALEN) {
-+						err = -EINVAL;
-+						goto out_free;
-+					}
-+					memcpy(request->match_sets[i].bssid,
-+					       nla_data(bssid), ETH_ALEN);
- 				}
--				memcpy(request->match_sets[i].ssid.ssid,
--				       nla_data(ssid), nla_len(ssid));
--				request->match_sets[i].ssid.ssid_len =
--					nla_len(ssid);
++/* Struct used for both configuration and status commands of thermal
++ * throttling
++ */
++struct wmi_tt_data {
++	/* Enable/Disable TT algorithm for baseband */
++	u8 bb_enabled;
++	u8 reserved0[3];
++	/* Define zones for baseband */
++	struct wmi_tt_zone_limits bb_zones[WMI_NUM_OF_TT_ZONES];
++	/* Enable/Disable TT algorithm for radio */
++	u8 rf_enabled;
++	u8 reserved1[3];
++	/* Define zones for all radio chips */
++	struct wmi_tt_zone_limits rf_zones[WMI_NUM_OF_TT_ZONES];
++} __packed;
 +
- 				/* special attribute - old implementation w/a */
- 				request->match_sets[i].rssi_thold =
- 					default_match_rssi;
++/* WMI_SET_THERMAL_THROTTLING_CFG_CMDID */
++struct wmi_set_thermal_throttling_cfg_cmd {
++	/* Command data */
++	struct wmi_tt_data tt_data;
++} __packed;
++
+ /* WMI_NEW_STA_CMDID */
+ struct wmi_new_sta_cmd {
+ 	u8 dst_mac[WMI_MAC_LEN];
+@@ -1040,7 +1064,6 @@ enum wmi_event_id {
+ 	WMI_BF_RXSS_MGMT_DONE_EVENTID			= 0x1839,
+ 	WMI_RS_MGMT_DONE_EVENTID			= 0x1852,
+ 	WMI_RF_MGMT_STATUS_EVENTID			= 0x1853,
+-	WMI_THERMAL_THROTTLING_STATUS_EVENTID		= 0x1855,
+ 	WMI_BF_SM_MGMT_DONE_EVENTID			= 0x1838,
+ 	WMI_RX_MGMT_PACKET_EVENTID			= 0x1840,
+ 	WMI_TX_MGMT_PACKET_EVENTID			= 0x1841,
+@@ -1090,6 +1113,8 @@ enum wmi_event_id {
+ 	WMI_BRP_SET_ANT_LIMIT_EVENTID			= 0x1924,
+ 	WMI_SET_MGMT_RETRY_LIMIT_EVENTID		= 0x1930,
+ 	WMI_GET_MGMT_RETRY_LIMIT_EVENTID		= 0x1931,
++	WMI_SET_THERMAL_THROTTLING_CFG_EVENTID		= 0x1940,
++	WMI_GET_THERMAL_THROTTLING_CFG_EVENTID		= 0x1941,
+ 	WMI_TOF_SESSION_END_EVENTID			= 0x1991,
+ 	WMI_TOF_GET_CAPABILITIES_EVENTID		= 0x1992,
+ 	WMI_TOF_SET_LCR_EVENTID				= 0x1993,
+@@ -1133,13 +1158,6 @@ struct wmi_rf_mgmt_status_event {
+ 	__le32 rf_status;
+ } __packed;
+ 
+-/* WMI_THERMAL_THROTTLING_STATUS_EVENTID */
+-struct wmi_thermal_throttling_status_event {
+-	__le32 time_on_usec;
+-	__le32 time_off_usec;
+-	__le32 max_txop_length_usec;
+-} __packed;
+-
+ /* WMI_GET_STATUS_DONE_EVENTID */
+ struct wmi_get_status_done_event {
+ 	__le32 is_associated;
+@@ -2206,6 +2224,19 @@ struct wmi_tof_get_capabilities_event {
+ 	__le32 aoa_supported_types;
+ } __packed;
+ 
++/* WMI_SET_THERMAL_THROTTLING_CFG_EVENTID */
++struct wmi_set_thermal_throttling_cfg_event {
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_GET_THERMAL_THROTTLING_CFG_EVENTID */
++struct wmi_get_thermal_throttling_cfg_event {
++	/* Status data */
++	struct wmi_tt_data tt_data;
++} __packed;
++
+ enum wmi_tof_session_end_status {
+ 	WMI_TOF_SESSION_END_NO_ERROR		= 0x00,
+ 	WMI_TOF_SESSION_END_FAIL		= 0x01,
 -- 
 1.9.1
