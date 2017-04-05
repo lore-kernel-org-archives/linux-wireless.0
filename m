@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:41893 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S971337AbdDYWn6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37434 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933001AbdDEMfn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 18:43:58 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH v5 1/9] MAINTAINERS: NFC: trf7970a: Add Mark Greer as maintainer
-Date: Tue, 25 Apr 2017 15:43:48 -0700
-Message-Id: <20170425224356.11498-2-mgreer@animalcreek.com> (sfid-20170426_004409_122617_D91C9768)
-In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
-References: <20170425224356.11498-1-mgreer@animalcreek.com>
+        Wed, 5 Apr 2017 08:35:43 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [V2] brcmfmac: update BRCMFMAC symbol description
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170323102928.11413-1-zajec5@gmail.com>
+References: <20170323102928.11413-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20170405123537.794C060D61@smtp.codeaurora.org> (sfid-20170405_143649_999936_8AA55BC4)
+Date: Wed,  5 Apr 2017 12:35:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Mark Greer as the maintainer of the trf7970a NFC driver.
+Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> For quite some time now brcmfmac supports 802.11ac chipsets and it's
+> not limited to embedded devices only. There are even standalone PCIe
+> cards based on BCM43602 or BCM4366.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a8eaa0a8e522..d7441b69f101 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11118,6 +11118,14 @@ F:	kernel/time/alarmtimer.c
- F:	kernel/time/ntp.c
- F:	tools/testing/selftests/timers/
- 
-+TI TRF7970A NFC DRIVER
-+M:	Mark Greer <mgreer@animalcreek.com>
-+L:	linux-wireless@vger.kernel.org
-+L:	linux-nfc@lists.01.org (moderated for non-subscribers)
-+S:	Supported
-+F:	drivers/nfc/trf7970a.c
-+F:	Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-+
- SC1200 WDT DRIVER
- M:	Zwane Mwaikambo <zwanem@gmail.com>
- S:	Maintained
+1c92af00a560 brcmfmac: update BRCMFMAC symbol description
+
 -- 
-2.12.0
+https://patchwork.kernel.org/patch/9640743/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
