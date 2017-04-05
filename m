@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35494 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:12699 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760333AbdDSHV1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 03:21:27 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: reject ToDS broadcast data frames
-Date: Wed, 19 Apr 2017 09:21:23 +0200
-Message-Id: <20170419072123.8090-1-johannes@sipsolutions.net> (sfid-20170419_092131_058993_C362E500)
+        id S933324AbdDERA3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 13:00:29 -0400
+Subject: [PATCH 23/38] Annotate hardware config module parameters in
+ drivers/net/wireless/
+From: David Howells <dhowells@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: gnomes@lxorguk.ukuu.org.uk, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, dhowells@redhat.com,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+        gregkh@linuxfoundation.org, Kalle Valo <kvalo@codeaurora.org>
+Date: Wed, 05 Apr 2017 18:00:21 +0100
+Message-ID: <149141162181.29162.8391170742895605946.stgit@warthog.procyon.org.uk> (sfid-20170405_190703_010504_697C5A1B)
+In-Reply-To: <149141141298.29162.5612793122429261720.stgit@warthog.procyon.org.uk>
+References: <149141141298.29162.5612793122429261720.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+When the kernel is running in secure boot mode, we lock down the kernel to
+prevent userspace from modifying the running kernel image.  Whilst this
+includes prohibiting access to things like /dev/mem, it must also prevent
+access by means of configuring driver modules in such a way as to cause a
+device to access or modify the kernel image.
 
-AP/AP_VLAN modes don't accept any real 802.11 multicast data
-frames, but since they do need to accept broadcast management
-frames the same is currently permitted for data frames. This
-opens a security problem because such frames would be decrypted
-with the GTK, and could even contain unicast L3 frames.
+To this end, annotate module_param* statements that refer to hardware
+configuration and indicate for future reference what type of parameter they
+specify.  The parameter parser in the core sees this information and can
+skip such parameters with an error message if the kernel is locked down.
+The module initialisation then runs as normal, but just sees whatever the
+default values for those parameters is.
 
-Since the spec says that ToDS frames must always have the BSSID
-as the RA (addr1), reject any other data frames.
+Note that we do still need to do the module initialisation because some
+drivers have viable defaults set in case parameters aren't specified and
+some drivers support automatic configuration (e.g. PNP or PCI) in addition
+to manually coded parameters.
 
-The problem was originally reported in "Predicting, Decrypting,
-and Abusing WPA2/802.11 Group Keys" at usenix
-https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/vanhoef
-and brought to my attention by Jouni.
+This patch annotates drivers in drivers/net/wireless/.
 
-Cc: stable@vger.kernel.org
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Suggested-by: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Kalle Valo <kvalo@codeaurora.org>
+cc: linux-wireless@vger.kernel.org
+cc: netdev@vger.kernel.org
 ---
- net/mac80211/rx.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 4b12c70c85f0..4d7543d1a62c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3639,6 +3639,27 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 			    !ether_addr_equal(bssid, hdr->addr1))
- 				return false;
- 		}
-+
-+		/*
-+		 * 802.11-2016 Table 9-26 says that for data frames, A1 must be
-+		 * the BSSID - we've checked that already but may have accepted
-+		 * the wildcard (ff:ff:ff:ff:ff:ff).
-+		 *
-+		 * It also says:
-+		 *	The BSSID of the Data frame is determined as follows:
-+		 *	a) If the STA is contained within an AP or is associated
-+		 *	   with an AP, the BSSID is the address currently in use
-+		 *	   by the STA contained in the AP.
-+		 *
-+		 * So we should not accept data frames with an address that's
-+		 * multicast.
-+		 *
-+		 * Accepting it also opens a security problem because stations
-+		 * could encrypt it with the GTK and inject traffic that way.
-+		 */
-+		if (ieee80211_is_data(hdr->frame_control) && multicast)
-+			return false;
-+
- 		return true;
- 	case NL80211_IFTYPE_WDS:
- 		if (bssid || !ieee80211_is_data(hdr->frame_control))
--- 
-2.11.0
+ drivers/net/wireless/cisco/airo.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 4b040451a9b8..1b7e125a28e2 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -246,8 +246,8 @@ MODULE_DESCRIPTION("Support for Cisco/Aironet 802.11 wireless ethernet cards.  "
+ 		   "Direct support for ISA/PCI/MPI cards and support for PCMCIA when used with airo_cs.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_SUPPORTED_DEVICE("Aironet 4500, 4800 and Cisco 340/350");
+-module_param_array(io, int, NULL, 0);
+-module_param_array(irq, int, NULL, 0);
++module_param_hw_array(io, int, ioport, NULL, 0);
++module_param_hw_array(irq, int, irq, NULL, 0);
+ module_param_array(rates, int, NULL, 0);
+ module_param_array(ssids, charp, NULL, 0);
+ module_param(auto_wep, int, 0);
