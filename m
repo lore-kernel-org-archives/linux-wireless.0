@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35613 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755387AbdDFUUN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932931AbdDEL62 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 16:20:13 -0400
-Received: by mail-oi0-f66.google.com with SMTP id d2so8884961oig.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 13:20:13 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 11/11] rtlwifi: btcoex: 23b 2ant: some hi-prio pkt will cause hid_exist
-Date: Thu,  6 Apr 2017 15:19:58 -0500
-Message-Id: <20170406201958.25642-12-Larry.Finger@lwfinger.net> (sfid-20170406_222543_540870_B0DB6C1D)
-In-Reply-To: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
-References: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
+        Wed, 5 Apr 2017 07:58:28 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 05/11] wil6210: fix protection against connections during reset
+Date: Wed,  5 Apr 2017 14:58:08 +0300
+Message-Id: <1491393494-11816-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_140200_450877_8FA841F0)
+In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Clear the hid_exist flag by monitoring the packet counter.
+Existing code that ignores connection events during
+reset flow will never take effect since it locks the
+same mutex taken by the reset flow.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+In addition, in case of unsolicited disconnect events ignore
+those as well since device is about to get reset.
+
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/ath/wil6210/wmi.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 1c823a71ce9f..2f3946be4ce2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -4329,6 +4329,7 @@ void ex_btc8723b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index e6c249d..814c356 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -518,16 +518,16 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 		assoc_resp_ielen = 0;
+ 	}
  
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], ==========================Periodical===========================\n");
-@@ -4352,6 +4353,13 @@ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
- 	btc8723b2ant_monitor_bt_ctr(btcoexist);
- 	btc8723b2ant_monitor_wifi_ctr(btcoexist);
+-	mutex_lock(&wil->mutex);
+ 	if (test_bit(wil_status_resetting, wil->status) ||
+ 	    !test_bit(wil_status_fwready, wil->status)) {
+ 		wil_err(wil, "status_resetting, cancel connect event, CID %d\n",
+ 			evt->cid);
+-		mutex_unlock(&wil->mutex);
+ 		/* no need for cleanup, wil_reset will do that */
+ 		return;
+ 	}
  
-+	/* for some BT speakers that High-Priority pkts appear before
-+	 * playing, this will cause HID exist
-+	 */
-+	if ((coex_sta->high_priority_tx + coex_sta->high_priority_rx < 50) &&
-+	    (bt_link_info->hid_exist))
-+		bt_link_info->hid_exist = false;
++	mutex_lock(&wil->mutex);
 +
- 	if (btc8723b2ant_is_wifi_status_changed(btcoexist) ||
- 	    coex_dm->auto_tdma_adjust)
- 		btc8723b2ant_run_coexist_mechanism(btcoexist);
+ 	if ((wdev->iftype == NL80211_IFTYPE_STATION) ||
+ 	    (wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)) {
+ 		if (!test_bit(wil_status_fwconnecting, wil->status)) {
+@@ -631,6 +631,13 @@ static void wmi_evt_disconnect(struct wil6210_priv *wil, int id,
+ 
+ 	wil->sinfo_gen++;
+ 
++	if (test_bit(wil_status_resetting, wil->status) ||
++	    !test_bit(wil_status_fwready, wil->status)) {
++		wil_err(wil, "status_resetting, cancel disconnect event\n");
++		/* no need for cleanup, wil_reset will do that */
++		return;
++	}
++
+ 	mutex_lock(&wil->mutex);
+ 	wil6210_disconnect(wil, evt->bssid, reason_code, true);
+ 	mutex_unlock(&wil->mutex);
 -- 
-2.12.0
+1.9.1
