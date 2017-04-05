@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00252a01.pphosted.com ([62.209.51.214]:62235 "EHLO
-        mx07-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1168620AbdDXKw3 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50526 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754073AbdDEHkA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 06:52:29 -0400
-Received: from pps.filterd (m0102628.ppops.net [127.0.0.1])
-        by mx07-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3OAnBAw011790
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 11:52:27 +0100
-Received: from mail-wm0-f71.google.com (mail-wm0-f71.google.com [74.125.82.71])
-        by mx07-00252a01.pphosted.com with ESMTP id 29yvjys19s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 11:52:27 +0100
-Received: by mail-wm0-f71.google.com with SMTP id d79so4496112wma.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 03:52:27 -0700 (PDT)
-From: James Hughes <james.hughes@raspberrypi.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Cc: James Hughes <james.hughes@raspberrypi.org>
-Subject: [PATCH] brcmfmac: Ensure pointer correctly set if skb data location changes
-Date: Mon, 24 Apr 2017 11:52:19 +0100
-Message-Id: <20170424105219.18797-1-james.hughes@raspberrypi.org> (sfid-20170424_125238_993102_BA45BDB3)
+        Wed, 5 Apr 2017 03:40:00 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: Fix the Transmit Power Control stats display format
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1490962180-24054-1-git-send-email-c_mkenna@qti.qualcomm.com>
+References: <1490962180-24054-1-git-send-email-c_mkenna@qti.qualcomm.com>
+To: <c_mkenna@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mkenna@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Message-ID: <87c5b76a4b7d41ef9cf1ec4691afa467@euamsexm01a.eu.qualcomm.com> (sfid-20170405_094011_025033_16B64DD9)
+Date: Wed, 5 Apr 2017 09:39:52 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The incoming skb header may be resized if header space is
-insufficient, which might change the data adddress in the skb.
-Ensure that a cached pointer to that data is correctly set by
-moving assignment to after any possible changes.
+c_mkenna@qti.qualcomm.com wrote:
+> From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+> 
+> This patch helps to fix TPC stats to display the stats
+> properly. Here cosmetic change has been done to print the
+> TPC stats for all the cases 1.CDD 2.STBC 3.TXBF
+> 
+> Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 
-Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 5eaac13e2317..934fe00e28a0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -198,7 +198,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 	int ret;
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_pub *drvr = ifp->drvr;
--	struct ethhdr *eh = (struct ethhdr *)(skb->data);
-+	struct ethhdr *eh;
- 
- 	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
-@@ -229,6 +229,8 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 		}
- 	}
- 
-+	eh = (struct ethhdr *)(skb->data);
-+
- 	/* validate length for ether packet */
- 	if (skb->len < sizeof(*eh)) {
- 		ret = -EINVAL;
+e871fb6396f7 ath10k: fix the Transmit Power Control stats display format
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9656133/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
