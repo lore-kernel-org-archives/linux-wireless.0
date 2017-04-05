@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36114 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1432985AbdDZI6d (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4936 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752967AbdDEHGY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 04:58:33 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 5 Apr 2017 03:06:24 -0400
+Subject: [PATCH 0/7] ath10k: remove ath10k_sdio_io()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 5 Apr 2017 10:06:13 +0300
+Message-ID: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net> (sfid-20170405_090628_788915_6C0064F5)
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8821ae: setup 8812ae RFE according to device type
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170417003207.32347-1-Larry.Finger@lwfinger.net>
-References: <20170417003207.32347-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Maxim Samoylov <max7255@gmail.com>,
-        Stable <stable@vger.kernel.org>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20170426085832.79D0E61493@smtp.codeaurora.org> (sfid-20170426_110239_260865_7B139B86)
-Date: Wed, 26 Apr 2017 08:58:32 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Current channel switch implementation sets 8812ae RFE reg value assuming
-> that device always has type 2.
-> 
-> Extend possible RFE types set and write corresponding reg values.
-> 
-> Source for new code is
-> http://dlcdnet.asus.com/pub/ASUS/wireless/PCE-AC51/DR_PCE_AC51_20232801152016.zip
-> 
-> Signed-off-by: Maxim Samoylov <max7255@gmail.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Pkshih <pkshih@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+Using ath10k_sdio_io() and ath10k_sdio_read_write_sync() are just
+confusing. Refactor the code by following the plan outlined
+below.
 
-Patch applied to wireless-drivers-next.git, thanks.
+I'm planning to fold all these seven patches into Erik's patch
+adding sdio.c[1] so I didn't write any commit logs. I'm just
+submitting these separately to make it easier to review the
+changes.
 
-46cfa2148e73 rtlwifi: rtl8821ae: setup 8812ae RFE according to device type
+Kalle
 
--- 
-https://patchwork.kernel.org/patch/9683395/
+ath10k_sdio_read_write_sync():
+X HIF_RD_SYNC_BLOCK_FIX	-> ath10k_sdio_readsb()
+X HIF_RD_SYNC_BYTE_INC	-> ath10k_sdio_read(), ath10k_sdio_read32()
+X HIF_WR_SYNC_BYTE_FIX	-> ath10k_sdio_writesb32()
+X HIF_WR_SYNC_BYTE_INC	-> ath10k_sdio_write()
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+ath10k_sdio_prep_async_req():
+X HIF_WRITE		-> HIF_WR_SYNC_BYTE_INC -> ath10k_sdio_write()
+
+ath10k_sdio_read/write32():
+sdio_readl()/sdio_writel() (those use endian macros)
+
+ath10k_sdio_writesb32():
+kmalloc()
+sdio_writesb(len)
+kfree()
+
+ath10k_sdio_readsb():
+len = round_down(len, ar_sdio->mbox_info.block_size);
+sdio_readsb(len)
+
+ath10k_sdio_read():
+sdio_memcpy_fromio()
+
+ath10k_sdio_write():
+sdio_memcpy_toio()
+
+
+[1] https://patchwork.kernel.org/patch/9626001/
+
+---
+
+Kalle Valo (7):
+      ath10k: add ath10k_sdio_write32/read32()
+      ath10k: add ath10k_sdio_writesb()
+      ath10k: add ath10k_sdio_read()
+      ath10k: add ath10k_sdio_write()
+      ath10k: add ath10k_sdio_readsb()
+      ath10k: convert __ath10k_sdio_write_async() to use ath10k_sdio_write()
+      ath10k: remove unused sdio wrappers
+
+
+ drivers/net/wireless/ath/ath10k/sdio.c |  419 +++++++++++++++++---------------
+ drivers/net/wireless/ath/ath10k/sdio.h |   40 ---
+ 2 files changed, 219 insertions(+), 240 deletions(-)
