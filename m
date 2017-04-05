@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:57664 "EHLO mail.us.es"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933185AbdDGTGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:06:07 -0400
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-        by mail.us.es (Postfix) with ESMTP id 325161395CE
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:06:03 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 23118DA729
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:06:03 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 04E5FDA7E9
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:06:01 +0200 (CEST)
-Date: Fri, 7 Apr 2017 21:06:01 +0200
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-Message-ID: <20170407190601.GA22991@salvia> (sfid-20170407_210611_346683_9F64A016)
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
- <20170407.115315.23470877439489670.davem@davemloft.net>
- <1491591552.5800.1.camel@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43350 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752718AbdDEMqZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 08:46:25 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491591552.5800.1.camel@sipsolutions.net>
+Subject: Re: [V2] wlcore: fix spelling mistakes in wl1271_warning
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170403094758.19397-1-colin.king@canonical.com>
+References: <20170403094758.19397-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20170405124625.209C760DCE@smtp.codeaurora.org> (sfid-20170405_144741_079060_BF683E6B)
+Date: Wed,  5 Apr 2017 12:46:25 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
-[...]
-> Heh. I think I really want to solve - at least partially - nla_parse()
-> to see that it can be done this way. It'd be nice to even transform all
-> the callers (I generated half of these patches with spatch anyway) to
-> have at least that.
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> trivial fix to spelling mistakes in wl1271_warning error message, change
+> iligal to invalid and opperation to operation.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-We can just have a modified version of nla_parse that deals with this.
-We can probably use struct nla_policy to place the extended error code
-or the string (as we discussed I don't need string errors, but I'm
-fine if other people find it useful).
+Patch applied to wireless-drivers-next.git, thanks.
 
-Thanks!
+5ea807896160 wlcore: fix spelling mistakes in wl1271_warning
+
+-- 
+https://patchwork.kernel.org/patch/9659173/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
