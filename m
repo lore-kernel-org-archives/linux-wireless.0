@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52148 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933777AbdDGTqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:46:53 -0400
-Message-ID: <1491594406.5800.18.camel@sipsolutions.net> (sfid-20170407_214852_332376_240F8F28)
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>, pablo@netfilter.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        jiri@resnulli.us
-Date: Fri, 07 Apr 2017 21:46:46 +0200
-In-Reply-To: <20170407.124327.626442219286333933.davem@davemloft.net>
-References: <1491591552.5800.1.camel@sipsolutions.net>
-         <20170407.122053.201153373954521345.davem@davemloft.net>
-         <20170407193550.GA23424@salvia>
-         <20170407.124327.626442219286333933.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:56244 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933483AbdDEKd0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 06:33:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Reshetova\, Elena" <elena.reshetova@intel.com>
+Cc: "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel\@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-rdma\@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-hams\@vger.kernel.org" <linux-hams@vger.kernel.org>,
+        "linux-ppp\@vger.kernel.org" <linux-ppp@vger.kernel.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ganeshgr\@chelsio.com" <ganeshgr@chelsio.com>,
+        "nbd\@openwrt.org" <nbd@openwrt.org>,
+        "blogic\@openwrt.org" <blogic@openwrt.org>,
+        "matthias.bgg\@gmail.com" <matthias.bgg@gmail.com>,
+        "yishaih\@mellanox.com" <yishaih@mellanox.com>,
+        "saeedm\@mellanox.com" <saeedm@mellanox.com>,
+        "matanb\@mellanox.com" <matanb@mellanox.com>,
+        "leonro\@mellanox.com" <leonro@mellanox.com>,
+        "ajk\@comnets.uni-bremen.de" <ajk@comnets.uni-bremen.de>,
+        "paulus\@samba.org" <paulus@samba.org>, "j\@w1.fi" <j@w1.fi>,
+        "peterz\@infradead.org" <peterz@infradead.org>,
+        "keescook\@chromium.org" <keescook@chromium.org>,
+        "gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>
+Subject: Re: [PATCH 16/16] drivers, net, intersil: convert request_context.refcount from atomic_t to refcount_t
+References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
+        <1490691403-4016-17-git-send-email-elena.reshetova@intel.com>
+        <87zifxn2gb.fsf@kamboji.qca.qualcomm.com>
+        <2236FBA76BA1254E88B949DDB74E612B41C8741B@IRSMSX102.ger.corp.intel.com>
+Date: Wed, 05 Apr 2017 13:33:12 +0300
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C8741B@IRSMSX102.ger.corp.intel.com>
+        (Elena Reshetova's message of "Tue, 4 Apr 2017 10:07:55 +0000")
+Message-ID: <87k26zi1p3.fsf@kamboji.qca.qualcomm.com> (sfid-20170405_123427_278181_1F0DAB2E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-04-07 at 12:43 -0700, David Miller wrote:
-> 
-> I have no strong opinions about string length.
-> 
-> In my opinion, I would like to believe that if someone tried to get a
-> networking patch applied that emitted a rediculously long string then
-> we would give them feedback about how that is not acceptable.  Right?
+"Reshetova, Elena" <elena.reshetova@intel.com> writes:
 
-Agree with this, I don't really see much point in adding an extra
-warning. There's an implicit (multi-KB though) limit as well in the
-message size ;-)
+>> Elena Reshetova <elena.reshetova@intel.com> writes:
+>> 
+>> > refcount_t type and corresponding API should be
+>> > used instead of atomic_t when the variable is used as
+>> > a reference counter. This allows to avoid accidental
+>> > refcounter overflows that might lead to use-after-free
+>> > situations.
+>> >
+>> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+>> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+>> > Signed-off-by: Kees Cook <keescook@chromium.org>
+>> > Signed-off-by: David Windsor <dwindsor@gmail.com>
+>> > ---
+>> >  drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 15 ++++++++-------
+>> >  1 file changed, 8 insertions(+), 7 deletions(-)
+>> 
+>> The prefix should be "orinoco_usb:", I'll fix that.
+>
+> Thanks for both! Will you take the patches in?
 
-> I suspect that someone will eventually give us a hard time about the
-> strings wrt. internationalization. :-) It's solvable at least
-> partially in userspace I suppose.
+You mean patches 15 and 16? I didn't even look rest of the patches.
 
-I tend to think of the strings more of a debugging aid, but that's a
-good point.
+But not sure yet because Dave doesn't seem to like the interface and I
+want to follow the discussion first.
 
-Perhaps we should have a macro that has the strings - similar to the
-inline function I put into netlink - but if we make that a macro we can
-put the strings into a separate section to be able to find them more
-easily for later translation, and optionally even omit them entirely
-(to satisfy the kernel tinification folks)?
-
-johannes
+-- 
+Kalle Valo
