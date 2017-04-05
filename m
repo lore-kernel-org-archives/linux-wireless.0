@@ -1,84 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0079.hostedemail.com ([216.40.44.79]:44804 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1424895AbdDVPAl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37382 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933097AbdDEKrL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2017 11:00:41 -0400
-Message-ID: <1492873234.30293.38.camel@perches.com> (sfid-20170422_170342_096736_C7B88F3F)
-Subject: Re: [PATCH] staging: wilc1000: Fixes Alignment should match open
- parenthesis
-From: Joe Perches <joe@perches.com>
-To: richard@netpro.work, gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Date: Sat, 22 Apr 2017 08:00:34 -0700
-In-Reply-To: <20170422062830.30715-1-richard@netpro.work>
-References: <20170422062830.30715-1-richard@netpro.work>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Wed, 5 Apr 2017 06:47:11 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [3/3] mwifiex: pcie: avoid hardcode wifi-only firmware name
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
+References: <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Message-Id: <20170405104711.32CD460DA5@smtp.codeaurora.org> (sfid-20170405_125045_357555_D197F3E1)
+Date: Wed,  5 Apr 2017 10:47:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-04-22 at 07:28 +0100, richard@netpro.work wrote:
-> This patch fixes the following checkpatch.pl
-> check: CHECK: Alignment should match open parenthesis
+Xinming Hu <huxinming820@gmail.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> Wifi-only firmware name should be chipset specific.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Please strive for improved code for human readers and
-not just shutting up checkpatch.
+The commit log is not telling anything. Why are you changing this? And how does
+the functionality change from user space point of view?
 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-[]
-> @@ -870,12 +870,12 @@ static int wilc_mac_open(struct net_device *ndev)
->  				if (memcmp(wl->vif[i ^ 1]->bssid,
->  					   wl->vif[i ^ 1]->src_addr, 6))
->  					wilc_set_wfi_drv_handler(vif,
-> -							 wilc_get_vif_idx(vif),
-> -							 0);
-> +					                         wilc_get_vif_idx(vif),
-> +					                         0);
->  				else
->  					wilc_set_wfi_drv_handler(vif,
-> -							 wilc_get_vif_idx(vif),
-> -							 1);
-> +					                         wilc_get_vif_idx(vif),
-> +					                         1);
+-- 
+https://patchwork.kernel.org/patch/9653387/
 
-Depending on alignment, perhaps a good bit of this code
-could use ether_addr_<foo> functions.
-
-				wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
-							 ether_addr_equals(wl->vif[i ^ 1]->bssid,
-									   wl->vif[i ^ 1]->src_addr));
-
-The code could also be restructured to reduce
-indentation by using if / continue;
-
-		if (ndev != wl->vif[i]->ndev)
-			continue;
-
-Using a temporary for the repeated use of
-wilc_get_vif_idx(vif) would also help code length.
-
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-[]
-> @@ -1301,16 +1301,16 @@ static int set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
->  
->  	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
->  		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
-> -				 ETH_ALEN)) {
-> +		            ETH_ALEN)) {
-
-		ether_addr_equals()
-
->  			flag = PMKID_FOUND;
->  			break;
->  		}
->  	}
->  	if (i < WILC_MAX_NUM_PMKIDS) {
->  		memcpy(priv->pmkid_list.pmkidlist[i].bssid, pmksa->bssid,
-> -			    ETH_ALEN);
-> +		       ETH_ALEN);
-
-		ether_addr_copy()
-
-etc.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
