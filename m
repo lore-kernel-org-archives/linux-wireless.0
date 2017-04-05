@@ -1,181 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52904 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755063AbdDRWWs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932929AbdDEL6Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:22:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:24 +0300
-Message-Id: <20170418221729.28372-21-luca@coelho.fi> (sfid-20170419_002251_903294_32F2B521)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 20/25] iwlwifi: split the handler and the wake parts of the notification infra
+        Wed, 5 Apr 2017 07:58:24 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 03/11] wil6210: support 8KB RX buffers
+Date: Wed,  5 Apr 2017 14:58:06 +0300
+Message-Id: <1491393494-11816-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_140201_533243_8BA02AC1)
+In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-The notification infrastructure (iwl_notification_wait_*
-functions) allows to wait until a list of notifications
-will come up from the firmware and to run a special handler
-(notif_wait handler) when those are received.
+The 11ad spec requires 11ad devices to be able to receive 8KB
+packets over the air. Currently this is only possible by
+loading the driver with mtu_max=7912 but this also forces
+a smaller block ACK window size which reduces performance
+for stations which transmit normal sized packets (<2KB).
+Fix this problem as follows:
+1. Add a module parameter rx_large_buf that when set,
+will allocate 8KB RX buffers regardless of mtu_max
+setting.
+2. When receiving block ACK request agree to any window
+size not above our maximum, regardless of the mtu_max setting.
+This means if the other side transmits small packets (2KB)
+it can still set up block ACK with a large window size,
+and get better performance.
 
-The operation mode notifies the notification infrastructure
-about any Rx being received by the mean of
-iwl_notification_wait_notify() which will do two things:
-1) call the notif_wait handler
-2) wakeup the thread that was waiting for the notification
-
-Typically, only after those two steps happened, the
-operation mode will run its own handler for the notification
-that was received from the firmware. This means that the
-thread that was waiting for that notification can be
-running before the operation mode's handler was called.
-
-When the operation mode's handler is ASYNC, things get even
-worse since the thread that was waiting for the
-notification isn't even guaranteed that the ASYNC callback
-was added to async_handlers_list before it starts to run.
-This means that even calling
-iwl_mvm_wait_for_async_handlers() can't guarantee that
-absolutely everything related to that notification has run.
-The following can happen:
-
-Thread sending the command        Operation mode's Rx path
---------------------------        ------------------------
-iwl_init_notification_wait()
-iwl_mvm_send_cmd()
-                                  iwl_mvm_rx_common()
-                                  iwl_notification_wait_notify()
-iwl_mvm_wait_for_async_handlers()
-// Possibly free some data
-// structure
-                                  list_add_tail(async_handlers_list);
-                                  schedule_work(async_handlers_wk);
-                                  // Access the freed structure
-
-Split the 'run notif_wait's handler' and the 'wake up the
-thread' parts to fix this. This allows the operation mode
-to do the following:
-
-Thread sending the command        Operation mode's Rx path
---------------------------        ------------------------
-iwl_init_notification_wait()
-iwl_mvm_send_cmd()
-                                  iwl_mvm_rx_common()
-                                  iwl_notification_wait()
-                                  // Will run the notif_wait's handler
-                                  list_add_tail(async_handlers_list);
-                                  schedule_work(async_handlers_wk);
-                                  iwl_notification_notify()
-iwl_mvm_wait_for_async_handlers()
-
-This way, the waiter is guaranteed that all the handlers
-have been run (if SYNC), or at least enqueued (if ASYNC)
-by the time it wakes up.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-notif-wait.c    | 10 ++++-----
- .../net/wireless/intel/iwlwifi/iwl-notif-wait.h    | 25 +++++++++++++++++-----
- 2 files changed, 24 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 12 ++++++++++--
+ drivers/net/wireless/ath/wil6210/txrx.c       | 24 ++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  2 ++
+ drivers/net/wireless/ath/wil6210/wmi.c        |  3 ++-
+ 4 files changed, 36 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
-index 88f260db3744..68412ff2112e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
-@@ -76,8 +76,8 @@ void iwl_notification_wait_init(struct iwl_notif_wait_data *notif_wait)
- }
- IWL_EXPORT_SYMBOL(iwl_notification_wait_init);
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index 7404b6f..a43cffc 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -343,8 +343,16 @@ int wil_addba_rx_request(struct wil6210_priv *wil, u8 cidxtid,
+ 		wil_err(wil, "BACK requested unsupported ba_policy == 1\n");
+ 		status = WLAN_STATUS_INVALID_QOS_PARAM;
+ 	}
+-	if (status == WLAN_STATUS_SUCCESS)
+-		agg_wsize = wil_agg_size(wil, req_agg_wsize);
++	if (status == WLAN_STATUS_SUCCESS) {
++		if (req_agg_wsize == 0) {
++			wil_dbg_misc(wil, "Suggest BACK wsize %d\n",
++				     WIL_MAX_AGG_WSIZE);
++			agg_wsize = WIL_MAX_AGG_WSIZE;
++		} else {
++			agg_wsize = min_t(u16,
++					  WIL_MAX_AGG_WSIZE, req_agg_wsize);
++		}
++	}
  
--void iwl_notification_wait_notify(struct iwl_notif_wait_data *notif_wait,
--				  struct iwl_rx_packet *pkt)
-+bool iwl_notification_wait(struct iwl_notif_wait_data *notif_wait,
-+			   struct iwl_rx_packet *pkt)
+ 	rc = wmi_addba_rx_resp(wil, cid, tid, dialog_token, status,
+ 			       agg_amsdu, agg_wsize, agg_timeout);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 67f50ae..edab4c0 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -37,6 +37,10 @@
+ module_param(rx_align_2, bool, 0444);
+ MODULE_PARM_DESC(rx_align_2, " align Rx buffers on 4*n+2, default - no");
+ 
++bool rx_large_buf;
++module_param(rx_large_buf, bool, 0444);
++MODULE_PARM_DESC(rx_large_buf, " allocate 8KB RX buffers, default - no");
++
+ static inline uint wil_rx_snaplen(void)
  {
- 	bool triggered = false;
+ 	return rx_align_2 ? 6 : 0;
+@@ -255,7 +259,7 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
+ 			       u32 i, int headroom)
+ {
+ 	struct device *dev = wil_to_dev(wil);
+-	unsigned int sz = mtu_max + ETH_HLEN + wil_rx_snaplen();
++	unsigned int sz = wil->rx_buf_len + ETH_HLEN + wil_rx_snaplen();
+ 	struct vring_rx_desc dd, *d = &dd;
+ 	volatile struct vring_rx_desc *_d = &vring->va[i].rx;
+ 	dma_addr_t pa;
+@@ -419,7 +423,7 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
+ 	struct sk_buff *skb;
+ 	dma_addr_t pa;
+ 	unsigned int snaplen = wil_rx_snaplen();
+-	unsigned int sz = mtu_max + ETH_HLEN + snaplen;
++	unsigned int sz = wil->rx_buf_len + ETH_HLEN + snaplen;
+ 	u16 dmalen;
+ 	u8 ftype;
+ 	int cid;
+@@ -780,6 +784,20 @@ void wil_rx_handle(struct wil6210_priv *wil, int *quota)
+ 	wil_rx_refill(wil, v->size);
+ }
  
-@@ -118,13 +118,11 @@ void iwl_notification_wait_notify(struct iwl_notif_wait_data *notif_wait,
- 			}
- 		}
- 		spin_unlock(&notif_wait->notif_wait_lock);
--
++static void wil_rx_buf_len_init(struct wil6210_priv *wil)
++{
++	wil->rx_buf_len = rx_large_buf ?
++		WIL_MAX_ETH_MTU : TXRX_BUF_LEN_DEFAULT - WIL_MAX_MPDU_OVERHEAD;
++	if (mtu_max > wil->rx_buf_len) {
++		/* do not allow RX buffers to be smaller than mtu_max, for
++		 * backward compatibility (mtu_max parameter was also used
++		 * to support receiving large packets)
++		 */
++		wil_info(wil, "Override RX buffer to mtu_max(%d)\n", mtu_max);
++		wil->rx_buf_len = mtu_max;
++	}
++}
++
+ int wil_rx_init(struct wil6210_priv *wil, u16 size)
+ {
+ 	struct vring *vring = &wil->vring_rx;
+@@ -792,6 +810,8 @@ int wil_rx_init(struct wil6210_priv *wil, u16 size)
+ 		return -EINVAL;
  	}
  
--	if (triggered)
--		wake_up_all(&notif_wait->notif_waitq);
-+	return triggered;
- }
--IWL_EXPORT_SYMBOL(iwl_notification_wait_notify);
-+IWL_EXPORT_SYMBOL(iwl_notification_wait);
- 
- void iwl_abort_notification_waits(struct iwl_notif_wait_data *notif_wait)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h
-index 0f9995ed71cd..368884be4e7c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2015 Intel Deutschland GmbH
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
++	wil_rx_buf_len_init(wil);
++
+ 	vring->size = size;
+ 	rc = wil_vring_alloc(wil, vring);
+ 	if (rc)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 9cedc2d..2af4a64 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
 @@ -32,6 +32,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -89,10 +90,10 @@ struct iwl_notif_wait_data {
-  *
-  * This structure is not used directly, to wait for a
-  * notification declare it on the stack, and call
-- * iwlagn_init_notification_wait() with appropriate
-+ * iwl_init_notification_wait() with appropriate
-  * parameters. Then do whatever will cause the ucode
-  * to notify the driver, and to wait for that then
-- * call iwlagn_wait_notification().
-+ * call iwl_wait_notification().
-  *
-  * Each notification is one-shot. If at some point we
-  * need to support multi-shot notifications (which
-@@ -114,10 +115,24 @@ struct iwl_notification_wait {
+ extern int agg_wsize;
+ extern u32 vring_idle_trsh;
+ extern bool rx_align_2;
++extern bool rx_large_buf;
+ extern bool debug_fw;
+ extern bool disable_ap_sme;
  
- /* caller functions */
- void iwl_notification_wait_init(struct iwl_notif_wait_data *notif_data);
--void iwl_notification_wait_notify(struct iwl_notif_wait_data *notif_data,
--				  struct iwl_rx_packet *pkt);
-+bool iwl_notification_wait(struct iwl_notif_wait_data *notif_data,
-+			   struct iwl_rx_packet *pkt);
- void iwl_abort_notification_waits(struct iwl_notif_wait_data *notif_data);
- 
-+static inline void
-+iwl_notification_notify(struct iwl_notif_wait_data *notif_data)
-+{
-+	wake_up_all(&notif_data->notif_waitq);
-+}
-+
-+static inline void
-+iwl_notification_wait_notify(struct iwl_notif_wait_data *notif_data,
-+			     struct iwl_rx_packet *pkt)
-+{
-+	if (iwl_notification_wait(notif_data, pkt))
-+		iwl_notification_notify(notif_data);
-+}
-+
- /* user functions */
- void __acquires(wait_entry)
- iwl_init_notification_wait(struct iwl_notif_wait_data *notif_data,
+@@ -656,6 +657,7 @@ struct wil6210_priv {
+ 	struct work_struct probe_client_worker;
+ 	/* DMA related */
+ 	struct vring vring_rx;
++	unsigned int rx_buf_len;
+ 	struct vring vring_tx[WIL6210_MAX_TX_RINGS];
+ 	struct vring_tx_data vring_tx_data[WIL6210_MAX_TX_RINGS];
+ 	u8 vring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 9255c47..e6c249d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1398,7 +1398,8 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ 	struct wmi_cfg_rx_chain_cmd cmd = {
+ 		.action = WMI_RX_CHAIN_ADD,
+ 		.rx_sw_ring = {
+-			.max_mpdu_size = cpu_to_le16(wil_mtu2macbuf(mtu_max)),
++			.max_mpdu_size = cpu_to_le16(
++				wil_mtu2macbuf(wil->rx_buf_len)),
+ 			.ring_mem_base = cpu_to_le64(vring->pa),
+ 			.ring_size = cpu_to_le16(vring->size),
+ 		},
 -- 
-2.11.0
+1.9.1
