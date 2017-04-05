@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37434 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933001AbdDEMfn (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60554 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751121AbdDEFXW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 08:35:43 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 5 Apr 2017 01:23:22 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@chromium.org>
+CC: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        "Rajat Jain" <rajatja@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>
+Subject: RE:  Re: [PATCH 1/3] mwifiex: remove unnecessary wakeup interrupt
+ number sanity check
+Date: Wed, 5 Apr 2017 05:23:15 +0000
+Message-ID: <74f9e175c7094442ae5c5eb018c0a735@SC-EXCH02.marvell.com> (sfid-20170405_072330_285184_805C1637)
+References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
+ <CAE_wzQ9x8-dNCEbJw9+XnSK6fPaUa-K29jc0hjB91xUaFvRFhQ@mail.gmail.com>
+ <20170403183346.GA116262@google.com>
+In-Reply-To: <20170403183346.GA116262@google.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Subject: Re: [V2] brcmfmac: update BRCMFMAC symbol description
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170323102928.11413-1-zajec5@gmail.com>
-References: <20170323102928.11413-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20170405123537.794C060D61@smtp.codeaurora.org> (sfid-20170405_143649_999936_8AA55BC4)
-Date: Wed,  5 Apr 2017 12:35:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> For quite some time now brcmfmac supports 802.11ac chipsets and it's
-> not limited to embedded devices only. There are even standalone PCIe
-> cards based on BCM43602 or BCM4366.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-1c92af00a560 brcmfmac: update BRCMFMAC symbol description
-
--- 
-https://patchwork.kernel.org/patch/9640743/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
+Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo0
+1MI0yNUgMjozNA0KPiBUbzogRG1pdHJ5IFRvcm9raG92DQo+IENjOiBYaW5taW5nIEh1OyBMaW51
+eCBXaXJlbGVzczsgS2FsbGUgVmFsbzsgUmFqYXQgSmFpbjsgQW1pdGt1bWFyIEthcndhcjsgQ2F0
+aHkNCj4gTHVvOyBYaW5taW5nIEh1DQo+IFN1YmplY3Q6IFtFWFRdIFJlOiBbUEFUQ0ggMS8zXSBt
+d2lmaWV4OiByZW1vdmUgdW5uZWNlc3Nhcnkgd2FrZXVwIGludGVycnVwdA0KPiBudW1iZXIgc2Fu
+aXR5IGNoZWNrDQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiANCj4gLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiBP
+biBGcmksIE1hciAzMSwgMjAxNyBhdCAwMzozNzowMVBNIC0wNzAwLCBEbWl0cnkgVG9yb2tob3Yg
+d3JvdGU6DQo+ID4gT24gVGh1LCBNYXIgMzAsIDIwMTcgYXQgMjoxOSBBTSwgWGlubWluZyBIdSA8
+aHV4aW5taW5nODIwQGdtYWlsLmNvbT4NCj4gd3JvdGU6DQo+ID4gPiBGcm9tOiBYaW5taW5nIEh1
+IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+ID4NCj4gPiA+IFNhbml0eSBjaGVjayBvZiBpbnRlcnJ1
+cHQgbnVtYmVyIGluIGludGVycnVwdCBoYW5kbGVyIGlzIHVubmVjZXNzYXJ5DQo+ID4gPiBhbmQg
+Y29uZnVzaW9uLCByZW1vdmUgaXQuDQo+ID4NCj4gPiBJJ2QgcmV3b3JkZWQgdGhlIGV4cGxhbmF0
+aW9uIGEgYml0OiAiSWYgd2FrZXVwIGludGVycnVwdCBoYW5kbGVyIGlzDQo+ID4gY2FsbGVkLCB3
+ZSBrbm93IHRoYXQgdGhlIHdha2V1cCBpbnRlcnJ1cHQgbnVtYmVyIGlzIHZhbGlkLCB0aGVyZSBp
+cyBubw0KPiA+IG5lZWQgdG8gY2hlY2sgaXQuIg0KPiANCj4gRWl0aGVyIHdheSB3b3JrcyBmb3Ig
+bWUgKG1vZHVsbyBncmFtbWFyKSwgdGhvdWdoIERtaXRyeSdzIGlzIG1vcmUNCj4gaW5mb3JtYXRp
+dmUuIFNvICsxLg0KPiANCj4gPiBPdGhlcndpc2U6DQo+ID4NCj4gPiBSZXZpZXdlZC1ieTogRG1p
+dHJ5IFRvcm9raG92IDxkdG9yQGNocm9taXVtLm9yZz4NCj4gDQo+IE9vaCwgbWUgdG9vIQ0KPiAN
+Cj4gUmV2aWV3ZWQtYnk6IEJyaWFuIE5vcnJpcyA8YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnPg0K
+PiANCj4gSSBiZWxpZXZlIHRoaXMgc2FtZSBwYXR0ZXJuIG9jY3VycyBpbiBidG1ydmxfc2Rpby4g
+UG9zc2libHkgb3RoZXJzLg0KPiANCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3LCB0aGUgc2ltaWxh
+ciBjaGFuZ2UgaGF2ZSBiZWVuIGFwcGxpZWQgdG8gQmx1ZXRvb3RoKGNvbW1pdCA3MzNkYjRjY2Vj
+KQ0KDQpUaGFua3MNClNJbW9uDQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBYaW5taW5nIEh1IDxodXht
+QG1hcnZlbGwuY29tPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWth
+cndhckBtYXJ2ZWxsLmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNz
+L21hcnZlbGwvbXdpZmlleC9tYWluLmMgfCA4ICsrKy0tLS0tDQo+ID4gPiAgMSBmaWxlIGNoYW5n
+ZWQsIDMgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4gPiA+DQo+ID4gPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uYw0KPiA+ID4g
+Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gPiBpbmRl
+eCAzMGY0OTk0Li41ZTgyNjAyIDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbWFydmVsbC9td2lmaWV4L21haW4uYw0KPiA+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbWFydmVsbC9td2lmaWV4L21haW4uYw0KPiA+ID4gQEAgLTE1MDMsMTEgKzE1MDMsOSBAQCBz
+dGF0aWMgaXJxcmV0dXJuX3QNCj4gPiA+IG13aWZpZXhfaXJxX3dha2V1cF9oYW5kbGVyKGludCBp
+cnEsIHZvaWQgKnByaXYpICB7DQo+ID4gPiAgICAgICAgIHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIg
+KmFkYXB0ZXIgPSBwcml2Ow0KPiA+ID4NCj4gPiA+IC0gICAgICAgaWYgKGFkYXB0ZXItPmlycV93
+YWtldXAgPj0gMCkgew0KPiA+ID4gLSAgICAgICAgICAgICAgIGRldl9kYmcoYWRhcHRlci0+ZGV2
+LCAiJXM6IHdha2UgYnkgd2lmaSIsIF9fZnVuY19fKTsNCj4gPiA+IC0gICAgICAgICAgICAgICBh
+ZGFwdGVyLT53YWtlX2J5X3dpZmkgPSB0cnVlOw0KPiA+ID4gLSAgICAgICAgICAgICAgIGRpc2Fi
+bGVfaXJxX25vc3luYyhpcnEpOw0KPiA+ID4gLSAgICAgICB9DQo+ID4gPiArICAgICAgIGRldl9k
+YmcoYWRhcHRlci0+ZGV2LCAiJXM6IHdha2UgYnkgd2lmaSIsIF9fZnVuY19fKTsNCj4gPiA+ICsg
+ICAgICAgYWRhcHRlci0+d2FrZV9ieV93aWZpID0gdHJ1ZTsNCj4gPiA+ICsgICAgICAgZGlzYWJs
+ZV9pcnFfbm9zeW5jKGlycSk7DQo+ID4gPg0KPiA+ID4gICAgICAgICAvKiBOb3RpZnkgUE0gY29y
+ZSB3ZSBhcmUgd2FrZXVwIHNvdXJjZSAqLw0KPiA+ID4gICAgICAgICBwbV93YWtldXBfZXZlbnQo
+YWRhcHRlci0+ZGV2LCAwKTsNCj4gPiA+IC0tDQo+ID4gPiAxLjguMS40DQo+ID4gPg0K
