@@ -1,174 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59619 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752997AbdDMMHH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 08:07:07 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 10/10] brcmfmac: add scheduled scan support for specified BSSIDs
-Date: Thu, 13 Apr 2017 13:06:36 +0100
-Message-Id: <1492085196-4574-11-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170413_140721_749826_8246214E)
-In-Reply-To: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50312 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932297AbdDEJgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 05:36:08 -0400
+Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+References: <20170329174751.13184-1-hdegoede@redhat.com>
+ <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
+ <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
+ <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com>
+ <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
+ <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net>
+Cc: Bastien Nocera <hadess@hadess.net>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        linux-wireless@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <560981e0-e1b0-7a06-80e4-14d677c7d64a@redhat.com> (sfid-20170405_113630_408910_BA3F9055)
+Date: Wed, 5 Apr 2017 11:36:05 +0200
+MIME-Version: 1.0
+In-Reply-To: <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to handle scheduled scan request containing BSSID in
-the matchsets. The firmware can send event upon finding BSSIDs and
-SSIDs. To get these in one event the bit REPORT_SEPERATELY needed
-to be removed from the flags in brcmf_pno_config().
+Hi,
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- V2:
-  - initialize err variable in brcmf_pno_config_networks().
----
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 11 ++++
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 58 ++++++++++++++++------
- 2 files changed, 53 insertions(+), 16 deletions(-)
+On 05-04-17 01:41, Larry Finger wrote:
+> On 04/04/2017 04:53 PM, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 04/04/2017 11:38 PM, Arend Van Spriel wrote:
+>>>
+>>>
+>>> On 4-4-2017 20:53, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> On 04/04/2017 08:31 PM, Larry Finger wrote:
+>>>>> On 03/29/2017 12:47 PM, Hans de Goede wrote:
+>>>>>> The rtl8723bs is found on quite a few systems used by Linux users,
+>>>>>> such as on Atom systems (Intel Computestick and various other
+>>>>>> Atom based devices) and on many (budget) ARM boards such as
+>>>>>> the CHIP.
+>>>>>>
+>>>>>> The plan moving forward with this is for the new clean,
+>>>>>> written from scratch, rtl8xxxu driver to eventually gain
+>>>>>> support for sdio devices. But there is no clear timeline
+>>>>>> for that, so lets add this driver included in staging for now.
+>>>>>
+>>>>> Hans,
+>>>>>
+>>>>> I started looking at the Smatch errors. This one may be the result of
+>>>>> a serious problem:
+>>>>>
+>>>>>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
+>>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info()
+>>>>> error: we previously assumed 'phead' could be null (see line 453)
+>>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info()
+>>>>> warn: variable dereferenced before check 'phead' (see line 454)
+>>>>>
+>>>>> A snippet of the code in question is as follows:
+>>>>>
+>>>>>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>>>         phead = get_list_head(queue);
+>>>>>         plist = phead ? get_next(phead) : NULL;
+>>>>>         plist = get_next(phead);
+>>>>>         if ((!phead) || (!plist)) {
+>>>>>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>>>                 return 0;
+>>>>>         }
+>>>>>
+>>>>> This code comes directly from the hadess repo, but I am suspicious of
+>>>>> the double call to get_next(phead). I cannot imagine any valid reason
+>>>>> to skip every other entry on that list.
+>>>>
+>>>> If you look closer and simplify the first getnext line what is written is:
+>>>>
+>>>>          plist = get_next(phead);
+>>>>          plist = get_next(phead);
+>>>>
+>>>> Which indeed looks like it could use improvement, but I don't
+>>>> think it is seriously broken.
+>>>
+>>> So get_list_head(queue) can never return NULL?
+>>
+>> I don't know.
+>>
+>>> Otherwise I don't know
+>>> how close I need to get for a simplified look ;-)
+>>
+>> I simplified things so as to make clear that Larry's worry was
+>> not really a problem, I do agree the smatch complaint is valid.
+>
+> I think the following fixes the problem:
+>
+> diff --git a/drivers/staging/rtl8723bs/core/rtw_debug.c b/drivers/staging/rtl8723bs/core/rtw_debug.c
+> index d34747b29309..51cef55d3f76 100644
+> --- a/drivers/staging/rtl8723bs/core/rtw_debug.c
+> +++ b/drivers/staging/rtl8723bs/core/rtw_debug.c
+> @@ -451,7 +451,6 @@ int proc_get_survey_info(struct seq_file *m, void *v)
+>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+>         phead = get_list_head(queue);
+>         plist = phead ? get_next(phead) : NULL;
+> -       plist = get_next(phead);
+>         if ((!phead) || (!plist)) {
+>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+>                 return 0;
+>
+> Pointer plist is set in the 3rd line, thus the second set of it can be removed.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index cc832ab..51d89c6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -806,6 +806,17 @@ struct brcmf_pno_macaddr_le {
- };
- 
- /**
-+ * struct brcmf_pno_bssid_le - bssid configuration for PNO scan.
-+ *
-+ * @bssid: BSS network identifier.
-+ * @flags: flags for this BSSID.
-+ */
-+struct brcmf_pno_bssid_le {
-+	u8 bssid[ETH_ALEN];
-+	__le16 flags;
-+};
-+
-+/**
-  * struct brcmf_pktcnt_le - packet counters.
-  *
-  * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index 5f4c67a..7fa7e9b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -120,7 +120,6 @@ static int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
- 
- 	/* set extra pno params */
- 	flags = BIT(BRCMF_PNO_IMMEDIATE_SCAN_BIT) |
--		BIT(BRCMF_PNO_REPORT_SEPARATELY_BIT) |
- 		BIT(BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
- 	pfn_param.repeat = BRCMF_PNO_REPEAT;
- 	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
-@@ -205,6 +204,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 			      bool active)
- {
- 	struct brcmf_pno_net_param_le pfn;
-+	int err;
- 
- 	pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
- 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
-@@ -215,7 +215,28 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
- 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
- 	memcpy(pfn.ssid.SSID, ssid->ssid, ssid->ssid_len);
--	return brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
-+
-+	brcmf_dbg(SCAN, "adding ssid=%.32s (active=%d)\n", ssid->ssid, active);
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
-+	if (err < 0)
-+		brcmf_err("adding failed: err=%d\n", err);
-+	return err;
-+}
-+
-+static int brcmf_pno_add_bssid(struct brcmf_if *ifp, const u8 *bssid)
-+{
-+	struct brcmf_pno_bssid_le bssid_cfg;
-+	int err;
-+
-+	memcpy(bssid_cfg.bssid, bssid, ETH_ALEN);
-+	bssid_cfg.flags = 0;
-+
-+	brcmf_dbg(SCAN, "adding bssid=%pM\n", bssid);
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_add_bssid", &bssid_cfg,
-+				       sizeof(bssid_cfg));
-+	if (err < 0)
-+		brcmf_err("adding failed: err=%d\n", err);
-+	return err;
- }
- 
- static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
-@@ -342,29 +363,29 @@ static int brcmf_pno_prep_fwconfig(struct brcmf_pno_info *pi,
- 	return err;
- }
- 
--static int brcmf_pno_config_ssids(struct brcmf_if *ifp,
--				  struct brcmf_pno_info *pi)
-+static int brcmf_pno_config_networks(struct brcmf_if *ifp,
-+				     struct brcmf_pno_info *pi)
- {
- 	struct cfg80211_sched_scan_request *r;
- 	struct cfg80211_match_set *ms;
- 	bool active;
--	int i, j, err;
-+	int i, j, err = 0;
- 
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		r = pi->reqs[i];
- 
- 		for (j = 0; j < r->n_match_sets; j++) {
- 			ms = &r->match_sets[j];
--			if (!ms->ssid.ssid_len)
--				continue;
--			active = brcmf_is_ssid_active(&ms->ssid, r);
--			brcmf_dbg(SCAN, "adding %.32s (active=%d)\n",
--				  ms->ssid.ssid, active);
--			err = brcmf_pno_add_ssid(ifp, &ms->ssid, active);
--			if (err < 0) {
--				brcmf_err("adding failed: err=%d\n", err);
--				return err;
-+			if (ms->ssid.ssid_len) {
-+				active = brcmf_is_ssid_active(&ms->ssid, r);
-+				err = brcmf_pno_add_ssid(ifp, &ms->ssid,
-+							 active);
- 			}
-+			if (!err && is_valid_ether_addr(ms->bssid))
-+				err = brcmf_pno_add_bssid(ifp, ms->bssid);
-+
-+			if (err < 0)
-+				return err;
- 		}
- 	}
- 	return 0;
-@@ -428,7 +449,7 @@ static int brcmf_pno_config_sched_scans(struct brcmf_if *ifp)
- 	if (err < 0)
- 		goto clean;
- 
--	err = brcmf_pno_config_ssids(ifp, pi);
-+	err = brcmf_pno_config_networks(ifp, pi);
- 	if (err < 0)
- 		goto clean;
- 
-@@ -555,7 +576,12 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 		for (j = 0; j < req->n_match_sets; j++) {
- 			ms = &req->match_sets[j];
- 			if (ms->ssid.ssid_len == ni->SSID_len &&
--			    !strncmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
-+			    !memcmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
-+				bucket_map |= BIT(i);
-+				break;
-+			}
-+			if (is_valid_ether_addr(ms->bssid) &&
-+			    !memcmp(ms->bssid, ni->bssid, ETH_ALEN)) {
- 				bucket_map |= BIT(i);
- 				break;
- 			}
--- 
-1.9.1
+Agreed, when I've some time I plan to do a follow-up patch
+to my initial submission fixing all the Smatch errors. But feel
+free to beat me to it.
+
+Greg, if I understood you correctly you plan to merge my initial
+submission as is and then we can fix this (and other things) with
+follow up patches, right ?
+
+Regards,
+
+Hans
