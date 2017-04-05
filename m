@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33491 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S976572AbdDXSJo (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38336 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753950AbdDEGmJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 14:09:44 -0400
-Message-ID: <1493057382.6453.39.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20170424_201050_463327_F6CCFC02)
-Subject: Re: [PATCH v2] brcmfmac: Make skb header writable before use
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: James Hughes <james.hughes@raspberrypi.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Date: Mon, 24 Apr 2017 11:09:42 -0700
-In-Reply-To: <20170424130322.476-1-james.hughes@raspberrypi.org>
-References: <20170424130322.476-1-james.hughes@raspberrypi.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 5 Apr 2017 02:42:09 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>
+CC: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        "Rajat Jain" <rajatja@google.com>, Cathy Luo <cluo@marvell.com>
+Subject: Re: [PATCH 2/3] mwifiex: using general print function during device
+ intialization
+Date: Wed, 5 Apr 2017 06:41:58 +0000
+Message-ID: <6911d836176a4cefbe3cb4452755ded3@SC-EXCH02.marvell.com> (sfid-20170405_084306_336965_FADF01EA)
+References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
+ <1490865547-10208-2-git-send-email-huxinming820@gmail.com>
+ <CAE_wzQ890=BCQviifEkcgfFO7XA+SNeFCUgn_Bx9_4n9uB1nsg@mail.gmail.com>
+ <20170403184208.GB116262@google.com>
+In-Reply-To: <20170403184208.GB116262@google.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-04-24 at 14:03 +0100, James Hughes wrote:
-> The driver was making changes to the skb_header without
-> ensuring it was writable (i.e. uncloned).
-> This patch also removes some boiler plate header size
-> checking/adjustment code as that is also handled by the
-> skb_cow_header function used to make header writable.
-> 
-> This patch depends on
-> brcmfmac: Ensure pointer correctly set if skb data location changes
-> 
-> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
-> ---
-> Changes in v2
->   Makes the _cow_ call at the entry point of the skb in to the
->   stack, means only needs to be done once, and error handling
->   is easier.
->   Split a separate minor bug fix off to a separate patch (which
->   this patch depends on)
-
-Best way to handle dependencies is to send a patch series.
-
-1/2 brcmfmac: Ensure pointer correctly set if skb data location changes
-2/2 brcmfmac: Make skb header writable before use
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJyaWFuIE5vcnJpcyBbbWFp
+bHRvOmJyaWFubm9ycmlzQGNocm9taXVtLm9yZ10NCj4gU2VudDogMjAxN8TqNNTCNMjVIDI6NDIN
+Cj4gVG86IERtaXRyeSBUb3Jva2hvdg0KPiBDYzogWGlubWluZyBIdTsgTGludXggV2lyZWxlc3M7
+IEthbGxlIFZhbG87IFJhamF0IEphaW47IEFtaXRrdW1hciBLYXJ3YXI7IENhdGh5DQo+IEx1bzsg
+WGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIDIvM10gbXdpZmlleDogdXNp
+bmcgZ2VuZXJhbCBwcmludCBmdW5jdGlvbiBkdXJpbmcNCj4gZGV2aWNlIGludGlhbGl6YXRpb24N
+Cj4gDQo+IEV4dGVybmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IE9uIEZyaSwgTWFy
+IDMxLCAyMDE3IGF0IDAzOjQ2OjU4UE0gLTA3MDAsIERtaXRyeSBUb3Jva2hvdiB3cm90ZToNCj4g
+PiBPbiBUaHUsIE1hciAzMCwgMjAxNyBhdCAyOjE5IEFNLCBYaW5taW5nIEh1IDxodXhpbm1pbmc4
+MjBAZ21haWwuY29tPg0KPiB3cm90ZToNCj4gPiA+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFy
+dmVsbC5jb20+DQo+ID4gPg0KPiA+ID4gYWRhcHRlci0+ZGV2IGlzIGluaXRpYWxpemVkIGFmdGVy
+IG13aWZpZXhfcmVnaXN0ZXIgZG9uZSwgYmVmb3JlIHRoYXQNCj4gPiA+IHByaW50IG1lc3NhZ2Ug
+YnkgZ2VuZXJhbCBwcl8qIGZ1bmN0aW9uDQo+ID4NCj4gPiBObywgd2Ugc2hvdWxkIG1vdmUgYXdh
+eSBmcm9tIG5ha2VkIHByXyooKSBhcyBtdWNoIGFzIHBvc3NpYmxlLiBQbGVhc2UNCj4gPiBjaGFu
+Z2UgIG13aWZpZXhfcmVnaXN0ZXIoKSB0byBhY2NlcHQgImRldiIgcGFyYW1ldGVyIGFuZCBhc3Np
+Z24NCj4gPiBhZGFwdGVyLT5kZXYgZWFybHkgZW5vdWdoIHNvIHRoYXQgdGhlIHN0YW5kYXJkIG13
+aWZpZXhfZXJyKCkgY2FsbHMgYXJlDQo+ID4gdXNhYmxlLg0KPiANCg0KVGhhbmtzIGZvciB0aGUg
+cmV2aWV3Lg0KDQo+IEFncmVlZC4gWW91IG1lYW4gbGlrZSBJIGRpZCBoZXJlPyA6KQ0KPiANCj4g
+YmExYzdlNDVlYzIyIG13aWZpZXg6IHNldCBhZGFwdGVyLT5kZXYgYmVmb3JlIHN0YXJ0aW5nIHRv
+IHVzZSBtd2lmaWV4X2RiZygpDQo+IA0KPiBUaGF0J3MgaW4gdjQuMTEtcmM0LCBwYXJ0bHkgYXMg
+YSBidWdmaXggdG8gdGhpczoNCj4gDQo+IDJlMDJiNTgxNDIxNyAoIm13aWZpZXg6IEFsbG93IG13
+aWZpZXggZWFybHkgYWNjZXNzIHRvIGRldmljZSBzdHJ1Y3R1cmUiKQ0KPiANCj4gPiBBbHNvIGNv
+bnNpZGVyIGNoYW5naW5nIF9td2lmaWV4X2RiZygpIHRvIGhhbmRsZSBjYXNlcyB3aGVuDQo+ID4g
+YWRhcHRlci0+ZGV2IGlzIE5VTEwgYW5kIGZhbGwgYmFjayB0byBwcl88bGV2ZWw+Lg0KPiANCj4g
+VGhhdCdkIGJlIG5pY2UuIEl0IHdvdWxkIGhhdmUgbWl0aWdhdGVkIHRoZSBwcm9ibGVtcyBvZiBj
+b21taXQNCj4gMmUwMmI1ODE0MjE3IHRvby4NCj4gDQoNClllcywgdGhpcyBjb21taXQgYmExYzdl
+NCBzaG91bGQgYmUgYmV0dGVyIGFuZCB3b3JrIGZvciBtb3N0IGNhc2VzLCB3aWxsIGVuaGFuY2Ug
+X19td2lmaWV4X2RiZyBmb3IgYWRhcHRlci0+ZGV2IE5VTEwgY2FzZSBpbiBWMi4NCg0KVGhhbmtz
+LA0KU2ltb24NCg0KPiBCcmlhbg0KPiANCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUg
+PGh1eG1AbWFydmVsbC5jb20+DQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2Fy
+IDxha2Fyd2FyQG1hcnZlbGwuY29tPg0KPiA+ID4gLS0tDQo+ID4gPiAgZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYyB8IDc4DQo+ID4gPiArKysrKysrKysrKystLS0t
+LS0tLS0tLS0tLS0tLQ0KPiA+ID4gZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4
+L3NkaW8uYyB8ICAzICstDQo+ID4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAzNCBpbnNlcnRpb25zKCsp
+LCA0NyBkZWxldGlvbnMoLSkNCj4gDQo+IFsuLi5dDQo=
