@@ -1,52 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:36598 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757103AbdDQRNN (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52114 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752702AbdDEHKS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 13:13:13 -0400
-Received: by mail-oi0-f44.google.com with SMTP id r203so148646707oib.3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2017 10:13:07 -0700 (PDT)
-Subject: Re: [PATCH 12/13] rtlwifi: btcoex: 21a 1ant: fix some coding style
- issues
-To: Joe Perches <joe@perches.com>, kvalo@codeaurora.org
-References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
- <20170417000700.29057-13-Larry.Finger@lwfinger.net>
- <1492445382.8661.9.camel@perches.com>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <869a1d9b-79dc-9d5a-c4f3-efb99c1b1ff7@lwfinger.net> (sfid-20170417_191410_192760_0B3C2BEB)
-Date: Mon, 17 Apr 2017 12:13:00 -0500
+        Wed, 5 Apr 2017 03:10:18 -0400
+Subject: [PATCH 3/7] ath10k: add ath10k_sdio_read()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 5 Apr 2017 10:06:53 +0300
+Message-ID: <149137601370.4898.4600249077985000688.stgit@potku.adurom.net> (sfid-20170405_091022_765034_B9BE4D17)
+In-Reply-To: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
+References: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1492445382.8661.9.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/17/2017 11:09 AM, Joe Perches wrote:
-> On Sun, 2017-04-16 at 19:06 -0500, Larry Finger wrote:
->> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
->>
->> Fix alignment for coding style consistency.
->
-> aside:
->
-> Are all the btcoexist variants for this code identical?
->
-> 8192e2ant.c 8723b1ant.c 8723b2ant.c 8821a1ant.c 8821a2ant.c
->
-> Maybe some of these functions should be centralized.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/sdio.c |   40 +++++++++++++++++++++++---------
+ 1 file changed, 29 insertions(+), 11 deletions(-)
 
-They are not identical, but some of the functions could certainly be centralized.
-
-The problem is that the btcoex software at Realtek is multi platform, and 
-written by a group that has not been too eager to implement this kind of 
-suggestion. If we were to force the issue, then the maintenance load on the 
-separate Linux group at Realtek would be greatly increased. This current set of 
-updates has already been delayed for at least two years while they found the 
-resources to be able to adhere to the "small change" policy of Linux. For that 
-reason alone, I would not be in favor of forcing the issue.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 56728d44dd12..bbd8317de861 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -343,6 +343,31 @@ static int ath10k_sdio_read32(struct ath10k *ar, u32 addr, u32 *val)
+ 	return ret;
+ }
+ 
++static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf, size_t len)
++{
++	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
++	struct sdio_func *func = ar_sdio->func;
++	int ret;
++
++	sdio_claim_host(func);
++
++	ret = sdio_memcpy_fromio(func, buf, addr, len);
++	if (ret) {
++		ath10k_warn(ar, "failed to read from address 0x%x: %d\n",
++			    addr, ret);
++		goto out;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_SDIO, "sdio read addr 0x%x buf 0x%p len %zu\n",
++		   addr, buf, len);
++	ath10k_dbg_dump(ar, ATH10K_DBG_SDIO_DUMP, NULL, "sdio read ", buf, len);
++
++out:
++	sdio_release_host(func);
++
++	return ret;
++}
++
+ /* HIF mbox functions */
+ 
+ static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
+@@ -859,11 +884,8 @@ static int ath10k_sdio_mbox_read_int_status(struct ath10k *ar,
+ 	 * will yield us the value of different int status
+ 	 * registers and the lookahead registers.
+ 	 */
+-	ret = ath10k_sdio_read_write_sync(ar,
+-					  MBOX_HOST_INT_STATUS_ADDRESS,
+-					  (u8 *)irq_proc_reg,
+-					  sizeof(*irq_proc_reg),
+-					  HIF_RD_SYNC_BYTE_INC);
++	ret = ath10k_sdio_read(ar, MBOX_HOST_INT_STATUS_ADDRESS,
++			       irq_proc_reg, sizeof(*irq_proc_reg));
+ 	if (ret)
+ 		goto out;
+ 
+@@ -1175,9 +1197,7 @@ static int ath10k_sdio_bmi_exchange_msg(struct ath10k *ar,
+ 
+ 	/* We always read from the start of the mbox address */
+ 	addr = ar_sdio->mbox_info.htc_addr;
+-	ret = ath10k_sdio_read_write_sync(ar, addr, ar_sdio->bmi_buf,
+-					  *resp_len,
+-					  HIF_RD_SYNC_BYTE_INC);
++	ret = ath10k_sdio_read(ar, addr, ar_sdio->bmi_buf, *resp_len);
+ 	if (ret) {
+ 		ath10k_warn(ar,
+ 			    "unable to read the bmi data from the device: %d\n",
+@@ -1538,9 +1558,7 @@ static int ath10k_sdio_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
+ 	}
+ 
+ 	/* read the data */
+-	ret = ath10k_sdio_read_write_sync(ar, MBOX_WINDOW_DATA_ADDRESS,
+-					  (u8 *)buf, buf_len,
+-					  HIF_RD_SYNC_BYTE_INC);
++	ret = ath10k_sdio_read(ar, MBOX_WINDOW_DATA_ADDRESS, buf, buf_len);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to read from mbox window data addrress: %d\n",
+ 			    ret);
