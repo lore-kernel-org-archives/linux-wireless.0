@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35782 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1168977AbdDXL0M (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36532 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754734AbdDEQIU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 07:26:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH 00/14] rtlwifi: btcoex: Second set of changes for rtl8821ae 2ant
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-        <87zifb65eh.fsf@codeaurora.org>
-        <5df931fe-cbb8-a0f7-ec0f-a62180ca760d@lwfinger.net>
-        <87lgqu45d0.fsf@kamboji.qca.qualcomm.com>
-        <d4c9dbc7-306a-df9b-cede-e0be462790e4@lwfinger.net>
-Date: Mon, 24 Apr 2017 14:26:05 +0300
-In-Reply-To: <d4c9dbc7-306a-df9b-cede-e0be462790e4@lwfinger.net> (Larry
-        Finger's message of "Fri, 21 Apr 2017 09:40:32 -0500")
-Message-ID: <87h91e2gj6.fsf@kamboji.qca.qualcomm.com> (sfid-20170424_132624_823009_7EE43EAB)
+        Wed, 5 Apr 2017 12:08:20 -0400
+Received: by mail-lf0-f68.google.com with SMTP id n78so1573492lfi.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Apr 2017 09:08:19 -0700 (PDT)
+Subject: Re: [PATCH 0/7] ath10k: remove ath10k_sdio_io()
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org
+References: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
+Cc: linux-wireless@vger.kernel.org
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <6a6d8e7f-ccd2-0ee6-bd99-6d82dd906843@gmail.com> (sfid-20170405_181024_689863_93BF2CFE)
+Date: Wed, 5 Apr 2017 18:08:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+I can't find patch 1/7...
 
-> On 04/21/2017 01:55 AM, Kalle Valo wrote:
->> But what should I do with this one:
->>
->> rtlwifi: rtl8821ae: setup 8812ae RFE according to device type
->> https://patchwork.kernel.org/patch/9683395/
+On 2017-04-05 09:06, Kalle Valo wrote:
+> Using ath10k_sdio_io() and ath10k_sdio_read_write_sync() are just
+> confusing. Refactor the code by following the plan outlined
+> below.
 >
-> Please apply that one. It should not conflict due to dropping the others.
-
-Ok, I'll take that one.
-
--- 
-Kalle Valo
+> I'm planning to fold all these seven patches into Erik's patch
+> adding sdio.c[1] so I didn't write any commit logs. I'm just
+> submitting these separately to make it easier to review the
+> changes.
+>
+> Kalle
+>
+> ath10k_sdio_read_write_sync():
+> X HIF_RD_SYNC_BLOCK_FIX	-> ath10k_sdio_readsb()
+> X HIF_RD_SYNC_BYTE_INC	-> ath10k_sdio_read(), ath10k_sdio_read32()
+> X HIF_WR_SYNC_BYTE_FIX	-> ath10k_sdio_writesb32()
+> X HIF_WR_SYNC_BYTE_INC	-> ath10k_sdio_write()
+>
+> ath10k_sdio_prep_async_req():
+> X HIF_WRITE		-> HIF_WR_SYNC_BYTE_INC -> ath10k_sdio_write()
+>
+> ath10k_sdio_read/write32():
+> sdio_readl()/sdio_writel() (those use endian macros)
+>
+> ath10k_sdio_writesb32():
+> kmalloc()
+> sdio_writesb(len)
+> kfree()
+>
+> ath10k_sdio_readsb():
+> len = round_down(len, ar_sdio->mbox_info.block_size);
+> sdio_readsb(len)
+>
+> ath10k_sdio_read():
+> sdio_memcpy_fromio()
+>
+> ath10k_sdio_write():
+> sdio_memcpy_toio()
+>
+>
+> [1] https://patchwork.kernel.org/patch/9626001/
+>
+> ---
+>
+> Kalle Valo (7):
+>       ath10k: add ath10k_sdio_write32/read32()
+>       ath10k: add ath10k_sdio_writesb()
+>       ath10k: add ath10k_sdio_read()
+>       ath10k: add ath10k_sdio_write()
+>       ath10k: add ath10k_sdio_readsb()
+>       ath10k: convert __ath10k_sdio_write_async() to use ath10k_sdio_write()
+>       ath10k: remove unused sdio wrappers
+>
+>
+>  drivers/net/wireless/ath/ath10k/sdio.c |  419 +++++++++++++++++---------------
+>  drivers/net/wireless/ath/ath10k/sdio.h |   40 ---
+>  2 files changed, 219 insertions(+), 240 deletions(-)
+>
+>
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
+>
