@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36538 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751250AbdDMNR0 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:44809 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750871AbdDEFRC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 09:17:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH] MAINTAINERS: drop akarwar from mwifiex
-References: <20170412174255.15021-1-briannorris@chromium.org>
-Date: Thu, 13 Apr 2017 16:17:18 +0300
-In-Reply-To: <20170412174255.15021-1-briannorris@chromium.org> (Brian Norris's
-        message of "Wed, 12 Apr 2017 10:42:55 -0700")
-Message-ID: <87k26obg69.fsf@kamboji.qca.qualcomm.com> (sfid-20170413_151735_020469_4DDC3C12)
+        Wed, 5 Apr 2017 01:17:02 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Dmitry Torokhov <dtor@chromium.org>,
+        Xinming Hu <huxinming820@gmail.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>
+Subject: RE: [EXT] Re: [PATCH 1/3] mwifiex: remove unnecessary wakeup
+ interrupt number sanity check
+Date: Wed, 5 Apr 2017 05:16:56 +0000
+Message-ID: <ca9234f3339841ce8f6daa0dfa4adf9a@SC-EXCH02.marvell.com> (sfid-20170405_071707_971562_40DB1647)
+References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
+ <CAE_wzQ9x8-dNCEbJw9+XnSK6fPaUa-K29jc0hjB91xUaFvRFhQ@mail.gmail.com>
+In-Reply-To: <CAE_wzQ9x8-dNCEbJw9+XnSK6fPaUa-K29jc0hjB91xUaFvRFhQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
-
-> His email is bouncing, and I expect he's not doing this work any more.
->
-> Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-> Cc: Nishant Sarmukadam <nishants@marvell.com>
-> Cc: Ganapathi Bhat <gbhat@marvell.com>
-> Cc: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
-> Or alternatively, we can update his email address. I just don't want to keep
-> seeing bounced emails :)
-
-Me neither :) So Amitkumar, which one do you prefer?
-
--- 
-Kalle Valo
+SGkgRG1pdHJ5LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IERtaXRy
+eSBUb3Jva2hvdiBbbWFpbHRvOmR0b3JAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE35bm0NOac
+iDHml6UgNjozNw0KPiBUbzogWGlubWluZyBIdQ0KPiBDYzogTGludXggV2lyZWxlc3M7IEthbGxl
+IFZhbG87IEJyaWFuIE5vcnJpczsgUmFqYXQgSmFpbjsgQW1pdGt1bWFyIEthcndhcjsNCj4gQ2F0
+aHkgTHVvOyBYaW5taW5nIEh1DQo+IFN1YmplY3Q6IFtFWFRdIFJlOiBbUEFUQ0ggMS8zXSBtd2lm
+aWV4OiByZW1vdmUgdW5uZWNlc3Nhcnkgd2FrZXVwIGludGVycnVwdA0KPiBudW1iZXIgc2FuaXR5
+IGNoZWNrDQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiANCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiBPbiBU
+aHUsIE1hciAzMCwgMjAxNyBhdCAyOjE5IEFNLCBYaW5taW5nIEh1IDxodXhpbm1pbmc4MjBAZ21h
+aWwuY29tPg0KPiB3cm90ZToNCj4gPiBGcm9tOiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29t
+Pg0KPiA+DQo+ID4gU2FuaXR5IGNoZWNrIG9mIGludGVycnVwdCBudW1iZXIgaW4gaW50ZXJydXB0
+IGhhbmRsZXIgaXMgdW5uZWNlc3NhcnkNCj4gPiBhbmQgY29uZnVzaW9uLCByZW1vdmUgaXQuDQo+
+IA0KPiBJJ2QgcmV3b3JkZWQgdGhlIGV4cGxhbmF0aW9uIGEgYml0OiAiSWYgd2FrZXVwIGludGVy
+cnVwdCBoYW5kbGVyIGlzIGNhbGxlZCwgd2UNCj4ga25vdyB0aGF0IHRoZSB3YWtldXAgaW50ZXJy
+dXB0IG51bWJlciBpcyB2YWxpZCwgdGhlcmUgaXMgbm8gbmVlZCB0byBjaGVjayBpdC4iDQo+IA0K
+PiBPdGhlcndpc2U6DQo+IA0KPiBSZXZpZXdlZC1ieTogRG1pdHJ5IFRvcm9raG92IDxkdG9yQGNo
+cm9taXVtLm9yZz4NCj4gDQoNClRoYW5rcyBmb3IgdGhlIHJldmlldy4gV2lsbCByZXdvcmQgaW4g
+VjIuDQoNClRoYW5rcw0KU2ltb24NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUg
+PGh1eG1AbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8
+YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bWFydmVsbC9td2lmaWV4L21haW4uYyB8IDggKysrLS0tLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQs
+IDMgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gYi9kcml2ZXJz
+L25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gaW5kZXggMzBmNDk5NC4u
+NWU4MjYwMiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213
+aWZpZXgvbWFpbi5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lm
+aWV4L21haW4uYw0KPiA+IEBAIC0xNTAzLDExICsxNTAzLDkgQEAgc3RhdGljIGlycXJldHVybl90
+DQo+ID4gbXdpZmlleF9pcnFfd2FrZXVwX2hhbmRsZXIoaW50IGlycSwgdm9pZCAqcHJpdikgIHsN
+Cj4gPiAgICAgICAgIHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIgPSBwcml2Ow0KPiA+
+DQo+ID4gLSAgICAgICBpZiAoYWRhcHRlci0+aXJxX3dha2V1cCA+PSAwKSB7DQo+ID4gLSAgICAg
+ICAgICAgICAgIGRldl9kYmcoYWRhcHRlci0+ZGV2LCAiJXM6IHdha2UgYnkgd2lmaSIsIF9fZnVu
+Y19fKTsNCj4gPiAtICAgICAgICAgICAgICAgYWRhcHRlci0+d2FrZV9ieV93aWZpID0gdHJ1ZTsN
+Cj4gPiAtICAgICAgICAgICAgICAgZGlzYWJsZV9pcnFfbm9zeW5jKGlycSk7DQo+ID4gLSAgICAg
+ICB9DQo+ID4gKyAgICAgICBkZXZfZGJnKGFkYXB0ZXItPmRldiwgIiVzOiB3YWtlIGJ5IHdpZmki
+LCBfX2Z1bmNfXyk7DQo+ID4gKyAgICAgICBhZGFwdGVyLT53YWtlX2J5X3dpZmkgPSB0cnVlOw0K
+PiA+ICsgICAgICAgZGlzYWJsZV9pcnFfbm9zeW5jKGlycSk7DQo+ID4NCj4gPiAgICAgICAgIC8q
+IE5vdGlmeSBQTSBjb3JlIHdlIGFyZSB3YWtldXAgc291cmNlICovDQo+ID4gICAgICAgICBwbV93
+YWtldXBfZXZlbnQoYWRhcHRlci0+ZGV2LCAwKTsNCj4gPiAtLQ0KPiA+IDEuOC4xLjQNCj4gPg0K
