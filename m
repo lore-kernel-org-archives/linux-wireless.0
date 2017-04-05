@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34284 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932452AbdDQALh (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933029AbdDEL6e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:37 -0400
-Received: by mail-oi0-f65.google.com with SMTP id t14so15969531oif.1
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:37 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 22/27] rtlwifi: btcoex: 23b 1ant: Add coex_table_type to log
-Date: Sun, 16 Apr 2017 19:11:06 -0500
-Message-Id: <20170417001111.29384-23-Larry.Finger@lwfinger.net> (sfid-20170417_021158_098800_2CD53868)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+        Wed, 5 Apr 2017 07:58:34 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 08/11] wil6210: fix memory access violation in wil_memcpy_from/toio_32
+Date: Wed,  5 Apr 2017 14:58:11 +0300
+Message-Id: <1491393494-11816-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_140158_716170_0CF6AF1A)
+In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Display coex_table_type in log.
+In case count is not multiple of 4, there is a read access in
+wil_memcpy_toio_32() from outside src buffer boundary.
+In wil_memcpy_fromio_32(), in case count is not multiple of 4, there is
+a write access to outside dst io memory boundary.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Fix these issues with proper handling of the last 1 to 4 copied bytes.
+
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 5 +++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h | 1 +
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/ath/wil6210/main.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index b41a338478aa..8a1fe5c75d4f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -541,6 +541,8 @@ static void halbtc8723b1ant_coex_table(struct btc_coexist *btcoexist,
- static void halbtc8723b1ant_coex_table_with_type(struct btc_coexist *btcoexist,
- 						 bool force_exec, u8 type)
- {
-+	coex_sta->coex_table_type = type;
-+
- 	switch (type) {
- 	case 0:
- 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
-@@ -2493,6 +2495,9 @@ void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
- 			   coex_dm->error_condition);
- 	}
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 9aa81ce..439d27c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -130,9 +130,15 @@ void wil_memcpy_fromio_32(void *dst, const volatile void __iomem *src,
+ 	u32 *d = dst;
+ 	const volatile u32 __iomem *s = src;
  
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = %d",
-+		 "Coex Table Type", coex_sta->coex_table_type);
+-	/* size_t is unsigned, if (count%4 != 0) it will wrap */
+-	for (count += 4; count > 4; count -= 4)
++	for (; count >= 4; count -= 4)
+ 		*d++ = __raw_readl(s++);
 +
- 	/* Hw setting */
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s",
- 		 "============[Hw setting]============");
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index fca78bc7a945..36e0a6b5ec58 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -174,6 +174,7 @@ struct coex_sta_8723b_1ant {
- 	u8 bt_info_ext;
- 	u8 scan_ap_num;
- 	bool cck_ever_lock;
-+	u8 coex_table_type;
- 	bool force_lps_on;
- 	u32 pop_event_cnt;
++	if (unlikely(count)) {
++		/* count can be 1..3 */
++		u32 tmp = __raw_readl(s);
++
++		memcpy(d, &tmp, count);
++	}
+ }
  
+ void wil_memcpy_fromio_halp_vote(struct wil6210_priv *wil, void *dst,
+@@ -149,8 +155,16 @@ void wil_memcpy_toio_32(volatile void __iomem *dst, const void *src,
+ 	volatile u32 __iomem *d = dst;
+ 	const u32 *s = src;
+ 
+-	for (count += 4; count > 4; count -= 4)
++	for (; count >= 4; count -= 4)
+ 		__raw_writel(*s++, d++);
++
++	if (unlikely(count)) {
++		/* count can be 1..3 */
++		u32 tmp = 0;
++
++		memcpy(&tmp, s, count);
++		__raw_writel(tmp, d);
++	}
+ }
+ 
+ void wil_memcpy_toio_halp_vote(struct wil6210_priv *wil,
 -- 
-2.12.0
+1.9.1
