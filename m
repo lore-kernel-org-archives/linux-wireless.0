@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59718 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S942424AbdDTHSc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:18:32 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mga03.intel.com ([134.134.136.65]:8212 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754605AbdDEIQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 04:16:46 -0400
+Date: Wed, 5 Apr 2017 10:16:42 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Subject: Re: [PATCH v1] NFC: Add nfc_dbg() macro
+Message-ID: <20170405081630.GD2136@zurbaran.ger.intel.com> (sfid-20170405_102009_799619_5531BD92)
+References: <20170322192251.30261-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Subject: Re: [v4,
- 1/4] mwifiex: remove unnecessary wakeup interrupt number sanity check
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
-References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Message-Id: <20170420071832.1931E6114F@smtp.codeaurora.org> (sfid-20170420_091849_874409_83F2D33E)
-Date: Thu, 20 Apr 2017 07:18:31 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170322192251.30261-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxinming820@gmail.com> wrote:
-> From: Xinming Hu <huxm@marvell.com>
+On Wed, Mar 22, 2017 at 09:22:51PM +0200, Andy Shevchenko wrote:
+> In some cases nfc_dbg() is useful. Add such macro to a header.
 > 
-> If wakeup interrupt handler is called, we know that the wakeup
-> interrupt number is valid, there is no need to check it.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Reviewed-by: Dmitry Torokhov <dtor@chromium.org>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  include/net/nfc/nfc.h | 1 +
+>  1 file changed, 1 insertion(+)
+Applied as well.
 
-3 patches applied to wireless-drivers-next.git, thanks.
-
-625b4dba57b2 mwifiex: remove unnecessary wakeup interrupt number sanity check
-ef6c7d3cb731 mwifiex: fall back mwifiex_dbg to pr_info when adapter->dev not set
-127ee1db0970 mwifiex: pcie: correct scratch register name
-
--- 
-https://patchwork.kernel.org/patch/9678763/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Cheers,
+Samuel.
