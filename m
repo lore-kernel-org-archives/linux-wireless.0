@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47640 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1425770AbdDUT7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 15:59:41 -0400
-Message-ID: <1492804774.19290.5.camel@sipsolutions.net> (sfid-20170421_215945_425478_A6BF64C8)
-Subject: Re: [PATCH] iwlwifi: pcie: off by one in
- iwl_trans_pcie_dyn_txq_alloc()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Sara Sharon <sara.sharon@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Date: Fri, 21 Apr 2017 21:59:34 +0200
-In-Reply-To: <20170421194619.sjc33647odsfkcfl@mwanda> (sfid-20170421_214638_709112_32AE460F)
-References: <20170421194619.sjc33647odsfkcfl@mwanda>
-         (sfid-20170421_214638_709112_32AE460F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11940 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932586AbdDEKJv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 06:09:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Alban <albeu@free.fr>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        John Crispin <john@phrozen.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/7] Documentation: dt: net: Update the ath9k binding for
+ SoC devices
+Date: Wed, 5 Apr 2017 10:09:44 +0000
+Message-ID: <87tw63i2s7.fsf@kamboji.qca.qualcomm.com> (sfid-20170405_121101_861216_49C1F6CC)
+References: <1489439116-4233-1-git-send-email-albeu@free.fr>
+In-Reply-To: <1489439116-4233-1-git-send-email-albeu@free.fr> (Alban's message
+        of "Mon, 13 Mar 2017 22:05:09 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-04-21 at 22:46 +0300, Dan Carpenter wrote:
-> The > should be >= or we are writing one space beyond the end of the
-> array.
+Alban <albeu@free.fr> writes:
 
-I think I just did the same fixes you did - after running smatch :)
+> The current binding only cover PCI devices so extend it for SoC devices.
+>
+> Most SoC platforms use an MTD partition for the calibration data
+> instead of an EEPROM. The qca,no-eeprom property was added to allow
+> loading the EEPROM content using firmware loading. This new binding
+> replace this hack with NVMEM cells, so we also mark the qca,no-eeprom
+> property as deprecated in case anyone ever used it.
 
-This is on its way already (in our local tree), but since nobody can
-actually run the code yet - the hardware doesn't exist - Luca hasn't
-sent it out yet.
+A patchset like this should definitely have a cover letter and explain
+the backround and reasoning for this patchset. Currently I'm just
+guessing.
 
-Thanks though!
+> Signed-off-by: Alban <albeu@free.fr>
 
-johannes
+Please use your full name both in From and S-o-b lines.
+
+--=20
+Kalle Valo=
