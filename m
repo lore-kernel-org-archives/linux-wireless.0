@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45918 "EHLO sipsolutions.net"
+Received: from mga01.intel.com ([192.55.52.88]:49969 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756214AbdDRIzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 04:55:38 -0400
-Message-ID: <1492505735.2472.3.camel@sipsolutions.net> (sfid-20170418_105805_973108_07FD1D99)
-Subject: Re: [PATCH V2 02/10] nl80211: allow multiple active scheduled scan
- requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 18 Apr 2017 10:55:35 +0200
-In-Reply-To: <1492505589.2472.2.camel@sipsolutions.net> (sfid-20170418_105344_247770_F670FA72)
-References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1492085196-4574-3-git-send-email-arend.vanspriel@broadcom.com>
-         <1492505589.2472.2.camel@sipsolutions.net>
-         (sfid-20170418_105344_247770_F670FA72)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752946AbdDEIG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 04:06:28 -0400
+Date: Wed, 5 Apr 2017 10:06:18 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v3 1/5] NFC: pn544: Get rid of platform data
+Message-ID: <20170405080618.GA2136@zurbaran.ger.intel.com> (sfid-20170405_100708_567369_1B7DED6F)
+References: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-04-18 at 10:53 +0200, Johannes Berg wrote:
-> Hi Arend,
-> 
-> Overall this looks good, and I've almost applied it - but I have a
-> question on this patch.
-> 
-> You have this list:
-> 
-> > +	struct list_head sched_scan_req_list;
-> >  	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
-> 
-> but you kept this. In fact, it's even still *used*. I don't
-> understand
-> that part.
-> 
-> Also, you used RCU primitives for the new list, but you never
-> actually
-> used them - except in one place (in nl80211_stop_sched_scan) where
-> it's
-> actually not needed at all and the _rcu should be removed (since it
-> holds the lock)
-> 
-> What's up with that?
+Hi Andy,
 
-Actually, I think I see what's up - you simply forgot to remove the
-sched_scan_req member, and then didn't realize that it was still used
-in nl80211_netlink_notify(), and that's the place that *does* need the
-RCU stuff.
+On Tue, Mar 28, 2017 at 12:36:35PM +0300, Andy Shevchenko wrote:
+> Legacy platform data must go away. We are on the safe side here since
+> there are no users of it in the kernel.
+> 
+> If anyone by any odd reason needs it the GPIO lookup tables and
+> built-in device properties at your service.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  v3: no change
+> 
+>  drivers/nfc/pn544/i2c.c             | 43 ++++++-------------------------------
+>  include/linux/platform_data/pn544.h | 43 -------------------------------------
+>  2 files changed, 6 insertions(+), 80 deletions(-)
+>  delete mode 100644 include/linux/platform_data/pn544.h
+All 5 patches applied to nfc-next.
 
-johannes
+Cheers,
+Samuel.
