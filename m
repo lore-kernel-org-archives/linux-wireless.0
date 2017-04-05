@@ -1,126 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35286 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752697AbdDLLHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 07:07:37 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/3] bpf/wireless: add wifimon program type
-Date: Wed, 12 Apr 2017 13:07:24 +0200
-Message-Id: <20170412110726.9689-1-johannes@sipsolutions.net> (sfid-20170412_130910_059795_2268F0CA)
+Received: from smtp.codeaurora.org ([198.145.29.96]:53734 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933245AbdDEK2G (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Apr 2017 06:28:06 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] rsi: Rename the file rsi_91x_pkt.c to rsi_91x_hal.c
+References: <1491282009-2854-1-git-send-email-prameela.j04cs@gmail.com>
+Date: Wed, 05 Apr 2017 13:28:01 +0300
+In-Reply-To: <1491282009-2854-1-git-send-email-prameela.j04cs@gmail.com>
+        (Prameela Rani Garnepudi's message of "Tue, 4 Apr 2017 10:30:09
+        +0530")
+Message-ID: <87o9wbi1xq.fsf@kamboji.qca.qualcomm.com> (sfid-20170405_122904_372813_F7FD7FC3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
 
-Add a new program type for wifi monitor interfaces. This program
-type can
- * access __sk_buff, but only skb->len
- * call bpf_skb_load_bytes()
+> The file rsi_91x_hal.c will contain new firmware loading method for
+> RSI 9113 chipset. So this file will have device specific operations.
+> As the file 'rsi_91x_pkt.c' contains code for preparing device
+> (frimware understandable) specific descriptors for the transmit frames,
+> it is moved to 'rsi_91x_hal.c'
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-The program type is only enabled when something selects the new
-Kconfig symbol WANT_BPF_WIFIMON, which will be done by mac80211
-in a follow-up patch.
+If you send a new version of the patchset mark it as "[PATCH v2]". Also
+I don't see a changelog anywhere, what has changed since the version you
+posted last December?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/bpf_types.h |  3 +++
- include/uapi/linux/bpf.h  |  1 +
- net/core/filter.c         | 41 +++++++++++++++++++++++++++++++++++++++++
- net/wireless/Kconfig      |  8 ++++++++
- 4 files changed, 53 insertions(+)
+Please read:
 
-diff --git a/include/linux/bpf_types.h b/include/linux/bpf_types.h
-index 03bf223f18be..fcaba84128dd 100644
---- a/include/linux/bpf_types.h
-+++ b/include/linux/bpf_types.h
-@@ -16,6 +16,9 @@ BPF_PROG_TYPE(BPF_PROG_TYPE_KPROBE, kprobe_prog_ops)
- BPF_PROG_TYPE(BPF_PROG_TYPE_TRACEPOINT, tracepoint_prog_ops)
- BPF_PROG_TYPE(BPF_PROG_TYPE_PERF_EVENT, perf_event_prog_ops)
- #endif
-+#ifdef CONFIG_BPF_WIFIMON
-+BPF_PROG_TYPE(BPF_PROG_TYPE_WIFIMON, wifimon_prog_ops)
-+#endif
- 
- BPF_MAP_TYPE(BPF_MAP_TYPE_ARRAY, array_map_ops)
- BPF_MAP_TYPE(BPF_MAP_TYPE_PERCPU_ARRAY, percpu_array_map_ops)
-diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
-index 1e062bb54eec..b0dfe8a79b3f 100644
---- a/include/uapi/linux/bpf.h
-+++ b/include/uapi/linux/bpf.h
-@@ -115,6 +115,7 @@ enum bpf_prog_type {
- 	BPF_PROG_TYPE_LWT_IN,
- 	BPF_PROG_TYPE_LWT_OUT,
- 	BPF_PROG_TYPE_LWT_XMIT,
-+	BPF_PROG_TYPE_WIFIMON,
- };
- 
- enum bpf_attach_type {
-diff --git a/net/core/filter.c b/net/core/filter.c
-index ce2a19da8aa4..c20624c81f6b 100644
---- a/net/core/filter.c
-+++ b/net/core/filter.c
-@@ -3415,3 +3415,44 @@ int sk_get_filter(struct sock *sk, struct sock_filter __user *ubuf,
- 	release_sock(sk);
- 	return ret;
- }
-+
-+#ifdef CONFIG_BPF_WIFIMON
-+static const struct bpf_func_proto *
-+wifimon_func_proto(enum bpf_func_id func_id)
-+{
-+	switch (func_id) {
-+	case BPF_FUNC_skb_load_bytes:
-+		return &bpf_skb_load_bytes_proto;
-+	default:
-+		return bpf_base_func_proto(func_id);
-+	}
-+}
-+
-+static bool wifimon_is_valid_access(int off, int size,
-+				    enum bpf_access_type type,
-+				    enum bpf_reg_type *reg_type)
-+{
-+	if (type == BPF_WRITE)
-+		return false;
-+
-+	switch (off) {
-+	case offsetof(struct __sk_buff, len):
-+		break;
-+	default:
-+		return false;
-+	}
-+	/* The verifier guarantees that size > 0. */
-+	if (off % size != 0)
-+		return false;
-+	if (size != sizeof(__u32))
-+		return false;
-+
-+	return true;
-+}
-+
-+const struct bpf_verifier_ops wifimon_prog_ops = {
-+	.get_func_proto		= wifimon_func_proto,
-+	.is_valid_access	= wifimon_is_valid_access,
-+	.convert_ctx_access	= bpf_convert_ctx_access,
-+};
-+#endif
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 6c606120abfe..50ffebafce46 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -214,3 +214,11 @@ config LIB80211_DEBUG
- 	  from lib80211.
- 
- 	  If unsure, say N.
-+
-+config WANT_BPF_WIFIMON
-+	bool
-+
-+config BPF_WIFIMON
-+	bool
-+	default y
-+	depends on WANT_BPF_WIFIMON && BPF_SYSCALL
+https://kernelnewbies.org/FirstKernelPatch#head-5c81b3c517a1d0bbc24f92594cb734e155fcbbcb
+
 -- 
-2.11.0
+Kalle Valo
