@@ -1,92 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52808 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754182AbdDRWVP (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:46792 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755303AbdDFMPB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:21:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:19 +0300
-Message-Id: <20170418221729.28372-16-luca@coelho.fi> (sfid-20170419_002133_601828_B6C54E1D)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 15/25] iwlwifi: pcie: remove RSA race workaround
+        Thu, 6 Apr 2017 08:15:01 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 6/6] brcmfmac: only add channels and ssids once in scan request
+Date: Thu,  6 Apr 2017 13:14:42 +0100
+Message-Id: <1491480882-13877-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170406_141512_129529_702F3B49)
+In-Reply-To: <1491480882-13877-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1491480882-13877-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+When receiving pno results there may be duplicate channels and/or
+ssids. Assure each is added only once when preparing the internal
+escan request.
 
-This workaround is not needed anymore.  Remove it.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 46 -------------------------
- 1 file changed, 46 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index ed1034e58cb4..91f6030529b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -720,47 +720,6 @@ static int iwl_pcie_load_section(struct iwl_trans *trans, u8 section_num,
- 	return ret;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index b687533..0a067e5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3216,7 +3216,7 @@ static int brcmf_internal_escan_add_info(struct cfg80211_scan_request *req,
+ {
+ 	struct ieee80211_channel *chan;
+ 	enum nl80211_band band;
+-	int freq;
++	int freq, i;
+ 
+ 	if (channel <= CH_MAX_2G_CHANNEL)
+ 		band = NL80211_BAND_2GHZ;
+@@ -3231,10 +3231,22 @@ static int brcmf_internal_escan_add_info(struct cfg80211_scan_request *req,
+ 	if (!chan)
+ 		return -EINVAL;
+ 
+-	req->channels[req->n_channels++] = chan;
+-	memcpy(req->ssids[req->n_ssids].ssid, ssid, ssid_len);
+-	req->ssids[req->n_ssids++].ssid_len = ssid_len;
++	for (i = 0; i < req->n_channels; i++) {
++		if (req->channels[i] == chan)
++			break;
++	}
++	if (i == req->n_channels)
++		req->channels[req->n_channels++] = chan;
+ 
++	for (i = 0; i < req->n_ssids; i++) {
++		if (req->ssids[i].ssid_len == ssid_len &&
++		    !memcmp(req->ssids[i].ssid, ssid, ssid_len))
++			break;
++	}
++	if (i == req->n_ssids) {
++		memcpy(req->ssids[req->n_ssids].ssid, ssid, ssid_len);
++		req->ssids[req->n_ssids++].ssid_len = ssid_len;
++	}
+ 	return 0;
  }
  
--/*
-- * Driver Takes the ownership on secure machine before FW load
-- * and prevent race with the BT load.
-- * W/A for ROM bug. (should be remove in the next Si step)
-- */
--static int iwl_pcie_rsa_race_bug_wa(struct iwl_trans *trans)
--{
--	u32 val, loop = 1000;
--
--	/*
--	 * Check the RSA semaphore is accessible.
--	 * If the HW isn't locked and the rsa semaphore isn't accessible,
--	 * we are in trouble.
--	 */
--	val = iwl_read_prph(trans, PREG_AUX_BUS_WPROT_0);
--	if (val & (BIT(1) | BIT(17))) {
--		IWL_DEBUG_INFO(trans,
--			       "can't access the RSA semaphore it is write protected\n");
--		return 0;
--	}
--
--	/* take ownership on the AUX IF */
--	iwl_write_prph(trans, WFPM_CTRL_REG, WFPM_AUX_CTL_AUX_IF_MAC_OWNER_MSK);
--	iwl_write_prph(trans, AUX_MISC_MASTER1_EN, AUX_MISC_MASTER1_EN_SBE_MSK);
--
--	do {
--		iwl_write_prph(trans, AUX_MISC_MASTER1_SMPHR_STATUS, 0x1);
--		val = iwl_read_prph(trans, AUX_MISC_MASTER1_SMPHR_STATUS);
--		if (val == 0x1) {
--			iwl_write_prph(trans, RSA_ENABLE, 0);
--			return 0;
--		}
--
--		udelay(10);
--		loop--;
--	} while (loop > 0);
--
--	IWL_ERR(trans, "Failed to take ownership on secure machine\n");
--	return -EIO;
--}
--
- static int iwl_pcie_load_cpu_sections_8000(struct iwl_trans *trans,
- 					   const struct fw_img *image,
- 					   int cpu,
-@@ -1010,11 +969,6 @@ static int iwl_pcie_load_given_ucode_8000(struct iwl_trans *trans,
- 	if (trans->dbg_dest_tlv)
- 		iwl_pcie_apply_destination(trans);
- 
--	/* TODO: remove in the next Si step */
--	ret = iwl_pcie_rsa_race_bug_wa(trans);
--	if (ret)
--		return ret;
--
- 	IWL_DEBUG_POWER(trans, "Original WFPM value = 0x%08X\n",
- 			iwl_read_prph(trans, WFPM_GP2));
- 
 -- 
-2.11.0
+1.9.1
