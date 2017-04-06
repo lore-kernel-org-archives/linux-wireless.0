@@ -1,132 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:33121 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752100AbdDHSeo (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:34407 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752971AbdDFQsR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 14:34:44 -0400
-Received: by mail-it0-f68.google.com with SMTP id w11so1838533itb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 11:34:43 -0700 (PDT)
-Date: Sat, 8 Apr 2017 20:34:41 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
-Message-ID: <20170408183440.GA1900@nanopsycho> (sfid-20170408_203456_724642_8151E368)
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
- <20170408174900.12820-2-johannes@sipsolutions.net>
+        Thu, 6 Apr 2017 12:48:17 -0400
+Received: by mail-pg0-f43.google.com with SMTP id 21so41610672pgg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 09:48:17 -0700 (PDT)
+Date: Thu, 6 Apr 2017 09:48:08 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: MAC randomization should not be persistent
+Message-ID: <20170406164807.GB25323@google.com> (sfid-20170406_184943_545275_E5585207)
+References: <20170405222640.4494-1-briannorris@chromium.org>
+ <87inmifak8.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170408174900.12820-2-johannes@sipsolutions.net>
+In-Reply-To: <87inmifak8.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sat, Apr 08, 2017 at 07:48:56PM CEST, johannes@sipsolutions.net wrote:
->From: Johannes Berg <johannes.berg@intel.com>
->
->Add the base infrastructure and UAPI for netlink
->extended ACK reporting. All "manual" calls to
->netlink_ack() pass NULL for now and thus don't
->get extended ACK reporting.
-
-Why so narrow? :)
-
-
->
->Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->---
-
-[...]
-
-
->diff --git a/include/linux/netlink.h b/include/linux/netlink.h
->index da14ab61f363..47562e940e9c 100644
->--- a/include/linux/netlink.h
->+++ b/include/linux/netlink.h
->@@ -62,11 +62,41 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
-> 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
-> }
+On Thu, Apr 06, 2017 at 07:02:15AM +0300, Kalle Valo wrote:
+> Brian Norris <briannorris@chromium.org> writes:
 > 
->+/**
->+ * struct netlink_ext_ack - netlink extended ACK report struct
->+ * @_msg: message string to report - don't access directly, use
->+ *	%NL_SET_ERR_MSG
->+ * @bad_attr: attribute with error
->+ * @missing_attr: number of missing attr (or 0)
->+ * @cookie: cookie data to return to userspace (for success)
->+ * @cookie_len: actual cookie data length
->+ */
->+struct netlink_ext_ack {
->+	const char *_msg;
->+	const struct nlattr *bad_attr;
->+	u16 missing_attr;
->+	u8 cookie[NETLINK_MAX_COOKIE_LEN];
->+	u8 cookie_len;
->+};
->+
->+/* Always use this macro, this allows later putting the
->+ * message into a separate section or such for things
->+ * like translation or listing all possible messages.
->+ * Currently string formatting is not supported (due
->+ * to the lack of an output buffer.)
-
-Please use 80 cols.
-
-[...]
-
-
->@@ -2267,21 +2284,37 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
-> }
-> EXPORT_SYMBOL(__netlink_dump_start);
+> > nl80211 provides the NL80211_SCAN_FLAG_RANDOM_ADDR for every scan
+> > request that should be randomized; the absence of such a flag means we
+> > should not randomize. However, mwifiex was stashing the latest
+> > randomization request and *always* using it for future scans, even those
+> > that didn't set the flag.
+> >
+> > Let's zero out the randomization info whenever we get a scan request
+> > without NL80211_SCAN_FLAG_RANDOM_ADDR. I'd prefer to remove
+> > priv->random_mac entirely (and plumb the randomization MAC properly
+> > through the call sequence), but the spaghetti is a little difficult to
+> > unravel here for me.
+> >
+> > Fixes: c2a8f0ff9c6c ("mwifiex: support random MAC address for scanning")
 > 
->-void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
->+void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
->+		 const struct netlink_ext_ack *extack)
-> {
-> 	struct sk_buff *skb;
-> 	struct nlmsghdr *rep;
-> 	struct nlmsgerr *errmsg;
-> 	size_t payload = sizeof(*errmsg);
->+	size_t acksize = sizeof(*errmsg);
-> 	struct netlink_sock *nlk = nlk_sk(NETLINK_CB(in_skb).sk);
+> So the first release with this was v4.9.
 > 
-> 	/* Error messages get the original request appened, unless the user
->-	 * requests to cap the error message.
->+	 * requests to cap the error message, and get extra error data if
->+	 * requested.
-> 	 */
->-	if (!(nlk->flags & NETLINK_F_CAP_ACK) && err)
->-		payload += nlmsg_len(nlh);
->+	if (err) {
->+		if (!(nlk->flags & NETLINK_F_CAP_ACK))
->+			payload += nlmsg_len(nlh);
->+		acksize = payload;
->+		if (nlk->flags & NETLINK_F_EXT_ACK) {
->+			if (extack && extack->_msg)
->+				acksize +=
->+					nla_total_size(strlen(extack->_msg) + 1);
->+			if (extack && extack->bad_attr)
->+				acksize += nla_total_size(sizeof(u32));
->+			if (extack &&
->+			    (extack->missing_attr || extack->bad_attr))
-
-Attr could be 0, right? I know that on the most of the places 0 is
-UNSPEC, but I'm pretty sure not everywhere.
-
-
->+				acksize += nla_total_size(sizeof(u16));
->+		}
->+	}
+> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > ---
+> > Should this be tagged for -stable?
 > 
->-	skb = nlmsg_new(payload, GFP_KERNEL);
->+	skb = nlmsg_new(acksize, GFP_KERNEL);
-> 	if (!skb) {
-> 		struct sock *sk;
-> 
+> IMHO yes.
 
-[...]
+Sounds fine to me. I suppose you'll do this when applying? Or I can
+resend...
 
-Look very good. Thanks for taking care of this!
+Brian
