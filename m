@@ -1,109 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:37301 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S944983AbdDTTs2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 15:48:28 -0400
-Received: by mail-wm0-f44.google.com with SMTP id m123so1352601wma.0
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2017 12:48:27 -0700 (PDT)
-Subject: Re: [PATCH] brcm80211: brcmfmac: Ensure that incoming skb's are
- writable
-To: James Hughes <james.hughes@raspberrypi.org>,
-        netdev@vger.kernel.org, Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170420111651.10213-1-james.hughes@raspberrypi.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <b6891d80-cc5f-3bcd-72aa-1de2d9bb9144@broadcom.com> (sfid-20170420_214859_117957_6A4ED85D)
-Date: Thu, 20 Apr 2017 21:48:25 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:37196 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756509AbdDFGzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Apr 2017 02:55:20 -0400
+Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+References: <20170329174751.13184-1-hdegoede@redhat.com>
+ <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
+ <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
+ <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com>
+ <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
+ <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net>
+ <560981e0-e1b0-7a06-80e4-14d677c7d64a@redhat.com>
+ <15871468-0086-2d66-328b-0699ef6f4b31@lwfinger.net>
+Cc: Bastien Nocera <hadess@hadess.net>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        linux-wireless@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <5d15c6e8-7c15-4226-c4be-d8db6ded29ef@redhat.com> (sfid-20170406_085715_022584_05A7DC61)
+Date: Thu, 6 Apr 2017 08:55:15 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170420111651.10213-1-james.hughes@raspberrypi.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <15871468-0086-2d66-328b-0699ef6f4b31@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ linux-wireless
+Hi,
 
-On 4/20/2017 1:16 PM, James Hughes wrote:
-> The driver was adding header information to incoming skb
-> without ensuring the head was uncloned and hence writable.
-> 
-> skb_cow_head has been used to ensure they are writable, however,
-> this required some changes to error handling to ensure that
-> if skb_cow_head failed it was not ignored.
-> 
-> This really needs to be reviewed by someone who is more familiar
-> with this code base to ensure any deallocation of skb's is
-> still correct.
-> 
-> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
-> ---
->   .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    | 15 ++++++++--
->   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 23 +++++-----------
->   .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 32 +++++++++++++++++-----
->   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  7 ++++-
->   4 files changed, 51 insertions(+), 26 deletions(-)
-> 
+On 05-04-17 18:32, Larry Finger wrote:
+> On 04/05/2017 04:36 AM, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 05-04-17 01:41, Larry Finger wrote:
+>>> On 04/04/2017 04:53 PM, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> On 04/04/2017 11:38 PM, Arend Van Spriel wrote:
+>>>>>
+>>>>>
+>>>>> On 4-4-2017 20:53, Hans de Goede wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> On 04/04/2017 08:31 PM, Larry Finger wrote:
+>>>>>>> On 03/29/2017 12:47 PM, Hans de Goede wrote:
+>>>>>>>> The rtl8723bs is found on quite a few systems used by Linux users,
+>>>>>>>> such as on Atom systems (Intel Computestick and various other
+>>>>>>>> Atom based devices) and on many (budget) ARM boards such as
+>>>>>>>> the CHIP.
+>>>>>>>>
+>>>>>>>> The plan moving forward with this is for the new clean,
+>>>>>>>> written from scratch, rtl8xxxu driver to eventually gain
+>>>>>>>> support for sdio devices. But there is no clear timeline
+>>>>>>>> for that, so lets add this driver included in staging for now.
+>>>>>>>
+>>>>>>> Hans,
+>>>>>>>
+>>>>>>> I started looking at the Smatch errors. This one may be the result of
+>>>>>>> a serious problem:
+>>>>>>>
+>>>>>>>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
+>>>>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info()
+>>>>>>> error: we previously assumed 'phead' could be null (see line 453)
+>>>>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info()
+>>>>>>> warn: variable dereferenced before check 'phead' (see line 454)
+>>>>>>>
+>>>>>>> A snippet of the code in question is as follows:
+>>>>>>>
+>>>>>>>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>>>>>         phead = get_list_head(queue);
+>>>>>>>         plist = phead ? get_next(phead) : NULL;
+>>>>>>>         plist = get_next(phead);
+>>>>>>>         if ((!phead) || (!plist)) {
+>>>>>>>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>>>>>                 return 0;
+>>>>>>>         }
+>>>>>>>
+>>>>>>> This code comes directly from the hadess repo, but I am suspicious of
+>>>>>>> the double call to get_next(phead). I cannot imagine any valid reason
+>>>>>>> to skip every other entry on that list.
+>>>>>>
+>>>>>> If you look closer and simplify the first getnext line what is written is:
+>>>>>>
+>>>>>>          plist = get_next(phead);
+>>>>>>          plist = get_next(phead);
+>>>>>>
+>>>>>> Which indeed looks like it could use improvement, but I don't
+>>>>>> think it is seriously broken.
+>>>>>
+>>>>> So get_list_head(queue) can never return NULL?
+>>>>
+>>>> I don't know.
+>>>>
+>>>>> Otherwise I don't know
+>>>>> how close I need to get for a simplified look ;-)
+>>>>
+>>>> I simplified things so as to make clear that Larry's worry was
+>>>> not really a problem, I do agree the smatch complaint is valid.
+>>>
+>>> I think the following fixes the problem:
+>>>
+>>> diff --git a/drivers/staging/rtl8723bs/core/rtw_debug.c
+>>> b/drivers/staging/rtl8723bs/core/rtw_debug.c
+>>> index d34747b29309..51cef55d3f76 100644
+>>> --- a/drivers/staging/rtl8723bs/core/rtw_debug.c
+>>> +++ b/drivers/staging/rtl8723bs/core/rtw_debug.c
+>>> @@ -451,7 +451,6 @@ int proc_get_survey_info(struct seq_file *m, void *v)
+>>>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>         phead = get_list_head(queue);
+>>>         plist = phead ? get_next(phead) : NULL;
+>>> -       plist = get_next(phead);
+>>>         if ((!phead) || (!plist)) {
+>>>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
+>>>                 return 0;
+>>>
+>>> Pointer plist is set in the 3rd line, thus the second set of it can be removed.
+>>
+>> Agreed, when I've some time I plan to do a follow-up patch
+>> to my initial submission fixing all the Smatch errors. But feel
+>> free to beat me to it.
+>>
+>> Greg, if I understood you correctly you plan to merge my initial
+>> submission as is and then we can fix this (and other things) with
+>> follow up patches, right ?
+>
+> Hans,
+>
+> I took GregKH out of the Cc list when I started the discussion of the Smatch errors/warnings, and he probably has not seen the recent E-mails in this thread.
 
-[...]
+Ah I missed that (clearly I did).
 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> index 5eaac13..08272e8 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -198,7 +198,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
->   	int ret;
->   	struct brcmf_if *ifp = netdev_priv(ndev);
->   	struct brcmf_pub *drvr = ifp->drvr;
-> -	struct ethhdr *eh = (struct ethhdr *)(skb->data);
-> +	struct ethhdr *eh;
->   
->   	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
->   
-> @@ -212,23 +212,14 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
->   	}
->   
->   	/* Make sure there's enough room for any header */
-> -	if (skb_headroom(skb) < drvr->hdrlen) {
-> -		struct sk_buff *skb2;
-> -
-> -		brcmf_dbg(INFO, "%s: insufficient headroom\n",
-> -			  brcmf_ifname(ifp));
-> -		drvr->bus_if->tx_realloc++;
-> -		skb2 = skb_realloc_headroom(skb, drvr->hdrlen);
-> -		dev_kfree_skb(skb);
-> -		skb = skb2;
-> -		if (skb == NULL) {
-> -			brcmf_err("%s: skb_realloc_headroom failed\n",
-> -				  brcmf_ifname(ifp));
-> -			ret = -ENOMEM;
-> -			goto done;
-> -		}
+> It it was my understanding that he planned to apply your submission in the form you sent.
 
-What you are throwing away here is code that assures there is sufficient 
-headroom for protocol and bus layer in the tx path, because that is 
-determined by drvr->hdrlen. This is where the skb is handed to the 
-driver so if you could leave the functionality above *and* assure it is 
-writeable that would be the best solution as there is no need for all 
-the other changes down the tx path.
+That is my understanding too.
 
-> +	ret = skb_cow_head(skb, drvr->hdrlen);
-> +	if (ret) {
+> I have several patches nearly ready to fix most of the Smatch warnings and errors. I will send them as soon as the original submission is applied.
 
-So move the realloc code above here instead of simply freeing the skb.
+Good thank you. So what is the plan with the github version ?
 
-> +		dev_kfree_skb_any(skb);
-> +		goto done;
->   	}
->   
-> +	eh = (struct ethhdr *)(skb->data);
+Note that my submission contains a few small fixes on top of
+the github version, for which I intended to submit a pull-req
+but I've not gotten around to that yet, I've done so now:
 
-Now this is actually a separate fix so I would like a separate patch for it.
+https://github.com/hadess/rtl8723bs/pull/125
 
-I have a RPi3 sitting on my desk so how can I replicate the issue. It 
-was something about broadcast/multicast traffic when using AP mode and a 
-bridge, right?
+But do we want to keep maintaining the github version (for a while
+at least) I wonder, as that does mean double work?
 
 Regards,
-Arend
+
+Hans
