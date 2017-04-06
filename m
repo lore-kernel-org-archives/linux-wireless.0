@@ -1,202 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55432 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:38894 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753820AbdDMNwD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 09:52:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 3/3] mac80211: support bpf monitor filter
-Date: Thu, 13 Apr 2017 15:51:55 +0200
-Message-Id: <20170413135155.27265-3-johannes@sipsolutions.net> (sfid-20170413_155230_224654_63AD579D)
-In-Reply-To: <20170413135155.27265-1-johannes@sipsolutions.net>
-References: <20170413135155.27265-1-johannes@sipsolutions.net>
+        id S1753441AbdDFMOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Apr 2017 08:14:04 -0400
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: brcmfmac: don't warn user if requested nvram fails
+Message-ID: <09063fc2-af77-ced6-ed90-ab20e2884969@redhat.com> (sfid-20170406_141435_567977_07BE3220)
+Date: Thu, 6 Apr 2017 14:14:02 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Add the necessary hooks for running monitor filter programs
-in mac80211's RX path, before a frame is handed off to a
-monitor interface. If the frame isn't accepted then this
-will save the overhead of creating a new SKB and building
-the radiotap header.
+I noticed your patch-series on the lwn.net kernel page,
+and I took a peek :)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/Kconfig       |  1 +
- net/mac80211/cfg.c         | 15 +++++++++++++++
- net/mac80211/ieee80211_i.h |  6 ++++++
- net/mac80211/iface.c       | 11 ++++++++++-
- net/mac80211/main.c        |  3 +++
- net/mac80211/rx.c          | 33 +++++++++++++++++++++++++++++++--
- 6 files changed, 66 insertions(+), 3 deletions(-)
+I don't think that this patch:
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 76e30f4797fb..080e0c705c72 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -8,6 +8,7 @@ config MAC80211
- 	select CRYPTO_GCM
- 	select CRYPTO_CMAC
- 	select CRC32
-+	select WANT_BPF_WIFIMON
- 	---help---
- 	  This option enables the hardware independent IEEE 802.11
- 	  networking stack.
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7af648e95bc6..5d427ed8b6c8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -107,6 +107,21 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+#ifdef CONFIG_BPF_WIFIMON
-+	if (params->filter) {
-+		struct bpf_prog *old = rtnl_dereference(sdata->u.mntr.filter);
-+
-+		if (IS_ERR(params->filter))
-+			RCU_INIT_POINTER(sdata->u.mntr.filter, NULL);
-+		else
-+			rcu_assign_pointer(sdata->u.mntr.filter,
-+					   params->filter);
-+
-+		if (old)
-+			bpf_prog_put(old);
-+	}
-+#endif
-+
- 	return 0;
- }
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cf6d5abb65a3..fb0592e0f7b3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -27,6 +27,8 @@
- #include <linux/leds.h>
- #include <linux/idr.h>
- #include <linux/rhashtable.h>
-+#include <linux/filter.h>
-+#include <linux/bpf.h>
- #include <net/ieee80211_radiotap.h>
- #include <net/cfg80211.h>
- #include <net/mac80211.h>
-@@ -841,6 +843,10 @@ struct ieee80211_if_mntr {
- 	u8 mu_follow_addr[ETH_ALEN] __aligned(2);
- 
- 	struct list_head list;
-+
-+#ifdef CONFIG_BPF_WIFIMON
-+	struct bpf_prog *filter;
-+#endif
- };
- 
- /**
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 3bd5b81f5d81..5c25afa6cf77 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1122,8 +1122,17 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- 		__skb_queue_purge(&sdata->fragments[i].skb_list);
- 	sdata->fragment_next = 0;
- 
--	if (ieee80211_vif_is_mesh(&sdata->vif))
-+	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		ieee80211_mesh_teardown_sdata(sdata);
-+	} else if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-+#ifdef CONFIG_BPF_WIFIMON
-+		struct bpf_prog *old = rtnl_dereference(sdata->u.mntr.filter);
-+
-+		RCU_INIT_POINTER(sdata->u.mntr.filter, NULL);
-+		if (old)
-+			bpf_prog_put(old);
-+#endif
-+	}
- }
- 
- static void ieee80211_uninit(struct net_device *dev)
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index ae408a96c407..b7857e710fd5 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -551,6 +551,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_FILS_STA);
- 
-+	if (IS_ENABLED(CONFIG_BPF_WIFIMON))
-+		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_WIFIMON_BPF);
-+
- 	if (!ops->hw_scan)
- 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
- 				   NL80211_FEATURE_AP_SCAN;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 50d8f8435830..ea7d56774dd3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -651,17 +651,39 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 
- 	ieee80211_handle_mu_mimo_mon(monitor_sdata, origskb, rtap_vendor_space);
- 
-+	/* pretend all the monitor info isn't there */
-+	__pskb_pull(origskb, rtap_vendor_space);
-+	origskb->len -= present_fcs_len;
-+
- 	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
-+		const struct bpf_prog *filter __maybe_unused;
- 		bool last_monitor = list_is_last(&sdata->u.mntr.list,
- 						 &local->mon_list);
- 
--		if (!monskb)
-+#ifdef CONFIG_BPF_WIFIMON
-+		filter = rcu_dereference(sdata->u.mntr.filter);
-+		if (filter && !BPF_PROG_RUN(filter, origskb))
-+			continue;
-+#endif
-+
-+		if (!monskb) {
-+			/* stop pretending the monitor info isn't there */
-+			origskb->len += present_fcs_len;
-+			__skb_push(origskb, rtap_vendor_space);
-+
- 			monskb = ieee80211_make_monitor_skb(local, &origskb,
- 							    rate,
- 							    rtap_vendor_space,
- 							    only_monitor &&
- 							    last_monitor);
- 
-+			if (origskb) {
-+				/* pretend all the monitor info isn't there */
-+				__pskb_pull(origskb, rtap_vendor_space);
-+				origskb->len -= present_fcs_len;
-+			}
-+		}
-+
- 		if (monskb) {
- 			struct sk_buff *skb;
- 
-@@ -683,13 +705,20 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 			break;
- 	}
- 
--	/* this happens if last_monitor was erroneously false */
-+	/*
-+	 * this may happen if filtering, or if the list RCU handling
-+	 * got last_monitor erroneously false
-+	 */
- 	dev_kfree_skb(monskb);
- 
- 	/* ditto */
- 	if (!origskb)
- 		return NULL;
- 
-+	/* stop pretending the monitor info isn't there */
-+	origskb->len += present_fcs_len;
-+	__skb_push(origskb, rtap_vendor_space);
-+
- 	remove_monitor_info(origskb, present_fcs_len, rtap_vendor_space);
- 	return origskb;
- }
--- 
-2.11.0
+https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/commit/?h=20170329-driver-data-v2-try3&id=3968dd3031d1ff7e7be4acfb810948c70c2d4490
+
+Is a good idea, specifically the "do not warn" part,
+although the brcmfmac driver will indeed try to continue
+without a nvram file, in my experience it almost all
+the time will not work properly without the nvram file.
+
+Arend, should we maybe just make the missing nvram file
+a fatal error ?
+
+###
+
+While on the subject of nvram file loading, I want to make
+some changes to how brcmfmac does this, for pcie
+devices I want it to first try:
+
+brcmfmac-4xxx-sdio-<pci-subsys-vid>-<pci-subsys-pid>.txt
+and only if that is not present fallback to
+brcmfmac-4xxx-sdio.txt, so that we can include the
+brcmfmac-4xxx-sdio-<pci-subsys-vid>-<pci-subsys-pid>.txt
+in the linux-firmware repo and have things just work.
+
+Likewise for sdio devices on devicetree platforms
+first try brcmfmac-4xxx-sdio-<model>.txt.
+
+And for sdio devices on ACPI/x86 systems I want to
+do something similar too.
+
+Luis, do you think it would be a good idea to add
+.optional_postfix member to driver_data_req_params
+for this? I believe other sdio based wifi devices
+may want to do the same, or should this be handled
+in the driver by doing 2 driver_data_request_async
+calls (the 2nd when the 1st fails) ?
+
+Regards,
+
+Hans
