@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:38393 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753679AbdDQTa1 (ORCPT
+Received: from zeniv.linux.org.uk ([195.92.253.2]:51826 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932616AbdDFQst (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 15:30:27 -0400
-Date: Mon, 17 Apr 2017 21:30:12 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 1/2] rt2800: fix LNA gain assignment for MT7620
-Message-ID: <20170417193007.GA3436@makrotopia.org> (sfid-20170417_213032_085358_A6763B22)
+        Thu, 6 Apr 2017 12:48:49 -0400
+Date: Thu, 6 Apr 2017 17:48:47 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] nfc: fix get_unaligned_...() misuses
+Message-ID: <20170406164847.GU29622@ZenIV.linux.org.uk> (sfid-20170406_184944_118750_AE3DDD47)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The base value used for MT7620 differs from Rt5392 which resulted in
-quite bad RX signal quality. Fix this by using the correct base value as
-well as the LNA calibration values for HT20.
+* use unaligned.h, not unaligned/access_ok.h
+* if a local variable of type uint16_t is unaligned, your compiler is FUBAR
+* the whole point of get_unaligned_... is to avoid memcpy + ..._to_cpu().
+  Using it *after* memcpy() (into aligned object, no less) is pointless.
+  
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 
-Reported-by: Tom Psyborg <pozega.tomislav@gmail.com>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index ba06ac2d876d..7135519a638c 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -3806,11 +3806,25 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/nfc/nfcmrvl/fw_dnld.c b/drivers/nfc/nfcmrvl/fw_dnld.c
+index f8dcdf4b24f6..d3b04da0f16f 100644
+--- a/drivers/nfc/nfcmrvl/fw_dnld.c
++++ b/drivers/nfc/nfcmrvl/fw_dnld.c
+@@ -17,7 +17,7 @@
+  */
+ 
+ #include <linux/module.h>
+-#include <linux/unaligned/access_ok.h>
++#include <linux/unaligned.h>
+ #include <linux/firmware.h>
+ #include <linux/nfc.h>
+ #include <net/nfc/nci.h>
+@@ -281,12 +281,11 @@ static int process_state_fw_dnld(struct nfcmrvl_private *priv,
+ 			return -EINVAL;
+ 		}
+ 		skb_pull(skb, 1);
+-		memcpy(&len, skb->data, 2);
++		len = get_unaligned_le16(skb->data);
+ 		skb_pull(skb, 2);
++		comp_len = get_unaligned_le16(skb->data);
+ 		memcpy(&comp_len, skb->data, 2);
+ 		skb_pull(skb, 2);
+-		len = get_unaligned_le16(&len);
+-		comp_len = get_unaligned_le16(&comp_len);
+ 		if (((~len) & 0xFFFF) != comp_len) {
+ 			nfc_err(priv->dev, "bad len complement: %x %x %x",
+ 				len, comp_len, (~len & 0xFFFF));
+diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
+index 5291797324ba..f27b03e3b5ae 100644
+--- a/drivers/nfc/nxp-nci/firmware.c
++++ b/drivers/nfc/nxp-nci/firmware.c
+@@ -24,7 +24,7 @@
+ #include <linux/completion.h>
+ #include <linux/firmware.h>
+ #include <linux/nfc.h>
+-#include <linux/unaligned/access_ok.h>
++#include <linux/unaligned.h>
+ 
+ #include "nxp-nci.h"
+ 
+diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
+index 36099e557730..9da35d2898fc 100644
+--- a/drivers/nfc/nxp-nci/i2c.c
++++ b/drivers/nfc/nxp-nci/i2c.c
+@@ -36,7 +36,6 @@
+ #include <linux/of_gpio.h>
+ #include <linux/of_irq.h>
+ #include <linux/platform_data/nxp-nci.h>
+-#include <linux/unaligned/access_ok.h>
+ 
+ #include <net/nfc/nfc.h>
+ 
+@@ -127,7 +126,7 @@ static int nxp_nci_i2c_fw_read(struct nxp_nci_i2c_phy *phy,
+ 		goto fw_read_exit;
  	}
  
- 	if (rt2x00_rt(rt2x00dev, RT5592) || rt2x00_rt(rt2x00dev, RT6352)) {
-+		reg = 0x10;
-+		if (!conf_is_ht40(conf)) {
-+			if (rt2x00_rt(rt2x00dev, RT6352) &&
-+			    rt2x00_has_cap_external_lna_bg(rt2x00dev)) {
-+				reg |= 0x5;
-+			} else {
-+				reg |= 0xa;
-+			}
-+		}
- 		rt2800_bbp_write(rt2x00dev, 195, 141);
--		rt2800_bbp_write(rt2x00dev, 196, conf_is_ht40(conf) ? 0x10 : 0x1a);
-+		rt2800_bbp_write(rt2x00dev, 196, reg);
+-	frame_len = (get_unaligned_be16(&header) & NXP_NCI_FW_FRAME_LEN_MASK) +
++	frame_len = (be16_to_cpu(header) & NXP_NCI_FW_FRAME_LEN_MASK) +
+ 		    NXP_NCI_FW_CRC_LEN;
  
- 		/* AGC init */
--		reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2 * rt2x00dev->lna_gain;
-+		if (rt2x00_rt(rt2x00dev, RT6352))
-+			reg = 0x04;
-+		else
-+			reg = rf->channel <= 14 ? 0x1c : 0x24;
-+
-+		reg += 2 * rt2x00dev->lna_gain;
- 		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
- 
- 		rt2800_iq_calibrate(rt2x00dev, rf->channel);
--- 
-2.12.2
+ 	*skb = alloc_skb(NXP_NCI_FW_HDR_LEN + frame_len, GFP_KERNEL);
