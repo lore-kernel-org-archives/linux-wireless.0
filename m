@@ -1,44 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19875 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1038026AbdDUKkG (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39447 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756747AbdDFIFl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 06:40:06 -0400
-Date: Fri, 21 Apr 2017 13:39:38 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] iwlwifi: pcie: missing unlock on error path
-Message-ID: <20170421103937.jko3eguvfn3i6r3v@mwanda> (sfid-20170421_124014_474328_C114F21E)
+        Thu, 6 Apr 2017 04:05:41 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Dmitry Torokhov <dtor@google.com>,
+        Xinming Hu <huxinming820@gmail.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>
+Subject: RE: Re: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only firmware
+ name
+Date: Thu, 6 Apr 2017 08:05:32 +0000
+Message-ID: <62b2509a7aef40f0aec3b1f0d8c45cd6@SC-EXCH02.marvell.com> (sfid-20170406_100553_971303_EF6B1DD1)
+References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
+ <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
+ <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com>
+In-Reply-To: <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should unlock before returning.
-
-Fixes: eda50cde58de ("iwlwifi: pcie: add context information support")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 302310dfef9e..4e84955d55c8 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -212,8 +212,10 @@ int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
- 		goto out;
- 	}
- 
--	if (iwl_pcie_ctxt_info_init(trans, fw))
--		return -ENOMEM;
-+	if (iwl_pcie_ctxt_info_init(trans, fw)) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
- 
- 	/* re-check RF-Kill state since we may have missed the interrupt */
- 	hw_rfkill = iwl_trans_check_hw_rf_kill(trans);
+SGkgRG1pdHJ5LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IERtaXRy
+eSBUb3Jva2hvdiBbbWFpbHRvOmR0b3JAZ29vZ2xlLmNvbV0NCj4gU2VudDogMjAxN+W5tDTmnIgx
+5pelIDY6NTANCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxsZSBW
+YWxvOyBCcmlhbiBOb3JyaXM7IFJhamF0IEphaW47IEFtaXRrdW1hciBLYXJ3YXI7DQo+IENhdGh5
+IEx1bzsgWGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIDMvM10gbXdpZmll
+eDogcGNpZTogYXZvaWQgaGFyZGNvZGUgd2lmaS1vbmx5DQo+IGZpcm13YXJlIG5hbWUNCj4gDQo+
+IEV4dGVybmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IE9uIFRodSwgTWFyIDMwLCAy
+MDE3IGF0IDI6MTkgQU0sIFhpbm1pbmcgSHUgPGh1eGlubWluZzgyMEBnbWFpbC5jb20+DQo+IHdy
+b3RlOg0KPiA+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4NCj4gPiBX
+aWZpLW9ubHkgZmlybXdhcmUgbmFtZSBzaG91bGQgYmUgY2hpcHNldCBzcGVjaWZpYy4NCj4gPg0K
+PiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4gU2ln
+bmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPiAt
+LS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYyB8IDgg
+KysrKysrKy0NCj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5o
+IHwgNiArKysrKysNCj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAxIGRl
+bGV0aW9uKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
+dmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
+d2lmaWV4L3BjaWUuYw0KPiA+IGluZGV4IDU5Y2IwMWEuLjI4MmFhOWEgMTAwNjQ0DQo+ID4gLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+ICsrKyBi
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9wY2llLmMNCj4gPiBAQCAtMzUx
+LDYgKzM1MSwxMiBAQCBzdGF0aWMgdm9pZCBtd2lmaWV4X3BjaWVfcmVzZXRfbm90aWZ5KHN0cnVj
+dCBwY2lfZGV2DQo+ICpwZGV2LCBib29sIHByZXBhcmUpDQo+ID4gICAgICAgICBzdHJ1Y3QgcGNp
+ZV9zZXJ2aWNlX2NhcmQgKmNhcmQgPSBwY2lfZ2V0X2RydmRhdGEocGRldik7DQo+ID4gICAgICAg
+ICBzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyID0gY2FyZC0+YWRhcHRlcjsNCj4gPg0K
+PiA+ICsgICAgICAgaWYgKCFjYXJkLT5wY2llLmZscl9zdXBwb3J0KSB7DQo+ID4gKyAgICAgICAg
+ICAgICAgIHByX2VycigiJXM6IEZMUiBkaXNhYmxlZCBpbiBjdXJyZW50IGNoaXBzZXRcbiIsIF9f
+ZnVuY19fKTsNCj4gPiArICAgICAgICAgICAgICAgcmV0dXJuOw0KPiA+ICsgICAgICAgfQ0KPiA+
+ICsNCj4gPiArICAgICAgIGFkYXB0ZXIgPSBjYXJkLT5hZGFwdGVyOw0KPiA+ICAgICAgICAgaWYg
+KCFhZGFwdGVyKSB7DQo+ID4gICAgICAgICAgICAgICAgIGRldl9lcnIoJnBkZXYtPmRldiwgIiVz
+OiBhZGFwdGVyIHN0cnVjdHVyZSBpcyBub3QNCj4gdmFsaWRcbiIsDQo+ID4gICAgICAgICAgICAg
+ICAgICAgICAgICAgX19mdW5jX18pOw0KPiA+IEBAIC0zMDQ3LDcgKzMwNTMsNyBAQCBzdGF0aWMg
+dm9pZCBtd2lmaWV4X3BjaWVfdXBfZGV2KHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0
+ZXIpDQo+ID4gICAgICAgICAgKiBkdXJpbmcgcGNpZSBGTFIsIHNvIHRoYXQgYmx1ZXRvb3RoIHBh
+cnQgb2YgZmlybXdhcmUgd2hpY2ggaXMNCj4gPiAgICAgICAgICAqIGFscmVhZHkgcnVubmluZyBk
+b2Vzbid0IGdldCBhZmZlY3RlZC4NCj4gPiAgICAgICAgICAqLw0KPiA+IC0gICAgICAgc3RyY3B5
+KGFkYXB0ZXItPmZ3X25hbWUsIFBDSUU4OTk3X0RFRkFVTFRfV0lGSUZXX05BTUUpOw0KPiA+ICsg
+ICAgICAgc3RyY3B5KGFkYXB0ZXItPmZ3X25hbWUsIGNhcmQtPnBjaWUud2lmaV9md19uYW1lKTsN
+Cj4gPg0KPiA+ICAgICAgICAgLyogdHhfYnVmX3NpemUgbWlnaHQgYmUgY2hhbmdlZCB0byAzNTg0
+IGJ5IGZpcm13YXJlIGR1cmluZw0KPiA+ICAgICAgICAgICogZGF0YSB0cmFuc2Zlciwgd2Ugc2hv
+dWxkIHJlc2V0IGl0IHRvIGRlZmF1bHQgc2l6ZS4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuaA0KPiA+IGIvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuaA0KPiA+IGluZGV4IDAwZThlZTUuLmQ2Yzg1MjYg
+MTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3Bj
+aWUuaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9wY2ll
+LmgNCj4gPiBAQCAtMjg1LDYgKzI4NSw4IEBAIHN0cnVjdCBtd2lmaWV4X3BjaWVfZGV2aWNlIHsN
+Cj4gPiAgICAgICAgIHN0cnVjdCBtZW1vcnlfdHlwZV9tYXBwaW5nICptZW1fdHlwZV9tYXBwaW5n
+X3RibDsNCj4gPiAgICAgICAgIHU4IG51bV9tZW1fdHlwZXM7DQo+ID4gICAgICAgICBib29sIGNh
+bl9leHRfc2NhbjsNCj4gPiArICAgICAgIHU4IGZscl9zdXBwb3J0Ow0KPiANCj4gVGhpcyBzb3Vu
+ZHMgbGlrZSBhIGJvb2xlYW4sIGJ1dCBnaXZlbiB0aGF0IHlvdSBjYW4ga2V5IG9mZiB3aWZpX2Z3
+X25hbWUgYmVpbmcNCj4gTlVMTCBJIGFtIG5vdCBzdXJlIGl0IGlzIG5lZWRlZC4NCj4gDQo+ID4g
+KyAgICAgICBjaGFyICp3aWZpX2Z3X25hbWU7DQo+IA0KPiBjb25zdCBjaGFyICouDQo+IA0KPiBU
+aGF0IHNhaWQsIEkgY29uc2lkZXIgdGhlIHdob2xlIHdpZmktb25seSBmaXJtd2FyZSBidXNpbmVz
+cyBpcyBxdWl0ZSBmcmFnaWxlLiBDYW4NCj4gd2UgaGF2ZSB1bmlmaWVkIGZpcm13YXJlIGFuZCBo
+YXZlIGRyaXZlciBmaWd1cmUgb3V0IHdoYXQgcGFydCBzaG91ZGwgYmUNCj4gW3JlXWxvYWRlZD8N
+Cj4gDQoNClRoYW5rcyBmb3IgdGhlIHJldmlldywgd2UgaGF2ZSB0cmllZCB0byBleHRyYWN0IHdp
+Zmktb25seSBwYXJ0IGZyb20gY29tYm8gZmlybXdhcmUuDQpUaGUgbmV3IHNvbHV0aW9uIHdpbGwg
+YmUgc2VuZCBpbiBWMiwgaW4gdGhpcyB3YXksIHdlIGRvIG5vdCBuZWVkIHNlcGFyYXRlIHdpZmlf
+ZndfbmFtZSBhbnkgbW9yZS4NCg0KVGhhbmtzDQpTaW1vbg0KDQo+ID4gIH07DQo+ID4NCj4gPiAg
+c3RhdGljIGNvbnN0IHN0cnVjdCBtd2lmaWV4X3BjaWVfZGV2aWNlIG13aWZpZXhfcGNpZTg3NjYg
+PSB7IEBADQo+ID4gLTI5Myw2ICsyOTUsNyBAQCBzdHJ1Y3QgbXdpZmlleF9wY2llX2RldmljZSB7
+DQo+ID4gICAgICAgICAudHhfYnVmX3NpemUgPSBNV0lGSUVYX1RYX0RBVEFfQlVGX1NJWkVfMkss
+DQo+ID4gICAgICAgICAuY2FuX2R1bXBfZncgPSBmYWxzZSwNCj4gPiAgICAgICAgIC5jYW5fZXh0
+X3NjYW4gPSB0cnVlLA0KPiA+ICsgICAgICAgLmZscl9zdXBwb3J0ID0gMCwNCj4gPiAgfTsNCj4g
+Pg0KPiA+ICBzdGF0aWMgY29uc3Qgc3RydWN0IG13aWZpZXhfcGNpZV9kZXZpY2UgbXdpZmlleF9w
+Y2llODg5NyA9IHsgQEANCj4gPiAtMzAzLDYgKzMwNiw3IEBAIHN0cnVjdCBtd2lmaWV4X3BjaWVf
+ZGV2aWNlIHsNCj4gPiAgICAgICAgIC5tZW1fdHlwZV9tYXBwaW5nX3RibCA9IG1lbV90eXBlX21h
+cHBpbmdfdGJsX3c4ODk3LA0KPiA+ICAgICAgICAgLm51bV9tZW1fdHlwZXMgPSBBUlJBWV9TSVpF
+KG1lbV90eXBlX21hcHBpbmdfdGJsX3c4ODk3KSwNCj4gPiAgICAgICAgIC5jYW5fZXh0X3NjYW4g
+PSB0cnVlLA0KPiA+ICsgICAgICAgLmZscl9zdXBwb3J0ID0gMCwNCj4gPiAgfTsNCj4gPg0KPiA+
+ICBzdGF0aWMgY29uc3Qgc3RydWN0IG13aWZpZXhfcGNpZV9kZXZpY2UgbXdpZmlleF9wY2llODk5
+NyA9IHsgQEANCj4gPiAtMzEzLDYgKzMxNyw4IEBAIHN0cnVjdCBtd2lmaWV4X3BjaWVfZGV2aWNl
+IHsNCj4gPiAgICAgICAgIC5tZW1fdHlwZV9tYXBwaW5nX3RibCA9IG1lbV90eXBlX21hcHBpbmdf
+dGJsX3c4OTk3LA0KPiA+ICAgICAgICAgLm51bV9tZW1fdHlwZXMgPSBBUlJBWV9TSVpFKG1lbV90
+eXBlX21hcHBpbmdfdGJsX3c4OTk3KSwNCj4gPiAgICAgICAgIC5jYW5fZXh0X3NjYW4gPSB0cnVl
+LA0KPiA+ICsgICAgICAgLmZscl9zdXBwb3J0ID0gMSwNCj4gPiArICAgICAgIC53aWZpX2Z3X25h
+bWUgPSAibXJ2bC9wY2llODk5N193bGFuX3Y0LmJpbiIsDQo+ID4gIH07DQo+ID4NCj4gPiAgc3Ry
+dWN0IG13aWZpZXhfZXZ0X2J1Zl9kZXNjIHsNCj4gPiAtLQ0KPiA+IDEuOC4xLjQNCj4gPg0KPiAN
+Cj4gVGhhbmtzLg0KPiANCj4gLS0NCj4gRG1pdHJ5DQo=
