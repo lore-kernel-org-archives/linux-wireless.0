@@ -1,120 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:50081 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751209AbdDJBoi (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:34209 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753042AbdDFXH2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Apr 2017 21:44:38 -0400
-Date: Mon, 10 Apr 2017 03:44:26 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] rt2x00: invert external PA capability flag logic
-Message-ID: <20170410014421.GA21876@makrotopia.org> (sfid-20170410_034449_707794_749C89C9)
+        Thu, 6 Apr 2017 19:07:28 -0400
+Received: by mail-pg0-f43.google.com with SMTP id 21so48672731pgg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 16:07:28 -0700 (PDT)
+Date: Thu, 6 Apr 2017 16:07:26 -0700
+From: Matthias Kaehlcke <mka@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
+        Michael Davidson <md@google.com>,
+        Greg Hackmann <ghackmann@google.com>
+Subject: Re: [PATCH] mac80211: Fix clang warning about constant operand in
+ logical operation
+Message-ID: <20170406230726.GB78690@google.com> (sfid-20170407_010830_100802_3B681266)
+References: <20170406185633.91065-1-mka@chromium.org>
+ <1491505878.11399.4.camel@sipsolutions.net>
+ <20170406192452.GE145051@google.com>
+ <1491513145.11399.8.camel@sipsolutions.net>
+ <20170406224238.GA78690@google.com>
+ <1491519117.11399.10.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1491519117.11399.10.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Consequently refer to external PA instead of inverting the logic and
-use an internal PA capability flag which is a bit confusing.
-Currently this is used for Rt3352 only, but MT7620A also allows for an
-external PA which will be supported by a follow up patch.
+El Fri, Apr 07, 2017 at 12:51:57AM +0200 Johannes Berg ha dit:
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 24 ++++++++++++------------
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  4 ++--
- 2 files changed, 14 insertions(+), 14 deletions(-)
+> On Thu, 2017-04-06 at 15:42 -0700, Matthias Kaehlcke wrote:
+> > 
+> > Thanks, it would also require to move the initialization of
+> > ieee80211_default_rc_algo into an ifdef. If you can live with such a
+> > solution I'm happy to change it.
+> 
+> I think that'd be something I can live with, yeah.
+> 
+> > > 	git grep 'IS_ENABLED(' | grep '&&'
+> > 
+> > Indeed the warning is not triggered by these constructs. It seems
+> > clang only emits the warning when the constant operand is not
+> > boolean.
+> 
+> That points to just adding "> 0" to the condition here as another
+> alternative solution, I guess? With a comment to make sure it's not
+> removed again, that'd seem like the best thing to do.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 201b12ed90c6..3e49df1607ff 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -7014,9 +7014,9 @@ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- {
--	int tx0_int_pa = test_bit(CAPABILITY_INTERNAL_PA_TX0,
-+	int tx0_ext_pa = test_bit(CAPABILITY_EXTERNAL_PA_TX0,
- 				  &rt2x00dev->cap_flags);
--	int tx1_int_pa = test_bit(CAPABILITY_INTERNAL_PA_TX1,
-+	int tx1_ext_pa = test_bit(CAPABILITY_EXTERNAL_PA_TX1,
- 				  &rt2x00dev->cap_flags);
- 	u8 rfcsr;
- 
-@@ -7056,9 +7056,9 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
- 	rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
- 	rfcsr = 0x01;
--	if (!tx0_int_pa)
-+	if (tx0_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR34_TX0_EXT_PA, 1);
--	if (!tx1_int_pa)
-+	if (tx1_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR34_TX1_EXT_PA, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 34, rfcsr);
- 	rt2800_rfcsr_write(rt2x00dev, 35, 0x03);
-@@ -7068,13 +7068,13 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 39, 0xc5);
- 	rt2800_rfcsr_write(rt2x00dev, 40, 0x33);
- 	rfcsr = 0x52;
--	if (tx0_int_pa) {
-+	if (!tx0_ext_pa) {
- 		rt2x00_set_field8(&rfcsr, RFCSR41_BIT1, 1);
- 		rt2x00_set_field8(&rfcsr, RFCSR41_BIT4, 1);
- 	}
- 	rt2800_rfcsr_write(rt2x00dev, 41, rfcsr);
- 	rfcsr = 0x52;
--	if (tx1_int_pa) {
-+	if (!tx1_ext_pa) {
- 		rt2x00_set_field8(&rfcsr, RFCSR42_BIT1, 1);
- 		rt2x00_set_field8(&rfcsr, RFCSR42_BIT4, 1);
- 	}
-@@ -7087,9 +7087,9 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 48, 0x14);
- 	rt2800_rfcsr_write(rt2x00dev, 49, 0x00);
- 	rfcsr = 0x2d;
--	if (!tx0_int_pa)
-+	if (tx0_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR50_TX0_EXT_PA, 1);
--	if (!tx1_int_pa)
-+	if (tx1_ext_pa)
- 		rt2x00_set_field8(&rfcsr, RFCSR50_TX1_EXT_PA, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 50, rfcsr);
- 	rt2800_rfcsr_write(rt2x00dev, 51, (tx0_int_pa ? 0x7f : 0x52));
-@@ -8782,13 +8782,13 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
- 
- 	if (rt2x00_rt(rt2x00dev, RT3352)) {
--		if (!rt2x00_get_field16(eeprom,
-+		if (rt2x00_get_field16(eeprom,
- 		    EEPROM_NIC_CONF1_EXTERNAL_TX0_PA_3352))
--		    __set_bit(CAPABILITY_INTERNAL_PA_TX0,
-+		    __set_bit(CAPABILITY_EXTERNAL_PA_TX0,
- 			      &rt2x00dev->cap_flags);
--		if (!rt2x00_get_field16(eeprom,
-+		if (rt2x00_get_field16(eeprom,
- 		    EEPROM_NIC_CONF1_EXTERNAL_TX1_PA_3352))
--		    __set_bit(CAPABILITY_INTERNAL_PA_TX1,
-+		    __set_bit(CAPABILITY_EXTERNAL_PA_TX1,
- 			      &rt2x00dev->cap_flags);
- 	}
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 8fdd2f9726ee..1bc353eafe37 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -719,8 +719,8 @@ enum rt2x00_capability_flags {
- 	CAPABILITY_DOUBLE_ANTENNA,
- 	CAPABILITY_BT_COEXIST,
- 	CAPABILITY_VCO_RECALIBRATION,
--	CAPABILITY_INTERNAL_PA_TX0,
--	CAPABILITY_INTERNAL_PA_TX1,
-+	CAPABILITY_EXTERNAL_PA_TX0,
-+	CAPABILITY_EXTERNAL_PA_TX1,
- };
- 
- /*
--- 
-2.12.1
+Good point, that's more digestible. I'll send an updated change soon.
+
+Matthias
