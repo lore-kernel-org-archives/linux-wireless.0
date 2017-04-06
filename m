@@ -1,187 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42476 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752028AbdDOJdo (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35579 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754719AbdDFUUI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Apr 2017 05:33:44 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: RE: [PATCH v5 4/4] mwifiex: pcie: extract wifi part from combo
- firmware during function level reset
-Date: Sat, 15 Apr 2017 09:33:38 +0000
-Message-ID: <72ccb05de2154daea2bc6ea9db8fd42c@SC-EXCH02.marvell.com> (sfid-20170415_113348_728272_3E99254E)
-References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
- <1492066102-31251-4-git-send-email-huxinming820@gmail.com>
- <20170413184629.GB66124@google.com> <20170413201032.GA91869@google.com>
-In-Reply-To: <20170413201032.GA91869@google.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+        Thu, 6 Apr 2017 16:20:08 -0400
+Received: by mail-oi0-f68.google.com with SMTP id d2so8884668oig.2
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 13:20:08 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 05/11] rtlwifi: btcoex: 23b 2ant: wifi is not actually off in mp mode
+Date: Thu,  6 Apr 2017 15:19:52 -0500
+Message-Id: <20170406201958.25642-6-Larry.Finger@lwfinger.net> (sfid-20170406_222543_830056_8991B03A)
+In-Reply-To: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
+References: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4gTm9ycmlz
-IFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo01MIxNMjV
-IDQ6MTENCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxsZSBWYWxv
-OyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsgQ2F0aHkgTHVvOw0KPiBYaW5t
-aW5nIEh1OyBHYW5hcGF0aGkgQmhhdA0KPiBTdWJqZWN0OiBbRVhUXSBbUEFUQ0ggdjUgNC80XSBt
-d2lmaWV4OiBwY2llOiBleHRyYWN0IHdpZmkgcGFydCBmcm9tIGNvbWJvDQo+IGZpcm13YXJlIGR1
-cmluZyBmdW5jdGlvbiBsZXZlbCByZXNldA0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0NCj4gRnJvbTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gDQo+
-IEEgc2VwYXJhdGUgd2lmaS1vbmx5IGZpcm13YXJlIHdhcyBkb3dubG9hZCBkdXJpbmcgcGNpZSBm
-dW5jdGlvbiBsZXZlbCByZXNldC4gSXQNCj4gaXMgaW4gZmFjdCB0aGUgdGFpbCBwYXJ0IG9mIHdp
-ZmkvYnQgY29tYm8gZmlybXdhcmUuIFBlciBCcmlhbidzIGFuZCBEbWl0cnkncw0KPiBzdWdnZXN0
-aW9uLCB0aGlzIHBhdGNoIGV4dHJhY3QgdGhlIHdpZmkgcGFydCBmcm9tIGNvbWJvIGZpcm13YXJl
-Lg0KPiANCj4gQWZ0ZXIgdGhhdCwgdGhlIG1ydmwvcGNpZTg5OTdfd2xhbl92NC5iaW4gaW1hZ2Ug
-aW4gbGludXgtZmlybXdhcmUgcmVwbyBpcw0KPiByZWR1bmRhbnQgKHRob3VnaCBJIGd1ZXNzIHdl
-IGtlZXAgaXQgYXJvdW5kIHRvIHN1cHBvcnQgb2xkZXIga2VybmVscykuDQo+IA0KPiBTaWduZWQt
-b2ZmLWJ5OiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBH
-YW5hcGF0aGkgQmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IENhdGh5
-IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogQnJpYW4gTm9ycmlzIDxi
-cmlhbm5vcnJpc0BjaHJvbWl1bS5vcmc+DQo+IC0tLQ0KPiBPbiBUaHUsIEFwciAxMywgMjAxNyBh
-dCAxMTo0NjozMEFNIC0wNzAwLCBCcmlhbiBOb3JyaXMgd3JvdGU6DQo+ID4gSSBtaWdodCBqdXN0
-IHJld3JpdGUgdGhpcyBhbmQgc2VuZCBpdCBteXNlbGYsIGlmIEkgZ2V0IHRoZSB0aW1lLg0KPiAN
-Cj4gRG9uZS4NCj4gDQo+IHYyOiBleHRyYWN0IHdpZmkgcGFydCBmcm9tIGNvbWJvIGZpcm13YXJl
-KERtaXRyeSBhbmQgQnJpYW4pDQo+ICAgICBhZGQgbW9yZSBkZXNjcmlwdGlvbihLYWxsZSkNCj4g
-djM6IHNhbWUgYXMgdjINCj4gdjQ6IGFkZCBzZXF1ZW5jZSBjb21tZW50cywgY29kZSBlbmhhbmNl
-KEJyaWFuKQ0KPiB2NTogKEJyaWFuKSBmaXggb3ZlcmZsb3cgZXJyb3JzDQo+ICAgICAoQnJpYW4p
-IGFkZCBtaXNzaW5nIG5ld2xpbmUgY2hhcnMNCj4gICAgIChCcmlhbikgY29uc29saWRhdGUgaGVh
-ZGVyLXNraXBwaW5nIGxvZ2ljDQo+IA0KPiBOb3RlOiBJIG9ubHkgcmVzdWJtaXR0ZWQgdGhlIDR0
-aCBwYXRjaCwgYXMgdGhlIG90aGVycyBsb29rIGZpbmUNCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93
-aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvZncuaCAgIHwgIDE4ICsrKysrDQo+ICBkcml2ZXJzL25l
-dC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5jIHwgMTE0DQo+ICsrKysrKysrKysrKysr
-KysrKysrKysrKysrLS0NCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9w
-Y2llLmggfCAgIDMgKy0NCj4gIDMgZmlsZXMgY2hhbmdlZCwgMTI3IGluc2VydGlvbnMoKyksIDgg
-ZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L2Z3LmgNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZp
-ZXgvZncuaA0KPiBpbmRleCAwYjY4Mzc0MmUzMGMuLjZjZjlhYjkxMzNlYSAxMDA2NDQNCj4gLS0t
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2Z3LmgNCj4gKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2Z3LmgNCj4gQEAgLTQzLDYgKzQzLDI0
-IEBAIHN0cnVjdCB0eF9wYWNrZXRfaGRyIHsNCj4gIAlzdHJ1Y3QgcmZjXzEwNDJfaGRyIHJmYzEw
-NDJfaGRyOw0KPiAgfSBfX3BhY2tlZDsNCj4gDQo+ICtzdHJ1Y3QgbXdpZmlleF9md19oZWFkZXIg
-ew0KPiArCV9fbGUzMiBkbmxkX2NtZDsNCj4gKwlfX2xlMzIgYmFzZV9hZGRyOw0KPiArCV9fbGUz
-MiBkYXRhX2xlbmd0aDsNCj4gKwlfX2xlMzIgY3JjOw0KPiArfSBfX3BhY2tlZDsNCj4gKw0KPiAr
-c3RydWN0IG13aWZpZXhfZndfZGF0YSB7DQo+ICsJc3RydWN0IG13aWZpZXhfZndfaGVhZGVyIGhl
-YWRlcjsNCj4gKwlfX2xlMzIgc2VxX251bTsNCj4gKwl1OCBkYXRhWzFdOw0KPiArfSBfX3BhY2tl
-ZDsNCj4gKw0KPiArI2RlZmluZSBNV0lGSUVYX0ZXX0ROTERfQ01EXzEgMHgxDQo+ICsjZGVmaW5l
-IE1XSUZJRVhfRldfRE5MRF9DTURfNSAweDUNCj4gKyNkZWZpbmUgTVdJRklFWF9GV19ETkxEX0NN
-RF82IDB4Ng0KPiArI2RlZmluZSBNV0lGSUVYX0ZXX0ROTERfQ01EXzcgMHg3DQo+ICsNCj4gICNk
-ZWZpbmUgQl9TVVBQT1JURURfUkFURVMgICAgICAgICAgICAgICA1DQo+ICAjZGVmaW5lIEdfU1VQ
-UE9SVEVEX1JBVEVTICAgICAgICAgICAgICAgOQ0KPiAgI2RlZmluZSBCR19TVVBQT1JURURfUkFU
-RVMgICAgICAgICAgICAgIDEzDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-YXJ2ZWxsL213aWZpZXgvcGNpZS5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
-d2lmaWV4L3BjaWUuYw0KPiBpbmRleCAwNjEyMjMxNDliZWQuLjYzMTAyZWZiMzg4ZSAxMDA2NDQN
-Cj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiAr
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5jDQo+IEBAIC0x
-OTU2LDYgKzE5NTYsOTQgQEAgc3RhdGljIGludCBtd2lmaWV4X3BjaWVfZXZlbnRfY29tcGxldGUo
-c3RydWN0DQo+IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwNCj4gIAlyZXR1cm4gcmV0Ow0KPiAg
-fQ0KPiANCj4gKy8qIENvbWJvIGZpcm13YXJlIGltYWdlIGlzIGEgY29tYmluYXRpb24gb2YNCj4g
-KyAqICgxKSBjb21ibyBjcmMgaGVhZXIsIHN0YXJ0IHdpdGggQ01ENQ0KPiArICogKDIpIGJsdWV0
-b290aCBpbWFnZSwgc3RhcnQgd2l0aCBDTUQ3LCBlbmQgd2l0aCBDTUQ2LCBkYXRhIHdyYXBwZWQg
-aW4NCj4gQ01EMS4NCj4gKyAqICgzKSB3aWZpIGltYWdlLg0KPiArICoNCj4gKyAqIFRoaXMgZnVu
-Y3Rpb24gYnlwYXNzIHRoZSBoZWFkZXIgYW5kIGJsdWV0b290aCBwYXJ0LCByZXR1cm4NCj4gKyAq
-IHRoZSBvZmZzZXQgb2YgdGFpbCB3aWZpLW9ubHkgcGFydC4NCj4gKyAqLw0KPiArDQo+ICtzdGF0
-aWMgaW50IG13aWZpZXhfZXh0cmFjdF93aWZpX2Z3KHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFk
-YXB0ZXIsDQo+ICsJCQkJICAgY29uc3Qgdm9pZCAqZmlybXdhcmUsIHUzMiBmaXJtd2FyZV9sZW4p
-IHsNCj4gKwljb25zdCBzdHJ1Y3QgbXdpZmlleF9md19kYXRhICpmd2RhdGE7DQo+ICsJdTMyIG9m
-ZnNldCA9IDAsIGRhdGFfbGVuLCBkbmxkX2NtZDsNCj4gKwlpbnQgcmV0ID0gMDsNCj4gKwlib29s
-IGNtZDdfYmVmb3JlID0gZmFsc2U7DQo+ICsNCj4gKwl3aGlsZSAoMSkgew0KPiArCQkvKiBDaGVj
-ayBmb3IgaW50ZWdlciBhbmQgYnVmZmVyIG92ZXJmbG93ICovDQo+ICsJCWlmIChvZmZzZXQgKyBz
-aXplb2YoZndkYXRhLT5oZWFkZXIpIDwgc2l6ZW9mKGZ3ZGF0YS0+aGVhZGVyKSB8fA0KPiArCQkg
-ICAgb2Zmc2V0ICsgc2l6ZW9mKGZ3ZGF0YS0+aGVhZGVyKSA+PSBmaXJtd2FyZV9sZW4pIHsNCj4g
-KwkJCW13aWZpZXhfZGJnKGFkYXB0ZXIsIEVSUk9SLA0KPiArCQkJCSAgICAiZXh0cmFjdCB3aWZp
-LW9ubHkgZncgZmFpbHVyZSFcbiIpOw0KPiArCQkJcmV0ID0gLTE7DQo+ICsJCQlnb3RvIGRvbmU7
-DQo+ICsJCX0NCj4gKw0KPiArCQlmd2RhdGEgPSBmaXJtd2FyZSArIG9mZnNldDsNCj4gKwkJZG5s
-ZF9jbWQgPSBsZTMyX3RvX2NwdShmd2RhdGEtPmhlYWRlci5kbmxkX2NtZCk7DQo+ICsJCWRhdGFf
-bGVuID0gbGUzMl90b19jcHUoZndkYXRhLT5oZWFkZXIuZGF0YV9sZW5ndGgpOw0KPiArDQo+ICsJ
-CS8qIFNraXAgcGFzdCBoZWFkZXIgKi8NCj4gKwkJb2Zmc2V0ICs9IHNpemVvZihmd2RhdGEtPmhl
-YWRlcik7DQo+ICsNCj4gKwkJc3dpdGNoIChkbmxkX2NtZCkgew0KPiArCQljYXNlIE1XSUZJRVhf
-RldfRE5MRF9DTURfMToNCj4gKwkJCWlmICghY21kN19iZWZvcmUpIHsNCj4gKwkJCQltd2lmaWV4
-X2RiZyhhZGFwdGVyLCBFUlJPUiwNCj4gKwkJCQkJICAgICJubyBjbWQ3IGJlZm9yZSBjbWQxIVxu
-Iik7DQo+ICsJCQkJcmV0ID0gLTE7DQo+ICsJCQkJZ290byBkb25lOw0KPiArCQkJfQ0KPiArCQkJ
-aWYgKG9mZnNldCArIGRhdGFfbGVuIDwgZGF0YV9sZW4pIHsNCj4gKwkJCQltd2lmaWV4X2RiZyhh
-ZGFwdGVyLCBFUlJPUiwgImJhZCBGVyBwYXJzZVxuIik7DQo+ICsJCQkJcmV0ID0gLTE7DQo+ICsJ
-CQkJZ290byBkb25lOw0KPiArCQkJfQ0KPiArCQkJb2Zmc2V0ICs9IGRhdGFfbGVuOw0KDQpMb29r
-cyBmaW5lIHRvIG1lLg0KRXZlbiB0aG91Z2ggZGF0YV9sZW4gc2hvdWxkIG5vdCBleGNlZWQgTVdJ
-RklFWF9VUExEX1NJWkUgYWNjb3JkaW5nIHRvIGZpcm13YXJlIGRvd25sb2FkIHByb3RvY29sLCBh
-bmQgd2UgY2FuIGFkZCBzYW5pdHkgY2hlY2sgbGlrZaOsDQoJaWYgKGRhdGFfbGVuID4gTVdJRklF
-WF9VUExEX1NJWkUgLSBzaXplb2YoZndkYXRhLT5oZWFkZXIpKQ0KCQkqZXJyb3IqDQpDb25zaWRl
-cmluZyB0aGUgZnV0dXJlIHByb3RvY29sIG1pZ2h0IGNoYW5nZSBNV0lGSUVYX1VQTERfU0laRSBh
-bmQgdGhlIGFiaWxpdHkgdG8gY29tcGF0aWJsZSB3aXRoIG9sZCBkcml2ZXIgYXQgdGhhdCB0aW1l
-Lg0Kb3ZlcmZsb3cgY2hlY2sgaGVyZSBkb2VzIHByb3ZpZGUgYSBnZW5lcmFsIHdheSwgYW5kIGxl
-dCBkZXZpY2UgdGFrZSBjYXJlIG9mIGludmFsaWQgZGF0YV9MZW4gY2FzZSB3b3VsZCBiZSByZWFz
-b25hYmxlLg0KDQpUaGFua3MsDQpTaW1vbg0KPiArCQkJYnJlYWs7DQo+ICsJCWNhc2UgTVdJRklF
-WF9GV19ETkxEX0NNRF81Og0KPiArCQkJLyogQ2hlY2sgZm9yIGludGVnZXIgb3ZlcmZsb3cgKi8N
-Cj4gKwkJCWlmIChvZmZzZXQgKyBkYXRhX2xlbiA8IGRhdGFfbGVuKSB7DQo+ICsJCQkJbXdpZmll
-eF9kYmcoYWRhcHRlciwgRVJST1IsICJiYWQgRlcgcGFyc2VcbiIpOw0KPiArCQkJCXJldCA9IC0x
-Ow0KPiArCQkJCWdvdG8gZG9uZTsNCj4gKwkJCX0NCj4gKwkJCW9mZnNldCArPSBkYXRhX2xlbjsN
-Cj4gKwkJCWJyZWFrOw0KPiArCQljYXNlIE1XSUZJRVhfRldfRE5MRF9DTURfNjoNCj4gKwkJCS8q
-IENoZWNrIGZvciBpbnRlZ2VyIG92ZXJmbG93ICovDQo+ICsJCQlpZiAob2Zmc2V0ICsgZGF0YV9s
-ZW4gPCBkYXRhX2xlbikgew0KPiArCQkJCW13aWZpZXhfZGJnKGFkYXB0ZXIsIEVSUk9SLCAiYmFk
-IEZXIHBhcnNlXG4iKTsNCj4gKwkJCQlyZXQgPSAtMTsNCj4gKwkJCQlnb3RvIGRvbmU7DQo+ICsJ
-CQl9DQo+ICsJCQlvZmZzZXQgKz0gZGF0YV9sZW47DQo+ICsJCQlpZiAob2Zmc2V0ID49IGZpcm13
-YXJlX2xlbikgew0KPiArCQkJCW13aWZpZXhfZGJnKGFkYXB0ZXIsIEVSUk9SLA0KPiArCQkJCQkg
-ICAgImV4dHJhY3Qgd2lmaS1vbmx5IGZ3IGZhaWx1cmUhXG4iKTsNCj4gKwkJCQlyZXQgPSAtMTsN
-Cj4gKwkJCX0gZWxzZSB7DQo+ICsJCQkJcmV0ID0gb2Zmc2V0Ow0KPiArCQkJfQ0KPiArCQkJZ290
-byBkb25lOw0KPiArCQljYXNlIE1XSUZJRVhfRldfRE5MRF9DTURfNzoNCj4gKwkJCWNtZDdfYmVm
-b3JlID0gdHJ1ZTsNCj4gKwkJCWJyZWFrOw0KPiArCQlkZWZhdWx0Og0KPiArCQkJbXdpZmlleF9k
-YmcoYWRhcHRlciwgRVJST1IsICJ1bmtub3duIGRubGRfY21kICVkXG4iLA0KPiArCQkJCSAgICBk
-bmxkX2NtZCk7DQo+ICsJCQlyZXQgPSAtMTsNCj4gKwkJCWdvdG8gZG9uZTsNCj4gKwkJfQ0KPiAr
-CX0NCj4gKw0KPiArZG9uZToNCj4gKwlyZXR1cm4gcmV0Ow0KPiArfQ0KPiArDQo+ICAvKg0KPiAg
-ICogVGhpcyBmdW5jdGlvbiBkb3dubG9hZHMgdGhlIGZpcm13YXJlIHRvIHRoZSBjYXJkLg0KPiAg
-ICoNCj4gQEAgLTE5NzEsNyArMjA1OSw3IEBAIHN0YXRpYyBpbnQgbXdpZmlleF9wcm9nX2Z3X3df
-aGVscGVyKHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIsDQo+ICAJdTMyIGZpcm13
-YXJlX2xlbiA9IGZ3LT5md19sZW47DQo+ICAJdTMyIG9mZnNldCA9IDA7DQo+ICAJc3RydWN0IHNr
-X2J1ZmYgKnNrYjsNCj4gLQl1MzIgdHhsZW4sIHR4X2Jsb2NrcyA9IDAsIHRyaWVzLCBsZW47DQo+
-ICsJdTMyIHR4bGVuLCB0eF9ibG9ja3MgPSAwLCB0cmllcywgbGVuLCB2YWw7DQo+ICAJdTMyIGJs
-b2NrX3JldHJ5X2NudCA9IDA7DQo+ICAJc3RydWN0IHBjaWVfc2VydmljZV9jYXJkICpjYXJkID0g
-YWRhcHRlci0+Y2FyZDsNCj4gIAljb25zdCBzdHJ1Y3QgbXdpZmlleF9wY2llX2NhcmRfcmVnICpy
-ZWcgPSBjYXJkLT5wY2llLnJlZzsgQEAgLTE5OTgsNg0KPiArMjA4NiwyNCBAQCBzdGF0aWMgaW50
-IG13aWZpZXhfcHJvZ19md193X2hlbHBlcihzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyDQo+ICphZGFw
-dGVyLA0KPiAgCQlnb3RvIGRvbmU7DQo+ICAJfQ0KPiANCj4gKwlyZXQgPSBtd2lmaWV4X3JlYWRf
-cmVnKGFkYXB0ZXIsIFBDSUVfU0NSQVRDSF8xM19SRUcsICZ2YWwpOw0KPiArCWlmIChyZXQpIHsN
-Cj4gKwkJbXdpZmlleF9kYmcoYWRhcHRlciwgRkFUQUwsICJGYWlsZWQgdG8gcmVhZCBzY3JhdGNo
-IHJlZ2lzdGVyIDEzXG4iKTsNCj4gKwkJZ290byBkb25lOw0KPiArCX0NCj4gKw0KPiArCS8qIFBD
-SUUgRkxSIGNhc2U6IGV4dHJhY3Qgd2lmaSBwYXJ0IGZyb20gY29tYm8gZmlybXdhcmUqLw0KPiAr
-CWlmICh2YWwgPT0gTVdJRklFWF9QQ0lFX0ZMUl9IQVBQRU5TKSB7DQo+ICsJCXJldCA9IG13aWZp
-ZXhfZXh0cmFjdF93aWZpX2Z3KGFkYXB0ZXIsIGZpcm13YXJlLCBmaXJtd2FyZV9sZW4pOw0KPiAr
-CQlpZiAocmV0IDwgMCkgew0KPiArCQkJbXdpZmlleF9kYmcoYWRhcHRlciwgRVJST1IsICJGYWls
-ZWQgdG8gZXh0cmFjdCB3aWZpIGZ3XG4iKTsNCj4gKwkJCWdvdG8gZG9uZTsNCj4gKwkJfQ0KPiAr
-CQlvZmZzZXQgPSByZXQ7DQo+ICsJCW13aWZpZXhfZGJnKGFkYXB0ZXIsIE1TRywNCj4gKwkJCSAg
-ICAiaW5mbzogZG5sZCB3aWZpIGZpcm13YXJlIGZyb20gJWQgYnl0ZXNcbiIsIG9mZnNldCk7DQo+
-ICsJfQ0KPiArDQo+ICAJLyogUGVyZm9ybSBmaXJtd2FyZSBkYXRhIHRyYW5zZmVyICovDQo+ICAJ
-ZG8gew0KPiAgCQl1MzIgaXJlZ19pbnRyID0gMDsNCj4gQEAgLTMwNzAsMTIgKzMxNzYsNiBAQCBz
-dGF0aWMgdm9pZCBtd2lmaWV4X3BjaWVfdXBfZGV2KHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIg
-KmFkYXB0ZXIpDQo+ICAJc3RydWN0IHBjaV9kZXYgKnBkZXYgPSBjYXJkLT5kZXY7DQo+ICAJY29u
-c3Qgc3RydWN0IG13aWZpZXhfcGNpZV9jYXJkX3JlZyAqcmVnID0gY2FyZC0+cGNpZS5yZWc7DQo+
-IA0KPiAtCS8qIEJsdWV0b290aCBpcyBub3Qgb24gcGNpZSBpbnRlcmZhY2UuIERvd25sb2FkIFdp
-Zmkgb25seSBmaXJtd2FyZQ0KPiAtCSAqIGR1cmluZyBwY2llIEZMUiwgc28gdGhhdCBibHVldG9v
-dGggcGFydCBvZiBmaXJtd2FyZSB3aGljaCBpcw0KPiAtCSAqIGFscmVhZHkgcnVubmluZyBkb2Vz
-bid0IGdldCBhZmZlY3RlZC4NCj4gLQkgKi8NCj4gLQlzdHJjcHkoYWRhcHRlci0+ZndfbmFtZSwg
-UENJRTg5OTdfREVGQVVMVF9XSUZJRldfTkFNRSk7DQo+IC0NCj4gIAkvKiB0eF9idWZfc2l6ZSBt
-aWdodCBiZSBjaGFuZ2VkIHRvIDM1ODQgYnkgZmlybXdhcmUgZHVyaW5nDQo+ICAJICogZGF0YSB0
-cmFuc2Zlciwgd2Ugc2hvdWxkIHJlc2V0IGl0IHRvIGRlZmF1bHQgc2l6ZS4NCj4gIAkgKi8NCj4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9wY2llLmgN
-Cj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5oDQo+IGluZGV4
-IDdlMjQ1MGNlNzlkMy4uZjdjZTliNmRiNmI0IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5oDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL21hcnZlbGwvbXdpZmlleC9wY2llLmgNCj4gQEAgLTM1LDcgKzM1LDYgQEANCj4gICNkZWZp
-bmUgUENJRTg4OTdfQjBfRldfTkFNRSAibXJ2bC9wY2llODg5N191YXBzdGEuYmluIg0KPiAgI2Rl
-ZmluZSBQQ0lFVUFSVDg5OTdfRldfTkFNRV9WNCAibXJ2bC9wY2lldWFydDg5OTdfY29tYm9fdjQu
-YmluIg0KPiAgI2RlZmluZSBQQ0lFVVNCODk5N19GV19OQU1FX1Y0ICJtcnZsL3BjaWV1c2I4OTk3
-X2NvbWJvX3Y0LmJpbiINCj4gLSNkZWZpbmUgUENJRTg5OTdfREVGQVVMVF9XSUZJRldfTkFNRSAi
-bXJ2bC9wY2llODk5N193bGFuX3Y0LmJpbiINCj4gDQo+ICAjZGVmaW5lIFBDSUVfVkVORE9SX0lE
-X01BUlZFTEwgICAgICAgICAgICAgICgweDExYWIpDQo+ICAjZGVmaW5lIFBDSUVfVkVORE9SX0lE
-X1YyX01BUlZFTEwgICAgICAgICAgICgweDFiNGIpDQo+IEBAIC0xMjAsNiArMTE5LDggQEANCj4g
-ICNkZWZpbmUgTVdJRklFWF9TTEVFUF9DT09LSUVfU0laRQkJCTQNCj4gICNkZWZpbmUgTVdJRklF
-WF9NQVhfREVMQVlfQ09VTlQJCQkJMTAwDQo+IA0KPiArI2RlZmluZSBNV0lGSUVYX1BDSUVfRkxS
-X0hBUFBFTlMgMHhGRURDQkFCQQ0KPiArDQo+ICBzdHJ1Y3QgbXdpZmlleF9wY2llX2NhcmRfcmVn
-IHsNCj4gIAl1MTYgY21kX2FkZHJfbG87DQo+ICAJdTE2IGNtZF9hZGRyX2hpOw0KPiAtLQ0KPiAy
-LjEyLjIuNzYyDQo=
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+In mp mode, the wifi will not turn off and still has control of the PTA,
+so the driver needs to distinguish whether it is mp mode or not
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c   | 10 ++++++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h  |  1 +
+ 2 files changed, 11 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 93dbbc507ba1..70f21059ddc3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -3606,6 +3606,7 @@ static void btc8723b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_wifioff_hwcfg(struct btc_coexist *btcoexist)
+ {
++	bool is_in_mp_mode = false;
+ 	u8 h2c_parameter[2] = {0};
+ 	u32 fw_ver = 0;
+ 
+@@ -3623,6 +3624,15 @@ static void btc8723b2ant_wifioff_hwcfg(struct btc_coexist *btcoexist)
+ 	} else {
+ 		btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
+ 	}
++
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_IS_IN_MP_MODE,
++			   &is_in_mp_mode);
++	if (!is_in_mp_mode)
++		/* BT select s0/s1 is controlled by BT */
++		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x0);
++	else
++		/* BT select s0/s1 is controlled by WiFi */
++		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x1);
+ }
+ 
+ /*********************************************************************
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 022658cafbca..0b90e7f0b722 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -205,6 +205,7 @@ enum btc_get_type {
+ 	BTC_GET_BL_WIFI_ENABLE_ENCRYPTION,
+ 	BTC_GET_BL_WIFI_UNDER_B_MODE,
+ 	BTC_GET_BL_EXT_SWITCH,
++	BTC_GET_BL_WIFI_IS_IN_MP_MODE,
+ 
+ 	/* type s4Byte */
+ 	BTC_GET_S4_WIFI_RSSI,
+-- 
+2.12.0
