@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39088 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752044AbdDTE7Y (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:33146 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756649AbdDFTY7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 00:59:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH 00/14] rtlwifi: btcoex: Second set of changes for rtl8821ae 2ant
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-Date: Thu, 20 Apr 2017 07:59:18 +0300
-In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Sat, 15 Apr 2017 15:31:46 -0500")
-Message-ID: <87zifb65eh.fsf@codeaurora.org> (sfid-20170420_065946_810396_9985E0BA)
+        Thu, 6 Apr 2017 15:24:59 -0400
+Received: by mail-io0-f170.google.com with SMTP id t68so2902173iof.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 12:24:54 -0700 (PDT)
+Date: Thu, 6 Apr 2017 12:24:52 -0700
+From: Matthias Kaehlcke <mka@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
+        Michael Davidson <md@google.com>,
+        Greg Hackmann <ghackmann@google.com>
+Subject: Re: [PATCH] mac80211: Fix clang warning about constant operand in
+ logical operation
+Message-ID: <20170406192452.GE145051@google.com> (sfid-20170406_212643_992628_054D4B8C)
+References: <20170406185633.91065-1-mka@chromium.org>
+ <1491505878.11399.4.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1491505878.11399.4.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Hi Johannes,
 
-> These patches are the second set of patches for file
-> btcoexist/halbtc8821a2ant.c.
->
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Pkshih <pkshih@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+thanks for your comments
 
-BTW, please try to limit the amount of patches you send. I haven't
-counted how many rtlwifi patches there are from the last week but it's
-just too much, even if they are in smaller sets like this one. Reviewing
-them is just too tedious when you see that you have something like 50
-more still to go.
+El Thu, Apr 06, 2017 at 09:11:18PM +0200 Johannes Berg ha dit:
 
-If you send two sets with reasonable size[1] per week I don't have any
-problems. But if you send five such sets per week I will get annoyed :)
-So try to strect the submission a bit to stay below ~30 patches per week
-limit, please.
+> On Thu, 2017-04-06 at 11:56 -0700, Matthias Kaehlcke wrote:
+> > Clang raises a warning about the expression 'strlen(CONFIG_XXX)'
+> > being
+> > used in a logical operation. Clangs' builtin strlen function resolves
+> > the
+> > expression to a constant at compile time, which causes clang to
+> > generate
+> > a 'constant-logical-operand' warning.
+> > 
+> > Split the if statement in two to avoid using the const expression in
+> > a logical operation.
+> > 
+> I don't really see all much point in doing this for the warning's
+> sake... hopefully it doesn't actually generate worse code, but I think
+> the code ends up looking worse and people will forever wonder what the
+> goto is really doing there.
 
-So I'm not sure if I'm able to apply all of pending rtlwifi patches
-before the merge window opens, but I'll try.
+I agree that the code looks worse :( I hoped to find a fix using a
+preprocessor condition but wasn't successful.
 
-[1] a reasonable size is around a dozen patches per set
+Some projects (like Chrome OS) build their kernel with all warnings
+being treated as errors. Besides changing the 'offending' code the
+alternatives are to disable the warning completely or to tell clang
+not to use the builtin(s). IMO changing the code is the preferable
+solution, especially since this is so far the only occurrence of the
+warning that I have encountered.
 
--- 
-Kalle Valo
+I used goto instead of nested ifs since other functions in this file
+use the same pattern. If nested ifs are preferred I can change that.
+
+Cheers
+
+Matthias
