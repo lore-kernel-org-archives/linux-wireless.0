@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:58249 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756894AbdDRJcr (ORCPT
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:34115 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754145AbdDFXy3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 05:32:47 -0400
-Date: Tue, 18 Apr 2017 11:32:35 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Subject: [PATCH] rt2800: fix mt7620 vco calibration registers
-Message-ID: <20170418093229.GA6026@makrotopia.org> (sfid-20170418_113315_468408_34E95BF7)
+        Thu, 6 Apr 2017 19:54:29 -0400
+Received: by mail-pg0-f50.google.com with SMTP id 21so49486244pgg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 16:54:28 -0700 (PDT)
+Date: Thu, 6 Apr 2017 16:54:27 -0700
+From: Matthias Kaehlcke <mka@chromium.org>
+To: Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>
+Subject: Re: [PATCH] ath9k: Add cast to u8 to FREQ2FBIN macro
+Message-ID: <20170406235427.GC78690@google.com> (sfid-20170407_015433_275297_0B461F87)
+References: <20170406212135.72157-1-mka@chromium.org>
+ <1491514160.27353.102.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1491514160.27353.102.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomislav Požega <pozega.tomislav@gmail.com>
+Hi Joe,
 
-Use register values from init LNA function instead of the ones from
-restore LNA function. Apply register values based on rx path
-configuration.
+El Thu, Apr 06, 2017 at 02:29:20PM -0700 Joe Perches ha dit:
 
-Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> On Thu, 2017-04-06 at 14:21 -0700, Matthias Kaehlcke wrote:
+> > The macro results are assigned to u8 variables/fields. Adding the cast
+> > fixes plenty of clang warnings about "implicit conversion from 'int' to
+> > 'u8'".
+> > 
+> > Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/eeprom.h | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+> > index 30bf722e33ed..31390af6c33e 100644
+> > --- a/drivers/net/wireless/ath/ath9k/eeprom.h
+> > +++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+> > @@ -106,7 +106,7 @@
+> >  #define AR9285_RDEXT_DEFAULT    0x1F
+> >  
+> >  #define ATH9K_POW_SM(_r, _s)	(((_r) & 0x3f) << (_s))
+> > -#define FREQ2FBIN(x, y)		((y) ? ((x) - 2300) : (((x) - 4800) / 5))
+> > +#define FREQ2FBIN(x, y)		(u8)((y) ? ((x) - 2300) : (((x) - 4800) / 5))
+> 
+> Maybe better to use:
+> 
+> static inline u8 FREQ2FBIN(int x, int y)
+> {
+> 	if (y)
+> 		return x - 2300;
+> 	return (x - 4800) / 5;
+> }
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 870bf315f98b..86cffee6876a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4932,7 +4932,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
- 
- 	if (rt2x00_rt(rt2x00dev, RT6352)) {
--		if (rt2x00dev->default_ant.tx_chain_num == 1) {
-+		if (rt2x00dev->default_ant.rx_chain_num == 1) {
- 			rt2800_bbp_write(rt2x00dev, 91, 0x07);
- 			rt2800_bbp_write(rt2x00dev, 95, 0x1A);
- 			rt2800_bbp_write(rt2x00dev, 195, 128);
-@@ -4953,8 +4953,8 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 		}
- 
- 		if (rt2x00_has_cap_external_lna_bg(rt2x00dev)) {
--			rt2800_bbp_write(rt2x00dev, 75, 0x60);
--			rt2800_bbp_write(rt2x00dev, 76, 0x44);
-+			rt2800_bbp_write(rt2x00dev, 75, 0x68);
-+			rt2800_bbp_write(rt2x00dev, 76, 0x4C);
- 			rt2800_bbp_write(rt2x00dev, 79, 0x1C);
- 			rt2800_bbp_write(rt2x00dev, 80, 0x0C);
- 			rt2800_bbp_write(rt2x00dev, 82, 0xB6);
--- 
-2.12.2
+Thanks for your suggestion! Unfortunately in this case an inline
+function is not suitable since FREQ2FBIN() is mostly used for
+structure initialization:
+
+static const struct ar9300_eeprom ar9300_default = {
+...
+        .calFreqPier2G = {
+                FREQ2FBIN(2412, 1),
+                FREQ2FBIN(2437, 1),
+                FREQ2FBIN(2472, 1),
+        },
+...
+
+Cheers
+
+Matthias
