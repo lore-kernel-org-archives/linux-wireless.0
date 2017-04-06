@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f54.google.com ([74.125.83.54]:35957 "EHLO
-        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752286AbdDLPdB (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39562 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753814AbdDFIJG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 11:33:01 -0400
-Received: by mail-pg0-f54.google.com with SMTP id g2so16380291pge.3
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 08:33:01 -0700 (PDT)
-Subject: Re: [PATCH net-next v5 1/5] netlink: extended ACK reporting
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20170412123408.22012-1-johannes@sipsolutions.net>
- <20170412123408.22012-2-johannes@sipsolutions.net>
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <dd9f0bb0-df0d-bf04-9d17-90d611af7cbc@cumulusnetworks.com> (sfid-20170412_173305_932767_168C734C)
-Date: Wed, 12 Apr 2017 09:32:59 -0600
+        Thu, 6 Apr 2017 04:09:06 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>
+CC: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        "Rajat Jain" <rajatja@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>
+Subject: RE: [EXT] Re: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only
+ firmware name
+Date: Thu, 6 Apr 2017 08:08:58 +0000
+Message-ID: <c245cfd3b00b4d89840bf7e08113af59@SC-EXCH02.marvell.com> (sfid-20170406_100912_692947_0AB697E5)
+References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
+ <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
+ <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com>
+ <20170403184857.GC116262@google.com>
+In-Reply-To: <20170403184857.GC116262@google.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <20170412123408.22012-2-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/12/17 6:34 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Add the base infrastructure and UAPI for netlink extended ACK
-> reporting. All "manual" calls to netlink_ack() pass NULL for
-> now and thus don't get extended ACK reporting.
-> 
-> Big thanks goes to Pablo Neira Ayuso for not only bringing up
-> the whole topic at netconf (again) but also coming up with the
-> nlattr passing trick and various other ideas.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  crypto/crypto_user.c              |  3 +-
->  drivers/infiniband/core/netlink.c |  5 +--
->  drivers/scsi/scsi_netlink.c       |  2 +-
->  include/linux/netlink.h           | 26 +++++++++++++-
->  include/net/netlink.h             |  3 +-
->  include/uapi/linux/netlink.h      | 32 ++++++++++++++++++
->  kernel/audit.c                    |  2 +-
->  net/core/rtnetlink.c              |  3 +-
->  net/core/sock_diag.c              |  3 +-
->  net/decnet/netfilter/dn_rtmsg.c   |  2 +-
->  net/hsr/hsr_netlink.c             |  4 +--
->  net/netfilter/ipset/ip_set_core.c |  2 +-
->  net/netfilter/nfnetlink.c         | 22 ++++++------
->  net/netlink/af_netlink.c          | 71 ++++++++++++++++++++++++++++++++++-----
->  net/netlink/af_netlink.h          |  1 +
->  net/netlink/genetlink.c           |  3 +-
->  net/xfrm/xfrm_user.c              |  3 +-
->  17 files changed, 153 insertions(+), 34 deletions(-)
-
-Reviewed-by: David Ahern <dsa@cumulusnetworks.com>
+SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
+Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo0
+1MI0yNUgMjo0OQ0KPiBUbzogRG1pdHJ5IFRvcm9raG92DQo+IENjOiBYaW5taW5nIEh1OyBMaW51
+eCBXaXJlbGVzczsgS2FsbGUgVmFsbzsgUmFqYXQgSmFpbjsgQW1pdGt1bWFyIEthcndhcjsgQ2F0
+aHkNCj4gTHVvOyBYaW5taW5nIEh1DQo+IFN1YmplY3Q6IFtFWFRdIFJlOiBbUEFUQ0ggMy8zXSBt
+d2lmaWV4OiBwY2llOiBhdm9pZCBoYXJkY29kZSB3aWZpLW9ubHkNCj4gZmlybXdhcmUgbmFtZQ0K
+PiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gT24gRnJpLCBNYXIg
+MzEsIDIwMTcgYXQgMDM6NTA6MjdQTSAtMDcwMCwgRG1pdHJ5IFRvcm9raG92IHdyb3RlOg0KPiA+
+IFRoYXQgc2FpZCwgSSBjb25zaWRlciB0aGUgd2hvbGUgd2lmaS1vbmx5IGZpcm13YXJlIGJ1c2lu
+ZXNzIGlzIHF1aXRlDQo+ID4gZnJhZ2lsZS4gQ2FuIHdlIGhhdmUgdW5pZmllZCBmaXJtd2FyZSBh
+bmQgaGF2ZSBkcml2ZXIgZmlndXJlIG91dCB3aGF0DQo+ID4gcGFydCBzaG91ZGwgYmUgW3JlXWxv
+YWRlZD8NCj4gDQo+ICsxLiBJIHRoaW5rIHdlIHNob3VsZCByZWFsbHkgZ2l2ZSBhIHN0YWIgYXQg
+dGhpcyBmaXJzdCwgYW5kICp0aGVuKiBzZWUNCj4gaG93IHdlIHdhbnQgdG8gcGF0Y2ggdXAgdGhl
+IGZsYWdnaW5nIG9mIHN1cHBvcnQgb24gYSBwZXItY2hpcHNldCBiYXNpcy4NCj4gQXMtaXMsIHlv
+dSdyZSB3YXN0aW5nIGZpbGVzeXN0ZW0gc3BhY2Ugb24gYSBkdXBsaWNhdGUgZmlybXdhcmUgYmxv
+YiwgdGhhdCB3ZQ0KPiBoYXZlIHRvIG1ha2Ugc3VyZSBnZXRzIHVwZGF0ZWQgaW4gc3luYyB3aXRo
+IHRoZSBjb21iaW5lZCBmaXJtd2FyZSBldmVyeQ0KPiB0aW1lIHRoZXJlJ3MgYW4gdXBkYXRlLg0K
+PiANCj4gUHJvb2Ygb2YgdGhlIGR1cGxpY2F0ZSBibG9iIC0tIHRoZSBsYXR0ZXIgcG9ydGlvbiBv
+ZiB0aGUgY29tYmluZWQgRlcgaXMgaWRlbnRpY2FsDQo+IHRvIHRoZSBXTEFOLW9ubHk6DQo+IA0K
+PiAgICQgY21wIG1ydmwvcGNpZXt1c2I4OTk3X2NvbWJvLDg5OTdfd2xhbn1fdjQuYmluICQoKDB4
+MjkxOWMpKTsgZWNobyAkPw0KPiAgIDANCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3LCB3ZSBoYXZl
+IGEgbmV3IHNvbHV0aW9uIGZvciBleHRyYWN0aW5nIHdpZmktb25seSBwYXJ0IGZyb20gY29tYm8g
+ZmlybXdhcmUsIHdpbGwgc2VuZCBpdCBpbiB2Mi4NCg0KVGhhbmtzDQpTaW1vbg0KPiANCj4gQnJp
+YW4NCg==
