@@ -1,187 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33747 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752163AbdDCSlx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 14:41:53 -0400
-Received: by mail-oi0-f68.google.com with SMTP id f193so21146805oib.0
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:53 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 03/12] rtlwifi: btcoex: 23b 2ant: add btc8723b2ant_limited_rx to reduce agg size
-Date: Mon,  3 Apr 2017 13:41:33 -0500
-Message-Id: <20170403184147.18409-3-Larry.Finger@lwfinger.net> (sfid-20170403_204217_677966_68270E60)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+Received: from mail.toke.dk ([52.28.52.200]:46871 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933847AbdDFJid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Apr 2017 05:38:33 -0400
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [PATCH v3] mac80211: Dynamically set CoDel parameters per station
+Date: Thu,  6 Apr 2017 11:38:26 +0200
+Message-Id: <20170406093826.16626-1-toke@toke.dk> (sfid-20170406_113851_927923_E0E6B713)
+In-Reply-To: <20170405161810.30671-1-toke@toke.dk>
+References: <20170405161810.30671-1-toke@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+CoDel can be too aggressive if a station sends at a very low rate,
+leading reduced throughput. This gets worse the more stations are
+present, as each station gets more bursty the longer the round-robin
+scheduling between stations takes.
 
-For wifi and bt coexistence, if the aggregation size of wifi is too
-large, the transmission time of the aggregated packet could be too long
-and the bt packets might "cut off" the wifi packet. We need to reduce
-the aggregation size to improve wifi performance.
+This adds dynamic adjustment of CoDel parameters per station. It uses
+the rate selection information to estimate throughput and sets more
+lenient CoDel parameters if the estimated throughput is below a
+threshold (modified by the number of active stations).
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+A new callback is added that drivers can use to notify mac80211 about
+changes in expected throughput, so the same adjustment can be made for
+cards that implement rate control in firmware. Drivers that don't use
+this will just get the default parameters.
+
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
 ---
-v2 - No changes.
-v3 - No changes.
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 40 ++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 9b09b94cbb43..b182c61edf91 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -240,6 +240,29 @@ static u8 btc8723b2ant_wifi_rssi_state(struct btc_coexist *btcoexist,
- 	return wifi_rssi_state;
- }
+Changes since v2:
+ - Messed up the rebase and squash in v2; this one actually compiles...
  
-+static
-+void btc8723b2ant_limited_rx(struct btc_coexist *btcoexist, bool force_exec,
-+			     bool rej_ap_agg_pkt, bool bt_ctrl_agg_buf_size,
-+			     u8 agg_buf_size)
-+{
-+	bool reject_rx_agg = rej_ap_agg_pkt;
-+	bool bt_ctrl_rx_agg_size = bt_ctrl_agg_buf_size;
-+	u8 rx_agg_size = agg_buf_size;
+ include/net/mac80211.h     | 17 +++++++++++++++++
+ net/mac80211/debugfs_sta.c |  6 ++++++
+ net/mac80211/rate.c        |  3 ++-
+ net/mac80211/sta_info.c    | 31 +++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h    | 11 +++++++++++
+ net/mac80211/tx.c          |  9 ++++++++-
+ 6 files changed, 75 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a3bab3c5ecfb..8cd546cbcabc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4181,6 +4181,23 @@ void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
+ 			    int max_rates);
+ 
+ /**
++ * ieee80211_sta_set_expected_throughput - set the expected throughput for a
++ * station
++ *
++ * Call this function to notify mac80211 about a change in expected throughput
++ * to a station. A driver for a device that does rate control in firmware can
++ * call this function when the expected throughput estimate towards a station
++ * changes. The information is used to tune the CoDel AQM applied to traffic
++ * going towards that station (which can otherwise be too aggressive and cause
++ * slow stations to starve).
++ *
++ * @pubsta: the station to set throughput for.
++ * @thr: the current expected throughput in kbps.
++ */
++void ieee80211_sta_set_expected_throughput(struct ieee80211_sta *pubsta,
++					   u32 thr);
 +
-+	/* ============================================ */
-+	/*	Rx Aggregation related setting		*/
-+	/* ============================================ */
-+	btcoexist->btc_set(btcoexist, BTC_SET_BL_TO_REJ_AP_AGG_PKT,
-+			   &reject_rx_agg);
-+	/* decide BT control aggregation buf size or not */
-+	btcoexist->btc_set(btcoexist, BTC_SET_BL_BT_CTRL_AGG_SIZE,
-+			   &bt_ctrl_rx_agg_size);
-+	/* aggregate buf size, only work when BT control Rx aggregate size */
-+	btcoexist->btc_set(btcoexist, BTC_SET_U1_AGG_BUF_SIZE, &rx_agg_size);
-+	/* real update aggregation setting */
-+	btcoexist->btc_set(btcoexist, BTC_SET_ACT_AGGREGATE_CTRL, NULL);
++/**
+  * ieee80211_tx_status - transmit status callback
+  *
+  * Call this function for all transmitted frames after they have been
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 42601820db20..b15412c21ac9 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -154,6 +154,12 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ 
+ 	p += scnprintf(p,
+ 		       bufsz+buf-p,
++		       "target %uus interval %uus ecn %s\n",
++		       codel_time_to_us(sta->cparams.target),
++		       codel_time_to_us(sta->cparams.interval),
++		       sta->cparams.ecn ? "yes" : "no");
++	p += scnprintf(p,
++		       bufsz+buf-p,
+ 		       "tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets\n");
+ 
+ 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 206698bc93f4..233c23ba2b98 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -890,6 +890,8 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ 
+ 	drv_sta_rate_tbl_update(hw_to_local(hw), sta->sdata, pubsta);
+ 
++	ieee80211_sta_set_expected_throughput(pubsta, sta_get_expected_throughput(sta));
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(rate_control_set_rates);
+@@ -938,4 +940,3 @@ void rate_control_deinitialize(struct ieee80211_local *local)
+ 	local->rate_ctrl = NULL;
+ 	rate_control_free(ref);
+ }
+-
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 3323a2fb289b..d5d54e84620f 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -20,6 +20,7 @@
+ #include <linux/timer.h>
+ #include <linux/rtnetlink.h>
+ 
++#include <net/codel.h>
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
+@@ -420,6 +421,11 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sta->sta.max_rc_amsdu_len = IEEE80211_MAX_MPDU_LEN_HT_BA;
+ 
++	sta->cparams.ce_threshold = CODEL_DISABLED_THRESHOLD;
++	sta->cparams.target = MS2TIME(20);
++	sta->cparams.interval = MS2TIME(100);
++	sta->cparams.ecn = true;
++
+ 	sta_dbg(sdata, "Allocated STA %pM\n", sta->sta.addr);
+ 
+ 	return sta;
+@@ -2298,3 +2304,28 @@ unsigned long ieee80211_sta_last_active(struct sta_info *sta)
+ 		return stats->last_rx;
+ 	return sta->status_stats.last_ack;
+ }
++
++static inline void sta_update_codel_params(struct sta_info *sta, u32 thr)
++{
++	if (!sta->sdata->local->ops->wake_tx_queue)
++		return;
++
++	if (thr && thr < STA_SLOW_THRESHOLD * sta->local->num_sta) {
++		sta->cparams.target = MS2TIME(50);
++		sta->cparams.interval = MS2TIME(300);
++		sta->cparams.ecn = false;
++	} else {
++		sta->cparams.target = MS2TIME(20);
++		sta->cparams.interval = MS2TIME(100);
++		sta->cparams.ecn = true;
++	}
 +}
 +
- static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -1266,6 +1289,8 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 		low_pwr_disable = false;
- 		btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
- 				   &low_pwr_disable);
-+		btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC,
-+					false, false, 0x8);
- 
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Wifi non-connected idle!!\n");
-@@ -1288,6 +1313,8 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 			btcoexist->btc_set(btcoexist,
- 					   BTC_SET_ACT_DISABLE_LOW_POWER,
- 					   &low_pwr_disable);
-+			btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC,
-+						false, false, 0x8);
- 
- 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 				 "[BTCoex], Wifi connected + BT non connected-idle!!\n");
-@@ -1317,6 +1344,8 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 				return false;
- 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 				 "[BTCoex], Wifi connected + BT connected-idle!!\n");
-+			btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC,
-+						false, false, 0x8);
- 
- 			btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1,
- 						  0xfffff, 0x0);
-@@ -1576,6 +1605,7 @@ static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 4);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-@@ -1623,6 +1653,7 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-@@ -1701,6 +1732,7 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
- 	}
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
-@@ -1746,6 +1778,7 @@ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
-@@ -1786,6 +1819,7 @@ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
-@@ -1835,6 +1869,7 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
-@@ -1880,6 +1915,7 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
-@@ -1935,6 +1971,8 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- 	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
++void ieee80211_sta_set_expected_throughput(struct ieee80211_sta *pubsta,
++					   u32 thr)
++{
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
 +
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++	sta_update_codel_params(sta, thr);
++}
++EXPORT_SYMBOL(ieee80211_sta_set_expected_throughput);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index e65cda34d2bc..e3b07e019df1 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -390,6 +390,14 @@ struct ieee80211_sta_rx_stats {
+ };
+ 
+ /**
++ * The bandwidth threshold below which the per-station CoDel parameters will be
++ * scaled to be more lenient (to prevent starvation of slow stations). This
++ * value will be scaled by the number of active stations when it is being
++ * applied.
++ */
++#define STA_SLOW_THRESHOLD 6000 /* 6 Mbps */
++
++/**
+  * struct sta_info - STA information
+  *
+  * This structure collects information about a station that
+@@ -442,6 +450,7 @@ struct ieee80211_sta_rx_stats {
+  * @known_smps_mode: the smps_mode the client thinks we are in. Relevant for
+  *	AP only.
+  * @cipher_scheme: optional cipher scheme for this station
++ * @cparams: CoDel parameters for this station.
+  * @reserved_tid: reserved TID (if any, otherwise IEEE80211_TID_UNRESERVED)
+  * @fast_tx: TX fastpath information
+  * @fast_rx: RX fastpath information
+@@ -545,6 +554,8 @@ struct sta_info {
+ 	enum ieee80211_smps_mode known_smps_mode;
+ 	const struct ieee80211_cipher_scheme *cipher_scheme;
+ 
++	struct codel_params cparams;
++
+ 	u8 reserved_tid;
+ 
+ 	struct cfg80211_chan_def tdls_chandef;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ba8d7db0a071..dab60a165059 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1344,9 +1344,16 @@ static struct sk_buff *fq_tin_dequeue_func(struct fq *fq,
+ 
+ 	local = container_of(fq, struct ieee80211_local, fq);
+ 	txqi = container_of(tin, struct txq_info, tin);
+-	cparams = &local->cparams;
+ 	cstats = &txqi->cstats;
+ 
++	if (txqi->txq.sta) {
++		struct sta_info *sta = container_of(txqi->txq.sta,
++						    struct sta_info, sta);
++		cparams = &sta->cparams;
++	} else {
++		cparams = &local->cparams;
++	}
++
+ 	if (flow == &txqi->def_flow)
+ 		cvars = &txqi->def_cvars;
  	else
-@@ -2000,6 +2038,7 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
-@@ -2056,6 +2095,7 @@ static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
 -- 
-2.12.0
+2.12.1
