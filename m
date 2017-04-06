@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35603 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755247AbdDFUUM (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:46771 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754772AbdDFMPA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 16:20:12 -0400
-Received: by mail-oi0-f68.google.com with SMTP id d2so8884861oig.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 13:20:12 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 09/11] rtlwifi: btcoex: 23b 2ant: fine tune for bt hid_a2dp
-Date: Thu,  6 Apr 2017 15:19:56 -0500
-Message-Id: <20170406201958.25642-10-Larry.Finger@lwfinger.net> (sfid-20170406_222057_999173_DEC46E4D)
-In-Reply-To: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
-References: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
+        Thu, 6 Apr 2017 08:15:00 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/6] brcmfmac: fwsignal and scheduled scan rework
+Date: Thu,  6 Apr 2017 13:14:36 +0100
+Message-Id: <1491480882-13877-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170406_141508_758203_B9F20E5A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+This series is intended for 4.12 including:
+ * rework for fwsignal module.
+ * tighten length checks for scheduled scan result event.
+ * fix duplicate entries in scan request for scheduled scan.
 
-Let bt control the aggregation size to improve stability.
+The patches apply to the master branch of the wireless-drivers-next
+repository.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Arend van Spriel (6):
+  brcmfmac: rename brcmf_fws_{de,}init to brcmf_fws{at,de}tach
+  brcmfmac: ignore interfaces when fwsignal is disabled
+  brcmfmac: remove reference to fwsignal data from struct brcmf_pub
+  brcmfmac: add length checks in scheduled scan result handler
+  brcmfmac: remove bogus check in scheduled scan result handler
+  brcmfmac: only add channels and ssids once in scan request
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index a76c8d20e093..9092de2d2c7c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -3355,7 +3355,7 @@ static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
--	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    | 35 ++++++++++----
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.h    |  1 +
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 39 +++++++++++-----
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 -
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 53 ++++++++++------------
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         |  4 +-
+ 6 files changed, 82 insertions(+), 52 deletions(-)
+
 -- 
-2.12.0
+1.9.1
