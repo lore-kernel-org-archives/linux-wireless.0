@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:36862 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754035AbdDQVAk (ORCPT
+Received: from mail-qk0-f177.google.com ([209.85.220.177]:33969 "EHLO
+        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755730AbdDFEcc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 17:00:40 -0400
-Received: by mail-pf0-f176.google.com with SMTP id 194so31464954pfv.3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2017 14:00:40 -0700 (PDT)
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Grant Grundler <grundler@chromium.org>,
-        Greg Hackmann <ghackmann@google.com>,
-        Michael Davidson <md@google.com>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH] mac80211: ibss: Fix channel type enum in ieee80211_sta_join_ibss()
-Date: Mon, 17 Apr 2017 13:59:53 -0700
-Message-Id: <20170417205953.4719-1-mka@chromium.org> (sfid-20170417_230109_123854_74C5FAEB)
+        Thu, 6 Apr 2017 00:32:32 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170331202136.100342-1-briannorris@chromium.org>
+References: <20170331202136.100342-1-briannorris@chromium.org>
+From: amit karwar <amitkarwar@gmail.com>
+Date: Thu, 6 Apr 2017 10:02:31 +0530
+Message-ID: <CAEhWJF==rVqrO3sWz2Sq-7kd=6=66rfJs7+9qu4dgeB3ONyYLg@mail.gmail.com> (sfid-20170406_063241_703359_CFCFEB8E)
+Subject: Re: [RFC PATCH] Revert "mwifiex: fix system hang problem after resume"
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_chandef_create() expects an 'enum nl80211_channel_type' as
-channel type however in ieee80211_sta_join_ibss()
-NL80211_CHAN_WIDTH_20_NOHT is passed in two occasions, which is of
-the enum type 'nl80211_chan_width'. Change the value to NL80211_CHAN_NO_HT
-(20 MHz, non-HT channel) of the channel type enum.
+On Sat, Apr 1, 2017 at 1:51 AM, Brian Norris <briannorris@chromium.org> wrote:
+> This reverts commit 437322ea2a36d112e20aa7282c869bf924b3a836.
+>
+> This above-mentioned "fix" does not actually do anything to prevent a
+> race condition. It simply papers over it so that the issue doesn't
+> appear.
+>
+> If this is a real problem, it should be explained better than the above
+> commit does, and an alternative, non-racy solution should be found.
+>
+> For further reason to revert this: there's ot reason we can't try
+> resetting the card when it's *actually* stuck in host-sleep mode. So
+> instead, this is unnecessarily creating scenarios where we can't recover
+> Wifi.
+>
+> Cc: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+> Amit, please take a look. AIUI, your "fix" is wrong, and quite racy. If you
+> still think it's needed, can you please propose an alternative? Or at least
+> explain more why this is needed? Thanks.
+>
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
----
- net/mac80211/ibss.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I agree. Fix just covers the issue. We need to investigate why system
+hangs when card reset is attempted in host sleep activated scenario.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 98999d3d5262..e957351976a2 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -425,7 +425,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_CHAN_WIDTH_5:
- 	case NL80211_CHAN_WIDTH_10:
- 		cfg80211_chandef_create(&chandef, cbss->channel,
--					NL80211_CHAN_WIDTH_20_NOHT);
-+					NL80211_CHAN_NO_HT);
- 		chandef.width = sdata->u.ibss.chandef.width;
- 		break;
- 	case NL80211_CHAN_WIDTH_80:
-@@ -437,7 +437,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	default:
- 		/* fall back to 20 MHz for unsupported modes */
- 		cfg80211_chandef_create(&chandef, cbss->channel,
--					NL80211_CHAN_WIDTH_20_NOHT);
-+					NL80211_CHAN_NO_HT);
- 		break;
- 	}
- 
--- 
-2.12.2.762.g0e3151a226-goog
+Acked-by: Amitkumar Karwar <amitkarwar@gmail.com>
+
+Regards,
+Amitkumar Karwar
