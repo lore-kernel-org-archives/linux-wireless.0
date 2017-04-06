@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51852 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933573AbdDGT3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:29:25 -0400
-Message-ID: <1491593357.5800.13.camel@sipsolutions.net> (sfid-20170407_213040_912655_2AFCEA8B)
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pablo Neira Ayuso <pablo@netfilter.org>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Date: Fri, 07 Apr 2017 21:29:17 +0200
-In-Reply-To: <20170407192134.GA23205@salvia>
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
-         <20170407.115315.23470877439489670.davem@davemloft.net>
-         <1491591552.5800.1.camel@sipsolutions.net> <20170407190601.GA22991@salvia>
-         <1491592185.5800.7.camel@sipsolutions.net> <20170407192134.GA23205@salvia>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f43.google.com ([209.85.214.43]:35355 "EHLO
+        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756255AbdDFS45 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Apr 2017 14:56:57 -0400
+Received: by mail-it0-f43.google.com with SMTP id y18so107032819itc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 11:56:57 -0700 (PDT)
+From: Matthias Kaehlcke <mka@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
+        Michael Davidson <md@google.com>,
+        Greg Hackmann <ghackmann@google.com>,
+        Matthias Kaehlcke <mka@chromium.org>
+Subject: [PATCH] mac80211: Fix clang warning about constant operand in logical operation
+Date: Thu,  6 Apr 2017 11:56:33 -0700
+Message-Id: <20170406185633.91065-1-mka@chromium.org> (sfid-20170406_205719_473802_3BB6915E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-04-07 at 21:21 +0200, Pablo Neira Ayuso wrote:
-> 
-> For my usecases in netfilter, the attributes and an specific error
-> code should be enough to figure out what is wrong. Will not need
-> strings.
+Clang raises a warning about the expression 'strlen(CONFIG_XXX)' being
+used in a logical operation. Clangs' builtin strlen function resolves the
+expression to a constant at compile time, which causes clang to generate
+a 'constant-logical-operand' warning.
 
-Fair enough.
+Split the if statement in two to avoid using the const expression in a
+logical operation.
 
-> BTW, we may not have an offset, eg. EINVAL because of missing
-> attribute. Given we have different requirements, I would leave it to
-> each subsystem to decide what netlink error attributes are specified.
-> 
-> > (It's ultimately always going to be optional since we'll continue
-> > returning errors without *any* extended error information - likely
-> > indefinitely - but if we have a wrong attribute, should we always
-> > have
-> > an offset? Would be nice, but could be difficult in practice)
-> > 
-> > > We can probably use struct nla_policy to place the extended error
-> > > code or the string (as we discussed I don't need string errors,
-> > > but
-> > > I'm fine if other people find it useful).
-> > 
-> > I don't think for the error strings really would be useful for
-> > nla_parse() or a policy - we can return something generic like
-> > "malformed attribute" there as a string, and hopefully point to the
-> > attribute/offset from there generically. I just really want to see
-> > how
-> > to actually do that.
-> 
-> I think the most flexible way is to pass the container error
-> structure to nla_parse() so it sets this for you. This would also
-> save tons of "malformed attribute" strings.
+Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+---
+ net/mac80211/rate.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Yes, for sure. The thing is we'll probalby have to pass down the
-request skb *and* the error struct so that we can get the offset, and
-this seems like the generic thing that we really should try to get the
-most information generated.
-
-johannes
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 206698bc93f4..68ff202d6380 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -173,9 +173,14 @@ ieee80211_rate_control_ops_get(const char *name)
+ 		/* try default if specific alg requested but not found */
+ 		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
+ 
++	if (ops)
++		goto unlock;
++
+ 	/* try built-in one if specific alg requested but not found */
+-	if (!ops && strlen(CONFIG_MAC80211_RC_DEFAULT))
++	if (strlen(CONFIG_MAC80211_RC_DEFAULT))
+ 		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
++
++unlock:
+ 	kernel_param_unlock(THIS_MODULE);
+ 
+ 	return ops;
+-- 
+2.12.2.715.g7642488e1d-goog
