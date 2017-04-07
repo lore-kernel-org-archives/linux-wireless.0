@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38256 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753860AbdDLPa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 11:30:56 -0400
-Message-ID: <1492011040.2855.18.camel@sipsolutions.net> (sfid-20170412_173111_494536_C2E714F0)
-Subject: Re: [RFC 1/3] bpf/wireless: add wifimon program type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        daniel@iogearbox.net, ast@kernel.org
-Date: Wed, 12 Apr 2017 17:30:40 +0200
-In-Reply-To: <20170412.111913.497795978751789475.davem@davemloft.net>
-References: <20170412110726.9689-1-johannes@sipsolutions.net>
-         <1492007254.2855.10.camel@sipsolutions.net>
-         <20170412.111913.497795978751789475.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([184.105.139.130]:59684 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756124AbdDGTWY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:22:24 -0400
+Date: Fri, 07 Apr 2017 12:22:23 -0700 (PDT)
+Message-Id: <20170407.122223.385211483743191711.davem@davemloft.net> (sfid-20170407_212435_599296_FA57D028)
+To: johannes@sipsolutions.net
+Cc: pablo@netfilter.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1491592185.5800.7.camel@sipsolutions.net>
+References: <1491591552.5800.1.camel@sipsolutions.net>
+        <20170407190601.GA22991@salvia>
+        <1491592185.5800.7.camel@sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-04-12 at 11:19 -0400, David Miller wrote:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 07 Apr 2017 21:09:45 +0200
+
+> On Fri, 2017-04-07 at 21:06 +0200, Pablo Neira Ayuso wrote:
+>> On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
+>> [...]
+>> > Heh. I think I really want to solve - at least partially -
+>> > nla_parse()
+>> > to see that it can be done this way. It'd be nice to even transform
+>> > all
+>> > the callers (I generated half of these patches with spatch anyway)
+>> > to
+>> > have at least that.
+>> 
+>> We can just have a modified version of nla_parse that deals with
+>> this.
 > 
-> > Instead it may make more sense to just have a "wifi_info(skb,
-> info)"
-> > function you can call, e.g. with a structure that has various
-> fields
-> > and flags to see which you care about.
+> Yes, but we need to figure out a good way to have the offset.
 > 
-> I would advise against this, let the parsing part use __sk_buff and
-> therefore have maximum flexibility.  You really cannot predict the
-> future, so in my opinion it might be unwise to constrain at this
-> point.
+> We also need to see if we want to *force* having the offset. In some
+> sense that'd be useful, in another it might be very complicated to fill
+> it in at all times, if for example errors come from lower layers like
+> drivers.
 
-So my point with the wifi_info() function to call from the BPF program
-was just that putting something that's not already in struct sk_buff
-into __sk_buff doesn't really make a lot of sense - we still have to
-actually build it somewhere/somehow without knowing if it's going to be
-needed by the program. We already have things like prog->cb_access and
-prog->dst_needed now, but I'm not sure we want to blow that up much.
+It has to be optional, some kinds of errors don't have an exact
+context per-se.
 
-At the same time, technically I *do* have the information in skb->cb,
-but the format thereof is something I really wouldn't want to let
-trickle into the ABI. Therefore, I think if somebody needs something
-like the bitrate, we should have a wifi_info() function that can return
-the bitrate (among other things) without having to pre-build the data.
-We can still cache it in mac80211 if multiple programs are there, dunno
-if that makes sense.
+Also another way to look at this is that we're providing a lot of
+new power and expressability.  So even if only one aspect of the
+new error reporting is used it's a positive step forward.
 
-Nevertheless, I think if I don't use __sk_buff as the program argument
-then things get really messy, so I'll stick to that, and avoid adding
-anything to it as much as possible.
-
-johannes
+So allow offset "0" meaning "unspecified".
