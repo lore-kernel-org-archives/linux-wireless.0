@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35758 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750705AbdDGKv6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 06:51:58 -0400
-Received: by mail-pg0-f67.google.com with SMTP id g2so14733667pge.2
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Apr 2017 03:51:58 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v2 1/4] mwifiex: remove unnecessary wakeup interrupt number sanity check
-Date: Fri,  7 Apr 2017 10:51:22 +0000
-Message-Id: <1491562285-29818-1-git-send-email-huxinming820@gmail.com> (sfid-20170407_125407_930355_2947EBB2)
+Received: from s3.sipsolutions.net ([5.9.151.49]:51852 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933573AbdDGT3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:29:25 -0400
+Message-ID: <1491593357.5800.13.camel@sipsolutions.net> (sfid-20170407_213040_912655_2AFCEA8B)
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Date: Fri, 07 Apr 2017 21:29:17 +0200
+In-Reply-To: <20170407192134.GA23205@salvia>
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+         <20170407.115315.23470877439489670.davem@davemloft.net>
+         <1491591552.5800.1.camel@sipsolutions.net> <20170407190601.GA22991@salvia>
+         <1491592185.5800.7.camel@sipsolutions.net> <20170407192134.GA23205@salvia>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Fri, 2017-04-07 at 21:21 +0200, Pablo Neira Ayuso wrote:
+> 
+> For my usecases in netfilter, the attributes and an specific error
+> code should be enough to figure out what is wrong. Will not need
+> strings.
 
-If wakeup interrupt handler is called, we know that the wakeup
-interrupt number is valid, there is no need to check it.
+Fair enough.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Reviewed-by: Dmitry Torokhov <dtor@chromium.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
-v2: modify description(Dimtry)
----
- drivers/net/wireless/marvell/mwifiex/main.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+> BTW, we may not have an offset, eg. EINVAL because of missing
+> attribute. Given we have different requirements, I would leave it to
+> each subsystem to decide what netlink error attributes are specified.
+> 
+> > (It's ultimately always going to be optional since we'll continue
+> > returning errors without *any* extended error information - likely
+> > indefinitely - but if we have a wrong attribute, should we always
+> > have
+> > an offset? Would be nice, but could be difficult in practice)
+> > 
+> > > We can probably use struct nla_policy to place the extended error
+> > > code or the string (as we discussed I don't need string errors,
+> > > but
+> > > I'm fine if other people find it useful).
+> > 
+> > I don't think for the error strings really would be useful for
+> > nla_parse() or a policy - we can return something generic like
+> > "malformed attribute" there as a string, and hopefully point to the
+> > attribute/offset from there generically. I just really want to see
+> > how
+> > to actually do that.
+> 
+> I think the most flexible way is to pass the container error
+> structure to nla_parse() so it sets this for you. This would also
+> save tons of "malformed attribute" strings.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 0dfbac8..98fd491 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1513,11 +1513,9 @@ static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
- {
- 	struct mwifiex_adapter *adapter = priv;
- 
--	if (adapter->irq_wakeup >= 0) {
--		dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
--		adapter->wake_by_wifi = true;
--		disable_irq_nosync(irq);
--	}
-+	dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
-+	adapter->wake_by_wifi = true;
-+	disable_irq_nosync(irq);
- 
- 	/* Notify PM core we are wakeup source */
- 	pm_wakeup_event(adapter->dev, 0);
--- 
-1.8.1.4
+Yes, for sure. The thing is we'll probalby have to pass down the
+request skb *and* the error struct so that we can get the offset, and
+this seems like the generic thing that we really should try to get the
+most information generated.
+
+johannes
