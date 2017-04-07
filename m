@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:48216 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947066AbdDTTiM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 15:38:12 -0400
-Date: Thu, 20 Apr 2017 15:38:09 -0400 (EDT)
-Message-Id: <20170420.153809.763038513182171279.davem@davemloft.net> (sfid-20170420_213818_817800_AB40C973)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        johannes.berg@intel.com
-Subject: Re: [PATCH net] mac80211: reject ToDS broadcast data frames
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170420193216.17087-1-johannes@sipsolutions.net>
-References: <20170420193216.17087-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.us.es ([193.147.175.20]:34094 "EHLO mail.us.es"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933993AbdDGT12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:27:28 -0400
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+        by mail.us.es (Postfix) with ESMTP id 208A5170D28
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:27:24 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id 117F2DA729
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:27:24 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id E22A4DA807
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:27:21 +0200 (CEST)
+Date: Fri, 7 Apr 2017 21:27:14 +0200
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+Message-ID: <20170407192714.GA23349@salvia> (sfid-20170407_212757_007207_9412563A)
+References: <1491591552.5800.1.camel@sipsolutions.net>
+ <20170407190601.GA22991@salvia>
+ <1491592185.5800.7.camel@sipsolutions.net>
+ <20170407.122223.385211483743191711.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170407.122223.385211483743191711.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 20 Apr 2017 21:32:16 +0200
+On Fri, Apr 07, 2017 at 12:22:23PM -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Fri, 07 Apr 2017 21:09:45 +0200
+> 
+> > On Fri, 2017-04-07 at 21:06 +0200, Pablo Neira Ayuso wrote:
+> >> On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
+> >> [...]
+> >> > Heh. I think I really want to solve - at least partially -
+> >> > nla_parse()
+> >> > to see that it can be done this way. It'd be nice to even transform
+> >> > all
+> >> > the callers (I generated half of these patches with spatch anyway)
+> >> > to
+> >> > have at least that.
+> >> 
+> >> We can just have a modified version of nla_parse that deals with
+> >> this.
+> > 
+> > Yes, but we need to figure out a good way to have the offset.
+> > 
+> > We also need to see if we want to *force* having the offset. In some
+> > sense that'd be useful, in another it might be very complicated to fill
+> > it in at all times, if for example errors come from lower layers like
+> > drivers.
+> 
+> It has to be optional, some kinds of errors don't have an exact
+> context per-se.
+> 
+> Also another way to look at this is that we're providing a lot of
+> new power and expressability.  So even if only one aspect of the
+> new error reporting is used it's a positive step forward.
+> 
+> So allow offset "0" meaning "unspecified".
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> AP/AP_VLAN modes don't accept any real 802.11 multicast data
-> frames, but since they do need to accept broadcast management
-> frames the same is currently permitted for data frames. This
-> opens a security problem because such frames would be decrypted
-> with the GTK, and could even contain unicast L3 frames.
-> 
-> Since the spec says that ToDS frames must always have the BSSID
-> as the RA (addr1), reject any other data frames.
-> 
-> The problem was originally reported in "Predicting, Decrypting,
-> and Abusing WPA2/802.11 Group Keys" at usenix
-> https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/vanhoef
-> and brought to my attention by Jouni.
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Jouni Malinen <j@w1.fi>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> --
-> Dave, I didn't want to send you a new pull request for a single
-> commit yet again - can you apply this one patch as is?
+Instead, we can just not send the offset attribute to userspace if
+it's not specified. So missing attribute means "unspecified".
 
-Sure, done.
+I'm always a bit worried this "0 means something" semantics :)
