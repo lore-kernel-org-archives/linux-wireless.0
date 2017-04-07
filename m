@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:34895 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755352AbdDPOua (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 10:50:30 -0400
-Received: by mail-pg0-f43.google.com with SMTP id 72so53236574pge.2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 07:50:30 -0700 (PDT)
-Subject: Re: second wave of netlink extended ACK reporting
-To: Jamal Hadi Salim <jhs@mojatatu.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        nicolas.dichtel@6wind.com, Jiri Pirko <jiri@resnulli.us>,
-        Pravin Shelar <pshelar@nicira.com>, dev@openvswitch.org
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
- <20170408174900.12820-2-johannes@sipsolutions.net>
- <20170408183440.GA1900@nanopsycho>
- <1491676621.5800.24.camel@sipsolutions.net>
- <20170408184008.GB1900@nanopsycho>
- <990b5610-a894-b3d2-d3a7-536dfd25adb8@cumulusnetworks.com>
- <1491805089.2455.3.camel@sipsolutions.net>
- <c0b35e6e-e5cb-25f6-7ccf-eec33ba39f3b@6wind.com>
- <1492090170.29526.1.camel@sipsolutions.net>
- <28b0d93a-7e96-f7eb-b140-afc9ad429c30@6wind.com>
- <1492111480.29526.7.camel@sipsolutions.net>
- <826de765-dd18-f6a3-8e37-7b55398ad99b@mojatatu.com>
- <c75ab5ec-d33e-256d-1222-590dd22c5b08@cumulusnetworks.com>
- <280d0c61-4506-f721-1536-4afb2daabef8@mojatatu.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52148 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933777AbdDGTqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:46:53 -0400
+Message-ID: <1491594406.5800.18.camel@sipsolutions.net> (sfid-20170407_214852_332376_240F8F28)
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>, pablo@netfilter.org
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jiri Benc <jbenc@redhat.com>
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <8a520788-7162-a745-98d8-1c378089acf4@cumulusnetworks.com> (sfid-20170416_165034_788420_3F75E30C)
-Date: Sun, 16 Apr 2017 08:50:27 -0600
-MIME-Version: 1.0
-In-Reply-To: <280d0c61-4506-f721-1536-4afb2daabef8@mojatatu.com>
-Content-Type: text/plain; charset=utf-8
+        jiri@resnulli.us
+Date: Fri, 07 Apr 2017 21:46:46 +0200
+In-Reply-To: <20170407.124327.626442219286333933.davem@davemloft.net>
+References: <1491591552.5800.1.camel@sipsolutions.net>
+         <20170407.122053.201153373954521345.davem@davemloft.net>
+         <20170407193550.GA23424@salvia>
+         <20170407.124327.626442219286333933.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/16/17 8:48 AM, Jamal Hadi Salim wrote:
-> Excellent. His patches seem to be in. Seems
-> commit ce07183282975026716107d36fd3f5f93de76668
-> is a good point?
+On Fri, 2017-04-07 at 12:43 -0700, David Miller wrote:
+> 
+> I have no strong opinions about string length.
+> 
+> In my opinion, I would like to believe that if someone tried to get a
+> networking patch applied that emitted a rediculously long string then
+> we would give them feedback about how that is not acceptable.  Right?
 
-yes. will send later today.
+Agree with this, I don't really see much point in adding an extra
+warning. There's an implicit (multi-KB though) limit as well in the
+message size ;-)
+
+> I suspect that someone will eventually give us a hard time about the
+> strings wrt. internationalization. :-) It's solvable at least
+> partially in userspace I suppose.
+
+I tend to think of the strings more of a debugging aid, but that's a
+good point.
+
+Perhaps we should have a macro that has the strings - similar to the
+inline function I put into netlink - but if we make that a macro we can
+put the strings into a separate section to be able to find them more
+easily for later translation, and optionally even omit them entirely
+(to satisfy the kernel tinification folks)?
+
+johannes
