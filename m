@@ -1,40 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55180 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S943851AbdDTLA4 (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58660 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756384AbdDGJXa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 07:00:56 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rt2800: fix mt7620 vco calibration registers
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170418093229.GA6026@makrotopia.org>
-References: <20170418093229.GA6026@makrotopia.org>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Message-Id: <20170420110050.0A8796114D@smtp.codeaurora.org> (sfid-20170420_130103_426927_7A38F6A2)
-Date: Thu, 20 Apr 2017 11:00:49 +0000 (UTC)
+        Fri, 7 Apr 2017 05:23:30 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 09/10] brcmfmac: add mutex to protect pno requests
+Date: Fri,  7 Apr 2017 10:23:09 +0100
+Message-Id: <1491556990-25143-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112348_309095_FB371601)
+In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Golle <daniel@makrotopia.org> wrote:
-> From: Tomislav Požega <pozega.tomislav@gmail.com>
-> 
-> Use register values from init LNA function instead of the ones from
-> restore LNA function. Apply register values based on rx path
-> configuration.
-> 
-> Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+The request references kept in pno are accessed in user-space context
+and in firmware event handler context. As such we need to protect it
+with a lock. As both context allow sleep a mutex seems appropriate.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
-4bd96b5d3379 rt2800: fix mt7620 vco calibration registers
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index aa323534..4c17a1c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -43,6 +43,7 @@
+ struct brcmf_pno_info {
+ 	int n_reqs;
+ 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
++	struct mutex req_lock;
+ };
+ 
+ #define ifp_to_pno(_ifp)	(_ifp)->drvr->config->pno
+@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
+ 		return -ENOSPC;
+ 	}
+ 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
++	mutex_lock(&pi->req_lock);
+ 	pi->reqs[pi->n_reqs++] = req;
++	mutex_unlock(&pi->req_lock);
+ 	return 0;
+ }
+ 
+ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ {
+-	int i;
++	int i, err = 0;
++
++	mutex_lock(&pi->req_lock);
+ 
+ 	/* find request */
+ 	for (i = 0; i < pi->n_reqs; i++) {
+@@ -71,7 +76,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ 	/* request not found */
+ 	if (WARN_ON(i == pi->n_reqs)) {
+ 		brcmf_err("reqid not found\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto done;
+ 	}
+ 
+ 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
+@@ -79,14 +85,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ 
+ 	/* if last we are done */
+ 	if (!pi->n_reqs || i == pi->n_reqs)
+-		return 0;
++		goto done;
+ 
+ 	/* fill the gap with remaining requests */
+ 	while (i <= pi->n_reqs - 1) {
+ 		pi->reqs[i] = pi->reqs[i + 1];
+ 		i++;
+ 	}
+-	return 0;
++
++done:
++	mutex_unlock(&pi->req_lock);
++	return err;
+ }
+ 
+ static int brcmf_pno_channel_config(struct brcmf_if *ifp,
+@@ -494,6 +503,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
+ 		return -ENOMEM;
+ 
+ 	cfg->pno = pi;
++	mutex_init(&pi->req_lock);
+ 	return 0;
+ }
+ 
+@@ -506,6 +516,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
+ 	cfg->pno = NULL;
+ 
+ 	WARN_ON(pi->n_reqs);
++	mutex_destroy(&pi->req_lock);
+ 	kfree(pi);
+ }
+ 
+@@ -521,11 +532,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
+ 
+ u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
+ {
+-	/* bucket appears to be gone */
+-	if (bucket >= pi->n_reqs)
+-		return 0;
++	u64 reqid = 0;
++
++	mutex_lock(&pi->req_lock);
++
++	if (bucket < pi->n_reqs)
++		reqid = pi->reqs[bucket]->reqid;
+ 
+-	return pi->reqs[bucket]->reqid;
++	mutex_unlock(&pi->req_lock);
++	return reqid;
+ }
+ 
+ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+@@ -536,6 +551,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 	u32 bucket_map = 0;
+ 	int i, j;
+ 
++	mutex_lock(&pi->req_lock);
+ 	for (i = 0; i < pi->n_reqs; i++) {
+ 		req = pi->reqs[i];
+ 
+@@ -550,5 +566,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 			}
+ 		}
+ 	}
++	mutex_unlock(&pi->req_lock);
+ 	return bucket_map;
+ }
 -- 
-https://patchwork.kernel.org/patch/9685229/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
