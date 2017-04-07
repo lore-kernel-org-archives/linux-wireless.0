@@ -1,74 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56244 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933483AbdDEKd0 (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58659 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756383AbdDGJXa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 06:33:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Reshetova\, Elena" <elena.reshetova@intel.com>
-Cc: "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel\@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-rdma\@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-hams\@vger.kernel.org" <linux-hams@vger.kernel.org>,
-        "linux-ppp\@vger.kernel.org" <linux-ppp@vger.kernel.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ganeshgr\@chelsio.com" <ganeshgr@chelsio.com>,
-        "nbd\@openwrt.org" <nbd@openwrt.org>,
-        "blogic\@openwrt.org" <blogic@openwrt.org>,
-        "matthias.bgg\@gmail.com" <matthias.bgg@gmail.com>,
-        "yishaih\@mellanox.com" <yishaih@mellanox.com>,
-        "saeedm\@mellanox.com" <saeedm@mellanox.com>,
-        "matanb\@mellanox.com" <matanb@mellanox.com>,
-        "leonro\@mellanox.com" <leonro@mellanox.com>,
-        "ajk\@comnets.uni-bremen.de" <ajk@comnets.uni-bremen.de>,
-        "paulus\@samba.org" <paulus@samba.org>, "j\@w1.fi" <j@w1.fi>,
-        "peterz\@infradead.org" <peterz@infradead.org>,
-        "keescook\@chromium.org" <keescook@chromium.org>,
-        "gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: Re: [PATCH 16/16] drivers, net, intersil: convert request_context.refcount from atomic_t to refcount_t
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-        <1490691403-4016-17-git-send-email-elena.reshetova@intel.com>
-        <87zifxn2gb.fsf@kamboji.qca.qualcomm.com>
-        <2236FBA76BA1254E88B949DDB74E612B41C8741B@IRSMSX102.ger.corp.intel.com>
-Date: Wed, 05 Apr 2017 13:33:12 +0300
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C8741B@IRSMSX102.ger.corp.intel.com>
-        (Elena Reshetova's message of "Tue, 4 Apr 2017 10:07:55 +0000")
-Message-ID: <87k26zi1p3.fsf@kamboji.qca.qualcomm.com> (sfid-20170405_123427_278181_1F0DAB2E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 7 Apr 2017 05:23:30 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 10/10] brcmfmac: add scheduled scan support for specified BSSIDs
+Date: Fri,  7 Apr 2017 10:23:10 +0100
+Message-Id: <1491556990-25143-11-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112345_860079_DC2C2A69)
+In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Reshetova, Elena" <elena.reshetova@intel.com> writes:
+Add support to handle scheduled scan request containing BSSID in
+the matchsets. The firmware can send event upon finding BSSIDs and
+SSIDs. To get these in one event the bit REPORT_SEPERATELY needed
+to be removed from the flags in brcmf_pno_config().
 
->> Elena Reshetova <elena.reshetova@intel.com> writes:
->> 
->> > refcount_t type and corresponding API should be
->> > used instead of atomic_t when the variable is used as
->> > a reference counter. This allows to avoid accidental
->> > refcounter overflows that might lead to use-after-free
->> > situations.
->> >
->> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
->> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
->> > Signed-off-by: Kees Cook <keescook@chromium.org>
->> > Signed-off-by: David Windsor <dwindsor@gmail.com>
->> > ---
->> >  drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 15 ++++++++-------
->> >  1 file changed, 8 insertions(+), 7 deletions(-)
->> 
->> The prefix should be "orinoco_usb:", I'll fix that.
->
-> Thanks for both! Will you take the patches in?
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 11 +++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 56 ++++++++++++++++------
+ 2 files changed, 52 insertions(+), 15 deletions(-)
 
-You mean patches 15 and 16? I didn't even look rest of the patches.
-
-But not sure yet because Dave doesn't seem to like the interface and I
-want to follow the discussion first.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index cc832ab..51d89c6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -806,6 +806,17 @@ struct brcmf_pno_macaddr_le {
+ };
+ 
+ /**
++ * struct brcmf_pno_bssid_le - bssid configuration for PNO scan.
++ *
++ * @bssid: BSS network identifier.
++ * @flags: flags for this BSSID.
++ */
++struct brcmf_pno_bssid_le {
++	u8 bssid[ETH_ALEN];
++	__le16 flags;
++};
++
++/**
+  * struct brcmf_pktcnt_le - packet counters.
+  *
+  * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index 4c17a1c..f178af0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -120,7 +120,6 @@ static int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
+ 
+ 	/* set extra pno params */
+ 	flags = BIT(BRCMF_PNO_IMMEDIATE_SCAN_BIT) |
+-		BIT(BRCMF_PNO_REPORT_SEPARATELY_BIT) |
+ 		BIT(BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
+ 	pfn_param.repeat = BRCMF_PNO_REPEAT;
+ 	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
+@@ -205,6 +204,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
+ 			      bool active)
+ {
+ 	struct brcmf_pno_net_param_le pfn;
++	int err;
+ 
+ 	pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
+ 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
+@@ -215,7 +215,28 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
+ 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
+ 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
+ 	memcpy(pfn.ssid.SSID, ssid->ssid, ssid->ssid_len);
+-	return brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
++
++	brcmf_dbg(SCAN, "adding ssid=%.32s (active=%d)\n", ssid->ssid, active);
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
++	if (err < 0)
++		brcmf_err("adding failed: err=%d\n", err);
++	return err;
++}
++
++static int brcmf_pno_add_bssid(struct brcmf_if *ifp, const u8 *bssid)
++{
++	struct brcmf_pno_bssid_le bssid_cfg;
++	int err;
++
++	memcpy(bssid_cfg.bssid, bssid, ETH_ALEN);
++	bssid_cfg.flags = 0;
++
++	brcmf_dbg(SCAN, "adding bssid=%pM\n", bssid);
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_add_bssid", &bssid_cfg,
++				       sizeof(bssid_cfg));
++	if (err < 0)
++		brcmf_err("adding failed: err=%d\n", err);
++	return err;
+ }
+ 
+ static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
+@@ -342,8 +363,8 @@ static int brcmf_pno_prep_fwconfig(struct brcmf_pno_info *pi,
+ 	return err;
+ }
+ 
+-static int brcmf_pno_config_ssids(struct brcmf_if *ifp,
+-				  struct brcmf_pno_info *pi)
++static int brcmf_pno_config_networks(struct brcmf_if *ifp,
++				     struct brcmf_pno_info *pi)
+ {
+ 	struct cfg80211_sched_scan_request *r;
+ 	struct cfg80211_match_set *ms;
+@@ -355,16 +376,16 @@ static int brcmf_pno_config_ssids(struct brcmf_if *ifp,
+ 
+ 		for (j = 0; j < r->n_match_sets; j++) {
+ 			ms = &r->match_sets[j];
+-			if (!ms->ssid.ssid_len)
+-				continue;
+-			active = brcmf_is_ssid_active(&ms->ssid, r);
+-			brcmf_dbg(SCAN, "adding %.32s (active=%d)\n",
+-				  ms->ssid.ssid, active);
+-			err = brcmf_pno_add_ssid(ifp, &ms->ssid, active);
+-			if (err < 0) {
+-				brcmf_err("adding failed: err=%d\n", err);
+-				return err;
++			if (ms->ssid.ssid_len) {
++				active = brcmf_is_ssid_active(&ms->ssid, r);
++				err = brcmf_pno_add_ssid(ifp, &ms->ssid,
++							 active);
+ 			}
++			if (!err && is_valid_ether_addr(ms->bssid))
++				err = brcmf_pno_add_bssid(ifp, ms->bssid);
++
++			if (err < 0)
++				return err;
+ 		}
+ 	}
+ 	return 0;
+@@ -428,7 +449,7 @@ static int brcmf_pno_config_sched_scans(struct brcmf_if *ifp)
+ 	if (err < 0)
+ 		goto clean;
+ 
+-	err = brcmf_pno_config_ssids(ifp, pi);
++	err = brcmf_pno_config_networks(ifp, pi);
+ 	if (err < 0)
+ 		goto clean;
+ 
+@@ -560,7 +581,12 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 		for (j = 0; j < req->n_match_sets; j++) {
+ 			ms = &req->match_sets[j];
+ 			if (ms->ssid.ssid_len == ni->SSID_len &&
+-			    !strncmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
++			    !memcmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
++				bucket_map |= BIT(i);
++				break;
++			}
++			if (is_valid_ether_addr(ms->bssid) &&
++			    !memcmp(ms->bssid, ni->bssid, ETH_ALEN)) {
+ 				bucket_map |= BIT(i);
+ 				break;
+ 			}
 -- 
-Kalle Valo
+1.9.1
