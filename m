@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-132.163.com ([123.125.50.132]:55316 "EHLO m50-132.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750952AbdDWN12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Apr 2017 09:27:28 -0400
-From: Pan Bian <bianpan201603@163.com>
-To: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Received: from mail2.candelatech.com ([208.74.158.173]:44824 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934112AbdDGT1e (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:27:34 -0400
+Subject: Re: [RFC 2/3] genetlink: pass extended error report down
+To: Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
-Subject: [PATCH 1/1] cfg80211: add return value validation
-Date: Sun, 23 Apr 2017 21:27:03 +0800
-Message-Id: <1492954023-8596-1-git-send-email-bianpan201603@163.com> (sfid-20170423_152758_130294_C8463A15)
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+ <20170407182620.6438-3-johannes@sipsolutions.net>
+ <25e1fb8c-22e0-d7a2-13a7-d0def5432c9e@candelatech.com>
+ <1491592343.5800.8.camel@sipsolutions.net>
+Cc: pablo@netfilter.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <fd15a0bb-535a-ba4f-efbb-fa566e30fcd4@candelatech.com> (sfid-20170407_212758_155204_5111528C)
+Date: Fri, 7 Apr 2017 12:27:33 -0700
+MIME-Version: 1.0
+In-Reply-To: <1491592343.5800.8.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pan Bian <bianpan2016@163.com>
+On 04/07/2017 12:12 PM, Johannes Berg wrote:
+> On Fri, 2017-04-07 at 11:37 -0700, Ben Greear wrote:
+>>
+>> I guess the error string must be constant and always available in
+>> memory in this implementation?
+>
+> Yes.
+>
+>> I think it would be nice to dynamically create strings (malloc,
+>> snprintf, etc) and have the err_str logic free it when done?
+>
+> We can think about that later, but I don't actually think it makes a
+> lot of sense - if we point to the attribute and/or offset you really
+> ought to have enough info to figure out what's up.
 
-Function create_singlethread_workqueue() will return a NULL pointer if
-there is no enough memory, and its return value should be validated
-before using. However, in function rndis_wlan_bind(), its return value
-is not checked. This may cause NULL dereference bugs. This patch fixes
-it.
+We can think about it later, but lots of things in the wifi stack
+could use a descriptive message specific to the failure.  Often these
+messages are much more useful if you explain why the failure conflicts
+with regulatory, channel, virtual-dev combination, etc info, so that needs
+to be dynamic.  The code that is failing knows, so I'd like to pass it
+back to user-space.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/net/wireless/rndis_wlan.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 785334f..92a1bde 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -3427,6 +3427,10 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
- 
- 	/* because rndis_command() sleeps we need to use workqueue */
- 	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
-+	if (!priv->workqueue) {
-+		wiphy_free(wiphy);
-+		return -ENOMEM;
-+	}
- 	INIT_WORK(&priv->work, rndis_wlan_worker);
- 	INIT_DELAYED_WORK(&priv->dev_poller_work, rndis_device_poller);
- 	INIT_DELAYED_WORK(&priv->scan_work, rndis_get_scan_results);
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
