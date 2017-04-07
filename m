@@ -1,74 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47897 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752750AbdDJJIy (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58640 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756373AbdDGJX1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 05:08:54 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Dmitry Torokhov <dtor@google.com>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Rajat Jain <rajatja@google.com>, Cathy Luo <cluo@marvell.com>
-Subject: RE:  Re: [PATCH v2 2/4] mwifiex: fall back mwifiex_dbg to pr_info
- when adapter->dev not set
-Date: Mon, 10 Apr 2017 09:08:46 +0000
-Message-ID: <506dfcd84c8341af85ddf4ac922c78a6@SC-EXCH02.marvell.com> (sfid-20170410_110858_935121_768EC770)
-References: <1491562285-29818-1-git-send-email-huxinming820@gmail.com>
- <1491562285-29818-2-git-send-email-huxinming820@gmail.com>
- <CAE_wzQ9WzgNfgRAPR8Anhmq_bHZR1==Pb_9u6395kFvc49jZxg@mail.gmail.com>
-In-Reply-To: <CAE_wzQ9WzgNfgRAPR8Anhmq_bHZR1==Pb_9u6395kFvc49jZxg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Fri, 7 Apr 2017 05:23:27 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 07/10] brcmfmac: move scheduled scan wiphy param setting to pno module
+Date: Fri,  7 Apr 2017 10:23:07 +0100
+Message-Id: <1491556990-25143-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112342_572746_CDEB8CB2)
+In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRG1pdHJ5LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IERtaXRy
-eSBUb3Jva2hvdiBbbWFpbHRvOmR0b3JAZ29vZ2xlLmNvbV0NCj4gU2VudDogMjAxN+W5tDTmnIg4
-5pelIDE6MjgNCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxsZSBW
-YWxvOyBCcmlhbiBOb3JyaXM7IFJhamF0IEphaW47IEFtaXRrdW1hciBLYXJ3YXI7DQo+IENhdGh5
-IEx1bzsgWGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIHYyIDIvNF0gbXdp
-ZmlleDogZmFsbCBiYWNrIG13aWZpZXhfZGJnIHRvIHByX2luZm8NCj4gd2hlbiBhZGFwdGVyLT5k
-ZXYgbm90IHNldA0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4g
-SGkgWGlubWluZywNCj4gDQo+IE9uIEZyaSwgQXByIDcsIDIwMTcgYXQgMzo1MSBBTSwgWGlubWlu
-ZyBIdSA8aHV4aW5taW5nODIwQGdtYWlsLmNvbT4NCj4gd3JvdGU6DQo+ID4gRnJvbTogWGlubWlu
-ZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IG13aWZpZXhfZGJnIHdpbGwgZG8gbm90
-aGluZyBiZWZvcmUgYWRhcHRlci0+ZGV2IGdldCBhc3NpZ25lZC4gc2V2ZXJhbA0KPiA+IGxvZ3Mg
-bG9zdCBpbiB0aGlzIGNhc2UuIGl0IGNhbiBiZSBhdm9pZGVkIGJ5IGZhbGwgYmFjayB0byBwcl9p
-bmZvLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNv
-bT4NCj4gPiAtLS0NCj4gPiB2MjogZW5oYW5jZSBhZGFwdGVyLT5kZXYgbnVsbCBjYXNlLihCcmFp
-bikNCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21h
-aW4uYyB8IDE3ICsrKysrKysrKysrKy0tLS0tDQo+ID4gZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L21haW4uaCB8ICAyICsrDQo+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTQgaW5z
-ZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gaW5kZXggOThmZDQ5MS4uZjNlNzcy
-ZiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgv
-bWFpbi5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21h
-aW4uYw0KPiA+IEBAIC0xNzQ5LDE4ICsxNzQ5LDI1IEBAIHZvaWQgX213aWZpZXhfZGJnKGNvbnN0
-IHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXINCj4gPiAqYWRhcHRlciwgaW50IG1hc2ssICB7DQo+
-ID4gICAgICAgICBzdHJ1Y3QgdmFfZm9ybWF0IHZhZjsNCj4gPiAgICAgICAgIHZhX2xpc3QgYXJn
-czsNCj4gPiArICAgICAgIGNoYXIgbXNnW01XSUZJRVhfTE9HX0xFTl07DQo+ID4NCj4gPiAtICAg
-ICAgIGlmICghYWRhcHRlci0+ZGV2IHx8ICEoYWRhcHRlci0+ZGVidWdfbWFzayAmIG1hc2spKQ0K
-PiA+ICsgICAgICAgaWYgKCEoYWRhcHRlci0+ZGVidWdfbWFzayAmIG1hc2spKQ0KPiA+ICAgICAg
-ICAgICAgICAgICByZXR1cm47DQo+ID4NCj4gPiAgICAgICAgIHZhX3N0YXJ0KGFyZ3MsIGZtdCk7
-DQo+ID4NCj4gPiAtICAgICAgIHZhZi5mbXQgPSBmbXQ7DQo+ID4gLSAgICAgICB2YWYudmEgPSAm
-YXJnczsNCj4gPiAtDQo+ID4gLSAgICAgICBkZXZfaW5mbyhhZGFwdGVyLT5kZXYsICIlcFYiLCAm
-dmFmKTsNCj4gPiArICAgICAgIGlmICghYWRhcHRlci0+ZGV2KSB7DQo+ID4gKyAgICAgICAgICAg
-ICAgIHZzbnByaW50Zihtc2csIE1XSUZJRVhfTE9HX0xFTiwgZm10LCBhcmdzKTsNCj4gPiArICAg
-ICAgIH0gZWxzZSB7DQo+ID4gKyAgICAgICAgICAgICAgIHZhZi5mbXQgPSBmbXQ7DQo+ID4gKyAg
-ICAgICAgICAgICAgIHZhZi52YSA9ICZhcmdzOw0KPiA+ICsgICAgICAgICAgICAgICBkZXZfaW5m
-byhhZGFwdGVyLT5kZXYsICIlcFYiLCAmdmFmKTsNCj4gPiArICAgICAgIH0NCj4gPg0KPiA+ICAg
-ICAgICAgdmFfZW5kKGFyZ3MpOw0KPiA+ICsNCj4gPiArICAgICAgIGlmICghYWRhcHRlci0+ZGV2
-KQ0KPiA+ICsgICAgICAgICAgICAgICBwcl9pbmZvKCIlcyIsIG1zZyk7DQo+IA0KPiBXaHkgbm90
-Og0KPiANCj4gdmFmLmZtdCA9IGZtdDsNCj4gdmFmLnZhID0gJmFyZ3M7DQo+IA0KPiBpZiAoYWRh
-cHRlci0+ZGV2KQ0KPiAgICAgICAgIGRldl9pbmZvKGFkYXB0ZXItPmRldiwgIiVwViIsICZ2YWYp
-OyBlbHNlDQo+ICAgICAgICAgcHJfaW5mbygibXdpZmlleDogJXBWIiwgJnZhZik7DQo+IA0KDQpT
-aW1wbGUgY2hhbmdlIGhlcmUgbG9va3MgYmV0dGVyLCBoYXZlIGFwcGxpZWQgaW4gdjMuDQoNCj4g
-dmFfZW5kKGFyZ3MpOw0KPiANCj4gQWxzbywgaW5zdGVhZCBvZiBzdGF0aWMgIm13aWZpZXgiIHBy
-ZWZpeCBtYXliZSBtYWtlIHN1cmUgeW91IGhhdmUNCj4gcHJfZm10KCkgc2V0IHByb3Blcmx5IChJ
-IGFtIG5vdCBzdXJlIGlmIGl0IGlzIHNldCBvciBub3QpLg0KPiANCg0KWWVzLCB3ZSBoYXZlIHRo
-ZSBiZWxvdyBkZWZpbmU6DQojZGVmaW5lIHByX2ZtdChmbXQpIEtCVUlMRF9NT0ROQU1FICI6ICIg
-Zm10DQoNClRoYW5rcw0KU2ltb24NCg0KPiBUaGFua3MuDQo+IA0KPiAtLQ0KPiBEbWl0cnkNCg==
+As pno module is providing scheduled scan functionality have it taking
+care of setting related wiphy parameters as well.
+
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 18 +++++-------------
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.h    |  2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 10 ++++++++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h |  8 ++++++++
+ 4 files changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index f2a2026..8d0a5a1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6355,16 +6355,6 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	return -ENOMEM;
+ }
+ 
+-static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
+-{
+-	/* scheduled scan settings */
+-	wiphy->max_sched_scan_reqs = 1;
+-	wiphy->max_sched_scan_ssids = BRCMF_PNO_MAX_PFN_COUNT;
+-	wiphy->max_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
+-	wiphy->max_sched_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
+-	wiphy->max_sched_scan_plan_interval = BRCMF_PNO_SCHED_SCAN_MAX_PERIOD;
+-}
+-
+ #ifdef CONFIG_PM
+ static const struct wiphy_wowlan_support brcmf_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
+@@ -6411,6 +6401,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	const struct ieee80211_iface_combination *combo;
+ 	struct ieee80211_supported_band *band;
+ 	u16 max_interfaces = 0;
++	bool gscan;
+ 	__le32 bandlist[3];
+ 	u32 n_bands;
+ 	int err, i;
+@@ -6459,9 +6450,10 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+ 	wiphy->mgmt_stypes = brcmf_txrx_stypes;
+ 	wiphy->max_remain_on_channel_duration = 5000;
+-	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO))
+-		brcmf_wiphy_pno_params(wiphy);
+-
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
++		gscan = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_GSCAN);
++		brcmf_pno_wiphy_params(wiphy, gscan);
++	}
+ 	/* vendor commands/events support */
+ 	wiphy->vendor_commands = brcmf_vendor_cmds;
+ 	wiphy->n_vendor_commands = BRCMF_VNDR_CMDS_LAST - 1;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 8f19d95..a1c2e0a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -24,6 +24,8 @@
+ #include "fwil_types.h"
+ #include "p2p.h"
+ 
++#define BRCMF_SCAN_IE_LEN_MAX		2048
++
+ #define WL_NUM_SCAN_MAX			10
+ #define WL_TLV_INFO_MAX			1024
+ #define WL_BSS_INFO_MAX			2048
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index 9a25e79..cc0e6a4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -241,3 +241,13 @@ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 	return ret;
+ }
+ 
++void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
++{
++	/* scheduled scan settings */
++	wiphy->max_sched_scan_reqs = gscan ? 2 : 1;
++	wiphy->max_sched_scan_ssids = BRCMF_PNO_MAX_PFN_COUNT;
++	wiphy->max_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
++	wiphy->max_sched_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
++	wiphy->max_sched_scan_plan_interval = BRCMF_PNO_SCHED_SCAN_MAX_PERIOD;
++}
++
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+index bae55b2..07ec51f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+@@ -37,4 +37,12 @@
+ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 			       struct cfg80211_sched_scan_request *req);
+ 
++/**
++ * brcmf_pno_wiphy_params - fill scheduled scan parameters in wiphy instance.
++ *
++ * @wiphy: wiphy instance to be used.
++ * @gscan: indicates whether the device has support for g-scan feature.
++ */
++void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan);
++
+ #endif /* _BRCMF_PNO_H */
+-- 
+1.9.1
