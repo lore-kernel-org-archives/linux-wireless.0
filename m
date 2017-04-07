@@ -1,171 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59798 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1038949AbdDUMF1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 08:05:27 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Received: from mail.us.es ([193.147.175.20]:57664 "EHLO mail.us.es"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933185AbdDGTGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:06:07 -0400
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+        by mail.us.es (Postfix) with ESMTP id 325161395CE
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:06:03 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id 23118DA729
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:06:03 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id 04E5FDA7E9
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:06:01 +0200 (CEST)
+Date: Fri, 7 Apr 2017 21:06:01 +0200
+From: Pablo Neira Ayuso <pablo@netfilter.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 9/9] brcmfmac: add scheduled scan support for specified BSSIDs
-Date: Fri, 21 Apr 2017 13:05:08 +0100
-Message-Id: <1492776308-15120-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170421_140541_524844_815F351E)
-In-Reply-To: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+Message-ID: <20170407190601.GA22991@salvia> (sfid-20170407_210611_346683_9F64A016)
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+ <20170407.115315.23470877439489670.davem@davemloft.net>
+ <1491591552.5800.1.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1491591552.5800.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to handle scheduled scan request containing BSSID in
-the matchsets. The firmware can send event upon finding BSSIDs and
-SSIDs. To get these in one event the bit REPORT_SEPARATELY needed
-to be removed from the flags in brcmf_pno_config().
+On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
+[...]
+> Heh. I think I really want to solve - at least partially - nla_parse()
+> to see that it can be done this way. It'd be nice to even transform all
+> the callers (I generated half of these patches with spatch anyway) to
+> have at least that.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 11 ++++
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 58 ++++++++++++++++------
- 2 files changed, 53 insertions(+), 16 deletions(-)
+We can just have a modified version of nla_parse that deals with this.
+We can probably use struct nla_policy to place the extended error code
+or the string (as we discussed I don't need string errors, but I'm
+fine if other people find it useful).
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 45aaae8..b857d53 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -806,6 +806,17 @@ struct brcmf_pno_macaddr_le {
- };
- 
- /**
-+ * struct brcmf_pno_bssid_le - bssid configuration for PNO scan.
-+ *
-+ * @bssid: BSS network identifier.
-+ * @flags: flags for this BSSID.
-+ */
-+struct brcmf_pno_bssid_le {
-+	u8 bssid[ETH_ALEN];
-+	__le16 flags;
-+};
-+
-+/**
-  * struct brcmf_pktcnt_le - packet counters.
-  *
-  * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index 81e8549..9623157 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -120,7 +120,6 @@ static int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
- 
- 	/* set extra pno params */
- 	flags = BIT(BRCMF_PNO_IMMEDIATE_SCAN_BIT) |
--		BIT(BRCMF_PNO_REPORT_SEPARATELY_BIT) |
- 		BIT(BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
- 	pfn_param.repeat = BRCMF_PNO_REPEAT;
- 	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
-@@ -205,6 +204,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 			      bool active)
- {
- 	struct brcmf_pno_net_param_le pfn;
-+	int err;
- 
- 	pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
- 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
-@@ -215,7 +215,28 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
- 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
- 	memcpy(pfn.ssid.SSID, ssid->ssid, ssid->ssid_len);
--	return brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
-+
-+	brcmf_dbg(SCAN, "adding ssid=%.32s (active=%d)\n", ssid->ssid, active);
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
-+	if (err < 0)
-+		brcmf_err("adding failed: err=%d\n", err);
-+	return err;
-+}
-+
-+static int brcmf_pno_add_bssid(struct brcmf_if *ifp, const u8 *bssid)
-+{
-+	struct brcmf_pno_bssid_le bssid_cfg;
-+	int err;
-+
-+	memcpy(bssid_cfg.bssid, bssid, ETH_ALEN);
-+	bssid_cfg.flags = 0;
-+
-+	brcmf_dbg(SCAN, "adding bssid=%pM\n", bssid);
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_add_bssid", &bssid_cfg,
-+				       sizeof(bssid_cfg));
-+	if (err < 0)
-+		brcmf_err("adding failed: err=%d\n", err);
-+	return err;
- }
- 
- static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
-@@ -342,29 +363,29 @@ static int brcmf_pno_prep_fwconfig(struct brcmf_pno_info *pi,
- 	return err;
- }
- 
--static int brcmf_pno_config_ssids(struct brcmf_if *ifp,
--				  struct brcmf_pno_info *pi)
-+static int brcmf_pno_config_networks(struct brcmf_if *ifp,
-+				     struct brcmf_pno_info *pi)
- {
- 	struct cfg80211_sched_scan_request *r;
- 	struct cfg80211_match_set *ms;
- 	bool active;
--	int i, j, err;
-+	int i, j, err = 0;
- 
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		r = pi->reqs[i];
- 
- 		for (j = 0; j < r->n_match_sets; j++) {
- 			ms = &r->match_sets[j];
--			if (!ms->ssid.ssid_len)
--				continue;
--			active = brcmf_is_ssid_active(&ms->ssid, r);
--			brcmf_dbg(SCAN, "adding %.32s (active=%d)\n",
--				  ms->ssid.ssid, active);
--			err = brcmf_pno_add_ssid(ifp, &ms->ssid, active);
--			if (err < 0) {
--				brcmf_err("adding failed: err=%d\n", err);
--				return err;
-+			if (ms->ssid.ssid_len) {
-+				active = brcmf_is_ssid_active(&ms->ssid, r);
-+				err = brcmf_pno_add_ssid(ifp, &ms->ssid,
-+							 active);
- 			}
-+			if (!err && is_valid_ether_addr(ms->bssid))
-+				err = brcmf_pno_add_bssid(ifp, ms->bssid);
-+
-+			if (err < 0)
-+				return err;
- 		}
- 	}
- 	return 0;
-@@ -428,7 +449,7 @@ static int brcmf_pno_config_sched_scans(struct brcmf_if *ifp)
- 	if (err < 0)
- 		goto clean;
- 
--	err = brcmf_pno_config_ssids(ifp, pi);
-+	err = brcmf_pno_config_networks(ifp, pi);
- 	if (err < 0)
- 		goto clean;
- 
-@@ -555,7 +576,12 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 		for (j = 0; j < req->n_match_sets; j++) {
- 			ms = &req->match_sets[j];
- 			if (ms->ssid.ssid_len == ni->SSID_len &&
--			    !strncmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
-+			    !memcmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
-+				bucket_map |= BIT(i);
-+				break;
-+			}
-+			if (is_valid_ether_addr(ms->bssid) &&
-+			    !memcmp(ms->bssid, ni->bssid, ETH_ALEN)) {
- 				bucket_map |= BIT(i);
- 				break;
- 			}
--- 
-1.9.1
+Thanks!
