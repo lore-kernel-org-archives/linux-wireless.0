@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34067 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752163AbdDCSl4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 14:41:56 -0400
-Received: by mail-oi0-f67.google.com with SMTP id s11so4976416oie.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:56 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 06/12] rtlwifi: btcoex: 23b 2ant: less sensitive to tx rate penalty
-Date: Mon,  3 Apr 2017 13:41:36 -0500
-Message-Id: <20170403184147.18409-6-Larry.Finger@lwfinger.net> (sfid-20170403_204239_897458_96047122)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+Received: from mail.us.es ([193.147.175.20]:56664 "EHLO mail.us.es"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933366AbdDGTCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:02:10 -0400
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+        by mail.us.es (Postfix) with ESMTP id A8A411395CF
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:02:06 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id 9A3A4DA872
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:02:06 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id 7738FDA86E
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:02:04 +0200 (CEST)
+Date: Fri, 7 Apr 2017 21:02:04 +0200
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+Message-ID: <20170407190204.GA22810@salvia> (sfid-20170407_210321_365533_42F0407F)
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+ <20170407.115315.23470877439489670.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170407.115315.23470877439489670.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Fri, Apr 07, 2017 at 11:53:15AM -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Fri,  7 Apr 2017 20:26:17 +0200
+> 
+> > So this is my first draft of what we'd talked about at netconf.
+> > I'm not super happy with the way we have to pass the extended
+> > error struct, but I don't see a way to implement reporting any
+> > dynamic information (like error offsets) in any other way.
+> > 
+> > Alexander Shishkin had a nice way of reporting static extended
+> > error data, but that isn't really suitable for reporting the
+> > offset or even reporting the broken attribute from nla_parse().
+> > 
+> > Speaking of nla_parse(), that'll be somewhat complicated to do
+> > since we'll have to track the offsets of where we're parsing,
+> > but it might be possible since the nlattrs are just pointers
+> > into the message, so (optionally?) passing the skb as well can
+> > allow us to fill the offset information.
+> 
+> I like it, nice work.
+> 
+> I know people want dynamically generated strings and stuff, and we can
+> get there, but I prefer that the first thing we commit is super simple.
+> 
+> Someone gave me a hard time about the fact that we've been talking
+> about this idea for years but nothing ever happens.
+> 
+> I'm tempted to apply this as-is just to show that person that things
+> do in fact happen.... eventually :-)
 
-modify h2c parameter so that the rate suffers less penalty from retry
+We can just send follow up patches to refine, I think it's a good
+start, Johannes?
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - No changes.
-v3 - No changes.
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+BTW, for this co-authored effort in designing this:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index e9c692a5b13e..2264b24fea9a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -754,9 +754,9 @@ static void btc8723b_set_penalty_txrate(struct btc_coexist *btcoexist,
- 		h2c_parameter[1] |= BIT0;
- 		/* normal rate except MCS7/6/5, OFDM54/48/36 */
- 		h2c_parameter[2] = 0x00;
--		h2c_parameter[3] = 0xf7; /* MCS7 or OFDM54 */
--		h2c_parameter[4] = 0xf8; /* MCS6 or OFDM48 */
--		h2c_parameter[5] = 0xf9; /* MCS5 or OFDM36 */
-+		h2c_parameter[3] = 0xf4; /* MCS7 or OFDM54 */
-+		h2c_parameter[4] = 0xf5; /* MCS6 or OFDM48 */
-+		h2c_parameter[5] = 0xf6; /* MCS5 or OFDM36 */
- 	}
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--- 
-2.12.0
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+
+Thanks!
