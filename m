@@ -1,51 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34196 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938610AbdDTHVV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:21:21 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v5,
- 4/4] mwifiex: pcie: extract wifi part from combo firmware during
- function level reset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170413201032.GA91869@google.com>
-References: <20170413201032.GA91869@google.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20170420072121.26EB461151@smtp.codeaurora.org> (sfid-20170420_092153_374969_BAF14E8C)
-Date: Thu, 20 Apr 2017 07:21:20 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52118 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933568AbdDGToI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:44:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] netlink: send exterr cookie on success
+Date: Fri,  7 Apr 2017 21:44:02 +0200
+Message-Id: <20170407194402.4181-1-johannes@sipsolutions.net> (sfid-20170407_214411_506325_EC208102)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> A separate wifi-only firmware was download during pcie function level
-> reset. It is in fact the tail part of wifi/bt combo firmware. Per
-> Brian's and Dmitry's suggestion, this patch extract the wifi part from
-> combo firmware.
-> 
-> After that, the mrvl/pcie8997_wlan_v4.bin image in linux-firmware repo
-> is redundant (though I guess we keep it around to support older
-> kernels).
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+This is for Jamal, it allows the subsystem to return an arbitrary
+cookie to identify a new object/operation, perhaps to delete or
+cancel it later.
 
-efde6648a618 mwifiex: pcie: extract wifi part from combo firmware during function level reset
+This is actually something we use a lot in wifi too, though I'm
+not sure how we could do the backport necessary for that (since
+we sadly need to ship to all kinds of old kernels)
 
+Also contains the missing (err) check I pointed out - I'll squash
+this patch into the first of the exterr after I test it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/netlink.h      |  2 ++
+ include/uapi/linux/netlink.h |  4 ++++
+ net/netlink/af_netlink.c     | 28 +++++++++++++++++++---------
+ 3 files changed, 25 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index 662f343dc68b..76a0b0a22349 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -67,6 +67,8 @@ struct netlink_ext_err {
+ 	u32 ext_code;
+ 	u32 msg_offset;
+ 	u16 attr;
++	const u8 *cookie;
++	u8 cookie_len;
+ };
+ 
+ extern void netlink_kernel_release(struct sock *sk);
+diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
+index 0ef970e6f9f5..72a398e0f332 100644
+--- a/include/uapi/linux/netlink.h
++++ b/include/uapi/linux/netlink.h
+@@ -119,6 +119,9 @@ struct nlmsgerr {
+  * @NLMSGERR_ATTR_CODE: extended per-subsystem error code (u32)
+  * @NLMSGERR_ATTR_ATTR: top-level attribute that caused the error
+  *	(or is missing, u16)
++ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
++ *	be used - in the success case - to identify a created
++ *	object or operation or similar (binary)
+  */
+ enum nlmsgerr_attrs {
+ 	NLMSGERR_ATTR_UNUSED,
+@@ -126,6 +129,7 @@ enum nlmsgerr_attrs {
+ 	NLMSGERR_ATTR_OFFS,
+ 	NLMSGERR_ATTR_CODE,
+ 	NLMSGERR_ATTR_ATTR,
++	NLMSGERR_ATTR_COOKIE,
+ };
+ 
+ #define NETLINK_ADD_MEMBERSHIP		1
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index 532d906af3be..6b256e540bc1 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -2277,6 +2277,9 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 			if (exterr && exterr->attr)
+ 				payload += nla_total_size(sizeof(u16));
+ 		}
++	} else if (nlk->flags & NETLINK_F_EXT_ACK) {
++		if (exterr && exterr->cookie_len)
++			payload += nla_total_size(exterr->cookie_len);
+ 	}
+ 
+ 	skb = nlmsg_new(payload, GFP_KERNEL);
+@@ -2301,15 +2304,22 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh->nlmsg_len : sizeof(*nlh));
+ 
+ 	if (nlk->flags & NETLINK_F_EXT_ACK) {
+-		if (exterr && exterr->msg)
+-			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
+-					       exterr->msg));
+-		if (exterr && exterr->msg_offset)
+-			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
+-					    exterr->msg_offset));
+-		if (exterr && exterr->attr)
+-			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
+-					    exterr->attr));
++		if (err) {
++			if (exterr && exterr->msg)
++				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
++						       exterr->msg));
++			if (exterr && exterr->msg_offset)
++				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
++						    exterr->msg_offset));
++			if (exterr && exterr->attr)
++				WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
++						    exterr->attr));
++		} else {
++			if (exterr && exterr->attr)
++				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
++						exterr->cookie_len,
++						exterr->cookie));
++		}
+ 	}
+ 
+ 	netlink_unicast(in_skb->sk, skb, NETLINK_CB(in_skb).portid, MSG_DONTWAIT);
 -- 
-https://patchwork.kernel.org/patch/9679957/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
