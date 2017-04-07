@@ -1,271 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36004 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932328AbdDQALU (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58611 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756340AbdDGJX0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:20 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so25356193oif.3
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:20 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/27] rtlwifi: btcoex: 23b 1ant: monitor wifi and BT counter
-Date: Sun, 16 Apr 2017 19:10:48 -0500
-Message-Id: <20170417001111.29384-5-Larry.Finger@lwfinger.net> (sfid-20170417_021140_465905_0C5C717E)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+        Fri, 7 Apr 2017 05:23:26 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 03/10] nl80211: add support for BSSIDs in scheduled scan matchsets
+Date: Fri,  7 Apr 2017 10:23:03 +0100
+Message-Id: <1491556990-25143-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112338_398265_1DE9773F)
+In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+This patch allows for the scheduled scan request to specify matchsets
+for specific BSSIDs.
 
-In field debug, we check wifi and BT counter to analyze problems.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 143 +++++++++++++++++++--
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  15 +++
- 2 files changed, 147 insertions(+), 11 deletions(-)
+ include/net/cfg80211.h       |  6 +++++-
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/nl80211.c       | 41 +++++++++++++++++++++++++++++++----------
+ 3 files changed, 38 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 15c16e524356..851c11d18d9c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -210,11 +210,24 @@ static void halbtc8723b1ant_limited_rx(struct btc_coexist *btcoexist,
- 	btcoexist->btc_set(btcoexist, BTC_SET_ACT_AGGREGATE_CTRL, NULL);
- }
- 
-+static void halbtc8723b1ant_query_bt_info(struct btc_coexist *btcoexist)
-+{
-+	u8 h2c_parameter[1] = {0};
-+
-+	coex_sta->c2h_bt_info_req_sent = true;
-+
-+	/* trigger */
-+	h2c_parameter[0] |= BIT(0);
-+
-+	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
-+}
-+
- static void halbtc8723b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
- {
- 	u32 reg_hp_txrx, reg_lp_txrx, u32tmp;
- 	u32 reg_hp_tx = 0, reg_hp_rx = 0;
- 	u32 reg_lp_tx = 0, reg_lp_rx = 0;
-+	static u32 num_of_bt_counter_chk;
- 
- 	reg_hp_txrx = 0x770;
- 	reg_lp_txrx = 0x774;
-@@ -232,25 +245,122 @@ static void halbtc8723b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
- 	coex_sta->low_priority_tx = reg_lp_tx;
- 	coex_sta->low_priority_rx = reg_lp_rx;
- 
-+	if ((coex_sta->low_priority_tx > 1050) &&
-+	    (!coex_sta->c2h_bt_inquiry_page))
-+		coex_sta->pop_event_cnt++;
-+
- 	/* reset counter */
- 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
-+
-+	/* This part is for wifi FW and driver to update BT's status as
-+	 * disabled.
-+	 *
-+	 * The flow is as the following
-+	 * 1. disable BT
-+	 * 2. if all BT Tx/Rx counter = 0, after 6 sec we query bt info
-+	 * 3. Because BT will not rsp from mailbox, so wifi fw will know BT is
-+	 * disabled
-+	 *
-+	 * 4. FW will rsp c2h for BT that driver will know BT is disabled.
-+	 */
-+	if ((reg_hp_tx == 0) && (reg_hp_rx == 0) && (reg_lp_tx == 0) &&
-+	    (reg_lp_rx == 0)) {
-+		num_of_bt_counter_chk++;
-+		if (num_of_bt_counter_chk == 3)
-+			halbtc8723b1ant_query_bt_info(btcoexist);
-+	} else {
-+		num_of_bt_counter_chk = 0;
-+	}
- }
- 
--static void halbtc8723b1ant_query_bt_info(struct btc_coexist *btcoexist)
-+static void halbtc8723b1ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
- {
--	struct rtl_priv *rtlpriv = btcoexist->adapter;
--	u8 h2c_parameter[1] = {0};
-+	s32 wifi_rssi = 0;
-+	bool wifi_busy = false, wifi_under_b_mode = false;
-+	static u8 cck_lock_counter;
-+	u32 total_cnt;
- 
--	coex_sta->c2h_bt_info_req_sent = true;
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
-+	btcoexist->btc_get(btcoexist, BTC_GET_S4_WIFI_RSSI, &wifi_rssi);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_UNDER_B_MODE,
-+			   &wifi_under_b_mode);
- 
--	/* trigger */
--	h2c_parameter[0] |= BIT0;
-+	if (coex_sta->under_ips) {
-+		coex_sta->crc_ok_cck = 0;
-+		coex_sta->crc_ok_11g = 0;
-+		coex_sta->crc_ok_11n = 0;
-+		coex_sta->crc_ok_11n_agg = 0;
-+
-+		coex_sta->crc_err_cck = 0;
-+		coex_sta->crc_err_11g = 0;
-+		coex_sta->crc_err_11n = 0;
-+		coex_sta->crc_err_11n_agg = 0;
-+	} else {
-+		coex_sta->crc_ok_cck =
-+			btcoexist->btc_read_4byte(btcoexist, 0xf88);
-+		coex_sta->crc_ok_11g =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf94);
-+		coex_sta->crc_ok_11n =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf90);
-+		coex_sta->crc_ok_11n_agg =
-+			btcoexist->btc_read_2byte(btcoexist, 0xfb8);
-+
-+		coex_sta->crc_err_cck =
-+			btcoexist->btc_read_4byte(btcoexist, 0xf84);
-+		coex_sta->crc_err_11g =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf96);
-+		coex_sta->crc_err_11n =
-+			btcoexist->btc_read_2byte(btcoexist, 0xf92);
-+		coex_sta->crc_err_11n_agg =
-+			btcoexist->btc_read_2byte(btcoexist, 0xfba);
-+	}
- 
--	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--		 "[BTCoex], Query Bt Info, FW write 0x61 = 0x%x\n",
--		 h2c_parameter[0]);
-+	/* reset counter */
-+	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x1);
-+	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x0);
-+
-+	if ((wifi_busy) && (wifi_rssi >= 30) && (!wifi_under_b_mode)) {
-+		total_cnt = coex_sta->crc_ok_cck + coex_sta->crc_ok_11g +
-+			    coex_sta->crc_ok_11n + coex_sta->crc_ok_11n_agg;
-+
-+		if ((coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) ||
-+		    (coex_dm->bt_status ==
-+		     BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) ||
-+		    (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY)) {
-+			if (coex_sta->crc_ok_cck >
-+			    (total_cnt - coex_sta->crc_ok_cck)) {
-+				if (cck_lock_counter < 3)
-+					cck_lock_counter++;
-+			} else {
-+				if (cck_lock_counter > 0)
-+					cck_lock_counter--;
-+			}
- 
--	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
-+		} else {
-+			if (cck_lock_counter > 0)
-+				cck_lock_counter--;
-+		}
-+	} else {
-+		if (cck_lock_counter > 0)
-+			cck_lock_counter--;
-+	}
-+
-+	if (!coex_sta->pre_ccklock) {
-+		if (cck_lock_counter >= 3)
-+			coex_sta->cck_lock = true;
-+		else
-+			coex_sta->cck_lock = false;
-+	} else {
-+		if (cck_lock_counter == 0)
-+			coex_sta->cck_lock = false;
-+		else
-+			coex_sta->cck_lock = true;
-+	}
-+
-+	if (coex_sta->cck_lock)
-+		coex_sta->cck_ever_lock = true;
-+
-+	coex_sta->pre_ccklock = coex_sta->cck_lock;
- }
- 
- static bool btc8723b1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
-@@ -1738,6 +1848,7 @@ static void halbtc8723b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 	}
- }
- 
-+/* force coex mechanism to reset */
- static void halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
- {
- 	/* sw all off */
-@@ -1745,6 +1856,7 @@ static void halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
- 
- 	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
- 	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
-+	coex_sta->pop_event_cnt = 0;
- }
- 
- static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
-@@ -2574,6 +2686,9 @@ void ex_halbtc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
- void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+#if (BT_AUTO_REPORT_ONLY_8723B_1ANT != 0)
-+	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
-+#endif
- 	struct btc_board_info *board_info = &btcoexist->board_info;
- 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
- 	static u8 dis_ver_info_cnt;
-@@ -2608,9 +2723,15 @@ void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
- 
- #if (BT_AUTO_REPORT_ONLY_8723B_1ANT == 0)
- 	halbtc8723b1ant_query_bt_info(btcoexist);
--	halbtc8723b1ant_monitor_bt_ctr(btcoexist);
- 	halbtc8723b1ant_monitor_bt_enable_disable(btcoexist);
- #else
-+	halbtc8723b1ant_monitor_bt_ctr(btcoexist);
-+	halbtc8723b1ant_monitor_wifi_ctr(btcoexist);
-+
-+	if ((coex_sta->high_priority_tx + coex_sta->high_priority_rx < 50) &&
-+	    bt_link_info->hid_exist)
-+		bt_link_info->hid_exist = false;
-+
- 	if (btc8723b1ant_is_wifi_status_changed(btcoexist) ||
- 	    coex_dm->auto_tdma_adjust) {
- 		halbtc8723b1ant_run_coexist_mechanism(btcoexist);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 786324783633..c3472fbb12ef 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -160,6 +160,21 @@ struct coex_sta_8723b_1ant {
- 	bool c2h_bt_inquiry_page;
- 	u8 bt_retry_cnt;
- 	u8 bt_info_ext;
-+	bool cck_ever_lock;
-+	u32 pop_event_cnt;
-+
-+	u32 crc_ok_cck;
-+	u32 crc_ok_11g;
-+	u32 crc_ok_11n;
-+	u32 crc_ok_11n_agg;
-+
-+	u32 crc_err_cck;
-+	u32 crc_err_11g;
-+	u32 crc_err_11n;
-+	u32 crc_err_11n_agg;
-+
-+	bool cck_lock;
-+	bool pre_ccklock;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4d9d49a..0736aea 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1605,11 +1605,15 @@ static inline void get_random_mask_addr(u8 *buf, const u8 *addr, const u8 *mask)
+ /**
+  * struct cfg80211_match_set - sets of attributes to match
+  *
+- * @ssid: SSID to be matched; may be zero-length for no match (RSSI only)
++ * @ssid: SSID to be matched; may be zero-length in case of BSSID match
++ *	or no match (RSSI only)
++ * @bssid: BSSID to be matched; may be all-zero BSSID in case of SSID match
++ *	or no match (RSSI only)
+  * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
+  */
+ struct cfg80211_match_set {
+ 	struct cfg80211_ssid ssid;
++	u8 bssid[ETH_ALEN];
+ 	s32 rssi_thold;
  };
  
- /*************************************************************************
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f34127d..925eb38 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3209,6 +3209,7 @@ enum nl80211_reg_rule_attr {
+  *	BSS-es in the specified band is to be adjusted before doing
+  *	RSSI-based BSS selection. The attribute value is a packed structure
+  *	value as specified by &struct nl80211_bss_select_rssi_adjust.
++ * @NL80211_SCHED_SCAN_MATCH_ATTR_BSSID: BSSID to be used for matching.
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_MAX: highest scheduled scan filter
+  *	attribute number currently defined
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST: internal use
+@@ -3220,6 +3221,7 @@ enum nl80211_sched_scan_match_attr {
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI,
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RELATIVE_RSSI,
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI_ADJUST,
++	NL80211_SCHED_SCAN_MATCH_ATTR_BSSID,
+ 
+ 	/* keep last */
+ 	__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2150cfe..611d92c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -497,6 +497,8 @@ enum nl80211_multicast_groups {
+ nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] = { .type = NLA_BINARY,
+ 						 .len = IEEE80211_MAX_SSID_LEN },
++	[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID] = { .type = NLA_BINARY,
++						  .len = ETH_ALEN },
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI] = { .type = NLA_U32 },
+ };
+ 
+@@ -7027,8 +7029,15 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 					       attr, nl80211_match_policy);
+ 			if (err)
+ 				return ERR_PTR(err);
++
++			/* SSID and BSSID are mutually exclusive */
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] &&
++			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID])
++				return ERR_PTR(-EINVAL);
++
+ 			/* add other standalone attributes here */
+-			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID]) {
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] ||
++			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID]) {
+ 				n_match_sets++;
+ 				continue;
+ 			}
+@@ -7199,7 +7208,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 		nla_for_each_nested(attr,
+ 				    attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
+ 				    tmp) {
+-			struct nlattr *ssid, *rssi;
++			struct nlattr *ssid, *bssid, *rssi;
+ 
+ 			err = nla_parse_nested(tb,
+ 					       NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
+@@ -7207,7 +7216,8 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 			if (err)
+ 				goto out_free;
+ 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
+-			if (ssid) {
++			bssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID];
++			if (ssid || bssid) {
+ 				if (WARN_ON(i >= n_match_sets)) {
+ 					/* this indicates a programming error,
+ 					 * the loop above should have verified
+@@ -7217,14 +7227,25 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 					goto out_free;
+ 				}
+ 
+-				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
+-					err = -EINVAL;
+-					goto out_free;
++				if (ssid) {
++					if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
++						err = -EINVAL;
++						goto out_free;
++					}
++					memcpy(request->match_sets[i].ssid.ssid,
++					       nla_data(ssid), nla_len(ssid));
++					request->match_sets[i].ssid.ssid_len =
++						nla_len(ssid);
++				}
++				if (bssid) {
++					if (nla_len(bssid) != ETH_ALEN) {
++						err = -EINVAL;
++						goto out_free;
++					}
++					memcpy(request->match_sets[i].bssid,
++					       nla_data(bssid), ETH_ALEN);
+ 				}
+-				memcpy(request->match_sets[i].ssid.ssid,
+-				       nla_data(ssid), nla_len(ssid));
+-				request->match_sets[i].ssid.ssid_len =
+-					nla_len(ssid);
++
+ 				/* special attribute - old implementation w/a */
+ 				request->match_sets[i].rssi_thold =
+ 					default_match_rssi;
 -- 
-2.12.0
+1.9.1
