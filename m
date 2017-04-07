@@ -1,32 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45962 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51208 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755774AbdDRI4q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 04:56:46 -0400
-Message-ID: <1492505804.2472.4.camel@sipsolutions.net> (sfid-20170418_105806_501298_66FEE2D0)
-Subject: Re: [PATCH V2 01/10] nl80211: add request id in scheduled scan
- event messages
+        id S1755507AbdDGS0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 14:26:25 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 18 Apr 2017 10:56:44 +0200
-In-Reply-To: <1492085196-4574-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170413_140724_747022_27A2CF28)
-References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1492085196-4574-2-git-send-email-arend.vanspriel@broadcom.com>
-         (sfid-20170413_140724_747022_27A2CF28)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org
+Subject: [RFC 0/3] netlink: extended error reporting
+Date: Fri,  7 Apr 2017 20:26:17 +0200
+Message-Id: <20170407182620.6438-1-johannes@sipsolutions.net> (sfid-20170407_202642_105974_F2AC200E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-04-13 at 13:06 +0100, Arend van Spriel wrote:
-> For multi-scheduled scan support in subsequent patch a request id
-> will be added. This patch add this request id to the scheduled
-> scan event messages. For now the request id will always be zero.
-> With multi-scheduled scan its value will inform user-space to which
-> scan the event relates.
+So this is my first draft of what we'd talked about at netconf.
+I'm not super happy with the way we have to pass the extended
+error struct, but I don't see a way to implement reporting any
+dynamic information (like error offsets) in any other way.
 
-I've applied this, but please resend all of the remaining ones, even if
-only patch 2 changes.
+Alexander Shishkin had a nice way of reporting static extended
+error data, but that isn't really suitable for reporting the
+offset or even reporting the broken attribute from nla_parse().
+
+Speaking of nla_parse(), that'll be somewhat complicated to do
+since we'll have to track the offsets of where we're parsing,
+but it might be possible since the nlattrs are just pointers
+into the message, so (optionally?) passing the skb as well can
+allow us to fill the offset information.
 
 johannes
