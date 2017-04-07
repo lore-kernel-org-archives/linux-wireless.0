@@ -1,39 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34441 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932722AbdD0Qbu (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43154 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934301AbdDGShK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2017 12:31:50 -0400
-From: ammly <ammlyf@gmail.com>
-To: ath9k-devel@qca.qualcomm.com
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ammly Fredrick <ammlyf@gmail.com>
-Subject: [PATCH] net: ath: tx99: fixed a spelling issue
-Date: Thu, 27 Apr 2017 19:31:37 +0300
-Message-Id: <1493310697-18610-1-git-send-email-ammly@gmail.com> (sfid-20170427_183223_318742_BA7E9B1B)
+        Fri, 7 Apr 2017 14:37:10 -0400
+Subject: Re: [RFC 2/3] genetlink: pass extended error report down
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+ <20170407182620.6438-3-johannes@sipsolutions.net>
+Cc: pablo@netfilter.org, Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <25e1fb8c-22e0-d7a2-13a7-d0def5432c9e@candelatech.com> (sfid-20170407_203840_972186_0DEFF13F)
+Date: Fri, 7 Apr 2017 11:37:07 -0700
+MIME-Version: 1.0
+In-Reply-To: <20170407182620.6438-3-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed a spelling issue.
+On 04/07/2017 11:26 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  include/net/genetlink.h | 27 +++++++++++++++++++++++++++
+>  net/netlink/genetlink.c |  6 ++++--
+>  2 files changed, 31 insertions(+), 2 deletions(-)
+>
+> diff --git a/include/net/genetlink.h b/include/net/genetlink.h
+> index a34275be3600..67ad2326cfa6 100644
+> --- a/include/net/genetlink.h
+> +++ b/include/net/genetlink.h
+> @@ -84,6 +84,7 @@ struct nlattr **genl_family_attrbuf(const struct genl_family *family);
+>   * @attrs: netlink attributes
+>   * @_net: network namespace
+>   * @user_ptr: user pointers
+> + * @exterr: extended error report struct
+>   */
+>  struct genl_info {
+>  	u32			snd_seq;
+> @@ -94,6 +95,7 @@ struct genl_info {
+>  	struct nlattr **	attrs;
+>  	possible_net_t		_net;
+>  	void *			user_ptr[2];
+> +	struct netlink_ext_err *exterr;
+>  };
+>
+>  static inline struct net *genl_info_net(struct genl_info *info)
+> @@ -106,6 +108,31 @@ static inline void genl_info_net_set(struct genl_info *info, struct net *net)
+>  	write_pnet(&info->_net, net);
+>  }
+>
+> +static inline int genl_err_str(struct genl_info *info, int err,
+> +			       const char *msg)
+> +{
+> +	info->exterr->msg = msg;
+> +
+> +	return err;
+> +}
 
-Signed-off-by: Ammly Fredrick <ammlyf@gmail.com>
----
- drivers/net/wireless/ath/ath9k/tx99.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I guess the error string must be constant and always available in memory
+in this implementation?
 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index 16aca9e28b77..a866cbda0799 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -153,7 +153,7 @@ static int ath9k_tx99_init(struct ath_softc *sc)
- 		sc->tx99_power,
- 		sc->tx99_power / 2);
- 
--	/* We leave the harware awake as it will be chugging on */
-+	/* We leave the hardware awake as it will be chugging on */
- 
- 	return 0;
- }
+I think it would be nice to dynamically create strings (malloc, snprintf, etc)
+and have the err_str logic free it when done?
+
+Thanks,
+Ben
+
 -- 
-2.11.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
