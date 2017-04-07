@@ -1,155 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35963 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752379AbdDLOAq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 10:00:46 -0400
-Received: by mail-wm0-f68.google.com with SMTP id q125so6591863wmd.3
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 07:00:45 -0700 (PDT)
-Date: Wed, 12 Apr 2017 16:00:43 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH net-next v5 5/5] netlink: pass extended ACK struct where
- available
-Message-ID: <20170412140043.GH1952@nanopsycho> (sfid-20170412_160121_431823_8ACB9EF3)
-References: <20170412123408.22012-1-johannes@sipsolutions.net>
- <20170412123408.22012-6-johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170412123408.22012-6-johannes@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52044 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752219AbdDGTlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:41:07 -0400
+Message-ID: <1491594063.5800.15.camel@sipsolutions.net> (sfid-20170407_214111_545733_A6E889C7)
+Subject: Re: [RFC 1/3] netlink: extended error reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org
+Date: Fri, 07 Apr 2017 21:41:03 +0200
+In-Reply-To: <20170407182620.6438-2-johannes@sipsolutions.net> (sfid-20170407_202644_889879_CEBB983B)
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+         <20170407182620.6438-2-johannes@sipsolutions.net>
+         (sfid-20170407_202644_889879_CEBB983B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Apr 12, 2017 at 02:34:08PM CEST, johannes@sipsolutions.net wrote:
->From: Johannes Berg <johannes.berg@intel.com>
->
->This is an add-on to the previous patch that passes
->the extended ACK structure where it's already available
->by existing genl_info or extack function arguments.
->
->This was done with this spatch (with some manual
->adjustment of indentation):
->
->@@
->expression A, B, C, D, E;
->identifier fn, info;
->@@
->fn(..., struct genl_info *info, ...) {
->...
->-nlmsg_parse(A, B, C, D, E, NULL)
->+nlmsg_parse(A, B, C, D, E, info->extack)
->...
->}
->
->@@
->expression A, B, C, D, E;
->identifier fn, info;
->@@
->fn(..., struct genl_info *info, ...) {
-><...
->-nla_parse_nested(A, B, C, D, NULL)
->+nla_parse_nested(A, B, C, D, info->extack)
->...>
->}
->
->@@
->expression A, B, C, D, E;
->identifier fn, extack;
->@@
->fn(..., struct netlink_ext_ack *extack, ...) {
-><...
->-nlmsg_parse(A, B, C, D, E, NULL)
->+nlmsg_parse(A, B, C, D, E, extack)
->...>
->}
->
->@@
->expression A, B, C, D, E;
->identifier fn, extack;
->@@
->fn(..., struct netlink_ext_ack *extack, ...) {
-><...
->-nla_parse(A, B, C, D, E, NULL)
->+nla_parse(A, B, C, D, E, extack)
->...>
->}
->
->@@
->expression A, B, C, D, E;
->identifier fn, extack;
->@@
->fn(..., struct netlink_ext_ack *extack, ...) {
->...
->-nlmsg_parse(A, B, C, D, E, NULL)
->+nlmsg_parse(A, B, C, D, E, extack)
->...
->}
->
->@@
->expression A, B, C, D;
->identifier fn, extack;
->@@
->fn(..., struct netlink_ext_ack *extack, ...) {
-><...
->-nla_parse_nested(A, B, C, D, NULL)
->+nla_parse_nested(A, B, C, D, extack)
->...>
->}
->
->@@
->expression A, B, C, D;
->identifier fn, extack;
->@@
->fn(..., struct netlink_ext_ack *extack, ...) {
-><...
->-nlmsg_validate(A, B, C, D, NULL)
->+nlmsg_validate(A, B, C, D, extack)
->...>
->}
->
->@@
->expression A, B, C, D;
->identifier fn, extack;
->@@
->fn(..., struct netlink_ext_ack *extack, ...) {
-><...
->-nla_validate(A, B, C, D, NULL)
->+nla_validate(A, B, C, D, extack)
->...>
->}
->
->@@
->expression A, B, C;
->identifier fn, extack;
->@@
->fn(..., struct netlink_ext_ack *extack, ...) {
-><...
->-nla_validate_nested(A, B, C, NULL)
->+nla_validate_nested(A, B, C, extack)
->...>
->}
->
->Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->---
-> crypto/crypto_user.c           |  2 +-
-> drivers/net/team/team.c        |  3 ++-
-> net/ieee802154/nl802154.c      | 10 +++++-----
-> net/netfilter/ipvs/ip_vs_ctl.c |  2 +-
-> net/netfilter/nfnetlink.c      |  2 +-
-> net/netlink/genetlink.c        |  2 +-
-> net/nfc/netlink.c              |  2 +-
-> net/tipc/bearer.c              | 14 +++++++-------
-> net/tipc/net.c                 |  2 +-
-> net/tipc/node.c                |  8 ++++----
-> net/wireless/nl80211.c         | 33 ++++++++++++++++++---------------
-> net/xfrm/xfrm_user.c           |  2 +-
-> 12 files changed, 43 insertions(+), 39 deletions(-)
+On Fri, 2017-04-07 at 20:26 +0200, Johannes Berg wrote:
+> 
+> +	if (nlk->flags & NETLINK_F_EXT_ACK) {
+> +		if (exterr && exterr->msg)
+> +			WARN_ON(nla_put_string(skb,
+> NLMSGERR_ATTR_MSG,
+> +					       exterr->msg));
+> +		if (exterr && exterr->msg_offset)
+> +			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
+> +					    exterr->msg_offset));
+> +		if (exterr && exterr->attr)
+> +			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
+> +					    exterr->attr));
+> +	}
 
-Aside from the tinyfication of desc lines, this looks good to me
+I forgot to check (err != 0) here, which can cause inconsistencies -
+noticed that while just adding the error case Jamal wanted. I'll send
+out that as a separate patch, and squash it later when I resubmit.
 
-Reviewed-by: Jiri Pirko <jiri@mellanox.com>
+johannes
