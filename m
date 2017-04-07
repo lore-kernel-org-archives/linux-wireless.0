@@ -1,63 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:34591 "EHLO
-        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2998115AbdDZKY6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 06:24:58 -0400
-Received: by mail-qk0-f182.google.com with SMTP id y63so138334874qkd.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 03:24:57 -0700 (PDT)
-Subject: Re: [PATCH V3 1/9] nl80211: allow multiple active scheduled scan
- requests
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
- <1492776308-15120-2-git-send-email-arend.vanspriel@broadcom.com>
- <1493149747.15192.0.camel@sipsolutions.net>
- <3ce6aed5-7d00-3446-a39b-b5da4b788358@broadcom.com>
- <1493196583.2464.14.camel@sipsolutions.net>
- <4323eaab-39c2-1946-a4dd-3d37361e3d8c@broadcom.com>
- <1493197685.2464.15.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5bdba644-82db-9df1-bfac-14c707dbdfda@broadcom.com> (sfid-20170426_122543_627175_EB72A263)
-Date: Wed, 26 Apr 2017 12:24:53 +0200
-MIME-Version: 1.0
-In-Reply-To: <1493197685.2464.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:51828 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933841AbdDGT0k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:26:40 -0400
+Message-ID: <1491593195.5800.11.camel@sipsolutions.net> (sfid-20170407_212755_867645_BFFC58BA)
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, jiri@resnulli.us
+Date: Fri, 07 Apr 2017 21:26:35 +0200
+In-Reply-To: <20170407.122053.201153373954521345.davem@davemloft.net>
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+         <20170407.115315.23470877439489670.davem@davemloft.net>
+         <1491591552.5800.1.camel@sipsolutions.net>
+         <20170407.122053.201153373954521345.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2017-04-07 at 12:20 -0700, David Miller wrote:
 
+> But what it lacks fundamentally is context.  Therefore it can't be
+> used to provide the offset or the bad attribute number.  So it can't
+> meet our requirements.
 
-On 4/26/2017 11:08 AM, Johannes Berg wrote:
-> On Wed, 2017-04-26 at 11:05 +0200, Arend van Spriel wrote:
->> I guess it could be done, but I'm tending towards doing that less
->>> again, I have no strong preference in this case. If it was
->>> something
->>> that seems likely to get abused, perhaps, but here...
->>
->> Ok. As long as drivers don't think they can use the list_head to push
->> it on a private list.
+Yes, it doesn't address the requirements here, and in a sense I suspect
+this will be true anywhere else too - perhaps that's the reason why it
+was never applied even over in perf. I've not gotten a good answer for
+that question yet :)
+
+> We've passed down new arguments into core method call chains for much
+> less useful facilitites than this.  So that doesn't bother me.  And
+> as that is a kernel internal matter, we can refine it later.
+
+Yes, both are true.
+
+> Wrt. nla_parse(), we can solve that problem as follow-on patches too.
+
+Yes. I just want to be sure we can solve it, but OTOH we're not locking
+down anything but the UAPI so whatever way we find to solve it, even if
+it requires a complete rearchitecture internally, it still doesn't
+matter.
+
+> So I consider this change ready as far as the implementation is
+> concerned.
+
+Fair enough. I still do need to test it though :)
+
+> Ok, Jiri, start reading.  I will try to make you happy here.
 > 
-> They'll crash immediately and be disabused of that notion :)
+> Let's just discuss the UAPI, since people complain we don't talk
+> about that enough :-)  For those playing at home it is three new
+> attributes returned in a netlink ACK when the application asks
+> for the extended response:
 > 
->> The internal use comment does not end up in
->> kerneldoc. So maybe we can improve that? Would work for me.
-> 
-> It's difficult - though we could replace it with /* private: */ and
-> remove those things from kernel-doc entirely.
+>         NLMSGERR_ATTR_MSG       string  Extended error string
+>         NLMSGERR_ATTR_OFFS      u32     Byte offset to netlink
+> element causing error
+>         NLMSGERR_ATTR_CODE      u32     Subsystem specific error code
+>         NLMSGERR_ATTR_ATTR      u16     Netlink attribute triggering
+> error or missing
 
-probably won't work:
+That's four ;-)
 
-	/* internal */
-	struct wiphy *wiphy;
-	struct net_device *dev;
-	unsigned long scan_start;
-	struct rcu_head rcu_head;
-	u32 owner_nlportid;
+Since you're carefully listing it here, you should also say that
 
-	/* keep last */
-	struct ieee80211_channel *channels[0];
-};
+ * the new behaviour is entirely optional, enabled by a new netlink
+   socket option
+ * the ACK message format ends up being
+   [nlmsg header]
+   [ack header including errno]
+   [request message nlmsg hdr]
+   [request message payload - optional, controlled by socket option,
+    aligned to 4 byte length if present]
+   [new TLVs - optional, controlled by socket option]
 
-Regards,
-Arend
+johannes
