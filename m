@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40338 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51660 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752520AbdDHUNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 16:13:20 -0400
-Message-ID: <1491682394.2379.1.camel@sipsolutions.net> (sfid-20170408_221406_371082_1E4915BE)
-Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
+        id S934392AbdDGTGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:06:37 -0400
+Message-ID: <1491591988.5800.5.camel@sipsolutions.net> (sfid-20170407_210700_491341_44722DBF)
+Subject: Re: [RFC 0/3] netlink: extended error reporting
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Pirko <jiri@resnulli.us>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>
-Date: Sat, 08 Apr 2017 22:13:14 +0200
-In-Reply-To: <20170408184008.GB1900@nanopsycho> (sfid-20170408_204012_186615_65B86B3C)
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
-         <20170408174900.12820-2-johannes@sipsolutions.net>
-         <20170408183440.GA1900@nanopsycho>
-         <1491676621.5800.24.camel@sipsolutions.net>
-         <20170408184008.GB1900@nanopsycho> (sfid-20170408_204012_186615_65B86B3C)
+To: Pablo Neira Ayuso <pablo@netfilter.org>,
+        David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Fri, 07 Apr 2017 21:06:28 +0200
+In-Reply-To: <20170407190204.GA22810@salvia>
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+         <20170407.115315.23470877439489670.davem@davemloft.net>
+         <20170407190204.GA22810@salvia>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-04-08 at 20:40 +0200, Jiri Pirko wrote:
-
-> > I think I'll leave it like this - if anyone really wants to say
-> > "attribute 0 is missing" then we can add a flag later... The UAPI
-> > does
-> > take this into account by not including the attribute at all if the
-> > data is invalid, so 0 in the userspace API can be done
+On Fri, 2017-04-07 at 21:02 +0200, Pablo Neira Ayuso wrote:
 > 
-> It a known issue, should be fixed right now. We are in no hurry. This
-> waited +15 years to be done, no harm in couple more days.
+> > I'm tempted to apply this as-is just to show that person that
+> > things do in fact happen.... eventually :-)
+> 
+> We can just send follow up patches to refine, I think it's a good
+> start, Johannes?
 
-It's not about any timing or anything - I simply think the likelihood
-that this will be needed is zero, because almost no netlink family uses
-attribute zero, those that do use it are older ones unlikely to be
-updated to start with, and *then* needing to indicate that attribute 0
-is missing? Not going to happen.
+I guess we can. Like I just said though - I do have a plan to make
+nla_parse() work but the week's been exhausting enough that I don't
+feel entirely comfortable saying that will definitely work.
 
-The extra code needed to handle this is therefore wasted.
+OTOH, arguably this is something that seems to work - as evidenced by
+the nl80211 changes - for at least some error reporting, so I guess we
+can continue to refine it, and the only thing we're really locking in
+to is the ABI, which is TLVs now, so that should be safe.
 
-> Also, could you please attach a patch to iproute2 for example which
-> would make use of this. I just want to make sure it clicks.
+That said, the nl80211 patch really should be bigger, and I've not even
+tested this at all yet, so I really need to do that first.
 
-No, I'm not going to do that. If you want it, please do it yourself.
-I've done the testing on a slightly modified iw, but even there haven't
-done any pretty-printing or parsing, just made sure the attributes show
-up properly (by dumping them in hex).
+Also, I'd like to point to the genl_info change, does that seem like a
+reasonable way to pass it around in genetlink? I'm much less familiar
+with the "regular" netlink to say how to pass it around there beyond
+what I already did.
 
 johannes
