@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:36136 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755089AbdD3Hv2 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14311 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932601AbdDGLzJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Apr 2017 03:51:28 -0400
-Received: by mail-io0-f170.google.com with SMTP id p80so91058889iop.3
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Apr 2017 00:51:28 -0700 (PDT)
+        Fri, 7 Apr 2017 07:55:09 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
+CC: <ganesh.krishna@microchip.com>, <devel@driverdev.osuosl.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        <stable@vger.kernel.org>
+Subject: [PATCH] staging: wilc1000: Fix problem with wrong vif index
+Date: Fri, 7 Apr 2017 17:24:58 +0530
+Message-ID: <1491566098-9328-1-git-send-email-aditya.shankar@microchip.com> (sfid-20170407_135512_742338_ABC2DD25)
 MIME-Version: 1.0
-From: Menion <menion@gmail.com>
-Date: Sun, 30 Apr 2017 09:51:06 +0200
-Message-ID: <CAJVZm6cEir9BGnhU7xyUmQvGUYxaRyKtQtNY8d_nfzwnnyusEQ@mail.gmail.com> (sfid-20170430_095133_269872_27874F2A)
-Subject: mwl8k driver issue: frequent disconnect with Android phone
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all
-I would like to recall to attention an issue that various user are
-observing running mwl8k driver together with android clients
-Relevant information can be found here:
+The vif->idx value is always 0 for two interfaces.
 
-https://dev.openwrt.org/ticket/21284
-http://www.spinics.net/lists/linux-wireless/msg151171.html
+wl->vif_num = 0;
 
-Unfortunately I don't have other information to add, logs on my sistem
-which is a kirkwood router running kernel 4.4.x with Lede are
-identical to the ones already provided.
-I can add that the problem seems to get worst depending on the
-bandwidth usage (higher is worst).
-And I can confirm that apparently only android clients are affected,
-in the sense that here I have also iPhones and some IP WebCam that
-work rock stable with the same router.
-Also both 5Ghz and 2.5Ghz radio are affected
-Userland seems to have no influence, I have tried wpad and hostapd,
-both show the problem
-Let me know how can I help
-Bye
+loop {
+     ...
+
+     vif->idx = wl->vif_num;
+     ...
+     wl->vif_num = i;
+      ....
+     i++;
+     ...
+}
+
+At present, vif->idx is assigned the value of wl->vif_num
+at the beginning of this block and device is initialized
+based on this index value.
+In the next iteration, wl->vif_num is still 0 as it is only updated
+later but gets assigned to vif->idx in the beginning. This causes problems
+later when we try to reference a particular interface and also while
+configuring the firmware.
+
+This patch moves the assignment to vif->idx from the beginning
+of the block to after wl->vif_num is updated with latest value of i.
+
+Fixes: commit 735bb39ca3be ("staging: wilc1000: simplify vif[i]->ndev accesses")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index cd2f602..a2c2ce6 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1232,11 +1232,12 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		else
+ 			strcpy(ndev->name, "p2p%d");
+ 
+-		vif->idx = wl->vif_num;
+ 		vif->wilc = *wilc;
+ 		vif->ndev = ndev;
+ 		wl->vif[i] = vif;
+ 		wl->vif_num = i;
++		vif->idx = wl->vif_num;
++
+ 		ndev->netdev_ops = &wilc_netdev_ops;
+ 
+ 		{
+-- 
+2.7.4
