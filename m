@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4741 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934673AbdDSN6Q (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:59076 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752848AbdDGSxR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 09:58:16 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath9k: off by one in ath9k_hw_nvram_read_array()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170406051220.GA23650@mwanda>
-References: <20170406051220.GA23650@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Message-ID: <939efb73b7f14d82ac204871395d3b4b@euamsexm01a.eu.qualcomm.com> (sfid-20170419_155835_643640_32E4FDB6)
-Date: Wed, 19 Apr 2017 15:58:07 +0200
+        Fri, 7 Apr 2017 14:53:17 -0400
+Date: Fri, 07 Apr 2017 11:53:15 -0700 (PDT)
+Message-Id: <20170407.115315.23470877439489670.davem@davemloft.net> (sfid-20170407_205320_621296_ABD561C2)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170407182620.6438-1-johannes@sipsolutions.net>
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> The > should be >= or we read one space beyond the end of the array.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri,  7 Apr 2017 20:26:17 +0200
+
+> So this is my first draft of what we'd talked about at netconf.
+> I'm not super happy with the way we have to pass the extended
+> error struct, but I don't see a way to implement reporting any
+> dynamic information (like error offsets) in any other way.
 > 
-> Fixes: ab5c4f71d8c7 ("ath9k: allow to load EEPROM content via firmware API")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Alexander Shishkin had a nice way of reporting static extended
+> error data, but that isn't really suitable for reporting the
+> offset or even reporting the broken attribute from nla_parse().
 > 
-> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-> index fb80ec86e53d..6ccf24814514 100644
-> --- a/drivers/net/wireless/ath/ath9k/eeprom.c
-> +++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-> @@ -112,7 +112,7 @@ void ath9k_hw_usb_gen_fill_eeprom(struct ath_hw *ah, u16 *eep_data,
->  static bool ath9k_hw_nvram_read_array(u16 *blob, size_t blob_size,
->  				      off_t offset, u16 *data)
->  {
-> -	if (offset > blob_size)
-> +	if (offset >= blob_size)
->  		return false;
->  
->  	*data =  blob[offset];
+> Speaking of nla_parse(), that'll be somewhat complicated to do
+> since we'll have to track the offsets of where we're parsing,
+> but it might be possible since the nlattrs are just pointers
+> into the message, so (optionally?) passing the skb as well can
+> allow us to fill the offset information.
 
-Patch applied to ath-next branch of ath.git, thanks.
+I like it, nice work.
 
-b7dcf68f383a ath9k: off by one in ath9k_hw_nvram_read_array()
+I know people want dynamically generated strings and stuff, and we can
+get there, but I prefer that the first thing we commit is super simple.
 
--- 
-https://patchwork.kernel.org/patch/9666031/
+Someone gave me a hard time about the fact that we've been talking
+about this idea for years but nothing ever happens.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+I'm tempted to apply this as-is just to show that person that things
+do in fact happen.... eventually :-)
