@@ -1,85 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f175.google.com ([209.85.128.175]:33326 "EHLO
-        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753129AbdDDViy (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:55972 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753962AbdDGXoI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 17:38:54 -0400
-Received: by mail-wr0-f175.google.com with SMTP id w43so223418935wrb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 14:38:53 -0700 (PDT)
-Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
-To: Hans de Goede <hdegoede@redhat.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-References: <20170329174751.13184-1-hdegoede@redhat.com>
- <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
- <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
-Cc: Bastien Nocera <hadess@hadess.net>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com> (sfid-20170404_233857_472379_80AA8A74)
-Date: Tue, 4 Apr 2017 23:38:50 +0200
+        Fri, 7 Apr 2017 19:44:08 -0400
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: fix incorrect strncasecmp length
+Date: Sat,  8 Apr 2017 00:44:03 +0100
+Message-Id: <20170407234403.9795-1-colin.king@canonical.com> (sfid-20170408_014507_591766_A58B5012)
 MIME-Version: 1.0
-In-Reply-To: <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Colin Ian King <colin.king@canonical.com>
 
+The strncasecmp of buff against the literal string RSSI
+is using variable length which is zero. This should be instead
+using the variable size instead.  Also remove the redundant
+variable length.
 
-On 4-4-2017 20:53, Hans de Goede wrote:
-> Hi,
-> 
-> On 04/04/2017 08:31 PM, Larry Finger wrote:
->> On 03/29/2017 12:47 PM, Hans de Goede wrote:
->>> The rtl8723bs is found on quite a few systems used by Linux users,
->>> such as on Atom systems (Intel Computestick and various other
->>> Atom based devices) and on many (budget) ARM boards such as
->>> the CHIP.
->>>
->>> The plan moving forward with this is for the new clean,
->>> written from scratch, rtl8xxxu driver to eventually gain
->>> support for sdio devices. But there is no clear timeline
->>> for that, so lets add this driver included in staging for now.
->>
->> Hans,
->>
->> I started looking at the Smatch errors. This one may be the result of
->> a serious problem:
->>
->>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
->> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info()
->> error: we previously assumed 'phead' could be null (see line 453)
->> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info()
->> warn: variable dereferenced before check 'phead' (see line 454)
->>
->> A snippet of the code in question is as follows:
->>
->>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
->>         phead = get_list_head(queue);
->>         plist = phead ? get_next(phead) : NULL;
->>         plist = get_next(phead);
->>         if ((!phead) || (!plist)) {
->>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
->>                 return 0;
->>         }
->>
->> This code comes directly from the hadess repo, but I am suspicious of
->> the double call to get_next(phead). I cannot imagine any valid reason
->> to skip every other entry on that list.
-> 
-> If you look closer and simplify the first getnext line what is written is:
-> 
->          plist = get_next(phead);
->          plist = get_next(phead);
-> 
-> Which indeed looks like it could use improvement, but I don't
-> think it is seriously broken.
+Detected by PVS-Studio, warning: V575
 
-So get_list_head(queue) can never return NULL? Otherwise I don't know
-how close I need to get for a simplified look ;-)
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Gr. AvS
-
-> Regards,
-> 
-> Hans
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2eebc6215cac..6aeaf19182e7 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1074,7 +1074,7 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ {
+ 	u8 *buff = NULL;
+ 	s8 rssi;
+-	u32 size = 0, length = 0;
++	u32 size = 0;
+ 	struct wilc_vif *vif;
+ 	s32 ret = 0;
+ 	struct wilc *wilc;
+@@ -1098,7 +1098,7 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 			if (IS_ERR(buff))
+ 				return PTR_ERR(buff);
+ 
+-			if (strncasecmp(buff, "RSSI", length) == 0) {
++			if (strncasecmp(buff, "RSSI", size) == 0) {
+ 				ret = wilc_get_rssi(vif, &rssi);
+ 				netdev_info(ndev, "RSSI :%d\n", rssi);
+ 
+-- 
+2.11.0
