@@ -1,49 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:35015 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938062AbdD0BmO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 21:42:14 -0400
-Received: by mail-qt0-f182.google.com with SMTP id y33so15442314qta.2
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 18:42:13 -0700 (PDT)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org, sameo@linux.intel.com
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com,
-        wharms@bfs.de, Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH v2] NFC: trf7970a: Correct register settings for 27MHz clock
-Date: Wed, 26 Apr 2017 21:41:48 -0400
-Message-Id: <1493257308-32503-1-git-send-email-geoff@kuvee.com> (sfid-20170427_034244_242032_7569F044)
+Received: from s3.sipsolutions.net ([5.9.151.49]:51226 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756049AbdDGS02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 14:26:28 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/3] nl80211: add a few extended error strings
+Date: Fri,  7 Apr 2017 20:26:20 +0200
+Message-Id: <20170407182620.6438-4-johannes@sipsolutions.net> (sfid-20170407_202702_319944_0B645C66)
+In-Reply-To: <20170407182620.6438-1-johannes@sipsolutions.net>
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In prior commits the selected clock frequency does not propagate
-correctly to what is written the the TRF7970A_MODULATOR_SYS_CLK_CTRL
-register.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/nfc/trf7970a.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ net/wireless/nl80211.c | 33 ++++++++++++++++++---------------
+ 1 file changed, 18 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 5f040e6..c278b0e 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2079,6 +2079,13 @@ static int trf7970a_probe(struct spi_device *spi)
- 		return -EINVAL;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9910aae08f1a..8808099db909 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -740,7 +740,8 @@ struct key_parse {
+ 	bool def_uni, def_multi;
+ };
+ 
+-static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
++static int nl80211_parse_key_new(struct genl_info *info, struct nlattr *key,
++				 struct key_parse *k)
+ {
+ 	struct nlattr *tb[NL80211_KEY_MAX + 1];
+ 	int err = nla_parse_nested(tb, NL80211_KEY_MAX, key,
+@@ -777,7 +778,7 @@ static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
+ 	if (tb[NL80211_KEY_TYPE]) {
+ 		k->type = nla_get_u32(tb[NL80211_KEY_TYPE]);
+ 		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES)
+-			return -EINVAL;
++			return genl_err_attr(info, -EINVAL, NL80211_KEY_TYPE);
  	}
  
-+	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
-+		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
-+		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
-+	} else {
-+		trf->modulator_sys_clk_ctrl = 0;
-+	}
-+
- 	if (of_property_read_bool(np, "en2-rf-quirk"))
- 		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+ 	if (tb[NL80211_KEY_DEFAULT_TYPES]) {
+@@ -855,7 +856,7 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
+ 	k->type = -1;
  
+ 	if (info->attrs[NL80211_ATTR_KEY])
+-		err = nl80211_parse_key_new(info->attrs[NL80211_ATTR_KEY], k);
++		err = nl80211_parse_key_new(info, info->attrs[NL80211_ATTR_KEY], k);
+ 	else
+ 		err = nl80211_parse_key_old(info, k);
+ 
+@@ -863,23 +864,27 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
+ 		return err;
+ 
+ 	if (k->def && k->defmgmt)
+-		return -EINVAL;
++		return genl_err_str(info, -EINVAL, "def && defmgmt is invalid");
+ 
+ 	if (k->defmgmt) {
+ 		if (k->def_uni || !k->def_multi)
+-			return -EINVAL;
++			return genl_err_str(info, -EINVAL,
++					    "defmgmt must be mcast");
+ 	}
+ 
+ 	if (k->idx != -1) {
+ 		if (k->defmgmt) {
+ 			if (k->idx < 4 || k->idx > 5)
+-				return -EINVAL;
++				return genl_err_str(info, -EINVAL,
++						    "defmgmt key idx not 4 or 5");
+ 		} else if (k->def) {
+ 			if (k->idx < 0 || k->idx > 3)
+-				return -EINVAL;
++				return genl_err_str(info, -EINVAL,
++						    "def key idx not 0-3");
+ 		} else {
+ 			if (k->idx < 0 || k->idx > 5)
+-				return -EINVAL;
++				return genl_err_str(info, -EINVAL,
++						    "key idx not 0-5");
+ 		}
+ 	}
+ 
+@@ -888,8 +893,9 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
+ 
+ static struct cfg80211_cached_keys *
+ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
+-		       struct nlattr *keys, bool *no_ht)
++		       struct genl_info *info, bool *no_ht)
+ {
++	struct nlattr *keys = info->attrs[NL80211_ATTR_KEYS];
+ 	struct key_parse parse;
+ 	struct nlattr *key;
+ 	struct cfg80211_cached_keys *result;
+@@ -914,7 +920,7 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
+ 		memset(&parse, 0, sizeof(parse));
+ 		parse.idx = -1;
+ 
+-		err = nl80211_parse_key_new(key, &parse);
++		err = nl80211_parse_key_new(info, key, &parse);
+ 		if (err)
+ 			goto error;
+ 		err = -EINVAL;
+@@ -8460,9 +8466,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 	if (ibss.privacy && info->attrs[NL80211_ATTR_KEYS]) {
+ 		bool no_ht = false;
+ 
+-		connkeys = nl80211_parse_connkeys(rdev,
+-					  info->attrs[NL80211_ATTR_KEYS],
+-					  &no_ht);
++		connkeys = nl80211_parse_connkeys(rdev, info, &no_ht);
+ 		if (IS_ERR(connkeys))
+ 			return PTR_ERR(connkeys);
+ 
+@@ -8853,8 +8857,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (connect.privacy && info->attrs[NL80211_ATTR_KEYS]) {
+-		connkeys = nl80211_parse_connkeys(rdev,
+-					  info->attrs[NL80211_ATTR_KEYS], NULL);
++		connkeys = nl80211_parse_connkeys(rdev, info, NULL);
+ 		if (IS_ERR(connkeys))
+ 			return PTR_ERR(connkeys);
+ 	}
 -- 
-2.7.4
+2.11.0
