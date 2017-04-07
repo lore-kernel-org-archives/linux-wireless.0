@@ -1,142 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60628 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752148AbdDHLA0 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33720 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753991AbdDGKwD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 07:00:26 -0400
-Date: Sat, 8 Apr 2017 13:00:15 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Aditya Shankar <aditya.shankar@microchip.com>
-Cc: linux-wireless@vger.kernel.org, ganesh.krishna@microchip.com,
-        devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: wilc1000: Update handler assignment logic
-Message-ID: <20170408110015.GA30777@kroah.com> (sfid-20170408_130032_785969_B156B238)
-References: <1491566045-9265-1-git-send-email-aditya.shankar@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491566045-9265-1-git-send-email-aditya.shankar@microchip.com>
+        Fri, 7 Apr 2017 06:52:03 -0400
+Received: by mail-pg0-f65.google.com with SMTP id 79so14788842pgf.0
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Apr 2017 03:52:03 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v2 3/4] mwifiex: pcie: correct scratch register name
+Date: Fri,  7 Apr 2017 10:51:24 +0000
+Message-Id: <1491562285-29818-3-git-send-email-huxinming820@gmail.com> (sfid-20170407_125409_010708_FE25DEDB)
+In-Reply-To: <1491562285-29818-1-git-send-email-huxinming820@gmail.com>
+References: <1491562285-29818-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 05:24:05PM +0530, Aditya Shankar wrote:
-> With this update, the host driver is consistent with the
-> implementation on the firmware side with respect to obtaining
-> the driver handler for all modes.
-> With this new format, the calls to set the wilc operation mode
-> is simplified.
-> 
-> Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c         | 56 +++++++++++++++++++----
->  drivers/staging/wilc1000/host_interface.h         |  9 +++-
->  drivers/staging/wilc1000/linux_wlan.c             | 29 ++----------
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
->  drivers/staging/wilc1000/wilc_wlan_if.h           |  2 +-
->  5 files changed, 61 insertions(+), 37 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index c3a8af0..c04643e 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -198,6 +198,7 @@ struct host_if_msg {
->  	union message_body body;
->  	struct wilc_vif *vif;
->  	struct work_struct work;
-> +	void *drv_handler;
->  };
->  
->  struct join_bss_param {
-> @@ -334,14 +335,44 @@ static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
->  {
->  	int ret = 0;
->  	struct wid wid;
-> +	u8 *currbyte;
-> +	struct host_if_drv *hif_drv = NULL;
-> +	int driver_handler_id = 0;
-> +	u8 *buffer = kzalloc(DRV_HANDLER_SIZE, GFP_ATOMIC);
-> +
-> +	if (!vif->hif_drv)
-> +		return;
-> +
-> +	if (!hif_drv_handler)
-> +		return;
-> +
-> +	hif_drv	= vif->hif_drv;
-> +
-> +	if (hif_drv)
-> +		driver_handler_id = hif_drv->driver_handler_id;
-> +	else
-> +		driver_handler_id = 0;
-> +
-> +	driver_handler_id = hif_drv->driver_handler_id;
-> +
-> +	currbyte = buffer;
-> +	*currbyte = driver_handler_id & DRV_HANDLER_MASK;
-> +	currbyte++;
-> +	*currbyte = (u32)0 & DRV_HANDLER_MASK;
-> +	currbyte++;
-> +	*currbyte = (u32)0 & DRV_HANDLER_MASK;
-> +	currbyte++;
-> +	*currbyte = (u32)0 & DRV_HANDLER_MASK;
-> +	currbyte++;
-> +	*currbyte = (hif_drv_handler->name | (hif_drv_handler->mode << 1));
->  
->  	wid.id = (u16)WID_SET_DRV_HANDLER;
->  	wid.type = WID_STR;
-> -	wid.val = (s8 *)hif_drv_handler;
-> -	wid.size = sizeof(*hif_drv_handler);
-> +	wid.val = (s8 *)buffer;
-> +	wid.size = DRV_HANDLER_SIZE;
->  
->  	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-> -				   hif_drv_handler->handler);
-> +				   driver_handler_id);
->  
->  	if (!hif_drv_handler->handler)
->  		complete(&hif_driver_comp);
-> @@ -2403,9 +2434,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
->  
->  	pu8CurrByte = wid.val;
->  	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
-> -	*pu8CurrByte++ = 0;
-> -	*pu8CurrByte++ = 0;
-> -	*pu8CurrByte++ = 0;
-> +	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
-> +	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
-> +	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
->  
->  	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
->  	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
-> @@ -3099,7 +3130,8 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
->  	return 0;
->  }
->  
-> -int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
-> +int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode, char
-> +			     *ifname)
->  {
->  	int result = 0;
->  	struct host_if_msg msg;
-> @@ -3107,9 +3139,14 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
->  	memset(&msg, 0, sizeof(struct host_if_msg));
->  	msg.id = HOST_IF_MSG_SET_WFIDRV_HANDLER;
->  	msg.body.drv.handler = index;
-> -	msg.body.drv.mac_idx = mac_idx;
-> +	msg.body.drv.mode = mode;
->  	msg.vif = vif;
->  
-> +	if (!memcmp(ifname, "wlan0", 5))
-> +	msg.body.drv.name = 1;
-> +	else if (!memcmp(ifname, "p2p0", 4))
-> +	msg.body.drv.name = 0;
+From: Xinming Hu <huxm@marvell.com>
 
-Does that code look correct to you?
+This patch correct pcie scratch register name, to keep the same with
+chipset side definition.
 
-Always use checkpatch before sending your patches out.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+---
+v2: code clean and prepare for next patch 4/4
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c |  4 ++--
+ drivers/net/wireless/marvell/mwifiex/pcie.h | 13 +++++++------
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-Also, your changelog is very vague, please explain what is happening
-in your patch much better.
-
-thanks,
-
-greg k-h
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index f45ab12..a07cb0a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2494,8 +2494,8 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+ 	int pcie_scratch_reg[] = {PCIE_SCRATCH_12_REG,
+-				  PCIE_SCRATCH_13_REG,
+-				  PCIE_SCRATCH_14_REG};
++				  PCIE_SCRATCH_14_REG,
++				  PCIE_SCRATCH_15_REG};
+ 
+ 	if (!p)
+ 		return 0;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 00e8ee5..7e2450c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -77,8 +77,9 @@
+ #define PCIE_SCRATCH_10_REG				0xCE8
+ #define PCIE_SCRATCH_11_REG				0xCEC
+ #define PCIE_SCRATCH_12_REG				0xCF0
+-#define PCIE_SCRATCH_13_REG				0xCF8
+-#define PCIE_SCRATCH_14_REG				0xCFC
++#define PCIE_SCRATCH_13_REG				0xCF4
++#define PCIE_SCRATCH_14_REG				0xCF8
++#define PCIE_SCRATCH_15_REG				0xCFC
+ #define PCIE_RD_DATA_PTR_Q0_Q1                          0xC08C
+ #define PCIE_WR_DATA_PTR_Q0_Q1                          0xC05C
+ 
+@@ -217,8 +218,8 @@ struct mwifiex_pcie_card_reg {
+ 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
+ 	.pfu_enabled = 1,
+ 	.sleep_cookie = 0,
+-	.fw_dump_ctrl = 0xcf4,
+-	.fw_dump_start = 0xcf8,
++	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
++	.fw_dump_start = PCIE_SCRATCH_14_REG,
+ 	.fw_dump_end = 0xcff,
+ 	.fw_dump_host_ready = 0xee,
+ 	.fw_dump_read_done = 0xfe,
+@@ -254,8 +255,8 @@ struct mwifiex_pcie_card_reg {
+ 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
+ 	.pfu_enabled = 1,
+ 	.sleep_cookie = 0,
+-	.fw_dump_ctrl = 0xcf4,
+-	.fw_dump_start = 0xcf8,
++	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
++	.fw_dump_start = PCIE_SCRATCH_14_REG,
+ 	.fw_dump_end = 0xcff,
+ 	.fw_dump_host_ready = 0xcc,
+ 	.fw_dump_read_done = 0xdd,
+-- 
+1.8.1.4
