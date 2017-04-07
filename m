@@ -1,71 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00252a01.pphosted.com ([62.209.51.214]:64751 "EHLO
-        mx07-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1169137AbdDXLlD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 07:41:03 -0400
-Received: from pps.filterd (m0102628.ppops.net [127.0.0.1])
-        by mx07-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3OBe6ll009014
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 12:41:02 +0100
-Received: from mail-wm0-f69.google.com (mail-wm0-f69.google.com [74.125.82.69])
-        by mx07-00252a01.pphosted.com with ESMTP id 29yvjys1vq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 12:41:01 +0100
-Received: by mail-wm0-f69.google.com with SMTP id b87so4556866wmi.14
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 04:41:01 -0700 (PDT)
-From: James Hughes <james.hughes@raspberrypi.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Cc: James Hughes <james.hughes@raspberrypi.org>
-Subject: [PATCH v2] brcmfmac: Ensure pointer correctly set if skb data location changes
-Date: Mon, 24 Apr 2017 12:40:50 +0100
-Message-Id: <20170424114050.24948-1-james.hughes@raspberrypi.org> (sfid-20170424_134121_376460_6951EBE3)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52156 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932800AbdDGTrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:47:47 -0400
+Message-ID: <1491594459.5800.19.camel@sipsolutions.net> (sfid-20170407_214852_884176_77C84DEB)
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Date: Fri, 07 Apr 2017 21:47:39 +0200
+In-Reply-To: <20170407194557.GA23613@salvia>
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+         <20170407.115315.23470877439489670.davem@davemloft.net>
+         <1491591552.5800.1.camel@sipsolutions.net> <20170407190601.GA22991@salvia>
+         <1491592185.5800.7.camel@sipsolutions.net> <20170407192134.GA23205@salvia>
+         <1491593357.5800.13.camel@sipsolutions.net> <20170407194557.GA23613@salvia>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The incoming skb header may be resized if header space is
-insufficient, which might change the data adddress in the skb.
-Ensure that a cached pointer to that data is correctly set by
-moving assignment to after any possible changes.
+On Fri, 2017-04-07 at 21:45 +0200, Pablo Neira Ayuso wrote:
+> 
+> We only need to store the pointer to the attribute in the error
+> container structure. We can calculate the offset from nl_err() by
+> pasing the skbuff as parameter there, right?
 
-Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+Ah, that's a good point, we could store the nlattr pointer and
+calculate the offset later. I'll need to try this, but yeah, good idea!
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-Changes in v2
-
-Moved the assignment below the len check - saves a few cycles 
-if the length check fails. 
-
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 5eaac13e2317..9b7c19a508ac 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -198,7 +198,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 	int ret;
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_pub *drvr = ifp->drvr;
--	struct ethhdr *eh = (struct ethhdr *)(skb->data);
-+	struct ethhdr *eh;
- 
- 	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
- 
-@@ -236,6 +236,8 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 		goto done;
- 	}
- 
-+	eh = (struct ethhdr *)(skb->data);
-+
- 	if (eh->h_proto == htons(ETH_P_PAE))
- 		atomic_inc(&ifp->pend_8021x_cnt);
- 
--- 
-2.11.0
+johannes
