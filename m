@@ -1,38 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43620 "EHLO sipsolutions.net"
+Received: from mail.us.es ([193.147.175.20]:33044 "EHLO mail.us.es"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1950603AbdDZHUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 03:20:52 -0400
-Message-ID: <1493191249.2464.6.camel@sipsolutions.net> (sfid-20170426_092328_257339_64513BC6)
-Subject: Re: [RFC] cfg80211: add control port state to struct
- cfg80211_connect_resp_params
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 26 Apr 2017 09:20:49 +0200
-In-Reply-To: <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com> (sfid-20170425_205607_063877_7FF3500F)
-References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1493131210.2609.2.camel@sipsolutions.net>
-         <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
-         <1493145418.2609.5.camel@sipsolutions.net>
-         <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com>
-         (sfid-20170425_205607_063877_7FF3500F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S933518AbdDGTVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:21:44 -0400
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+        by mail.us.es (Postfix) with ESMTP id 9E144170D2C
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:21:40 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id 8F782DA86F
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:21:40 +0200 (CEST)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+        by antivirus1-rhel7.int (Postfix) with ESMTP id B517BDA862
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:21:37 +0200 (CEST)
+Date: Fri, 7 Apr 2017 21:21:34 +0200
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+Message-ID: <20170407192134.GA23205@salvia> (sfid-20170407_212202_894740_B9AFAA50)
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+ <20170407.115315.23470877439489670.davem@davemloft.net>
+ <1491591552.5800.1.camel@sipsolutions.net>
+ <20170407190601.GA22991@salvia>
+ <1491592185.5800.7.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1491592185.5800.7.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-04-25 at 20:56 +0200, Arend Van Spriel wrote:
+On Fri, Apr 07, 2017 at 09:09:45PM +0200, Johannes Berg wrote:
+> On Fri, 2017-04-07 at 21:06 +0200, Pablo Neira Ayuso wrote:
+> > On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
+> > [...]
+> > > Heh. I think I really want to solve - at least partially -
+> > > nla_parse()
+> > > to see that it can be done this way. It'd be nice to even transform
+> > > all
+> > > the callers (I generated half of these patches with spatch anyway)
+> > > to
+> > > have at least that.
+> > 
+> > We can just have a modified version of nla_parse that deals with
+> > this.
 > 
-> You might, but not about this ;-) The other approach I had in mind is
-> to only pass the flag for drivers with 4-way-hs support. In that case
-> wpa_supp also has to check that to determine whether the flag should
-> be taken into account. Assuming the driver supporting 4-way-hs can
-> provide the port state info. Otherwise, a new ext_feature flag would
-> be needed.
+> Yes, but we need to figure out a good way to have the offset.
+> 
+> We also need to see if we want to *force* having the offset. In some
+> sense that'd be useful, in another it might be very complicated to fill
+> it in at all times, if for example errors come from lower layers like
+> drivers.
 
-I think it's reasonable to assume 4-way-HS offload drivers can support
-it.
+For my usecases in netfilter, the attributes and an specific error
+code should be enough to figure out what is wrong. Will not need
+strings.
 
-johannes
+BTW, we may not have an offset, eg. EINVAL because of missing
+attribute. Given we have different requirements, I would leave it to
+each subsystem to decide what netlink error attributes are specified.
+
+> (It's ultimately always going to be optional since we'll continue
+> returning errors without *any* extended error information - likely
+> indefinitely - but if we have a wrong attribute, should we always have
+> an offset? Would be nice, but could be difficult in practice)
+> 
+> > We can probably use struct nla_policy to place the extended error
+> > code or the string (as we discussed I don't need string errors, but
+> > I'm fine if other people find it useful).
+> 
+> I don't think for the error strings really would be useful for
+> nla_parse() or a policy - we can return something generic like
+> "malformed attribute" there as a string, and hopefully point to the
+> attribute/offset from there generically. I just really want to see how
+> to actually do that.
+
+I think the most flexible way is to pass the container error structure
+to nla_parse() so it sets this for you. This would also save tons of
+"malformed attribute" strings.
