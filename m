@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52744 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1757601AbdDRWRt (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:59616 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752848AbdDGTU4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:17:49 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, David Spinadel <david.spinadel@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:13 +0300
-Message-Id: <20170418221729.28372-10-luca@coelho.fi> (sfid-20170419_001801_324953_643ECA96)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 09/25] iwlwifi: mvm: change TX_CMD_SEC_KEY_FROM_TABLE value
+        Fri, 7 Apr 2017 15:20:56 -0400
+Date: Fri, 07 Apr 2017 12:20:53 -0700 (PDT)
+Message-Id: <20170407.122053.201153373954521345.davem@davemloft.net> (sfid-20170407_212103_460099_45875787)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, jiri@resnulli.us
+Subject: Re: [RFC 0/3] netlink: extended error reporting
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1491591552.5800.1.camel@sipsolutions.net>
+References: <20170407182620.6438-1-johannes@sipsolutions.net>
+        <20170407.115315.23470877439489670.davem@davemloft.net>
+        <1491591552.5800.1.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 07 Apr 2017 20:59:12 +0200
 
-Change the value of TX_CMD_SEC_KEY_FROM_TABLE flag
-in TX_CMD security flags to accommodate a FW API change.
+> Alexander Shishkin's patch
+> https://patchwork.kernel.org/patch/7162421/
+> 
+> was nice in a way because you could get away without passing the error
+> structure down all the time, but like I said it doesn't deal with
+> dynamic errors (even the offset/attr from nla_parse) and if it's not
+> done *everywhere* it risks leaking those exterr numbers (-1024..-4095)
+> to userspace through syscalls if it's used in a non-netlink path for
+> some reason (e.g. a single driver call being called through both
+> netlink and ioctl, and trying to return an extended error)
 
-Bump min API for 9000 series devices to 30 to keep the driver aligned
-aligned the FW.
+Alexander's patch is cute in that it annotates errors using the special
+section blobs.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c      | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+But what it lacks fundamentally is context.  Therefore it can't be
+used to provide the offset or the bad attribute number.  So it can't
+meet our requirements.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index d265b279b2ca..110ceefccc15 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -58,7 +58,7 @@
- #define IWL9000_UCODE_API_MAX	30
- 
- /* Lowest firmware API version supported */
--#define IWL9000_UCODE_API_MIN	17
-+#define IWL9000_UCODE_API_MIN	30
- 
- /* NVM versions */
- #define IWL9000_NVM_VERSION		0x0a1d
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index e9f055706a6f..81b98915b1a4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -174,7 +174,7 @@ enum iwl_tx_cmd_sec_ctrl {
- 	TX_CMD_SEC_EXT			= 0x04,
- 	TX_CMD_SEC_GCMP			= 0x05,
- 	TX_CMD_SEC_KEY128		= 0x08,
--	TX_CMD_SEC_KEY_FROM_TABLE	= 0x08,
-+	TX_CMD_SEC_KEY_FROM_TABLE	= 0x10,
- };
- 
- /* TODO: how does these values are OK with only 16 bit variable??? */
--- 
-2.11.0
+We've passed down new arguments into core method call chains for much
+less useful facilitites than this.  So that doesn't bother me.  And
+as that is a kernel internal matter, we can refine it later.
+
+Wrt. nla_parse(), we can solve that problem as follow-on patches too.
+
+So I consider this change ready as far as the implementation is
+concerned.
+
+Ok, Jiri, start reading.  I will try to make you happy here.
+
+Let's just discuss the UAPI, since people complain we don't talk
+about that enough :-)  For those playing at home it is three new
+attributes returned in a netlink ACK when the application asks
+for the extended response:
+
+	NLMSGERR_ATTR_MSG	string	Extended error string
+	NLMSGERR_ATTR_OFFS	u32	Byte offset to netlink element causing error
+	NLMSGERR_ATTR_CODE	u32	Subsystem specific error code
+	NLMSGERR_ATTR_ATTR	u16	Netlink attribute triggering error or missing
+
+So please consider this interface carefully.
