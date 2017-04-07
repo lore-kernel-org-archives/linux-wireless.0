@@ -1,81 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35579 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754719AbdDFUUI (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58609 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756213AbdDGJXZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 16:20:08 -0400
-Received: by mail-oi0-f68.google.com with SMTP id d2so8884668oig.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 13:20:08 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 05/11] rtlwifi: btcoex: 23b 2ant: wifi is not actually off in mp mode
-Date: Thu,  6 Apr 2017 15:19:52 -0500
-Message-Id: <20170406201958.25642-6-Larry.Finger@lwfinger.net> (sfid-20170406_222543_830056_8991B03A)
-In-Reply-To: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
-References: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
+        Fri, 7 Apr 2017 05:23:25 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 00/10] cfg80211: support multiple scheduled scans
+Date: Fri,  7 Apr 2017 10:23:00 +0100
+Message-Id: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112330_605182_C5A0EE51)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+After the RFC rounds here is multi-scheduled scan submission. What
+has been added since the RFC is support for user-space to specify a
+BSSID in the matchset (PATCH 3/10). As example this could be used for
+roaming algorithm done in user-space. The patches for scheduled scan
+notification api have been collapsed into a single patch and rtnl
+locking was needed for the cfg80211_sched_scan_results() function.
 
-In mp mode, the wifi will not turn off and still has control of the PTA,
-so the driver needs to distinguish whether it is mp mode or not
+This series also adds a driver implementation for the new features.
+Not surprisingly being brcmfmac.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c   | 10 ++++++++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h  |  1 +
- 2 files changed, 11 insertions(+)
+This series applies to master branch of the mac80211-next
+repository. However, there is a patch pending for the
+wireless-drivers-next repository [1] that may give a merge
+conflict.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 93dbbc507ba1..70f21059ddc3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -3606,6 +3606,7 @@ static void btc8723b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 
- static void btc8723b2ant_wifioff_hwcfg(struct btc_coexist *btcoexist)
- {
-+	bool is_in_mp_mode = false;
- 	u8 h2c_parameter[2] = {0};
- 	u32 fw_ver = 0;
- 
-@@ -3623,6 +3624,15 @@ static void btc8723b2ant_wifioff_hwcfg(struct btc_coexist *btcoexist)
- 	} else {
- 		btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
- 	}
-+
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_IS_IN_MP_MODE,
-+			   &is_in_mp_mode);
-+	if (!is_in_mp_mode)
-+		/* BT select s0/s1 is controlled by BT */
-+		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x0);
-+	else
-+		/* BT select s0/s1 is controlled by WiFi */
-+		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x1);
- }
- 
- /*********************************************************************
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 022658cafbca..0b90e7f0b722 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -205,6 +205,7 @@ enum btc_get_type {
- 	BTC_GET_BL_WIFI_ENABLE_ENCRYPTION,
- 	BTC_GET_BL_WIFI_UNDER_B_MODE,
- 	BTC_GET_BL_EXT_SWITCH,
-+	BTC_GET_BL_WIFI_IS_IN_MP_MODE,
- 
- 	/* type s4Byte */
- 	BTC_GET_S4_WIFI_RSSI,
+[1] https://patchwork.kernel.org/patch/9666945/
+
+Arend van Spriel (10):
+  nl80211: add request id in scheduled scan event messages
+  nl80211: allow multiple active scheduled scan requests
+  nl80211: add support for BSSIDs in scheduled scan matchsets
+  cfg80211: add request id parameter to .sched_scan_stop() signature
+  cfg80211: add request id to cfg80211_sched_scan_*() api
+  brcmfmac: add firmware feature detection for gscan feature
+  brcmfmac: move scheduled scan wiphy param setting to pno module
+  brcmfmac: add support multi-scheduled scan
+  brcmfmac: add mutex to protect pno requests
+  brcmfmac: add scheduled scan support for specified BSSIDs
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |   6 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c              |   2 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  93 +++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   8 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.h   |   2 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  22 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  75 ++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 460 ++++++++++++++++++---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.h |  55 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   2 +-
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    |  10 +-
+ drivers/net/wireless/marvell/mwifiex/main.c        |   2 +-
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   2 +-
+ drivers/net/wireless/marvell/mwifiex/sta_event.c   |   2 +-
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |   2 +-
+ drivers/net/wireless/ti/wlcore/main.c              |   2 +-
+ include/net/cfg80211.h                             |  40 +-
+ include/uapi/linux/nl80211.h                       |  14 +-
+ net/mac80211/cfg.c                                 |   3 +-
+ net/mac80211/pm.c                                  |   2 +-
+ net/mac80211/scan.c                                |   4 +-
+ net/mac80211/util.c                                |   2 +-
+ net/wireless/core.c                                |  27 +-
+ net/wireless/core.h                                |  11 +-
+ net/wireless/nl80211.c                             | 116 ++++--
+ net/wireless/nl80211.h                             |   3 +-
+ net/wireless/rdev-ops.h                            |   8 +-
+ net/wireless/scan.c                                | 146 +++++--
+ net/wireless/trace.h                               |  54 ++-
+ 31 files changed, 945 insertions(+), 235 deletions(-)
+
 -- 
-2.12.0
+1.9.1
