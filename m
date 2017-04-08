@@ -1,45 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:41323 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1953173AbdDYWoA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 18:44:00 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH v5 7/9] NFC: trf7970a: Enable pins are active high not active low
-Date: Tue, 25 Apr 2017 15:43:54 -0700
-Message-Id: <20170425224356.11498-8-mgreer@animalcreek.com> (sfid-20170426_004428_883237_4B68AE36)
-In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
-References: <20170425224356.11498-1-mgreer@animalcreek.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38144 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752153AbdDHRtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 13:49:10 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/5] netlink: allow sending extended ACK with cookie on success
+Date: Sat,  8 Apr 2017 19:48:58 +0200
+Message-Id: <20170408174900.12820-4-johannes@sipsolutions.net> (sfid-20170408_194927_157587_3A9F8CB6)
+In-Reply-To: <20170408174900.12820-1-johannes@sipsolutions.net>
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The example DTS code for the trf7970a sets the GPIOs for the EN
-and EN2 pins to active low when they are really active high so
-correct the error.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+Now that we have extended error reporting and a new message format
+for netlink ACK messages, also extend this to be able to return
+arbitrary cookie data on success.
+
+This will allow, for example, nl80211 to not send an extra message
+for cookies identifying newly created objects, but return those
+directly in the ACK message.
+
+The cookie data size is currently limited to 32 bytes (since Jamal
+talked about using SHA1 for identifiers.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- Documentation/devicetree/bindings/net/nfc/trf7970a.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/linux/netlink.h      |  3 +++
+ include/uapi/linux/netlink.h |  4 ++++
+ net/netlink/af_netlink.c     | 38 ++++++++++++++++++++++++--------------
+ 3 files changed, 31 insertions(+), 14 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-index 57cb52c94783..a24a93a4b010 100644
---- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-+++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-@@ -36,8 +36,8 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 		spi-max-frequency = <2000000>;
- 		interrupt-parent = <&gpio2>;
- 		interrupts = <14 0>;
--		ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>,
--				  <&gpio2 5 GPIO_ACTIVE_LOW>;
-+		ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_HIGH>,
-+				  <&gpio2 5 GPIO_ACTIVE_HIGH>;
- 		vin-supply = <&ldo3_reg>;
- 		vdd-io-supply = <&ldo2_reg>;
- 		autosuspend-delay = <30000>;
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index 47562e940e9c..2133353b9a30 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -62,6 +62,9 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
+ 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
+ }
+ 
++/* this can be increased when necessary - don't expose to userland */
++#define NETLINK_MAX_COOKIE_LEN	32
++
+ /**
+  * struct netlink_ext_ack - netlink extended ACK report struct
+  * @_msg: message string to report - don't access directly, use
+diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
+index d1564557d645..7892095b1a16 100644
+--- a/include/uapi/linux/netlink.h
++++ b/include/uapi/linux/netlink.h
+@@ -118,12 +118,16 @@ struct nlmsgerr {
+  * @NLMSGERR_ATTR_OFFS: error offset in the original message (u32)
+  * @NLMSGERR_ATTR_ATTR: top-level attribute that caused the error
+  *	(or is missing, u16)
++ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
++ *	be used - in the success case - to identify a created
++ *	object or operation or similar (binary)
+  */
+ enum nlmsgerr_attrs {
+ 	NLMSGERR_ATTR_UNUSED,
+ 	NLMSGERR_ATTR_MSG,
+ 	NLMSGERR_ATTR_OFFS,
+ 	NLMSGERR_ATTR_ATTR,
++	NLMSGERR_ATTR_COOKIE,
+ };
+ 
+ #define NETLINK_ADD_MEMBERSHIP		1
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index 02cffb0a3904..bc1c9e8dd7ef 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -2312,6 +2312,9 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 			    (extack->missing_attr || extack->bad_attr))
+ 				acksize += nla_total_size(sizeof(u16));
+ 		}
++	} else if (nlk->flags & NETLINK_F_EXT_ACK) {
++		if (extack && extack->cookie_len)
++			acksize += nla_total_size(extack->cookie_len);
+ 	}
+ 
+ 	skb = nlmsg_new(acksize, GFP_KERNEL);
+@@ -2337,20 +2340,27 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
+ 						 : sizeof(*nlh));
+ 
+-	if (err && nlk->flags & NETLINK_F_EXT_ACK) {
+-		if (extack && extack->_msg)
+-			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
+-					       extack->_msg));
+-		if (extack && extack->bad_attr &&
+-		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
+-			     (u8 *)extack->bad_attr >= in_skb->data +
+-						       in_skb->len))
+-			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
+-					    (u8 *)extack->bad_attr -
+-					    in_skb->data));
+-		if (extack && extack->missing_attr)
+-			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
+-					    extack->missing_attr));
++	if (nlk->flags & NETLINK_F_EXT_ACK) {
++		if (err) {
++			if (extack && extack->_msg)
++				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
++						       extack->_msg));
++			if (extack && extack->bad_attr &&
++			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
++				     (u8 *)extack->bad_attr >= in_skb->data +
++							       in_skb->len))
++				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
++						    (u8 *)extack->bad_attr -
++						    in_skb->data));
++			if (extack && extack->missing_attr)
++				WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
++						    extack->missing_attr));
++		} else {
++			if (extack && extack->cookie_len)
++				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
++						extack->cookie_len,
++						extack->cookie));
++		}
+ 	}
+ 
+ 	netlink_unicast(in_skb->sk, skb, NETLINK_CB(in_skb).portid, MSG_DONTWAIT);
 -- 
-2.12.0
+2.11.0
