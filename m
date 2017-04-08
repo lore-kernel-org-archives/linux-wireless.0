@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45870 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38860 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755550AbdDRIxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 04:53:12 -0400
-Message-ID: <1492505589.2472.2.camel@sipsolutions.net> (sfid-20170418_105344_247770_F670FA72)
-Subject: Re: [PATCH V2 02/10] nl80211: allow multiple active scheduled scan
- requests
+        id S1752612AbdDHShG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 14:37:06 -0400
+Message-ID: <1491676621.5800.24.camel@sipsolutions.net> (sfid-20170408_203748_376323_A46A5339)
+Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 18 Apr 2017 10:53:09 +0200
-In-Reply-To: <1492085196-4574-3-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1492085196-4574-3-git-send-email-arend.vanspriel@broadcom.com>
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>
+Date: Sat, 08 Apr 2017 20:37:01 +0200
+In-Reply-To: <20170408183440.GA1900@nanopsycho> (sfid-20170408_203444_598631_EBE98730)
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
+         <20170408174900.12820-2-johannes@sipsolutions.net>
+         <20170408183440.GA1900@nanopsycho> (sfid-20170408_203444_598631_EBE98730)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On Sat, 2017-04-08 at 20:34 +0200, Jiri Pirko wrote:
+> nla_total_size(sizeof(u32));
+> > +			if (extack &&
+> > +			    (extack->missing_attr || extack-
+> > >bad_attr))
+> 
+> Attr could be 0, right? I know that on the most of the places 0 is
+> UNSPEC, but I'm pretty sure not everywhere.
 
-Overall this looks good, and I've almost applied it - but I have a
-question on this patch.
+Yeah, I guess we can't show a missing attribute of 0 now - bad_attr is
+a pointer so no problem there.
 
-You have this list:
-
-> +	struct list_head sched_scan_req_list;
-
-> 	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
-
-but you kept this. In fact, it's even still *used*. I don't understand
-that part.
-
-Also, you used RCU primitives for the new list, but you never actually
-used them - except in one place (in nl80211_stop_sched_scan) where it's
-actually not needed at all and the _rcu should be removed (since it
-holds the lock)
-
-What's up with that?
+I think I'll leave it like this - if anyone really wants to say
+"attribute 0 is missing" then we can add a flag later... The UAPI does
+take this into account by not including the attribute at all if the
+data is invalid, so 0 in the userspace API can be done
 
 johannes
