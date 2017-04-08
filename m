@@ -1,116 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:32860 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752456AbdDNQlL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 12:41:11 -0400
-Subject: Re: How to debug DMAR errors?
-To: Alexander Duyck <alexander.duyck@gmail.com>
-References: <a21d8845-ae8d-fae0-b1b4-7bf6751b04b5@candelatech.com>
- <CAKgT0UcEKTsc6-tSHXMHFybnE4NQASKWHziq2SV+spOCLJGH-g@mail.gmail.com>
- <fdbc5502-e388-b614-4f09-fa7de9a4f40e@candelatech.com>
- <CAKgT0UcPCMvs2OFkWGTs_TbKoxkLcnxjodroMDo82W4ptCfu3Q@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <884e0ae5-f9a2-734d-b46c-5b22678fbe6d@candelatech.com> (sfid-20170414_184143_743307_3196DA0E)
-Date: Fri, 14 Apr 2017 09:41:04 -0700
-MIME-Version: 1.0
-In-Reply-To: <CAKgT0UcPCMvs2OFkWGTs_TbKoxkLcnxjodroMDo82W4ptCfu3Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:40338 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752520AbdDHUNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 16:13:20 -0400
+Message-ID: <1491682394.2379.1.camel@sipsolutions.net> (sfid-20170408_221406_371082_1E4915BE)
+Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>
+Date: Sat, 08 Apr 2017 22:13:14 +0200
+In-Reply-To: <20170408184008.GB1900@nanopsycho> (sfid-20170408_204012_186615_65B86B3C)
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
+         <20170408174900.12820-2-johannes@sipsolutions.net>
+         <20170408183440.GA1900@nanopsycho>
+         <1491676621.5800.24.camel@sipsolutions.net>
+         <20170408184008.GB1900@nanopsycho> (sfid-20170408_204012_186615_65B86B3C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2017-04-08 at 20:40 +0200, Jiri Pirko wrote:
 
+> > I think I'll leave it like this - if anyone really wants to say
+> > "attribute 0 is missing" then we can add a flag later... The UAPI
+> > does
+> > take this into account by not including the attribute at all if the
+> > data is invalid, so 0 in the userspace API can be done
+> 
+> It a known issue, should be fixed right now. We are in no hurry. This
+> waited +15 years to be done, no harm in couple more days.
 
-On 04/14/2017 09:24 AM, Alexander Duyck wrote:
-> On Fri, Apr 14, 2017 at 9:19 AM, Ben Greear <greearb@candelatech.com> wrote:
->>
->>
->> On 04/14/2017 08:45 AM, Alexander Duyck wrote:
->>>
->>> On Thu, Apr 13, 2017 at 11:12 AM, Ben Greear <greearb@candelatech.com>
->>> wrote:
->>>>
->>>> Hello,
->>>>
->>>> I have been seeing a regular occurrence of DMAR errors, looking something
->>>> like this when testing my ath10k driver/firmware under some specific
->>>> loads
->>>> (maximum receive of 512 byte frames in AP mode):
->>>>
->>>> DMAR: DRHD: handling fault status reg 3
->>>> DMAR: [DMA Read] Request device [05:00.0] fault addr fd99f000 [fault
->>>> reason
->>>> 06] PTE Read access is not set
->>>> ath10k_pci 0000:05:00.0: firmware crashed! (uuid
->>>> 594b1393-ae35-42b5-9dec-74ff0c6791ff)
->>>>
->>>> So, I am wondering if there is any way I can get more information about
->>>> what
->>>> this fd99f000 address
->>>> is?
->>>>
->>>> Once this problem hits, the entire OS locks hard (not even sysrq-boot
->>>> will
->>>> do anything),
->>>> so I guess I would need the DMAR logic to print out more info on that
->>>> address somehow.
->>>>
->>>> Thanks,
->>>> Ben
->>>
->>>
->>> There isn't much more info to give you. The problem is that the device
->>> at 5:00.0 attempted to read at fd99f000 even though it didn't have
->>> permissions. In response this should trigger a PCI Master Abort
->>> message to that function. It looks like the firmware for the device
->>> doesn't handle that and so that is likely why things got hung.
->>>
->>> Really you would need to interrogate the ath10k_pci to see if there
->>> is/was a mapping somewhere for that address and what it was supposed
->>> to be used for.
->>
->>
->> I'm working on a hook in DMAR logic to call into ath10k_pci when the
->> error is seen, so the ath10k can dump debug info, including recent DMA
->> addresses.
->>
->> My code is an awful hack so far, but if someone could add a clean way to
->> register
->> DMAR error callbacks, I think that would be very welcome.  It might could
->> tie into
->> automated dma map/unmap debugging logic, and at the least, someone could
->> write custom debugging callbacks
->> for the driver(s) in question.
->>
->> Thanks,
->> Ben
->>
->
-> You might look at coding up something to add pci_error_handlers for
-> the pci_driver in the ath10k_pci driver. The PCI Master Abort should
-> trigger an error that you could then capture in the driver and handle
-> at least dumping it via your own implementation of the error handlers.
-> If nothing else I suspect there are probably some sort of descriptor
-> rings you could probably dump. I'm suspecting this is some sort of Tx
-> issue since the problem was a read fault, but I suppose there are
-> other paths in the driver that might trigger DMA read requests.
+It's not about any timing or anything - I simply think the likelihood
+that this will be needed is zero, because almost no netlink family uses
+attribute zero, those that do use it are older ones unlikely to be
+updated to start with, and *then* needing to indicate that attribute 0
+is missing? Not going to happen.
 
-This is a thick firmware driver, so the firmware could also be screwing up
-and accessing something it should not.  There are some existing work-arounds
-in it to deal with sketchy behaviour already, maybe more are needed.
+The extra code needed to handle this is therefore wasted.
 
-Anyway, once I added the debugging code, I didn't see it crash again, so
-might be a while before I know more.
+> Also, could you please attach a patch to iproute2 for example which
+> would make use of this. I just want to make sure it clicks.
 
-Thanks,
-Ben
+No, I'm not going to do that. If you want it, please do it yourself.
+I've done the testing on a slightly modified iw, but even there haven't
+done any pretty-printing or parsing, just made sure the attributes show
+up properly (by dumping them in hex).
 
->
-> - Alex
->
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
