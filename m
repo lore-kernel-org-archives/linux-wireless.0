@@ -1,92 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:34003 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752985AbdDJJJq (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:32891 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751955AbdDHSkL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 05:09:46 -0400
-Received: by mail-pg0-f66.google.com with SMTP id o123so25022840pga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 02:09:46 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v3 3/4] mwifiex: pcie: correct scratch register name
-Date: Mon, 10 Apr 2017 09:09:33 +0000
-Message-Id: <1491815374-6555-3-git-send-email-huxinming820@gmail.com> (sfid-20170410_110949_537857_5044F0FB)
-In-Reply-To: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
-References: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
+        Sat, 8 Apr 2017 14:40:11 -0400
+Received: by mail-it0-f67.google.com with SMTP id w11so1845377itb.0
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 11:40:11 -0700 (PDT)
+Date: Sat, 8 Apr 2017 20:40:08 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>
+Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
+Message-ID: <20170408184008.GB1900@nanopsycho> (sfid-20170408_204127_257590_2DFF1668)
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
+ <20170408174900.12820-2-johannes@sipsolutions.net>
+ <20170408183440.GA1900@nanopsycho>
+ <1491676621.5800.24.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1491676621.5800.24.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Sat, Apr 08, 2017 at 08:37:01PM CEST, johannes@sipsolutions.net wrote:
+>On Sat, 2017-04-08 at 20:34 +0200, Jiri Pirko wrote:
+>> nla_total_size(sizeof(u32));
+>> > +			if (extack &&
+>> > +			    (extack->missing_attr || extack-
+>> > >bad_attr))
+>> 
+>> Attr could be 0, right? I know that on the most of the places 0 is
+>> UNSPEC, but I'm pretty sure not everywhere.
+>
+>Yeah, I guess we can't show a missing attribute of 0 now - bad_attr is
+>a pointer so no problem there.
+>
+>I think I'll leave it like this - if anyone really wants to say
+>"attribute 0 is missing" then we can add a flag later... The UAPI does
+>take this into account by not including the attribute at all if the
+>data is invalid, so 0 in the userspace API can be done
 
-This patch correct pcie scratch register name, to keep the same with
-chipset side definition.
+It a known issue, should be fixed right now. We are in no hurry. This
+waited +15 years to be done, no harm in couple more days.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
-v2: code clean and prepare for next patch 4/4
-v3: same as v2
----
- drivers/net/wireless/marvell/mwifiex/pcie.c |  4 ++--
- drivers/net/wireless/marvell/mwifiex/pcie.h | 13 +++++++------
- 2 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index f45ab12..a07cb0a 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2494,8 +2494,8 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
- 	int pcie_scratch_reg[] = {PCIE_SCRATCH_12_REG,
--				  PCIE_SCRATCH_13_REG,
--				  PCIE_SCRATCH_14_REG};
-+				  PCIE_SCRATCH_14_REG,
-+				  PCIE_SCRATCH_15_REG};
- 
- 	if (!p)
- 		return 0;
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 00e8ee5..7e2450c 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -77,8 +77,9 @@
- #define PCIE_SCRATCH_10_REG				0xCE8
- #define PCIE_SCRATCH_11_REG				0xCEC
- #define PCIE_SCRATCH_12_REG				0xCF0
--#define PCIE_SCRATCH_13_REG				0xCF8
--#define PCIE_SCRATCH_14_REG				0xCFC
-+#define PCIE_SCRATCH_13_REG				0xCF4
-+#define PCIE_SCRATCH_14_REG				0xCF8
-+#define PCIE_SCRATCH_15_REG				0xCFC
- #define PCIE_RD_DATA_PTR_Q0_Q1                          0xC08C
- #define PCIE_WR_DATA_PTR_Q0_Q1                          0xC05C
- 
-@@ -217,8 +218,8 @@ struct mwifiex_pcie_card_reg {
- 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
- 	.pfu_enabled = 1,
- 	.sleep_cookie = 0,
--	.fw_dump_ctrl = 0xcf4,
--	.fw_dump_start = 0xcf8,
-+	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
-+	.fw_dump_start = PCIE_SCRATCH_14_REG,
- 	.fw_dump_end = 0xcff,
- 	.fw_dump_host_ready = 0xee,
- 	.fw_dump_read_done = 0xfe,
-@@ -254,8 +255,8 @@ struct mwifiex_pcie_card_reg {
- 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
- 	.pfu_enabled = 1,
- 	.sleep_cookie = 0,
--	.fw_dump_ctrl = 0xcf4,
--	.fw_dump_start = 0xcf8,
-+	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
-+	.fw_dump_start = PCIE_SCRATCH_14_REG,
- 	.fw_dump_end = 0xcff,
- 	.fw_dump_host_ready = 0xcc,
- 	.fw_dump_read_done = 0xdd,
--- 
-1.8.1.4
+Also, could you please attach a patch to iproute2 for example which
+would make use of this. I just want to make sure it clicks.
+
+Thanks!
