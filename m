@@ -1,46 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43890 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751378AbdDMOGo (ORCPT
+Received: from mail-io0-f175.google.com ([209.85.223.175]:34603 "EHLO
+        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751626AbdDHS0U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 10:06:44 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sat, 8 Apr 2017 14:26:20 -0400
+Received: by mail-io0-f175.google.com with SMTP id a103so283701ioj.1
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 11:26:20 -0700 (PDT)
+Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
+ <20170408174900.12820-2-johannes@sipsolutions.net>
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us,
+        Johannes Berg <johannes.berg@intel.com>
+From: David Ahern <dsa@cumulusnetworks.com>
+Message-ID: <46f42c2a-db2a-78b5-37c8-0ee5bb0443f8@cumulusnetworks.com> (sfid-20170408_202641_382361_A54DC948)
+Date: Sat, 8 Apr 2017 14:26:18 -0400
 MIME-Version: 1.0
-Subject: Re: brcmfmac: properly align buffers on certain platforms with 64 bit
- DMA
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <7120e0d6-8687-2622-7432-cb78dae3e122@gmail.com>
-References: <7120e0d6-8687-2622-7432-cb78dae3e122@gmail.com>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Helmut Klein <hgkr.klein@gmail.com>
-Message-Id: <20170413140644.45B2660D70@smtp.codeaurora.org> (sfid-20170413_160650_484205_DD9236CE)
-Date: Thu, 13 Apr 2017 14:06:44 +0000 (UTC)
+In-Reply-To: <20170408174900.12820-2-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Heiner Kallweit <hkallweit1@gmail.com> wrote:
-> Systems with 64 bit DMA at least partially require buffers to be used
-> for DMA to be 8-byte-aligned. One example is Amlogic Meson GX.
-> Switching the MMC/SDIO driver for this platform to SG DMA mode
-> resulted in problems due to unaligned buffers.
-> 
-> Fortunately the brcmfmac driver has a global define for the alignment.
-> Changing it to 8 fixed the issues with Meson GX.
-> 
-> Suggested-by: Helmut Klein <hgkr.klein@gmail.com>
-> Tested-by: Helmut Klein <hgkr.klein@gmail.com>
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+On 4/8/17 1:48 PM, Johannes Berg wrote:
+> @@ -2267,21 +2284,37 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
+>  }
+>  EXPORT_SYMBOL(__netlink_dump_start);
+>  
+> -void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
+> +void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+> +		 const struct netlink_ext_ack *extack)
+>  {
+>  	struct sk_buff *skb;
+>  	struct nlmsghdr *rep;
+>  	struct nlmsgerr *errmsg;
+>  	size_t payload = sizeof(*errmsg);
+> +	size_t acksize = sizeof(*errmsg);
+>  	struct netlink_sock *nlk = nlk_sk(NETLINK_CB(in_skb).sk);
+>  
+>  	/* Error messages get the original request appened, unless the user
+> -	 * requests to cap the error message.
+> +	 * requests to cap the error message, and get extra error data if
+> +	 * requested.
+>  	 */
+> -	if (!(nlk->flags & NETLINK_F_CAP_ACK) && err)
+> -		payload += nlmsg_len(nlh);
+> +	if (err) {
+> +		if (!(nlk->flags & NETLINK_F_CAP_ACK))
+> +			payload += nlmsg_len(nlh);
+> +		acksize = payload;
+> +		if (nlk->flags & NETLINK_F_EXT_ACK) {
+> +			if (extack && extack->_msg)
+> +				acksize +=
+> +					nla_total_size(strlen(extack->_msg) + 1);
+> +			if (extack && extack->bad_attr)
+> +				acksize += nla_total_size(sizeof(u32));
+> +			if (extack &&
+> +			    (extack->missing_attr || extack->bad_attr))
+> +				acksize += nla_total_size(sizeof(u16));
 
-Patch applied to wireless-drivers-next.git, thanks.
+If you create a v3, the extack check can by pulled up to the (flags &
+NETLINK_F_EXT_ACK) check.
 
-6e84ab604bde brcmfmac: properly align buffers on certain platforms with 64 bit DMA
 
--- 
-https://patchwork.kernel.org/patch/9665425/
+> +		}
+> +	}
+>  
+> -	skb = nlmsg_new(payload, GFP_KERNEL);
+> +	skb = nlmsg_new(acksize, GFP_KERNEL);
+>  	if (!skb) {
+>  		struct sock *sk;
+>  
+> @@ -2300,14 +2333,35 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
+>  			  NLMSG_ERROR, payload, 0);
+>  	errmsg = nlmsg_data(rep);
+>  	errmsg->error = err;
+> -	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh->nlmsg_len : sizeof(*nlh));
+> +	memcpy(&errmsg->msg, nlh,
+> +	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
+> +						 : sizeof(*nlh));
+> +
+> +	if (err && nlk->flags & NETLINK_F_EXT_ACK) {
+> +		if (extack && extack->_msg)
+> +			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
+> +					       extack->_msg));
+> +		if (extack && extack->bad_attr &&
+> +		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
+> +			     (u8 *)extack->bad_attr >= in_skb->data +
+> +						       in_skb->len))
+> +			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
+> +					    (u8 *)extack->bad_attr -
+> +					    in_skb->data));
+> +		if (extack && extack->missing_attr)
+> +			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
+> +					    extack->missing_attr));
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+same here
