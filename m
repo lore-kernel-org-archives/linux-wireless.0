@@ -1,60 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55112 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751692AbdDCT7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 15:59:38 -0400
-Message-ID: <1491249573.4714.3.camel@sipsolutions.net> (sfid-20170403_215941_597752_06BD0940)
-Subject: Re: [PATCH 1/2] Documentation/sphinx: kerneldoc: add
- "unused-functions"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jani Nikula <jani.nikula@linux.intel.com>,
-        linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org
-Date: Mon, 03 Apr 2017 21:59:33 +0200
-In-Reply-To: <878tnl38ur.fsf@intel.com>
-References: <20170331071632.6209-1-johannes@sipsolutions.net>
-         <878tnl38ur.fsf@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f68.google.com ([209.85.214.68]:33121 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752100AbdDHSeo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 14:34:44 -0400
+Received: by mail-it0-f68.google.com with SMTP id w11so1838533itb.0
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 11:34:43 -0700 (PDT)
+Date: Sat, 8 Apr 2017 20:34:41 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
+Message-ID: <20170408183440.GA1900@nanopsycho> (sfid-20170408_203456_724642_8151E368)
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
+ <20170408174900.12820-2-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170408174900.12820-2-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-03-31 at 15:54 +0300, Jani Nikula wrote:
+Sat, Apr 08, 2017 at 07:48:56PM CEST, johannes@sipsolutions.net wrote:
+>From: Johannes Berg <johannes.berg@intel.com>
+>
+>Add the base infrastructure and UAPI for netlink
+>extended ACK reporting. All "manual" calls to
+>netlink_ack() pass NULL for now and thus don't
+>get extended ACK reporting.
+
+Why so narrow? :)
+
+
+>
+>Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>---
+
+[...]
+
+
+>diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+>index da14ab61f363..47562e940e9c 100644
+>--- a/include/linux/netlink.h
+>+++ b/include/linux/netlink.h
+>@@ -62,11 +62,41 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
+> 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
+> }
 > 
-> I'm sure the parameter name could be improved to capture what you
-> mean better; alas I don't have a suggestion.
+>+/**
+>+ * struct netlink_ext_ack - netlink extended ACK report struct
+>+ * @_msg: message string to report - don't access directly, use
+>+ *	%NL_SET_ERR_MSG
+>+ * @bad_attr: attribute with error
+>+ * @missing_attr: number of missing attr (or 0)
+>+ * @cookie: cookie data to return to userspace (for success)
+>+ * @cookie_len: actual cookie data length
+>+ */
+>+struct netlink_ext_ack {
+>+	const char *_msg;
+>+	const struct nlattr *bad_attr;
+>+	u16 missing_attr;
+>+	u8 cookie[NETLINK_MAX_COOKIE_LEN];
+>+	u8 cookie_len;
+>+};
+>+
+>+/* Always use this macro, this allows later putting the
+>+ * message into a separate section or such for things
+>+ * like translation or listing all possible messages.
+>+ * Currently string formatting is not supported (due
+>+ * to the lack of an output buffer.)
 
-Yes, that's a fair point - perhaps "functions-not-linked" or something
-like that.
+Please use 80 cols.
 
-> > Internally this works by collecting (per-file) those functions
-> > (and enums, structs, doc sections...) that are explicitly used,
-> > and invoking the kernel-doc script with "-nofunction" later.
+[...]
+
+
+>@@ -2267,21 +2284,37 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
+> }
+> EXPORT_SYMBOL(__netlink_dump_start);
 > 
-> A quick thought that I don't have the time to check now, but should
-> be checked before merging: Is the order of directive extension
-> execution deterministic if the Sphinx run is parallelized (sphinx-
-> build -j)? Is it deterministic within an rst file? Surely it's not
-> deterministic when called from several rst files? The latter is,
-> perhaps, acceptable, but the former not.
+>-void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
+>+void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+>+		 const struct netlink_ext_ack *extack)
+> {
+> 	struct sk_buff *skb;
+> 	struct nlmsghdr *rep;
+> 	struct nlmsgerr *errmsg;
+> 	size_t payload = sizeof(*errmsg);
+>+	size_t acksize = sizeof(*errmsg);
+> 	struct netlink_sock *nlk = nlk_sk(NETLINK_CB(in_skb).sk);
+> 
+> 	/* Error messages get the original request appened, unless the user
+>-	 * requests to cap the error message.
+>+	 * requests to cap the error message, and get extra error data if
+>+	 * requested.
+> 	 */
+>-	if (!(nlk->flags & NETLINK_F_CAP_ACK) && err)
+>-		payload += nlmsg_len(nlh);
+>+	if (err) {
+>+		if (!(nlk->flags & NETLINK_F_CAP_ACK))
+>+			payload += nlmsg_len(nlh);
+>+		acksize = payload;
+>+		if (nlk->flags & NETLINK_F_EXT_ACK) {
+>+			if (extack && extack->_msg)
+>+				acksize +=
+>+					nla_total_size(strlen(extack->_msg) + 1);
+>+			if (extack && extack->bad_attr)
+>+				acksize += nla_total_size(sizeof(u32));
+>+			if (extack &&
+>+			    (extack->missing_attr || extack->bad_attr))
 
-Interesting, TBH I never even considered this. How would I even run it
-that way? Presumably "make htmldocs" doesn't do this?
+Attr could be 0, right? I know that on the most of the places 0 is
+UNSPEC, but I'm pretty sure not everywhere.
 
-Sphinx documentation (http://www.sphinx-doc.org/en/stable/extdev/) says
-this:
 
-    The setup() function can return a dictionary. This is treated by
-    Sphinx as metadata of the extension. Metadata keys currently
-    recognized are:
-    [...]
-    'parallel_read_safe': a boolean that specifies if parallel reading
-    of source files can be used when the extension is loaded. It
-    defaults to False, i.e. you have to explicitly specify your
-    extension to be parallel-read-safe after checking that it is.
+>+				acksize += nla_total_size(sizeof(u16));
+>+		}
+>+	}
+> 
+>-	skb = nlmsg_new(payload, GFP_KERNEL);
+>+	skb = nlmsg_new(acksize, GFP_KERNEL);
+> 	if (!skb) {
+> 		struct sock *sk;
+> 
 
-    We do set this right now, so I guess it'd only be guaranteed to work
-    right within a single rst file, and then I should perhaps consider not
-    making this state global but somehow linking it to the rst file being
-    processed?
+[...]
 
-    johannes
+Look very good. Thanks for taking care of this!
