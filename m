@@ -1,68 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:32781 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932277AbdDDQuc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 12:50:32 -0400
-Received: by mail-oi0-f68.google.com with SMTP id f193so25704247oib.0
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:31 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 09/13] rtlwifi: btcoex: 23b 2ant: tell fw if external or internal switch is used
-Date: Tue,  4 Apr 2017 11:50:02 -0500
-Message-Id: <20170404165006.14329-10-Larry.Finger@lwfinger.net> (sfid-20170404_185041_431361_4A016E02)
-In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
-References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38124 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751863AbdDHRtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 13:49:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/5] genetlink: pass extended ACK report down
+Date: Sat,  8 Apr 2017 19:48:57 +0200
+Message-Id: <20170408174900.12820-3-johannes@sipsolutions.net> (sfid-20170408_194926_087671_5AD9A6C6)
+In-Reply-To: <20170408174900.12820-1-johannes@sipsolutions.net>
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Some chips use an external antenna switch, but fw may not realize it.
-Here we tell fw exactly that which type of switch we are using.
+Pass the extended ACK reporting struct down from
+generic netlink to the families, using the existing
+struct genl_info for simplicity.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Also add support to set the extended ACK information
+from generic netlink users.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ include/net/genetlink.h | 20 ++++++++++++++++++++
+ net/netlink/genetlink.c |  6 ++++--
+ 2 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 8098676..2cdcf82 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1106,14 +1106,19 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
- 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT) {
- 			/* tell firmware "no antenna inverse" */
- 			h2c_parameter[0] = 0;
--			h2c_parameter[1] = 1;  /* ext switch type */
--			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
--						h2c_parameter);
--			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
- 		} else {
- 			/* tell firmware "antenna inverse" */
- 			h2c_parameter[0] = 1;
- 		}
+diff --git a/include/net/genetlink.h b/include/net/genetlink.h
+index a34275be3600..b81a4979e1db 100644
+--- a/include/net/genetlink.h
++++ b/include/net/genetlink.h
+@@ -84,6 +84,7 @@ struct nlattr **genl_family_attrbuf(const struct genl_family *family);
+  * @attrs: netlink attributes
+  * @_net: network namespace
+  * @user_ptr: user pointers
++ * @extack: extended ACK report struct
+  */
+ struct genl_info {
+ 	u32			snd_seq;
+@@ -94,6 +95,7 @@ struct genl_info {
+ 	struct nlattr **	attrs;
+ 	possible_net_t		_net;
+ 	void *			user_ptr[2];
++	struct netlink_ext_ack *extack;
+ };
+ 
+ static inline struct net *genl_info_net(struct genl_info *info)
+@@ -106,6 +108,24 @@ static inline void genl_info_net_set(struct genl_info *info, struct net *net)
+ 	write_pnet(&info->_net, net);
+ }
+ 
++#define GENL_SET_ERR_MSG(info, msg) NL_SET_ERR_MSG((info)->extack, msg)
 +
-+		if (use_ext_switch) {
-+			/* ext switch type */
-+			h2c_parameter[1] = 1;
-+		} else {
-+			/* int switch type */
-+			h2c_parameter[1] = 0;
-+		}
-+		btcoexist->btc_fill_h2c(btcoexist, 0x65, 2, h2c_parameter);
- 	} else {
- 		if (fw_ver >= 0x180000) {
- 			/* Use H2C to set GNT_BT to "Control by PTA"*/
++static inline int genl_err_attr(struct genl_info *info, int err,
++				struct nlattr *attr)
++{
++	info->extack->bad_attr = attr;
++
++	return err;
++}
++
++static inline int genl_err_attr_missing(struct genl_info *info, int err,
++					u16 attr)
++{
++	info->extack->missing_attr = attr;
++
++	return err;
++}
++
+ /**
+  * struct genl_ops - generic netlink operations
+  * @cmd: command identifier
+diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+index 57b2e3648bc0..4b598a5999a2 100644
+--- a/net/netlink/genetlink.c
++++ b/net/netlink/genetlink.c
+@@ -497,7 +497,8 @@ static int genl_lock_done(struct netlink_callback *cb)
+ 
+ static int genl_family_rcv_msg(const struct genl_family *family,
+ 			       struct sk_buff *skb,
+-			       struct nlmsghdr *nlh)
++			       struct nlmsghdr *nlh,
++			       struct netlink_ext_ack *extack)
+ {
+ 	const struct genl_ops *ops;
+ 	struct net *net = sock_net(skb->sk);
+@@ -584,6 +585,7 @@ static int genl_family_rcv_msg(const struct genl_family *family,
+ 	info.genlhdr = nlmsg_data(nlh);
+ 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
+ 	info.attrs = attrbuf;
++	info.extack = extack;
+ 	genl_info_net_set(&info, net);
+ 	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
+ 
+@@ -618,7 +620,7 @@ static int genl_rcv_msg(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 	if (!family->parallel_ops)
+ 		genl_lock();
+ 
+-	err = genl_family_rcv_msg(family, skb, nlh);
++	err = genl_family_rcv_msg(family, skb, nlh, extack);
+ 
+ 	if (!family->parallel_ops)
+ 		genl_unlock();
 -- 
-2.10.2
+2.11.0
