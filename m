@@ -1,120 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36348 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754704AbdDOUcM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Apr 2017 16:32:12 -0400
-Received: by mail-oi0-f65.google.com with SMTP id b187so22210817oif.3
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:11 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 06/14] rtlwifi: btcoex: 21a 2ant: set tdma based on rssi state amd limit rx agg size
-Date: Sat, 15 Apr 2017 15:31:52 -0500
-Message-Id: <20170415203200.22979-7-Larry.Finger@lwfinger.net> (sfid-20170415_223234_987655_6DC7E312)
-In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:41552 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751137AbdDHP2v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 11:28:51 -0400
+Date: Sat, 8 Apr 2017 11:28:43 -0400
+From: Jiri Benc <jbenc@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC] netlink: send exterr cookie on success
+Message-ID: <20170408112844.3aa4d448@griffin> (sfid-20170408_172858_092198_596E608C)
+In-Reply-To: <20170407194402.4181-1-johannes@sipsolutions.net>
+References: <20170407194402.4181-1-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Fri,  7 Apr 2017 21:44:02 +0200, Johannes Berg wrote:
+> @@ -67,6 +67,8 @@ struct netlink_ext_err {
+>  	u32 ext_code;
+>  	u32 msg_offset;
+>  	u16 attr;
+> +	const u8 *cookie;
+> +	u8 cookie_len;
+>  };
 
-Monitor the rssi state to set the tdma and limit rx aggregation size to
-fit the bt profiling.
+Perhaps the structure should be named just "netlink_ext" or so? It
+seems it'll pick up some non-error related usage, such as the cookies
+here or, in the future, flags indicating how the message should be
+parsed.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 51 ++++++++++------------
- 1 file changed, 23 insertions(+), 28 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index bbce0cbe2e9a..9df5b4c195ff 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -2875,33 +2875,40 @@ static void btc8821a2ant_action_a2dp(struct btc_coexist *btcoexist)
- 
- static void btc8821a2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, bt_rssi_state, bt_info_ext;
-+	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 
--	bt_info_ext = coex_sta->bt_info_ext;
- 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
--	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
-+	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
-+				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
-+	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
-+		2, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 0);
-+
-+	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
-+
-+	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
-+	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
- 		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
--	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-+	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
-+		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
-+		btc8821a2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
-+					      0x0, 0x0);
-+	} else {
-+		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 13);
-+		btc8821a2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
-+					      0x4);
-+	}
- 
--	if (wifi_bw == BTC_WIFI_BW_HT40) {
--		/* fw mechanism */
--		if (bt_info_ext&BIT0) {
--			/* a2dp basic rate */
--			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
--							  true, 2);
--		} else {
--			/* a2dp edr rate */
--			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
--							  true, 1);
--		}
-+	btc8821a2ant_tdma_duration_adjust(btcoexist, false, true, 2);
- 
--		/* sw mechanism */
-+	/* sw mechanism */
-+	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-+	if (wifi_bw == BTC_WIFI_BW_HT40) {
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, true, false,
-@@ -2915,18 +2922,6 @@ static void btc8821a2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- 						   false, 0x18);
- 		}
- 	} else {
--		/* fw mechanism */
--		if (bt_info_ext&BIT0) {
--			/* a2dp basic rate */
--			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
--							  true, 2);
--		} else {
--			/* a2dp edr rate */
--			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
--							  true, 1);
--		}
--
--		/* sw mechanism */
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, false, false,
--- 
-2.12.0
+ Jiri
