@@ -1,53 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:36817 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937220AbdDZWEu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 18:04:50 -0400
-Received: by mail-pf0-f172.google.com with SMTP id 194so6942075pfv.3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 15:04:50 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-soc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Nicolas Dechesne <nicolas.dechesne@linaro.org>
-Subject: [PATCH 2/2] arm64: dts: apq8016-sbc: Correct WLAN LED default-trigger
-Date: Wed, 26 Apr 2017 15:04:44 -0700
-Message-Id: <20170426220444.10539-2-bjorn.andersson@linaro.org> (sfid-20170427_000625_146565_A2B39868)
-In-Reply-To: <20170426220444.10539-1-bjorn.andersson@linaro.org>
-References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38786 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752876AbdDHSe5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 14:34:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 3/5] netlink: allow sending extended ACK with cookie on success
+Date: Sat,  8 Apr 2017 20:34:42 +0200
+Message-Id: <20170408183444.2796-4-johannes@sipsolutions.net> (sfid-20170408_203534_586243_5CB46F28)
+In-Reply-To: <20170408183444.2796-1-johannes@sipsolutions.net>
+References: <20170408183444.2796-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TX status trigger of the wlan interface is named phy0tx, so this
-updates the default-trigger for the WLAN LED to use that instead.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Now that we have extended error reporting and a new message format
+for netlink ACK messages, also extend this to be able to return
+arbitrary cookie data on success.
+
+This will allow, for example, nl80211 to not send an extra message
+for cookies identifying newly created objects, but return those
+directly in the ACK message.
+
+The cookie data size is currently limited to 32 bytes (since Jamal
+talked about using SHA1 for identifiers.)
+
+Thanks to Jamal Hadi Salim for bringing up this idea during the
+discussions.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ include/linux/netlink.h      |  3 +++
+ include/uapi/linux/netlink.h |  4 ++++
+ net/netlink/af_netlink.c     | 38 ++++++++++++++++++++++++--------------
+ 3 files changed, 31 insertions(+), 14 deletions(-)
 
-Note that without patch 1/2 this trigger does not fire - but there's also no
-harm in picking the two patches through separate trees.
-
- arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi b/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi
-index 5d83b02b7c4a..21a8f5ce8955 100644
---- a/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi
-+++ b/arch/arm64/boot/dts/qcom/apq8016-sbc.dtsi
-@@ -178,7 +178,7 @@
- 			led@5 {
- 				label = "apq8016-sbc:yellow:wlan";
- 				gpios = <&pm8916_mpps 2 GPIO_ACTIVE_HIGH>;
--				linux,default-trigger = "wlan";
-+				linux,default-trigger = "phy0tx";
- 				default-state = "off";
- 			};
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index 47562e940e9c..2133353b9a30 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -62,6 +62,9 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
+ 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
+ }
  
++/* this can be increased when necessary - don't expose to userland */
++#define NETLINK_MAX_COOKIE_LEN	32
++
+ /**
+  * struct netlink_ext_ack - netlink extended ACK report struct
+  * @_msg: message string to report - don't access directly, use
+diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
+index d1564557d645..7892095b1a16 100644
+--- a/include/uapi/linux/netlink.h
++++ b/include/uapi/linux/netlink.h
+@@ -118,12 +118,16 @@ struct nlmsgerr {
+  * @NLMSGERR_ATTR_OFFS: error offset in the original message (u32)
+  * @NLMSGERR_ATTR_ATTR: top-level attribute that caused the error
+  *	(or is missing, u16)
++ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
++ *	be used - in the success case - to identify a created
++ *	object or operation or similar (binary)
+  */
+ enum nlmsgerr_attrs {
+ 	NLMSGERR_ATTR_UNUSED,
+ 	NLMSGERR_ATTR_MSG,
+ 	NLMSGERR_ATTR_OFFS,
+ 	NLMSGERR_ATTR_ATTR,
++	NLMSGERR_ATTR_COOKIE,
+ };
+ 
+ #define NETLINK_ADD_MEMBERSHIP		1
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index c74f56a4fcf1..98e55a59c97e 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -2311,6 +2311,9 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 			if (extack->missing_attr)
+ 				acksize += nla_total_size(sizeof(u16));
+ 		}
++	} else if (nlk->flags & NETLINK_F_EXT_ACK) {
++		if (extack && extack->cookie_len)
++			acksize += nla_total_size(extack->cookie_len);
+ 	}
+ 
+ 	skb = nlmsg_new(acksize, GFP_KERNEL);
+@@ -2336,20 +2339,27 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
+ 						 : sizeof(*nlh));
+ 
+-	if (err && nlk->flags & NETLINK_F_EXT_ACK && extack) {
+-		if (extack->_msg)
+-			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
+-					       extack->_msg));
+-		if (extack->bad_attr &&
+-		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
+-			     (u8 *)extack->bad_attr >= in_skb->data +
+-						       in_skb->len))
+-			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
+-					    (u8 *)extack->bad_attr -
+-					    in_skb->data));
+-		if (extack->missing_attr)
+-			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
+-					    extack->missing_attr));
++	if (nlk->flags & NETLINK_F_EXT_ACK) {
++		if (err && extack) {
++			if (extack->_msg)
++				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
++						       extack->_msg));
++			if (extack->bad_attr &&
++			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
++				     (u8 *)extack->bad_attr >= in_skb->data +
++							       in_skb->len))
++				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
++						    (u8 *)extack->bad_attr -
++						    in_skb->data));
++			if (extack->missing_attr)
++				WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
++						    extack->missing_attr));
++		} else if (!err && extack) {
++			if (extack->cookie_len)
++				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
++						extack->cookie_len,
++						extack->cookie));
++		}
+ 	}
+ 
+ 	netlink_unicast(in_skb->sk, skb, NETLINK_CB(in_skb).portid, MSG_DONTWAIT);
 -- 
-2.12.0
+2.11.0
