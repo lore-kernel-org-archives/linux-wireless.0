@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:60588 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765437AbdDSWLm (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:33090 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753248AbdDHSgm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 18:11:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH net-next] brcmfmac: fix build without CONFIG_BRCMFMAC_PROTO_BCDC
-Date: Thu, 20 Apr 2017 00:10:24 +0200
-Message-Id: <20170419221133.2180685-1-arnd@arndb.de> (sfid-20170420_001208_937000_55BCF676)
+        Sat, 8 Apr 2017 14:36:42 -0400
+Received: by mail-pf0-f176.google.com with SMTP id s16so17163579pfs.0
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 11:36:42 -0700 (PDT)
+Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
+ <20170408174900.12820-2-johannes@sipsolutions.net>
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us,
+        Johannes Berg <johannes.berg@intel.com>
+From: David Ahern <dsa@cumulusnetworks.com>
+Message-ID: <14c58480-cd03-4d61-fffa-fab6e437a7ea@cumulusnetworks.com> (sfid-20170408_203746_782324_2B2DC8C1)
+Date: Sat, 8 Apr 2017 14:36:39 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170408174900.12820-2-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With CONFIG_BRCMFMAC_PROTO_BCDC unset, we cannot build the fwsignal.c file:
+On 4/8/17 1:48 PM, Johannes Berg wrote:
+> diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+> index da14ab61f363..47562e940e9c 100644
+> --- a/include/linux/netlink.h
+> +++ b/include/linux/netlink.h
+> @@ -62,11 +62,41 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
+>  	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
+>  }
+>  
+> +/**
+> + * struct netlink_ext_ack - netlink extended ACK report struct
+> + * @_msg: message string to report - don't access directly, use
+> + *	%NL_SET_ERR_MSG
+> + * @bad_attr: attribute with error
+> + * @missing_attr: number of missing attr (or 0)
+> + * @cookie: cookie data to return to userspace (for success)
+> + * @cookie_len: actual cookie data length
+> + */
+> +struct netlink_ext_ack {
+> +	const char *_msg;
+> +	const struct nlattr *bad_attr;
+> +	u16 missing_attr;
+> +	u8 cookie[NETLINK_MAX_COOKIE_LEN];
+> +	u8 cookie_len;
+> +};
+> +
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c: In function 'brcmf_fws_notify_credit_map':
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:1590:31: error: implicit declaration of function 'drvr_to_fws'; did you mean 'dev_to_psd'? [-Werror=implicit-function-declaration]
-  struct brcmf_fws_info *fws = drvr_to_fws(ifp->drvr);
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:1590:31: error: initialization makes pointer from integer without a cast [-Werror=int-conversion]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:1621:31: error: initialization makes pointer from integer without a cast [-Werror=int-conversion]
+I think v3 is in your future ...
 
-However, as pointed out in the changeset description for the patch that caused
-the problem, fwsignal.c is only required when CONFIG_BRCMFMAC_PROTO_BCDC is
-enabled, so we can simply change the Makefile to build it conditionally.
+/home/dsa/kernel-4.git/include/linux/netlink.h:78:12: error:
+‘NETLINK_MAX_COOKIE_LEN’ undeclared here (not in a function)
+  u8 cookie[NETLINK_MAX_COOKIE_LEN];
+            ^
 
-Fixes: acf8ac41dd73 ("brcmfmac: remove reference to fwsignal data from struct brcmf_pub")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-index 0383ba559edc..1f5a9b948abf 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-@@ -25,7 +25,6 @@ brcmfmac-objs += \
- 		chip.o \
- 		fwil.o \
- 		fweh.o \
--		fwsignal.o \
- 		p2p.o \
- 		proto.o \
- 		common.o \
-@@ -36,7 +35,8 @@ brcmfmac-objs += \
- 		vendor.o \
- 		pno.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
--		bcdc.o
-+		bcdc.o \
-+		fwsignal.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
- 		commonring.o \
- 		flowring.o \
--- 
-2.9.0
+it's defined in patch 3; needed in patch 1
