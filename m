@@ -1,144 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36134 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40616 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753552AbdDLMeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 08:34:12 -0400
+        id S1752249AbdDHUYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Apr 2017 16:24:41 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
         Jiri Benc <jbenc@redhat.com>,
         David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH net-next v5 3/5] netlink: allow sending extended ACK with cookie on success
-Date: Wed, 12 Apr 2017 14:34:06 +0200
-Message-Id: <20170412123408.22012-4-johannes@sipsolutions.net> (sfid-20170412_143456_989280_A9EBEB3C)
-In-Reply-To: <20170412123408.22012-1-johannes@sipsolutions.net>
-References: <20170412123408.22012-1-johannes@sipsolutions.net>
+Subject: [PATCH v3 2/5] genetlink: pass extended ACK report down
+Date: Sat,  8 Apr 2017 22:24:31 +0200
+Message-Id: <20170408202434.12018-3-johannes@sipsolutions.net> (sfid-20170408_222506_695842_3FAD8F76)
+In-Reply-To: <20170408202434.12018-1-johannes@sipsolutions.net>
+References: <20170408202434.12018-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Now that we have extended error reporting and a new message format
-for netlink ACK messages, also extend this to be able to return
-arbitrary cookie data on success.
+Pass the extended ACK reporting struct down from
+generic netlink to the families, using the existing
+struct genl_info for simplicity.
 
-This will allow, for example, nl80211 to not send an extra message
-for cookies identifying newly created objects, but return those
-directly in the ACK message.
-
-The cookie data size is currently limited to 20 bytes (since Jamal
-talked about using SHA1 for identifiers.)
-
-Thanks to Jamal Hadi Salim for bringing up this idea during the
-discussions.
+Also add support to set the extended ACK information
+from generic netlink users.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/netlink.h      |  7 +++++++
- include/uapi/linux/netlink.h |  4 ++++
- net/netlink/af_netlink.c     | 33 ++++++++++++++++++++++-----------
- 3 files changed, 33 insertions(+), 11 deletions(-)
+ include/net/genetlink.h | 20 ++++++++++++++++++++
+ net/netlink/genetlink.c |  6 ++++--
+ 2 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-index 60e7137f840d..8d2a8924705c 100644
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -62,15 +62,22 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
- 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
- }
- 
-+/* this can be increased when necessary - don't expose to userland */
-+#define NETLINK_MAX_COOKIE_LEN	20
-+
- /**
-  * struct netlink_ext_ack - netlink extended ACK report struct
-  * @_msg: message string to report - don't access directly, use
-  *	%NL_SET_ERR_MSG
-  * @bad_attr: attribute with error
-+ * @cookie: cookie data to return to userspace (for success)
-+ * @cookie_len: actual cookie data length
+diff --git a/include/net/genetlink.h b/include/net/genetlink.h
+index a34275be3600..b81a4979e1db 100644
+--- a/include/net/genetlink.h
++++ b/include/net/genetlink.h
+@@ -84,6 +84,7 @@ struct nlattr **genl_family_attrbuf(const struct genl_family *family);
+  * @attrs: netlink attributes
+  * @_net: network namespace
+  * @user_ptr: user pointers
++ * @extack: extended ACK report struct
   */
- struct netlink_ext_ack {
- 	const char *_msg;
- 	const struct nlattr *bad_attr;
-+	u8 cookie[NETLINK_MAX_COOKIE_LEN];
-+	u8 cookie_len;
+ struct genl_info {
+ 	u32			snd_seq;
+@@ -94,6 +95,7 @@ struct genl_info {
+ 	struct nlattr **	attrs;
+ 	possible_net_t		_net;
+ 	void *			user_ptr[2];
++	struct netlink_ext_ack *extack;
  };
  
- /* Always use this macro, this allows later putting the
-diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
-index 7df88770e029..f86127a46cfc 100644
---- a/include/uapi/linux/netlink.h
-+++ b/include/uapi/linux/netlink.h
-@@ -122,6 +122,9 @@ struct nlmsgerr {
-  * @NLMSGERR_ATTR_MSG: error message string (string)
-  * @NLMSGERR_ATTR_OFFS: offset of the invalid attribute in the original
-  *	 message, counting from the beginning of the header (u32)
-+ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
-+ *	be used - in the success case - to identify a created
-+ *	object or operation or similar (binary)
-  * @__NLMSGERR_ATTR_MAX: number of attributes
-  * @NLMSGERR_ATTR_MAX: highest attribute number
-  */
-@@ -129,6 +132,7 @@ enum nlmsgerr_attrs {
- 	NLMSGERR_ATTR_UNUSED,
- 	NLMSGERR_ATTR_MSG,
- 	NLMSGERR_ATTR_OFFS,
-+	NLMSGERR_ATTR_COOKIE,
+ static inline struct net *genl_info_net(struct genl_info *info)
+@@ -106,6 +108,24 @@ static inline void genl_info_net_set(struct genl_info *info, struct net *net)
+ 	write_pnet(&info->_net, net);
+ }
  
- 	__NLMSGERR_ATTR_MAX,
- 	NLMSGERR_ATTR_MAX = __NLMSGERR_ATTR_MAX - 1
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index c1564768000e..ee841f00a6ec 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -2311,6 +2311,10 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 		}
- 	} else {
- 		flags |= NLM_F_CAPPED;
++#define GENL_SET_ERR_MSG(info, msg) NL_SET_ERR_MSG((info)->extack, msg)
 +
-+		if (nlk->flags & NETLINK_F_EXT_ACK &&
-+		    extack && extack->cookie_len)
-+			tlvlen += nla_total_size(extack->cookie_len);
- 	}
++static inline int genl_err_attr(struct genl_info *info, int err,
++				struct nlattr *attr)
++{
++	info->extack->bad_attr = attr;
++
++	return err;
++}
++
++static inline int genl_err_attr_missing(struct genl_info *info, int err,
++					u16 attr)
++{
++	info->extack->missing_attr = attr;
++
++	return err;
++}
++
+ /**
+  * struct genl_ops - generic netlink operations
+  * @cmd: command identifier
+diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
+index 57b2e3648bc0..4b598a5999a2 100644
+--- a/net/netlink/genetlink.c
++++ b/net/netlink/genetlink.c
+@@ -497,7 +497,8 @@ static int genl_lock_done(struct netlink_callback *cb)
  
- 	if (tlvlen)
-@@ -2337,17 +2341,24 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 	errmsg->error = err;
- 	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh->nlmsg_len : sizeof(*nlh));
+ static int genl_family_rcv_msg(const struct genl_family *family,
+ 			       struct sk_buff *skb,
+-			       struct nlmsghdr *nlh)
++			       struct nlmsghdr *nlh,
++			       struct netlink_ext_ack *extack)
+ {
+ 	const struct genl_ops *ops;
+ 	struct net *net = sock_net(skb->sk);
+@@ -584,6 +585,7 @@ static int genl_family_rcv_msg(const struct genl_family *family,
+ 	info.genlhdr = nlmsg_data(nlh);
+ 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
+ 	info.attrs = attrbuf;
++	info.extack = extack;
+ 	genl_info_net_set(&info, net);
+ 	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
  
--	if (err && nlk->flags & NETLINK_F_EXT_ACK && extack) {
--		if (extack->_msg)
--			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
--					       extack->_msg));
--		if (extack->bad_attr &&
--		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
--			     (u8 *)extack->bad_attr >= in_skb->data +
--						       in_skb->len))
--			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
--					    (u8 *)extack->bad_attr -
--					    in_skb->data));
-+	if (nlk->flags & NETLINK_F_EXT_ACK && extack) {
-+		if (err) {
-+			if (extack->_msg)
-+				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
-+						       extack->_msg));
-+			if (extack->bad_attr &&
-+			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
-+				     (u8 *)extack->bad_attr >= in_skb->data +
-+							       in_skb->len))
-+				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
-+						    (u8 *)extack->bad_attr -
-+						    in_skb->data));
-+		} else {
-+			if (extack->cookie_len)
-+				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
-+						extack->cookie_len,
-+						extack->cookie));
-+		}
- 	}
+@@ -618,7 +620,7 @@ static int genl_rcv_msg(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 	if (!family->parallel_ops)
+ 		genl_lock();
  
- 	nlmsg_end(skb, rep);
+-	err = genl_family_rcv_msg(family, skb, nlh);
++	err = genl_family_rcv_msg(family, skb, nlh, extack);
+ 
+ 	if (!family->parallel_ops)
+ 		genl_unlock();
 -- 
 2.11.0
