@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35846 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750830AbdDCLi6 (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:36422 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751606AbdDIIBs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 07:38:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-ppp@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ganeshgr@chelsio.com,
-        nbd@openwrt.org, blogic@openwrt.org, matthias.bgg@gmail.com,
-        yishaih@mellanox.com, saeedm@mellanox.com, matanb@mellanox.com,
-        leonro@mellanox.com, ajk@comnets.uni-bremen.de, paulus@samba.org,
-        j@w1.fi, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org, Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: Re: [PATCH 15/16] drivers, net, intersil: convert hostap_cmd_queue.usecnt from atomic_t to refcount_t
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-        <1490691403-4016-16-git-send-email-elena.reshetova@intel.com>
-Date: Mon, 03 Apr 2017 14:38:49 +0300
-In-Reply-To: <1490691403-4016-16-git-send-email-elena.reshetova@intel.com>
-        (Elena Reshetova's message of "Tue, 28 Mar 2017 11:56:42 +0300")
-Message-ID: <874ly5oh4m.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_133955_197928_FB4AE1BD)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 9 Apr 2017 04:01:48 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] net: rfkill: gpio: Add OBDA8723 ACPI HID
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20170408210520.2799-1-hdegoede@redhat.com>
+Date: Sun, 9 Apr 2017 10:01:45 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org
+Message-Id: <D47F8D1B-8EE0-4754-A0F2-EC823A9BDA11@holtmann.org> (sfid-20170409_100234_456745_71D4EA8C)
+References: <20170408210520.2799-1-hdegoede@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Elena Reshetova <elena.reshetova@intel.com> writes:
+Hi Hans,
 
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
->
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> The OBDA8723 ACPI HID is used on quite a few Bay Trail based tablets
+> for bluetooth rfkill functionality.
+> 
+> Tested-by: russianneuromancer@ya.ru <russianneuromancer@ya.ru>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 > ---
->  drivers/net/wireless/intersil/hostap/hostap_hw.c   | 12 ++++++------
->  drivers/net/wireless/intersil/hostap/hostap_wlan.h |  3 ++-
->  2 files changed, 8 insertions(+), 7 deletions(-)
+> net/rfkill/rfkill-gpio.c | 1 +
+> 1 file changed, 1 insertion(+)
+> 
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 76c01cb..50ca65e 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -163,6 +163,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+> static const struct acpi_device_id rfkill_acpi_match[] = {
+> 	{ "BCM4752", RFKILL_TYPE_GPS },
+> 	{ "LNV4752", RFKILL_TYPE_GPS },
+> +	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
+> 	{ },
+> };
 
-The prefix should be "hostap:", I'll fix that.
+NAK. We are integrating these with hci_bcm.c or hci_intel.c drivers.
 
--- 
-Kalle Valo
+Regards
+
+Marcel
