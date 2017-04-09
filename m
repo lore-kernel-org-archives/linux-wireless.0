@@ -1,117 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20583 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbdDMI2z (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:56694 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752065AbdDIMLv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 04:28:55 -0400
-Subject: [PATCH v7 00/10] ath10k: sdio support
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 13 Apr 2017 11:28:44 +0300
-Message-ID: <149207201649.4590.5821794186383265138.stgit@potku.adurom.net> (sfid-20170413_102901_004507_4F9500E0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Sun, 9 Apr 2017 08:11:51 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] net: rfkill: gpio: Add OBDA8723 ACPI HID
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <d1206383-7fad-55ca-0717-5e485b9bee92@redhat.com>
+Date: Sun, 9 Apr 2017 14:11:48 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        russianneuromancer@ya.ru,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Message-Id: <0939E68A-DBF5-40BF-B83B-73AF234EB60B@holtmann.org> (sfid-20170409_141157_724719_E5C46936)
+References: <20170408210520.2799-1-hdegoede@redhat.com>
+ <D47F8D1B-8EE0-4754-A0F2-EC823A9BDA11@holtmann.org>
+ <d1206383-7fad-55ca-0717-5e485b9bee92@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-More changes to Erik's SDIO patches. The biggest change in this round
-is refactoring of the ugly ath10k_sdio_io() function.
+Hi Hans,
 
-Only compile tested, I don't have any SDIO boards at the moment.
+>>> The OBDA8723 ACPI HID is used on quite a few Bay Trail based tablets
+>>> for bluetooth rfkill functionality.
+>>> 
+>>> Tested-by: russianneuromancer@ya.ru <russianneuromancer@ya.ru>
+>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>> ---
+>>> net/rfkill/rfkill-gpio.c | 1 +
+>>> 1 file changed, 1 insertion(+)
+>>> 
+>>> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+>>> index 76c01cb..50ca65e 100644
+>>> --- a/net/rfkill/rfkill-gpio.c
+>>> +++ b/net/rfkill/rfkill-gpio.c
+>>> @@ -163,6 +163,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+>>> static const struct acpi_device_id rfkill_acpi_match[] = {
+>>> 	{ "BCM4752", RFKILL_TYPE_GPS },
+>>> 	{ "LNV4752", RFKILL_TYPE_GPS },
+>>> +	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
+>>> 	{ },
+>>> };
+>> 
+>> NAK. We are integrating these with hci_bcm.c or hci_intel.c drivers.
+> 
+> This is for the bluetooth side of the rtl8723bs driver which recently
+> (yesterday) got merged in into drivers/staging. Which still needs
+> hciattach from userspace. I completely agree that eventually we should
+> fix that. In the mean time it would be nice if we could carry this
+> one line patch to give people using the staging driver working bluetooth.
 
-Changes in v7:
+why are Bluetooth drivers in staging? I objected to them before. The only reason to have them in staging would be people being to lazy to clean things up.
 
-* fix mutex unlock bug found by kbuild bot
+Regards
 
-* fix function rename mistake found by Ryan
-
-* rename patch title to "ath10k: different fw file name for sdio"
-  found by Ryan
-
-* fix a conflict in patch 4 ath10k_htc_control_rx_complete() due to
-  rebase to latest ath.git master branch
-
-* move FIFO_TIMEOUT defines to sdio.h and ATH10K_ prefix
-
-* refactored ath10k_sdio_io() and ath10k_sdio_read_write_sync() to
-  more simple functions, should also fix the remaining memory leaks
-  and endian conversion problems
-
-* write commit log for patch "ath10k: sdio support"
-
-* improve Kconfig description
-
-Changes in v6:
-
-* resubmit due to stgit problems
-
-Changes in v5:
-
-* promote from RFC to PATCH
-
-* move "ath10k: sdio support" patch to last
-
-* in "ath10k: sdio get target info" fix sparse warning by changing tmp
-  variable to __le32:
-
-drivers/net/wireless/ath/ath10k/bmi.c:145:19: warning: cast to restricted __le32
-
-* fix checkpatch warnings by renaming to struct ath10k_htc_lookahead_bundle:
-
-drivers/net/wireless/ath/ath10k/htc.c:265: line over 90 characters
-drivers/net/wireless/ath/ath10k/htc.c:357: line over 90 characters
-
-* use switch statement in ath10k_core_get_fw_name()
-
-* remove enable of fwlog from ath10k_sdio_extra_initialization(),
-  that's not sdio specific and should be enabled separately (with a
-  module parameter?)
-
-* rename ath10k_sdio_extra_initialization() to ath10k_init_sdio()
-
-* add warning to probe() that sdio support is not complete
-
-* unify error and debug messagess
-
-* whitespace changes
-
-* move variable declarations to the beginning of the function
-
-* remove unnecessary gotos
-
-* small cosmetic changes
-
-* add FIXME comments to unclear cases
-
----
-
-Erik Stromdahl (10):
-      ath10k: htc: made static function public
-      ath10k: htc: rx trailer lookahead support
-      ath10k: htc: move htc ctrl ep connect to htc_init
-      ath10k: htc: refactorization
-      ath10k: various sdio related definitions
-      ath10k: add sdio extra initializations
-      ath10k: sdio get target info
-      ath10k: htc: ready_ext msg support
-      ath10k: different fw file name for sdio
-      ath10k: add initial SDIO support
-
-
- drivers/net/wireless/ath/ath10k/Kconfig     |    7 
- drivers/net/wireless/ath/ath10k/Makefile    |    3 
- drivers/net/wireless/ath/ath10k/bmi.c       |   71 +
- drivers/net/wireless/ath/ath10k/bmi.h       |    2 
- drivers/net/wireless/ath/ath10k/core.c      |   36 
- drivers/net/wireless/ath/ath10k/core.h      |    3 
- drivers/net/wireless/ath/ath10k/debug.h     |    2 
- drivers/net/wireless/ath/ath10k/htc.c       |  244 ++-
- drivers/net/wireless/ath/ath10k/htc.h       |   39 
- drivers/net/wireless/ath/ath10k/hw.h        |   53 +
- drivers/net/wireless/ath/ath10k/sdio.c      | 2113 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/sdio.h      |  229 +++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 
- 13 files changed, 2749 insertions(+), 77 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.c
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.h
+Marcel
