@@ -1,144 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59618 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752982AbdDMMHH (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:34295 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752511AbdDIRnf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 08:07:07 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 09/10] brcmfmac: add mutex to protect pno requests
-Date: Thu, 13 Apr 2017 13:06:35 +0100
-Message-Id: <1492085196-4574-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170413_140722_662928_CDC115C9)
-In-Reply-To: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sun, 9 Apr 2017 13:43:35 -0400
+Received: by mail-pf0-f178.google.com with SMTP id c198so12064385pfc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Apr 2017 10:43:35 -0700 (PDT)
+Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
+To: Jiri Pirko <jiri@resnulli.us>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <20170408174900.12820-1-johannes@sipsolutions.net>
+ <20170408174900.12820-2-johannes@sipsolutions.net>
+ <20170408183440.GA1900@nanopsycho>
+ <1491676621.5800.24.camel@sipsolutions.net>
+ <20170408184008.GB1900@nanopsycho>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>
+From: David Ahern <dsa@cumulusnetworks.com>
+Message-ID: <990b5610-a894-b3d2-d3a7-536dfd25adb8@cumulusnetworks.com> (sfid-20170409_194349_219345_B82CADFF)
+Date: Sun, 9 Apr 2017 13:43:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170408184008.GB1900@nanopsycho>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The request references kept in pno are accessed in user-space context
-and in firmware event handler context. As such we need to protect it
-with a lock. As both context allow sleep a mutex seems appropriate.
+On 4/8/17 2:40 PM, Jiri Pirko wrote:
+> Sat, Apr 08, 2017 at 08:37:01PM CEST, johannes@sipsolutions.net wrote:
+>> On Sat, 2017-04-08 at 20:34 +0200, Jiri Pirko wrote:
+>>> nla_total_size(sizeof(u32));
+>>>> +			if (extack &&
+>>>> +			    (extack->missing_attr || extack-
+>>>>> bad_attr))
+>>>
+>>> Attr could be 0, right? I know that on the most of the places 0 is
+>>> UNSPEC, but I'm pretty sure not everywhere.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+perhaps I misunderstand something, but nla_parse suggests attribute type
+can not be 0:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index d0e4283..5f4c67a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -43,6 +43,7 @@
- struct brcmf_pno_info {
- 	int n_reqs;
- 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
-+	struct mutex req_lock;
- };
- 
- #define ifp_to_pno(_ifp)	(_ifp)->drvr->config->pno
-@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
- 		return -ENOSPC;
- 	}
- 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
-+	mutex_lock(&pi->req_lock);
- 	pi->reqs[pi->n_reqs++] = req;
-+	mutex_unlock(&pi->req_lock);
- 	return 0;
- }
- 
- static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- {
--	int i;
-+	int i, err = 0;
-+
-+	mutex_lock(&pi->req_lock);
- 
- 	/* find request */
- 	for (i = 0; i < pi->n_reqs; i++) {
-@@ -71,7 +76,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 	/* request not found */
- 	if (WARN_ON(i == pi->n_reqs)) {
- 		brcmf_err("reqid not found\n");
--		return -ENOENT;
-+		err = -ENOENT;
-+		goto done;
- 	}
- 
- 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
-@@ -79,14 +85,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 
- 	/* if last we are done */
- 	if (!pi->n_reqs || i == pi->n_reqs)
--		return 0;
-+		goto done;
- 
- 	/* fill the gap with remaining requests */
- 	while (i <= pi->n_reqs - 1) {
- 		pi->reqs[i] = pi->reqs[i + 1];
- 		i++;
- 	}
--	return 0;
-+
-+done:
-+	mutex_unlock(&pi->req_lock);
-+	return err;
- }
- 
- static int brcmf_pno_channel_config(struct brcmf_if *ifp,
-@@ -489,6 +498,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
- 		return -ENOMEM;
- 
- 	cfg->pno = pi;
-+	mutex_init(&pi->req_lock);
- 	return 0;
- }
- 
-@@ -501,6 +511,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
- 	cfg->pno = NULL;
- 
- 	WARN_ON(pi->n_reqs);
-+	mutex_destroy(&pi->req_lock);
- 	kfree(pi);
- }
- 
-@@ -516,11 +527,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
- 
- u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
- {
--	/* bucket appears to be gone */
--	if (bucket >= pi->n_reqs)
--		return 0;
-+	u64 reqid = 0;
-+
-+	mutex_lock(&pi->req_lock);
-+
-+	if (bucket < pi->n_reqs)
-+		reqid = pi->reqs[bucket]->reqid;
- 
--	return pi->reqs[bucket]->reqid;
-+	mutex_unlock(&pi->req_lock);
-+	return reqid;
- }
- 
- u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
-@@ -531,6 +546,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 	u32 bucket_map = 0;
- 	int i, j;
- 
-+	mutex_lock(&pi->req_lock);
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		req = pi->reqs[i];
- 
-@@ -545,5 +561,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 			}
- 		}
- 	}
-+	mutex_unlock(&pi->req_lock);
- 	return bucket_map;
- }
--- 
-1.9.1
+int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
+              int len, const struct nla_policy *policy,
+              struct netlink_ext_ack *extack)
+{
+	...
+
+        nla_for_each_attr(nla, head, len, rem) {
+                u16 type = nla_type(nla);
+
+                if (type > 0 && type <= maxtype) {
+			...
+                        tb[type] = (struct nlattr *)nla;
+                }
+        }
+
+
+> Also, could you please attach a patch to iproute2 for example which
+> would make use of this. I just want to make sure it clicks.
+
+I have follow on patches to Johannes' set that plumbs extack for
+rtnetlink doit function and iproute2. will send later.
