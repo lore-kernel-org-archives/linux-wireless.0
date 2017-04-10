@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39562 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753814AbdDFIJG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 04:09:06 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>
-CC: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        "Rajat Jain" <rajatja@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>
-Subject: RE: [EXT] Re: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only
- firmware name
-Date: Thu, 6 Apr 2017 08:08:58 +0000
-Message-ID: <c245cfd3b00b4d89840bf7e08113af59@SC-EXCH02.marvell.com> (sfid-20170406_100912_692947_0AB697E5)
-References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
- <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
- <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com>
- <20170403184857.GC116262@google.com>
-In-Reply-To: <20170403184857.GC116262@google.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:38878 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752752AbdDJPaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 11:30:21 -0400
+Message-ID: <1491838218.28432.5.camel@sipsolutions.net> (sfid-20170410_173034_194793_676C2D66)
+Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Ahern <dsa@cumulusnetworks.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
+Date: Mon, 10 Apr 2017 17:30:18 +0200
+In-Reply-To: <fddba2c8-3b85-d5df-81c4-ef31c459e40c@cumulusnetworks.com> (sfid-20170410_172609_028607_E5C0AF14)
+References: <20170408202434.12018-1-johannes@sipsolutions.net>
+         <20170408202434.12018-2-johannes@sipsolutions.net>
+         <fddba2c8-3b85-d5df-81c4-ef31c459e40c@cumulusnetworks.com>
+         (sfid-20170410_172609_028607_E5C0AF14)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
-Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo0
-1MI0yNUgMjo0OQ0KPiBUbzogRG1pdHJ5IFRvcm9raG92DQo+IENjOiBYaW5taW5nIEh1OyBMaW51
-eCBXaXJlbGVzczsgS2FsbGUgVmFsbzsgUmFqYXQgSmFpbjsgQW1pdGt1bWFyIEthcndhcjsgQ2F0
-aHkNCj4gTHVvOyBYaW5taW5nIEh1DQo+IFN1YmplY3Q6IFtFWFRdIFJlOiBbUEFUQ0ggMy8zXSBt
-d2lmaWV4OiBwY2llOiBhdm9pZCBoYXJkY29kZSB3aWZpLW9ubHkNCj4gZmlybXdhcmUgbmFtZQ0K
-PiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gT24gRnJpLCBNYXIg
-MzEsIDIwMTcgYXQgMDM6NTA6MjdQTSAtMDcwMCwgRG1pdHJ5IFRvcm9raG92IHdyb3RlOg0KPiA+
-IFRoYXQgc2FpZCwgSSBjb25zaWRlciB0aGUgd2hvbGUgd2lmaS1vbmx5IGZpcm13YXJlIGJ1c2lu
-ZXNzIGlzIHF1aXRlDQo+ID4gZnJhZ2lsZS4gQ2FuIHdlIGhhdmUgdW5pZmllZCBmaXJtd2FyZSBh
-bmQgaGF2ZSBkcml2ZXIgZmlndXJlIG91dCB3aGF0DQo+ID4gcGFydCBzaG91ZGwgYmUgW3JlXWxv
-YWRlZD8NCj4gDQo+ICsxLiBJIHRoaW5rIHdlIHNob3VsZCByZWFsbHkgZ2l2ZSBhIHN0YWIgYXQg
-dGhpcyBmaXJzdCwgYW5kICp0aGVuKiBzZWUNCj4gaG93IHdlIHdhbnQgdG8gcGF0Y2ggdXAgdGhl
-IGZsYWdnaW5nIG9mIHN1cHBvcnQgb24gYSBwZXItY2hpcHNldCBiYXNpcy4NCj4gQXMtaXMsIHlv
-dSdyZSB3YXN0aW5nIGZpbGVzeXN0ZW0gc3BhY2Ugb24gYSBkdXBsaWNhdGUgZmlybXdhcmUgYmxv
-YiwgdGhhdCB3ZQ0KPiBoYXZlIHRvIG1ha2Ugc3VyZSBnZXRzIHVwZGF0ZWQgaW4gc3luYyB3aXRo
-IHRoZSBjb21iaW5lZCBmaXJtd2FyZSBldmVyeQ0KPiB0aW1lIHRoZXJlJ3MgYW4gdXBkYXRlLg0K
-PiANCj4gUHJvb2Ygb2YgdGhlIGR1cGxpY2F0ZSBibG9iIC0tIHRoZSBsYXR0ZXIgcG9ydGlvbiBv
-ZiB0aGUgY29tYmluZWQgRlcgaXMgaWRlbnRpY2FsDQo+IHRvIHRoZSBXTEFOLW9ubHk6DQo+IA0K
-PiAgICQgY21wIG1ydmwvcGNpZXt1c2I4OTk3X2NvbWJvLDg5OTdfd2xhbn1fdjQuYmluICQoKDB4
-MjkxOWMpKTsgZWNobyAkPw0KPiAgIDANCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3LCB3ZSBoYXZl
-IGEgbmV3IHNvbHV0aW9uIGZvciBleHRyYWN0aW5nIHdpZmktb25seSBwYXJ0IGZyb20gY29tYm8g
-ZmlybXdhcmUsIHdpbGwgc2VuZCBpdCBpbiB2Mi4NCg0KVGhhbmtzDQpTaW1vbg0KPiANCj4gQnJp
-YW4NCg==
+On Mon, 2017-04-10 at 09:26 -0600, David Ahern wrote:
+> On 4/8/17 2:24 PM, Johannes Berg wrote:
+> > @@ -2300,14 +2332,35 @@ void netlink_ack(struct sk_buff *in_skb,
+> > struct nlmsghdr *nlh, int err)
+> >  			  NLMSG_ERROR, payload, 0);
+> >  	errmsg = nlmsg_data(rep);
+> >  	errmsg->error = err;
+> > -	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh-
+> > >nlmsg_len : sizeof(*nlh));
+> > +	memcpy(&errmsg->msg, nlh,
+> > +	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
+> > +						 : sizeof(*nlh));
+> > +
+> 
+> generically this makes userspace parsing more problematic: the
+> parsing layer may not know if the socket option has been set to
+> precisely know the size of errmsg->msg and how much data needs to be
+> skipped to get to the new attributes.
+
+Yes, I know. I'd hope that userspace can remember that per socket - I
+don't see a good other way to do this.
+
+If we insert the TLVs in front of, or instead of (with a TLV containing
+it), the request message then at least libnl's debugging will need to
+be changed.
+
+As it is, I can assume that libnl will not set the CAP setting, and
+everything works fine even if I don't change libnl, which makes things
+easier.
+
+Do you have any better ideas?
+
+johannes
