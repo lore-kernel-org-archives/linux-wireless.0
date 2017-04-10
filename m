@@ -1,69 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:34094 "EHLO mail.us.es"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933993AbdDGT12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:27:28 -0400
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-        by mail.us.es (Postfix) with ESMTP id 208A5170D28
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:27:24 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 117F2DA729
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:27:24 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id E22A4DA807
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:27:21 +0200 (CEST)
-Date: Fri, 7 Apr 2017 21:27:14 +0200
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-Message-ID: <20170407192714.GA23349@salvia> (sfid-20170407_212757_007207_9412563A)
-References: <1491591552.5800.1.camel@sipsolutions.net>
- <20170407190601.GA22991@salvia>
- <1491592185.5800.7.camel@sipsolutions.net>
- <20170407.122223.385211483743191711.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170407.122223.385211483743191711.davem@davemloft.net>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35236 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753092AbdDJQXS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 12:23:18 -0400
+Received: by mail-oi0-f65.google.com with SMTP id g204so13131273oib.2
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:18 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 03/14] rtlwifi: btcoex: 21a 1ant: coex table setting for new fw
+Date: Mon, 10 Apr 2017 11:22:59 -0500
+Message-Id: <20170410162310.7515-4-Larry.Finger@lwfinger.net> (sfid-20170410_182325_318795_3D80D74A)
+In-Reply-To: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
+References: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 12:22:23PM -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Fri, 07 Apr 2017 21:09:45 +0200
-> 
-> > On Fri, 2017-04-07 at 21:06 +0200, Pablo Neira Ayuso wrote:
-> >> On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
-> >> [...]
-> >> > Heh. I think I really want to solve - at least partially -
-> >> > nla_parse()
-> >> > to see that it can be done this way. It'd be nice to even transform
-> >> > all
-> >> > the callers (I generated half of these patches with spatch anyway)
-> >> > to
-> >> > have at least that.
-> >> 
-> >> We can just have a modified version of nla_parse that deals with
-> >> this.
-> > 
-> > Yes, but we need to figure out a good way to have the offset.
-> > 
-> > We also need to see if we want to *force* having the offset. In some
-> > sense that'd be useful, in another it might be very complicated to fill
-> > it in at all times, if for example errors come from lower layers like
-> > drivers.
-> 
-> It has to be optional, some kinds of errors don't have an exact
-> context per-se.
-> 
-> Also another way to look at this is that we're providing a lot of
-> new power and expressability.  So even if only one aspect of the
-> new error reporting is used it's a positive step forward.
-> 
-> So allow offset "0" meaning "unspecified".
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Instead, we can just not send the offset attribute to userspace if
-it's not specified. So missing attribute means "unspecified".
+For newer fw, the coex table setting needs to be modified to operate
+correctly.
 
-I'm always a bit worried this "0 means something" semantics :)
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c        | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 65c455bfd8fb..3a117eaf1b21 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -806,24 +806,24 @@ static void btc8821a1ant_coex_table_with_type(struct btc_coexist *btcoexist,
+ 					0x5a5a5a5a, 0xffffff, 0x3);
+ 		break;
+ 	case 3:
+-		btc8821a1ant_coex_table(btcoexist, force_exec, 0x55555555,
++		btc8821a1ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
+ 					0xaaaaaaaa, 0xffffff, 0x3);
+ 		break;
+ 	case 4:
+-		btc8821a1ant_coex_table(btcoexist, force_exec, 0xffffffff,
+-					0xffffffff, 0xffffff, 0x3);
++		btc8821a1ant_coex_table(btcoexist, force_exec, 0x55555555,
++					0x5a5a5a5a, 0xffffff, 0x3);
+ 		break;
+ 	case 5:
+-		btc8821a1ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
+-					0x5fff5fff, 0xffffff, 0x3);
++		btc8821a1ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
++					0xaaaa5a5a, 0xffffff, 0x3);
+ 		break;
+ 	case 6:
+-		btc8821a1ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
+-					0x5a5a5a5a, 0xffffff, 0x3);
++		btc8821a1ant_coex_table(btcoexist, force_exec, 0x55555555,
++					0xaaaa5a5a, 0xffffff, 0x3);
+ 		break;
+ 	case 7:
+-		btc8821a1ant_coex_table(btcoexist, force_exec, 0x5afa5afa,
+-					0x5afa5afa, 0xffffff, 0x3);
++		btc8821a1ant_coex_table(btcoexist, force_exec, 0xaaaaaaaa,
++					0xaaaaaaaa, 0xffffff, 0x3);
+ 		break;
+ 	default:
+ 		break;
+-- 
+2.12.0
