@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38956 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754849AbdDJPkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 11:40:14 -0400
-Message-ID: <1491838811.28432.8.camel@sipsolutions.net> (sfid-20170410_174028_849361_B9460115)
-Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Ahern <dsa@cumulusnetworks.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
-Date: Mon, 10 Apr 2017 17:40:11 +0200
-In-Reply-To: <029e6587-c0e8-bdb0-49e9-2abe2946a7ff@cumulusnetworks.com> (sfid-20170410_173530_723869_8DC854E1)
-References: <20170408202434.12018-1-johannes@sipsolutions.net>
-         <20170408202434.12018-2-johannes@sipsolutions.net>
-         <fddba2c8-3b85-d5df-81c4-ef31c459e40c@cumulusnetworks.com>
-         <1491838218.28432.5.camel@sipsolutions.net>
-         <029e6587-c0e8-bdb0-49e9-2abe2946a7ff@cumulusnetworks.com>
-         (sfid-20170410_173530_723869_8DC854E1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36543 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753090AbdDJQXR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 12:23:17 -0400
+Received: by mail-oi0-f67.google.com with SMTP id b187so23324718oif.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:17 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 02/14] rtlwifi: btcoex: 21a 1ant: add function to check wifi status
+Date: Mon, 10 Apr 2017 11:22:58 -0500
+Message-Id: <20170410162310.7515-3-Larry.Finger@lwfinger.net> (sfid-20170410_182324_766117_8E497C03)
+In-Reply-To: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
+References: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-04-10 at 09:35 -0600, David Ahern wrote:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> > Do you have any better ideas?
-> 
-> NETLINK_F_CAP_ACK and NETLINK_F_EXT_ACK should be incompatible -- if
-> one is set the other can not be set. CAP_ACK means abbreviate the
-> response and EXT_ACK means give me more data.
+This function checks if wifi has changed its statusi. It will be needed
+in the future.
 
-So you mean if I want EXT_ACK I cannot also cap the message?
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 33 ++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-I guess that's doable, but again wouldn't it hurt applications that
-want to use CAP? I assume every application wants to use EXT_ACK
-eventually, and those that use CAP right now wouldn't be able to.
-
-Another thought: if we add a new flag that indicates "message has been
-capped", which we introduce in this same patch, then we can disentangle
-this more easily, right?
-
-Adding a new flag for "TLVs present" won't really help, but if you know
-the message was capped then you know the TLVs start after the inner
-nlmsghdr and you ignore that header's nlmsg_len.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 5b8f4ed5ce62..65c455bfd8fb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -424,6 +424,39 @@ static void btc8821a1ant_query_bt_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
+ }
+ 
++bool btc8821a1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
++{
++	static bool pre_wifi_busy = true;
++	static bool pre_under_4way = true;
++	static bool pre_bt_hs_on = true;
++	bool wifi_busy = false, under_4way = false, bt_hs_on = false;
++	bool wifi_connected = false;
++
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
++			   &wifi_connected);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_4_WAY_PROGRESS,
++			   &under_4way);
++
++	if (wifi_connected) {
++		if (wifi_busy != pre_wifi_busy) {
++			pre_wifi_busy = wifi_busy;
++			return true;
++		}
++		if (under_4way != pre_under_4way) {
++			pre_under_4way = under_4way;
++			return true;
++		}
++		if (bt_hs_on != pre_bt_hs_on) {
++			pre_bt_hs_on = bt_hs_on;
++			return true;
++		}
++	}
++
++	return false;
++}
++
+ static void btc8821a1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+ 	struct btc_bt_link_info	*bt_link_info = &btcoexist->bt_link_info;
+-- 
+2.12.0
