@@ -1,186 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34213 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750992AbdDCBOe (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50244 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752760AbdDJLOR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Apr 2017 21:14:34 -0400
-Received: by mail-oi0-f68.google.com with SMTP id s11so1228973oie.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Apr 2017 18:14:34 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 03/12] rtlwifi: btcoex: 23b 2ant: add btc8723b2ant_limited_rx to reduce agg size
-Date: Sun,  2 Apr 2017 20:14:13 -0500
-Message-Id: <20170403011428.6156-3-Larry.Finger@lwfinger.net> (sfid-20170403_031439_284815_FED4A596)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+        Mon, 10 Apr 2017 07:14:17 -0400
+Message-ID: <1491822841.31980.45.camel@coelho.fi> (sfid-20170410_131540_206125_52E80812)
+From: Luca Coelho <luca@coelho.fi>
+To: =?ISO-8859-1?Q?=22K=E4fer=2C?= "Marcel\"" <mk@djagoo.io>,
+        linuxwifi@intel.com, linux-wireless@vger.kernel.org
+Date: Mon, 10 Apr 2017 14:14:01 +0300
+In-Reply-To: <212619248.282995.1491726087885.JavaMail.open-xchange@app09.ox.hosteurope.de>
+References: <212619248.282995.1491726087885.JavaMail.open-xchange@app09.ox.hosteurope.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi crashing on X1 Carbon 5th Gen iwlwifi-8265 "Microcode
+ SW error detected"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi,
 
-For wifi and bt coexistence, if the aggregation size of wifi is too
-large, the transmission time of the aggregated packet could be too long
-and the bt packets might "cut off" the wifi packet. We need to reduce
-the aggregation size to improve wifi performance.
+On Sun, 2017-04-09 at 10:21 +0200, 
+> Hello,
+> 
+> on the new 5th Gen Lenovo X1 Carbon and Intel 8265 on a fresh Arch install
+> iwlwifi keeps crashing the moment network is coming up. Happens on both
+> core/linux-firmware 20170309.695f2d6-1 and aur/linux-firmware-iwlwifi-git.
+> 
+> After it's crashing it's impossible to rmmod iwlmvm and iwlwifi, all netctl and
+> ip commands are hanging, sudo isn't working and even shutdown isn't working.
+> Tried netctl and NetworkManager. Netctl sometimes work for a few minutes before
+> it crashes, NetworkManager is chrashing after a few seconds.
+> Someone reported a bug with Intel 7265D card wich looks exactly the same.
+> https://bugs.archlinux.org/task/53317
+> The firmware files for 8265 found in /lib/firmware are:
+> - iwlwifi-8265-21.ucode
+> - iwlwifi-8265-22.ucode
+> - iwlwifi-8265-27.ucode
+> 
+> The dmesg output is attached to this mail as dmesg.txt
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - No changes.
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 40 ++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+Please refer to this bug in bugzilla:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index d5a54ddd1dca..fe4af218ff18 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -240,6 +240,29 @@ static u8 btc8723b2ant_wifi_rssi_state(struct btc_coexist *btcoexist,
- 	return wifi_rssi_state;
- }
- 
-+static
-+void btc8723b2ant_limited_rx(struct btc_coexist *btcoexist, bool force_exec,
-+			     bool rej_ap_agg_pkt, bool bt_ctrl_agg_buf_size,
-+			     u8 agg_buf_size)
-+{
-+	bool reject_rx_agg = rej_ap_agg_pkt;
-+	bool bt_ctrl_rx_agg_size = bt_ctrl_agg_buf_size;
-+	u8 rx_agg_size = agg_buf_size;
-+
-+	/* ============================================ */
-+	/*	Rx Aggregation related setting		*/
-+	/* ============================================ */
-+	btcoexist->btc_set(btcoexist, BTC_SET_BL_TO_REJ_AP_AGG_PKT,
-+			   &reject_rx_agg);
-+	/* decide BT control aggregation buf size or not */
-+	btcoexist->btc_set(btcoexist, BTC_SET_BL_BT_CTRL_AGG_SIZE,
-+			   &bt_ctrl_rx_agg_size);
-+	/* aggregate buf size, only work when BT control Rx aggregate size */
-+	btcoexist->btc_set(btcoexist, BTC_SET_U1_AGG_BUF_SIZE, &rx_agg_size);
-+	/* real update aggregation setting */
-+	btcoexist->btc_set(btcoexist, BTC_SET_ACT_AGGREGATE_CTRL, NULL);
-+}
-+
- static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -1266,6 +1289,8 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 		low_pwr_disable = false;
- 		btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
- 				   &low_pwr_disable);
-+		btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC,
-+					false, false, 0x8);
- 
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Wifi non-connected idle!!\n");
-@@ -1288,6 +1313,8 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 			btcoexist->btc_set(btcoexist,
- 					   BTC_SET_ACT_DISABLE_LOW_POWER,
- 					   &low_pwr_disable);
-+			btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC,
-+						false, false, 0x8);
- 
- 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 				 "[BTCoex], Wifi connected + BT non connected-idle!!\n");
-@@ -1317,6 +1344,8 @@ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- 				return false;
- 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 				 "[BTCoex], Wifi connected + BT connected-idle!!\n");
-+			btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC,
-+						false, false, 0x8);
- 
- 			btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1,
- 						  0xfffff, 0x0);
-@@ -1576,6 +1605,7 @@ static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 4);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-@@ -1623,6 +1653,7 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-@@ -1701,6 +1732,7 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
- 	}
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
-@@ -1746,6 +1778,7 @@ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
-@@ -1786,6 +1819,7 @@ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
-@@ -1835,6 +1869,7 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
-@@ -1880,6 +1915,7 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
-@@ -1935,6 +1971,8 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- 	bt_rssi_state = btc8723b2ant_bt_rssi_state(btcoexist, 2, 29, 0);
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
-+
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
- 		btc8723b2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
- 	else
-@@ -2000,6 +2038,7 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
-@@ -2056,6 +2095,7 @@ static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
-+	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
--- 
-2.12.0
+https://bugzilla.kernel.org/show_bug.cgi?id=193641
+
+--
+Cheers,
+Luca.
