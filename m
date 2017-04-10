@@ -1,49 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58942 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S940033AbdDTHRZ (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34003 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752985AbdDJJJq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:17:25 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: MAC randomization should not be persistent
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170405222640.4494-1-briannorris@chromium.org>
-References: <20170405222640.4494-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>, <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20170420071724.6D77E60FFC@smtp.codeaurora.org> (sfid-20170420_091848_662478_CAFABDA7)
-Date: Thu, 20 Apr 2017 07:17:24 +0000 (UTC)
+        Mon, 10 Apr 2017 05:09:46 -0400
+Received: by mail-pg0-f66.google.com with SMTP id o123so25022840pga.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 02:09:46 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v3 3/4] mwifiex: pcie: correct scratch register name
+Date: Mon, 10 Apr 2017 09:09:33 +0000
+Message-Id: <1491815374-6555-3-git-send-email-huxinming820@gmail.com> (sfid-20170410_110949_537857_5044F0FB)
+In-Reply-To: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
+References: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> nl80211 provides the NL80211_SCAN_FLAG_RANDOM_ADDR for every scan
-> request that should be randomized; the absence of such a flag means we
-> should not randomize. However, mwifiex was stashing the latest
-> randomization request and *always* using it for future scans, even those
-> that didn't set the flag.
-> 
-> Let's zero out the randomization info whenever we get a scan request
-> without NL80211_SCAN_FLAG_RANDOM_ADDR. I'd prefer to remove
-> priv->random_mac entirely (and plumb the randomization MAC properly
-> through the call sequence), but the spaghetti is a little difficult to
-> unravel here for me.
-> 
-> Fixes: c2a8f0ff9c6c ("mwifiex: support random MAC address for scanning")
-> Cc: <stable@vger.kernel.org> # 4.9+
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+From: Xinming Hu <huxm@marvell.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+This patch correct pcie scratch register name, to keep the same with
+chipset side definition.
 
-7e2f18f06408 mwifiex: MAC randomization should not be persistent
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+---
+v2: code clean and prepare for next patch 4/4
+v3: same as v2
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c |  4 ++--
+ drivers/net/wireless/marvell/mwifiex/pcie.h | 13 +++++++------
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index f45ab12..a07cb0a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2494,8 +2494,8 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+ 	int pcie_scratch_reg[] = {PCIE_SCRATCH_12_REG,
+-				  PCIE_SCRATCH_13_REG,
+-				  PCIE_SCRATCH_14_REG};
++				  PCIE_SCRATCH_14_REG,
++				  PCIE_SCRATCH_15_REG};
+ 
+ 	if (!p)
+ 		return 0;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 00e8ee5..7e2450c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -77,8 +77,9 @@
+ #define PCIE_SCRATCH_10_REG				0xCE8
+ #define PCIE_SCRATCH_11_REG				0xCEC
+ #define PCIE_SCRATCH_12_REG				0xCF0
+-#define PCIE_SCRATCH_13_REG				0xCF8
+-#define PCIE_SCRATCH_14_REG				0xCFC
++#define PCIE_SCRATCH_13_REG				0xCF4
++#define PCIE_SCRATCH_14_REG				0xCF8
++#define PCIE_SCRATCH_15_REG				0xCFC
+ #define PCIE_RD_DATA_PTR_Q0_Q1                          0xC08C
+ #define PCIE_WR_DATA_PTR_Q0_Q1                          0xC05C
+ 
+@@ -217,8 +218,8 @@ struct mwifiex_pcie_card_reg {
+ 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
+ 	.pfu_enabled = 1,
+ 	.sleep_cookie = 0,
+-	.fw_dump_ctrl = 0xcf4,
+-	.fw_dump_start = 0xcf8,
++	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
++	.fw_dump_start = PCIE_SCRATCH_14_REG,
+ 	.fw_dump_end = 0xcff,
+ 	.fw_dump_host_ready = 0xee,
+ 	.fw_dump_read_done = 0xfe,
+@@ -254,8 +255,8 @@ struct mwifiex_pcie_card_reg {
+ 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
+ 	.pfu_enabled = 1,
+ 	.sleep_cookie = 0,
+-	.fw_dump_ctrl = 0xcf4,
+-	.fw_dump_start = 0xcf8,
++	.fw_dump_ctrl = PCIE_SCRATCH_13_REG,
++	.fw_dump_start = PCIE_SCRATCH_14_REG,
+ 	.fw_dump_end = 0xcff,
+ 	.fw_dump_host_ready = 0xcc,
+ 	.fw_dump_read_done = 0xdd,
 -- 
-https://patchwork.kernel.org/patch/9665813/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.8.1.4
