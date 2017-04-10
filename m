@@ -1,79 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0017.hostedemail.com ([216.40.44.17]:60422 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751884AbdDGCgz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 22:36:55 -0400
-Message-ID: <1491532601.3250.1.camel@perches.com> (sfid-20170407_043716_617792_93308DAC)
-Subject: Re: [PATCH] ath9k: Add cast to u8 to FREQ2FBIN macro
-From: Joe Perches <joe@perches.com>
-To: Matthias Kaehlcke <mka@chromium.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>
-Date: Thu, 06 Apr 2017 19:36:41 -0700
-In-Reply-To: <20170406235427.GC78690@google.com>
-References: <20170406212135.72157-1-mka@chromium.org>
-         <1491514160.27353.102.camel@perches.com>
-         <20170406235427.GC78690@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36206 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752746AbdDJLUt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 07:20:49 -0400
+Message-ID: <1491823242.2455.9.camel@sipsolutions.net> (sfid-20170410_132124_804730_E5552E61)
+Subject: Re: [PATCH v3 0/5] netlink extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
+        David Miller <davem@davemloft.net>
+Date: Mon, 10 Apr 2017 13:20:42 +0200
+In-Reply-To: <20170408202434.12018-1-johannes@sipsolutions.net> (sfid-20170408_222447_224133_39B19566)
+References: <20170408202434.12018-1-johannes@sipsolutions.net>
+         (sfid-20170408_222447_224133_39B19566)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-04-06 at 16:54 -0700, Matthias Kaehlcke wrote:
-> Hi Joe,
-> 
-> El Thu, Apr 06, 2017 at 02:29:20PM -0700 Joe Perches ha dit:
-> 
-> > On Thu, 2017-04-06 at 14:21 -0700, Matthias Kaehlcke wrote:
-> > > The macro results are assigned to u8 variables/fields. Adding the cast
-> > > fixes plenty of clang warnings about "implicit conversion from 'int' to
-> > > 'u8'".
-> > > 
-> > > Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
-> > > ---
-> > >  drivers/net/wireless/ath/ath9k/eeprom.h | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-> > > index 30bf722e33ed..31390af6c33e 100644
-> > > --- a/drivers/net/wireless/ath/ath9k/eeprom.h
-> > > +++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-> > > @@ -106,7 +106,7 @@
-> > >  #define AR9285_RDEXT_DEFAULT    0x1F
-> > >  
-> > >  #define ATH9K_POW_SM(_r, _s)	(((_r) & 0x3f) << (_s))
-> > > -#define FREQ2FBIN(x, y)		((y) ? ((x) - 2300) : (((x) - 4800) / 5))
-> > > +#define FREQ2FBIN(x, y)		(u8)((y) ? ((x) - 2300) : (((x) - 4800) / 5))
-> > 
-> > Maybe better to use:
-> > 
-> > static inline u8 FREQ2FBIN(int x, int y)
-> > {
-> > 	if (y)
-> > 		return x - 2300;
-> > 	return (x - 4800) / 5;
-> > }
-> 
-> Thanks for your suggestion! Unfortunately in this case an inline
-> function is not suitable since FREQ2FBIN() is mostly used for
-> structure initialization:
-> 
-> static const struct ar9300_eeprom ar9300_default = {
-> ...
->         .calFreqPier2G = {
->                 FREQ2FBIN(2412, 1),
->                 FREQ2FBIN(2437, 1),
->                 FREQ2FBIN(2472, 1)
->         },
-> ...
+I thought a little bit more about the part of reporting the broken and
+missing attributes, and I'm not sure I'm entirely happy with that part.
 
-Maybe it's better to remove the second argument and write
-something like:
+For reporting broken attributes, I think the pointer is really the best
+thing we can do - adding the attribute number in addition to that would
+seem to be easy to misuse in userspace, and there's no information
+about nesting at that point and the "malformed attribute" ID will not
+make any sense without knowing the nesting level. So I think we
+shouldn't add the attribute ID there. The userspace app can disentangle
+the nesting, or it can know that it never used nesting, for example.
 
-#define FREQ2FBIN(x) \
-	(u8)(((x) >= 2300 && (x) <= 2555) ? (x) - 2300 : \
-	     ((x) >= 4800 && (x) <= 4800 + (256 * 5) ? ((x) - 4800) / 5) : \
-	     __builtin_const_p(x) ? BUILD_BUG_ON(1) : 0)
+Similarly, the "missing attribute" ID - which I did add an attribute
+for but didn't use it yet - can result in similar interpretation
+problems. I'm not really sure what to do with this one - technically
+one could report back the entire nesting chain, but having that kind of
+state might be really difficult.
+
+Did anyone already have any plans for the "missing attribute"
+functionality?
+
+
+And another thought regarding the strict checking: we might also want
+to extend that to strictly check the *size* of attributes as well. For
+example, right now, if the kernel wants a u8 attribute but userspace
+uses a u16 or u32, this will work on little-endian and be accepted but
+wrongly be 0 on big endian.
+
+johannes
