@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-133.163.com ([123.125.50.133]:57186 "EHLO m50-133.163.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38956 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1045279AbdDWNUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Apr 2017 09:20:41 -0400
-From: Pan Bian <bianpan201603@163.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
-        Tejun Heo <tj@kernel.org>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Pan Bian <bianpan2016@163.com>
-Subject: [PATCH 1/1] libertas: check return value of alloc_workqueue
-Date: Sun, 23 Apr 2017 21:19:38 +0800
-Message-Id: <1492953578-387-1-git-send-email-bianpan201603@163.com> (sfid-20170423_152134_243291_A2CDB5B1)
+        id S1754849AbdDJPkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 11:40:14 -0400
+Message-ID: <1491838811.28432.8.camel@sipsolutions.net> (sfid-20170410_174028_849361_B9460115)
+Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Ahern <dsa@cumulusnetworks.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
+Date: Mon, 10 Apr 2017 17:40:11 +0200
+In-Reply-To: <029e6587-c0e8-bdb0-49e9-2abe2946a7ff@cumulusnetworks.com> (sfid-20170410_173530_723869_8DC854E1)
+References: <20170408202434.12018-1-johannes@sipsolutions.net>
+         <20170408202434.12018-2-johannes@sipsolutions.net>
+         <fddba2c8-3b85-d5df-81c4-ef31c459e40c@cumulusnetworks.com>
+         <1491838218.28432.5.camel@sipsolutions.net>
+         <029e6587-c0e8-bdb0-49e9-2abe2946a7ff@cumulusnetworks.com>
+         (sfid-20170410_173530_723869_8DC854E1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pan Bian <bianpan2016@163.com>
+On Mon, 2017-04-10 at 09:35 -0600, David Ahern wrote:
 
-Function alloc_workqueue() will return a NULL pointer if there is no
-enough memory, and its return value should be validated before using.
-However, in function if_spi_probe(), its return value is not checked.
-This may result in a NULL dereference bug. This patch fixes the bug.
+> > Do you have any better ideas?
+> 
+> NETLINK_F_CAP_ACK and NETLINK_F_EXT_ACK should be incompatible -- if
+> one is set the other can not be set. CAP_ACK means abbreviate the
+> response and EXT_ACK means give me more data.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/net/wireless/marvell/libertas/if_spi.c | 5 +++++
- 1 file changed, 5 insertions(+)
+So you mean if I want EXT_ACK I cannot also cap the message?
 
-diff --git a/drivers/net/wireless/marvell/libertas/if_spi.c b/drivers/net/wireless/marvell/libertas/if_spi.c
-index c3a53cd..7b4955c 100644
---- a/drivers/net/wireless/marvell/libertas/if_spi.c
-+++ b/drivers/net/wireless/marvell/libertas/if_spi.c
-@@ -1181,6 +1181,10 @@ static int if_spi_probe(struct spi_device *spi)
- 
- 	/* Initialize interrupt handling stuff. */
- 	card->workqueue = alloc_workqueue("libertas_spi", WQ_MEM_RECLAIM, 0);
-+	if (!card->workqueue) {
-+		err = -ENOMEM;
-+		goto remove_card;
-+	}
- 	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
- 	INIT_WORK(&card->resume_work, if_spi_resume_worker);
- 
-@@ -1209,6 +1213,7 @@ static int if_spi_probe(struct spi_device *spi)
- 	free_irq(spi->irq, card);
- terminate_workqueue:
- 	destroy_workqueue(card->workqueue);
-+remove_card:
- 	lbs_remove_card(priv); /* will call free_netdev */
- free_card:
- 	free_if_spi_card(card);
--- 
-1.9.1
+I guess that's doable, but again wouldn't it hurt applications that
+want to use CAP? I assume every application wants to use EXT_ACK
+eventually, and those that use CAP right now wouldn't be able to.
+
+Another thought: if we add a new flag that indicates "message has been
+capped", which we introduce in this same patch, then we can disentangle
+this more easily, right?
+
+Adding a new flag for "TLVs present" won't really help, but if you know
+the message was capped then you know the TLVs start after the inner
+nlmsghdr and you ignore that header's nlmsg_len.
+
+johannes
