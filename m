@@ -1,11 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36306 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755221AbdDFUUL (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36569 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753144AbdDJQXZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 16:20:11 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so8910376oif.3
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 13:20:10 -0700 (PDT)
+        Mon, 10 Apr 2017 12:23:25 -0400
+Received: by mail-oi0-f67.google.com with SMTP id b187so23324973oif.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:25 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
@@ -13,49 +13,52 @@ Cc: linux-wireless@vger.kernel.org,
         Larry Finger <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/11] rtlwifi: btcoex: 23b 2ant: fine tune for bt pan_edr_a2dp
-Date: Thu,  6 Apr 2017 15:19:55 -0500
-Message-Id: <20170406201958.25642-9-Larry.Finger@lwfinger.net> (sfid-20170406_222056_385433_70D34B56)
-In-Reply-To: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
-References: <20170406201958.25642-1-Larry.Finger@lwfinger.net>
+Subject: [PATCH 05/14] rtlwifi: btcoex: 21a 1ant: remove setting for 2 antennas
+Date: Mon, 10 Apr 2017 11:23:01 -0500
+Message-Id: <20170410162310.7515-6-Larry.Finger@lwfinger.net> (sfid-20170410_182334_553910_94725767)
+In-Reply-To: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
+References: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-If we don't limit the rx aggregation size, and set tdma instead, the bt profile can
-get more stable.
+The antenna position setting is useless for 1 antenna chip.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: Pkshih <pkshih@realtek.com>
 Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
 Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 06f70944bdac..a76c8d20e093 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -3140,7 +3140,6 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
--	btc8723b2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8723b2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	if (BTC_RSSI_HIGH(bt_rssi_state))
-@@ -3167,7 +3166,7 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 							  false, 3);
- 	} else {
- 		btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
--		btc8723b2ant_tdma_duration_adjust(btcoexist, false, true, 3);
-+		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 3);
- 	}
- 
- 	/* sw mechanism	*/
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 88bf70f27669..b84c1a5be40a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -994,9 +994,6 @@ static void btc8821a1ant_set_ant_path(struct btc_coexist *btcoexist,
+ 			h2c_parameter[1] = 1;
+ 			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
+ 						h2c_parameter);
+-			/* Main Ant to  BT for IPS case 0x4c[23] = 1 */
+-			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x64,
+-							   0x1, 0x1);
+ 		} else {
+ 			/* tell firmware "no antenna inverse"
+ 			 * WRONG firmware antenna control code, need fw to fix
+@@ -1005,9 +1002,6 @@ static void btc8821a1ant_set_ant_path(struct btc_coexist *btcoexist,
+ 			h2c_parameter[1] = 1;
+ 			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
+ 						h2c_parameter);
+-			/* Aux Ant to BT for IPS case 0x4c[23] = 1 */
+-			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x64,
+-							   0x1, 0x0);
+ 		}
+ 	} else if (wifi_off) {
+ 		/* 0x4c[24:23] = 00, Set Antenna control
 -- 
 2.12.0
