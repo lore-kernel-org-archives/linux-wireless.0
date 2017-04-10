@@ -1,101 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52832 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754250AbdDRWVi (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:50081 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751209AbdDJBoi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:21:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:23 +0300
-Message-Id: <20170418221729.28372-20-luca@coelho.fi> (sfid-20170419_002141_034506_C6822EF3)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 19/25] iwlwifi: mvm: dump frames early on invalid rate
+        Sun, 9 Apr 2017 21:44:38 -0400
+Date: Mon, 10 Apr 2017 03:44:26 +0200
+From: Daniel Golle <daniel@makrotopia.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] rt2x00: invert external PA capability flag logic
+Message-ID: <20170410014421.GA21876@makrotopia.org> (sfid-20170410_034449_707794_749C89C9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Consequently refer to external PA instead of inverting the logic and
+use an internal PA capability flag which is a bit confusing.
+Currently this is used for Rt3352 only, but MT7620A also allows for an
+external PA which will be supported by a follow up patch.
 
-Currently when rate isn't found (invalid rate or CCK rate in high
-band) driver is assigning rate -1, which causes mac80211 to dump
-it later with the cryptic rate value of 0xFF.
-Instead, warn early and dump the frame in mvm.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 13 ++++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 18 +++++++++++++-----
- 2 files changed, 23 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 24 ++++++++++++------------
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  4 ++--
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index eab6e2ad62e1..d4c0ca7ccb34 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -460,9 +460,16 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		if (rate_n_flags & RATE_MCS_BF_MSK)
- 			rx_status->vht_flag |= RX_VHT_FLAG_BF;
- 	} else {
--		rx_status->rate_idx =
--			iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
--							    rx_status->band);
-+		int rate = iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
-+							       rx_status->band);
-+
-+		if (WARN(rate < 0 || rate > 0xFF,
-+			 "Invalid rate flags 0x%x, band %d,\n",
-+			 rate_n_flags, rx_status->band)) {
-+			kfree_skb(skb);
-+			return;
-+		}
-+		rx_status->rate_idx = rate;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 201b12ed90c6..3e49df1607ff 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7014,9 +7014,9 @@ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+ 
+ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+ {
+-	int tx0_int_pa = test_bit(CAPABILITY_INTERNAL_PA_TX0,
++	int tx0_ext_pa = test_bit(CAPABILITY_EXTERNAL_PA_TX0,
+ 				  &rt2x00dev->cap_flags);
+-	int tx1_int_pa = test_bit(CAPABILITY_INTERNAL_PA_TX1,
++	int tx1_ext_pa = test_bit(CAPABILITY_EXTERNAL_PA_TX1,
+ 				  &rt2x00dev->cap_flags);
+ 	u8 rfcsr;
+ 
+@@ -7056,9 +7056,9 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
+ 	rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
+ 	rfcsr = 0x01;
+-	if (!tx0_int_pa)
++	if (tx0_ext_pa)
+ 		rt2x00_set_field8(&rfcsr, RFCSR34_TX0_EXT_PA, 1);
+-	if (!tx1_int_pa)
++	if (tx1_ext_pa)
+ 		rt2x00_set_field8(&rfcsr, RFCSR34_TX1_EXT_PA, 1);
+ 	rt2800_rfcsr_write(rt2x00dev, 34, rfcsr);
+ 	rt2800_rfcsr_write(rt2x00dev, 35, 0x03);
+@@ -7068,13 +7068,13 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 39, 0xc5);
+ 	rt2800_rfcsr_write(rt2x00dev, 40, 0x33);
+ 	rfcsr = 0x52;
+-	if (tx0_int_pa) {
++	if (!tx0_ext_pa) {
+ 		rt2x00_set_field8(&rfcsr, RFCSR41_BIT1, 1);
+ 		rt2x00_set_field8(&rfcsr, RFCSR41_BIT4, 1);
+ 	}
+ 	rt2800_rfcsr_write(rt2x00dev, 41, rfcsr);
+ 	rfcsr = 0x52;
+-	if (tx1_int_pa) {
++	if (!tx1_ext_pa) {
+ 		rt2x00_set_field8(&rfcsr, RFCSR42_BIT1, 1);
+ 		rt2x00_set_field8(&rfcsr, RFCSR42_BIT4, 1);
+ 	}
+@@ -7087,9 +7087,9 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 48, 0x14);
+ 	rt2800_rfcsr_write(rt2x00dev, 49, 0x00);
+ 	rfcsr = 0x2d;
+-	if (!tx0_int_pa)
++	if (tx0_ext_pa)
+ 		rt2x00_set_field8(&rfcsr, RFCSR50_TX0_EXT_PA, 1);
+-	if (!tx1_int_pa)
++	if (tx1_ext_pa)
+ 		rt2x00_set_field8(&rfcsr, RFCSR50_TX1_EXT_PA, 1);
+ 	rt2800_rfcsr_write(rt2x00dev, 50, rfcsr);
+ 	rt2800_rfcsr_write(rt2x00dev, 51, (tx0_int_pa ? 0x7f : 0x52));
+@@ -8782,13 +8782,13 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT3352)) {
+-		if (!rt2x00_get_field16(eeprom,
++		if (rt2x00_get_field16(eeprom,
+ 		    EEPROM_NIC_CONF1_EXTERNAL_TX0_PA_3352))
+-		    __set_bit(CAPABILITY_INTERNAL_PA_TX0,
++		    __set_bit(CAPABILITY_EXTERNAL_PA_TX0,
+ 			      &rt2x00dev->cap_flags);
+-		if (!rt2x00_get_field16(eeprom,
++		if (rt2x00_get_field16(eeprom,
+ 		    EEPROM_NIC_CONF1_EXTERNAL_TX1_PA_3352))
+-		    __set_bit(CAPABILITY_INTERNAL_PA_TX1,
++		    __set_bit(CAPABILITY_EXTERNAL_PA_TX1,
+ 			      &rt2x00dev->cap_flags);
  	}
  
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 8601d25407b3..0f74a200e812 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -918,8 +918,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 8fdd2f9726ee..1bc353eafe37 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -719,8 +719,8 @@ enum rt2x00_capability_flags {
+ 	CAPABILITY_DOUBLE_ANTENNA,
+ 	CAPABILITY_BT_COEXIST,
+ 	CAPABILITY_VCO_RECALIBRATION,
+-	CAPABILITY_INTERNAL_PA_TX0,
+-	CAPABILITY_INTERNAL_PA_TX1,
++	CAPABILITY_EXTERNAL_PA_TX0,
++	CAPABILITY_EXTERNAL_PA_TX1,
+ };
  
- 		if (iwl_mvm_is_nonagg_dup(sta, queue, rx_status, hdr, desc)) {
- 			kfree_skb(skb);
--			rcu_read_unlock();
--			return;
-+			goto out;
- 		}
- 
- 		/*
-@@ -985,9 +984,17 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		if (rate_n_flags & RATE_MCS_BF_MSK)
- 			rx_status->vht_flag |= RX_VHT_FLAG_BF;
- 	} else {
--		rx_status->rate_idx =
--			iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
--							    rx_status->band);
-+		int rate = iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
-+							       rx_status->band);
-+
-+		if (WARN(rate < 0 || rate > 0xFF,
-+			 "Invalid rate flags 0x%x, band %d,\n",
-+			 rate_n_flags, rx_status->band)) {
-+			kfree_skb(skb);
-+			goto out;
-+		}
-+		rx_status->rate_idx = rate;
-+
- 	}
- 
- 	/* management stuff on default queue */
-@@ -1006,6 +1013,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	iwl_mvm_create_skb(skb, hdr, len, crypt_len, rxb);
- 	if (!iwl_mvm_reorder(mvm, napi, queue, sta, skb, desc))
- 		iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta);
-+out:
- 	rcu_read_unlock();
- }
- 
+ /*
 -- 
-2.11.0
+2.12.1
