@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:43121 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753177AbdDDKJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 06:09:34 -0400
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
-        "linux-ppp@vger.kernel.org" <linux-ppp@vger.kernel.org>,
+Received: from smtp-out6.electric.net ([192.162.217.195]:53843 "EHLO
+        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752760AbdDJOMH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 10:12:07 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Matthias Kaehlcke' <mka@chromium.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
-        "nbd@openwrt.org" <nbd@openwrt.org>,
-        "blogic@openwrt.org" <blogic@openwrt.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "yishaih@mellanox.com" <yishaih@mellanox.com>,
-        "saeedm@mellanox.com" <saeedm@mellanox.com>,
-        "matanb@mellanox.com" <matanb@mellanox.com>,
-        "leonro@mellanox.com" <leonro@mellanox.com>,
-        "ajk@comnets.uni-bremen.de" <ajk@comnets.uni-bremen.de>,
-        "paulus@samba.org" <paulus@samba.org>, "j@w1.fi" <j@w1.fi>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: RE: [PATCH 16/16] drivers, net, intersil: convert
- request_context.refcount from atomic_t to refcount_t
-Date: Tue, 4 Apr 2017 10:07:55 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C8741B@IRSMSX102.ger.corp.intel.com> (sfid-20170404_121208_796186_E16CE845)
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-        <1490691403-4016-17-git-send-email-elena.reshetova@intel.com>
- <87zifxn2gb.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87zifxn2gb.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Grant Grundler <grundler@chromium.org>,
+        Michael Davidson <md@google.com>,
+        Greg Hackmann <ghackmann@google.com>
+Subject: RE: [PATCH] mac80211: Fix clang warning about constant operand in
+ logical operation
+Date: Mon, 10 Apr 2017 14:12:00 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFCA9CE@AcuExch.aculab.com> (sfid-20170410_161309_064766_501AECDE)
+References: <20170406185633.91065-1-mka@chromium.org>
+In-Reply-To: <20170406185633.91065-1-mka@chromium.org>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Matthias Kaehlcke
+> Sent: 06 April 2017 19:57
+> Clang raises a warning about the expression 'strlen(CONFIG_XXX)' being
+> used in a logical operation. Clangs' builtin strlen function resolves the
+> expression to a constant at compile time, which causes clang to generate
+> a 'constant-logical-operand' warning.
+> 
+> Split the if statement in two to avoid using the const expression in a
+> logical operation.
+> 
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> ---
+>  net/mac80211/rate.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+> index 206698bc93f4..68ff202d6380 100644
+> --- a/net/mac80211/rate.c
+> +++ b/net/mac80211/rate.c
+> @@ -173,9 +173,14 @@ ieee80211_rate_control_ops_get(const char *name)
+>  		/* try default if specific alg requested but not found */
+>  		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
+> 
+> +	if (ops)
+> +		goto unlock;
+> +
+>  	/* try built-in one if specific alg requested but not found */
+> -	if (!ops && strlen(CONFIG_MAC80211_RC_DEFAULT))
+> +	if (strlen(CONFIG_MAC80211_RC_DEFAULT))
+>  		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
+> +
+> +unlock:
 
-> Elena Reshetova <elena.reshetova@intel.com> writes:
->=20
-> > refcount_t type and corresponding API should be
-> > used instead of atomic_t when the variable is used as
-> > a reference counter. This allows to avoid accidental
-> > refcounter overflows that might lead to use-after-free
-> > situations.
-> >
-> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > ---
-> >  drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 15 ++++++++-----=
---
-> >  1 file changed, 8 insertions(+), 7 deletions(-)
->=20
-> The prefix should be "orinoco_usb:", I'll fix that.
+Using the result of strlen() as a boolean should itself be a compilation error.
+You could change to code to the equivalent:
 
-Thanks for both! Will you take the patches in?
+	if (!ops && CONFIG_MAC80211_RC_DEFAULT[0])
+		ops = ...
 
-Best Regards,
-Elena.
-
->=20
-> --
-> Kalle Valo
+	David
