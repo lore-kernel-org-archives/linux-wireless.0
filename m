@@ -1,101 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:40868 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753209AbdDROu4 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34466 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751237AbdDJUyQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 10:50:56 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
-        Ben Greear <greearb@candelatech.com>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [v2,1/3] ath9k: Support channels in licensed bands
-Date: Tue, 18 Apr 2017 16:50:52 +0200
-Message-ID: <3170657.DNPqgEf8fi@prime> (sfid-20170418_165102_054888_5B1373BB)
-In-Reply-To: <20170418143654.8AC0A60FAA@smtp.codeaurora.org>
-References: <20170323133048.30062-2-sw@simonwunderlich.de> <20170418143654.8AC0A60FAA@smtp.codeaurora.org>
+        Mon, 10 Apr 2017 16:54:16 -0400
+Date: Mon, 10 Apr 2017 13:54:14 -0700
+From: Myungho Jung <mhjungk@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: netdev@vger.kernel.org, David Miller <davem@redhat.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54: add null pointer check before releasing socket
+ buffer
+Message-ID: <20170410205414.GB12557@fqdn.specialj.com> (sfid-20170410_225423_480742_9652F91A)
+References: <1491801800-4371-1-git-send-email-mhjungk@gmail.com>
+ <3716717.OUypxXNBrR@debian64>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2143168.6jItE74DCN"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3716717.OUypxXNBrR@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2143168.6jItE74DCN
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-
-Hi,
-
-On Tuesday, April 18, 2017 2:36:54 PM CEST Kalle Valo wrote:
-> Simon Wunderlich <sw@simonwunderlich.de> wrote:
-> > From: Ben Greear <greearb@candelatech.com>
-> > 
-> > Many chips support channels in licensed bands. Add support for those,
-> > along with a corresponding kernel config option to disable them by
-> > default. Note that these channels are not selectable even if the
-> > option has been compiled unless the user modifies the regulatory
-> > database to explicitly enable the corresponding channels.
-> > 
-> > NOTE:  These channels must not be used in most regulatory
-> > domains unless you have a license from the FCC or similar!
-> > 
-> > Signed-off-by: Ben Greear <greearb@candelatech.com>
-> > [Hide this support behind a Kconfig option]
-> > Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
-> > [only use the 20 mhz channels, add 5 ghz, change to 4.9ghz to licensed
-> > bands, simplify] Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-> > Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+On Mon, Apr 10, 2017 at 02:12:54PM +0200, Christian Lamparter wrote:
+> (Added linux-wireless, since this is a wireless driver)
 > 
-> I am not sure that we should support unlicensed bands in Linux and hence
-> hesitant to apply these. My view is that due to regulatory restrictions we
-> should not make it too easy to use unlicensed bands. But I'm open for
-> discussion, this is a challenging area and my knowledge here is limited.
+> On Sunday, April 9, 2017 10:23:20 PM CEST Myungho Jung wrote:
+> > Kernel panic is caused by trying to dereference null pointer. Check if
+> > the pointer is null before freeing space.
+> Do you have the kernel panic somewhere?
+> I think you have an even bigger problem: You see, in order to get EEPROM
+> readback and rx_stats feedback you need to sent a request to the firmware
+> and if the response's req_id cookies don't match, you end up filling up 
+> the very limited device address space.
+> 
+> As for adding if (!skb) checks. I think kfree, kfree_skb, dev_kfree_skb 
+> (aka consume_skb) all check for null pointers already. So the logical
+> thing to do would be to make dev_kfree_skb_irq (which would also fix
+> dev_kfree_skb_any) consistent with kfree, kfree_skb, dev_kfree_skb and
+> add the check there.
+> 
+> > Signed-off-by: Myungho Jung <mhjungk@gmail.com>
+> > ---
+> >  drivers/net/wireless/intersil/p54/txrx.c | 8 ++++++--
+> >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/intersil/p54/txrx.c b/drivers/net/wireless/intersil/p54/txrx.c
+> > index 1af7da0..8956061 100644
+> > --- a/drivers/net/wireless/intersil/p54/txrx.c
+> > +++ b/drivers/net/wireless/intersil/p54/txrx.c
+> > @@ -503,7 +503,9 @@ static void p54_rx_eeprom_readback(struct p54_common *priv,
+> >  
+> >  	priv->eeprom = NULL;
+> >  	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
+> > -	dev_kfree_skb_any(tmp);
+> > +	if (unlikely(!tmp))
+> > +		dev_kfree_skb_any(tmp);
+> > +
+> >  	complete(&priv->eeprom_comp);
+> >  }
+> >  
+> > @@ -597,7 +599,9 @@ static void p54_rx_stats(struct p54_common *priv, struct sk_buff *skb)
+> >  	}
+> >  
+> >  	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
+> > -	dev_kfree_skb_any(tmp);
+> > +	if (unlikely(!tmp))
+> > +		dev_kfree_skb_any(tmp);
+> > +
+> >  	complete(&priv->stat_comp);
+> >  }
+> >  
+> > 
+> 
+> 
 
-thanks for your reply! I agree that we should not make it too easy, and 
-therefore there are the following "obstacles" which should avoid accidental 
-use of license bands:
+I found that the fix was totally opposite to my thought. Sorry about
+confusion. I'm not sure it actually caused kernel panic but guessed from
+a bug report [https://bugzilla.kernel.org/show_bug.cgi?id=195289]. And
+correct fix will be like this:
+	if (likely(tmp))
+		dev_kfree_skb_any(tmp);
 
- * we have the kernel CONFIG option which features a big fat warning
- * regulatory database must be tampered with to enabel the channels. In 
-distributions, the regdb also gets signed. There is also the "internal regdb" 
-CONFIG option if you compile your own kernel (rarely used, except for 
-OpenWRT). In each case, a user must actively add the 4.9 GHz channels into it, 
-because they are not included in the default regdb (and this should not 
-change).
- * CFG80211_CERTIFICATION_ONUS is also required, which also says "you are on 
-your own".
+But, like you said, I think null pointer should be checked in
+dev_kfree_skb_irq although already checking before calling it in many
+other places. I'll try another patch. Thank you for your advice.
 
-I had a comparison with ath5k, which also allows using those channels without 
-at least the special configuration option (there is one enabling even more 
-channels). The regdb "obstacle" is in place as well. However, ath5k is for 
-very old chips and therefore the threat is limited.
-
-In my personal view, we have quite a few obstacles which I consider "enough", 
-but would be interesting to hear others opinions ...
-
-Cheers,
-      Simon
---nextPart2143168.6jItE74DCN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEE1ilQI7G+y+fdhnrfoSvjmEKSnqEFAlj2J8wACgkQoSvjmEKS
-nqFFmBAAmdGgMdLutorSFpPauYucnNYi2aAIN0yaKgGz968dI6OYn2eYXkZKGjYo
-kTIdLTDt1SORb41PU6Csda8FwDDdv+A9WJZT7mUZz4uD1/fRZpj5irq0Er9+5ikA
-wbcmpSUlYKYnoWU1eRv5XMB7SjyWwAziPlZLA4+lGo+ga/YOXxq3dkIP/q2Xz5IF
-Hc+X+OtYH1QWZSxraH3KRIjZke6y6ak82Ef/geqJ6WiPhbOcAFI5oNuRKGnZy3Ts
-/srLgssUjWWBYTZ5+lc4cXEPT9PCtA31NoOvME7U12nA3v42NncdJVbjaDp+CSQJ
-f3fvFd+r7mOWhxc4SwWtFL87XMww4HyikiSXFAjpJcbJpxOyEfiPgW/wSH74MGC/
-lGeR+F4LYpG2Ymzob42XoxswFbik5BXhncMgih5F4qzC9qI9pfWEWRBh6PzNn2ZV
-ImmEolkGq7OKjig0sO9xJxKG3f6xlbI+r2A+SUJiTafSLyxKnTqZ+Eu5YhrsdIrt
-WRGEKLH3VHRfgYetGutEFB2PGXkTpLsKpu6vXjSvgFpPKAX7gQwZuszXiHHmsc95
-X5ygcv0xvzgwwbBnQNB6jHmLCXr44r4TE6oO5oQL7A128XXWEnp3vR407woYwKOv
-Dk9CNsdPfe5LtdqCq2ghob47rEcamA3q4oh5ni5xdVW0RyZKe7c=
-=71q+
------END PGP SIGNATURE-----
-
---nextPart2143168.6jItE74DCN--
+Thanks,
+Myungho
