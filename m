@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-133.163.com ([123.125.50.133]:36765 "EHLO m50-133.163.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36342 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1427705AbdDWHBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Apr 2017 03:01:54 -0400
-From: Pan Bian <bianpan2016@163.com>
-To: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, Pan Bian <bianpan2016@163.com>
-Subject: [PATCH 1/1] mt7601u: check return value of alloc_skb
-Date: Sun, 23 Apr 2017 15:00:23 +0800
-Message-Id: <1492930823-17249-1-git-send-email-bianpan2016@163.com> (sfid-20170423_090219_346441_7830741A)
+        id S1751615AbdDJLi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 07:38:27 -0400
+Message-ID: <1491824305.2455.10.camel@sipsolutions.net> (sfid-20170410_133834_502365_AC89A034)
+Subject: Re: [PATCH v3 0/5] netlink extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us
+Date: Mon, 10 Apr 2017 13:38:25 +0200
+In-Reply-To: <20170408202434.12018-1-johannes@sipsolutions.net> (sfid-20170408_222447_224133_39B19566)
+References: <20170408202434.12018-1-johannes@sipsolutions.net>
+         (sfid-20170408_222447_224133_39B19566)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function alloc_skb() will return a NULL pointer if there is no enough
-memory. However, in function mt7601u_mcu_msg_alloc(), its return value
-is not validated before it is used. This patch fixes it.
+Here's a simple iw patch that shows the error message string:
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/net/wireless/mediatek/mt7601u/mcu.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-index dbdfb3f..a9f5f39 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-@@ -66,8 +66,10 @@ static inline void trace_mt_mcu_msg_send_cs(struct mt7601u_dev *dev,
- 	WARN_ON(len % 4); /* if length is not divisible by 4 we need to pad */
+--- a/iw.c
++++ b/iw.c
+@@ -62,6 +62,10 @@ static int nl80211_init(struct nl80211_state *state)
  
- 	skb = alloc_skb(len + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
--	skb_reserve(skb, MT_DMA_HDR_LEN);
--	memcpy(skb_put(skb, len), data, len);
-+	if (skb) {
-+		skb_reserve(skb, MT_DMA_HDR_LEN);
-+		memcpy(skb_put(skb, len), data, len);
+ 	nl_socket_set_buffer_size(state->nl_sock, 8192, 8192);
+ 
++	/* try to set NETLINK_EXT_ACK to 1 (ignore errors) */
++	err = 1;
++	setsockopt(nl_socket_get_fd(state->nl_sock), SOL_NETLINK, 11, &err, sizeof(err));
++
+ 	state->nl80211_id = genl_ctrl_resolve(state->nl_sock, "nl80211");
+ 	if (state->nl80211_id < 0) {
+ 		fprintf(stderr, "nl80211 not found.\n");
+@@ -270,11 +274,45 @@ static int phy_lookup(char *name)
+ 	return atoi(buf);
+ }
+ 
++#ifndef NETLINK_EXT_ACK
++enum nlmsgerr_attrs {
++	NLMSGERR_ATTR_UNUSED,
++	NLMSGERR_ATTR_MSG,
++	NLMSGERR_ATTR_OFFS,
++	NLMSGERR_ATTR_ATTR,
++	NLMSGERR_ATTR_COOKIE,
++
++	NUM_NLMSGERR_ATTRS,
++	NLMSGERR_ATTR_MAX = NUM_NLMSGERR_ATTRS - 1
++};
++#endif
++
+ static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr *err,
+ 			 void *arg)
+ {
++	struct nlmsghdr *nlh = (struct nlmsghdr *)err - 1;
++	int len = nlh->nlmsg_len;
++	struct nlattr *attrs;
++	struct nlattr *tb[NUM_NLMSGERR_ATTRS];
+ 	int *ret = arg;
++	int ack_len = sizeof(*nlh) + sizeof(int) + err->msg.nlmsg_len;
++
+ 	*ret = err->error;
++
++	if (len <= ack_len)
++		return NL_STOP;
++
++	attrs = (void *)((unsigned char *)nlh + ack_len);
++	len -= ack_len;
++
++	nla_parse(tb, NLMSGERR_ATTR_MAX, attrs, len, NULL);
++	if (tb[NLMSGERR_ATTR_MSG]) {
++		len = strnlen((char *)nla_data(tb[NLMSGERR_ATTR_MSG]),
++			      nla_len(tb[NLMSGERR_ATTR_MSG]));
++		fprintf(stderr, "kernel reports: %*s\n", len,
++			(char *)nla_data(tb[NLMSGERR_ATTR_MSG]));
 +	}
- 
- 	return skb;
- }
-@@ -170,6 +172,8 @@ static int mt7601u_mcu_function_select(struct mt7601u_dev *dev,
- 	};
- 
- 	skb = mt7601u_mcu_msg_alloc(dev, &msg, sizeof(msg));
-+	if (!skb)
-+		return -ENOMEM;
- 	return mt7601u_mcu_msg_send(dev, skb, CMD_FUN_SET_OP, func == 5);
++
+ 	return NL_STOP;
  }
  
-@@ -205,6 +209,8 @@ int mt7601u_mcu_tssi_read_kick(struct mt7601u_dev *dev, int use_hvga)
- 	};
- 
- 	skb = mt7601u_mcu_msg_alloc(dev, &msg, sizeof(msg));
-+	if (!skb)
-+		return -ENOMEM;
- 	return mt7601u_mcu_msg_send(dev, skb, CMD_CALIBRATION_OP, true);
- }
- 
--- 
-1.9.1
+
+johannes
