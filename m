@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34366 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752153AbdDMSMN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50258 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753503AbdDJL05 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:12:13 -0400
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: How to debug DMAR errors?
-Message-ID: <a21d8845-ae8d-fae0-b1b4-7bf6751b04b5@candelatech.com> (sfid-20170413_201244_100223_E4287776)
-Date: Thu, 13 Apr 2017 11:12:12 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 10 Apr 2017 07:26:57 -0400
+Message-ID: <1491823607.31980.47.camel@coelho.fi> (sfid-20170410_132705_614825_05276C9A)
+From: Luca Coelho <luca@coelho.fi>
+To: =?ISO-8859-1?Q?=22K=E4fer=2C?= "Marcel\"" <mk@djagoo.io>,
+        linuxwifi@intel.com, linux-wireless@vger.kernel.org
+Date: Mon, 10 Apr 2017 14:26:47 +0300
+In-Reply-To: <1491822841.31980.45.camel@coelho.fi>
+References: <212619248.282995.1491726087885.JavaMail.open-xchange@app09.ox.hosteurope.de>
+         <1491822841.31980.45.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi crashing on X1 Carbon 5th Gen iwlwifi-8265 "Microcode
+ SW error detected"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, 2017-04-10 at 14:14 +0300, Luca Coelho wrote:
+> Hi,
+> 
+> On Sun, 2017-04-09 at 10:21 +0200, 
+> > Hello,
+> > 
+> > on the new 5th Gen Lenovo X1 Carbon and Intel 8265 on a fresh Arch install
+> > iwlwifi keeps crashing the moment network is coming up. Happens on both
+> > core/linux-firmware 20170309.695f2d6-1 and aur/linux-firmware-iwlwifi-git.
+> > 
+> > After it's crashing it's impossible to rmmod iwlmvm and iwlwifi, all netctl and
+> > ip commands are hanging, sudo isn't working and even shutdown isn't working.
+> > Tried netctl and NetworkManager. Netctl sometimes work for a few minutes before
+> > it crashes, NetworkManager is chrashing after a few seconds.
+> > Someone reported a bug with Intel 7265D card wich looks exactly the same.
+> > https://bugs.archlinux.org/task/53317
+> > The firmware files for 8265 found in /lib/firmware are:
+> > - iwlwifi-8265-21.ucode
+> > - iwlwifi-8265-22.ucode
+> > - iwlwifi-8265-27.ucode
+> > 
+> > The dmesg output is attached to this mail as dmesg.txt
+> 
+> Please refer to this bug in bugzilla:
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=193641
 
-I have been seeing a regular occurrence of DMAR errors, looking something
-like this when testing my ath10k driver/firmware under some specific loads
-(maximum receive of 512 byte frames in AP mode):
+Actually, as Johannes noticed, your case is much more serious, because
+it triggers a NULL-dereference in our recovery flow.  And that's what's
+causing your machine to go to a bad state.
 
-DMAR: DRHD: handling fault status reg 3
-DMAR: [DMA Read] Request device [05:00.0] fault addr fd99f000 [fault reason 06] PTE Read access is not set
-ath10k_pci 0000:05:00.0: firmware crashed! (uuid 594b1393-ae35-42b5-9dec-74ff0c6791ff)
+Can you please report it in bugzilla so we can track and fix the null-
+dereference?
 
-So, I am wondering if there is any way I can get more information about what this fd99f000 address
-is?
+Thanks for reporting!
 
-Once this problem hits, the entire OS locks hard (not even sysrq-boot will do anything),
-so I guess I would need the DMAR logic to print out more info on that address somehow.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--
+Cheers,
+Luca.
