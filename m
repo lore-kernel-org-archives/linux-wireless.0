@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:35297 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750941AbdD0EC0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47897 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752750AbdDJJIy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2017 00:02:26 -0400
-Date: Wed, 26 Apr 2017 21:02:24 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com,
-        wharms@bfs.de
-Subject: Re: [PATCH v2] NFC: trf7970a: Correct register settings for 27MHz
- clock
-Message-ID: <20170427040224.GA13061@animalcreek.com> (sfid-20170427_060233_428472_494753C0)
-References: <1493257308-32503-1-git-send-email-geoff@kuvee.com>
+        Mon, 10 Apr 2017 05:08:54 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Dmitry Torokhov <dtor@google.com>,
+        Xinming Hu <huxinming820@gmail.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Rajat Jain <rajatja@google.com>, Cathy Luo <cluo@marvell.com>
+Subject: RE:  Re: [PATCH v2 2/4] mwifiex: fall back mwifiex_dbg to pr_info
+ when adapter->dev not set
+Date: Mon, 10 Apr 2017 09:08:46 +0000
+Message-ID: <506dfcd84c8341af85ddf4ac922c78a6@SC-EXCH02.marvell.com> (sfid-20170410_110858_935121_768EC770)
+References: <1491562285-29818-1-git-send-email-huxinming820@gmail.com>
+ <1491562285-29818-2-git-send-email-huxinming820@gmail.com>
+ <CAE_wzQ9WzgNfgRAPR8Anhmq_bHZR1==Pb_9u6395kFvc49jZxg@mail.gmail.com>
+In-Reply-To: <CAE_wzQ9WzgNfgRAPR8Anhmq_bHZR1==Pb_9u6395kFvc49jZxg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1493257308-32503-1-git-send-email-geoff@kuvee.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 09:41:48PM -0400, Geoff Lansberry wrote:
-
-Hi Geoff.
-
-> In prior commits the selected clock frequency does not propagate
-> correctly to what is written the the TRF7970A_MODULATOR_SYS_CLK_CTRL
-> register.
-> 
-> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
-> ---
->  drivers/nfc/trf7970a.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-> index 5f040e6..c278b0e 100644
-> --- a/drivers/nfc/trf7970a.c
-> +++ b/drivers/nfc/trf7970a.c
-> @@ -2079,6 +2079,13 @@ static int trf7970a_probe(struct spi_device *spi)
->  		return -EINVAL;
->  	}
->  
-> +	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
-> +		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
-> +		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
-> +	} else {
-> +		trf->modulator_sys_clk_ctrl = 0;
-> +	}
-> +
->  	if (of_property_read_bool(np, "en2-rf-quirk"))
->  		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
-
-Looks fine to me but please rebase it on top of current nfc-next/master
-as it doesn't apply to it right now.
-
-Thanks,
-
-Mark
---
+SGkgRG1pdHJ5LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IERtaXRy
+eSBUb3Jva2hvdiBbbWFpbHRvOmR0b3JAZ29vZ2xlLmNvbV0NCj4gU2VudDogMjAxN+W5tDTmnIg4
+5pelIDE6MjgNCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxsZSBW
+YWxvOyBCcmlhbiBOb3JyaXM7IFJhamF0IEphaW47IEFtaXRrdW1hciBLYXJ3YXI7DQo+IENhdGh5
+IEx1bzsgWGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIHYyIDIvNF0gbXdp
+ZmlleDogZmFsbCBiYWNrIG13aWZpZXhfZGJnIHRvIHByX2luZm8NCj4gd2hlbiBhZGFwdGVyLT5k
+ZXYgbm90IHNldA0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4g
+SGkgWGlubWluZywNCj4gDQo+IE9uIEZyaSwgQXByIDcsIDIwMTcgYXQgMzo1MSBBTSwgWGlubWlu
+ZyBIdSA8aHV4aW5taW5nODIwQGdtYWlsLmNvbT4NCj4gd3JvdGU6DQo+ID4gRnJvbTogWGlubWlu
+ZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IG13aWZpZXhfZGJnIHdpbGwgZG8gbm90
+aGluZyBiZWZvcmUgYWRhcHRlci0+ZGV2IGdldCBhc3NpZ25lZC4gc2V2ZXJhbA0KPiA+IGxvZ3Mg
+bG9zdCBpbiB0aGlzIGNhc2UuIGl0IGNhbiBiZSBhdm9pZGVkIGJ5IGZhbGwgYmFjayB0byBwcl9p
+bmZvLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNv
+bT4NCj4gPiAtLS0NCj4gPiB2MjogZW5oYW5jZSBhZGFwdGVyLT5kZXYgbnVsbCBjYXNlLihCcmFp
+bikNCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21h
+aW4uYyB8IDE3ICsrKysrKysrKysrKy0tLS0tDQo+ID4gZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
+dmVsbC9td2lmaWV4L21haW4uaCB8ICAyICsrDQo+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTQgaW5z
+ZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gYi9kcml2ZXJzL25ldC93
+aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gaW5kZXggOThmZDQ5MS4uZjNlNzcy
+ZiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgv
+bWFpbi5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21h
+aW4uYw0KPiA+IEBAIC0xNzQ5LDE4ICsxNzQ5LDI1IEBAIHZvaWQgX213aWZpZXhfZGJnKGNvbnN0
+IHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXINCj4gPiAqYWRhcHRlciwgaW50IG1hc2ssICB7DQo+
+ID4gICAgICAgICBzdHJ1Y3QgdmFfZm9ybWF0IHZhZjsNCj4gPiAgICAgICAgIHZhX2xpc3QgYXJn
+czsNCj4gPiArICAgICAgIGNoYXIgbXNnW01XSUZJRVhfTE9HX0xFTl07DQo+ID4NCj4gPiAtICAg
+ICAgIGlmICghYWRhcHRlci0+ZGV2IHx8ICEoYWRhcHRlci0+ZGVidWdfbWFzayAmIG1hc2spKQ0K
+PiA+ICsgICAgICAgaWYgKCEoYWRhcHRlci0+ZGVidWdfbWFzayAmIG1hc2spKQ0KPiA+ICAgICAg
+ICAgICAgICAgICByZXR1cm47DQo+ID4NCj4gPiAgICAgICAgIHZhX3N0YXJ0KGFyZ3MsIGZtdCk7
+DQo+ID4NCj4gPiAtICAgICAgIHZhZi5mbXQgPSBmbXQ7DQo+ID4gLSAgICAgICB2YWYudmEgPSAm
+YXJnczsNCj4gPiAtDQo+ID4gLSAgICAgICBkZXZfaW5mbyhhZGFwdGVyLT5kZXYsICIlcFYiLCAm
+dmFmKTsNCj4gPiArICAgICAgIGlmICghYWRhcHRlci0+ZGV2KSB7DQo+ID4gKyAgICAgICAgICAg
+ICAgIHZzbnByaW50Zihtc2csIE1XSUZJRVhfTE9HX0xFTiwgZm10LCBhcmdzKTsNCj4gPiArICAg
+ICAgIH0gZWxzZSB7DQo+ID4gKyAgICAgICAgICAgICAgIHZhZi5mbXQgPSBmbXQ7DQo+ID4gKyAg
+ICAgICAgICAgICAgIHZhZi52YSA9ICZhcmdzOw0KPiA+ICsgICAgICAgICAgICAgICBkZXZfaW5m
+byhhZGFwdGVyLT5kZXYsICIlcFYiLCAmdmFmKTsNCj4gPiArICAgICAgIH0NCj4gPg0KPiA+ICAg
+ICAgICAgdmFfZW5kKGFyZ3MpOw0KPiA+ICsNCj4gPiArICAgICAgIGlmICghYWRhcHRlci0+ZGV2
+KQ0KPiA+ICsgICAgICAgICAgICAgICBwcl9pbmZvKCIlcyIsIG1zZyk7DQo+IA0KPiBXaHkgbm90
+Og0KPiANCj4gdmFmLmZtdCA9IGZtdDsNCj4gdmFmLnZhID0gJmFyZ3M7DQo+IA0KPiBpZiAoYWRh
+cHRlci0+ZGV2KQ0KPiAgICAgICAgIGRldl9pbmZvKGFkYXB0ZXItPmRldiwgIiVwViIsICZ2YWYp
+OyBlbHNlDQo+ICAgICAgICAgcHJfaW5mbygibXdpZmlleDogJXBWIiwgJnZhZik7DQo+IA0KDQpT
+aW1wbGUgY2hhbmdlIGhlcmUgbG9va3MgYmV0dGVyLCBoYXZlIGFwcGxpZWQgaW4gdjMuDQoNCj4g
+dmFfZW5kKGFyZ3MpOw0KPiANCj4gQWxzbywgaW5zdGVhZCBvZiBzdGF0aWMgIm13aWZpZXgiIHBy
+ZWZpeCBtYXliZSBtYWtlIHN1cmUgeW91IGhhdmUNCj4gcHJfZm10KCkgc2V0IHByb3Blcmx5IChJ
+IGFtIG5vdCBzdXJlIGlmIGl0IGlzIHNldCBvciBub3QpLg0KPiANCg0KWWVzLCB3ZSBoYXZlIHRo
+ZSBiZWxvdyBkZWZpbmU6DQojZGVmaW5lIHByX2ZtdChmbXQpIEtCVUlMRF9NT0ROQU1FICI6ICIg
+Zm10DQoNClRoYW5rcw0KU2ltb24NCg0KPiBUaGFua3MuDQo+IA0KPiAtLQ0KPiBEbWl0cnkNCg==
