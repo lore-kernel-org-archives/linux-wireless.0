@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33053 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753727AbdDSDeu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 23:34:50 -0400
-Date: Wed, 19 Apr 2017 13:34:46 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: ks7010 endianness question
-Message-ID: <20170419033446.GA17058@eros> (sfid-20170419_053455_188599_BEC87AA1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:35448 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751968AbdDJKPo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 06:15:44 -0400
+Message-ID: <1491819340.2455.7.camel@sipsolutions.net> (sfid-20170410_121603_461958_F6AE20A1)
+Subject: Re: [PATCH v2 1/5] netlink: extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us
+Date: Mon, 10 Apr 2017 12:15:40 +0200
+In-Reply-To: <20170408183444.2796-2-johannes@sipsolutions.net> (sfid-20170408_203507_265684_7230C4D6)
+References: <20170408183444.2796-1-johannes@sipsolutions.net>
+         <20170408183444.2796-2-johannes@sipsolutions.net>
+         (sfid-20170408_203507_265684_7230C4D6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wolfram,
 
-May I please ask you with an ks7010 driver endianness question?
+> @@ -2300,14 +2332,35 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
+        rep = __nlmsg_put(skb, NETLINK_CB(in_skb).portid, nlh->nlmsg_seq,
+>  			  NLMSG_ERROR, payload, 0);
+>  	errmsg = nlmsg_data(rep);
+>  	errmsg->error = err;
 
-Comments on the hostif_hdr data structure (ks_hostif.h) state that the
-target uses little endian byte order.
+This is still wrong - now the message length is too short.
 
-/*
- * HOST-MAC I/F data structure
- * Byte alignmet Little Endian
- */
+At the very least,
 
-struct hostif_hdr {
-	u16 size;
-	u16 event;
-} __packed;
+> -	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh-
+> >nlmsg_len : sizeof(*nlh));
+> +	memcpy(&errmsg->msg, nlh,
+> +	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
+> +						 : sizeof(*nlh));
+> +
+> +	if (err && nlk->flags & NETLINK_F_EXT_ACK && extack) {
+> +		if (extack->_msg)
+> +			WARN_ON(nla_put_string(skb,
+> NLMSGERR_ATTR_MSG,
+> +					       extack->_msg));
+> +		if (extack->bad_attr &&
+> +		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data
+> ||
+> +			     (u8 *)extack->bad_attr >= in_skb->data
+> +
+> +						       in_skb->len))
+> +			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
+> +					    (u8 *)extack->bad_attr -
+> +					    in_skb->data));
+> +		if (extack->missing_attr)
+> +			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
+> +					    extack->missing_attr));
+> +	}
 
-On the rx data path this header is unpacked using get_WORD()
+I need to add
+ rep->nlmsg_len = skb->len;
 
-void hostif_receive(struct ks_wlan_private *priv, unsigned char *p,
-		    unsigned int size)
-{
-	DPRINTK(4, "\n");
+>  	netlink_unicast(in_skb->sk, skb, NETLINK_CB(in_skb).portid,
+> MSG_DONTWAIT);
 
-	devio_rec_ind(priv, p, size);
+Here, but at that point I think it makes sense to rewrite this nlmsg
+put stuff here as well.
 
-	priv->rxp = p;
-	priv->rx_size = size;
-
-	if (get_WORD(priv) == priv->rx_size) {	/* length check !! */
-		hostif_event_check(priv);	/* event check */
-	}
-}
-
-get_WORD() inverts the byte order
-
-static inline u16 get_WORD(struct ks_wlan_private *priv)
-{
-	u16 data;
-
-	data = (get_BYTE(priv) & 0xff);
-	data |= ((get_BYTE(priv) << 8) & 0xff00);
-	return data;
-}
-
-Am I missing something? It seems that this code will only work if the
-host and the target have differing endianness. It seems unlikely that
-the driver was tested solely on a big-endian machine, is the comment
-wrong - is the target actually big-endian?
-
-Off topic, I watched your 2014 Fosdem talk on adding device support to
-the kernel without adding code. It was very educational.
-
-thanks for your time,
-Tobin.
+johannes
