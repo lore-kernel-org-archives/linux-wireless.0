@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:32870 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754029AbdDKINt (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36537 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752805AbdDJQXP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 04:13:49 -0400
-Received: by mail-wr0-f196.google.com with SMTP id l28so7227821wre.0
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2017 01:13:49 -0700 (PDT)
-Date: Tue, 11 Apr 2017 10:13:46 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>
-Subject: Re: [PATCH net-next v4 1/5] netlink: extended ACK reporting
-Message-ID: <20170411081346.GD1976@nanopsycho> (sfid-20170411_101509_368218_37CB131D)
-References: <20170411065700.2623-1-johannes@sipsolutions.net>
- <20170411065700.2623-2-johannes@sipsolutions.net>
- <20170411071900.GC1976@nanopsycho>
- <1491895758.31620.4.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491895758.31620.4.camel@sipsolutions.net>
+        Mon, 10 Apr 2017 12:23:15 -0400
+Received: by mail-oi0-f66.google.com with SMTP id b187so23324623oif.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:15 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 00/14] rtlwifi: btcoex: Fixes for rtl8821ae 1ant code
+Date: Mon, 10 Apr 2017 11:22:56 -0500
+Message-Id: <20170410162310.7515-1-Larry.Finger@lwfinger.net> (sfid-20170410_182324_217917_96B805DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tue, Apr 11, 2017 at 09:29:18AM CEST, johannes@sipsolutions.net wrote:
->On Tue, 2017-04-11 at 09:19 +0200, Jiri Pirko wrote:
->> 
->> > +	NUM_NLMSGERR_ATTRS,
->> 
->> According to the rest of the uapi, this should be rather named:
->> 	__NLMSGERR_ATTR_MAX
->
->nl80211 uses NUM_ so I guess that's a matter of convention, but I can
->change that I guess.
+These patches update the BT coexistence routines for the RTL8821AE 1ant
+routines.
 
-Please do.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
 
->
->> > 		if (err || (nlh->nlmsg_flags & NLM_F_ACK))
->> > -			netlink_ack(skb, nlh, err);
->> > +			netlink_ack(skb, nlh, err, NULL);
->> 
->> Wouldn't it make sense to leave netlink_ack as is and add
->> netlink_ack_ext for those who need to pass non-null?
->
->I thought about it, but didn't really see much point. The churn isn't
->super big (a dozen callers or so), and I thought it makes sense to
->point out to the users that there's something here.
+Yan-Hsuan Chuang (14):
+  rtlwifi: btcoex: 21a 1ant: fw settings for softap mode
+  rtlwifi: btcoex: 21a 1ant: add function to check wifi status
+  rtlwifi: btcoex: 21a 1ant: coex table setting for new fw
+  rtlwifi: btcoex: 21a 1ant: mask profile bit for connect-ilde
+  rtlwifi: btcoex: 21a 1ant: remove setting for 2 antennas
+  rtlwifi: btcoex: 21a 1ant: set antenna control path for PTA
+  rtlwifi: btcoex: 21a 1ant: add multi port action for miracast and P2P
+  rtlwifi: btcoex: 21a 1ant: action when associating/authenticating
+  rtlwifi: btcoex: 21a 1ant: If wifi only, do not initiate coex
+    mechanism
+  rtlwifi: btcoex: 21a 1ant: move bt_disabled to global struct
+  rtlwifi: btcoex: 21a 1ant: consider more cases when bt inquiry
+  rtlwifi: btcoex: 21a 1ant: monitor bt profiling when scan
+  rtlwifi: btcoex: 21a 1ant: do not switch antenna when wifi is under 5G
+    channel
+  rtlwifi: btcoex: 21a 1ant: avoid LPS/IPS mismatch for pnp notify
 
-Makes sense.
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 408 ++++++++++++++++++---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +
+ 2 files changed, 351 insertions(+), 59 deletions(-)
+
+-- 
+2.12.0
