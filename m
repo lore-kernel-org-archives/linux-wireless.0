@@ -1,144 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58660 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756384AbdDGJXa (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35262 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753101AbdDJQXV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 05:23:30 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 09/10] brcmfmac: add mutex to protect pno requests
-Date: Fri,  7 Apr 2017 10:23:09 +0100
-Message-Id: <1491556990-25143-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112348_309095_FB371601)
-In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 10 Apr 2017 12:23:21 -0400
+Received: by mail-oi0-f66.google.com with SMTP id g204so13131562oib.2
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:20 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 06/14] rtlwifi: btcoex: 21a 1ant: set antenna control path for PTA
+Date: Mon, 10 Apr 2017 11:23:02 -0500
+Message-Id: <20170410162310.7515-7-Larry.Finger@lwfinger.net> (sfid-20170410_182325_863330_5708C09A)
+In-Reply-To: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
+References: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The request references kept in pno are accessed in user-space context
-and in firmware event handler context. As such we need to protect it
-with a lock. As both context allow sleep a mutex seems appropriate.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Set antenna control path if PTA is in control of the packet path of wifi
+and bt. If wifi is turned off, tell the PTA about it.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index aa323534..4c17a1c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -43,6 +43,7 @@
- struct brcmf_pno_info {
- 	int n_reqs;
- 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
-+	struct mutex req_lock;
- };
- 
- #define ifp_to_pno(_ifp)	(_ifp)->drvr->config->pno
-@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
- 		return -ENOSPC;
- 	}
- 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
-+	mutex_lock(&pi->req_lock);
- 	pi->reqs[pi->n_reqs++] = req;
-+	mutex_unlock(&pi->req_lock);
- 	return 0;
- }
- 
- static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- {
--	int i;
-+	int i, err = 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index b84c1a5be40a..5b374c7728ba 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -1011,11 +1011,18 @@ static void btc8821a1ant_set_ant_path(struct btc_coexist *btcoexist,
+ 		u4_tmp &= ~BIT23;
+ 		u4_tmp &= ~BIT24;
+ 		btcoexist->btc_write_4byte(btcoexist, 0x4c, u4_tmp);
 +
-+	mutex_lock(&pi->req_lock);
- 
- 	/* find request */
- 	for (i = 0; i < pi->n_reqs; i++) {
-@@ -71,7 +76,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 	/* request not found */
- 	if (WARN_ON(i == pi->n_reqs)) {
- 		brcmf_err("reqid not found\n");
--		return -ENOENT;
-+		err = -ENOENT;
-+		goto done;
++		/* 0x765 = 0x18 */
++		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x3);
++	} else {
++		/* 0x765 = 0x0 */
++		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x0);
  	}
  
- 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
-@@ -79,14 +85,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 
- 	/* if last we are done */
- 	if (!pi->n_reqs || i == pi->n_reqs)
--		return 0;
-+		goto done;
- 
- 	/* fill the gap with remaining requests */
- 	while (i <= pi->n_reqs - 1) {
- 		pi->reqs[i] = pi->reqs[i + 1];
- 		i++;
- 	}
--	return 0;
-+
-+done:
-+	mutex_unlock(&pi->req_lock);
-+	return err;
- }
- 
- static int brcmf_pno_channel_config(struct brcmf_if *ifp,
-@@ -494,6 +503,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
- 		return -ENOMEM;
- 
- 	cfg->pno = pi;
-+	mutex_init(&pi->req_lock);
- 	return 0;
- }
- 
-@@ -506,6 +516,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
- 	cfg->pno = NULL;
- 
- 	WARN_ON(pi->n_reqs);
-+	mutex_destroy(&pi->req_lock);
- 	kfree(pi);
- }
- 
-@@ -521,11 +532,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
- 
- u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
- {
--	/* bucket appears to be gone */
--	if (bucket >= pi->n_reqs)
--		return 0;
-+	u64 reqid = 0;
-+
-+	mutex_lock(&pi->req_lock);
-+
-+	if (bucket < pi->n_reqs)
-+		reqid = pi->reqs[bucket]->reqid;
- 
--	return pi->reqs[bucket]->reqid;
-+	mutex_unlock(&pi->req_lock);
-+	return reqid;
- }
- 
- u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
-@@ -536,6 +551,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 	u32 bucket_map = 0;
- 	int i, j;
- 
-+	mutex_lock(&pi->req_lock);
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		req = pi->reqs[i];
- 
-@@ -550,5 +566,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 			}
- 		}
- 	}
-+	mutex_unlock(&pi->req_lock);
- 	return bucket_map;
- }
+ 	/* ext switch setting */
+ 	switch (ant_pos_type) {
+ 	case BTC_ANT_PATH_WIFI:
++		btcoexist->btc_write_1byte(btcoexist, 0xcb4, 0x77);
+ 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
+ 			btcoexist->btc_write_1byte_bitmask(btcoexist, 0xcb7,
+ 							   0x30, 0x1);
+@@ -1024,6 +1031,7 @@ static void btc8821a1ant_set_ant_path(struct btc_coexist *btcoexist,
+ 							   0x30, 0x2);
+ 		break;
+ 	case BTC_ANT_PATH_BT:
++		btcoexist->btc_write_1byte(btcoexist, 0xcb4, 0x77);
+ 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
+ 			btcoexist->btc_write_1byte_bitmask(btcoexist, 0xcb7,
+ 							   0x30, 0x2);
+@@ -1033,6 +1041,7 @@ static void btc8821a1ant_set_ant_path(struct btc_coexist *btcoexist,
+ 		break;
+ 	default:
+ 	case BTC_ANT_PATH_PTA:
++		btcoexist->btc_write_1byte(btcoexist, 0xcb4, 0x66);
+ 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
+ 			btcoexist->btc_write_1byte_bitmask(btcoexist, 0xcb7,
+ 							   0x30, 0x1);
 -- 
-1.9.1
+2.12.0
