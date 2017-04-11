@@ -1,76 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36001 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756597AbdDPTEk (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50748 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751797AbdDKMk3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 15:04:40 -0400
-Received: by mail-oi0-f65.google.com with SMTP id b187so24721318oif.3
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 12:04:39 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 06/10] rtlwifi: btcoex: 21a 2ant: run mechanism if status changes or auto adjust is set
-Date: Sun, 16 Apr 2017 14:04:24 -0500
-Message-Id: <20170416190428.23857-7-Larry.Finger@lwfinger.net> (sfid-20170416_210448_867385_F446C3A5)
-In-Reply-To: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
-References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
+        Tue, 11 Apr 2017 08:40:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:39 +0300
+Message-Id: <20170411123742.12214-23-luca@coelho.fi> (sfid-20170411_145544_286370_1DC7FD11)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 22/25] iwlwifi: pcie: introduce split point to a000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-The driver will periodically ask the coex, and the coex only runs the
-mechanism when the status was changed or the auto adjust is set.
+a000 devices are going to have a lot of flows simplified
+and changed: init flow, RX, TX, and more.
+This, combined with the fact that code is already very
+complicated due to backward compatibility - introduce
+a split that will enable to introduce simplified version
+of functions.
+Shared ops are moved to a macro, while functions that will
+be updated in the next patches are defined twice for now.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c  | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c   |  3 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 85 +++++++++++++++++--------
+ 3 files changed, 62 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index ca7649dca352..56972d36fe84 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3485,14 +3485,14 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 	if (btc8821a2ant_is_common_action(btcoexist)) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Action 2-Ant common\n");
--		coex_dm->reset_tdma_adjust = true;
-+		coex_dm->auto_tdma_adjust = true;
- 	} else {
- 		if (coex_dm->cur_algorithm != coex_dm->pre_algorithm) {
- 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 				 "[BTCoex], pre_algorithm = %d, cur_algorithm = %d\n",
- 				    coex_dm->pre_algorithm,
- 				    coex_dm->cur_algorithm);
--			coex_dm->reset_tdma_adjust = true;
-+			coex_dm->auto_tdma_adjust = false;
- 		}
- 		switch (coex_dm->cur_algorithm) {
- 		case BT_8821A_2ANT_COEX_ALGO_SCO:
-@@ -4200,7 +4200,14 @@ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
- 			 "[BTCoex], ****************************************************************\n");
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index 20739e92aef6..df4e8714d627 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -121,7 +121,8 @@ static const struct iwl_ht_params iwl_a000_ht_params = {
+ 	.vht_mu_mimo_supported = true,					\
+ 	.mac_addr_from_csr = true,					\
+ 	.use_tfh = true,						\
+-	.rf_id = true
++	.rf_id = true,							\
++	.gen2 = true
  
-+#ifdef BT_AUTO_REPORT_ONLY_8821A_2ANT
- 	btc8821a2ant_query_bt_info(btcoexist);
-+#else
- 	btc8821a2ant_monitor_bt_ctr(btcoexist);
- 	btc8821a2ant_monitor_wifi_ctr(btcoexist);
-+
-+	if (btc8821a2ant_is_wifi_status_changed(btcoexist) ||
-+	    coex_dm->auto_tdma_adjust)
-+		btc8821a2ant_run_coexist_mechanism(btcoexist);
-+#endif
+ const struct iwl_cfg iwla000_2ac_cfg_hr = {
+ 		.name = "Intel(R) Dual Band Wireless AC a000",
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 852963487bd9..717e089ff036 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -323,6 +323,7 @@ struct iwl_pwr_tx_backoff {
+  * @vht_mu_mimo_supported: VHT MU-MIMO support
+  * @rf_id: need to read rf_id to determine the firmware image
+  * @integrated: discrete or integrated
++ * @gen2: a000 and on transport operation
+  *
+  * We enable the driver to be backward compatible wrt. hardware features.
+  * API differences in uCode shouldn't be handled here but through TLVs
+@@ -368,7 +369,8 @@ struct iwl_cfg {
+ 	    vht_mu_mimo_supported:1,
+ 	    rf_id:1,
+ 	    integrated:1,
+-	    use_tfh:1;
++	    use_tfh:1,
++	    gen2:1;
+ 	u8 valid_tx_ant;
+ 	u8 valid_rx_ant;
+ 	u8 non_shared_ant;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index b362779b66f4..16c8b37bf6d7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2887,20 +2887,64 @@ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
  }
+ #endif /* CONFIG_PM_SLEEP */
+ 
++#define IWL_TRANS_COMMON_OPS						\
++	.op_mode_leave = iwl_trans_pcie_op_mode_leave,			\
++	.write8 = iwl_trans_pcie_write8,				\
++	.write32 = iwl_trans_pcie_write32,				\
++	.read32 = iwl_trans_pcie_read32,				\
++	.read_prph = iwl_trans_pcie_read_prph,				\
++	.write_prph = iwl_trans_pcie_write_prph,			\
++	.read_mem = iwl_trans_pcie_read_mem,				\
++	.write_mem = iwl_trans_pcie_write_mem,				\
++	.configure = iwl_trans_pcie_configure,				\
++	.set_pmi = iwl_trans_pcie_set_pmi,				\
++	.grab_nic_access = iwl_trans_pcie_grab_nic_access,		\
++	.release_nic_access = iwl_trans_pcie_release_nic_access,	\
++	.set_bits_mask = iwl_trans_pcie_set_bits_mask,			\
++	.ref = iwl_trans_pcie_ref,					\
++	.unref = iwl_trans_pcie_unref,					\
++	.dump_data = iwl_trans_pcie_dump_data,				\
++	.wait_tx_queue_empty = iwl_trans_pcie_wait_txq_empty,		\
++	.d3_suspend = iwl_trans_pcie_d3_suspend,			\
++	.d3_resume = iwl_trans_pcie_d3_resume
++
++#ifdef CONFIG_PM_SLEEP
++#define IWL_TRANS_PM_OPS						\
++	.suspend = iwl_trans_pcie_suspend,				\
++	.resume = iwl_trans_pcie_resume,
++#else
++#define IWL_TRANS_PM_OPS
++#endif /* CONFIG_PM_SLEEP */
++
+ static const struct iwl_trans_ops trans_ops_pcie = {
++	IWL_TRANS_COMMON_OPS,
++	IWL_TRANS_PM_OPS
+ 	.start_hw = iwl_trans_pcie_start_hw,
+-	.op_mode_leave = iwl_trans_pcie_op_mode_leave,
+ 	.fw_alive = iwl_trans_pcie_fw_alive,
+ 	.start_fw = iwl_trans_pcie_start_fw,
+ 	.stop_device = iwl_trans_pcie_stop_device,
+ 
+-	.d3_suspend = iwl_trans_pcie_d3_suspend,
+-	.d3_resume = iwl_trans_pcie_d3_resume,
++	.send_cmd = iwl_trans_pcie_send_hcmd,
++
++	.tx = iwl_trans_pcie_tx,
++	.reclaim = iwl_trans_pcie_reclaim,
+ 
+-#ifdef CONFIG_PM_SLEEP
+-	.suspend = iwl_trans_pcie_suspend,
+-	.resume = iwl_trans_pcie_resume,
+-#endif /* CONFIG_PM_SLEEP */
++	.txq_disable = iwl_trans_pcie_txq_disable,
++	.txq_enable = iwl_trans_pcie_txq_enable,
++
++	.txq_set_shared_mode = iwl_trans_pcie_txq_set_shared_mode,
++
++	.freeze_txq_timer = iwl_trans_pcie_freeze_txq_timer,
++	.block_txq_ptrs = iwl_trans_pcie_block_txq_ptrs,
++};
++
++static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
++	IWL_TRANS_COMMON_OPS,
++	IWL_TRANS_PM_OPS
++	.start_hw = iwl_trans_pcie_start_hw,
++	.fw_alive = iwl_trans_pcie_fw_alive,
++	.start_fw = iwl_trans_pcie_start_fw,
++	.stop_device = iwl_trans_pcie_stop_device,
+ 
+ 	.send_cmd = iwl_trans_pcie_send_hcmd,
+ 
+@@ -2912,27 +2956,8 @@ static const struct iwl_trans_ops trans_ops_pcie = {
+ 
+ 	.txq_set_shared_mode = iwl_trans_pcie_txq_set_shared_mode,
+ 
+-	.wait_tx_queue_empty = iwl_trans_pcie_wait_txq_empty,
+ 	.freeze_txq_timer = iwl_trans_pcie_freeze_txq_timer,
+ 	.block_txq_ptrs = iwl_trans_pcie_block_txq_ptrs,
+-
+-	.write8 = iwl_trans_pcie_write8,
+-	.write32 = iwl_trans_pcie_write32,
+-	.read32 = iwl_trans_pcie_read32,
+-	.read_prph = iwl_trans_pcie_read_prph,
+-	.write_prph = iwl_trans_pcie_write_prph,
+-	.read_mem = iwl_trans_pcie_read_mem,
+-	.write_mem = iwl_trans_pcie_write_mem,
+-	.configure = iwl_trans_pcie_configure,
+-	.set_pmi = iwl_trans_pcie_set_pmi,
+-	.grab_nic_access = iwl_trans_pcie_grab_nic_access,
+-	.release_nic_access = iwl_trans_pcie_release_nic_access,
+-	.set_bits_mask = iwl_trans_pcie_set_bits_mask,
+-
+-	.ref = iwl_trans_pcie_ref,
+-	.unref = iwl_trans_pcie_unref,
+-
+-	.dump_data = iwl_trans_pcie_dump_data,
+ };
+ 
+ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+@@ -2947,8 +2972,12 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+-	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
+-				&pdev->dev, cfg, &trans_ops_pcie);
++	if (cfg->gen2)
++		trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
++					&pdev->dev, cfg, &trans_ops_pcie_gen2);
++	else
++		trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
++					&pdev->dev, cfg, &trans_ops_pcie);
+ 	if (!trans)
+ 		return ERR_PTR(-ENOMEM);
+ 
 -- 
-2.12.0
+2.11.0
