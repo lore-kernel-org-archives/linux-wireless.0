@@ -1,134 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34076 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752766AbdDCSl6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30152 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752770AbdDKKOM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 14:41:58 -0400
-Received: by mail-oi0-f66.google.com with SMTP id s11so4976520oie.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:41:58 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 08/12] rtlwifi: btcoex: 23b 2ant: coex table fine tune
-Date: Mon,  3 Apr 2017 13:41:38 -0500
-Message-Id: <20170403184147.18409-8-Larry.Finger@lwfinger.net> (sfid-20170403_204240_015133_3414BABB)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+        Tue, 11 Apr 2017 06:14:12 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+        <tamizhchelvam@codeaurora.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHv4 2/2] mac80211: Add support to enable or disable btcoex and set btcoex priority value
+Date: Tue, 11 Apr 2017 15:45:30 +0530
+Message-ID: <1491905730-16392-3-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170411_121448_780874_FCBF8571)
+In-Reply-To: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
+References: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-set coex table fine tune, for register settings
+This patch introduces a new driver call back drv_set_btcoex.
+This API will pass user space value to driver to
+enable or disabe btcoex and set or modify the btcoex priority value.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
-v2 - No changes.
-v3 - No changes.
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 52 +++++++++++++---------
- 1 file changed, 32 insertions(+), 20 deletions(-)
+ include/net/mac80211.h    |    5 +++++
+ net/mac80211/cfg.c        |    9 +++++++++
+ net/mac80211/driver-ops.h |   15 +++++++++++++++
+ net/mac80211/trace.h      |   20 ++++++++++++++++++++
+ 4 files changed, 49 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 57eed18e19c8..4139ddf6022b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -915,55 +915,67 @@ static void btc8723b2ant_coex_table_with_type(struct btc_coexist *btcoexist,
- 	switch (type) {
- 	case 0:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55555555,
--					0x55555555, 0xffff, 0x3);
-+					0x55555555, 0xffffff, 0x3);
- 		break;
- 	case 1:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55555555,
--					0x5afa5afa, 0xffff, 0x3);
-+					0x5afa5afa, 0xffffff, 0x3);
- 		break;
- 	case 2:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
--					0x5a5a5a5a, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5ada5ada,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 3:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0xaaaaaaaa,
--					0xaaaaaaaa, 0xffff, 0x3);
-+					0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
- 	case 4:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0xffffffff,
--					0xffffffff, 0xffff, 0x3);
-+					0xffffffff, 0xffffff, 0x3);
- 		break;
- 	case 5:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
--					0x5fff5fff, 0xffff, 0x3);
-+					0x5fff5fff, 0xffffff, 0x3);
- 		break;
- 	case 6:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5a5a5a5a, 0xffff, 0x3);
-+					0x5a5a5a5a, 0xffffff, 0x3);
- 		break;
- 	case 7:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5afa5afa, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 8:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5aea5aea,
--					0x5aea5aea, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 9:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5aea5aea, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 10:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5aff5aff, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 11:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5a5f5a5f, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 12:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5f5f5f5f, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 13:
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					0xaaaaaaaa, 0xffffff, 0x3);
-+		break;
-+	case 14:
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 15:
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
- 	default:
- 		break;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b1ac872..865eb7f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3453,6 +3453,9 @@ enum ieee80211_reconfig_type {
+  * @del_nan_func: Remove a NAN function. The driver must call
+  *	ieee80211_nan_func_terminated() with
+  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
++ * @set_btcoex: Called when BTCOEX is enabled/disabled, use
++ *     this callback to enable or disable btcoex and use this callback to
++ *     set btcoex_priority. BTCOEX should be enabled to set this priority.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3734,6 +3737,8 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled,
++			  u32 btcoex_priority);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8bc3d366..512e5f7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3617,6 +3617,14 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled,
++				u32 btcoex_priority)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_btcoex(local, enabled, btcoex_priority);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3709,4 +3717,5 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	.add_nan_func = ieee80211_add_nan_func,
+ 	.del_nan_func = ieee80211_del_nan_func,
+ 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
++	.set_btcoex = ieee80211_set_btcoex,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 09f77e4..c420da5 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1248,4 +1248,19 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int drv_set_btcoex(struct ieee80211_local *local,
++				 bool enabled, u32 btcoex_priority)
++{
++	int ret = -EOPNOTSUPP;
++
++	trace_drv_set_btcoex(local, enabled, btcoex_priority);
++	if (local->ops->set_btcoex)
++		ret = local->ops->set_btcoex(&local->hw, enabled,
++					     btcoex_priority);
++
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0d645bc..3a4621e 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -742,6 +742,26 @@
+ 	TP_ARGS(local, value)
+ );
+ 
++TRACE_EVENT(drv_set_btcoex,
++	TP_PROTO(struct ieee80211_local *local, bool enabled,
++		 u32 btcoex_priority),
++	TP_ARGS(local, enabled, btcoex_priority),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(bool, enabled)
++		__field(u32, btcoex_priority)
++	),
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->enabled = enabled;
++		__entry->btcoex_priority = btcoex_priority;
++	),
++	TP_printk(
++		LOCAL_PR_FMT " enabled:%d btcoex_priority :%u",
++		LOCAL_PR_ARG, __entry->enabled, __entry->btcoex_priority
++	)
++);
++
+ TRACE_EVENT(drv_set_coverage_class,
+ 	TP_PROTO(struct ieee80211_local *local, s16 value),
+ 
 -- 
-2.12.0
+1.7.9.5
