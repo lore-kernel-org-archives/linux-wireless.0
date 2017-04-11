@@ -1,49 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40370 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752288AbdDHUPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 16:15:16 -0400
-Message-ID: <1491682511.2379.2.camel@sipsolutions.net> (sfid-20170408_221554_377712_DEC566AE)
-Subject: Re: [PATCH 4/5] netlink: pass extended ACK struct to parsing
- functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Ahern <dsa@cumulusnetworks.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
-Date: Sat, 08 Apr 2017 22:15:11 +0200
-In-Reply-To: <3077bf17-553d-f9e3-8873-c59fbb26e2aa@cumulusnetworks.com> (sfid-20170408_205014_016171_8149213D)
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
-         <20170408174900.12820-5-johannes@sipsolutions.net>
-         <3077bf17-553d-f9e3-8873-c59fbb26e2aa@cumulusnetworks.com>
-         (sfid-20170408_205014_016171_8149213D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:50692 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751876AbdDKMji (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 08:39:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:32 +0300
+Message-Id: <20170411123742.12214-16-luca@coelho.fi> (sfid-20170411_144108_960420_C2BCB4FF)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 15/25] iwlwifi: mvm: don't assume static queue numbers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-04-08 at 14:50 -0400, David Ahern wrote:
-> On 4/8/17 1:48 PM, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Pass the new extended ACK reporting struct to all of the
-> > generic netlink parsing functions. For now, pass NULL in
-> > almost all callers (except for some in the core.)
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> fails to compile as well:
-> 
-> In file included from /home/dsa/kernel-
-> 4.git/net/sched/cls_rsvp.c:27:0:
-> /home/dsa/kernel-4.git/net/sched/cls_rsvp.h: In function
-> ‘rsvp_change’:
-> /home/dsa/kernel-4.git/net/sched/cls_rsvp.h:487:8: error: too few
-> arguments to function ‘nla_parse_nested’
->   err = nla_parse_nested(tb, TCA_RSVP_MAX, opt, rsvp_policy);
->         ^
+From: Sara Sharon <sara.sharon@intel.com>
 
-Yeah, spatch misses header files without special command-line arguments
-... this should be fixed in v2, the kbuild bot also noticed it.
+In a000 devices FW will assign the queue number. Prepare for
+that by getting rid of static defines and store them in variables.
+Enlarge to u16 since we may have up to 512 queues.
 
-johannes
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  5 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 22 ++++++++--------------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c  |  8 ++++----
+ 4 files changed, 18 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 70b994638273..b58ac2aa9999 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -976,7 +976,10 @@ struct iwl_mvm {
+ #endif
+ 
+ 	/* Tx queues */
+-	u8 aux_queue;
++	u16 aux_queue;
++	u16 probe_queue;
++	u16 p2p_dev_queue;
++
+ 	u8 first_agg_queue;
+ 	u8 last_agg_queue;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index f4f957fe71d7..600af8a31200 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -603,6 +603,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		}
+ 	} else {
+ 		mvm->aux_queue = IWL_MVM_DQA_AUX_QUEUE;
++		mvm->probe_queue = IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++		mvm->p2p_dev_queue = IWL_MVM_DQA_P2P_DEVICE_QUEUE;
+ 		mvm->first_agg_queue = IWL_MVM_DQA_MIN_DATA_QUEUE;
+ 		mvm->last_agg_queue = IWL_MVM_DQA_MAX_DATA_QUEUE;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 26155e2efa84..2d68cee41306 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1806,9 +1806,9 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		int queue;
+ 
+ 		if (vif->type == NL80211_IFTYPE_AP)
+-			queue = IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++			queue = mvm->probe_queue;
+ 		else if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+-			queue = IWL_MVM_DQA_P2P_DEVICE_QUEUE;
++			queue = mvm->p2p_dev_queue;
+ 		else if (WARN(1, "Missing required TXQ for adding bcast STA\n"))
+ 			return -EINVAL;
+ 
+@@ -1836,24 +1836,18 @@ static void iwl_mvm_free_bcast_sta_queues(struct iwl_mvm *mvm,
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-	if (mvmvif->bcast_sta.tfd_queue_msk &
+-	    BIT(IWL_MVM_DQA_AP_PROBE_RESP_QUEUE)) {
+-		iwl_mvm_disable_txq(mvm,
+-				    IWL_MVM_DQA_AP_PROBE_RESP_QUEUE,
++	if (mvmvif->bcast_sta.tfd_queue_msk & BIT(mvm->probe_queue)) {
++		iwl_mvm_disable_txq(mvm, mvm->probe_queue,
+ 				    vif->hw_queue[0], IWL_MAX_TID_COUNT,
+ 				    0);
+-		mvmvif->bcast_sta.tfd_queue_msk &=
+-			~BIT(IWL_MVM_DQA_AP_PROBE_RESP_QUEUE);
++		mvmvif->bcast_sta.tfd_queue_msk &= ~BIT(mvm->probe_queue);
+ 	}
+ 
+-	if (mvmvif->bcast_sta.tfd_queue_msk &
+-	    BIT(IWL_MVM_DQA_P2P_DEVICE_QUEUE)) {
+-		iwl_mvm_disable_txq(mvm,
+-				    IWL_MVM_DQA_P2P_DEVICE_QUEUE,
++	if (mvmvif->bcast_sta.tfd_queue_msk & BIT(mvm->p2p_dev_queue)) {
++		iwl_mvm_disable_txq(mvm, mvm->p2p_dev_queue,
+ 				    vif->hw_queue[0], IWL_MAX_TID_COUNT,
+ 				    0);
+-		mvmvif->bcast_sta.tfd_queue_msk &=
+-			~BIT(IWL_MVM_DQA_P2P_DEVICE_QUEUE);
++		mvmvif->bcast_sta.tfd_queue_msk &= ~BIT(mvm->p2p_dev_queue);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 3f37075f4cde..568b0793e84e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -513,20 +513,20 @@ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
+ 		 */
+ 		if (ieee80211_is_probe_resp(fc) || ieee80211_is_auth(fc) ||
+ 		    ieee80211_is_deauth(fc))
+-			return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++			return mvm->probe_queue;
+ 		if (info->hw_queue == info->control.vif->cab_queue)
+ 			return info->hw_queue;
+ 
+ 		WARN_ONCE(1, "fc=0x%02x", le16_to_cpu(fc));
+-		return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++		return mvm->probe_queue;
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		if (ieee80211_is_mgmt(fc))
+-			return IWL_MVM_DQA_P2P_DEVICE_QUEUE;
++			return mvm->p2p_dev_queue;
+ 		if (info->hw_queue == info->control.vif->cab_queue)
+ 			return info->hw_queue;
+ 
+ 		WARN_ON_ONCE(1);
+-		return IWL_MVM_DQA_P2P_DEVICE_QUEUE;
++		return mvm->p2p_dev_queue;
+ 	default:
+ 		WARN_ONCE(1, "Not a ctrl vif, no available queue\n");
+ 		return -1;
+-- 
+2.11.0
