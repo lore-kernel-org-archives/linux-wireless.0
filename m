@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f45.google.com ([74.125.83.45]:34671 "EHLO
-        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753160AbdDFVWA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 17:22:00 -0400
-Received: by mail-pg0-f45.google.com with SMTP id 21so46731211pgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 14:22:00 -0700 (PDT)
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH] ath9k: Add cast to u8 to FREQ2FBIN macro
-Date: Thu,  6 Apr 2017 14:21:35 -0700
-Message-Id: <20170406212135.72157-1-mka@chromium.org> (sfid-20170406_232357_000804_B45FC417)
+Received: from s3.sipsolutions.net ([5.9.151.49]:47588 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752504AbdDKH3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 03:29:21 -0400
+Message-ID: <1491895758.31620.4.camel@sipsolutions.net> (sfid-20170411_092937_586168_A24DBB05)
+Subject: Re: [PATCH net-next v4 1/5] netlink: extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>
+Date: Tue, 11 Apr 2017 09:29:18 +0200
+In-Reply-To: <20170411071900.GC1976@nanopsycho> (sfid-20170411_091902_806901_2B2253F7)
+References: <20170411065700.2623-1-johannes@sipsolutions.net>
+         <20170411065700.2623-2-johannes@sipsolutions.net>
+         <20170411071900.GC1976@nanopsycho> (sfid-20170411_091902_806901_2B2253F7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The macro results are assigned to u8 variables/fields. Adding the cast
-fixes plenty of clang warnings about "implicit conversion from 'int' to
-'u8'".
+On Tue, 2017-04-11 at 09:19 +0200, Jiri Pirko wrote:
+> 
+> > +	NUM_NLMSGERR_ATTRS,
+> 
+> According to the rest of the uapi, this should be rather named:
+> 	__NLMSGERR_ATTR_MAX
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+nl80211 uses NUM_ so I guess that's a matter of convention, but I can
+change that I guess.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 30bf722e33ed..31390af6c33e 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -106,7 +106,7 @@
- #define AR9285_RDEXT_DEFAULT    0x1F
- 
- #define ATH9K_POW_SM(_r, _s)	(((_r) & 0x3f) << (_s))
--#define FREQ2FBIN(x, y)		((y) ? ((x) - 2300) : (((x) - 4800) / 5))
-+#define FREQ2FBIN(x, y)		(u8)((y) ? ((x) - 2300) : (((x) - 4800) / 5))
- #define FBIN2FREQ(x, y)		((y) ? (2300 + x) : (4800 + 5 * x))
- #define ath9k_hw_use_flash(_ah)	(!(_ah->ah_flags & AH_USE_EEPROM))
- 
--- 
-2.12.2.715.g7642488e1d-goog
+> > 		if (err || (nlh->nlmsg_flags & NLM_F_ACK))
+> > -			netlink_ack(skb, nlh, err);
+> > +			netlink_ack(skb, nlh, err, NULL);
+> 
+> Wouldn't it make sense to leave netlink_ack as is and add
+> netlink_ack_ext for those who need to pass non-null?
+
+I thought about it, but didn't really see much point. The churn isn't
+super big (a dozen callers or so), and I thought it makes sense to
+point out to the users that there's something here.
+
+johannes
