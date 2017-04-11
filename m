@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38860 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752612AbdDHShG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 14:37:06 -0400
-Message-ID: <1491676621.5800.24.camel@sipsolutions.net> (sfid-20170408_203748_376323_A46A5339)
-Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Pirko <jiri@resnulli.us>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>
-Date: Sat, 08 Apr 2017 20:37:01 +0200
-In-Reply-To: <20170408183440.GA1900@nanopsycho> (sfid-20170408_203444_598631_EBE98730)
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
-         <20170408174900.12820-2-johannes@sipsolutions.net>
-         <20170408183440.GA1900@nanopsycho> (sfid-20170408_203444_598631_EBE98730)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:50650 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752988AbdDKMjB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 08:39:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:36 +0300
+Message-Id: <20170411123742.12214-20-luca@coelho.fi> (sfid-20170411_144106_163068_AF4E4DBB)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 19/25] iwlwifi: pcie: use iwl_get_dma_hi_addr()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-04-08 at 20:34 +0200, Jiri Pirko wrote:
-> nla_total_size(sizeof(u32));
-> > +			if (extack &&
-> > +			    (extack->missing_attr || extack-
-> > >bad_attr))
-> 
-> Attr could be 0, right? I know that on the most of the places 0 is
-> UNSPEC, but I'm pretty sure not everywhere.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yeah, I guess we can't show a missing attribute of 0 now - bad_attr is
-a pointer so no problem there.
+Use iwl_get_dma_hi_addr() instead of open-coding it.
 
-I think I'll leave it like this - if anyone really wants to say
-"attribute 0 is missing" then we can add a flag later... The UAPI does
-take this into account by not including the attribute at all if the
-data is invalid, so 0 in the userspace API can be done
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 66bdd2df910a..9c8ab1a82b72 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -380,8 +380,7 @@ static inline void iwl_pcie_tfd_set_tb(struct iwl_trans *trans, void *tfd,
+ 		u16 hi_n_len = len << 4;
+ 
+ 		put_unaligned_le32(addr, &tb->lo);
+-		if (sizeof(dma_addr_t) > sizeof(u32))
+-			hi_n_len |= ((addr >> 16) >> 16) & 0xF;
++		hi_n_len |= iwl_get_dma_hi_addr(addr);
+ 
+ 		tb->hi_n_len = cpu_to_le16(hi_n_len);
+ 
+-- 
+2.11.0
