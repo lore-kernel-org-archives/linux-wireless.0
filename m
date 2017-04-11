@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:33873 "EHLO
-        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753521AbdDQXAB (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50560 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753677AbdDKMiC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 19:00:01 -0400
-Received: by mail-pf0-f169.google.com with SMTP id c198so71833460pfc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2017 16:00:01 -0700 (PDT)
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Grant Grundler <grundler@chromium.org>,
-        Greg Hackmann <ghackmann@google.com>,
-        Michael Davidson <md@google.com>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH] nl80211: Fix enum type of variable in nl80211_put_sta_rate()
-Date: Mon, 17 Apr 2017 15:59:52 -0700
-Message-Id: <20170417225952.106468-1-mka@chromium.org> (sfid-20170418_010038_301004_A205AC30)
+        Tue, 11 Apr 2017 08:38:02 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:23 +0300
+Message-Id: <20170411123742.12214-7-luca@coelho.fi> (sfid-20170411_143808_132473_A02C06BE)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 06/25] iwlwifi: mvm: adjust new API of compressed BA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rate_flg is of type 'enum nl80211_attrs', however it is assigned with
-'enum nl80211_rate_info' values. Change the type of rate_flg accordingly.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+Final API has a reserved field - adjust accordingly.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2312dc2ffdb9..9af21a21ea6b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4151,7 +4151,7 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
- 	struct nlattr *rate;
- 	u32 bitrate;
- 	u16 bitrate_compat;
--	enum nl80211_attrs rate_flg;
-+	enum nl80211_rate_info rate_flg;
- 
- 	rate = nla_nest_start(msg, attr);
- 	if (!rate)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index b38cc073adcc..85744fa3bd4d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -635,6 +635,10 @@ enum iwl_mvm_ba_resp_flags {
+  * @tx_rate: the rate the aggregation was sent at
+  * @tfd_cnt: number of TFD-Q elements
+  * @ra_tid_cnt: number of RATID-Q elements
++ * @ba_tfd: array of TFD queue status updates. See &iwl_mvm_compressed_ba_tfd
++ *	for details.
++ * @ra_tid: array of RA-TID queue status updates. For debug purposes only. See
++ *	&iwl_mvm_compressed_ba_ratid for more details.
+  */
+ struct iwl_mvm_compressed_ba_notif {
+ 	__le32 flags;
+@@ -646,6 +650,7 @@ struct iwl_mvm_compressed_ba_notif {
+ 	__le16 query_frame_cnt;
+ 	__le16 txed;
+ 	__le16 done;
++	__le16 reserved;
+ 	__le32 wireless_time;
+ 	__le32 tx_rate;
+ 	__le16 tfd_cnt;
 -- 
-2.12.2.762.g0e3151a226-goog
+2.11.0
