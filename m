@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36206 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54270 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752746AbdDJLUt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 07:20:49 -0400
-Message-ID: <1491823242.2455.9.camel@sipsolutions.net> (sfid-20170410_132124_804730_E5552E61)
-Subject: Re: [PATCH v3 0/5] netlink extended ACK reporting
+        id S1752753AbdDKTng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 15:43:36 -0400
+Message-ID: <1491939809.27324.1.camel@sipsolutions.net> (sfid-20170411_214351_042937_AEB4468E)
+Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
-        David Miller <davem@davemloft.net>
-Date: Mon, 10 Apr 2017 13:20:42 +0200
-In-Reply-To: <20170408202434.12018-1-johannes@sipsolutions.net> (sfid-20170408_222447_224133_39B19566)
-References: <20170408202434.12018-1-johannes@sipsolutions.net>
-         (sfid-20170408_222447_224133_39B19566)
+To: David Miller <davem@davemloft.net>, pablo@netfilter.org
+Cc: dsa@cumulusnetworks.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, jhs@mojatatu.com, jbenc@redhat.com,
+        jiri@resnulli.us
+Date: Tue, 11 Apr 2017 21:43:29 +0200
+In-Reply-To: <20170411.134225.398046538225438175.davem@davemloft.net>
+References: <1491894172.31620.2.camel@sipsolutions.net>
+         <9a68aa01-474c-7054-30c2-473ee1250abe@cumulusnetworks.com>
+         <20170411173143.GA1899@salvia>
+         <20170411.134225.398046538225438175.davem@davemloft.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I thought a little bit more about the part of reporting the broken and
-missing attributes, and I'm not sure I'm entirely happy with that part.
+On Tue, 2017-04-11 at 13:42 -0400, David Miller wrote:
 
-For reporting broken attributes, I think the pointer is really the best
-thing we can do - adding the attribute number in addition to that would
-seem to be easy to misuse in userspace, and there's no information
-about nesting at that point and the "malformed attribute" ID will not
-make any sense without knowing the nesting level. So I think we
-shouldn't add the attribute ID there. The userspace app can disentangle
-the nesting, or it can know that it never used nesting, for example.
+> > Then, the library needs to be extended to enable this handling to
+> > modify the way it needs to handle errors, together with the
+> > setsockopt().
 
-Similarly, the "missing attribute" ID - which I did add an attribute
-for but didn't use it yet - can result in similar interpretation
-problems. I'm not really sure what to do with this one - technically
-one could report back the entire nesting chain, but having that kind of
-state might be really difficult.
+So I'd tend to agree, but
 
-Did anyone already have any plans for the "missing attribute"
-functionality?
+ * it was easy to solve this, with the flags I added
+ * the flags reduce the amount of parsing dependencies, for example, it
+   is then no longer necessary to check if error == 0 to know if the
+   message was capped or not (when not requested), since the flag
+   indicates it
+ * having the flag that TLVs were set lets us not store if the
+   setsockopt failed or not - this can be useful in the error report
+   case (but not in the success/cookie case) since it avoids extra
+   state that needs to be passed around
+ * libnl, which seems pretty common, allows just passing a single
+   pointer around as state, which is often already used for something
+   else, meaning a bigger refactoring can be required to pass the extra
+   state
 
-
-And another thought regarding the strict checking: we might also want
-to extend that to strictly check the *size* of attributes as well. For
-example, right now, if the kernel wants a u8 attribute but userspace
-uses a u16 or u32, this will work on little-endian and be accepted but
-wrongly be 0 on big endian.
+So yes, in theory we don't need this, but in practice it does make the
+userland parsing code quite a bit easier.
 
 johannes
