@@ -1,330 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51710 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:50740 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753571AbdDNJCk (ORCPT
+        with ESMTP id S1751797AbdDKMkY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 05:02:40 -0400
+        Tue, 11 Apr 2017 08:40:24 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Haim Dreyfuss <haim.dreyfuss@intel.com>,
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 14 Apr 2017 12:01:51 +0300
-Message-Id: <20170414090210.31397-8-luca@coelho.fi> (sfid-20170414_110253_999108_98597531)
-In-Reply-To: <20170414090210.31397-1-luca@coelho.fi>
-References: <20170414090210.31397-1-luca@coelho.fi>
-Subject: [PATCH v2 07/26] iwlwifi: mvm: refactor SAR init to prepare for dynamic SAR
+Date: Tue, 11 Apr 2017 15:37:29 +0300
+Message-Id: <20170411123742.12214-13-luca@coelho.fi> (sfid-20170411_145544_547426_C5E7F38B)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 12/25] iwlwifi: mvm: add multicast station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-We are adding support for dynamic TX power tables for SAR (specific
-absorption rate) compliance.  Currently, we only support a single
-(static) TX power table, which is read from ACPI, and use it
-statically.
+Currently multicast queue is associated with the broadcast
+station.
 
-To prepare for more tables that can be switched dynamically, refactor
-the SAR init flow to allow reusage and add the current static table as
-a single entry in an array of tables.
+This raises quite a few issues:
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+The multicast queue has a special treatment:
+- It is sent in the MAC context command
+- It is excluded from tfd_queue_mask
+
+In DQA mode we end up enabling two queues - the probe response
+queue and the multicast queue - with the same station (broadcast)
+and TID while in DQA mode it should be unique RA-TID.
+Firmware will enforce it for a000 devices, so this allocation
+will fail.
+
+In addition, in a000 devices the FW will set the FIFO and not
+the driver. So there is a need for FW to know when we enable
+the queue that it is multicast queue so it will be bound to
+the multicast FIFO. There is no such way in current design.
+
+In order to simplify driver and firmware handling of this queue
+create a multicast station.
+This solves the unique RA-TID issue in the short term and serves
+as preparation for the long term.
+
+In the long term we will also add a flag marking this station for
+the FW as the multicast station.
+Once we will do that the FW will know this is the multicast queue
+immediately when it is added and bind it to the correct FIFO.
+It will also enable removing the special treatment of the
+queue in the MAC context command.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 155 ++++++++++++++++-----------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  17 ++-
- 2 files changed, 107 insertions(+), 65 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  26 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 112 +++++++++++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h      |   3 +
+ 5 files changed, 106 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 4c5088643b2b..1679104e19e9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -990,85 +990,87 @@ static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
- 				    sizeof(cmd), &cmd);
- }
- 
--#define ACPI_WRDS_METHOD	"WRDS"
--#define ACPI_WRDS_WIFI		(0x07)
--#define ACPI_WRDS_TABLE_SIZE	10
-+#ifdef CONFIG_ACPI
-+#define ACPI_WRDS_METHOD		"WRDS"
-+#define ACPI_WRDS_WIFI			(0x07)
-+#define ACPI_WRDS_WIFI_DATA_SIZE	(IWL_MVM_SAR_TABLE_SIZE + 2)
-+
-+static int iwl_mvm_sar_set_profile(struct iwl_mvm *mvm,
-+				   union acpi_object *table,
-+				   struct iwl_mvm_sar_profile *profile,
-+				   bool enabled)
-+{
-+	int i;
- 
--struct iwl_mvm_sar_table {
--	bool enabled;
--	u8 values[ACPI_WRDS_TABLE_SIZE];
--};
-+	profile->enabled = enabled;
- 
--#ifdef CONFIG_ACPI
--static int iwl_mvm_sar_get_wrds(struct iwl_mvm *mvm, union acpi_object *wrds,
--				struct iwl_mvm_sar_table *sar_table)
-+	for (i = 0; i < IWL_MVM_SAR_TABLE_SIZE; i++) {
-+		if ((table[i].type != ACPI_TYPE_INTEGER) ||
-+		    (table[i].integer.value > U8_MAX))
-+			return -EINVAL;
-+
-+		profile->table[i] = table[i].integer.value;
-+	}
-+
-+	return 0;
-+}
-+
-+static union acpi_object *iwl_mvm_sar_find_wifi_pkg(struct iwl_mvm *mvm,
-+						    union acpi_object *data,
-+						    int data_size)
- {
--	union acpi_object *data_pkg;
--	u32 i;
-+	int i;
-+	union acpi_object *wifi_pkg;
- 
--	/* We need at least two packages, one for the revision and one
-+	/*
-+	 * We need at least two packages, one for the revision and one
- 	 * for the data itself.  Also check that the revision is valid
- 	 * (i.e. it is an integer set to 0).
--	*/
--	if (wrds->type != ACPI_TYPE_PACKAGE ||
--	    wrds->package.count < 2 ||
--	    wrds->package.elements[0].type != ACPI_TYPE_INTEGER ||
--	    wrds->package.elements[0].integer.value != 0) {
--		IWL_DEBUG_RADIO(mvm, "Unsupported wrds structure\n");
--		return -EINVAL;
-+	 */
-+	if (data->type != ACPI_TYPE_PACKAGE ||
-+	    data->package.count < 2 ||
-+	    data->package.elements[0].type != ACPI_TYPE_INTEGER ||
-+	    data->package.elements[0].integer.value != 0) {
-+		IWL_DEBUG_RADIO(mvm, "Unsupported packages structure\n");
-+		return ERR_PTR(-EINVAL);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 99132ea16ede..e7c8567cafff 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -472,6 +472,7 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
  	}
  
- 	/* loop through all the packages to find the one for WiFi */
--	for (i = 1; i < wrds->package.count; i++) {
-+	for (i = 1; i < data->package.count; i++) {
- 		union acpi_object *domain;
+ 	mvmvif->bcast_sta.sta_id = IWL_MVM_STATION_COUNT;
++	mvmvif->mcast_sta.sta_id = IWL_MVM_STATION_COUNT;
+ 	mvmvif->ap_sta_id = IWL_MVM_STATION_COUNT;
  
--		data_pkg = &wrds->package.elements[i];
-+		wifi_pkg = &data->package.elements[i];
- 
- 		/* Skip anything that is not a package with the right
- 		 * amount of elements (i.e. domain_type,
--		 * enabled/disabled plus the sar table size.
-+		 * enabled/disabled plus the actual data size.
- 		 */
--		if (data_pkg->type != ACPI_TYPE_PACKAGE ||
--		    data_pkg->package.count != ACPI_WRDS_TABLE_SIZE + 2)
-+		if (wifi_pkg->type != ACPI_TYPE_PACKAGE ||
-+		    wifi_pkg->package.count != data_size)
- 			continue;
- 
--		domain = &data_pkg->package.elements[0];
-+		domain = &wifi_pkg->package.elements[0];
- 		if (domain->type == ACPI_TYPE_INTEGER &&
- 		    domain->integer.value == ACPI_WRDS_WIFI)
- 			break;
- 
--		data_pkg = NULL;
-+		wifi_pkg = NULL;
- 	}
- 
--	if (!data_pkg)
--		return -ENOENT;
--
--	if (data_pkg->package.elements[1].type != ACPI_TYPE_INTEGER)
--		return -EINVAL;
--
--	sar_table->enabled = !!(data_pkg->package.elements[1].integer.value);
--
--	for (i = 0; i < ACPI_WRDS_TABLE_SIZE; i++) {
--		union acpi_object *entry;
--
--		entry = &data_pkg->package.elements[i + 2];
--		if ((entry->type != ACPI_TYPE_INTEGER) ||
--		    (entry->integer.value > U8_MAX))
--			return -EINVAL;
--
--		sar_table->values[i] = entry->integer.value;
--	}
-+	if (!wifi_pkg)
-+		return ERR_PTR(-ENOENT);
- 
--	return 0;
-+	return wifi_pkg;
- }
- 
--static int iwl_mvm_sar_get_table(struct iwl_mvm *mvm,
--				 struct iwl_mvm_sar_table *sar_table)
-+static int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
- {
-+	union acpi_object *wifi_pkg, *table;
- 	acpi_handle root_handle;
- 	acpi_handle handle;
- 	struct acpi_buffer wrds = {ACPI_ALLOCATE_BUFFER, NULL};
- 	acpi_status status;
-+	bool enabled;
- 	int ret;
- 
- 	root_handle = ACPI_HANDLE(mvm->dev);
-@@ -1093,22 +1095,36 @@ static int iwl_mvm_sar_get_table(struct iwl_mvm *mvm,
- 		return -ENOENT;
- 	}
- 
--	ret = iwl_mvm_sar_get_wrds(mvm, wrds.pointer, sar_table);
--	kfree(wrds.pointer);
-+	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, wrds.pointer,
-+					     ACPI_WRDS_WIFI_DATA_SIZE);
-+	if (IS_ERR(wifi_pkg)) {
-+		ret = PTR_ERR(wifi_pkg);
-+		goto out_free;
-+	}
-+
-+	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) {
-+		ret = -EINVAL;
-+		goto out_free;
-+	}
-+
-+	enabled = !!(wifi_pkg->package.elements[1].integer.value);
- 
-+	/* position of the actual table */
-+	table = &wifi_pkg->package.elements[2];
-+
-+	/* The profile from WRDS is officially profile 1, but goes
-+	 * into sar_profiles[0] (because we don't have a profile 0).
-+	 */
-+	ret = iwl_mvm_sar_set_profile(mvm, table, &mvm->sar_profiles[0],
-+				      enabled);
-+
-+out_free:
-+	kfree(wrds.pointer);
- 	return ret;
- }
--#else /* CONFIG_ACPI */
--static int iwl_mvm_sar_get_table(struct iwl_mvm *mvm,
--				 struct iwl_mvm_sar_table *sar_table)
--{
--	return -ENOENT;
--}
--#endif /* CONFIG_ACPI */
- 
- static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- {
--	struct iwl_mvm_sar_table sar_table;
- 	struct iwl_dev_tx_power_cmd cmd = {
- 		.v3.set_mode = cpu_to_le32(IWL_TX_POWER_MODE_SET_CHAINS),
- 	};
-@@ -1118,7 +1134,7 @@ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- 	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_TX_POWER_ACK))
- 		len = sizeof(cmd.v3);
- 
--	ret = iwl_mvm_sar_get_table(mvm, &sar_table);
-+	ret = iwl_mvm_sar_get_wrds_table(mvm);
- 	if (ret < 0) {
- 		IWL_DEBUG_RADIO(mvm,
- 				"SAR BIOS table invalid or unavailable. (%d)\n",
-@@ -1127,22 +1143,23 @@ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- 		return 0;
- 	}
- 
--	if (!sar_table.enabled)
-+	/* if profile 0 is disabled, there's nothing else to do here */
-+	if (!mvm->sar_profiles[0].enabled)
- 		return 0;
- 
- 	IWL_DEBUG_RADIO(mvm, "Sending REDUCE_TX_POWER_CMD per chain\n");
- 
- 	BUILD_BUG_ON(IWL_NUM_CHAIN_LIMITS * IWL_NUM_SUB_BANDS !=
--		     ACPI_WRDS_TABLE_SIZE);
-+		     IWL_MVM_SAR_TABLE_SIZE);
- 
- 	for (i = 0; i < IWL_NUM_CHAIN_LIMITS; i++) {
- 		IWL_DEBUG_RADIO(mvm, "  Chain[%d]:\n", i);
- 		for (j = 0; j < IWL_NUM_SUB_BANDS; j++) {
- 			idx = (i * IWL_NUM_SUB_BANDS) + j;
- 			cmd.v3.per_chain_restriction[i][j] =
--				cpu_to_le16(sar_table.values[idx]);
-+				cpu_to_le16(mvm->sar_profiles[0].table[idx]);
- 			IWL_DEBUG_RADIO(mvm, "    Band[%d] = %d * .125dBm\n",
--					j, sar_table.values[idx]);
-+					j, mvm->sar_profiles[0].table[idx]);
- 		}
- 	}
- 
-@@ -1153,6 +1170,18 @@ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- 	return ret;
- }
- 
-+#else /* CONFIG_ACPI */
-+static inline int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
-+{
-+	return -ENOENT;
-+}
-+
-+static inline int iwl_mvm_sar_init(struct iwl_mvm *mvm)
-+{
-+	return 0;
-+}
-+#endif /* CONFIG_ACPI */
-+
- static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
- {
- 	int ret;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 91bd5ebd5b65..0c35d9ebd4ac 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -7,7 +7,7 @@
+ 	for (i = 0; i < NUM_IWL_MVM_SMPS_REQ; i++)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 265d9eb8f0b0..72a056a80516 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -6,8 +6,8 @@
+  * GPL LICENSE SUMMARY
   *
   * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2016 Intel Deutschland GmbH
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,7 +33,8 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1351,6 +1352,17 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 			goto out_release;
+ 		}
+ 
++		if (iwl_mvm_is_dqa_supported(mvm)) {
++			/*
++			 * Only queue for this station is the mcast queue,
++			 * which shouldn't be in TFD mask anyway
++			 */
++			ret = iwl_mvm_allocate_int_sta(mvm, &mvmvif->mcast_sta,
++						       0, vif->type);
++			if (ret)
++				goto out_release;
++		}
++
+ 		iwl_mvm_vif_dbgfs_register(mvm, vif);
+ 		goto out_unlock;
+ 	}
+@@ -1516,6 +1528,7 @@ static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
+ 			mvm->noa_duration = 0;
+ 		}
+ #endif
++		iwl_mvm_dealloc_int_sta(mvm, &mvmvif->mcast_sta);
+ 		iwl_mvm_dealloc_bcast_sta(mvm, vif);
+ 		goto out_release;
+ 	}
+@@ -2104,6 +2117,10 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto out_unbind;
+ 
++	ret = iwl_mvm_add_mcast_sta(mvm, vif);
++	if (ret)
++		goto out_rm_bcast;
++
+ 	/* must be set before quota calculations */
+ 	mvmvif->ap_ibss_active = true;
+ 
+@@ -2131,6 +2148,8 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ out_quota_failed:
+ 	iwl_mvm_power_update_mac(mvm);
+ 	mvmvif->ap_ibss_active = false;
++	iwl_mvm_rm_mcast_sta(mvm, vif);
++out_rm_bcast:
+ 	iwl_mvm_send_rm_bcast_sta(mvm, vif);
+ out_unbind:
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
+@@ -2177,6 +2196,7 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
+ 		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif, false, NULL);
+ 
+ 	iwl_mvm_update_quotas(mvm, false, NULL);
++	iwl_mvm_rm_mcast_sta(mvm, vif);
+ 	iwl_mvm_send_rm_bcast_sta(mvm, vif);
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 88bc459b1f9a..70b994638273 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -407,6 +407,7 @@ struct iwl_mvm_vif {
+ 	struct iwl_mvm_time_event_data hs_time_event_data;
+ 
+ 	struct iwl_mvm_int_sta bcast_sta;
++	struct iwl_mvm_int_sta mcast_sta;
+ 
+ 	/*
+ 	 * Assigned while mac80211 has the interface in a channel context,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index b51a2853cc80..41fd3ba574c0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
   * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
+- * Copyright(c) 2016 Intel Deutschland GmbH
 + * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of version 2 of the GNU General Public License as
 @@ -34,7 +34,7 @@
   *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
   * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
+- * Copyright(c) 2016 Intel Deutschland GmbH
 + * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -710,6 +710,16 @@ enum iwl_mvm_queue_status {
- #define IWL_MVM_DQA_QUEUE_TIMEOUT	(5 * HZ)
- #define IWL_MVM_NUM_CIPHERS             10
+@@ -1652,8 +1652,7 @@ int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm,
+ 	return 0;
+ }
  
-+#ifdef CONFIG_ACPI
-+#define IWL_MVM_SAR_TABLE_SIZE		10
-+#define IWL_MVM_SAR_PROFILE_NUM		1
+-static void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm,
+-				    struct iwl_mvm_int_sta *sta)
++void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
+ {
+ 	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta->sta_id], NULL);
+ 	memset(sta, 0, sizeof(struct iwl_mvm_int_sta));
+@@ -1826,33 +1825,8 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	ret = iwl_mvm_add_int_sta_common(mvm, bsta, baddr,
+ 					 mvmvif->id, mvmvif->color);
+-	if (ret)
+-		return ret;
+-
+-	/*
+-	 * In AP vif type, we also need to enable the cab_queue. However, we
+-	 * have to enable it after the ADD_STA command is sent, otherwise the
+-	 * FW will throw an assert once we send the ADD_STA command (it'll
+-	 * detect a mismatch in the tfd_queue_msk, as we can't add the
+-	 * enabled-cab_queue to the mask)
+-	 */
+-	if (iwl_mvm_is_dqa_supported(mvm) &&
+-	    vif->type == NL80211_IFTYPE_AP) {
+-		struct iwl_trans_txq_scd_cfg cfg = {
+-			.fifo = IWL_MVM_TX_FIFO_MCAST,
+-			.sta_id = mvmvif->bcast_sta.sta_id,
+-			.tid = IWL_MAX_TID_COUNT,
+-			.aggregate = false,
+-			.frame_limit = IWL_FRAME_LIMIT,
+-		};
+-		unsigned int wdg_timeout =
+-			iwl_mvm_get_wd_timeout(mvm, vif, false, false);
+-
+-		iwl_mvm_enable_txq(mvm, vif->cab_queue, vif->cab_queue,
+-				   0, &cfg, wdg_timeout);
+-	}
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static void iwl_mvm_free_bcast_sta_queues(struct iwl_mvm *mvm,
+@@ -1862,10 +1836,6 @@ static void iwl_mvm_free_bcast_sta_queues(struct iwl_mvm *mvm,
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-	if (vif->type == NL80211_IFTYPE_AP)
+-		iwl_mvm_disable_txq(mvm, vif->cab_queue, vif->cab_queue,
+-				    IWL_MAX_TID_COUNT, 0);
+-
+ 	if (mvmvif->bcast_sta.tfd_queue_msk &
+ 	    BIT(IWL_MVM_DQA_AP_PROBE_RESP_QUEUE)) {
+ 		iwl_mvm_disable_txq(mvm,
+@@ -1979,6 +1949,80 @@ int iwl_mvm_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	return ret;
+ }
+ 
++/*
++ * Allocate a new station entry for the multicast station to the given vif,
++ * and send it to the FW.
++ * Note that each AP/GO mac should have its own multicast station.
++ *
++ * @mvm: the mvm component
++ * @vif: the interface to which the multicast station is added
++ */
++int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm_int_sta *msta = &mvmvif->mcast_sta;
++	static const u8 _maddr[] = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00};
++	const u8 *maddr = _maddr;
++	struct iwl_trans_txq_scd_cfg cfg = {
++		.fifo = IWL_MVM_TX_FIFO_MCAST,
++		.sta_id = msta->sta_id,
++		.tid = IWL_MAX_TID_COUNT,
++		.aggregate = false,
++		.frame_limit = IWL_FRAME_LIMIT,
++	};
++	unsigned int timeout = iwl_mvm_get_wd_timeout(mvm, vif, false, false);
++	int ret;
 +
-+struct iwl_mvm_sar_profile {
-+	bool enabled;
-+	u8 table[IWL_MVM_SAR_TABLE_SIZE];
-+};
-+#endif
++	lockdep_assert_held(&mvm->mutex);
 +
- struct iwl_mvm {
- 	/* for logger access */
- 	struct device *dev;
-@@ -1039,6 +1049,9 @@ struct iwl_mvm {
- 	bool drop_bcn_ap_mode;
++	if (!iwl_mvm_is_dqa_supported(mvm))
++		return 0;
++
++	if (WARN_ON(vif->type != NL80211_IFTYPE_AP))
++		return -ENOTSUPP;
++
++	ret = iwl_mvm_add_int_sta_common(mvm, msta, maddr,
++					 mvmvif->id, mvmvif->color);
++	if (ret) {
++		iwl_mvm_dealloc_int_sta(mvm, msta);
++		return ret;
++	}
++
++	/*
++	 * Enable cab queue after the ADD_STA command is sent.
++	 * This is needed for a000 firmware which won't accept SCD_QUEUE_CFG
++	 * command with unknown station id.
++	 */
++	iwl_mvm_enable_txq(mvm, vif->cab_queue, vif->cab_queue, 0, &cfg,
++			   timeout);
++
++	return 0;
++}
++
++/*
++ * Send the FW a request to remove the station from it's internal data
++ * structures, and in addition remove it from the local data structure.
++ */
++int iwl_mvm_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	int ret;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	if (!iwl_mvm_is_dqa_supported(mvm))
++		return 0;
++
++	iwl_mvm_disable_txq(mvm, vif->cab_queue, vif->cab_queue,
++			    IWL_MAX_TID_COUNT, 0);
++
++	ret = iwl_mvm_rm_sta_common(mvm, mvmvif->mcast_sta.sta_id);
++	if (ret)
++		IWL_WARN(mvm, "Failed sending remove station\n");
++
++	return ret;
++}
++
+ #define IWL_MAX_RX_BA_SESSIONS 16
  
- 	struct delayed_work cs_tx_unblock_dwork;
-+#ifdef CONFIG_ACPI
-+	struct iwl_mvm_sar_profile sar_profiles[IWL_MVM_SAR_PROFILE_NUM];
-+#endif
- };
- 
- /* Extract MVM priv from op_mode and _hw */
+ static void iwl_mvm_sync_rxq_del_ba(struct iwl_mvm *mvm, u8 baid)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 1927ce607798..a143a8757e27 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -532,10 +532,13 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_send_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++int iwl_mvm_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm,
+ 			     struct iwl_mvm_int_sta *sta,
+ 				    u32 qmask, enum nl80211_iftype iftype);
+ void iwl_mvm_dealloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta);
+ int iwl_mvm_add_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ void iwl_mvm_dealloc_snif_sta(struct iwl_mvm *mvm);
 -- 
 2.11.0
