@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:36779 "EHLO
-        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162744AbdD0OmM (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:35358 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752312AbdDKTFa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2017 10:42:12 -0400
-Received: by mail-qk0-f176.google.com with SMTP id u75so29008250qka.3
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2017 07:42:11 -0700 (PDT)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org, sameo@linux.intel.com
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com,
-        wharms@bfs.de, Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH v3] NFC: trf7970a: Correct register settings for 27MHz clock
-Date: Thu, 27 Apr 2017 10:41:59 -0400
-Message-Id: <1493304119-16605-1-git-send-email-geoff@kuvee.com> (sfid-20170427_164330_595588_8B15ACFE)
+        Tue, 11 Apr 2017 15:05:30 -0400
+Date: Tue, 11 Apr 2017 15:05:27 -0400 (EDT)
+Message-Id: <20170411.150527.283014710949232666.davem@davemloft.net> (sfid-20170411_210713_866388_5B893888)
+To: dsa@cumulusnetworks.com
+Cc: pablo@netfilter.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        jhs@mojatatu.com, jbenc@redhat.com, jiri@resnulli.us
+Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <cb6106f2-3128-da79-69bf-a10b249db054@cumulusnetworks.com>
+References: <20170411173143.GA1899@salvia>
+        <20170411.134225.398046538225438175.davem@davemloft.net>
+        <cb6106f2-3128-da79-69bf-a10b249db054@cumulusnetworks.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In prior commits the selected clock frequency does not propagate
-correctly to what is written the the TRF7970A_MODULATOR_SYS_CLK_CTRL
-register.
+From: David Ahern <dsa@cumulusnetworks.com>
+Date: Tue, 11 Apr 2017 12:57:59 -0600
 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
----
- drivers/nfc/trf7970a.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+> On 4/11/17 11:42 AM, David Miller wrote:
+>> David, if you have a specific case where it's absolutely impossible
+>> to resolve this when the library is converted to support extended
+>> ACKs, please mention it.
+> 
+> I don't have a specific library in mind. It is more the disjoint nature
+> of a socket option and message parsing, and thinking through the API.
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 6ed5d7e..f7fee7d 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2067,6 +2067,13 @@ static int trf7970a_probe(struct spi_device *spi)
- 		return -EINVAL;
- 	}
- 
-+	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
-+		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
-+		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
-+	} else {
-+		trf->modulator_sys_clk_ctrl = 0;
-+	}
-+
- 	ret = devm_request_threaded_irq(trf->dev, spi->irq, NULL,
- 					trf7970a_irq,
- 					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
--- 
-2.7.4
+Would you prefer it being passed via a control message at sendmsg()
+time?  That would require more changes to userland programs, and also
+increase the per-request overhead in the kernel as it parses this CMSG
+every single time.
+
+We have a setsockopt for AF_PACKET that changes the entire layout of
+the packet mmap ring, nobody complains that libraries are hard to
+implement because of that right?
