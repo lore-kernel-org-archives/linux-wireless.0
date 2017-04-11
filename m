@@ -1,152 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:19637 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750877AbdDJDir (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50668 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753029AbdDKMjP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Apr 2017 23:38:47 -0400
-Date: Mon, 10 Apr 2017 09:08:40 +0530
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: Greg KH <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>
-CC: <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>
-Subject: Re: [PATCH] staging: wilc1000: Update handler assignment logic
-Message-ID: <20170410090840.7386d08c@aditya-ubuntu> (sfid-20170410_053850_792593_B1A99823)
-In-Reply-To: <20170408110015.GA30777@kroah.com>
-References: <1491566045-9265-1-git-send-email-aditya.shankar@microchip.com>
-        <20170408110015.GA30777@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Tue, 11 Apr 2017 08:39:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Golan Ben-Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:37 +0300
+Message-Id: <20170411123742.12214-21-luca@coelho.fi> (sfid-20170411_144107_296843_09364D34)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 20/25] iwlwifi: mvm: support MFUART dump in case of MFUART assert
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 8 Apr 2017 13:00:15 +0200
-Greg KH <gregkh@linuxfoundation.org> wrote:
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-> On Fri, Apr 07, 2017 at 05:24:05PM +0530, Aditya Shankar wrote:
-> > With this update, the host driver is consistent with the
-> > implementation on the firmware side with respect to obtaining
-> > the driver handler for all modes.
-> > With this new format, the calls to set the wilc operation mode
-> > is simplified.
-> > 
-> > Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c         | 56 +++++++++++++++++++----
-> >  drivers/staging/wilc1000/host_interface.h         |  9 +++-
-> >  drivers/staging/wilc1000/linux_wlan.c             | 29 ++----------
-> >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
-> >  drivers/staging/wilc1000/wilc_wlan_if.h           |  2 +-
-> >  5 files changed, 61 insertions(+), 37 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> > index c3a8af0..c04643e 100644
-> > --- a/drivers/staging/wilc1000/host_interface.c
-> > +++ b/drivers/staging/wilc1000/host_interface.c
-> > @@ -198,6 +198,7 @@ struct host_if_msg {
-> >  	union message_body body;
-> >  	struct wilc_vif *vif;
-> >  	struct work_struct work;
-> > +	void *drv_handler;
-> >  };
-> >  
-> >  struct join_bss_param {
-> > @@ -334,14 +335,44 @@ static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
-> >  {
-> >  	int ret = 0;
-> >  	struct wid wid;
-> > +	u8 *currbyte;
-> > +	struct host_if_drv *hif_drv = NULL;
-> > +	int driver_handler_id = 0;
-> > +	u8 *buffer = kzalloc(DRV_HANDLER_SIZE, GFP_ATOMIC);
-> > +
-> > +	if (!vif->hif_drv)
-> > +		return;
-> > +
-> > +	if (!hif_drv_handler)
-> > +		return;
-> > +
-> > +	hif_drv	= vif->hif_drv;
-> > +
-> > +	if (hif_drv)
-> > +		driver_handler_id = hif_drv->driver_handler_id;
-> > +	else
-> > +		driver_handler_id = 0;
-> > +
-> > +	driver_handler_id = hif_drv->driver_handler_id;
-> > +
-> > +	currbyte = buffer;
-> > +	*currbyte = driver_handler_id & DRV_HANDLER_MASK;
-> > +	currbyte++;
-> > +	*currbyte = (u32)0 & DRV_HANDLER_MASK;
-> > +	currbyte++;
-> > +	*currbyte = (u32)0 & DRV_HANDLER_MASK;
-> > +	currbyte++;
-> > +	*currbyte = (u32)0 & DRV_HANDLER_MASK;
-> > +	currbyte++;
-> > +	*currbyte = (hif_drv_handler->name | (hif_drv_handler->mode << 1));
-> >  
-> >  	wid.id = (u16)WID_SET_DRV_HANDLER;
-> >  	wid.type = WID_STR;
-> > -	wid.val = (s8 *)hif_drv_handler;
-> > -	wid.size = sizeof(*hif_drv_handler);
-> > +	wid.val = (s8 *)buffer;
-> > +	wid.size = DRV_HANDLER_SIZE;
-> >  
-> >  	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-> > -				   hif_drv_handler->handler);
-> > +				   driver_handler_id);
-> >  
-> >  	if (!hif_drv_handler->handler)
-> >  		complete(&hif_driver_comp);
-> > @@ -2403,9 +2434,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
-> >  
-> >  	pu8CurrByte = wid.val;
-> >  	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
-> > -	*pu8CurrByte++ = 0;
-> > -	*pu8CurrByte++ = 0;
-> > -	*pu8CurrByte++ = 0;
-> > +	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
-> > +	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
-> > +	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
-> >  
-> >  	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
-> >  	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
-> > @@ -3099,7 +3130,8 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
-> >  	return 0;
-> >  }
-> >  
-> > -int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
-> > +int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode, char
-> > +			     *ifname)
-> >  {
-> >  	int result = 0;
-> >  	struct host_if_msg msg;
-> > @@ -3107,9 +3139,14 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
-> >  	memset(&msg, 0, sizeof(struct host_if_msg));
-> >  	msg.id = HOST_IF_MSG_SET_WFIDRV_HANDLER;
-> >  	msg.body.drv.handler = index;
-> > -	msg.body.drv.mac_idx = mac_idx;
-> > +	msg.body.drv.mode = mode;
-> >  	msg.vif = vif;
-> >  
-> > +	if (!memcmp(ifname, "wlan0", 5))
-> > +	msg.body.drv.name = 1;
-> > +	else if (!memcmp(ifname, "p2p0", 4))
-> > +	msg.body.drv.name = 0;  
-> 
-> Does that code look correct to you?
-> 
-> Always use checkpatch before sending your patches out.
-> 
-> Also, your changelog is very vague, please explain what is happening
-> in your patch much better.
-> 
-> thanks,
-> 
-> greg k-h
+In case of a MFUART assert, get a notification from the fw
+that consists of the assert id and debug data.
 
-That's a mistake. I will re-send the patch with a new subject line 
-as "staging: wilc1000: New cfg packet format in handle_set_wfi_drv_handler"
-and an updated description instead of a v2 of the same change log.
+The notification may be divided to multiple chunks, depending
+on the size of the debug data sent to the driver, which would
+be up to 1KB.
 
-Thanks,
-Aditya 
+Get the notification, and if the debug info flag is enabled,
+print the debug data to the dmesg.
+
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 26 ++++++++++++++++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 24 ++++++++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    |  9 +++++++++
+ 4 files changed, 57 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 248373a0990a..dd2bd7c3587c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -345,9 +345,10 @@ enum iwl_regulatory_and_nvm_subcmd_ids {
+ 	NVM_ACCESS_COMPLETE = 0x0,
+ };
+ 
+-enum iwl_fmac_debug_cmds {
++enum iwl_debug_cmds {
+ 	LMAC_RD_WR = 0x0,
+ 	UMAC_RD_WR = 0x1,
++	MFU_ASSERT_DUMP_NTF = 0xFE,
+ };
+ 
+ /* command groups */
+@@ -1239,6 +1240,25 @@ struct iwl_mfuart_load_notif {
+ } __packed; /*MFU_LOADER_NTFY_API_S_VER_2*/
+ 
+ /**
++ * struct iwl_mfu_assert_dump_notif - mfuart dump logs
++ * ( MFU_ASSERT_DUMP_NTF = 0xfe )
++ * @assert_id: mfuart assert id that cause the notif
++ * @curr_reset_num: number of asserts since uptime
++ * @index_num: current chunk id
++ * @parts_num: total number of chunks
++ * @data_size: number of data bytes sent
++ * @data: data buffer
++ */
++struct iwl_mfu_assert_dump_notif {
++	__le32   assert_id;
++	__le32   curr_reset_num;
++	__le16   index_num;
++	__le16   parts_num;
++	__le32   data_size;
++	__le32   data[0];
++} __packed; /*MFU_DUMP_ASSERT_API_S_VER_1*/
++
++/**
+  * struct iwl_set_calib_default_cmd - set default value for calibration.
+  * ( SET_CALIB_DEFAULT_CMD = 0x8e )
+  * @calib_index: the calibration to set value for
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 45cb4f476e76..286f18609729 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016 Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,6 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -271,6 +272,27 @@ static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
+ 	return 0;
+ }
+ 
++void iwl_mvm_mfu_assert_dump_notif(struct iwl_mvm *mvm,
++				   struct iwl_rx_cmd_buffer *rxb)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_mfu_assert_dump_notif *mfu_dump_notif = (void *)pkt->data;
++	__le32 *dump_data = mfu_dump_notif->data;
++	int n_words = le32_to_cpu(mfu_dump_notif->data_size) / sizeof(__le32);
++	int i;
++
++	if (mfu_dump_notif->index_num == 0)
++		IWL_INFO(mvm, "MFUART assert id 0x%x occurred\n",
++			 le32_to_cpu(mfu_dump_notif->assert_id));
++
++	for (i = 0; i < n_words; i++)
++		IWL_DEBUG_INFO(mvm,
++			       "MFUART assert dump, dword %u: 0x%08x\n",
++			       le16_to_cpu(mfu_dump_notif->index_num) *
++			       n_words + i,
++			       le32_to_cpu(dump_data[i]));
++}
++
+ static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
+ 				   const struct fw_img *image)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index b58ac2aa9999..b3f67fe98203 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1395,6 +1395,8 @@ int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
+ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 			    int queue);
+ void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
++void iwl_mvm_mfu_assert_dump_notif(struct iwl_mvm *mvm,
++				   struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
+ 				   struct iwl_rx_cmd_buffer *rxb);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 600af8a31200..72afccfe4282 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -302,6 +302,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 		   RX_HANDLER_SYNC),
+ 	RX_HANDLER(TOF_NOTIFICATION, iwl_mvm_tof_resp_handler,
+ 		   RX_HANDLER_ASYNC_LOCKED),
++	RX_HANDLER_GRP(DEBUG_GROUP, MFU_ASSERT_DUMP_NTF,
++		       iwl_mvm_mfu_assert_dump_notif, RX_HANDLER_SYNC),
+ 	RX_HANDLER_GRP(PROT_OFFLOAD_GROUP, STORED_BEACON_NTF,
+ 		       iwl_mvm_rx_stored_beacon_notif, RX_HANDLER_SYNC),
+ 	RX_HANDLER_GRP(DATA_PATH_GROUP, MU_GROUP_MGMT_NOTIF,
+@@ -463,6 +465,13 @@ static const struct iwl_hcmd_names iwl_mvm_data_path_names[] = {
+ /* Please keep this array *SORTED* by hex value.
+  * Access is done through binary search
+  */
++static const struct iwl_hcmd_names iwl_mvm_debug_names[] = {
++	HCMD_NAME(MFU_ASSERT_DUMP_NTF),
++};
++
++/* Please keep this array *SORTED* by hex value.
++ * Access is done through binary search
++ */
+ static const struct iwl_hcmd_names iwl_mvm_prot_offload_names[] = {
+ 	HCMD_NAME(STORED_BEACON_NTF),
+ };
+-- 
+2.11.0
