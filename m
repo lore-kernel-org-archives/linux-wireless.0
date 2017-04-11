@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:33218 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1423761AbdD1Xmv (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:32870 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754029AbdDKINt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 19:42:51 -0400
-Received: by mail-pf0-f174.google.com with SMTP id q20so1158235pfg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2017 16:42:51 -0700 (PDT)
-Date: Fri, 28 Apr 2017 16:42:47 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
+        Tue, 11 Apr 2017 04:13:49 -0400
+Received: by mail-wr0-f196.google.com with SMTP id l28so7227821wre.0
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2017 01:13:49 -0700 (PDT)
+Date: Tue, 11 Apr 2017 10:13:46 +0200
+From: Jiri Pirko <jiri@resnulli.us>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-soc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Nicolas Dechesne <nicolas.dechesne@linaro.org>
-Subject: Re: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
-Message-ID: <20170428234247.GQ15143@minitux> (sfid-20170429_014320_894882_4F8BB5AA)
-References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
- <1493281332.2529.1.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>
+Subject: Re: [PATCH net-next v4 1/5] netlink: extended ACK reporting
+Message-ID: <20170411081346.GD1976@nanopsycho> (sfid-20170411_101509_368218_37CB131D)
+References: <20170411065700.2623-1-johannes@sipsolutions.net>
+ <20170411065700.2623-2-johannes@sipsolutions.net>
+ <20170411071900.GC1976@nanopsycho>
+ <1491895758.31620.4.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1493281332.2529.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1491895758.31620.4.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 27 Apr 01:22 PDT 2017, Johannes Berg wrote:
+Tue, Apr 11, 2017 at 09:29:18AM CEST, johannes@sipsolutions.net wrote:
+>On Tue, 2017-04-11 at 09:19 +0200, Jiri Pirko wrote:
+>> 
+>> > +	NUM_NLMSGERR_ATTRS,
+>> 
+>> According to the rest of the uapi, this should be rather named:
+>> 	__NLMSGERR_ATTR_MAX
+>
+>nl80211 uses NUM_ so I guess that's a matter of convention, but I can
+>change that I guess.
 
-> 
-> > @@ -371,7 +371,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn,
-> > struct wcn36xx_dxe_ch *ch)
-> >  			info = IEEE80211_SKB_CB(ctl->skb);
-> >  			if (!(info->flags &
-> > IEEE80211_TX_CTL_REQ_TX_STATUS)) {
-> >  				/* Keep frame until TX status comes
-> > */
-> > -				ieee80211_free_txskb(wcn->hw, ctl-
-> > >skb);
-> > +				ieee80211_tx_status(wcn->hw, ctl-
-> > >skb);
-> > 
-> 
-> I don't think this is a good idea.
+Please do.
 
-Thanks for letting me know :)
 
-> This code intentionally checked if TX status was requested, and if not
-> then it doesn't go to the effort of building it.
-> 
+>
+>> > 		if (err || (nlh->nlmsg_flags & NLM_F_ACK))
+>> > -			netlink_ack(skb, nlh, err);
+>> > +			netlink_ack(skb, nlh, err, NULL);
+>> 
+>> Wouldn't it make sense to leave netlink_ack as is and add
+>> netlink_ack_ext for those who need to pass non-null?
+>
+>I thought about it, but didn't really see much point. The churn isn't
+>super big (a dozen callers or so), and I thought it makes sense to
+>point out to the users that there's something here.
 
-What I'm finding puzzling is the fact that the only caller of
-ieee80211_led_tx() is ieee80211_tx_status() and it seems like drivers,
-such as ath10k, call this for each packet handled - but I'm likely
-missing something.
-
-> As it is with your patch, it'll go and report the TX status without any
-> TX status information - which is handled in wcn36xx_dxe_tx_ack_ind()
-> for those frames needing it.
-> 
-
-Right, it doesn't sound desired. However, during normal operation I'm
-not seeing IEEE80211_TX_CTL_REQ_TX_STATUS being set and as such
-ieee80211_led_tx() is never called.
-
-Regards,
-Bjorn
+Makes sense.
