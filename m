@@ -1,80 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:22990 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1171488AbdDXSld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 14:41:33 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 1/2] NFC: st21nfca: Add GPIO ACPI mapping table
-Date: Mon, 24 Apr 2017 21:41:27 +0300
-Message-Id: <20170424184128.48061-1-andriy.shevchenko@linux.intel.com> (sfid-20170424_204254_075396_C8FBC370)
+Received: from paleale.coelho.fi ([176.9.41.70]:50642 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752700AbdDKMi5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 08:38:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:42 +0300
+Message-Id: <20170411123742.12214-26-luca@coelho.fi> (sfid-20170411_144105_045328_F90E0380)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 25/25] iwlwifi: mvm: separate queue mapping from queue enablement
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+As preparation for a000 different queue management, separate
+mapping of queues from actual enablement.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/nfc/st21nfca/i2c.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 34 ++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 02a920ca07c8..a04f24334b54 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -501,14 +501,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
- 	.disable = st21nfca_hci_i2c_disable,
- };
- 
-+static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
-+	{ "enable-gpios", &enable_gpios, 1 },
-+	{},
-+};
-+
- static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct device *dev = &client->dev;
-+	int ret;
-+
-+	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_st21nfca_gpios);
-+	if (ret)
-+		return ret;
- 
- 	/* Get EN GPIO from ACPI */
--	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
--					      GPIOD_OUT_LOW);
-+	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
- 	if (IS_ERR(phy->gpiod_ena)) {
- 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
- 		return PTR_ERR(phy->gpiod_ena);
-@@ -523,8 +534,7 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
- 	struct device *dev = &client->dev;
- 
- 	/* Get GPIO from device tree */
--	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
--					      GPIOD_OUT_HIGH);
-+	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
- 	if (IS_ERR(phy->gpiod_ena)) {
- 		nfc_err(dev, "Failed to request enable pin\n");
- 		return PTR_ERR(phy->gpiod_ena);
-@@ -618,6 +628,7 @@ static int st21nfca_hci_i2c_remove(struct i2c_client *client)
- 	if (phy->powered)
- 		st21nfca_hci_i2c_disable(phy);
- 
-+	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
- 	return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index dedea96a8e0f..8f199ff9be87 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright (C) 2015 Intel Deutschland GmbH
++ * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,6 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -644,20 +645,19 @@ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
+ 	return ret;
  }
  
+-void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+-			u16 ssn, const struct iwl_trans_txq_scd_cfg *cfg,
+-			unsigned int wdg_timeout)
++static bool iwl_mvm_update_txq_mapping(struct iwl_mvm *mvm, int queue,
++				       int mac80211_queue, u8 sta_id, u8 tid)
+ {
+ 	bool enable_queue = true;
+ 
+ 	spin_lock_bh(&mvm->queue_info_lock);
+ 
+ 	/* Make sure this TID isn't already enabled */
+-	if (mvm->queue_info[queue].tid_bitmap & BIT(cfg->tid)) {
++	if (mvm->queue_info[queue].tid_bitmap & BIT(tid)) {
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+ 		IWL_ERR(mvm, "Trying to enable TXQ %d with existing TID %d\n",
+-			queue, cfg->tid);
+-		return;
++			queue, tid);
++		return false;
+ 	}
+ 
+ 	/* Update mappings and refcounts */
+@@ -666,17 +666,17 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 
+ 	mvm->queue_info[queue].hw_queue_to_mac80211 |= BIT(mac80211_queue);
+ 	mvm->queue_info[queue].hw_queue_refcount++;
+-	mvm->queue_info[queue].tid_bitmap |= BIT(cfg->tid);
+-	mvm->queue_info[queue].ra_sta_id = cfg->sta_id;
++	mvm->queue_info[queue].tid_bitmap |= BIT(tid);
++	mvm->queue_info[queue].ra_sta_id = sta_id;
+ 
+ 	if (enable_queue) {
+-		if (cfg->tid != IWL_MAX_TID_COUNT)
++		if (tid != IWL_MAX_TID_COUNT)
+ 			mvm->queue_info[queue].mac80211_ac =
+-				tid_to_mac80211_ac[cfg->tid];
++				tid_to_mac80211_ac[tid];
+ 		else
+ 			mvm->queue_info[queue].mac80211_ac = IEEE80211_AC_VO;
+ 
+-		mvm->queue_info[queue].txq_tid = cfg->tid;
++		mvm->queue_info[queue].txq_tid = tid;
+ 	}
+ 
+ 	IWL_DEBUG_TX_QUEUES(mvm,
+@@ -686,8 +686,16 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 
+ 	spin_unlock_bh(&mvm->queue_info_lock);
+ 
++	return enable_queue;
++}
++
++void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
++			u16 ssn, const struct iwl_trans_txq_scd_cfg *cfg,
++			unsigned int wdg_timeout)
++{
+ 	/* Send the enabling command if we need to */
+-	if (enable_queue) {
++	if (iwl_mvm_update_txq_mapping(mvm, queue, mac80211_queue,
++				       cfg->sta_id, cfg->tid)) {
+ 		struct iwl_scd_txq_cfg_cmd cmd = {
+ 			.scd_queue = queue,
+ 			.action = SCD_CFG_ENABLE_QUEUE,
 -- 
 2.11.0
