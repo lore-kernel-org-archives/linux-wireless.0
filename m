@@ -1,136 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35341 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753803AbdDEQcM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 12:32:12 -0400
-Received: by mail-oi0-f66.google.com with SMTP id d2so2888437oig.2
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Apr 2017 09:32:12 -0700 (PDT)
-Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
-To: Hans de Goede <hdegoede@redhat.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-References: <20170329174751.13184-1-hdegoede@redhat.com>
- <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
- <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
- <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com>
- <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
- <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net>
- <560981e0-e1b0-7a06-80e4-14d677c7d64a@redhat.com>
-Cc: Bastien Nocera <hadess@hadess.net>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <15871468-0086-2d66-328b-0699ef6f4b31@lwfinger.net> (sfid-20170405_183456_757725_4F8B1B9B)
-Date: Wed, 5 Apr 2017 11:32:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <560981e0-e1b0-7a06-80e4-14d677c7d64a@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:47290 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752873AbdDKG5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 02:57:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH net-next v4 3/5] netlink: allow sending extended ACK with cookie on success
+Date: Tue, 11 Apr 2017 08:56:58 +0200
+Message-Id: <20170411065700.2623-4-johannes@sipsolutions.net> (sfid-20170411_085746_520611_A26D4129)
+In-Reply-To: <20170411065700.2623-1-johannes@sipsolutions.net>
+References: <20170411065700.2623-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/05/2017 04:36 AM, Hans de Goede wrote:
-> Hi,
->
-> On 05-04-17 01:41, Larry Finger wrote:
->> On 04/04/2017 04:53 PM, Hans de Goede wrote:
->>> Hi,
->>>
->>> On 04/04/2017 11:38 PM, Arend Van Spriel wrote:
->>>>
->>>>
->>>> On 4-4-2017 20:53, Hans de Goede wrote:
->>>>> Hi,
->>>>>
->>>>> On 04/04/2017 08:31 PM, Larry Finger wrote:
->>>>>> On 03/29/2017 12:47 PM, Hans de Goede wrote:
->>>>>>> The rtl8723bs is found on quite a few systems used by Linux users,
->>>>>>> such as on Atom systems (Intel Computestick and various other
->>>>>>> Atom based devices) and on many (budget) ARM boards such as
->>>>>>> the CHIP.
->>>>>>>
->>>>>>> The plan moving forward with this is for the new clean,
->>>>>>> written from scratch, rtl8xxxu driver to eventually gain
->>>>>>> support for sdio devices. But there is no clear timeline
->>>>>>> for that, so lets add this driver included in staging for now.
->>>>>>
->>>>>> Hans,
->>>>>>
->>>>>> I started looking at the Smatch errors. This one may be the result of
->>>>>> a serious problem:
->>>>>>
->>>>>>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
->>>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info()
->>>>>> error: we previously assumed 'phead' could be null (see line 453)
->>>>>> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info()
->>>>>> warn: variable dereferenced before check 'phead' (see line 454)
->>>>>>
->>>>>> A snippet of the code in question is as follows:
->>>>>>
->>>>>>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
->>>>>>         phead = get_list_head(queue);
->>>>>>         plist = phead ? get_next(phead) : NULL;
->>>>>>         plist = get_next(phead);
->>>>>>         if ((!phead) || (!plist)) {
->>>>>>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
->>>>>>                 return 0;
->>>>>>         }
->>>>>>
->>>>>> This code comes directly from the hadess repo, but I am suspicious of
->>>>>> the double call to get_next(phead). I cannot imagine any valid reason
->>>>>> to skip every other entry on that list.
->>>>>
->>>>> If you look closer and simplify the first getnext line what is written is:
->>>>>
->>>>>          plist = get_next(phead);
->>>>>          plist = get_next(phead);
->>>>>
->>>>> Which indeed looks like it could use improvement, but I don't
->>>>> think it is seriously broken.
->>>>
->>>> So get_list_head(queue) can never return NULL?
->>>
->>> I don't know.
->>>
->>>> Otherwise I don't know
->>>> how close I need to get for a simplified look ;-)
->>>
->>> I simplified things so as to make clear that Larry's worry was
->>> not really a problem, I do agree the smatch complaint is valid.
->>
->> I think the following fixes the problem:
->>
->> diff --git a/drivers/staging/rtl8723bs/core/rtw_debug.c
->> b/drivers/staging/rtl8723bs/core/rtw_debug.c
->> index d34747b29309..51cef55d3f76 100644
->> --- a/drivers/staging/rtl8723bs/core/rtw_debug.c
->> +++ b/drivers/staging/rtl8723bs/core/rtw_debug.c
->> @@ -451,7 +451,6 @@ int proc_get_survey_info(struct seq_file *m, void *v)
->>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
->>         phead = get_list_head(queue);
->>         plist = phead ? get_next(phead) : NULL;
->> -       plist = get_next(phead);
->>         if ((!phead) || (!plist)) {
->>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
->>                 return 0;
->>
->> Pointer plist is set in the 3rd line, thus the second set of it can be removed.
->
-> Agreed, when I've some time I plan to do a follow-up patch
-> to my initial submission fixing all the Smatch errors. But feel
-> free to beat me to it.
->
-> Greg, if I understood you correctly you plan to merge my initial
-> submission as is and then we can fix this (and other things) with
-> follow up patches, right ?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hans,
+Now that we have extended error reporting and a new message format
+for netlink ACK messages, also extend this to be able to return
+arbitrary cookie data on success.
 
-I took GregKH out of the Cc list when I started the discussion of the Smatch 
-errors/warnings, and he probably has not seen the recent E-mails in this thread. 
-It it was my understanding that he planned to apply your submission in the form 
-you sent.
+This will allow, for example, nl80211 to not send an extra message
+for cookies identifying newly created objects, but return those
+directly in the ACK message.
 
-I have several patches nearly ready to fix most of the Smatch warnings and 
-errors. I will send them as soon as the original submission is applied.
+The cookie data size is currently limited to 20 bytes (since Jamal
+talked about using SHA1 for identifiers.)
 
-Larry
+Thanks to Jamal Hadi Salim for bringing up this idea during the
+discussions.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/netlink.h      |  7 +++++++
+ include/uapi/linux/netlink.h |  4 ++++
+ net/netlink/af_netlink.c     | 33 ++++++++++++++++++++++-----------
+ 3 files changed, 33 insertions(+), 11 deletions(-)
+
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index 60e7137f840d..8d2a8924705c 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -62,15 +62,22 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
+ 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
+ }
+ 
++/* this can be increased when necessary - don't expose to userland */
++#define NETLINK_MAX_COOKIE_LEN	20
++
+ /**
+  * struct netlink_ext_ack - netlink extended ACK report struct
+  * @_msg: message string to report - don't access directly, use
+  *	%NL_SET_ERR_MSG
+  * @bad_attr: attribute with error
++ * @cookie: cookie data to return to userspace (for success)
++ * @cookie_len: actual cookie data length
+  */
+ struct netlink_ext_ack {
+ 	const char *_msg;
+ 	const struct nlattr *bad_attr;
++	u8 cookie[NETLINK_MAX_COOKIE_LEN];
++	u8 cookie_len;
+ };
+ 
+ /* Always use this macro, this allows later putting the
+diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
+index 96e613db68cb..67fcde069b9c 100644
+--- a/include/uapi/linux/netlink.h
++++ b/include/uapi/linux/netlink.h
+@@ -122,6 +122,9 @@ struct nlmsgerr {
+  * @NLMSGERR_ATTR_MSG: error message string (string)
+  * @NLMSGERR_ATTR_OFFS: offset of the invalid attribute in the original
+  *	 message, counting from the beginning of the header (u32)
++ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
++ *	be used - in the success case - to identify a created
++ *	object or operation or similar (binary)
+  * @NUM_NLMSGERR_ATTRS: number of attributes
+  * @NLMSGERR_ATTR_MAX: highest attribute number
+  */
+@@ -129,6 +132,7 @@ enum nlmsgerr_attrs {
+ 	NLMSGERR_ATTR_UNUSED,
+ 	NLMSGERR_ATTR_MSG,
+ 	NLMSGERR_ATTR_OFFS,
++	NLMSGERR_ATTR_COOKIE,
+ 
+ 	NUM_NLMSGERR_ATTRS,
+ 	NLMSGERR_ATTR_MAX = NUM_NLMSGERR_ATTRS - 1
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index c1564768000e..ee841f00a6ec 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -2311,6 +2311,10 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 		}
+ 	} else {
+ 		flags |= NLM_F_CAPPED;
++
++		if (nlk->flags & NETLINK_F_EXT_ACK &&
++		    extack && extack->cookie_len)
++			tlvlen += nla_total_size(extack->cookie_len);
+ 	}
+ 
+ 	if (tlvlen)
+@@ -2337,17 +2341,24 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 	errmsg->error = err;
+ 	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh->nlmsg_len : sizeof(*nlh));
+ 
+-	if (err && nlk->flags & NETLINK_F_EXT_ACK && extack) {
+-		if (extack->_msg)
+-			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
+-					       extack->_msg));
+-		if (extack->bad_attr &&
+-		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
+-			     (u8 *)extack->bad_attr >= in_skb->data +
+-						       in_skb->len))
+-			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
+-					    (u8 *)extack->bad_attr -
+-					    in_skb->data));
++	if (nlk->flags & NETLINK_F_EXT_ACK && extack) {
++		if (err) {
++			if (extack->_msg)
++				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
++						       extack->_msg));
++			if (extack->bad_attr &&
++			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
++				     (u8 *)extack->bad_attr >= in_skb->data +
++							       in_skb->len))
++				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
++						    (u8 *)extack->bad_attr -
++						    in_skb->data));
++		} else {
++			if (extack->cookie_len)
++				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
++						extack->cookie_len,
++						extack->cookie));
++		}
+ 	}
+ 
+ 	nlmsg_end(skb, rep);
+-- 
+2.11.0
