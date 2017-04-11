@@ -1,33 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:36437 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756963AbdDQKLL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 06:11:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170417100730.3648-1-vincent.legoll@gmail.com>
-References: <CAEwRq=oz=8T489QZtjcHB03rv_mFY6WAyOUkgMTOrsJuDEPPdw@mail.gmail.com>
- <20170417100730.3648-1-vincent.legoll@gmail.com>
-From: Vincent Legoll <vincent.legoll@gmail.com>
-Date: Mon, 17 Apr 2017 12:11:10 +0200
-Message-ID: <CAEwRq=p0LMng+ztMNBbtHwYFq-Y26KyxbcZuiBxL-jK1+Wgkyw@mail.gmail.com> (sfid-20170417_121137_294529_122E269F)
-Subject: Re: [PATCH RFC] Make BCMA a menuconfig to ease disabling it all
-To: Linux Kernel ML <linux-kernel@vger.kernel.org>, zajec5@gmail.com,
+Received: from ozlabs.org ([103.22.144.67]:54849 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752124AbdDKAD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Apr 2017 20:03:57 -0400
+Date: Tue, 11 Apr 2017 10:03:55 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bastien Nocera <hadess@hadess.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
         linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] staging: rtl8723bs: Add missing include <linux/of.h> to
+ fix compile error
+Message-ID: <20170411100355.6d204cbf@canb.auug.org.au> (sfid-20170411_020401_669636_8A581591)
+In-Reply-To: <20170410191307.4137-1-hdegoede@redhat.com>
+References: <20170410191307.4137-1-hdegoede@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Argh,
+Hi Hans,
 
-looks like the "--in-reply-to" did not hook it up properly...
+On Mon, 10 Apr 2017 21:13:07 +0200 Hans de Goede <hdegoede@redhat.com> wrote:
+>
+> As reported by Stephen Rothwell when merging staging-next,
+> drivers/staging/rtl8723bs/core/rtw_ieee80211.c does not compile due
+> to of_get_property not being declared.
+> 
+> Explicitly include <linux/of.h> to fix this compile error.
+> 
+> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>  drivers/staging/rtl8723bs/core/rtw_ieee80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/rtl8723bs/core/rtw_ieee80211.c b/drivers/staging/rtl8723bs/core/rtw_ieee80211.c
+> index af44a8c..74f5ee0 100644
+> --- a/drivers/staging/rtl8723bs/core/rtw_ieee80211.c
+> +++ b/drivers/staging/rtl8723bs/core/rtw_ieee80211.c
+> @@ -16,7 +16,7 @@
+>  
+>  #include <drv_types.h>
+>  #include <rtw_debug.h>
+> -
+> +#include <linux/of.h>
+>  
+>  u8 RTW_WPA_OUI_TYPE[] = { 0x00, 0x50, 0xf2, 1 };
+>  u16 RTW_WPA_VERSION = 1;
+> -- 
+> 2.9.3
 
-This was intended as a reply to:
-http://lkml.iu.edu/hypermail/linux/kernel/1704.1/04654.html
-Re: [PATCH] Make AMBA a menuconfig to ease disabling it all
-from (Fri Apr 14 2017 - 08:33:57 EST)
-
-Sorry
-
+I will add this to linux-next today.
 -- 
-Vincent Legoll
+Cheers,
+Stephen Rothwell
