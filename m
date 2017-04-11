@@ -1,144 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:33940 "EHLO
-        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756567AbdDPSJf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30114 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752247AbdDKKNt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 14:09:35 -0400
+        Tue, 11 Apr 2017 06:13:49 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+        <tamizhchelvam@codeaurora.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHv4 0/2] cfg80211: mac80211: BTCOEX feature support
+Date: Tue, 11 Apr 2017 15:45:28 +0530
+Message-ID: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170411_121441_665736_F0B2DA94)
 MIME-Version: 1.0
-In-Reply-To: <40bc6004-519c-7bf1-874b-3ae169140637@lwfinger.net>
-References: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
- <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net> <CAJs9aZ9Hwnjb60mCycR3T2TWH75ZTdtEeWQ1iHRN+6NkkD+pZA@mail.gmail.com>
- <40bc6004-519c-7bf1-874b-3ae169140637@lwfinger.net>
-From: rupert THURNER <rupert.thurner@gmail.com>
-Date: Sun, 16 Apr 2017 20:09:13 +0200
-Message-ID: <CAJs9aZ_QRgqAjt+6FV=ZkPvYvkDedwtegMKC4Dk-uT8KtrE-mA@mail.gmail.com> (sfid-20170416_201021_603826_C40AA55A)
-Subject: Re: 4.10.9 nok with realtek wlan, atom
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 16, 2017 at 6:02 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 04/16/2017 05:23 AM, rupert THURNER wrote:
->>
->> On Sat, Apr 15, 2017 at 10:40 PM, Larry Finger
->> <Larry.Finger@lwfinger.net> wrote:
->>>
->>> On 04/14/2017 03:26 PM, rupert THURNER wrote:
->>>>
->>>>
->>>> On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net>
->>>> wrote:
->>>>>
->>>>>
->>>>> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>> [+cc rtl8192ce folks in case they've seen this]
->>>>>>
->>>>>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> hi,
->>>>>>>
->>>>>>> not technical expert enough, i just wanted to give a short user
->>>>>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
->>>>>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
->>>>>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
->>>>>>> hotspot is possible then drops, or connecting to wlan fails
->>>>>>> alltogether.
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> Thanks very much for your report, and sorry for the inconvenience.
->>>>>>
->>>>>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
->>>>>>
->>>>>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
->>>>>> need to figure out why and make sure we fix the v4.9 stable series.
->>>>>>
->>>>>> I can't tell yet whether this is PCI-related or not.  If it is,
->>>>>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
->>>>>> appeared in v4.9.6, and there is a known issue with that.  The issue
->>>>>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
->>>>>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
->>>>>> the first thing to do would be to test v4.9.9.
->>>>>>
->>>>>> If it's not fixed in v4.9.9, can you share the complete dmesg log
->>>>>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
->>>>>> known working version) and v4.9.6 (first known broken version)?  On
->>>>>> v4.9.6, collect the dmesg output after the failure occurs.
->>>>>>
->>>>>>> 24: PCI 300.0: 0282 WLAN controller
->>>>>>>   [Created at pci.366]
->>>>>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>>>>   Revision: 0x01
->>>>>>>   Driver: "rtl8192ce"
->>>>>>>   Driver Modules: "rtl8192ce"
->>>>>>>   Device File: wlp3s0
->>>>>>>   Features: WLAN
->>>>>
->>>>>
->>>>>
->>>>>
->>>>> It would be helpful if someone were to bisect this issue. The only
->>>>> issue
->>>>> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi:
->>>>> rtl8192ce:
->>>>> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
->>>>> backported to 4.9.
->>>>>
->>>>> The above issue is one that could not be reproduced on my hardware,
->>>>> thus
->>>>> it
->>>>> took Jurij Smakov to find the fix. Without his bisection of the
->>>>> problem,
->>>>> who
->>>>> knows how long it would have taken to find my edit mistake.
->>>>
->>>>
->>>>
->>>> larry, using the newest kernel 4.10.8 the network connection dropps
->>>> again irregular.
->>>>
->>>> # dmesg
->>>> [    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
->>>> version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
->>>> 2017
->>>> [   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
->>>> [   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
->>>> [   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
->>>> [   11.978945] rtlwifi: rtlwifi: wireless switch is on
->>>>
->>>> # lspci -vv
->>>> Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
->>>> Adapter
->>>> Kernel driver in use: rtl8192ce
->>>
->>>
->>>
->>> Is firmware rtlwifi/rtl8192cfw.bin also used on kernels that work?
->>
->>
->> 4.10.x used to work. 4.10.6 or 4.10.7 it started failing? i am not too
->> sure about it.
->>
->> # ls -l /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
->> -rw-r--r-- 1 root root 16192 Mar 10 12:15
->> /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
->
->
-> That does not answer my question.
-4.10, 4.10.2, 4.10.3, 4.10.5 worked. as far as i can tell
-rtl8192cfw.bin did not change and was used. with kernels 4.9 there was
-a phase where rtl8192cfwU.bin was loaded which did not work. or i do
-not understand your question correctly?
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+
+This patchset add support for BTCOEX feature to enable/disable and
+modifying btcoex priority value via nl80211
+
+Tamizh chelvam (2):
+  cfg80211: Add support to enable or disable btcoex and set
+    btcoex_priority
+  mac80211: Add support to enable or disable btcoex and set btcoex
+    priority value
+
+v4 :
+  * Moved btcoex_priority_support_flag enum to nl80211.h and renamed it.
+  * fixed typo.
+
+v3 :
+  * Introduced NL80211_EXT_FEATURE_BTCOEX_PRIORITY to expose
+    btcoex priority support and removed bool variable.
+
+v2 :
+  * Introduced NL80211_CMD_SET_BTCOEX to enable/disable btcoex and
+    to set/modify btcoex_priority.
+  * Added bool variable in wiphy structure to advertise btcoex_priority
+    feature and removed BITMAP calculation for btcoex_priority value.
+
+ include/net/cfg80211.h       |    6 +++++
+ include/net/mac80211.h       |    5 +++++
+ include/uapi/linux/nl80211.h |   50 ++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/cfg.c           |    9 ++++++++
+ net/mac80211/driver-ops.h    |   15 +++++++++++++
+ net/mac80211/trace.h         |   20 +++++++++++++++++
+ net/wireless/nl80211.c       |   45 +++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |   13 +++++++++++
+ net/wireless/trace.h         |   17 ++++++++++++++
+ 9 files changed, 180 insertions(+)
+
+-- 
+1.7.9.5
