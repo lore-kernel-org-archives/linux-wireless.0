@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53736 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1165766AbdDXGuj (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56790 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751790AbdDKN7f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 02:50:39 -0400
-Message-ID: <1493016631.31741.139.camel@coelho.fi> (sfid-20170424_085043_207619_98CC93D9)
-From: Luca Coelho <luca@coelho.fi>
-To: Andi Kleen <andi@firstfloor.org>, linuxwifi@intel.com,
+        Tue, 11 Apr 2017 09:59:35 -0400
+Date: Tue, 11 Apr 2017 15:59:25 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
         linux-wireless@vger.kernel.org
-Date: Mon, 24 Apr 2017 09:50:31 +0300
-In-Reply-To: <20170424005400.GK22592@two.firstfloor.org>
-References: <20170424005400.GK22592@two.firstfloor.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: 4.11-rc* iwlwifi instable
+Subject: Re: [PATCH] staging: rtl8188eu: force driver to be built as a module
+Message-ID: <20170411135925.GA4892@kroah.com> (sfid-20170411_155938_472345_664452B4)
+References: <20170411091953.25069-1-hdegoede@redhat.com>
+ <fb9b6ee4-ae69-282a-5c69-558b0810cf2f@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fb9b6ee4-ae69-282a-5c69-558b0810cf2f@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2017-04-23 at 17:54 -0700, Andi Kleen wrote:
-> Hi,
-
-Hi Andi,
-
-
-> Since I updated my laptop to 4.11-rc* the wireless is fairly instable
-> (I think it was already less stable with 4.10 than with 4.8, but no
-> clear data) 
+On Tue, Apr 11, 2017 at 01:30:16PM +0200, Arend Van Spriel wrote:
+> On 11-4-2017 11:19, Hans de Goede wrote:
+> > The rtl8188eu driver defines a ton of global symbols which tend to
+> > conflict with other realtek wifi drivers, force it to be built as
+> > a module.
 > 
-> For example it locked up (no more wireless) with a warn on while connecting
-> and actually needed a reboot to recover (reloading modules was not
-> enough)
-> 
-> Any fixes/workarounds?
+> Or get rid of those globals as we did to get out of staging :-p
 
-It seems that you are using an old firmware version:
-
-> [70585.074356] iwlwifi 0000:03:00.0: Loaded firmware version: 21.302800.0
-
-We have already published version -27 for 4.11 and you're still using
-version -21.  You can get the latest version from here:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-7265D-27.ucode
-
-We have loads of fixes and improvements in this new version.  And
-hopefully it will make your problems go away. ;)
-
-Please try it and let me know how it goes.
-
---
-Cheers,
-Luca.
+Give it time...
