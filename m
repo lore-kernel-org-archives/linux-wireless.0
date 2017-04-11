@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51710 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1171578AbdDXNgG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 09:36:06 -0400
-From: Colin King <colin.king@canonical.com>
-To: Geoff Lansberry <geoff@kuvee.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] NFC: trf7970a: fix check of clock frequencies, use && instead of ||
-Date: Mon, 24 Apr 2017 14:36:02 +0100
-Message-Id: <20170424133603.3697-1-colin.king@canonical.com> (sfid-20170424_153640_105544_43593ABF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48174 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751645AbdDKI34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 04:29:56 -0400
+Message-ID: <1491899392.31620.14.camel@sipsolutions.net> (sfid-20170411_103205_938117_D15E0439)
+Subject: Re: [PATCH net-next v4 1/5] netlink: extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>
+Date: Tue, 11 Apr 2017 10:29:52 +0200
+In-Reply-To: <20170411081346.GD1976@nanopsycho> (sfid-20170411_101348_843690_BC897405)
+References: <20170411065700.2623-1-johannes@sipsolutions.net>
+         <20170411065700.2623-2-johannes@sipsolutions.net>
+         <20170411071900.GC1976@nanopsycho>
+         <1491895758.31620.4.camel@sipsolutions.net>
+         <20170411081346.GD1976@nanopsycho> (sfid-20170411_101348_843690_BC897405)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, 2017-04-11 at 10:13 +0200, Jiri Pirko wrote:
+> Tue, Apr 11, 2017 at 09:29:18AM CEST, johannes@sipsolutions.net
+> wrote:
+> > On Tue, 2017-04-11 at 09:19 +0200, Jiri Pirko wrote:
+> > > 
+> > > > +	NUM_NLMSGERR_ATTRS,
+> > > 
+> > > According to the rest of the uapi, this should be rather named:
+> > > 	__NLMSGERR_ATTR_MAX
+> > 
+> > nl80211 uses NUM_ so I guess that's a matter of convention, but I
+> > can
+> > change that I guess.
+> 
+> Please do.
 
-The "or" condition (clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
-(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUE) will always be true because
-clk_freq cannot be equal to two different values at the same time. Use
-the  && operator instead of || to fix this.
+No further comments on any other parts of the patch(es)? :)
 
-Detected by CoverityScan, CID#1430468 ("Constant expression result")
+I don't want to be resending all the time, so I guess I'll wait. For
+now, all code is in the nl-err branch in mac80211-next.
 
-Fixes: 837eb4d21ecde7 ("NFC: trf7970a: add device tree option for 27MHz clock")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/nfc/trf7970a.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 2d1c8ca6e679..00eb6cd2b22f 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2071,8 +2071,8 @@ static int trf7970a_probe(struct spi_device *spi)
- 	}
- 
- 	of_property_read_u32(np, "clock-frequency", &clk_freq);
--	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
--		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
-+	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) &&
-+		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
- 		dev_err(trf->dev,
- 			"clock-frequency (%u Hz) unsupported\n",
- 			clk_freq);
--- 
-2.11.0
+johannes
