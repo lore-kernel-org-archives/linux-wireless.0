@@ -1,112 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40616 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752249AbdDHUYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 16:24:41 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 2/5] genetlink: pass extended ACK report down
-Date: Sat,  8 Apr 2017 22:24:31 +0200
-Message-Id: <20170408202434.12018-3-johannes@sipsolutions.net> (sfid-20170408_222506_695842_3FAD8F76)
-In-Reply-To: <20170408202434.12018-1-johannes@sipsolutions.net>
-References: <20170408202434.12018-1-johannes@sipsolutions.net>
+Received: from shards.monkeyblade.net ([184.105.139.130]:33910 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751396AbdDKRm1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 13:42:27 -0400
+Date: Tue, 11 Apr 2017 13:42:25 -0400 (EDT)
+Message-Id: <20170411.134225.398046538225438175.davem@davemloft.net> (sfid-20170411_194236_674644_63BFF441)
+To: pablo@netfilter.org
+Cc: dsa@cumulusnetworks.com, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        jhs@mojatatu.com, jbenc@redhat.com, jiri@resnulli.us
+Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170411173143.GA1899@salvia>
+References: <1491894172.31620.2.camel@sipsolutions.net>
+        <9a68aa01-474c-7054-30c2-473ee1250abe@cumulusnetworks.com>
+        <20170411173143.GA1899@salvia>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Date: Tue, 11 Apr 2017 19:31:43 +0200
 
-Pass the extended ACK reporting struct down from
-generic netlink to the families, using the existing
-struct genl_info for simplicity.
+> On Tue, Apr 11, 2017 at 08:25:57AM -0600, David Ahern wrote:
+>> On 4/11/17 1:02 AM, Johannes Berg wrote:
+>> > On Tue, 2017-04-11 at 08:59 +0200, Pablo Neira Ayuso wrote:
+>> >> CAP_ACK means: trim off the payload that the netlink error message
+>> >> is embedding, just like ICMP error does.
+>> >>
+>> >> What is exactly your concern? If the user explicitly requests this
+>> >> via socket option for this socket, then we're expecting they do the
+>> >> right handling for what they're asking for.
+>> > 
+>> > I think David's concern was that when you want to parse the ACK in a
+>> > library (or application), you may not easily know if the application
+>> > (or library) requested capping.
+>> 
+>> exactly.
+> 
+> Then, the library needs to be extended to enable this handling to
+> modify the way it needs to handle errors, together with the
+> setsockopt().
 
-Also add support to set the extended ACK information
-from generic netlink users.
+That's my take on this.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/genetlink.h | 20 ++++++++++++++++++++
- net/netlink/genetlink.c |  6 ++++--
- 2 files changed, 24 insertions(+), 2 deletions(-)
+If there are libraries where there is a disconnect between the thing
+that controls the sending of the netlink request from the processing
+of the netlink response, that really is their problem to work out.
 
-diff --git a/include/net/genetlink.h b/include/net/genetlink.h
-index a34275be3600..b81a4979e1db 100644
---- a/include/net/genetlink.h
-+++ b/include/net/genetlink.h
-@@ -84,6 +84,7 @@ struct nlattr **genl_family_attrbuf(const struct genl_family *family);
-  * @attrs: netlink attributes
-  * @_net: network namespace
-  * @user_ptr: user pointers
-+ * @extack: extended ACK report struct
-  */
- struct genl_info {
- 	u32			snd_seq;
-@@ -94,6 +95,7 @@ struct genl_info {
- 	struct nlattr **	attrs;
- 	possible_net_t		_net;
- 	void *			user_ptr[2];
-+	struct netlink_ext_ack *extack;
- };
- 
- static inline struct net *genl_info_net(struct genl_info *info)
-@@ -106,6 +108,24 @@ static inline void genl_info_net_set(struct genl_info *info, struct net *net)
- 	write_pnet(&info->_net, net);
- }
- 
-+#define GENL_SET_ERR_MSG(info, msg) NL_SET_ERR_MSG((info)->extack, msg)
-+
-+static inline int genl_err_attr(struct genl_info *info, int err,
-+				struct nlattr *attr)
-+{
-+	info->extack->bad_attr = attr;
-+
-+	return err;
-+}
-+
-+static inline int genl_err_attr_missing(struct genl_info *info, int err,
-+					u16 attr)
-+{
-+	info->extack->missing_attr = attr;
-+
-+	return err;
-+}
-+
- /**
-  * struct genl_ops - generic netlink operations
-  * @cmd: command identifier
-diff --git a/net/netlink/genetlink.c b/net/netlink/genetlink.c
-index 57b2e3648bc0..4b598a5999a2 100644
---- a/net/netlink/genetlink.c
-+++ b/net/netlink/genetlink.c
-@@ -497,7 +497,8 @@ static int genl_lock_done(struct netlink_callback *cb)
- 
- static int genl_family_rcv_msg(const struct genl_family *family,
- 			       struct sk_buff *skb,
--			       struct nlmsghdr *nlh)
-+			       struct nlmsghdr *nlh,
-+			       struct netlink_ext_ack *extack)
- {
- 	const struct genl_ops *ops;
- 	struct net *net = sock_net(skb->sk);
-@@ -584,6 +585,7 @@ static int genl_family_rcv_msg(const struct genl_family *family,
- 	info.genlhdr = nlmsg_data(nlh);
- 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
- 	info.attrs = attrbuf;
-+	info.extack = extack;
- 	genl_info_net_set(&info, net);
- 	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
- 
-@@ -618,7 +620,7 @@ static int genl_rcv_msg(struct sk_buff *skb, struct nlmsghdr *nlh,
- 	if (!family->parallel_ops)
- 		genl_lock();
- 
--	err = genl_family_rcv_msg(family, skb, nlh);
-+	err = genl_family_rcv_msg(family, skb, nlh, extack);
- 
- 	if (!family->parallel_ops)
- 		genl_unlock();
--- 
-2.11.0
+If they wish to support extended ACK reports, they will need to
+sort those details out.
+
+If there is sharing of a newlink socket between different libraries,
+each wanting to operate in a different mode, that isn't all that
+reasonable to me.  Often libraries can't even agree on whether they
+want to use a socket fd in non-blocking vs. blocking mode.
+
+David, if you have a specific case where it's absolutely impossible
+to resolve this when the library is converted to support extended
+ACKs, please mention it.
+
+Thanks.
