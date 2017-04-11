@@ -1,71 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33411 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751582AbdDOUcL (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:33698 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751792AbdDKBh3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Apr 2017 16:32:11 -0400
-Received: by mail-oi0-f65.google.com with SMTP id t63so22231365oih.0
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:10 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>
-Subject: [PATCH 05/14] rtlwifi: btcoex: 21a 2ant: fix some coding style issues
-Date: Sat, 15 Apr 2017 15:31:51 -0500
-Message-Id: <20170415203200.22979-6-Larry.Finger@lwfinger.net> (sfid-20170415_223241_279621_77BE3B20)
-In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+        Mon, 10 Apr 2017 21:37:29 -0400
+Received: by mail-pf0-f181.google.com with SMTP id s16so41207517pfs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 18:37:29 -0700 (PDT)
+Date: Mon, 10 Apr 2017 18:37:25 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: Re: [PATCH v3 4/4] mwifiex: pcie: extract wifi part from combo
+ firmware during function level reset
+Message-ID: <20170411013724.GA135531@google.com> (sfid-20170411_033914_059118_92155253)
+References: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
+ <1491815374-6555-4-git-send-email-huxinming820@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1491815374-6555-4-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi,
 
-Fix some ident and naming for linux coding style.
+On Mon, Apr 10, 2017 at 09:09:34AM +0000, Xinming Hu wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> A seperate wifi-only firmware was download during pcie function level reset.
+> It is in fact the tail part of wifi/bt combo firmware. Per Brian's and
+> Dmitry's suggestion, this patch extract the wifi part from combo firmware.
+> 
+> After that, we can discard the redudant image in linux-firmware repo.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> ---
+> v2: extract wifi part from combo firmware(Dimtry and Brain)
+>     add more description(Kalle)
+> v3: same as v2
+> ---
+>  drivers/net/wireless/marvell/mwifiex/fw.h   | 18 +++++++
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 83 ++++++++++++++++++++++++++---
+>  drivers/net/wireless/marvell/mwifiex/pcie.h |  2 +
+>  3 files changed, 96 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+> index 0b68374..6cf9ab9 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/fw.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+> @@ -43,6 +43,24 @@ struct tx_packet_hdr {
+>  	struct rfc_1042_hdr rfc1042_hdr;
+>  } __packed;
+>  
+> +struct mwifiex_fw_header {
+> +	__le32 dnld_cmd;
+> +	__le32 base_addr;
+> +	__le32 data_length;
+> +	__le32 crc;
+> +} __packed;
+> +
+> +struct mwifiex_fw_data {
+> +	struct mwifiex_fw_header header;
+> +	__le32 seq_num;
+> +	u8 data[1];
+> +} __packed;
+> +
+> +#define MWIFIEX_FW_DNLD_CMD_1 0x1
+> +#define MWIFIEX_FW_DNLD_CMD_5 0x5
+> +#define MWIFIEX_FW_DNLD_CMD_6 0x6
+> +#define MWIFIEX_FW_DNLD_CMD_7 0x7
+> +
+>  #define B_SUPPORTED_RATES               5
+>  #define G_SUPPORTED_RATES               9
+>  #define BG_SUPPORTED_RATES              13
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index a07cb0a..ebf00d9 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -1956,6 +1956,63 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+>  	return ret;
+>  }
+>  
+> +/* Extract wifi part from wifi-bt combo firmware image.
+> + */
+> +
+> +static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
+> +				   u8 *firmware, u32 firmware_len) {
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Can you make 'firmware' const? Also, to help below, it might work better
+as 'const void *'.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 62c3556e83b5..bbce0cbe2e9a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3512,8 +3512,7 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 		return;
- 	}
- 
--	btcoexist->btc_get(btcoexist,
--		BTC_GET_BL_WIFI_UNDER_5G, &wifi_under_5g);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_UNDER_5G, &wifi_under_5g);
- 
- 	if (wifi_under_5g) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-@@ -3629,15 +3628,15 @@ void ex_btc8821a2ant_init_hwconfig(struct btc_coexist *btcoexist)
- 	u1tmp |= 0x5;
- 	btcoexist->btc_write_1byte(btcoexist, 0x790, u1tmp);
- 
--	/*Antenna config */
-+	/* Antenna config */
- 	btc8821a2ant_set_ant_path(btcoexist, BTC_ANT_WIFI_AT_MAIN, true, false);
- 
- 	/* PTA parameter */
- 	btc8821a2ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
- 
- 	/* Enable counter statistics */
--	/*0x76e[3] = 1, WLAN_Act control by PTA*/
--	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
-+	/* 0x76e[3] = 1, WLAN_Act control by PTA */
-+	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
- 	btcoexist->btc_write_1byte(btcoexist, 0x778, 0x3);
- 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
- }
--- 
-2.12.0
+> +	struct mwifiex_fw_data fwdata;
+> +	u32 offset = 0, data_len, dnld_cmd;
+> +	int ret = 0;
+> +	bool cmd7_before = false;
+> +
+> +	while (1) {
+> +		if (offset + sizeof(fwdata.header) >= firmware_len) {
+> +			mwifiex_dbg(adapter, ERROR,
+> +				    "extract wifi-only firmware failure!");
+> +			ret = -1;
+> +			goto done;
+> +		}
+> +
+> +		memcpy(&fwdata.header, firmware + offset,
+> +		       sizeof(fwdata.header));
+
+Do you actually need to copy this? Can't you just keep a pointer to the
+location? e.g.
+
+	const struct mwifiex_fw_data *fwdata;
+...
+	fwdata = firmware + offset;
+
+> +		dnld_cmd = le32_to_cpu(fwdata.header.dnld_cmd);
+> +		data_len = le32_to_cpu(fwdata.header.data_length);
+> +
+> +		switch (dnld_cmd) {
+> +		case MWIFIEX_FW_DNLD_CMD_1:
+> +			if (!cmd7_before) {
+> +				mwifiex_dbg(adapter, ERROR,
+> +					    "no cmd7 before cmd1!");
+> +				ret = -1;
+> +				goto done;
+> +			}
+> +			offset += data_len + sizeof(fwdata.header);
+
+Technically, we need an overflow check to make sure that 'data_len'
+isn't some bogus value that overflows 'offset'.
+
+> +			break;
+> +		case MWIFIEX_FW_DNLD_CMD_5:
+> +			offset += data_len + sizeof(fwdata.header);
+
+Same here.
+
+> +			break;
+> +		case MWIFIEX_FW_DNLD_CMD_6:
+
+Can we have a comment, either here or above this function, to describe
+what this sequence is? Or particularly, what is this terminating
+condition? "CMD_6" doesn't really tell me that this is the start of the
+Wifi blob.
+
+> +			offset += data_len + sizeof(fwdata.header);
+
+You don't check for overflow here. Check this before returning this
+(either here, or in the 'done' label).
+
+> +			ret = offset;
+> +			goto done;
+> +		case MWIFIEX_FW_DNLD_CMD_7:
+> +			if (!cmd7_before)
+
+^^ This 'if' isn't really needed.
+
+> +				cmd7_before = true;
+> +			offset += sizeof(fwdata.header);
+> +			break;
+> +		default:
+> +			mwifiex_dbg(adapter, ERROR, "unknown dnld_cmd %d\n",
+> +				    dnld_cmd);
+> +			ret = -1;
+> +			goto done;
+> +		}
+> +	}
+> +
+> +done:
+> +	return ret;
+> +}
+> +
+>  /*
+>   * This function downloads the firmware to the card.
+>   *
+> @@ -1971,7 +2028,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+>  	u32 firmware_len = fw->fw_len;
+>  	u32 offset = 0;
+>  	struct sk_buff *skb;
+> -	u32 txlen, tx_blocks = 0, tries, len;
+> +	u32 txlen, tx_blocks = 0, tries, len, val;
+>  	u32 block_retry_cnt = 0;
+>  	struct pcie_service_card *card = adapter->card;
+>  	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+> @@ -1998,6 +2055,24 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+>  		goto done;
+>  	}
+>  
+> +	ret = mwifiex_read_reg(adapter, PCIE_SCRATCH_13_REG, &val);
+> +	if (ret) {
+> +		mwifiex_dbg(adapter, FATAL, "Failed to read scratch register 13\n");
+> +		goto done;
+> +	}
+> +
+> +	/* PCIE FLR case: extract wifi part from combo firmware*/
+> +	if (val == MWIFIEX_PCIE_FLR_HAPPENS) {
+> +		ret = mwifiex_extract_wifi_fw(adapter, firmware, firmware_len);
+> +		if (ret < 0) {
+> +			mwifiex_dbg(adapter, ERROR, "Failed to extract wifi fw\n");
+> +			goto done;
+> +		}
+> +		offset = ret;
+> +		mwifiex_dbg(adapter, MSG,
+> +			    "info: dnld wifi firmware from %d bytes\n", offset);
+> +	}
+> +
+>  	/* Perform firmware data transfer */
+>  	do {
+>  		u32 ireg_intr = 0;
+> @@ -3060,12 +3135,6 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
+>  	struct pci_dev *pdev = card->dev;
+>  	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+>  
+> -	/* Bluetooth is not on pcie interface. Download Wifi only firmware
+> -	 * during pcie FLR, so that bluetooth part of firmware which is
+> -	 * already running doesn't get affected.
+> -	 */
+> -	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
+
+Now that there's no users, delete PCIE8997_DEFAULT_WIFIFW_NAME from
+pcie.h.
+
+Brian
+
+> -
+>  	/* tx_buf_size might be changed to 3584 by firmware during
+>  	 * data transfer, we should reset it to default size.
+>  	 */
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> index 7e2450c..54aecda 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> @@ -120,6 +120,8 @@
+>  #define MWIFIEX_SLEEP_COOKIE_SIZE			4
+>  #define MWIFIEX_MAX_DELAY_COUNT				100
+>  
+> +#define MWIFIEX_PCIE_FLR_HAPPENS 0xFEDCBABA
+> +
+>  struct mwifiex_pcie_card_reg {
+>  	u16 cmd_addr_lo;
+>  	u16 cmd_addr_hi;
+> -- 
+> 1.8.1.4
+> 
