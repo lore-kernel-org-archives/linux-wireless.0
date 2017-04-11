@@ -1,141 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35755 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757030AbdDQAHR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50708 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752692AbdDKMju (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:07:17 -0400
-Received: by mail-oi0-f68.google.com with SMTP id a21so8751731oic.2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 11/13] rtlwifi: btcoex: 21a 1ant: treat ARP as special packet
-Date: Sun, 16 Apr 2017 19:06:58 -0500
-Message-Id: <20170417000700.29057-12-Larry.Finger@lwfinger.net> (sfid-20170417_020748_750230_FAF8E912)
-In-Reply-To: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
-References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+        Tue, 11 Apr 2017 08:39:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:38 +0300
+Message-Id: <20170411123742.12214-22-luca@coelho.fi> (sfid-20170411_145544_413665_7687A240)
+In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
+References: <20170411123742.12214-1-luca@coelho.fi>
+Subject: [PATCH 21/25] iwlwifi: remove unnecessary dev_cmd_headroom parameter
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-We need to pay attention to ARP packets to correctly establish
-connection, and reset the ARP counter when disconnected.
+We don't need this parameter anymore, since we always pass 0 anyway.
+Remove it from the structure and from all the relevant functions.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 49 ++++++++++++++++++++--
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  1 +
- 2 files changed, 47 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c  |  7 ++-----
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 17 +++++------------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  2 +-
+ 3 files changed, 8 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index b8d5b73011ba..7d91d82e37fe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -2592,7 +2592,7 @@ void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
- void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index d42cab291025..0bde26bab15d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -70,8 +70,7 @@
+ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 				  struct device *dev,
+ 				  const struct iwl_cfg *cfg,
+-				  const struct iwl_trans_ops *ops,
+-				  size_t dev_cmd_headroom)
++				  const struct iwl_trans_ops *ops)
  {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--	bool	wifi_connected = false, bt_hs_on = false;
-+	bool wifi_connected = false, bt_hs_on = false;
- 	u32 wifi_link_status = 0;
- 	u32 num_of_wifi_link = 0;
- 	bool bt_ctrl_agg_buf_size = false;
-@@ -2610,6 +2610,18 @@ void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
- 		return;
- 	}
+ 	struct iwl_trans *trans;
+ #ifdef CONFIG_LOCKDEP
+@@ -90,15 +89,13 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 	trans->dev = dev;
+ 	trans->cfg = cfg;
+ 	trans->ops = ops;
+-	trans->dev_cmd_headroom = dev_cmd_headroom;
+ 	trans->num_rx_queues = 1;
  
-+	if (type == BTC_ASSOCIATE_START) {
-+		coex_sta->wifi_is_high_pri_task = true;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], CONNECT START notify\n");
-+		coex_dm->arp_cnt = 0;
-+	} else {
-+		coex_sta->wifi_is_high_pri_task = false;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], CONNECT FINISH notify\n");
-+		coex_dm->arp_cnt = 0;
-+	}
-+
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
- 			   &wifi_link_status);
- 	num_of_wifi_link = wifi_link_status >> 16;
-@@ -2675,6 +2687,7 @@ void ex_btc8821a1ant_media_status_notify(struct btc_coexist *btcoexist,
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], MEDIA disconnect notify\n");
-+		coex_dm->arp_cnt = 0;
- 	}
+ 	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
+ 		 "iwl_cmd_pool:%s", dev_name(trans->dev));
+ 	trans->dev_cmd_pool =
+ 		kmem_cache_create(trans->dev_cmd_pool_name,
+-				  sizeof(struct iwl_device_cmd)
+-				  + trans->dev_cmd_headroom,
++				  sizeof(struct iwl_device_cmd),
+ 				  sizeof(void *),
+ 				  SLAB_HWCACHE_ALIGN,
+ 				  NULL);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index b52804dd884f..1b4b62ede2c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -772,9 +772,6 @@ enum iwl_plat_pm_mode {
+  *	the transport must set this before calling iwl_drv_start()
+  * @dev_cmd_pool: pool for Tx cmd allocation - for internal use only.
+  *	The user should use iwl_trans_{alloc,free}_tx_cmd.
+- * @dev_cmd_headroom: room needed for the transport's private use before the
+- *	device_cmd for Tx - for internal use only
+- *	The user should use iwl_trans_{alloc,free}_tx_cmd.
+  * @rx_mpdu_cmd: MPDU RX command ID, must be assigned by opmode before
+  *	starting the firmware, used for tracing
+  * @rx_mpdu_cmd_hdr_size: used for tracing, amount of data before the
+@@ -825,7 +822,6 @@ struct iwl_trans {
  
- 	/* only 2.4G we need to inform bt the chnl mask */
-@@ -2728,6 +2741,24 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
- 		return;
- 	}
+ 	/* The following fields are internal only */
+ 	struct kmem_cache *dev_cmd_pool;
+-	size_t dev_cmd_headroom;
+ 	char dev_cmd_pool_name[50];
  
-+	if (type == BTC_PACKET_DHCP || type == BTC_PACKET_EAPOL ||
-+	    type == BTC_PACKET_ARP) {
-+		coex_sta->wifi_is_high_pri_task = true;
-+
-+		if (type == BTC_PACKET_ARP) {
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], specific Packet ARP notify\n");
-+		} else {
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], specific Packet DHCP or EAPOL notify\n");
-+		}
-+	} else {
-+		coex_sta->wifi_is_high_pri_task = false;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], specific Packet [Type = %d] notify\n",
-+			 type);
-+	}
-+
- 	coex_sta->special_pkt_period_cnt = 0;
+ 	struct dentry *dbgfs_dir;
+@@ -998,13 +994,13 @@ iwl_trans_dump_data(struct iwl_trans *trans,
+ static inline struct iwl_device_cmd *
+ iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
+ {
+-	u8 *dev_cmd_ptr = kmem_cache_alloc(trans->dev_cmd_pool, GFP_ATOMIC);
++	struct iwl_device_cmd *dev_cmd_ptr =
++		kmem_cache_alloc(trans->dev_cmd_pool, GFP_ATOMIC);
  
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
-@@ -2750,8 +2781,20 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
- 		return;
- 	}
+ 	if (unlikely(dev_cmd_ptr == NULL))
+ 		return NULL;
  
--	if (BTC_PACKET_DHCP == type ||
--	    BTC_PACKET_EAPOL == type) {
-+	if (type == BTC_PACKET_DHCP || type == BTC_PACKET_EAPOL ||
-+	    type == BTC_PACKET_ARP) {
-+		if (type == BTC_PACKET_ARP) {
-+			coex_dm->arp_cnt++;
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], ARP Packet Count = %d\n",
-+				 coex_dm->arp_cnt);
-+			if (coex_dm->arp_cnt >= 10)
-+				/* if APR PKT > 10 after connect, do not go to
-+				 * btc8821a1ant_act_wifi_conn_sp_pkt
-+				 */
-+				return;
-+		}
-+
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], special Packet(%d) notify\n", type);
- 		btc8821a1ant_act_wifi_conn_sp_pkt(btcoexist);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-index 1bd1ebe3364e..8d6ee81586fd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-@@ -135,6 +135,7 @@ struct coex_dm_8821a_1ant {
- 	u8	cur_retry_limit_type;
- 	u8	pre_ampdu_time_type;
- 	u8	cur_ampdu_time_type;
-+	u32	arp_cnt;
+-	return (struct iwl_device_cmd *)
+-			(dev_cmd_ptr + trans->dev_cmd_headroom);
++	return dev_cmd_ptr;
+ }
  
- 	u8	error_condition;
- };
+ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+@@ -1012,9 +1008,7 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+ static inline void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
+ 					 struct iwl_device_cmd *dev_cmd)
+ {
+-	u8 *dev_cmd_ptr = (u8 *)dev_cmd - trans->dev_cmd_headroom;
+-
+-	kmem_cache_free(trans->dev_cmd_pool, dev_cmd_ptr);
++	kmem_cache_free(trans->dev_cmd_pool, dev_cmd);
+ }
+ 
+ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
+@@ -1237,8 +1231,7 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
+ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 				  struct device *dev,
+ 				  const struct iwl_cfg *cfg,
+-				  const struct iwl_trans_ops *ops,
+-				  size_t dev_cmd_headroom);
++				  const struct iwl_trans_ops *ops);
+ void iwl_trans_free(struct iwl_trans *trans);
+ 
+ /*****************************************************
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 15bf5100d096..b362779b66f4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2948,7 +2948,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		return ERR_PTR(ret);
+ 
+ 	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
+-				&pdev->dev, cfg, &trans_ops_pcie, 0);
++				&pdev->dev, cfg, &trans_ops_pcie);
+ 	if (!trans)
+ 		return ERR_PTR(-ENOMEM);
+ 
 -- 
-2.12.0
+2.11.0
