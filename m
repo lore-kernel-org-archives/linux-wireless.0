@@ -1,53 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50560 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:50514 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753677AbdDKMiC (ORCPT
+        with ESMTP id S1752267AbdDKMhx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 08:38:02 -0400
+        Tue, 11 Apr 2017 08:37:53 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 11 Apr 2017 15:37:23 +0300
-Message-Id: <20170411123742.12214-7-luca@coelho.fi> (sfid-20170411_143808_132473_A02C06BE)
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 11 Apr 2017 15:37:19 +0300
+Message-Id: <20170411123742.12214-3-luca@coelho.fi> (sfid-20170411_143800_164299_16E5AEE4)
 In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
 References: <20170411123742.12214-1-luca@coelho.fi>
-Subject: [PATCH 06/25] iwlwifi: mvm: adjust new API of compressed BA
+Subject: [PATCH 02/25] iwlwifi: be more verbose about needed firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Final API has a reserved field - adjust accordingly.
+If the supported firmware versions are not found, we currently only
+print "no suitable firmware found".  This is not very informative for
+the user trying to find the correct version to use.  Improve this by
+printing the exact firmware name(s) the driver supports and pointing
+to the git repository where they can be found.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index b38cc073adcc..85744fa3bd4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -635,6 +635,10 @@ enum iwl_mvm_ba_resp_flags {
-  * @tx_rate: the rate the aggregation was sent at
-  * @tfd_cnt: number of TFD-Q elements
-  * @ra_tid_cnt: number of RATID-Q elements
-+ * @ba_tfd: array of TFD queue status updates. See &iwl_mvm_compressed_ba_tfd
-+ *	for details.
-+ * @ra_tid: array of RA-TID queue status updates. For debug purposes only. See
-+ *	&iwl_mvm_compressed_ba_ratid for more details.
-  */
- struct iwl_mvm_compressed_ba_notif {
- 	__le32 flags;
-@@ -646,6 +650,7 @@ struct iwl_mvm_compressed_ba_notif {
- 	__le16 query_frame_cnt;
- 	__le16 txed;
- 	__le16 done;
-+	__le16 reserved;
- 	__le32 wireless_time;
- 	__le32 tx_rate;
- 	__le16 tfd_cnt;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index be466a074c1d..21c523a9cc7e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -211,24 +211,39 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw,
+ 
+ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
+ {
+-	const char *name_pre = drv->trans->cfg->fw_name_pre;
++	const struct iwl_cfg *cfg = drv->trans->cfg;
+ 	char tag[8];
+ 
+ 	if (first) {
+-		drv->fw_index = drv->trans->cfg->ucode_api_max;
++		drv->fw_index = cfg->ucode_api_max;
+ 		sprintf(tag, "%d", drv->fw_index);
+ 	} else {
+ 		drv->fw_index--;
+ 		sprintf(tag, "%d", drv->fw_index);
+ 	}
+ 
+-	if (drv->fw_index < drv->trans->cfg->ucode_api_min) {
++	if (drv->fw_index < cfg->ucode_api_min) {
+ 		IWL_ERR(drv, "no suitable firmware found!\n");
++
++		if (cfg->ucode_api_min == cfg->ucode_api_max) {
++			IWL_ERR(drv, "%s%d is required\n", cfg->fw_name_pre,
++				cfg->ucode_api_max);
++		} else {
++			IWL_ERR(drv, "minimum version required: %s%d\n",
++				cfg->fw_name_pre,
++				cfg->ucode_api_min);
++			IWL_ERR(drv, "maximum version supported: %s%d\n",
++				cfg->fw_name_pre,
++				cfg->ucode_api_max);
++		}
++
++		IWL_ERR(drv,
++			"check git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git\n");
+ 		return -ENOENT;
+ 	}
+ 
+ 	snprintf(drv->firmware_name, sizeof(drv->firmware_name), "%s%s.ucode",
+-		 name_pre, tag);
++		 cfg->fw_name_pre, tag);
+ 
+ 	IWL_DEBUG_INFO(drv, "attempting to load firmware '%s'\n",
+ 		       drv->firmware_name);
 -- 
 2.11.0
