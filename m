@@ -1,84 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kw04.serverdomain.org ([89.107.189.121]:51525 "EHLO
-        kw04.serverdomain.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S935193AbdDFO17 (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:35834 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752232AbdDKO0E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 10:27:59 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: How to use netlink to determine wifi protection WEP  
-From: Thomas Thielemann <thomas@th-thielemann.de>
-In-Reply-To: <1491413087.14498.2.camel@redhat.com>
-Date: Thu, 6 Apr 2017 16:27:56 +0200
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <C7BDEED9-DCEC-4BED-AC69-800EEFE4FF49@th-thielemann.de> (sfid-20170406_162925_682542_95487A43)
-References: <163FFAFB-1BA3-42A1-9F84-0EAEDFEBE5AE@th-thielemann.de>
- <1491413087.14498.2.camel@redhat.com>
-To: Dan Williams <dcbw@redhat.com>
+        Tue, 11 Apr 2017 10:26:04 -0400
+Received: by mail-pf0-f171.google.com with SMTP id i5so49555382pfc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2017 07:26:04 -0700 (PDT)
+Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Pablo Neira Ayuso <pablo@netfilter.org>
+References: <20170408202434.12018-1-johannes@sipsolutions.net>
+ <20170408202434.12018-2-johannes@sipsolutions.net>
+ <fddba2c8-3b85-d5df-81c4-ef31c459e40c@cumulusnetworks.com>
+ <1491838218.28432.5.camel@sipsolutions.net>
+ <029e6587-c0e8-bdb0-49e9-2abe2946a7ff@cumulusnetworks.com>
+ <20170411065908.GB1492@salvia> <1491894172.31620.2.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
+From: David Ahern <dsa@cumulusnetworks.com>
+Message-ID: <9a68aa01-474c-7054-30c2-473ee1250abe@cumulusnetworks.com> (sfid-20170411_162608_269301_856B345A)
+Date: Tue, 11 Apr 2017 08:25:57 -0600
+MIME-Version: 1.0
+In-Reply-To: <1491894172.31620.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks!
-
-If the sequence is the following:
-
- 1. Prepare and execute NL80211_CMD_TRIGGER_SCAN
- 2. Prepare and execute NL80211_CMD_GET_SCAN
- Together with NL80211_CMD_GET_SCAN a callback is registered. 
- In the callback the raw data are parsed as BSS. The IE's are parsed to.
-
-When do I have to fetch the beacon to get the right beacon but without lost of the scan result?
-After I fetched all scan results or immediately after the receive of every scan result?
-
-Regards,
-Thomas
-
-
-> Am 05.04.2017 um 19:24 schrieb Dan Williams <dcbw@redhat.com>:
+On 4/11/17 1:02 AM, Johannes Berg wrote:
+> On Tue, 2017-04-11 at 08:59 +0200, Pablo Neira Ayuso wrote:
+>> CAP_ACK means: trim off the payload that the netlink error message
+>> is embedding, just like ICMP error does.
+>>
+>> What is exactly your concern? If the user explicitly requests this
+>> via socket option for this socket, then we're expecting they do the
+>> right handling for what they're asking for.
 > 
-> On Wed, 2017-04-05 at 09:27 +0200, Thomas Thielemann wrote:
->> Hello!
->> 
->> I need a solution to determine whether a WiFi is using WEP. I know
->> there is a protection flag within MAC frame but do not know how to
->> access.
->> 
->> To detect whether a WiFi i protected by WPA2 I found the following
->> solution: 
->> 
->> Scan with
->> 
->> nl_sock* socket = nl_socket_alloc();
->> genl_connect(socket);
->> struct nl_msg* msg = nlmsg_alloc();
->> int driverId = genl_ctrl_resolve(socket, "nl80211"); 
->> genlmsg_put(msg, 0, 0, driverId, 0, 0, NL80211_CMD_TRIGGER_SCAN, 0);
->> 
->> and fetch with
->> 
->> genlmsg_put(msg, 0, 0, driverId, 0, NLM_F_DUMP, NL80211_CMD_GET_SCAN,
->> 0);
->> 
->> Read the received structure using nl80211_bss::
->> NL80211_BSS_INFORMATION_ELEMENTS from nl80211.h and
->> 
->> examine the field RSN(id=48) (see IEEE802.11-2012.pdf, chapter 8.4.2
->> Information elements)
->> 
->> Which netlink command gives me the related data? Is it
->> NL80211_CMD_GET_BEACON?
-> 
-> You want both the beacon (for the Privacy bit) and the information
-> elements.
-> 
-> If the privacy bit is set in beacon and there are no WPA/WPA2/RSN-
-> related information elements, then the AP is using WEP.  Unfortunately
-> you don't know whether it's WEP-40 or WEP-104, but that's another
-> topic.
-> 
-> If the privacy bit is set, and there are WPA/WPA2/RSN information
-> elements, then the AP *might* be using WEP in compatibility mode.  This
-> isn't very common though, so you can probably just ignore this case.
-> 
-> Dan
-> 
+> I think David's concern was that when you want to parse the ACK in a
+> library (or application), you may not easily know if the application
+> (or library) requested capping.
+
+exactly.
