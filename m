@@ -1,203 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58610 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756365AbdDGJX0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 05:23:26 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 04/10] cfg80211: add request id parameter to .sched_scan_stop() signature
-Date: Fri,  7 Apr 2017 10:23:04 +0100
-Message-Id: <1491556990-25143-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112334_476490_31406E4B)
-In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mga01.intel.com ([192.55.52.88]:28222 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751890AbdDKN2M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Apr 2017 09:28:12 -0400
+Date: Tue, 11 Apr 2017 21:26:50 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org
+Subject: [mac80211-next:bpf 2/2] kernel/built-in.o:undefined reference to
+ `stack_map_ops'
+Message-ID: <201704112143.WHpue32V%fengguang.wu@intel.com> (sfid-20170411_152850_419210_FF4E062C)
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="3V7upXqbjpZ4EhLz"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For multiple scheduled scan support the driver needs to know which
-scheduled scan request is being stopped. Pass the request id in the
-.sched_scan_stop() callback.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+--3V7upXqbjpZ4EhLz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git bpf
+head:   fe544432ea248442bc748639d66dbd6ac6a7cc5e
+commit: fe544432ea248442bc748639d66dbd6ac6a7cc5e [2/2] bpf: remove struct bpf_map_type_list
+config: m68k-sun3_defconfig (attached as .config)
+compiler: m68k-linux-gcc (GCC) 4.9.0
+reproduce:
+        wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        git checkout fe544432ea248442bc748639d66dbd6ac6a7cc5e
+        # save the attached .config to linux build tree
+        make.cross ARCH=m68k 
+
+All errors (new ones prefixed by >>):
+
+>> kernel/built-in.o:(.rodata+0x12ce): undefined reference to `stack_map_ops'
+
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c                |  2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c   |  6 +++---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c           |  2 +-
- include/net/cfg80211.h                                    | 15 ++++++++-------
- net/mac80211/cfg.c                                        |  3 ++-
- net/wireless/rdev-ops.h                                   |  6 +++---
- net/wireless/scan.c                                       |  2 +-
- net/wireless/trace.h                                      | 10 +++++-----
- 8 files changed, 24 insertions(+), 22 deletions(-)
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index b7dd6f4..f7dd45e 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3355,7 +3355,7 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
- }
- 
- static int ath6kl_cfg80211_sscan_stop(struct wiphy *wiphy,
--				      struct net_device *dev)
-+				      struct net_device *dev, u64 reqid)
- {
- 	struct ath6kl_vif *vif = netdev_priv(dev);
- 	bool stopped;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 4725a0a..42243f7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3389,7 +3389,7 @@ static int brcmf_start_internal_escan(struct brcmf_if *ifp,
- }
- 
- static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
--					  struct net_device *ndev)
-+					  struct net_device *ndev, u64 reqid)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
- 	struct brcmf_if *ifp = netdev_priv(ndev);
-@@ -3591,7 +3591,7 @@ static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
- 				      cfg->wowl.pre_pmmode);
- 		cfg->wowl.active = false;
- 		if (cfg->wowl.nd_enabled) {
--			brcmf_cfg80211_sched_scan_stop(cfg->wiphy, ifp->ndev);
-+			brcmf_cfg80211_sched_scan_stop(cfg->wiphy, ifp->ndev, 0);
- 			brcmf_fweh_unregister(cfg->pub, BRCMF_E_PFN_NET_FOUND);
- 			brcmf_fweh_register(cfg->pub, BRCMF_E_PFN_NET_FOUND,
- 					    brcmf_notify_sched_scan_results);
-@@ -3675,7 +3675,7 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
- 
- 	/* Stop scheduled scan */
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO))
--		brcmf_cfg80211_sched_scan_stop(wiphy, ndev);
-+		brcmf_cfg80211_sched_scan_stop(wiphy, ndev, 0);
- 
- 	/* end any scanning */
- 	if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status))
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index b734197..91c71066 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2701,7 +2701,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
-  * previous bgscan configuration in the firmware
-  */
- static int mwifiex_cfg80211_sched_scan_stop(struct wiphy *wiphy,
--					    struct net_device *dev)
-+					    struct net_device *dev, u64 reqid)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0736aea..be36606 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2763,12 +2763,12 @@ struct cfg80211_nan_func {
-  * @set_cqm_txe_config: Configure connection quality monitor TX error
-  *	thresholds.
-  * @sched_scan_start: Tell the driver to start a scheduled scan.
-- * @sched_scan_stop: Tell the driver to stop an ongoing scheduled scan. This
-- *	call must stop the scheduled scan and be ready for starting a new one
-- *	before it returns, i.e. @sched_scan_start may be called immediately
-- *	after that again and should not fail in that case. The driver should
-- *	not call cfg80211_sched_scan_stopped() for a requested stop (when this
-- *	method returns 0.)
-+ * @sched_scan_stop: Tell the driver to stop an ongoing scheduled scan with
-+ *	given request id. This call must stop the scheduled scan and be ready
-+ *	for starting a new one before it returns, i.e. @sched_scan_start may be
-+ *	called immediately after that again and should not fail in that case.
-+ *	The driver should not call cfg80211_sched_scan_stopped() for a requested
-+ *	stop (when this method returns 0).
-  *
-  * @mgmt_frame_register: Notify driver that a management frame type was
-  *	registered. The callback is allowed to sleep.
-@@ -3067,7 +3067,8 @@ struct cfg80211_ops {
- 	int	(*sched_scan_start)(struct wiphy *wiphy,
- 				struct net_device *dev,
- 				struct cfg80211_sched_scan_request *request);
--	int	(*sched_scan_stop)(struct wiphy *wiphy, struct net_device *dev);
-+	int	(*sched_scan_stop)(struct wiphy *wiphy, struct net_device *dev,
-+				   u64 reqid);
- 
- 	int	(*set_rekey_data)(struct wiphy *wiphy, struct net_device *dev,
- 				  struct cfg80211_gtk_rekey_data *data);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8bc3d366..14b4127 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2199,7 +2199,8 @@ static void ieee80211_abort_scan(struct wiphy *wiphy, struct wireless_dev *wdev)
- }
- 
- static int
--ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev)
-+ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev,
-+			  u64 reqid)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 33d79ff..6e29cc4 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -821,11 +821,11 @@ static inline int rdev_get_antenna(struct cfg80211_registered_device *rdev,
- }
- 
- static inline int rdev_sched_scan_stop(struct cfg80211_registered_device *rdev,
--				       struct net_device *dev)
-+				       struct net_device *dev, u64 reqid)
- {
- 	int ret;
--	trace_rdev_sched_scan_stop(&rdev->wiphy, dev);
--	ret = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
-+	trace_rdev_sched_scan_stop(&rdev->wiphy, dev, reqid);
-+	ret = rdev->ops->sched_scan_stop(&rdev->wiphy, dev, reqid);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 1c7dcf4..abe9b42 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -429,7 +429,7 @@ int cfg80211_stop_sched_scan_req(struct cfg80211_registered_device *rdev,
- 	ASSERT_RTNL();
- 
- 	if (!driver_initiated) {
--		int err = rdev_sched_scan_stop(rdev, req->dev);
-+		int err = rdev_sched_scan_stop(rdev, req->dev, req->reqid);
- 		if (err)
- 			return err;
- 	}
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 52935c4..8d8f6b4 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -576,11 +576,6 @@
- 	TP_ARGS(wiphy, netdev)
- );
- 
--DEFINE_EVENT(wiphy_netdev_evt, rdev_sched_scan_stop,
--	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
--	TP_ARGS(wiphy, netdev)
--);
--
- DEFINE_EVENT(wiphy_netdev_evt, rdev_set_rekey_data,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
- 	TP_ARGS(wiphy, netdev)
-@@ -1632,6 +1627,11 @@
- 	TP_ARGS(wiphy, netdev, id)
- );
- 
-+DEFINE_EVENT(wiphy_netdev_id_evt, rdev_sched_scan_stop,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u64 id),
-+	TP_ARGS(wiphy, netdev, id)
-+);
-+
- TRACE_EVENT(rdev_tdls_mgmt,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 u8 *peer, u8 action_code, u8 dialog_token,
--- 
-1.9.1
+--3V7upXqbjpZ4EhLz
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+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
+
+--3V7upXqbjpZ4EhLz--
