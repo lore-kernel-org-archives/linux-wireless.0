@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:52909 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754116AbdDLTrp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 15:47:45 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [RFC 1/3] bpf/wireless: add wifimon program type
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20170412110726.9689-1-johannes@sipsolutions.net>
-Date: Wed, 12 Apr 2017 21:47:44 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Message-Id: <74C8B200-1552-497E-853B-33428E8E2FF3@holtmann.org> (sfid-20170412_214749_708494_ED38920D)
-References: <20170412110726.9689-1-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37306 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752345AbdDLNyd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 09:54:33 -0400
+Message-ID: <1492005271.2855.6.camel@sipsolutions.net> (sfid-20170412_155458_188411_6805AF75)
+Subject: Re: [PATCH net-next v5 3/5] netlink: allow sending extended ACK
+ with cookie on success
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>
+Date: Wed, 12 Apr 2017 15:54:31 +0200
+In-Reply-To: <20170412134709.GF1952@nanopsycho> (sfid-20170412_154711_878142_644C1B02)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+         <20170412123408.22012-4-johannes@sipsolutions.net>
+         <20170412134709.GF1952@nanopsycho> (sfid-20170412_154711_878142_644C1B02)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
-> Add a new program type for wifi monitor interfaces. This program
-> type can
-> * access __sk_buff, but only skb->len
-> * call bpf_skb_load_bytes()
+> > 	} else {
+> > 		flags |= NLM_F_CAPPED;
+> > +
+> > +		if (nlk->flags & NETLINK_F_EXT_ACK &&
+> > +		    extack && extack->cookie_len)
+> > +			tlvlen += nla_total_size(extack-
+> > >cookie_len);
+> > 	}
+> > 
 > 
-> The program type is only enabled when something selects the new
-> Kconfig symbol WANT_BPF_WIFIMON, which will be done by mac80211
-> in a follow-up patch.
+> Now I see why you have "if (tlvlen)" where you have it :)
 
-we used to stay away from WIFI naming in the kernel. Any reasoning why this is used instead of WLAN now?
+Ah, you had me wondering with that comment ... Yeah, I'd been
+developing this by adding patches and then rebasing, so the fact that
+this could've been elsewhere to start with never crossed my mind.
 
-Regards
-
-Marcel
+johannes
