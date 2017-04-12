@@ -1,44 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:29318 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1037331AbdDUKno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 06:43:44 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>,
-        "Sharon, Sara" <sara.sharon@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: pcie: missing unlock on error path
-Date: Fri, 21 Apr 2017 10:43:40 +0000
-Message-ID: <1492771419.31741.124.camel@intel.com> (sfid-20170421_124347_345741_E9509416)
-References: <20170421103937.jko3eguvfn3i6r3v@mwanda>
-In-Reply-To: <20170421103937.jko3eguvfn3i6r3v@mwanda>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35963 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752379AbdDLOAq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 10:00:46 -0400
+Received: by mail-wm0-f68.google.com with SMTP id q125so6591863wmd.3
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 07:00:45 -0700 (PDT)
+Date: Wed, 12 Apr 2017 16:00:43 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH net-next v5 5/5] netlink: pass extended ACK struct where
+ available
+Message-ID: <20170412140043.GH1952@nanopsycho> (sfid-20170412_160121_431823_8ACB9EF3)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+ <20170412123408.22012-6-johannes@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170412123408.22012-6-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRGFuDQoNCk9uIEZyaSwgMjAxNy0wNC0yMSBhdCAxMzozOSArMDMwMCwgRGFuIENhcnBlbnRl
-ciB3cm90ZToNCj4gV2Ugc2hvdWxkIHVubG9jayBiZWZvcmUgcmV0dXJuaW5nLg0KPiANCj4gRml4
-ZXM6IGVkYTUwY2RlNThkZSAoIml3bHdpZmk6IHBjaWU6IGFkZCBjb250ZXh0IGluZm9ybWF0aW9u
-IHN1cHBvcnQiKQ0KPiBTaWduZWQtb2ZmLWJ5OiBEYW4gQ2FycGVudGVyIDxkYW4uY2FycGVudGVy
-QG9yYWNsZS5jb20+DQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50
-ZWwvaXdsd2lmaS9wY2llL3RyYW5zLWdlbjIuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVs
-L2l3bHdpZmkvcGNpZS90cmFucy1nZW4yLmMNCj4gaW5kZXggMzAyMzEwZGZlZjllLi40ZTg0OTU1
-ZDU1YzggMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkv
-cGNpZS90cmFucy1nZW4yLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXds
-d2lmaS9wY2llL3RyYW5zLWdlbjIuYw0KPiBAQCAtMjEyLDggKzIxMiwxMCBAQCBpbnQgaXdsX3Ry
-YW5zX3BjaWVfZ2VuMl9zdGFydF9mdyhzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywNCj4gIAkJZ290
-byBvdXQ7DQo+ICAJfQ0KPiAgDQo+IC0JaWYgKGl3bF9wY2llX2N0eHRfaW5mb19pbml0KHRyYW5z
-LCBmdykpDQo+IC0JCXJldHVybiAtRU5PTUVNOw0KPiArCWlmIChpd2xfcGNpZV9jdHh0X2luZm9f
-aW5pdCh0cmFucywgZncpKSB7DQo+ICsJCXJldCA9IC1FTk9NRU07DQo+ICsJCWdvdG8gb3V0Ow0K
-PiArCX0NCj4gIA0KPiAgCS8qIHJlLWNoZWNrIFJGLUtpbGwgc3RhdGUgc2luY2Ugd2UgbWF5IGhh
-dmUgbWlzc2VkIHRoZSBpbnRlcnJ1cHQgKi8NCj4gIAlod19yZmtpbGwgPSBpd2xfdHJhbnNfY2hl
-Y2tfaHdfcmZfa2lsbCh0cmFucyk7DQoNClRoYW5rcyBmb3IgeW91ciBwYXRjaCEgQnV0IHRoaXMg
-aGFzIGFscmVhZHkgYmVlbiBmaXhlZCBieSBKb2hhbm5lcyBpbg0KdGhlIHBhdGNoIEkgc2VudCBv
-dXQgeWVzdGVyZGF5WzFdLg0KDQpbMV0gaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGlu
-dXgtd2lyZWxlc3MvbXNnMTYxNTgyLmh0bWwNCg0KLS0NCkNoZWVycywNCkx1Y2Eu
+Wed, Apr 12, 2017 at 02:34:08PM CEST, johannes@sipsolutions.net wrote:
+>From: Johannes Berg <johannes.berg@intel.com>
+>
+>This is an add-on to the previous patch that passes
+>the extended ACK structure where it's already available
+>by existing genl_info or extack function arguments.
+>
+>This was done with this spatch (with some manual
+>adjustment of indentation):
+>
+>@@
+>expression A, B, C, D, E;
+>identifier fn, info;
+>@@
+>fn(..., struct genl_info *info, ...) {
+>...
+>-nlmsg_parse(A, B, C, D, E, NULL)
+>+nlmsg_parse(A, B, C, D, E, info->extack)
+>...
+>}
+>
+>@@
+>expression A, B, C, D, E;
+>identifier fn, info;
+>@@
+>fn(..., struct genl_info *info, ...) {
+><...
+>-nla_parse_nested(A, B, C, D, NULL)
+>+nla_parse_nested(A, B, C, D, info->extack)
+>...>
+>}
+>
+>@@
+>expression A, B, C, D, E;
+>identifier fn, extack;
+>@@
+>fn(..., struct netlink_ext_ack *extack, ...) {
+><...
+>-nlmsg_parse(A, B, C, D, E, NULL)
+>+nlmsg_parse(A, B, C, D, E, extack)
+>...>
+>}
+>
+>@@
+>expression A, B, C, D, E;
+>identifier fn, extack;
+>@@
+>fn(..., struct netlink_ext_ack *extack, ...) {
+><...
+>-nla_parse(A, B, C, D, E, NULL)
+>+nla_parse(A, B, C, D, E, extack)
+>...>
+>}
+>
+>@@
+>expression A, B, C, D, E;
+>identifier fn, extack;
+>@@
+>fn(..., struct netlink_ext_ack *extack, ...) {
+>...
+>-nlmsg_parse(A, B, C, D, E, NULL)
+>+nlmsg_parse(A, B, C, D, E, extack)
+>...
+>}
+>
+>@@
+>expression A, B, C, D;
+>identifier fn, extack;
+>@@
+>fn(..., struct netlink_ext_ack *extack, ...) {
+><...
+>-nla_parse_nested(A, B, C, D, NULL)
+>+nla_parse_nested(A, B, C, D, extack)
+>...>
+>}
+>
+>@@
+>expression A, B, C, D;
+>identifier fn, extack;
+>@@
+>fn(..., struct netlink_ext_ack *extack, ...) {
+><...
+>-nlmsg_validate(A, B, C, D, NULL)
+>+nlmsg_validate(A, B, C, D, extack)
+>...>
+>}
+>
+>@@
+>expression A, B, C, D;
+>identifier fn, extack;
+>@@
+>fn(..., struct netlink_ext_ack *extack, ...) {
+><...
+>-nla_validate(A, B, C, D, NULL)
+>+nla_validate(A, B, C, D, extack)
+>...>
+>}
+>
+>@@
+>expression A, B, C;
+>identifier fn, extack;
+>@@
+>fn(..., struct netlink_ext_ack *extack, ...) {
+><...
+>-nla_validate_nested(A, B, C, NULL)
+>+nla_validate_nested(A, B, C, extack)
+>...>
+>}
+>
+>Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>---
+> crypto/crypto_user.c           |  2 +-
+> drivers/net/team/team.c        |  3 ++-
+> net/ieee802154/nl802154.c      | 10 +++++-----
+> net/netfilter/ipvs/ip_vs_ctl.c |  2 +-
+> net/netfilter/nfnetlink.c      |  2 +-
+> net/netlink/genetlink.c        |  2 +-
+> net/nfc/netlink.c              |  2 +-
+> net/tipc/bearer.c              | 14 +++++++-------
+> net/tipc/net.c                 |  2 +-
+> net/tipc/node.c                |  8 ++++----
+> net/wireless/nl80211.c         | 33 ++++++++++++++++++---------------
+> net/xfrm/xfrm_user.c           |  2 +-
+> 12 files changed, 43 insertions(+), 39 deletions(-)
+
+Aside from the tinyfication of desc lines, this looks good to me
+
+Reviewed-by: Jiri Pirko <jiri@mellanox.com>
