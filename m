@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:33408 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033961AbdD0Lg6 (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:46866 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752513AbdDLP32 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2017 07:36:58 -0400
-Received: by mail-io0-f174.google.com with SMTP id k87so20740637ioi.0
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2017 04:36:58 -0700 (PDT)
-MIME-Version: 1.0
-From: Arun Kumar <arunkumar.1993.2050@gmail.com>
-Date: Thu, 27 Apr 2017 17:06:57 +0530
-Message-ID: <CAO4+10NY+OL5rPjsuYpsC4T1vUh1EAK_u1LoPdLrRpxBuY9hiQ@mail.gmail.com> (sfid-20170427_133743_327623_DF9543B1)
-Subject: Linux Wireless project contribution related enquiry
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, kvalo@codeaurora.org, luca@coelho.fi,
-        arend.vanspriel@broadcom.com, vignesh_v@live.in,
-        sathishkumar1849@gmail.com
-Content-Type: text/plain; charset=UTF-8
+        Wed, 12 Apr 2017 11:29:28 -0400
+Date: Wed, 12 Apr 2017 11:29:26 -0400 (EDT)
+Message-Id: <20170412.112926.53823287831778729.davem@davemloft.net> (sfid-20170412_172936_227354_B3D47525)
+To: jiri@resnulli.us
+Cc: dsa@cumulusnetworks.com, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, jhs@mojatatu.com, jbenc@redhat.com,
+        johannes.berg@intel.com
+Subject: Re: [PATCH net-next v5 5/5] netlink: pass extended ACK struct
+ where available
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170412151531.GL1952@nanopsycho>
+References: <20170412140043.GH1952@nanopsycho>
+        <1fdfb890-162a-a22c-53e0-101b9ef3bfa2@cumulusnetworks.com>
+        <20170412151531.GL1952@nanopsycho>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linux Wireless Developers,
+From: Jiri Pirko <jiri@resnulli.us>
+Date: Wed, 12 Apr 2017 17:15:31 +0200
 
-I am Arunkumar Ravichandran, a software engineer in the WLAN driver
-development field. Me[1] and 2 other colleagues(Sathish[2],
-Vignesh[3]) would like to contribute to the Linux Wireless. We have
-work experience in WLAN device driver development, though not in Linux
-platform.
+> Wed, Apr 12, 2017 at 04:55:07PM CEST, dsa@cumulusnetworks.com wrote:
+>>On 4/12/17 8:00 AM, Jiri Pirko wrote:
+>>> Aside from the tinyfication of desc lines
+>>
+>>channel your inner Elsa and just let it go
+> 
+> Not sure why. I still believe it is a mistake so I like to point it out.
+> Don't see anything wrong about it :)
 
-The to-do page[4] suggested support for 11v is needed. Please let us
-know if this has been already implemented or under implementation(code
-search in mac80211 and cfg80211 code base didn't show anything related
-to these). If already implemented, which was implemented earlier? 11v
-DMS or 11v BSS Transition management from both AP and STA perspective.
+I'll just reformat the commit messages when I apply this series if it bothers
+you so much Jiri.
 
-If there are any enhancements for existing features or new features to
-be developed in the Linux Wireless, please let us know. We would like
-to contribute to the Linux wireless project and learn more about Linux
-platform. Or if there is any updated  to-do list, please share the
-link for the same and we would be glad to work on those.
+I too think that there are more important issues to discuss with this patch
+set.
 
-As of now, we are learning more about the mac80211 and cfg80211.
-
-[1] https://www.linkedin.com/in/arunkumar-ravichandran-3806083a/
-[2] https://www.linkedin.com/in/sathishkumar-muruganandam-6b81a532/
-[3] https://www.linkedin.com/in/vignesh207/
-[4] https://wireless.wiki.kernel.org/en/developers/todo-list
-
-Thanks,
-Arun
+Thanks.
