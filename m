@@ -1,177 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58639 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756374AbdDGJX2 (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:32916 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752224AbdDLNrM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 05:23:28 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
+        Wed, 12 Apr 2017 09:47:12 -0400
+Received: by mail-wm0-f68.google.com with SMTP id o81so6532725wmb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 06:47:12 -0700 (PDT)
+Date: Wed, 12 Apr 2017 15:47:09 +0200
+From: Jiri Pirko <jiri@resnulli.us>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 06/10] brcmfmac: add firmware feature detection for gscan feature
-Date: Fri,  7 Apr 2017 10:23:06 +0100
-Message-Id: <1491556990-25143-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112350_632799_3AF6F833)
-In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH net-next v5 3/5] netlink: allow sending extended ACK with
+ cookie on success
+Message-ID: <20170412134709.GF1952@nanopsycho> (sfid-20170412_154717_029776_CAE42203)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+ <20170412123408.22012-4-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170412123408.22012-4-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Wed, Apr 12, 2017 at 02:34:06PM CEST, johannes@sipsolutions.net wrote:
+>From: Johannes Berg <johannes.berg@intel.com>
+>
+>Now that we have extended error reporting and a new message format
+>for netlink ACK messages, also extend this to be able to return
+>arbitrary cookie data on success.
+>
+>This will allow, for example, nl80211 to not send an extra message
+>for cookies identifying newly created objects, but return those
+>directly in the ACK message.
+>
+>The cookie data size is currently limited to 20 bytes (since Jamal
+>talked about using SHA1 for identifiers.)
+>
+>Thanks to Jamal Hadi Salim for bringing up this idea during the
+>discussions.
+>
+>Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
-invalid version.
+Reviewed-by: Jiri Pirko <jiri@mellanox.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 22 +++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +-
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 59 ++++++++++++++++++++++
- 3 files changed, 83 insertions(+), 2 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 62985f2..8c7ef59 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -27,6 +27,7 @@
- #include "feature.h"
- #include "common.h"
- 
-+#define BRCMF_FW_UNSUPPORTED	23
- 
- /*
-  * expand feature list to array of feature strings.
-@@ -113,6 +114,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
- 	}
- }
- 
-+static void brcmf_feat_iovar_data_set(struct brcmf_if *ifp,
-+				      enum brcmf_feat_id id, char *name,
-+				      const void *data, size_t len)
-+{
-+	int err;
-+
-+	err = brcmf_fil_iovar_data_set(ifp, name, data, len);
-+	if (err != -BRCMF_FW_UNSUPPORTED) {
-+		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
-+		ifp->drvr->feat_flags |= BIT(id);
-+	} else {
-+		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
-+			  brcmf_feat_names[id], err);
-+	}
-+}
-+
- static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
- {
- 	char caps[256];
-@@ -136,11 +153,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- {
- 	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
- 	struct brcmf_pno_macaddr_le pfn_mac;
-+	struct brcmf_gscan_config gscan_cfg;
- 	u32 wowl_cap;
- 	s32 err;
- 
- 	brcmf_feat_firmware_capabilities(ifp);
--
-+	memset(&gscan_cfg, 0, sizeof(gscan_cfg));
-+	brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
-+				  &gscan_cfg, sizeof(gscan_cfg));
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
- 	if (drvr->bus_if->wowl_supported)
- 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-index db4733a..c1dbd17 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-@@ -31,6 +31,7 @@
-  * WOWL_GTK: (WOWL) GTK rekeying offload
-  * WOWL_ARP_ND: ARP and Neighbor Discovery offload support during WOWL.
-  * MFP: 802.11w Management Frame Protection.
-+ * GSCAN: enhanced scan offload feature.
-  */
- #define BRCMF_FEAT_LIST \
- 	BRCMF_FEAT_DEF(MBSS) \
-@@ -44,7 +45,8 @@
- 	BRCMF_FEAT_DEF(WOWL_ND) \
- 	BRCMF_FEAT_DEF(WOWL_GTK) \
- 	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
--	BRCMF_FEAT_DEF(MFP)
-+	BRCMF_FEAT_DEF(MFP) \
-+	BRCMF_FEAT_DEF(GSCAN)
- 
- /*
-  * Quirks:
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 9a1eb5a..8c18fad 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -835,4 +835,63 @@ struct brcmf_gtk_keyinfo_le {
- 	u8 replay_counter[BRCMF_RSN_REPLAY_LEN];
- };
- 
-+/**
-+ * struct brcmf_gscan_bucket_config - configuration data for channel bucket.
-+ *
-+ * @bucket_end_index: !unknown!
-+ * @bucket_freq_multiple: !unknown!
-+ * @flag: !unknown!
-+ * @reserved: !unknown!
-+ * @repeat: !unknown!
-+ * @max_freq_multiple: !unknown!
-+ */
-+struct brcmf_gscan_bucket_config {
-+	u8 bucket_end_index;
-+	u8 bucket_freq_multiple;
-+	u8 flag;
-+	u8 reserved;
-+	__le16 repeat;
-+	__le16 max_freq_multiple;
-+};
-+
-+/* version supported which must match firmware */
-+#define BRCMF_GSCAN_CFG_VERSION                     1
-+
-+/**
-+ * enum brcmf_gscan_cfg_flags - bit values for gscan flags.
-+ *
-+ * @BRCMF_GSCAN_CFG_FLAGS_ALL_RESULTS: send probe responses/beacons to host.
-+ * @BRCMF_GSCAN_CFG_FLAGS_CHANGE_ONLY: indicated only flags member is changed.
-+ */
-+enum brcmf_gscan_cfg_flags {
-+	BRCMF_GSCAN_CFG_FLAGS_ALL_RESULTS = BIT(0),
-+	BRCMF_GSCAN_CFG_FLAGS_CHANGE_ONLY = BIT(7),
-+};
-+
-+/**
-+ * struct brcmf_gscan_config - configuration data for gscan.
-+ *
-+ * @version: version of the api to match firmware.
-+ * @flags: flags according %enum brcmf_gscan_cfg_flags.
-+ * @buffer_threshold: percentage threshold of buffer to generate an event.
-+ * @swc_nbssid_threshold: number of BSSIDs with significant change that
-+ *	will generate an event.
-+ * @swc_rssi_window_size: size of rssi cache buffer (max=8).
-+ * @count_of_channel_buckets: number of array members in @bucket.
-+ * @retry_threshold: !unknown!
-+ * @lost_ap_window: !unknown!
-+ * @bucket: array of channel buckets.
-+ */
-+struct brcmf_gscan_config {
-+	__le16 version;
-+	u8  flags;
-+	u8   buffer_threshold;
-+	u8   swc_nbssid_threshold;
-+	u8  swc_rssi_window_size;
-+	u8  count_of_channel_buckets;
-+	u8  retry_threshold;
-+	__le16  lost_ap_window;
-+	struct brcmf_gscan_bucket_config bucket[1];
-+};
-+
- #endif /* FWIL_TYPES_H_ */
--- 
-1.9.1
+>diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
+>index 7df88770e029..f86127a46cfc 100644
+>--- a/include/uapi/linux/netlink.h
+>+++ b/include/uapi/linux/netlink.h
+>@@ -122,6 +122,9 @@ struct nlmsgerr {
+>  * @NLMSGERR_ATTR_MSG: error message string (string)
+>  * @NLMSGERR_ATTR_OFFS: offset of the invalid attribute in the original
+>  *	 message, counting from the beginning of the header (u32)
+>+ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
+>+ *	be used - in the success case - to identify a created
+>+ *	object or operation or similar (binary)
+>  * @__NLMSGERR_ATTR_MAX: number of attributes
+>  * @NLMSGERR_ATTR_MAX: highest attribute number
+>  */
+>@@ -129,6 +132,7 @@ enum nlmsgerr_attrs {
+> 	NLMSGERR_ATTR_UNUSED,
+> 	NLMSGERR_ATTR_MSG,
+> 	NLMSGERR_ATTR_OFFS,
+>+	NLMSGERR_ATTR_COOKIE,
+> 
+> 	__NLMSGERR_ATTR_MAX,
+> 	NLMSGERR_ATTR_MAX = __NLMSGERR_ATTR_MAX - 1
+>diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+>index c1564768000e..ee841f00a6ec 100644
+>--- a/net/netlink/af_netlink.c
+>+++ b/net/netlink/af_netlink.c
+>@@ -2311,6 +2311,10 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+> 		}
+> 	} else {
+> 		flags |= NLM_F_CAPPED;
+>+
+>+		if (nlk->flags & NETLINK_F_EXT_ACK &&
+>+		    extack && extack->cookie_len)
+>+			tlvlen += nla_total_size(extack->cookie_len);
+> 	}
+> 
+
+Now I see why you have "if (tlvlen)" where you have it :)
+
+
+> 	if (tlvlen)
