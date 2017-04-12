@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44527 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762275AbdDSLrs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 07:47:48 -0400
-Date: Wed, 19 Apr 2017 14:47:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Vincent Cuissard <cuissard@marvell.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] NFC: nfcmrvl: double free on error path
-Message-ID: <20170419113354.6j7co2yuusdqsubl@mwanda> (sfid-20170419_134823_231195_EB27F482)
-References: <20170308052237.GA14542@mwanda>
- <20170401221117.GD22034@zurbaran.ger.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170401221117.GD22034@zurbaran.ger.intel.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38184 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752513AbdDLPVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 11:21:47 -0400
+Message-ID: <1492010503.2855.14.camel@sipsolutions.net> (sfid-20170412_172153_155241_E68B680E)
+Subject: Re: [PATCH net-next v5 1/5] netlink: extended ACK reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Ahern <dsa@cumulusnetworks.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
+Date: Wed, 12 Apr 2017 17:21:43 +0200
+In-Reply-To: <dbc81431-487b-f218-a4c6-2caa44783d97@cumulusnetworks.com> (sfid-20170412_170649_644527_0ED3DE34)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+         <20170412123408.22012-2-johannes@sipsolutions.net>
+         <dbc81431-487b-f218-a4c6-2caa44783d97@cumulusnetworks.com>
+         (sfid-20170412_170649_644527_0ED3DE34)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 02, 2017 at 12:11:17AM +0200, Samuel Ortiz wrote:
-> Hi Dan,
+On Wed, 2017-04-12 at 09:06 -0600, David Ahern wrote:
 > 
-> On Wed, Mar 08, 2017 at 08:22:37AM +0300, Dan Carpenter wrote:
-> > The nci_spi_send() function calls kfree_skb(skb) on both error and
-> > success so this extra kfree_skb() is a double free.
-> > 
-> > Fixes: caf6e49bf6d0 ("NFC: nfcmrvl: add spi driver")
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > ---
-> > Static analysis.  Not tested.
-> Applied to nfc-next, thanks.
-> 
+> There was a discussion about side effects of adding strings (bloat,
+> internationalization). Should ATTR_MSG be removed until that is
+> ironed out? Leaving it in suggests it is ok to start adding strings.
 
-This is still not showing up in linux-next.
+I really do want the strings; this is why I named the struct member
+"_msg" and added the NL_SET_ERR_MSG() macro, that will easily allow
+both making the strings optional with Kconfig (bloat) and collecting
+them into a separate data section (translation).
 
-regards,
-dan carpenter
+johannes
