@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43492 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754394AbdDMOFs (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:35650 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754206AbdDLPPe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 10:05:48 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 12 Apr 2017 11:15:34 -0400
+Received: by mail-wr0-f196.google.com with SMTP id l44so4672973wrc.2
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 08:15:34 -0700 (PDT)
+Date: Wed, 12 Apr 2017 17:15:31 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: David Ahern <dsa@cumulusnetworks.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH net-next v5 5/5] netlink: pass extended ACK struct where
+ available
+Message-ID: <20170412151531.GL1952@nanopsycho> (sfid-20170412_171540_990711_30AE6EC1)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+ <20170412123408.22012-6-johannes@sipsolutions.net>
+ <20170412140043.GH1952@nanopsycho>
+ <1fdfb890-162a-a22c-53e0-101b9ef3bfa2@cumulusnetworks.com>
 MIME-Version: 1.0
-Subject: Re: mwifiex: Fix invalid port issue
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1491281188-6471-1-git-send-email-gbhat@marvell.com>
-References: <1491281188-6471-1-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20170413140547.E7A3460D70@smtp.codeaurora.org> (sfid-20170413_160627_512975_E3CEC95E)
-Date: Thu, 13 Apr 2017 14:05:47 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1fdfb890-162a-a22c-53e0-101b9ef3bfa2@cumulusnetworks.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
-> We have to use start port, for TX/RX of single packet,
-> instead of current aggregating port. This will fix SDIO
-> CMD53(TX/RX) returning -ETIMEDOUT and halting the data path.
-> 
-> Fixes: 0cb52aac4d19 ("mwifiex: do not set multiport flag for tx/rx single packet")
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Wed, Apr 12, 2017 at 04:55:07PM CEST, dsa@cumulusnetworks.com wrote:
+>On 4/12/17 8:00 AM, Jiri Pirko wrote:
+>> Aside from the tinyfication of desc lines
+>
+>channel your inner Elsa and just let it go
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-ecd7eb7c2bcf mwifiex: Fix invalid port issue
-
--- 
-https://patchwork.kernel.org/patch/9660845/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Not sure why. I still believe it is a mistake so I like to point it out.
+Don't see anything wrong about it :)
