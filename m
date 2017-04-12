@@ -1,136 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35238 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752697AbdDLLGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 07:06:25 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: aviya.erenfeld@intel.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/6] mac80211: correct MU-MIMO monitor follow functionality
-Date: Wed, 12 Apr 2017 13:06:18 +0200
-Message-Id: <20170412110621.8981-3-johannes@sipsolutions.net> (sfid-20170412_130635_985645_D7EF0A90)
-In-Reply-To: <20170412110621.8981-1-johannes@sipsolutions.net>
-References: <20170412110621.8981-1-johannes@sipsolutions.net>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:32844 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752650AbdDLPNM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 11:13:12 -0400
+Received: by mail-wm0-f65.google.com with SMTP id o81so7062809wmb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 08:13:06 -0700 (PDT)
+Date: Wed, 12 Apr 2017 17:13:03 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: David Ahern <dsa@cumulusnetworks.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH net-next v5 1/5] netlink: extended ACK reporting
+Message-ID: <20170412151303.GK1952@nanopsycho> (sfid-20170412_171335_552089_2D1C043D)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+ <20170412123408.22012-2-johannes@sipsolutions.net>
+ <dbc81431-487b-f218-a4c6-2caa44783d97@cumulusnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <dbc81431-487b-f218-a4c6-2caa44783d97@cumulusnetworks.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Wed, Apr 12, 2017 at 05:06:48PM CEST, dsa@cumulusnetworks.com wrote:
+>On 4/12/17 6:34 AM, Johannes Berg wrote:
+>> diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
+>> index b2c9c26ea30f..7df88770e029 100644
+>> --- a/include/uapi/linux/netlink.h
+>> +++ b/include/uapi/linux/netlink.h
+>> @@ -69,6 +69,10 @@ struct nlmsghdr {
+>>  #define NLM_F_CREATE	0x400	/* Create, if it does not exist	*/
+>>  #define NLM_F_APPEND	0x800	/* Add to end of list		*/
+>>  
+>> +/* Flags for ACK message */
+>> +#define NLM_F_CAPPED	0x100	/* request was capped */
+>> +#define NLM_F_ACK_TLVS	0x200	/* extended ACK TVLs were included */
+>> +
+>>  /*
+>>     4.4BSD ADD		NLM_F_CREATE|NLM_F_EXCL
+>>     4.4BSD CHANGE	NLM_F_REPLACE
+>> @@ -101,6 +105,33 @@ struct nlmsghdr {
+>>  struct nlmsgerr {
+>>  	int		error;
+>>  	struct nlmsghdr msg;
+>> +	/*
+>> +	 * followed by the message contents unless NETLINK_CAP_ACK was set
+>> +	 * or the ACK indicates success (error == 0)
+>> +	 * message length is aligned with NLMSG_ALIGN()
+>> +	 */
+>> +	/*
+>> +	 * followed by TLVs defined in enum nlmsgerr_attrs
+>> +	 * if NETLINK_EXT_ACK was set
+>> +	 */
+>> +};
+>> +
+>> +/**
+>> + * enum nlmsgerr_attrs - nlmsgerr attributes
+>> + * @NLMSGERR_ATTR_UNUSED: unused
+>> + * @NLMSGERR_ATTR_MSG: error message string (string)
+>> + * @NLMSGERR_ATTR_OFFS: offset of the invalid attribute in the original
+>> + *	 message, counting from the beginning of the header (u32)
+>> + * @__NLMSGERR_ATTR_MAX: number of attributes
+>> + * @NLMSGERR_ATTR_MAX: highest attribute number
+>> + */
+>> +enum nlmsgerr_attrs {
+>> +	NLMSGERR_ATTR_UNUSED,
+>> +	NLMSGERR_ATTR_MSG,
+>
+>There was a discussion about side effects of adding strings (bloat,
+>internationalization). Should ATTR_MSG be removed until that is ironed
+>out? Leaving it in suggests it is ok to start adding strings.
 
-The MU-MIMO monitor follow functionality is broken because it
-doesn't clear the MU-MIMO owner even if both follow features
-are disabled. Fix that, and while at it move the code into a
-new helper function. Call this also when creating a new monitor
-interface to prepare for an upcoming cfg80211 change allowing
-that.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c | 78 ++++++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 58 insertions(+), 20 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index dc397815a8bf..3dd0b7511b84 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -22,6 +22,49 @@
- #include "mesh.h"
- #include "wme.h"
- 
-+static int ieee80211_set_mu_mimo_follow(struct ieee80211_sub_if_data *sdata,
-+					struct vif_params *params)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_sub_if_data *monitor_sdata;
-+	bool mu_mimo_groups = false;
-+	bool mu_mimo_follow = false;
-+
-+	monitor_sdata = rtnl_dereference(local->monitor_sdata);
-+
-+	if (!monitor_sdata)
-+		return -EOPNOTSUPP;
-+
-+	if (params->vht_mumimo_groups) {
-+		u64 membership;
-+
-+		BUILD_BUG_ON(sizeof(membership) != WLAN_MEMBERSHIP_LEN);
-+
-+		memcpy(monitor_sdata->vif.bss_conf.mu_group.membership,
-+		       params->vht_mumimo_groups, WLAN_MEMBERSHIP_LEN);
-+		memcpy(monitor_sdata->vif.bss_conf.mu_group.position,
-+		       params->vht_mumimo_groups + WLAN_MEMBERSHIP_LEN,
-+		       WLAN_USER_POSITION_LEN);
-+		ieee80211_bss_info_change_notify(monitor_sdata,
-+						 BSS_CHANGED_MU_GROUPS);
-+		/* don't care about endianness - just check for 0 */
-+		memcpy(&membership, params->vht_mumimo_groups,
-+		       WLAN_MEMBERSHIP_LEN);
-+		mu_mimo_groups = membership != 0;
-+	}
-+
-+	if (params->vht_mumimo_follow_addr) {
-+		mu_mimo_follow =
-+			is_valid_ether_addr(params->vht_mumimo_follow_addr);
-+		ether_addr_copy(monitor_sdata->u.mntr.mu_follow_addr,
-+				params->vht_mumimo_follow_addr);
-+	}
-+
-+	monitor_sdata->vif.mu_mimo_owner = mu_mimo_groups || mu_mimo_follow;
-+
-+	return 0;
-+}
-+
- static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 						const char *name,
- 						unsigned char name_assign_type,
-@@ -38,9 +81,17 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 	if (err)
- 		return ERR_PTR(err);
- 
--	if (type == NL80211_IFTYPE_MONITOR && flags) {
--		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
--		sdata->u.mntr.flags = *flags;
-+	sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+
-+	if (type == NL80211_IFTYPE_MONITOR) {
-+		err = ieee80211_set_mu_mimo_follow(sdata, params);
-+		if (err) {
-+			ieee80211_if_remove(sdata);
-+			return NULL;
-+		}
-+
-+		if (flags)
-+			sdata->u.mntr.flags = *flags;
- 	}
- 
- 	return wdev;
-@@ -76,24 +127,11 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
- 		struct ieee80211_local *local = sdata->local;
--		struct ieee80211_sub_if_data *monitor_sdata;
--		u32 mu_mntr_cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
--
--		monitor_sdata = rtnl_dereference(local->monitor_sdata);
--		if (monitor_sdata && params->vht_mumimo_groups) {
--			memcpy(monitor_sdata->vif.bss_conf.mu_group.membership,
--			       params->vht_mumimo_groups, WLAN_MEMBERSHIP_LEN);
--			memcpy(monitor_sdata->vif.bss_conf.mu_group.position,
--			       params->vht_mumimo_groups + WLAN_MEMBERSHIP_LEN,
--			       WLAN_USER_POSITION_LEN);
--			monitor_sdata->vif.mu_mimo_owner = true;
--			ieee80211_bss_info_change_notify(monitor_sdata,
--							 BSS_CHANGED_MU_GROUPS);
--		}
-+		int err;
- 
--		if (monitor_sdata && params->vht_mumimo_follow_addr)
--			ether_addr_copy(monitor_sdata->u.mntr.mu_follow_addr,
--					params->vht_mumimo_follow_addr);
-+		err = ieee80211_set_mu_mimo_follow(sdata, params);
-+		if (err)
-+			return err;
- 
- 		if (!flags)
- 			return 0;
--- 
-2.11.0
+I believe that we need strings right away. Without them, this patchset
+really does not make much sense.
