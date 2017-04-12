@@ -1,32 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29991 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751933AbdDAVnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Apr 2017 17:43:55 -0400
-Date: Sat, 1 Apr 2017 23:43:48 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Geliang Tang <geliangtang@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: nfcmrvl: drop duplicate header gpio.h
-Message-ID: <20170401214348.GA22034@zurbaran.ger.intel.com> (sfid-20170401_234458_054683_4261CCEE)
-References: <15299de49216a2360976ca37ff774cae9d27d88b.1479991297.git.geliangtang@gmail.com>
- <b3d55dda173172b385d7e617cf07ec00efae9b49.1479991468.git.geliangtang@gmail.com>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:35993 "EHLO
+        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752956AbdDLOzU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 10:55:20 -0400
+Received: by mail-io0-f173.google.com with SMTP id l7so43527068ioe.3
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 07:55:20 -0700 (PDT)
+Subject: Re: [PATCH net-next v5 5/5] netlink: pass extended ACK struct where
+ available
+To: Jiri Pirko <jiri@resnulli.us>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+ <20170412123408.22012-6-johannes@sipsolutions.net>
+ <20170412140043.GH1952@nanopsycho>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>
+From: David Ahern <dsa@cumulusnetworks.com>
+Message-ID: <1fdfb890-162a-a22c-53e0-101b9ef3bfa2@cumulusnetworks.com> (sfid-20170412_165523_983076_D1D9133B)
+Date: Wed, 12 Apr 2017 08:55:07 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b3d55dda173172b385d7e617cf07ec00efae9b49.1479991468.git.geliangtang@gmail.com>
+In-Reply-To: <20170412140043.GH1952@nanopsycho>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Geliang,
+On 4/12/17 8:00 AM, Jiri Pirko wrote:
+> Aside from the tinyfication of desc lines
 
-On Thu, Nov 24, 2016 at 09:58:34PM +0800, Geliang Tang wrote:
-> Drop duplicate header gpio.h from nfcmrvl/spi.c.
-> 
-> Signed-off-by: Geliang Tang <geliangtang@gmail.com>
-> ---
->  drivers/nfc/nfcmrvl/spi.c | 1 -
->  1 file changed, 1 deletion(-)
-Patch applied, thanks.
-
-Cheers,
-Samuel.
+channel your inner Elsa and just let it go
