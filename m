@@ -1,91 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:32916 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752224AbdDLNrM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 09:47:12 -0400
-Received: by mail-wm0-f68.google.com with SMTP id o81so6532725wmb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 06:47:12 -0700 (PDT)
-Date: Wed, 12 Apr 2017 15:47:09 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH net-next v5 3/5] netlink: allow sending extended ACK with
- cookie on success
-Message-ID: <20170412134709.GF1952@nanopsycho> (sfid-20170412_154717_029776_CAE42203)
-References: <20170412123408.22012-1-johannes@sipsolutions.net>
- <20170412123408.22012-4-johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170412123408.22012-4-johannes@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37758 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753491AbdDLO1l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 10:27:41 -0400
+Message-ID: <1492007254.2855.10.camel@sipsolutions.net> (sfid-20170412_162805_680364_6876F6CE)
+Subject: Re: [RFC 1/3] bpf/wireless: add wifimon program type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Daniel Borkmann <daniel@iogearbox.net>,
+        Alexei Starovoitov <ast@kernel.org>
+Date: Wed, 12 Apr 2017 16:27:34 +0200
+In-Reply-To: <20170412110726.9689-1-johannes@sipsolutions.net> (sfid-20170412_130910_059795_2268F0CA)
+References: <20170412110726.9689-1-johannes@sipsolutions.net>
+         (sfid-20170412_130910_059795_2268F0CA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Apr 12, 2017 at 02:34:06PM CEST, johannes@sipsolutions.net wrote:
->From: Johannes Berg <johannes.berg@intel.com>
->
->Now that we have extended error reporting and a new message format
->for netlink ACK messages, also extend this to be able to return
->arbitrary cookie data on success.
->
->This will allow, for example, nl80211 to not send an extra message
->for cookies identifying newly created objects, but return those
->directly in the ACK message.
->
->The cookie data size is currently limited to 20 bytes (since Jamal
->talked about using SHA1 for identifiers.)
->
->Thanks to Jamal Hadi Salim for bringing up this idea during the
->discussions.
->
->Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-
-Reviewed-by: Jiri Pirko <jiri@mellanox.com>
-
-[...]
-
->diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
->index 7df88770e029..f86127a46cfc 100644
->--- a/include/uapi/linux/netlink.h
->+++ b/include/uapi/linux/netlink.h
->@@ -122,6 +122,9 @@ struct nlmsgerr {
->  * @NLMSGERR_ATTR_MSG: error message string (string)
->  * @NLMSGERR_ATTR_OFFS: offset of the invalid attribute in the original
->  *	 message, counting from the beginning of the header (u32)
->+ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
->+ *	be used - in the success case - to identify a created
->+ *	object or operation or similar (binary)
->  * @__NLMSGERR_ATTR_MAX: number of attributes
->  * @NLMSGERR_ATTR_MAX: highest attribute number
->  */
->@@ -129,6 +132,7 @@ enum nlmsgerr_attrs {
-> 	NLMSGERR_ATTR_UNUSED,
-> 	NLMSGERR_ATTR_MSG,
-> 	NLMSGERR_ATTR_OFFS,
->+	NLMSGERR_ATTR_COOKIE,
+On Wed, 2017-04-12 at 13:07 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> 	__NLMSGERR_ATTR_MAX,
-> 	NLMSGERR_ATTR_MAX = __NLMSGERR_ATTR_MAX - 1
->diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
->index c1564768000e..ee841f00a6ec 100644
->--- a/net/netlink/af_netlink.c
->+++ b/net/netlink/af_netlink.c
->@@ -2311,6 +2311,10 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
-> 		}
-> 	} else {
-> 		flags |= NLM_F_CAPPED;
->+
->+		if (nlk->flags & NETLINK_F_EXT_ACK &&
->+		    extack && extack->cookie_len)
->+			tlvlen += nla_total_size(extack->cookie_len);
-> 	}
+> Add a new program type for wifi monitor interfaces. This program
+> type can
+>  * access __sk_buff, but only skb->len
+>  * call bpf_skb_load_bytes()
 > 
+> The program type is only enabled when something selects the new
+> Kconfig symbol WANT_BPF_WIFIMON, which will be done by mac80211
+> in a follow-up patch.
 
-Now I see why you have "if (tlvlen)" where you have it :)
+This works. An example BPF program is here:
+https://p.sipsolutions.net/ca32264f2b705e5e.txt
 
+I haven't really done any performance measurements and only tested it
+in a virtual environment, but it's nice to see that in principle I can
+get it working relatively easily.
 
-> 	if (tlvlen)
+One thing I'm not so sure about is the usage of __sk_buff.
+
+Clearly, I need to pass the struct sk_buff internally for
+bpf_skb_load_bytes() to work. However, using __sk_buff seems a bit
+strange since I only let the program access the len field.
+
+Perhaps adding a __wifi_sk_buff would work, but then clang will
+probably complain if you pass that to bpf_skb_load_bytes().
+
+The alternative will be to add any wifi fields we might need eventually
+to __sk_buff, which perhaps isn't such a big deal since accesses are
+optimized away anyway through convert_ctx_access.
+
+Instead it may make more sense to just have a "wifi_info(skb, info)"
+function you can call, e.g. with a structure that has various fields
+and flags to see which you care about.
+
+johannes
