@@ -1,91 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51426 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754687AbdDMP04 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 11:26:56 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 13 Apr 2017 18:25:00 +0300
-Message-Id: <20170413152507.9648-20-luca@coelho.fi> (sfid-20170413_172700_447908_9BD924A0)
-In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
-References: <20170413152507.9648-1-luca@coelho.fi>
-Subject: [PATCH 19/26] iwlwifi: pcie: support new TX command
+Received: from mga07.intel.com ([134.134.136.100]:26446 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752956AbdDLPSV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 11:18:21 -0400
+Date: Wed, 12 Apr 2017 23:17:41 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org
+Subject: [mac80211-next:bpf 9/9] net/mac80211/iface.c:1113:40: sparse:
+ incompatible types in comparison expression (different address spaces)
+Message-ID: <201704122335.dadhdBZo%fengguang.wu@intel.com> (sfid-20170412_171825_825328_72CEF08B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git bpf
+head:   772b164e17bd40659b5a45e26389e4d9418162e4
+commit: 772b164e17bd40659b5a45e26389e4d9418162e4 [9/9] mac80211: support bpf monitor filter
+reproduce:
+        # apt-get install sparse
+        git checkout 772b164e17bd40659b5a45e26389e4d9418162e4
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
-Move to use the correct structure.
-Remove code referring to old command.
-Update DMA locations.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+sparse warnings: (new ones prefixed by >>)
+
+   include/linux/compiler.h:264:8: sparse: attribute 'no_sanitize_address': unknown attribute
+>> net/mac80211/iface.c:1113:40: sparse: incompatible types in comparison expression (different address spaces)
+   net/mac80211/iface.c:1115:17: sparse: incompatible types in comparison expression (different address spaces)
+--
+   include/linux/compiler.h:264:8: sparse: attribute 'no_sanitize_address': unknown attribute
+>> net/mac80211/cfg.c:110:40: sparse: incompatible types in comparison expression (different address spaces)
+   net/mac80211/cfg.c:113:25: sparse: incompatible types in comparison expression (different address spaces)
+--
+   include/linux/compiler.h:264:8: sparse: attribute 'no_sanitize_address': unknown attribute
+>> net/mac80211/rx.c:573:26: sparse: incompatible types in comparison expression (different address spaces)
+
+vim +1113 net/mac80211/iface.c
+
+  1097	static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
+  1098	{
+  1099		int i;
+  1100	
+  1101		/* free extra data */
+  1102		ieee80211_free_keys(sdata, false);
+  1103	
+  1104		ieee80211_debugfs_remove_netdev(sdata);
+  1105	
+  1106		for (i = 0; i < IEEE80211_FRAGMENT_MAX; i++)
+  1107			__skb_queue_purge(&sdata->fragments[i].skb_list);
+  1108		sdata->fragment_next = 0;
+  1109	
+  1110		if (ieee80211_vif_is_mesh(&sdata->vif)) {
+  1111			ieee80211_mesh_teardown_sdata(sdata);
+  1112		} else if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
+> 1113			struct bpf_prog *old = rtnl_dereference(sdata->u.mntr.filter);
+  1114	
+  1115			RCU_INIT_POINTER(sdata->u.mntr.filter, NULL);
+  1116			if (old)
+  1117				bpf_prog_put(old);
+  1118		}
+  1119	}
+  1120	
+  1121	static void ieee80211_uninit(struct net_device *dev)
+
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  4 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 10 +---------
- 2 files changed, 3 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index bd358895caee..912d475ed292 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -205,11 +205,11 @@ struct iwl_cmd_meta {
-  * into the buffer regardless of whether it should be mapped or not.
-  * This indicates how big the first TB must be to include the scratch buffer
-  * and the assigned PN.
-- * Since PN location is 16 bytes at offset 24, it's 40 now.
-+ * Since PN location is 8 bytes at offset 12, it's 20 now.
-  * If we make it bigger then allocations will be bigger and copy slower, so
-  * that's probably not useful.
-  */
--#define IWL_FIRST_TB_SIZE	40
-+#define IWL_FIRST_TB_SIZE	20
- #define IWL_FIRST_TB_SIZE_ALIGN ALIGN(IWL_FIRST_TB_SIZE, 64)
- 
- struct iwl_pcie_txq_entry {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 3a36bda5fd27..67af73ef7d0d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -284,14 +284,12 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
- 	return 0;
- }
- 
--#define TX_CMD_FLG_MH_PAD_MSK cpu_to_le32(TX_CMD_FLG_MH_PAD)
--
- int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 			   struct iwl_device_cmd *dev_cmd, int txq_id)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct ieee80211_hdr *hdr;
--	struct iwl_tx_cmd *tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
-+	struct iwl_tx_cmd_gen2 *tx_cmd = (void *)dev_cmd->payload;
- 	struct iwl_cmd_meta *out_meta;
- 	struct iwl_txq *txq;
- 	dma_addr_t tb0_phys, tb1_phys, scratch_phys;
-@@ -345,9 +343,6 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	scratch_phys = tb0_phys + sizeof(struct iwl_cmd_header) +
- 		       offsetof(struct iwl_tx_cmd, scratch);
- 
--	tx_cmd->dram_lsb_ptr = cpu_to_le32(scratch_phys);
--	tx_cmd->dram_msb_ptr = iwl_get_dma_hi_addr(scratch_phys);
--
- 	/* Set up first empty entry in queue's array of Tx/cmd buffers */
- 	out_meta = &txq->entries[txq->write_ptr].meta;
- 	out_meta->flags = 0;
-@@ -361,9 +356,6 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	len = sizeof(struct iwl_tx_cmd) + sizeof(struct iwl_cmd_header) +
- 	      hdr_len - IWL_FIRST_TB_SIZE;
- 	tb1_len = ALIGN(len, 4);
--	/* Tell NIC about any 2-byte padding after MAC header */
--	if (tb1_len != len)
--		tx_cmd->tx_flags |= TX_CMD_FLG_MH_PAD_MSK;
- 
- 	/*
- 	 * The first TB points to bi-directional DMA data, we'll
--- 
-2.11.0
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
