@@ -1,96 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52114 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752702AbdDEHKS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 03:10:18 -0400
-Subject: [PATCH 3/7] ath10k: add ath10k_sdio_read()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 5 Apr 2017 10:06:53 +0300
-Message-ID: <149137601370.4898.4600249077985000688.stgit@potku.adurom.net> (sfid-20170405_091022_765034_B9BE4D17)
-In-Reply-To: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
-References: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35246 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752737AbdDLLGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 07:06:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: aviya.erenfeld@intel.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5/6] cfg80211: refactor nl80211 monitor option parsing
+Date: Wed, 12 Apr 2017 13:06:20 +0200
+Message-Id: <20170412110621.8981-5-johannes@sipsolutions.net> (sfid-20170412_130635_168453_DDEE6B37)
+In-Reply-To: <20170412110621.8981-1-johannes@sipsolutions.net>
+References: <20170412110621.8981-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/sdio.c |   40 +++++++++++++++++++++++---------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 56728d44dd12..bbd8317de861 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -343,6 +343,31 @@ static int ath10k_sdio_read32(struct ath10k *ar, u32 addr, u32 *val)
- 	return ret;
+Refactor the parsing of monitor flags and the MU-MIMO options.
+This will allow adding more things cleanly in the future and
+also allows setting the latter already when creating a monitor
+interface.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 126 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 70 insertions(+), 56 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index dd871586cb94..9516840b6e5f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2708,6 +2708,69 @@ static int parse_monitor_flags(struct nlattr *nla, u32 *mntrflags)
+ 	return 0;
  }
  
-+static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf, size_t len)
++static int nl80211_parse_mon_options(struct cfg80211_registered_device *rdev,
++				     enum nl80211_iftype type,
++				     struct genl_info *info,
++				     struct vif_params *params)
 +{
-+	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
-+	struct sdio_func *func = ar_sdio->func;
-+	int ret;
++	bool change = false;
++	int err;
 +
-+	sdio_claim_host(func);
++	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
++		if (type != NL80211_IFTYPE_MONITOR)
++			return -EINVAL;
 +
-+	ret = sdio_memcpy_fromio(func, buf, addr, len);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to read from address 0x%x: %d\n",
-+			    addr, ret);
-+		goto out;
++		err = parse_monitor_flags(info->attrs[NL80211_ATTR_MNTR_FLAGS],
++					  &params->flags);
++		if (err)
++			return err;
++
++		change = true;
 +	}
 +
-+	ath10k_dbg(ar, ATH10K_DBG_SDIO, "sdio read addr 0x%x buf 0x%p len %zu\n",
-+		   addr, buf, len);
-+	ath10k_dbg_dump(ar, ATH10K_DBG_SDIO_DUMP, NULL, "sdio read ", buf, len);
++	if (params->flags & MONITOR_FLAG_ACTIVE &&
++	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
++		return -EOPNOTSUPP;
 +
-+out:
-+	sdio_release_host(func);
++	if (info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]) {
++		const u8 *mumimo_groups;
++		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
 +
-+	return ret;
++		if (type != NL80211_IFTYPE_MONITOR)
++			return -EINVAL;
++
++		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
++			return -EOPNOTSUPP;
++
++		mumimo_groups =
++			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]);
++
++		/* bits 0 and 63 are reserved and must be zero */
++		if ((mumimo_groups[0] & BIT(7)) ||
++		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(0)))
++			return -EINVAL;
++
++		params->vht_mumimo_groups = mumimo_groups;
++		change = true;
++	}
++
++	if (info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]) {
++		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
++
++		if (type != NL80211_IFTYPE_MONITOR)
++			return -EINVAL;
++
++		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
++			return -EOPNOTSUPP;
++
++		params->vht_mumimo_follow_addr =
++			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]);
++		change = true;
++	}
++
++	return change ? 1 : 0;
 +}
 +
- /* HIF mbox functions */
- 
- static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
-@@ -859,11 +884,8 @@ static int ath10k_sdio_mbox_read_int_status(struct ath10k *ar,
- 	 * will yield us the value of different int status
- 	 * registers and the lookahead registers.
- 	 */
--	ret = ath10k_sdio_read_write_sync(ar,
--					  MBOX_HOST_INT_STATUS_ADDRESS,
--					  (u8 *)irq_proc_reg,
--					  sizeof(*irq_proc_reg),
--					  HIF_RD_SYNC_BYTE_INC);
-+	ret = ath10k_sdio_read(ar, MBOX_HOST_INT_STATUS_ADDRESS,
-+			       irq_proc_reg, sizeof(*irq_proc_reg));
- 	if (ret)
- 		goto out;
- 
-@@ -1175,9 +1197,7 @@ static int ath10k_sdio_bmi_exchange_msg(struct ath10k *ar,
- 
- 	/* We always read from the start of the mbox address */
- 	addr = ar_sdio->mbox_info.htc_addr;
--	ret = ath10k_sdio_read_write_sync(ar, addr, ar_sdio->bmi_buf,
--					  *resp_len,
--					  HIF_RD_SYNC_BYTE_INC);
-+	ret = ath10k_sdio_read(ar, addr, ar_sdio->bmi_buf, *resp_len);
- 	if (ret) {
- 		ath10k_warn(ar,
- 			    "unable to read the bmi data from the device: %d\n",
-@@ -1538,9 +1558,7 @@ static int ath10k_sdio_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
+ static int nl80211_valid_4addr(struct cfg80211_registered_device *rdev,
+ 			       struct net_device *netdev, u8 use_4addr,
+ 			       enum nl80211_iftype iftype)
+@@ -2783,50 +2846,11 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		params.use_4addr = -1;
  	}
  
- 	/* read the data */
--	ret = ath10k_sdio_read_write_sync(ar, MBOX_WINDOW_DATA_ADDRESS,
--					  (u8 *)buf, buf_len,
--					  HIF_RD_SYNC_BYTE_INC);
-+	ret = ath10k_sdio_read(ar, MBOX_WINDOW_DATA_ADDRESS, buf, buf_len);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read from mbox window data addrress: %d\n",
- 			    ret);
+-	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
+-		if (ntype != NL80211_IFTYPE_MONITOR)
+-			return -EINVAL;
+-		err = parse_monitor_flags(info->attrs[NL80211_ATTR_MNTR_FLAGS],
+-					  &params.flags);
+-		if (err)
+-			return err;
+-
+-		change = true;
+-	}
+-
+-	if (params.flags & MONITOR_FLAG_ACTIVE &&
+-	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
+-		return -EOPNOTSUPP;
+-
+-	if (info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]) {
+-		const u8 *mumimo_groups;
+-		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
+-
+-		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
+-			return -EOPNOTSUPP;
+-
+-		mumimo_groups =
+-			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]);
+-
+-		/* bits 0 and 63 are reserved and must be zero */
+-		if ((mumimo_groups[0] & BIT(7)) ||
+-		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(0)))
+-			return -EINVAL;
+-
+-		params.vht_mumimo_groups = mumimo_groups;
+-		change = true;
+-	}
+-
+-	if (info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]) {
+-		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
+-
+-		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
+-			return -EOPNOTSUPP;
+-
+-		params.vht_mumimo_follow_addr =
+-			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]);
++	err = nl80211_parse_mon_options(rdev, ntype, info, &params);
++	if (err < 0)
++		return err;
++	if (err > 0)
+ 		change = true;
+-	}
+ 
+ 	if (change)
+ 		err = cfg80211_change_iface(rdev, dev, ntype, &params);
+@@ -2882,19 +2906,9 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
+-		if (type != NL80211_IFTYPE_MONITOR)
+-			return -EINVAL;
+-
+-		err = parse_monitor_flags(info->attrs[NL80211_ATTR_MNTR_FLAGS],
+-					  &params.flags);
+-		if (err)
+-			return err;
+-	}
+-
+-	if (params.flags & MONITOR_FLAG_ACTIVE &&
+-	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
+-		return -EOPNOTSUPP;
++	err = nl80211_parse_mon_options(rdev, type, info, &params);
++	if (err < 0)
++		return err;
+ 
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+-- 
+2.11.0
