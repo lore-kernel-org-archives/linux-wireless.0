@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:63308 "EHLO mga04.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38256 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755001AbdDEJGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 05:06:21 -0400
-Date: Wed, 5 Apr 2017 11:06:11 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, robh+dt@kernel.org,
-        mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com
-Subject: Re: [PATCH v3 1/3] NFC: trf7970a: add device tree option for 27MHz
- clock
-Message-ID: <20170405090611.GF2136@zurbaran.ger.intel.com> (sfid-20170405_172443_906471_7DF7E7A3)
-References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+        id S1753860AbdDLPa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 11:30:56 -0400
+Message-ID: <1492011040.2855.18.camel@sipsolutions.net> (sfid-20170412_173111_494536_C2E714F0)
+Subject: Re: [RFC 1/3] bpf/wireless: add wifimon program type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        daniel@iogearbox.net, ast@kernel.org
+Date: Wed, 12 Apr 2017 17:30:40 +0200
+In-Reply-To: <20170412.111913.497795978751789475.davem@davemloft.net>
+References: <20170412110726.9689-1-johannes@sipsolutions.net>
+         <1492007254.2855.10.camel@sipsolutions.net>
+         <20170412.111913.497795978751789475.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Geoff,
-
-On Wed, Dec 21, 2016 at 11:18:32PM -0500, Geoff Lansberry wrote:
-> The TRF7970A has configuration options to support hardware designs
-> which use a 27.12MHz clock. This commit adds a device tree option
-> 'clock-frequency' to support configuring the this chip for default
-> 13.56MHz clock or the optional 27.12MHz clock.
+On Wed, 2017-04-12 at 11:19 -0400, David Miller wrote:
 > 
-> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
-> ---
->  .../devicetree/bindings/net/nfc/trf7970a.txt       |  2 +
->  drivers/nfc/trf7970a.c                             | 50 +++++++++++++++++-----
->  2 files changed, 41 insertions(+), 11 deletions(-)
-Patches #1 and #2 applied to nfc-next. I'll wait for you to rework #3
-before merging.
+> > Instead it may make more sense to just have a "wifi_info(skb,
+> info)"
+> > function you can call, e.g. with a structure that has various
+> fields
+> > and flags to see which you care about.
+> 
+> I would advise against this, let the parsing part use __sk_buff and
+> therefore have maximum flexibility.  You really cannot predict the
+> future, so in my opinion it might be unwise to constrain at this
+> point.
 
-Cheers,
-Samuel.
+So my point with the wifi_info() function to call from the BPF program
+was just that putting something that's not already in struct sk_buff
+into __sk_buff doesn't really make a lot of sense - we still have to
+actually build it somewhere/somehow without knowing if it's going to be
+needed by the program. We already have things like prog->cb_access and
+prog->dst_needed now, but I'm not sure we want to blow that up much.
+
+At the same time, technically I *do* have the information in skb->cb,
+but the format thereof is something I really wouldn't want to let
+trickle into the ABI. Therefore, I think if somebody needs something
+like the bitrate, we should have a wifi_info() function that can return
+the bitrate (among other things) without having to pre-build the data.
+We can still cache it in mac80211 if multiple programs are there, dunno
+if that makes sense.
+
+Nevertheless, I think if I don't use __sk_buff as the program argument
+then things get really messy, so I'll stick to that, and avoid adding
+anything to it as much as possible.
+
+johannes
