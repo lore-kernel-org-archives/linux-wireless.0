@@ -1,231 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51718 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753218AbdDNJCl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 05:02:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 14 Apr 2017 12:01:53 +0300
-Message-Id: <20170414090210.31397-10-luca@coelho.fi> (sfid-20170414_110254_842035_142B5FD1)
-In-Reply-To: <20170414090210.31397-1-luca@coelho.fi>
-References: <20170414090210.31397-1-luca@coelho.fi>
-Subject: [PATCH v2 09/26] iwlwifi: mvm: add support for EWRD (Dynamic SAR) ACPI table
+Received: from s3.sipsolutions.net ([5.9.151.49]:35290 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753789AbdDLLHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 07:07:37 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 2/3] cfg80211: add API to attach monitor filter program
+Date: Wed, 12 Apr 2017 13:07:25 +0200
+Message-Id: <20170412110726.9689-2-johannes@sipsolutions.net> (sfid-20170412_130909_516865_19B05254)
+In-Reply-To: <20170412110726.9689-1-johannes@sipsolutions.net>
+References: <20170412110726.9689-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Dynamic SAR allows changing TX power limits at runtime to comply with
-SAR regulations on multiple form factors (e.g. tablet vs. clamshell
-mode).  To support this, a new table was added to ACPI, which is
-called Extended Wireless Regulatory Descriptor (EWRD).  This table
-allows OEMs to define different TX power profiles for each form-factor
-or usage mode.
+Some people have suggested that the nl80211 API to look at
+management frames should be extended to allow multiple
+registrations, in order to allow applications other than
+the usual controllers (wpa_supplicant/hostapd) to look out
+for frames, e.g. for statistics or similar. Suggestions to
+use monitor interfaces were rejected, because the overhead
+is too big, even when a socket filter is installed. Adding
+this to the nl80211 API is, however, problematic because
+it then becomes undefined who is responsible for a frame,
+e.g. when action frames have multiple listeners - but only
+one can be responsible for handling them.
 
-Read this new table and store it in our SAR profiles table, in
-preparation for Dynamic SAR support.
+To solve this problem, we can allow installing a BPF filter
+program that gets run on the raw 802.11 frame received from
+the driver, before the frame is even considered for copying
+the SKB or building the radiotap header for a given monitor
+interface.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Add the necessary API to attach a monitor filter program
+to a newly created monitor interface, or allow changing
+it. Also allow clearing it by passing -1 as the FD.
+
+NOTE/WARNING
+We really should first figure out what we want to do with
+802.3 frames that are received by the driver. Do they at
+all show up on monitor? For the use case described above,
+that doesn't matter - however, it's easy to imagine other
+use cases, like using BPF for packet statistics (like the
+never-merged per-rate statistics), and then seeing data
+frames as well would be good. Perhaps the program can get
+a different metadata struct rather than __sk_buff, that
+indiciates whether the frames has 802.11 or 802.3 format?
+However, if it already has 802.3 format, the TA might no
+longer be present (in AP -> STA frames), which would then
+no longer allow collecting such statistics anyway ...
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 114 +++++++++++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  11 ++-
- 2 files changed, 108 insertions(+), 17 deletions(-)
+ include/net/cfg80211.h       |  3 +++
+ include/uapi/linux/nl80211.h |  7 +++++++
+ net/wireless/core.c          |  5 +++++
+ net/wireless/nl80211.c       | 27 +++++++++++++++++++++++++++
+ 4 files changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 6360361c576d..2a4c952ef01a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -992,8 +992,11 @@ static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a8faf9f0cac2..a59a8917a74c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -376,6 +376,8 @@ static inline void wiphy_read_of_freq_limits(struct wiphy *wiphy)
+  *	belonging to that MU-MIMO groupID; %NULL if not changed
+  * @vht_mumimo_follow_addr: MU-MIMO follow address, used for monitoring
+  *	MU-MIMO packets going to the specified station; %NULL if not changed
++ * @filter: wifi monitor BPF program, %NULL if not changed, an ERR_PTR()
++ *	if the program should be removed
+  */
+ struct vif_params {
+ 	u32 flags;
+@@ -383,6 +385,7 @@ struct vif_params {
+ 	u8 macaddr[ETH_ALEN];
+ 	const u8 *vht_mumimo_groups;
+ 	const u8 *vht_mumimo_follow_addr;
++	struct bpf_prog *filter;
+ };
  
- #ifdef CONFIG_ACPI
- #define ACPI_WRDS_METHOD		"WRDS"
--#define ACPI_WRDS_WIFI			(0x07)
-+#define ACPI_EWRD_METHOD		"EWRD"
-+#define ACPI_WIFI_DOMAIN		(0x07)
- #define ACPI_WRDS_WIFI_DATA_SIZE	(IWL_MVM_SAR_TABLE_SIZE + 2)
-+#define ACPI_EWRD_WIFI_DATA_SIZE	((IWL_MVM_SAR_PROFILE_NUM - 1) * \
-+					 IWL_MVM_SAR_TABLE_SIZE + 3)
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5ed257c4cd4e..4a33cac2a41a 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2012,6 +2012,8 @@ enum nl80211_commands {
+  *	u32 attribute with an &enum nl80211_timeout_reason value. This is used,
+  *	e.g., with %NL80211_CMD_CONNECT event.
+  *
++ * @NL80211_ATTR_BPF_FD: BPF file descriptor (s32), use -1 to remove a program
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2423,6 +2425,8 @@ enum nl80211_attrs {
  
- static int iwl_mvm_sar_set_profile(struct iwl_mvm *mvm,
- 				   union acpi_object *table,
-@@ -1051,7 +1054,7 @@ static union acpi_object *iwl_mvm_sar_find_wifi_pkg(struct iwl_mvm *mvm,
+ 	NL80211_ATTR_TIMEOUT_REASON,
  
- 		domain = &wifi_pkg->package.elements[0];
- 		if (domain->type == ACPI_TYPE_INTEGER &&
--		    domain->integer.value == ACPI_WRDS_WIFI)
-+		    domain->integer.value == ACPI_WIFI_DOMAIN)
- 			break;
++	NL80211_ATTR_BPF_FD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 		wifi_pkg = NULL;
-@@ -1123,6 +1126,78 @@ static int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
- 	return ret;
- }
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4753,6 +4757,8 @@ enum nl80211_feature_flags {
+  * @NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI: The driver supports sched_scan
+  *	for reporting BSSs with better RSSI than the current connected BSS
+  *	(%NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI).
++ * @NL80211_EXT_FEATURE_WIFIMON_BPF: supports running BPF filter programs
++ *	for frames seen on monitor interfaces
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4771,6 +4777,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA,
+ 	NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA_CONNECTED,
+ 	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
++	NL80211_EXT_FEATURE_WIFIMON_BPF,
  
-+static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
-+{
-+	union acpi_object *wifi_pkg;
-+	acpi_handle root_handle;
-+	acpi_handle handle;
-+	struct acpi_buffer ewrd = {ACPI_ALLOCATE_BUFFER, NULL};
-+	acpi_status status;
-+	bool enabled;
-+	int i, n_profiles, ret;
-+
-+	root_handle = ACPI_HANDLE(mvm->dev);
-+	if (!root_handle) {
-+		IWL_DEBUG_RADIO(mvm,
-+				"Could not retrieve root port ACPI handle\n");
-+		return -ENOENT;
-+	}
-+
-+	/* Get the method's handle */
-+	status = acpi_get_handle(root_handle, (acpi_string)ACPI_EWRD_METHOD,
-+				 &handle);
-+	if (ACPI_FAILURE(status)) {
-+		IWL_DEBUG_RADIO(mvm, "EWRD method not found\n");
-+		return -ENOENT;
-+	}
-+
-+	/* Call EWRD with no arguments */
-+	status = acpi_evaluate_object(handle, NULL, NULL, &ewrd);
-+	if (ACPI_FAILURE(status)) {
-+		IWL_DEBUG_RADIO(mvm, "EWRD invocation failed (0x%x)\n", status);
-+		return -ENOENT;
-+	}
-+
-+	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, ewrd.pointer,
-+					     ACPI_EWRD_WIFI_DATA_SIZE);
-+	if (IS_ERR(wifi_pkg)) {
-+		ret = PTR_ERR(wifi_pkg);
-+		goto out_free;
-+	}
-+
-+	if ((wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) ||
-+	    (wifi_pkg->package.elements[2].type != ACPI_TYPE_INTEGER)) {
-+		ret = -EINVAL;
-+		goto out_free;
-+	}
-+
-+	enabled = !!(wifi_pkg->package.elements[1].integer.value);
-+	n_profiles = wifi_pkg->package.elements[2].integer.value;
-+
-+	for (i = 0; i < n_profiles; i++) {
-+		/* the tables start at element 3 */
-+		static int pos = 3;
-+
-+		/* The EWRD profiles officially go from 2 to 4, but we
-+		 * save them in sar_profiles[1-3] (because we don't
-+		 * have profile 0).  So in the array we start from 1.
-+		 */
-+		ret = iwl_mvm_sar_set_profile(mvm,
-+					      &wifi_pkg->package.elements[pos],
-+					      &mvm->sar_profiles[i + 1],
-+					      enabled);
-+		if (ret < 0)
-+			break;
-+
-+		/* go to the next table */
-+		pos += IWL_MVM_SAR_TABLE_SIZE;
-+	}
-+
-+out_free:
-+	kfree(ewrd.pointer);
-+	return ret;
-+}
-+
- int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
- {
- 	struct iwl_dev_tx_power_cmd cmd = {
-@@ -1176,6 +1251,18 @@ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
- 	return iwl_mvm_send_cmd_pdu(mvm, REDUCE_TX_POWER_CMD, 0, len, &cmd);
- }
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index e55e05bc4805..6d9a38e9a375 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -691,6 +691,11 @@ int wiphy_register(struct wiphy *wiphy)
+ 		    (wiphy->bss_select_support & ~(BIT(__NL80211_BSS_SELECT_ATTR_AFTER_LAST) - 2))))
+ 		return -EINVAL;
  
-+#else /* CONFIG_ACPI */
-+static int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
-+{
-+	return -ENOENT;
-+}
++	if (WARN_ON(!IS_ENABLED(CONFIG_BPF_WIFIMON) &&
++		    wiphy_ext_feature_isset(wiphy,
++					    NL80211_EXT_FEATURE_WIFIMON_BPF)))
++		return -EINVAL;
 +
-+static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
-+{
-+	return -ENOENT;
-+}
-+#endif /* CONFIG_ACPI */
-+
- static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- {
- 	int ret;
-@@ -1183,12 +1270,19 @@ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- 	ret = iwl_mvm_sar_get_wrds_table(mvm);
- 	if (ret < 0) {
- 		IWL_DEBUG_RADIO(mvm,
--				"SAR BIOS table invalid or unavailable. (%d)\n",
-+				"WRDS SAR BIOS table invalid or unavailable. (%d)\n",
- 				ret);
--		/* we don't fail if the table is not available */
-+		/* if not available, don't fail and don't bother with EWRD */
- 		return 0;
+ 	if (wiphy->addresses)
+ 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9516840b6e5f..505e6db633c6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -17,6 +17,7 @@
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
+ #include <linux/etherdevice.h>
++#include <linux/bpf.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+ #include <net/cfg80211.h>
+@@ -410,6 +411,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 		.len = sizeof(struct nl80211_bss_select_rssi_adjust)
+ 	},
+ 	[NL80211_ATTR_TIMEOUT_REASON] = { .type = NLA_U32 },
++	[NL80211_ATTR_BPF_FD] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2768,6 +2770,28 @@ static int nl80211_parse_mon_options(struct cfg80211_registered_device *rdev,
+ 		change = true;
  	}
  
-+	ret = iwl_mvm_sar_get_ewrd_table(mvm);
-+	/* if EWRD is not available, we can still use WRDS, so don't fail */
-+	if (ret < 0)
-+		IWL_DEBUG_RADIO(mvm,
-+				"EWRD SAR BIOS table invalid or unavailable. (%d)\n",
-+				ret);
++	if (info->attrs[NL80211_ATTR_BPF_FD]) {
++		struct bpf_prog *prog = ERR_PTR(-ENODATA);
++		int fd = nla_get_s32(info->attrs[NL80211_ATTR_BPF_FD]);
++		u32 cap_flag = NL80211_EXT_FEATURE_WIFIMON_BPF;
 +
- 	/* choose profile 1 (WRDS) as default for both chains */
- 	ret = iwl_mvm_sar_select_profile(mvm, 1, 1);
- 
-@@ -1199,18 +1293,6 @@ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- 	return ret;
++		if (!IS_ENABLED(CONFIG_BPF_WIFIMON) ||
++		    !wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
++			return -EOPNOTSUPP;
++
++		if (type != NL80211_IFTYPE_MONITOR)
++			return -EINVAL;
++
++		if (fd >= 0) {
++			prog = bpf_prog_get_type(fd, BPF_PROG_TYPE_WIFIMON);
++			if (IS_ERR(prog))
++				return PTR_ERR(prog);
++		}
++
++		params->filter = prog;
++		change = true;
++	}
++
+ 	return change ? 1 : 0;
  }
  
--#else /* CONFIG_ACPI */
--static inline int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
--{
--	return -ENOENT;
--}
--
--static inline int iwl_mvm_sar_init(struct iwl_mvm *mvm)
--{
--	return 0;
--}
--#endif /* CONFIG_ACPI */
--
- static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
- {
- 	int ret;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index f4e8fa3765fa..2205c9f8bb58 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -712,7 +712,7 @@ enum iwl_mvm_queue_status {
+@@ -2857,6 +2881,9 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	else
+ 		err = 0;
  
- #ifdef CONFIG_ACPI
- #define IWL_MVM_SAR_TABLE_SIZE		10
--#define IWL_MVM_SAR_PROFILE_NUM		1
-+#define IWL_MVM_SAR_PROFILE_NUM		4
- 
- struct iwl_mvm_sar_profile {
- 	bool enabled;
-@@ -1818,6 +1818,15 @@ int iwl_mvm_send_lqm_cmd(struct ieee80211_vif *vif,
- 			 enum iwl_lqm_cmd_operatrions operation,
- 			 u32 duration, u32 timeout);
- bool iwl_mvm_lqm_active(struct iwl_mvm *mvm);
++	if (err && params.filter)
++		bpf_prog_put(params.filter);
 +
-+#ifdef CONFIG_ACPI
- int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b);
-+#else
-+static inline
-+int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
-+{
-+	return -ENOENT;
-+}
-+#endif /* CONFIG_ACPI */
+ 	if (!err && params.use_4addr != -1)
+ 		dev->ieee80211_ptr->use_4addr = params.use_4addr;
  
- #endif /* __IWL_MVM_H__ */
 -- 
 2.11.0
