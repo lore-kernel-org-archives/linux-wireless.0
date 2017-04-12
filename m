@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51814 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751838AbdDNJEM (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34639 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751107AbdDLOIZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 05:04:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 14 Apr 2017 12:02:06 +0300
-Message-Id: <20170414090210.31397-23-luca@coelho.fi> (sfid-20170414_110419_134225_51D7F104)
-In-Reply-To: <20170414090210.31397-1-luca@coelho.fi>
-References: <20170414090210.31397-1-luca@coelho.fi>
-Subject: [PATCH v2 22/26] iwlwifi: pcie: support new write pointer width
+        Wed, 12 Apr 2017 10:08:25 -0400
+Received: by mail-wm0-f67.google.com with SMTP id x75so6650036wma.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 07:08:25 -0700 (PDT)
+Date: Wed, 12 Apr 2017 16:08:23 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH net-next v5 4/5] netlink: pass extended ACK struct to
+ parsing functions
+Message-ID: <20170412140823.GJ1952@nanopsycho> (sfid-20170412_160842_581299_ACC017FB)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+ <20170412123408.22012-5-johannes@sipsolutions.net>
+ <20170412131708.GC1952@nanopsycho>
+ <8737ddd8r0.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8737ddd8r0.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Wed, Apr 12, 2017 at 04:02:27PM CEST, kvalo@codeaurora.org wrote:
+>Jiri Pirko <jiri@resnulli.us> writes:
+>
+>> Wed, Apr 12, 2017 at 02:34:07PM CEST, johannes@sipsolutions.net wrote:
+>>>From: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>>Pass the new extended ACK reporting struct to all of the
+>>
+>> Johannes, I wonder, is there a reason you ignore my comments about
+>> narrow descriptions? Why don't you use the whole line?
+>
+>Seriously, you ask that with totally unnecessary 3800 lines of quotes?
+>
+>(Or at least I assume so, I didn't bother to check if you had any
+>comments there as it would have taken forever to find them.)
 
-In a000 devices we have 16 bytes for the TFD index and 16 for the
-queue, in order to support 512 queues.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index af5b97c82c5e..e8eb11282795 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -109,7 +109,7 @@ static void iwl_pcie_gen2_txq_inc_wr_ptr(struct iwl_trans *trans,
- 	 */
- 	if (!txq->block)
- 		iwl_write32(trans, HBUS_TARG_WRPTR,
--			    txq->write_ptr | (txq->id << 8));
-+			    txq->write_ptr | (txq->id << 16));
- }
- 
- static u8 iwl_pcie_gen2_get_num_tbs(struct iwl_trans *trans,
-@@ -825,7 +825,7 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
- 	txq->read_ptr = (ssn & 0xff);
- 	txq->write_ptr = (ssn & 0xff);
- 	iwl_write_direct32(trans, HBUS_TARG_WRPTR,
--			   (ssn & 0xff) | (cmd->scd_queue << 8));
-+			   (ssn & 0xff) | (cmd->scd_queue << 16));
- 
- 	IWL_DEBUG_TX_QUEUES(trans, "Activate queue %d WrPtr: %d\n",
- 			    cmd->scd_queue, ssn & 0xff);
--- 
-2.11.0
+Yep, that I did not remove. Sorry about that. Will behave the next time.
