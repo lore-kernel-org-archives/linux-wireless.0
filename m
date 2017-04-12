@@ -1,255 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34875 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932430AbdDQALk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:40 -0400
-Received: by mail-oi0-f65.google.com with SMTP id a21so8760979oic.2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:39 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 24/27] rtlwifi: btcoex: 23b 1ant: fine tune for wifi connected
-Date: Sun, 16 Apr 2017 19:11:08 -0500
-Message-Id: <20170417001111.29384-25-Larry.Finger@lwfinger.net> (sfid-20170417_021158_712452_ACC78DC2)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35234 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752677AbdDLLGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Apr 2017 07:06:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: aviya.erenfeld@intel.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/6] cfg80211: allow leaving MU-MIMO monitor configuration unchanged
+Date: Wed, 12 Apr 2017 13:06:17 +0200
+Message-Id: <20170412110621.8981-2-johannes@sipsolutions.net> (sfid-20170412_130630_743447_156894B1)
+In-Reply-To: <20170412110621.8981-1-johannes@sipsolutions.net>
+References: <20170412110621.8981-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fine tune the parameters in cases of bt_acl_busy and scan when wifi is
-connected.
+When changing monitor parameters, not setting the MU-MIMO attributes
+should mean that they're not changed - it's documented that to turn
+the feature off it's necessary to set all-zero group membership and
+an invalid follow-address. This isn't implemented.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Fix this by making the parameters pointers, stop reusing the macaddr
+struct member, and documenting that NULL pointers mean unchanged.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 114 ++++++++++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +
- 2 files changed, 79 insertions(+), 37 deletions(-)
+ include/net/cfg80211.h | 9 ++++++---
+ net/mac80211/cfg.c     | 8 ++++----
+ net/wireless/nl80211.c | 8 +++-----
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 0eae27aca67a..a338b72aed95 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1842,9 +1842,9 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
- 	} else if (bt_link_info->a2dp_only) { /* A2DP */
- 		if (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						false, 8);
-+						true, 32);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 2);
-+							     NORMAL_EXEC, 4);
- 			coex_dm->auto_tdma_adjust = false;
- 		} else {
- 			btc8723b1ant_tdma_dur_adj_for_acl(btcoexist,
-@@ -1853,28 +1853,29 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
- 							     NORMAL_EXEC, 1);
- 			coex_dm->auto_tdma_adjust = true;
- 		}
--	} else if (bt_link_info->hid_exist &&
--		bt_link_info->a2dp_exist) { /* HID + A2DP */
-+	} else if (((bt_link_info->a2dp_exist) && (bt_link_info->pan_exist)) ||
-+		   (bt_link_info->hid_exist && bt_link_info->a2dp_exist &&
-+		    bt_link_info->pan_exist)) {
-+		/* A2DP + PAN(OPP,FTP), HID + A2DP + PAN(OPP,FTP) */
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+		coex_dm->auto_tdma_adjust = false;
-+	} else if (bt_link_info->hid_exist && bt_link_info->a2dp_exist) {
-+		/* HID + A2DP */
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,	true, 14);
- 		coex_dm->auto_tdma_adjust = false;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ead1aa6d003e..70dfdb964958 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -370,13 +370,16 @@ static inline void wiphy_read_of_freq_limits(struct wiphy *wiphy)
+  *	This feature is only fully supported by drivers that enable the
+  *	%NL80211_FEATURE_MAC_ON_CREATE flag.  Others may support creating
+  **	only p2p devices with specified MAC.
+- * @vht_mumimo_groups: MU-MIMO groupID. used for monitoring only
+- *	 packets belonging to that MU-MIMO groupID.
++ * @vht_mumimo_groups: MU-MIMO groupID, used for monitoring MU-MIMO packets
++ *	belonging to that MU-MIMO groupID; %NULL if not changed
++ * @vht_mumimo_follow_addr: MU-MIMO follow address, used for monitoring
++ *	MU-MIMO packets going to the specified station; %NULL if not changed
+  */
+ struct vif_params {
+ 	int use_4addr;
+ 	u8 macaddr[ETH_ALEN];
+-	u8 vht_mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN];
++	const u8 *vht_mumimo_groups;
++	const u8 *vht_mumimo_follow_addr;
+ };
  
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 6);
--	 /* PAN(OPP,FTP), HID + PAN(OPP,FTP) */
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
- 	} else if (bt_link_info->pan_only ||
--		   (bt_link_info->hid_exist && bt_link_info->pan_exist)) {
-+			(bt_link_info->hid_exist && bt_link_info->pan_exist)) {
-+		/* PAN(OPP,FTP), HID + PAN(OPP,FTP) */
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 3);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 6);
--		coex_dm->auto_tdma_adjust = false;
--	 /* A2DP + PAN(OPP,FTP), HID + A2DP + PAN(OPP,FTP) */
--	} else if ((bt_link_info->a2dp_exist && bt_link_info->pan_exist) ||
--		   (bt_link_info->hid_exist && bt_link_info->a2dp_exist &&
--		    bt_link_info->pan_exist)) {
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
- 		coex_dm->auto_tdma_adjust = false;
- 	} else {
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 11);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+		/* BT no-profile busy (0x9) */
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 33);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
- 		coex_dm->auto_tdma_adjust = false;
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ac879bb17870..dc397815a8bf 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -80,8 +80,7 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 		u32 mu_mntr_cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
+ 
+ 		monitor_sdata = rtnl_dereference(local->monitor_sdata);
+-		if (monitor_sdata &&
+-		    wiphy_ext_feature_isset(wiphy, mu_mntr_cap_flag)) {
++		if (monitor_sdata && params->vht_mumimo_groups) {
+ 			memcpy(monitor_sdata->vif.bss_conf.mu_group.membership,
+ 			       params->vht_mumimo_groups, WLAN_MEMBERSHIP_LEN);
+ 			memcpy(monitor_sdata->vif.bss_conf.mu_group.position,
+@@ -90,10 +89,11 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 			monitor_sdata->vif.mu_mimo_owner = true;
+ 			ieee80211_bss_info_change_notify(monitor_sdata,
+ 							 BSS_CHANGED_MU_GROUPS);
++		}
+ 
++		if (monitor_sdata && params->vht_mumimo_follow_addr)
+ 			ether_addr_copy(monitor_sdata->u.mntr.mu_follow_addr,
+-					params->macaddr);
+-		}
++					params->vht_mumimo_follow_addr);
+ 
+ 		if (!flags)
+ 			return 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2312dc2ffdb9..1b8f267315f1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2809,8 +2809,7 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(0)))
+ 			return -EINVAL;
+ 
+-		memcpy(params.vht_mumimo_groups, mumimo_groups,
+-		       VHT_MUMIMO_GROUPS_DATA_LEN);
++		params.vht_mumimo_groups = mumimo_groups;
+ 		change = true;
  	}
- }
-@@ -1954,21 +1955,22 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
  
- 	/* tdma and coex table */
- 	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
--		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
-+		if (bt_link_info->a2dp_exist) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						true, 22);
-+						true, 32);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 1);
--		} else if (bt_link_info->pan_only) {
-+							     NORMAL_EXEC, 4);
-+		} else if (bt_link_info->a2dp_exist &&
-+			   bt_link_info->pan_exist) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						true, 20);
-+						true, 22);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 2);
-+							     NORMAL_EXEC, 4);
- 		} else {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 						true, 20);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 1);
-+							     NORMAL_EXEC, 4);
- 		}
- 	} else if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
- 		   coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
-@@ -1976,6 +1978,8 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
- 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
- 	} else {
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
-+					     NORMAL_EXEC, false, false);
- 		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
+@@ -2820,9 +2819,8 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
+ 			return -EOPNOTSUPP;
+ 
+-		nla_memcpy(params.macaddr,
+-			   info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR],
+-			   ETH_ALEN);
++		params.vht_mumimo_follow_addr =
++			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]);
+ 		change = true;
  	}
- }
-@@ -1983,23 +1987,34 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
- static void halbtc8723b1ant_action_wifi_connected_special_packet(
- 						struct btc_coexist *btcoexist)
- {
--	bool hs_connecting = false;
- 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
-+	bool wifi_busy = false;
  
--	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_CONNECTING, &hs_connecting);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
-+
-+	/* no special packet process for both WiFi and BT very busy */
-+	if ((wifi_busy) &&
-+	    ((bt_link_info->pan_exist) || (coex_sta->num_of_profile >= 2)))
-+		return;
- 
- 	halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
- 					 0x0, 0x0);
- 
- 	/* tdma and coex table */
--	if ((BT_8723B_1ANT_BT_STATUS_CONNECTED_IDLE == coex_dm->bt_status) ||
--	    (bt_link_info->sco_exist) || (bt_link_info->hid_only) ||
--	    (bt_link_info->a2dp_only) || (bt_link_info->pan_only)) {
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
--	} else {
-+	if ((bt_link_info->sco_exist) || (bt_link_info->hid_exist)) {
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 5);
-+	} else if (bt_link_info->a2dp_exist) {
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+	} else if (bt_link_info->pan_exist) {
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+	} else {
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
-+					     NORMAL_EXEC, false, false);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
- 	}
- }
- 
-@@ -2044,10 +2059,29 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 	if (!ap_enable &&
- 	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY &&
- 	    !btcoexist->bt_link_info.hid_only) {
--		if (!wifi_busy && btcoexist->bt_link_info.a2dp_only)
--			halbtc8723b1ant_power_save_state(btcoexist,
-+		if (btcoexist->bt_link_info.a2dp_only) {
-+			if (!wifi_busy) {
-+				halbtc8723b1ant_power_save_state(btcoexist,
- 							 BTC_PS_WIFI_NATIVE,
- 							 0x0, 0x0);
-+			} else { /* busy */
-+				if (coex_sta->scan_ap_num >=
-+				    BT_8723B_1ANT_WIFI_NOISY_THRESH)
-+					/* no force LPS, no PS-TDMA,
-+					 * use pure TDMA
-+					 */
-+					halbtc8723b1ant_power_save_state(
-+						btcoexist, BTC_PS_WIFI_NATIVE,
-+						0x0, 0x0);
-+				else
-+					halbtc8723b1ant_power_save_state(
-+						btcoexist, BTC_PS_LPS_ON, 0x50,
-+						0x4);
-+			}
-+		} else if ((!coex_sta->pan_exist) && (!coex_sta->a2dp_exist) &&
-+			   (!coex_sta->hid_exist))
-+			halbtc8723b1ant_power_save_state(
-+				btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
- 		else
- 			halbtc8723b1ant_power_save_state(btcoexist,
- 							 BTC_PS_LPS_ON,
-@@ -2071,6 +2105,9 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 		} else {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 						false, 8);
-+			halbtc8723b1ant_set_ant_path(btcoexist,
-+						     BTC_ANT_PATH_PTA,
-+						     NORMAL_EXEC, false, false);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
- 							     NORMAL_EXEC, 2);
- 		}
-@@ -2087,9 +2124,12 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 				    BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
- 		} else {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						false, 8);
-+						true, 32);
-+			halbtc8723b1ant_set_ant_path(btcoexist,
-+						     BTC_ANT_PATH_PTA,
-+						     NORMAL_EXEC, false, false);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 2);
-+							     NORMAL_EXEC, 4);
- 		}
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 36e0a6b5ec58..1e00b6a9b6b8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -41,6 +41,8 @@
- 
- #define	BTC_RSSI_COEX_THRESH_TOL_8723B_1ANT		2
- 
-+#define BT_8723B_1ANT_WIFI_NOISY_THRESH			50
-+
- enum _BT_INFO_SRC_8723B_1ANT {
- 	BT_INFO_SRC_8723B_1ANT_WIFI_FW			= 0x0,
- 	BT_INFO_SRC_8723B_1ANT_BT_RSP			= 0x1,
 -- 
-2.12.0
+2.11.0
