@@ -1,175 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48303 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750811AbdDMGsN (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35402 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752458AbdDLN4L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 02:48:13 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: RE: Re: [PATCH v3 4/4] mwifiex: pcie: extract wifi part from combo
- firmware during function level reset
-Date: Thu, 13 Apr 2017 06:47:59 +0000
-Message-ID: <45a8fcd4f0384fa7b622cf3a87b41ea8@SC-EXCH02.marvell.com> (sfid-20170413_084819_521047_F946C409)
-References: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
- <1491815374-6555-4-git-send-email-huxinming820@gmail.com>
- <20170411013724.GA135531@google.com>
-In-Reply-To: <20170411013724.GA135531@google.com>
-Content-Type: text/plain; charset="gb2312"
+        Wed, 12 Apr 2017 09:56:11 -0400
+Received: by mail-wm0-f68.google.com with SMTP id d79so6598574wmi.2
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 06:56:10 -0700 (PDT)
+Date: Wed, 12 Apr 2017 15:56:08 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        David Ahern <dsa@cumulusnetworks.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH net-next v5 4/5] netlink: pass extended ACK struct to
+ parsing functions
+Message-ID: <20170412135608.GG1952@nanopsycho> (sfid-20170412_155619_605232_15445BA0)
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+ <20170412123408.22012-5-johannes@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170412123408.22012-5-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
-Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo0
-1MIxMcjVIDk6MzcNCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxs
-ZSBWYWxvOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsNCj4gQW1pdGt1bWFy
-IEthcndhcjsgQ2F0aHkgTHVvOyBYaW5taW5nIEh1OyBHYW5hcGF0aGkgQmhhdA0KPiBTdWJqZWN0
-OiBbRVhUXSBSZTogW1BBVENIIHYzIDQvNF0gbXdpZmlleDogcGNpZTogZXh0cmFjdCB3aWZpIHBh
-cnQgZnJvbSBjb21ibw0KPiBmaXJtd2FyZSBkdXJpbmcgZnVuY3Rpb24gbGV2ZWwgcmVzZXQNCj4g
-DQo+IEV4dGVybmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEhpLA0KPiANCj4gT24g
-TW9uLCBBcHIgMTAsIDIwMTcgYXQgMDk6MDk6MzRBTSArMDAwMCwgWGlubWluZyBIdSB3cm90ZToN
-Cj4gPiBGcm9tOiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+DQo+ID4gQSBzZXBl
-cmF0ZSB3aWZpLW9ubHkgZmlybXdhcmUgd2FzIGRvd25sb2FkIGR1cmluZyBwY2llIGZ1bmN0aW9u
-IGxldmVsIHJlc2V0Lg0KPiA+IEl0IGlzIGluIGZhY3QgdGhlIHRhaWwgcGFydCBvZiB3aWZpL2J0
-IGNvbWJvIGZpcm13YXJlLiBQZXIgQnJpYW4ncyBhbmQNCj4gPiBEbWl0cnkncyBzdWdnZXN0aW9u
-LCB0aGlzIHBhdGNoIGV4dHJhY3QgdGhlIHdpZmkgcGFydCBmcm9tIGNvbWJvIGZpcm13YXJlLg0K
-PiA+DQo+ID4gQWZ0ZXIgdGhhdCwgd2UgY2FuIGRpc2NhcmQgdGhlIHJlZHVkYW50IGltYWdlIGlu
-IGxpbnV4LWZpcm13YXJlIHJlcG8uDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBYaW5taW5nIEh1
-IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEdhbmFwYXRoaSBCaGF0IDxn
-YmhhdEBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBDYXRoeSBMdW8gPGNsdW9AbWFy
-dmVsbC5jb20+DQo+ID4gLS0tDQo+ID4gdjI6IGV4dHJhY3Qgd2lmaSBwYXJ0IGZyb20gY29tYm8g
-ZmlybXdhcmUoRGltdHJ5IGFuZCBCcmFpbikNCj4gPiAgICAgYWRkIG1vcmUgZGVzY3JpcHRpb24o
-S2FsbGUpDQo+ID4gdjM6IHNhbWUgYXMgdjINCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbWFydmVsbC9td2lmaWV4L2Z3LmggICB8IDE4ICsrKysrKysNCj4gPiAgZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYyB8IDgzDQo+ID4gKysrKysrKysrKysr
-KysrKysrKysrKysrKystLS0NCj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZp
-ZXgvcGNpZS5oIHwgIDIgKw0KPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDk2IGluc2VydGlvbnMoKyks
-IDcgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWFydmVsbC9td2lmaWV4L2Z3LmgNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZl
-bGwvbXdpZmlleC9mdy5oDQo+ID4gaW5kZXggMGI2ODM3NC4uNmNmOWFiOSAxMDA2NDQNCj4gPiAt
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvZncuaA0KPiA+ICsrKyBi
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9mdy5oDQo+ID4gQEAgLTQzLDYg
-KzQzLDI0IEBAIHN0cnVjdCB0eF9wYWNrZXRfaGRyIHsNCj4gPiAgCXN0cnVjdCByZmNfMTA0Ml9o
-ZHIgcmZjMTA0Ml9oZHI7DQo+ID4gIH0gX19wYWNrZWQ7DQo+ID4NCj4gPiArc3RydWN0IG13aWZp
-ZXhfZndfaGVhZGVyIHsNCj4gPiArCV9fbGUzMiBkbmxkX2NtZDsNCj4gPiArCV9fbGUzMiBiYXNl
-X2FkZHI7DQo+ID4gKwlfX2xlMzIgZGF0YV9sZW5ndGg7DQo+ID4gKwlfX2xlMzIgY3JjOw0KPiA+
-ICt9IF9fcGFja2VkOw0KPiA+ICsNCj4gPiArc3RydWN0IG13aWZpZXhfZndfZGF0YSB7DQo+ID4g
-KwlzdHJ1Y3QgbXdpZmlleF9md19oZWFkZXIgaGVhZGVyOw0KPiA+ICsJX19sZTMyIHNlcV9udW07
-DQo+ID4gKwl1OCBkYXRhWzFdOw0KPiA+ICt9IF9fcGFja2VkOw0KPiA+ICsNCj4gPiArI2RlZmlu
-ZSBNV0lGSUVYX0ZXX0ROTERfQ01EXzEgMHgxDQo+ID4gKyNkZWZpbmUgTVdJRklFWF9GV19ETkxE
-X0NNRF81IDB4NQ0KPiA+ICsjZGVmaW5lIE1XSUZJRVhfRldfRE5MRF9DTURfNiAweDYNCj4gPiAr
-I2RlZmluZSBNV0lGSUVYX0ZXX0ROTERfQ01EXzcgMHg3DQo+ID4gKw0KPiA+ICAjZGVmaW5lIEJf
-U1VQUE9SVEVEX1JBVEVTICAgICAgICAgICAgICAgNQ0KPiA+ICAjZGVmaW5lIEdfU1VQUE9SVEVE
-X1JBVEVTICAgICAgICAgICAgICAgOQ0KPiA+ICAjZGVmaW5lIEJHX1NVUFBPUlRFRF9SQVRFUyAg
-ICAgICAgICAgICAgMTMNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
-d2lmaWV4L3BjaWUuYw0KPiA+IGluZGV4IGEwN2NiMGEuLmViZjAwZDkgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+ICsrKyBi
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9wY2llLmMNCj4gPiBAQCAtMTk1
-Niw2ICsxOTU2LDYzIEBAIHN0YXRpYyBpbnQgbXdpZmlleF9wY2llX2V2ZW50X2NvbXBsZXRlKHN0
-cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIsDQo+ID4gIAlyZXR1cm4gcmV0Ow0KPiA+
-ICB9DQo+ID4NCj4gPiArLyogRXh0cmFjdCB3aWZpIHBhcnQgZnJvbSB3aWZpLWJ0IGNvbWJvIGZp
-cm13YXJlIGltYWdlLg0KPiA+ICsgKi8NCj4gPiArDQo+ID4gK3N0YXRpYyBpbnQgbXdpZmlleF9l
-eHRyYWN0X3dpZmlfZncoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwNCj4gPiArCQkJ
-CSAgIHU4ICpmaXJtd2FyZSwgdTMyIGZpcm13YXJlX2xlbikgew0KPiANCj4gQ2FuIHlvdSBtYWtl
-ICdmaXJtd2FyZScgY29uc3Q/IEFsc28sIHRvIGhlbHAgYmVsb3csIGl0IG1pZ2h0IHdvcmsgYmV0
-dGVyIGFzDQo+ICdjb25zdCB2b2lkIConLg0KPiANCg0KT0ssIFRoYW5rcyBmb3IgdGhlIHJldmll
-dy4NCg0KPiA+ICsJc3RydWN0IG13aWZpZXhfZndfZGF0YSBmd2RhdGE7DQo+ID4gKwl1MzIgb2Zm
-c2V0ID0gMCwgZGF0YV9sZW4sIGRubGRfY21kOw0KPiA+ICsJaW50IHJldCA9IDA7DQo+ID4gKwli
-b29sIGNtZDdfYmVmb3JlID0gZmFsc2U7DQo+ID4gKw0KPiA+ICsJd2hpbGUgKDEpIHsNCj4gPiAr
-CQlpZiAob2Zmc2V0ICsgc2l6ZW9mKGZ3ZGF0YS5oZWFkZXIpID49IGZpcm13YXJlX2xlbikgew0K
-PiA+ICsJCQltd2lmaWV4X2RiZyhhZGFwdGVyLCBFUlJPUiwNCj4gPiArCQkJCSAgICAiZXh0cmFj
-dCB3aWZpLW9ubHkgZmlybXdhcmUgZmFpbHVyZSEiKTsNCj4gPiArCQkJcmV0ID0gLTE7DQo+ID4g
-KwkJCWdvdG8gZG9uZTsNCj4gPiArCQl9DQo+ID4gKw0KPiA+ICsJCW1lbWNweSgmZndkYXRhLmhl
-YWRlciwgZmlybXdhcmUgKyBvZmZzZXQsDQo+ID4gKwkJICAgICAgIHNpemVvZihmd2RhdGEuaGVh
-ZGVyKSk7DQo+IA0KPiBEbyB5b3UgYWN0dWFsbHkgbmVlZCB0byBjb3B5IHRoaXM/IENhbid0IHlv
-dSBqdXN0IGtlZXAgYSBwb2ludGVyIHRvIHRoZSBsb2NhdGlvbj8NCj4gZS5nLg0KPiANCj4gCWNv
-bnN0IHN0cnVjdCBtd2lmaWV4X2Z3X2RhdGEgKmZ3ZGF0YTsNCj4gLi4uDQo+IAlmd2RhdGEgPSBm
-aXJtd2FyZSArIG9mZnNldDsNCj4gDQoNCk9rLg0KDQo+ID4gKwkJZG5sZF9jbWQgPSBsZTMyX3Rv
-X2NwdShmd2RhdGEuaGVhZGVyLmRubGRfY21kKTsNCj4gPiArCQlkYXRhX2xlbiA9IGxlMzJfdG9f
-Y3B1KGZ3ZGF0YS5oZWFkZXIuZGF0YV9sZW5ndGgpOw0KPiA+ICsNCj4gPiArCQlzd2l0Y2ggKGRu
-bGRfY21kKSB7DQo+ID4gKwkJY2FzZSBNV0lGSUVYX0ZXX0ROTERfQ01EXzE6DQo+ID4gKwkJCWlm
-ICghY21kN19iZWZvcmUpIHsNCj4gPiArCQkJCW13aWZpZXhfZGJnKGFkYXB0ZXIsIEVSUk9SLA0K
-PiA+ICsJCQkJCSAgICAibm8gY21kNyBiZWZvcmUgY21kMSEiKTsNCj4gPiArCQkJCXJldCA9IC0x
-Ow0KPiA+ICsJCQkJZ290byBkb25lOw0KPiA+ICsJCQl9DQo+ID4gKwkJCW9mZnNldCArPSBkYXRh
-X2xlbiArIHNpemVvZihmd2RhdGEuaGVhZGVyKTsNCj4gDQo+IFRlY2huaWNhbGx5LCB3ZSBuZWVk
-IGFuIG92ZXJmbG93IGNoZWNrIHRvIG1ha2Ugc3VyZSB0aGF0ICdkYXRhX2xlbicNCj4gaXNuJ3Qg
-c29tZSBib2d1cyB2YWx1ZSB0aGF0IG92ZXJmbG93cyAnb2Zmc2V0Jy4NCj4gDQoNClRoZXJlIGlz
-IHRoZSBzYW5pdHkgY2hlY2sgZm9yIHRoZSBvZmZzZXQgYWZ0ZXIgYnlwYXNzIENNRDEvNS83IGlu
-IHRoZSBzdGFydCBvZiB3aGlsZS1sb29wLCBlbmhhbmNlZCBpbiB2NCBhcywNCmlmIChvZmZzZXQg
-Pj0gZmlybXdhcmVfbGVuKQ0KDQo+ID4gKwkJCWJyZWFrOw0KPiA+ICsJCWNhc2UgTVdJRklFWF9G
-V19ETkxEX0NNRF81Og0KPiA+ICsJCQlvZmZzZXQgKz0gZGF0YV9sZW4gKyBzaXplb2YoZndkYXRh
-LmhlYWRlcik7DQo+IA0KPiBTYW1lIGhlcmUuDQo+IA0KPiA+ICsJCQlicmVhazsNCj4gPiArCQlj
-YXNlIE1XSUZJRVhfRldfRE5MRF9DTURfNjoNCj4gDQo+IENhbiB3ZSBoYXZlIGEgY29tbWVudCwg
-ZWl0aGVyIGhlcmUgb3IgYWJvdmUgdGhpcyBmdW5jdGlvbiwgdG8gZGVzY3JpYmUgd2hhdA0KPiB0
-aGlzIHNlcXVlbmNlIGlzPyBPciBwYXJ0aWN1bGFybHksIHdoYXQgaXMgdGhpcyB0ZXJtaW5hdGlu
-ZyBjb25kaXRpb24/ICJDTURfNiINCj4gZG9lc24ndCByZWFsbHkgdGVsbCBtZSB0aGF0IHRoaXMg
-aXMgdGhlIHN0YXJ0IG9mIHRoZSBXaWZpIGJsb2IuDQo+IA0KPiA+ICsJCQlvZmZzZXQgKz0gZGF0
-YV9sZW4gKyBzaXplb2YoZndkYXRhLmhlYWRlcik7DQo+IA0KDQpUaGUgc2VxdWVuY2UgaGF2ZSBi
-ZWVuIGFkZGVkIHRvIGZ1bmN0aW9uIGNvbW1lbnRzIGluIHY0Lg0KDQo+IFlvdSBkb24ndCBjaGVj
-ayBmb3Igb3ZlcmZsb3cgaGVyZS4gQ2hlY2sgdGhpcyBiZWZvcmUgcmV0dXJuaW5nIHRoaXMgKGVp
-dGhlciBoZXJlLA0KPiBvciBpbiB0aGUgJ2RvbmUnIGxhYmVsKS4NCj4gDQoNClllcywgYWRkIHNh
-bml0eSBjaGVjayBmb3IgdGhlIG9mZnNldCBpbiBlbmQgb2YgQ01ENi4NCg0KPiA+ICsJCQlyZXQg
-PSBvZmZzZXQ7DQo+ID4gKwkJCWdvdG8gZG9uZTsNCj4gPiArCQljYXNlIE1XSUZJRVhfRldfRE5M
-RF9DTURfNzoNCj4gPiArCQkJaWYgKCFjbWQ3X2JlZm9yZSkNCj4gDQo+IF5eIFRoaXMgJ2lmJyBp
-c24ndCByZWFsbHkgbmVlZGVkLg0KDQpEb25lLg0KDQo+IA0KPiA+ICsJCQkJY21kN19iZWZvcmUg
-PSB0cnVlOw0KPiA+ICsJCQlvZmZzZXQgKz0gc2l6ZW9mKGZ3ZGF0YS5oZWFkZXIpOw0KPiA+ICsJ
-CQlicmVhazsNCj4gPiArCQlkZWZhdWx0Og0KPiA+ICsJCQltd2lmaWV4X2RiZyhhZGFwdGVyLCBF
-UlJPUiwgInVua25vd24gZG5sZF9jbWQgJWRcbiIsDQo+ID4gKwkJCQkgICAgZG5sZF9jbWQpOw0K
-PiA+ICsJCQlyZXQgPSAtMTsNCj4gPiArCQkJZ290byBkb25lOw0KPiA+ICsJCX0NCj4gPiArCX0N
-Cj4gPiArDQo+ID4gK2RvbmU6DQo+ID4gKwlyZXR1cm4gcmV0Ow0KPiA+ICt9DQo+ID4gKw0KPiA+
-ICAvKg0KPiA+ICAgKiBUaGlzIGZ1bmN0aW9uIGRvd25sb2FkcyB0aGUgZmlybXdhcmUgdG8gdGhl
-IGNhcmQuDQo+ID4gICAqDQo+ID4gQEAgLTE5NzEsNyArMjAyOCw3IEBAIHN0YXRpYyBpbnQgbXdp
-ZmlleF9wcm9nX2Z3X3dfaGVscGVyKHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIs
-DQo+ID4gIAl1MzIgZmlybXdhcmVfbGVuID0gZnctPmZ3X2xlbjsNCj4gPiAgCXUzMiBvZmZzZXQg
-PSAwOw0KPiA+ICAJc3RydWN0IHNrX2J1ZmYgKnNrYjsNCj4gPiAtCXUzMiB0eGxlbiwgdHhfYmxv
-Y2tzID0gMCwgdHJpZXMsIGxlbjsNCj4gPiArCXUzMiB0eGxlbiwgdHhfYmxvY2tzID0gMCwgdHJp
-ZXMsIGxlbiwgdmFsOw0KPiA+ICAJdTMyIGJsb2NrX3JldHJ5X2NudCA9IDA7DQo+ID4gIAlzdHJ1
-Y3QgcGNpZV9zZXJ2aWNlX2NhcmQgKmNhcmQgPSBhZGFwdGVyLT5jYXJkOw0KPiA+ICAJY29uc3Qg
-c3RydWN0IG13aWZpZXhfcGNpZV9jYXJkX3JlZyAqcmVnID0gY2FyZC0+cGNpZS5yZWc7IEBAIC0x
-OTk4LDYNCj4gPiArMjA1NSwyNCBAQCBzdGF0aWMgaW50IG13aWZpZXhfcHJvZ19md193X2hlbHBl
-cihzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyDQo+ICphZGFwdGVyLA0KPiA+ICAJCWdvdG8gZG9uZTsN
-Cj4gPiAgCX0NCj4gPg0KPiA+ICsJcmV0ID0gbXdpZmlleF9yZWFkX3JlZyhhZGFwdGVyLCBQQ0lF
-X1NDUkFUQ0hfMTNfUkVHLCAmdmFsKTsNCj4gPiArCWlmIChyZXQpIHsNCj4gPiArCQltd2lmaWV4
-X2RiZyhhZGFwdGVyLCBGQVRBTCwgIkZhaWxlZCB0byByZWFkIHNjcmF0Y2ggcmVnaXN0ZXIgMTNc
-biIpOw0KPiA+ICsJCWdvdG8gZG9uZTsNCj4gPiArCX0NCj4gPiArDQo+ID4gKwkvKiBQQ0lFIEZM
-UiBjYXNlOiBleHRyYWN0IHdpZmkgcGFydCBmcm9tIGNvbWJvIGZpcm13YXJlKi8NCj4gPiArCWlm
-ICh2YWwgPT0gTVdJRklFWF9QQ0lFX0ZMUl9IQVBQRU5TKSB7DQo+ID4gKwkJcmV0ID0gbXdpZmll
-eF9leHRyYWN0X3dpZmlfZncoYWRhcHRlciwgZmlybXdhcmUsIGZpcm13YXJlX2xlbik7DQo+ID4g
-KwkJaWYgKHJldCA8IDApIHsNCj4gPiArCQkJbXdpZmlleF9kYmcoYWRhcHRlciwgRVJST1IsICJG
-YWlsZWQgdG8gZXh0cmFjdCB3aWZpIGZ3XG4iKTsNCj4gPiArCQkJZ290byBkb25lOw0KPiA+ICsJ
-CX0NCj4gPiArCQlvZmZzZXQgPSByZXQ7DQo+ID4gKwkJbXdpZmlleF9kYmcoYWRhcHRlciwgTVNH
-LA0KPiA+ICsJCQkgICAgImluZm86IGRubGQgd2lmaSBmaXJtd2FyZSBmcm9tICVkIGJ5dGVzXG4i
-LCBvZmZzZXQpOw0KPiA+ICsJfQ0KPiA+ICsNCj4gPiAgCS8qIFBlcmZvcm0gZmlybXdhcmUgZGF0
-YSB0cmFuc2ZlciAqLw0KPiA+ICAJZG8gew0KPiA+ICAJCXUzMiBpcmVnX2ludHIgPSAwOw0KPiA+
-IEBAIC0zMDYwLDEyICszMTM1LDYgQEAgc3RhdGljIHZvaWQgbXdpZmlleF9wY2llX3VwX2Rldihz
-dHJ1Y3QNCj4gbXdpZmlleF9hZGFwdGVyICphZGFwdGVyKQ0KPiA+ICAJc3RydWN0IHBjaV9kZXYg
-KnBkZXYgPSBjYXJkLT5kZXY7DQo+ID4gIAljb25zdCBzdHJ1Y3QgbXdpZmlleF9wY2llX2NhcmRf
-cmVnICpyZWcgPSBjYXJkLT5wY2llLnJlZzsNCj4gPg0KPiA+IC0JLyogQmx1ZXRvb3RoIGlzIG5v
-dCBvbiBwY2llIGludGVyZmFjZS4gRG93bmxvYWQgV2lmaSBvbmx5IGZpcm13YXJlDQo+ID4gLQkg
-KiBkdXJpbmcgcGNpZSBGTFIsIHNvIHRoYXQgYmx1ZXRvb3RoIHBhcnQgb2YgZmlybXdhcmUgd2hp
-Y2ggaXMNCj4gPiAtCSAqIGFscmVhZHkgcnVubmluZyBkb2Vzbid0IGdldCBhZmZlY3RlZC4NCj4g
-PiAtCSAqLw0KPiA+IC0Jc3RyY3B5KGFkYXB0ZXItPmZ3X25hbWUsIFBDSUU4OTk3X0RFRkFVTFRf
-V0lGSUZXX05BTUUpOw0KPiANCj4gTm93IHRoYXQgdGhlcmUncyBubyB1c2VycywgZGVsZXRlIFBD
-SUU4OTk3X0RFRkFVTFRfV0lGSUZXX05BTUUgZnJvbQ0KPiBwY2llLmguDQoNClJlbW92ZWQgaW4g
-VjQuDQoNCj4gDQo+IEJyaWFuDQo+IA0KPiA+IC0NCj4gPiAgCS8qIHR4X2J1Zl9zaXplIG1pZ2h0
-IGJlIGNoYW5nZWQgdG8gMzU4NCBieSBmaXJtd2FyZSBkdXJpbmcNCj4gPiAgCSAqIGRhdGEgdHJh
-bnNmZXIsIHdlIHNob3VsZCByZXNldCBpdCB0byBkZWZhdWx0IHNpemUuDQo+ID4gIAkgKi8NCj4g
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUu
-aA0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuaA0KPiA+
-IGluZGV4IDdlMjQ1MGMuLjU0YWVjZGEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL21hcnZlbGwvbXdpZmlleC9wY2llLmgNCj4gPiBAQCAtMTIwLDYgKzEyMCw4IEBADQo+ID4g
-ICNkZWZpbmUgTVdJRklFWF9TTEVFUF9DT09LSUVfU0laRQkJCTQNCj4gPiAgI2RlZmluZSBNV0lG
-SUVYX01BWF9ERUxBWV9DT1VOVAkJCQkxMDANCj4gPg0KPiA+ICsjZGVmaW5lIE1XSUZJRVhfUENJ
-RV9GTFJfSEFQUEVOUyAweEZFRENCQUJBDQo+ID4gKw0KPiA+ICBzdHJ1Y3QgbXdpZmlleF9wY2ll
-X2NhcmRfcmVnIHsNCj4gPiAgCXUxNiBjbWRfYWRkcl9sbzsNCj4gPiAgCXUxNiBjbWRfYWRkcl9o
-aTsNCj4gPiAtLQ0KPiA+IDEuOC4xLjQNCj4gPg0K
+Wed, Apr 12, 2017 at 02:34:07PM CEST, johannes@sipsolutions.net wrote:
+>From: Johannes Berg <johannes.berg@intel.com>
+>
+>Pass the new extended ACK reporting struct to all of the
+>generic netlink parsing functions. For now, pass NULL in
+>almost all callers (except for some in the core.)
+>
+>Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>---
+
+[...]
+
+>diff --git a/lib/nlattr.c b/lib/nlattr.c
+>index b42b8577fc23..a7e0b16078df 100644
+>--- a/lib/nlattr.c
+>+++ b/lib/nlattr.c
+>@@ -112,6 +112,7 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+>  * @len: length of attribute stream
+>  * @maxtype: maximum attribute type to be expected
+>  * @policy: validation policy
+>+ * @extack: extended ACK report struct
+>  *
+>  * Validates all attributes in the specified attribute stream against the
+>  * specified policy. Attributes with a type exceeding maxtype will be
+>@@ -120,20 +121,23 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+>  * Returns 0 on success or a negative error code.
+>  */
+> int nla_validate(const struct nlattr *head, int len, int maxtype,
+>-		 const struct nla_policy *policy)
+>+		 const struct nla_policy *policy,
+>+		 struct netlink_ext_ack *extack)
+> {
+> 	const struct nlattr *nla;
+>-	int rem, err;
+>+	int rem;
+> 
+> 	nla_for_each_attr(nla, head, len, rem) {
+>-		err = validate_nla(nla, maxtype, policy);
+>-		if (err < 0)
+>-			goto errout;
+>+		int err = validate_nla(nla, maxtype, policy);
+>+
+>+		if (err < 0) {
+
+		You can just check:
+	 	if (err)
+		while you are at it. validate_nla never returns positive
+		value.
+
+Btw, unrelated to this patch, I find it odd to have 2 functions:
+nla_validate
+validate_nla
+Confusing :)
+
+
+>+			if (extack)
+>+				extack->bad_attr = nla;
+>+			return err;
+>+		}
+> 	}
+> 
+>-	err = 0;
+>-errout:
+>-	return err;
+>+	return 0;
+> }
+> EXPORT_SYMBOL(nla_validate);
+> 
+>@@ -180,7 +184,8 @@ EXPORT_SYMBOL(nla_policy_len);
+>  * Returns 0 on success or a negative error code.
+>  */
+> int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
+>-	      int len, const struct nla_policy *policy)
+>+	      int len, const struct nla_policy *policy,
+>+	      struct netlink_ext_ack *extack)
+> {
+> 	const struct nlattr *nla;
+> 	int rem, err;
+>@@ -193,8 +198,11 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
+> 		if (type > 0 && type <= maxtype) {
+> 			if (policy) {
+> 				err = validate_nla(nla, maxtype, policy);
+>-				if (err < 0)
+>+				if (err < 0) {
+
+Same here.
+
+
+
+>+					if (extack)
+>+						extack->bad_attr = nla;
+> 					goto errout;
+>+				}
+> 			}
+> 
+> 			tb[type] = (struct nlattr *)nla;
