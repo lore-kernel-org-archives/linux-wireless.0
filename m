@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52848 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754382AbdDRWVw (ORCPT
+Received: from mail-io0-f176.google.com ([209.85.223.176]:33276 "EHLO
+        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752412AbdDLO5r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:21:52 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:22 +0300
-Message-Id: <20170418221729.28372-19-luca@coelho.fi> (sfid-20170419_002155_671045_82A38286)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 18/25] iwlwifi: mvm: disable RX queue notification for a000 devices
+        Wed, 12 Apr 2017 10:57:47 -0400
+Received: by mail-io0-f176.google.com with SMTP id k87so28226210ioi.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 07:57:46 -0700 (PDT)
+Subject: Re: [PATCH net-next v5 0/5] netlink extended ACK reporting
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20170412123408.22012-1-johannes@sipsolutions.net>
+Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
+        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
+From: David Ahern <dsa@cumulusnetworks.com>
+Message-ID: <24573d2e-abde-af5b-1b00-583dc687639e@cumulusnetworks.com> (sfid-20170412_165752_695787_005DA414)
+Date: Wed, 12 Apr 2017 08:57:38 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170412123408.22012-1-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 4/12/17 6:34 AM, Johannes Berg wrote:
+> Changes since v4:
+>  * use __NLMSGERR_ATTR_MAX instead of NUM_NLMSGERR_ATTRS
+> 
 
-For a000 devices, we don't really have multi RX queue for now,
-until we have the RX queue configuration API.
-Disable RX queue notification for now.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 26cf3dfcc108..f35f295d0c81 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4218,7 +4218,8 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (!iwl_mvm_has_new_rx_api(mvm))
-+	/* TODO - remove a000 disablement when we have RXQ config API */
-+	if (!iwl_mvm_has_new_rx_api(mvm) || iwl_mvm_has_new_tx_api(mvm))
- 		return;
- 
- 	notif->cookie = mvm->queue_sync_cookie;
--- 
-2.11.0
+Dave uses the cover letter with the change history in the merge commit
+logs. Would be good to keep the design intent and history.
