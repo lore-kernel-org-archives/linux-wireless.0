@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33264 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1426639AbdDVTfG (ORCPT
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:33406 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755498AbdDLRnR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2017 15:35:06 -0400
-Received: by mail-lf0-f68.google.com with SMTP id 88so12544920lfr.0
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Apr 2017 12:35:05 -0700 (PDT)
-Subject: Re: [PATCH v7 00/10] ath10k: sdio support
-To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org
-References: <149207201649.4590.5821794186383265138.stgit@potku.adurom.net>
-Cc: linux-wireless@vger.kernel.org
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <15e7a765-d5f0-677a-51a9-e2a74ef6ed33@gmail.com> (sfid-20170422_213510_951480_70BE5CB4)
-Date: Sat, 22 Apr 2017 21:35:02 +0200
-MIME-Version: 1.0
-In-Reply-To: <149207201649.4590.5821794186383265138.stgit@potku.adurom.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Wed, 12 Apr 2017 13:43:17 -0400
+Received: by mail-pg0-f49.google.com with SMTP id x125so18146696pgb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 10:43:17 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH] MAINTAINERS: drop akarwar from mwifiex
+Date: Wed, 12 Apr 2017 10:42:55 -0700
+Message-Id: <20170412174255.15021-1-briannorris@chromium.org> (sfid-20170412_194533_597645_75FC3D97)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+His email is bouncing, and I expect he's not doing this work any more.
 
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>
+Cc: Ganapathi Bhat <gbhat@marvell.com>
+Cc: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+Or alternatively, we can update his email address. I just don't want to keep
+seeing bounced emails :)
 
-On 2017-04-13 10:28, Kalle Valo wrote:
-> More changes to Erik's SDIO patches. The biggest change in this round
-> is refactoring of the ugly ath10k_sdio_io() function.
->
-> Only compile tested, I don't have any SDIO boards at the moment.
->
-I have tested the patches and they are working as expected...
+ MAINTAINERS | 1 -
+ 1 file changed, 1 deletion(-)
 
---
-Erik
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 078c38217daa..5e316efbfe31 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7844,7 +7844,6 @@ S:	Maintained
+ F:	drivers/net/ethernet/marvell/mvneta.*
+ 
+ MARVELL MWIFIEX WIRELESS DRIVER
+-M:	Amitkumar Karwar <akarwar@marvell.com>
+ M:	Nishant Sarmukadam <nishants@marvell.com>
+ M:	Ganapathi Bhat <gbhat@marvell.com>
+ M:	Xinming Hu <huxm@marvell.com>
+-- 
+2.12.2.715.g7642488e1d-goog
