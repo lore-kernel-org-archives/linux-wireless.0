@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35761 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756927AbdDQAHR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751255AbdDMNNt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:07:17 -0400
-Received: by mail-oi0-f65.google.com with SMTP id a21so8751763oic.2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 12/13] rtlwifi: btcoex: 21a 1ant: fix some coding style issues
-Date: Sun, 16 Apr 2017 19:06:59 -0500
-Message-Id: <20170417000700.29057-13-Larry.Finger@lwfinger.net> (sfid-20170417_020725_938883_521C4CA1)
-In-Reply-To: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
-References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+        Thu, 13 Apr 2017 09:13:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: MAC randomization should not be persistent
+References: <20170405222640.4494-1-briannorris@chromium.org>
+        <87inmifak8.fsf@kamboji.qca.qualcomm.com>
+        <20170406164807.GB25323@google.com>
+Date: Thu, 13 Apr 2017 16:13:40 +0300
+In-Reply-To: <20170406164807.GB25323@google.com> (Brian Norris's message of
+        "Thu, 6 Apr 2017 09:48:08 -0700")
+Message-ID: <87o9w0bgcb.fsf@kamboji.qca.qualcomm.com> (sfid-20170413_151405_182890_5DBA6885)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Brian Norris <briannorris@chromium.org> writes:
 
-Fix alignment for coding style consistency.
+> On Thu, Apr 06, 2017 at 07:02:15AM +0300, Kalle Valo wrote:
+>> Brian Norris <briannorris@chromium.org> writes:
+>> 
+>> > nl80211 provides the NL80211_SCAN_FLAG_RANDOM_ADDR for every scan
+>> > request that should be randomized; the absence of such a flag means we
+>> > should not randomize. However, mwifiex was stashing the latest
+>> > randomization request and *always* using it for future scans, even those
+>> > that didn't set the flag.
+>> >
+>> > Let's zero out the randomization info whenever we get a scan request
+>> > without NL80211_SCAN_FLAG_RANDOM_ADDR. I'd prefer to remove
+>> > priv->random_mac entirely (and plumb the randomization MAC properly
+>> > through the call sequence), but the spaghetti is a little difficult to
+>> > unravel here for me.
+>> >
+>> > Fixes: c2a8f0ff9c6c ("mwifiex: support random MAC address for scanning")
+>> 
+>> So the first release with this was v4.9.
+>> 
+>> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+>> > ---
+>> > Should this be tagged for -stable?
+>> 
+>> IMHO yes.
+>
+> Sounds fine to me. I suppose you'll do this when applying? Or I can
+> resend...
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c   | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+I can add this:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 7d91d82e37fe..8022779004fb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -2839,14 +2839,14 @@ void ex_btc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 	}
- 
- 	if (BT_INFO_SRC_8821A_1ANT_WIFI_FW != rsp_source) {
--		coex_sta->bt_retry_cnt =	/* [3:0]*/
--			coex_sta->bt_info_c2h[rsp_source][2]&0xf;
-+		/* [3:0] */
-+		coex_sta->bt_retry_cnt =
-+			coex_sta->bt_info_c2h[rsp_source][2] & 0xf;
- 
- 		coex_sta->bt_rssi =
--			coex_sta->bt_info_c2h[rsp_source][3]*2+10;
-+			coex_sta->bt_info_c2h[rsp_source][3] * 2 + 10;
- 
--		coex_sta->bt_info_ext =
--			coex_sta->bt_info_c2h[rsp_source][4];
-+		coex_sta->bt_info_ext = coex_sta->bt_info_c2h[rsp_source][4];
- 
- 		/* Here we need to resend some wifi info to BT
- 		 * because bt is reset and lost the info
-@@ -2928,11 +2928,11 @@ void ex_btc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], BtInfoNotify(), BT Connected-idle!!!\n");
- 	} else if ((bt_info&BT_INFO_8821A_1ANT_B_SCO_ESCO) ||
--		(bt_info&BT_INFO_8821A_1ANT_B_SCO_BUSY)) {
-+		(bt_info & BT_INFO_8821A_1ANT_B_SCO_BUSY)) {
- 		coex_dm->bt_status = BT_8821A_1ANT_BT_STATUS_SCO_BUSY;
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], BtInfoNotify(), BT SCO busy!!!\n");
--	} else if (bt_info&BT_INFO_8821A_1ANT_B_ACL_BUSY) {
-+	} else if (bt_info & BT_INFO_8821A_1ANT_B_ACL_BUSY) {
- 		if (BT_8821A_1ANT_BT_STATUS_ACL_BUSY != coex_dm->bt_status)
- 			coex_dm->auto_tdma_adjust = false;
- 		coex_dm->bt_status = BT_8821A_1ANT_BT_STATUS_ACL_BUSY;
+Cc: <stable@vger.kernel.org> # 4.9+
+
 -- 
-2.12.0
+Kalle Valo
