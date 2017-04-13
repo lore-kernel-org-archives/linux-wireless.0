@@ -1,52 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:32773 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932072AbdDDQub (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59618 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752982AbdDMMHH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 12:50:31 -0400
-Received: by mail-oi0-f65.google.com with SMTP id f193so25704197oib.0
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:31 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/13] rtlwifi: btcoex: 23b 2ant: workaround for bt a2dp and hid
-Date: Tue,  4 Apr 2017 11:50:01 -0500
-Message-Id: <20170404165006.14329-9-Larry.Finger@lwfinger.net> (sfid-20170404_185036_181038_7FACDE12)
-In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
-References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+        Thu, 13 Apr 2017 08:07:07 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 09/10] brcmfmac: add mutex to protect pno requests
+Date: Thu, 13 Apr 2017 13:06:35 +0100
+Message-Id: <1492085196-4574-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170413_140722_662928_CDC115C9)
+In-Reply-To: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+The request references kept in pno are accessed in user-space context
+and in firmware event handler context. As such we need to protect it
+with a lock. As both context allow sleep a mutex seems appropriate.
 
-For a2dp and hid, we need extra process to avoid voice degradation
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 2 ++
- 1 file changed, 2 insertions(+)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 8b2bef8..8098676 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1035,6 +1035,8 @@ static void btc8723b2ant_set_fw_ps_tdma(struct btc_coexist *btcoexist, u8 byte1,
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	u8 h2c_parameter[5];
-+	if ((coex_sta->a2dp_exist) && (coex_sta->hid_exist))
-+		byte5 = byte5 | 0x1;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index d0e4283..5f4c67a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -43,6 +43,7 @@
+ struct brcmf_pno_info {
+ 	int n_reqs;
+ 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
++	struct mutex req_lock;
+ };
  
- 	h2c_parameter[0] = byte1;
- 	h2c_parameter[1] = byte2;
+ #define ifp_to_pno(_ifp)	(_ifp)->drvr->config->pno
+@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
+ 		return -ENOSPC;
+ 	}
+ 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
++	mutex_lock(&pi->req_lock);
+ 	pi->reqs[pi->n_reqs++] = req;
++	mutex_unlock(&pi->req_lock);
+ 	return 0;
+ }
+ 
+ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ {
+-	int i;
++	int i, err = 0;
++
++	mutex_lock(&pi->req_lock);
+ 
+ 	/* find request */
+ 	for (i = 0; i < pi->n_reqs; i++) {
+@@ -71,7 +76,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ 	/* request not found */
+ 	if (WARN_ON(i == pi->n_reqs)) {
+ 		brcmf_err("reqid not found\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto done;
+ 	}
+ 
+ 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
+@@ -79,14 +85,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ 
+ 	/* if last we are done */
+ 	if (!pi->n_reqs || i == pi->n_reqs)
+-		return 0;
++		goto done;
+ 
+ 	/* fill the gap with remaining requests */
+ 	while (i <= pi->n_reqs - 1) {
+ 		pi->reqs[i] = pi->reqs[i + 1];
+ 		i++;
+ 	}
+-	return 0;
++
++done:
++	mutex_unlock(&pi->req_lock);
++	return err;
+ }
+ 
+ static int brcmf_pno_channel_config(struct brcmf_if *ifp,
+@@ -489,6 +498,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
+ 		return -ENOMEM;
+ 
+ 	cfg->pno = pi;
++	mutex_init(&pi->req_lock);
+ 	return 0;
+ }
+ 
+@@ -501,6 +511,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
+ 	cfg->pno = NULL;
+ 
+ 	WARN_ON(pi->n_reqs);
++	mutex_destroy(&pi->req_lock);
+ 	kfree(pi);
+ }
+ 
+@@ -516,11 +527,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
+ 
+ u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
+ {
+-	/* bucket appears to be gone */
+-	if (bucket >= pi->n_reqs)
+-		return 0;
++	u64 reqid = 0;
++
++	mutex_lock(&pi->req_lock);
++
++	if (bucket < pi->n_reqs)
++		reqid = pi->reqs[bucket]->reqid;
+ 
+-	return pi->reqs[bucket]->reqid;
++	mutex_unlock(&pi->req_lock);
++	return reqid;
+ }
+ 
+ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+@@ -531,6 +546,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 	u32 bucket_map = 0;
+ 	int i, j;
+ 
++	mutex_lock(&pi->req_lock);
+ 	for (i = 0; i < pi->n_reqs; i++) {
+ 		req = pi->reqs[i];
+ 
+@@ -545,5 +561,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 			}
+ 		}
+ 	}
++	mutex_unlock(&pi->req_lock);
+ 	return bucket_map;
+ }
 -- 
-2.10.2
+1.9.1
