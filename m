@@ -1,90 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933040AbdDEL6j (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59594 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752534AbdDMMHF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 07:58:39 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 11/11] wil6210: prevent access to 11AD device if resume fails
-Date: Wed,  5 Apr 2017 14:58:14 +0300
-Message-Id: <1491393494-11816-12-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_140157_074260_5666890F)
-In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 13 Apr 2017 08:07:05 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 03/10] nl80211: add support for BSSIDs in scheduled scan matchsets
+Date: Thu, 13 Apr 2017 13:06:29 +0100
+Message-Id: <1492085196-4574-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170413_140728_331886_B63569CC)
+In-Reply-To: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case wil6210 resume fails, wil6210 suspend function will try
-to access the suspended device in the next kernel suspend.
-To prevent that, add wil_status_suspended flag to indicate if the
-device is already suspended and clear it only if the resume succeeds.
+This patch allows for the scheduled scan request to specify matchsets
+for specific BSSIDs.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ath/wil6210/pm.c      | 16 ++++++++++++++--
- drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
- 2 files changed, 15 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h       |  6 +++++-
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/nl80211.c       | 41 +++++++++++++++++++++++++++++++----------
+ 3 files changed, 38 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 7260bef..2ae4fe8 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -71,6 +71,11 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
- 
- 	wil_dbg_pm(wil, "suspend: %s\n", is_runtime ? "runtime" : "system");
- 
-+	if (test_bit(wil_status_suspended, wil->status)) {
-+		wil_dbg_pm(wil, "trying to suspend while suspended\n");
-+		return 0;
-+	}
-+
- 	/* if netif up, hardware is alive, shut it down */
- 	if (ndev->flags & IFF_UP) {
- 		rc = wil_down(wil);
-@@ -86,10 +91,14 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
- 
- 	if (wil->platform_ops.suspend) {
- 		rc = wil->platform_ops.suspend(wil->platform_handle);
--		if (rc)
-+		if (rc) {
- 			wil_enable_irq(wil);
-+			goto out;
-+		}
- 	}
- 
-+	set_bit(wil_status_suspended, wil->status);
-+
- out:
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
-@@ -117,10 +126,13 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 
- 	/* if netif up, bring hardware up
- 	 * During open(), IFF_UP set after actual device method
--	 * invocation. This prevent recursive call to wil_up()
-+	 * invocation. This prevent recursive call to wil_up().
-+	 * wil_status_suspended will be cleared in wil_reset
- 	 */
- 	if (ndev->flags & IFF_UP)
- 		rc = wil_up(wil);
-+	else
-+		clear_bit(wil_status_suspended, wil->status);
- 
- out:
- 	wil_dbg_pm(wil, "resume: %s => %d\n",
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ec646d7..b00c803 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -412,6 +412,7 @@ enum { /* for wil6210_priv.status */
- 	wil_status_irqen, /* FIXME: interrupts enabled - for debug */
- 	wil_status_napi_en, /* NAPI enabled protected by wil->mutex */
- 	wil_status_resetting, /* reset in progress */
-+	wil_status_suspended, /* suspend completed, device is suspended */
- 	wil_status_last /* keep last */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7721a9b..2142800 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1613,11 +1613,15 @@ static inline void get_random_mask_addr(u8 *buf, const u8 *addr, const u8 *mask)
+ /**
+  * struct cfg80211_match_set - sets of attributes to match
+  *
+- * @ssid: SSID to be matched; may be zero-length for no match (RSSI only)
++ * @ssid: SSID to be matched; may be zero-length in case of BSSID match
++ *	or no match (RSSI only)
++ * @bssid: BSSID to be matched; may be all-zero BSSID in case of SSID match
++ *	or no match (RSSI only)
+  * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
+  */
+ struct cfg80211_match_set {
+ 	struct cfg80211_ssid ssid;
++	u8 bssid[ETH_ALEN];
+ 	s32 rssi_thold;
  };
  
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f34127d..925eb38 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3209,6 +3209,7 @@ enum nl80211_reg_rule_attr {
+  *	BSS-es in the specified band is to be adjusted before doing
+  *	RSSI-based BSS selection. The attribute value is a packed structure
+  *	value as specified by &struct nl80211_bss_select_rssi_adjust.
++ * @NL80211_SCHED_SCAN_MATCH_ATTR_BSSID: BSSID to be used for matching.
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_MAX: highest scheduled scan filter
+  *	attribute number currently defined
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST: internal use
+@@ -3220,6 +3221,7 @@ enum nl80211_sched_scan_match_attr {
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI,
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RELATIVE_RSSI,
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI_ADJUST,
++	NL80211_SCHED_SCAN_MATCH_ATTR_BSSID,
+ 
+ 	/* keep last */
+ 	__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ce6f55a..87efa91 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -497,6 +497,8 @@ enum nl80211_multicast_groups {
+ nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] = { .type = NLA_BINARY,
+ 						 .len = IEEE80211_MAX_SSID_LEN },
++	[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID] = { .type = NLA_BINARY,
++						  .len = ETH_ALEN },
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI] = { .type = NLA_U32 },
+ };
+ 
+@@ -7043,8 +7045,15 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 					       attr, nl80211_match_policy);
+ 			if (err)
+ 				return ERR_PTR(err);
++
++			/* SSID and BSSID are mutually exclusive */
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] &&
++			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID])
++				return ERR_PTR(-EINVAL);
++
+ 			/* add other standalone attributes here */
+-			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID]) {
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] ||
++			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID]) {
+ 				n_match_sets++;
+ 				continue;
+ 			}
+@@ -7215,7 +7224,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 		nla_for_each_nested(attr,
+ 				    attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
+ 				    tmp) {
+-			struct nlattr *ssid, *rssi;
++			struct nlattr *ssid, *bssid, *rssi;
+ 
+ 			err = nla_parse_nested(tb,
+ 					       NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
+@@ -7223,7 +7232,8 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 			if (err)
+ 				goto out_free;
+ 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
+-			if (ssid) {
++			bssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID];
++			if (ssid || bssid) {
+ 				if (WARN_ON(i >= n_match_sets)) {
+ 					/* this indicates a programming error,
+ 					 * the loop above should have verified
+@@ -7233,14 +7243,25 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 					goto out_free;
+ 				}
+ 
+-				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
+-					err = -EINVAL;
+-					goto out_free;
++				if (ssid) {
++					if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
++						err = -EINVAL;
++						goto out_free;
++					}
++					memcpy(request->match_sets[i].ssid.ssid,
++					       nla_data(ssid), nla_len(ssid));
++					request->match_sets[i].ssid.ssid_len =
++						nla_len(ssid);
++				}
++				if (bssid) {
++					if (nla_len(bssid) != ETH_ALEN) {
++						err = -EINVAL;
++						goto out_free;
++					}
++					memcpy(request->match_sets[i].bssid,
++					       nla_data(bssid), ETH_ALEN);
+ 				}
+-				memcpy(request->match_sets[i].ssid.ssid,
+-				       nla_data(ssid), nla_len(ssid));
+-				request->match_sets[i].ssid.ssid_len =
+-					nla_len(ssid);
++
+ 				/* special attribute - old implementation w/a */
+ 				request->match_sets[i].rssi_thold =
+ 					default_match_rssi;
 -- 
 1.9.1
