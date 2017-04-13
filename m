@@ -1,235 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33404 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751808AbdDMSqd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51168 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751083AbdDMMel (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:46:33 -0400
-Received: by mail-pf0-f181.google.com with SMTP id s16so32231956pfs.0
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:46:33 -0700 (PDT)
-Date: Thu, 13 Apr 2017 11:46:30 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [PATCH v4 4/4] mwifiex: pcie: extract wifi part from combo
- firmware during function level reset
-Message-ID: <20170413184629.GB66124@google.com> (sfid-20170413_204638_936553_5F560AC6)
-References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
- <1492066102-31251-4-git-send-email-huxinming820@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1492066102-31251-4-git-send-email-huxinming820@gmail.com>
+        Thu, 13 Apr 2017 08:34:41 -0400
+Message-ID: <1492086857.31741.20.camel@coelho.fi> (sfid-20170413_143445_583813_EFCD691B)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Thu, 13 Apr 2017 15:34:17 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-ap8De3enMNK43Q6t/mkR"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2017-04-13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Xinming,
 
-On Thu, Apr 13, 2017 at 06:48:22AM +0000, Xinming Hu wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> A seprate wifi-only firmware was download during pcie function level reset.
-> It is in fact the tail part of wifi/bt combo firmware. Per Brian's and
-> Dmitry's suggestion, this patch extract the wifi part from combo firmware.
-> 
-> After that, we can discard the redudant image in linux-firmware repo.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
+--=-ap8De3enMNK43Q6t/mkR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Please don't add my Reviewed-by tag unless I've provided it explicitly.
-And especially not if you have to change the patch significantly. (It's
-fair to carry an old tag I've provided, if you only have to make minor
-changes, or if I suggest *exactly* what needs changed, along with a
-conditional 'Reviewed-by'.)
+Hi Kalle,
 
-As it stands, this patch is worse than the previous one. I replied to
-some of your commnets on v3, but I'll carry some here.
+Here's my first pull-request intended for v4.12.  This is generic
+development work, nothing really stands out.  More
+details in the tag description.
 
-> ---
-> v2: extract wifi part from combo firmware(Dimtry and Brain)
->     add more description(Kalle)
-> v3: same as v2
-> v4: add sequence comments, code enhance(Brain)
-> ---
->  drivers/net/wireless/marvell/mwifiex/fw.h   | 18 ++++++
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 93 ++++++++++++++++++++++++++---
->  drivers/net/wireless/marvell/mwifiex/pcie.h |  3 +-
->  3 files changed, 106 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-> index 0b68374..6cf9ab9 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/fw.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-> @@ -43,6 +43,24 @@ struct tx_packet_hdr {
->  	struct rfc_1042_hdr rfc1042_hdr;
->  } __packed;
->  
-> +struct mwifiex_fw_header {
-> +	__le32 dnld_cmd;
-> +	__le32 base_addr;
-> +	__le32 data_length;
-> +	__le32 crc;
-> +} __packed;
-> +
-> +struct mwifiex_fw_data {
-> +	struct mwifiex_fw_header header;
-> +	__le32 seq_num;
-> +	u8 data[1];
-> +} __packed;
-> +
-> +#define MWIFIEX_FW_DNLD_CMD_1 0x1
-> +#define MWIFIEX_FW_DNLD_CMD_5 0x5
-> +#define MWIFIEX_FW_DNLD_CMD_6 0x6
-> +#define MWIFIEX_FW_DNLD_CMD_7 0x7
-> +
->  #define B_SUPPORTED_RATES               5
->  #define G_SUPPORTED_RATES               9
->  #define BG_SUPPORTED_RATES              13
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index a07cb0a..7b24bb4 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -1956,6 +1956,73 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
->  	return ret;
->  }
->  
-> +/* Combo firmware image is a combination of
-> + * (1) combo crc heaer, start with CMD5
-> + * (2) bluetooth image, start with CMD7, end with CMD6, data wrapped in CMD1.
-> + * (3) wifi image.
-> + *
-> + * This function bypass the header and bluetooth part, return
-> + * the offset of tail wifi-only part.
-> + */
-> +
-> +static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
-> +				   const void *firmware, u32 firmware_len) {
-> +	const struct mwifiex_fw_data *fwdata;
-> +	u32 offset = 0, data_len, dnld_cmd;
-> +	int ret = 0;
-> +	bool cmd7_before = false;
-> +
-> +	while (1) {
-> +		if (offset >= firmware_len) {
+I have sent this out before, and kbuildbot reported success.
 
-This is worse than what you used to have. This should still be:
+Please let me know if there are any issues.
 
-		if (offset + sizeof(fwdata->header) >= firmware_len) {
+Cheers,
+Luca.
 
-And you might add an overflow check here too, so:
 
-		/* Check for integer and buffer overflow */
-		if (offset + sizeof(fwdata->header) < sizeof(fwdata->header) ||
-		    offset + sizeof(fwdata->header) >= firmware_len) {
+The following changes since commit 1aed89640a899cd695bbfc976a4356affa474646=
+:
 
-> +			mwifiex_dbg(adapter, ERROR,
-> +				    "extract wifi-only fw failure!");
+  mwifiex: apply radar flag (2017-04-05 15:54:52 +0300)
 
-Needs a '\n'.
+are available in the git repository at:
 
-> +			ret = -1;
-> +			goto done;
-> +		}
-> +
-> +		fwdata = firmware + offset;
-> +		dnld_cmd = le32_to_cpu(fwdata->header.dnld_cmd);
-> +		data_len = le32_to_cpu(fwdata->header.data_length);
-> +
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2017-04-13
 
-Then:
+for you to fetch changes up to 87d0e1af9db3bff4ec2f68fd4d032f89c23867a4:
 
-		offset += sizeof(fwdata->header);
+  iwlwifi: mvm: separate queue mapping from queue enablement (2017-04-11 15=
+:25:00 +0300)
 
-> +		switch (dnld_cmd) {
-> +		case MWIFIEX_FW_DNLD_CMD_1:
-> +			if (!cmd7_before) {
-> +				mwifiex_dbg(adapter, ERROR,
-> +					    "no cmd7 before cmd1!");
+----------------------------------------------------------------
+Patches intended for v4.12:
 
-Needs a '\n'.
+  * Some small fixes here and there;
+  * The usual cleanups and small improvements;
+  * Work to support A000 devices continues;
+  * New FW API version;
+  * Some debugging improvements;
 
-> +				ret = -1;
-> +				goto done;
-> +			}
-> +			offset += data_len + sizeof(fwdata->header);
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: mvm: add DQA_ENABLE_CMD to the command list
+      iwlwifi: pcie: print less data upon firmware crash
 
-Replace with:
+Golan Ben-Ami (1):
+      iwlwifi: mvm: support MFUART dump in case of MFUART assert
 
-			if (offset + data_len < data_len) {
-				mwifiex_dbg(adapter, ERROR, "bad firmware\n");
-				ret = -1;
-				goto done;
-			}
-			offset += data_len;
+Johannes Berg (3):
+      iwlwifi: mvm: fix RX SKB header size and align it properly
+      iwlwifi: use upper_32_bits/lower_32_bits where appropriate
+      iwlwifi: pcie: use iwl_get_dma_hi_addr()
 
-> +			break;
-> +		case MWIFIEX_FW_DNLD_CMD_5:
-> +			offset += data_len + sizeof(fwdata->header);
+Liad Kaufman (1):
+      iwlwifi: add support for 9000 HW B-step NICs
 
-Replace with:
+Luca Coelho (4):
+      iwlwifi: be more verbose about needed firmware
+      iwlwifi: remove support for deprecated RF
+      iwlwifi: mvm: bump max API to 30
+      iwlwifi: remove unnecessary dev_cmd_headroom parameter
 
-			if (offset + data_len < data_len) {
-				mwifiex_dbg(adapter, ERROR, "bad firmware\n");
-				ret = -1;
-				goto done;
-			}
-			offset += data_len;
+Sara Sharon (14):
+      iwlwifi: mvm: support new binding API
+      iwlwifi: mvm: adjust new API of compressed BA
+      iwlwifi: mvm: cleanup pending frames in DQA mode
+      iwlwifi: mvm: add multicast station
+      iwlwifi: mvm: support new ADD_MODIFY_STA_KEY command
+      iwlwifi: mvm: optimize reorder timeout frame releasing
+      iwlwifi: mvm: don't assume static queue numbers
+      Revert "iwlwifi: introduce trans API to get byte count table"
+      iwlwifi: pcie: remove the active field in struct iwl_txq
+      iwlwifi: pcie: use WFPM_GP for debugging D3 flows
+      iwlwifi: pcie: introduce split point to a000 devices
+      iwlwifi: pcie: add context information support
+      iwlwifi: mvm: remove call for paging in new init flow
+      iwlwifi: mvm: separate queue mapping from queue enablement
 
-> +			break;
-> +		case MWIFIEX_FW_DNLD_CMD_6:
-> +			offset += data_len + sizeof(fwdata->header);
+ drivers/net/wireless/intel/iwlwifi/Makefile           |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c         |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c         |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c         |  46 +++++--------
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c         |   5 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h       |  12 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-context-info.h | 203 ++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h          |   1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c          |  34 +++++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h           |   6 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h      |   5 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c           |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h         |   2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c        |   7 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h        |  28 ++------
+ drivers/net/wireless/intel/iwlwifi/mvm/binding.c      |  17 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c           |  20 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h   |  34 +++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h    |   5 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h       |  40 +++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c           |  32 ++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c     |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     |  34 +++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h          |  25 ++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c          |  12 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c           |  18 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c         |  20 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c          | 241 ++++++++++++++=
+++++++++++++++++++++++++++++----------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h          |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c           |  49 ++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c        |  34 +++++----
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c   | 274 ++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c         |  17 ++---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h    |  53 ++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c          |  48 ++++++++++---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c  | 226 ++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c       | 218 ++++++++++++++=
++++++++++++++++-----------------------------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c          |  99 ++++++++++++++=
+++-----------
+ 38 files changed, 1462 insertions(+), 422 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-context-info.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+--=-ap8De3enMNK43Q6t/mkR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-Replace with:
+-----BEGIN PGP SIGNATURE-----
 
-			if (offset + data_len < data_len) {
-				mwifiex_dbg(adapter, ERROR, "bad firmware\n");
-				ret = -1;
-				goto done;
-			}
-			offset += data_len;
+iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAljvcEkACgkQoUecoho8
+xfrnLxAAjpLl2T+U/viBVow60a4tBRAtXrriPuyBOiRhyvCz7ZR72rttiA/aanxo
+uoLJ+GUrQThu2Per/0hL7WHV0y3c0aaFIf1c1YpQmnrLgNX9xgybgQoaIce/Fjn9
+AzlXh0ZgMkyN5w0W0pzaq+y+0EBFiaOZ4JwSXDCAEiwvhn7/Ao4FMg+OhEzDiAtZ
+Ea6kacv6hXk2eVowFhfOUZE1WhGsZ/+Erw3tchusdzqzp2SaIQBzh/UWI09AQewX
+6W2KNVYEP31EvqwjylFiVDvIKIfMtS6uvpTsZcb9YbH3+sw96RbE0saMO1+zR57d
+76SxKeD8NF3lsGMcP7jrB05DTOcLpZeiKA6tE3FGkSFWlAJ6jX73O85ta/SO+m/H
+RPzYlBUXSDQYQYXnVJZVEI94vWIGkXL+2lZStmea7G0AZgdB+/lQqy4UZIyQOi3+
+rTaeSw6yy0AXSBZcGPY5GPNG8AEMEqZFwDzgBQc8Rlhygd+FmFBZPEK+LWSbepPV
+VpdCAlTcyLneiyZO/dWY9y7fwWx9SMtjit8Z2OIZnNTQm+dVH12TXXuPUjCsM4ya
+qwrpAtd0WdXNOJ9mG6Ujxp0QzYerAVkRkR+L/PANKlJtw3eQBl0un4K7b1nbS1xR
+OrvyBAWEIPu3B3w1rC6siPRxWP4xhU+Ry7EnlptmtV/4rZLKgmo=
+=vMef
+-----END PGP SIGNATURE-----
 
-> +			if (offset >= firmware_len) {
-> +				mwifiex_dbg(adapter, ERROR,
-> +					    "extract wifi-only fw failure!");
-
-Needs a '\n'.
-
-> +				ret = -1;
-> +			} else {
-> +				ret = offset;
-> +			}
-> +			goto done;
-> +		case MWIFIEX_FW_DNLD_CMD_7:
-> +			cmd7_before = true;
-> +			offset += sizeof(fwdata->header);
-
-Now you can delete this line.
-
-> +			break;
-> +		default:
-> +			mwifiex_dbg(adapter, ERROR, "unknown dnld_cmd %d\n",
-> +				    dnld_cmd);
-> +			ret = -1;
-> +			goto done;
-> +		}
-> +	}
-> +
-> +done:
-> +	return ret;
-> +}
-> +
->  /*
->   * This function downloads the firmware to the card.
->   *
-
-[...]
-
-I might just rewrite this and send it myself, if I get the time.
-
-Brian
+--=-ap8De3enMNK43Q6t/mkR--
