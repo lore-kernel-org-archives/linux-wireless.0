@@ -1,133 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33014 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932413AbdDQAL2 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51244 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753957AbdDMPZT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:28 -0400
-Received: by mail-oi0-f67.google.com with SMTP id a189so587476oib.0
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:28 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 12/27] rtlwifi: btcoex: 23b 1ant: Add power_on_setting
-Date: Sun, 16 Apr 2017 19:10:56 -0500
-Message-Id: <20170417001111.29384-13-Larry.Finger@lwfinger.net> (sfid-20170417_021143_468164_3472CBD0)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+        Thu, 13 Apr 2017 11:25:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 13 Apr 2017 18:24:43 +0300
+Message-Id: <20170413152507.9648-3-luca@coelho.fi> (sfid-20170413_172525_745467_F81E78E8)
+In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
+References: <20170413152507.9648-1-luca@coelho.fi>
+Subject: [PATCH 02/26] iwlwifi: mvm: add queues after adding station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-This change is highly related to init_hwconfig that decomposed into
-two parts for better program routine.
+Currently aux & broadcast queues are added before calling add
+station, which results with a SCD_QUEUE_CFG command sent with
+a station id unknown yet to fw.
+While this works for pre-a000 firmware, the a000 fw requires
+the order to be reversed.
+The reason the change is only for a000 devices and not for
+previous devices is that we cannot reverse the order since
+the tfd_queue_mask containing the aux queue will cause FW to
+assert on adding a queue mask with a queue that is not enabled.
+This is not a problem in a000 fw since the tfd_queue_mask was
+removed from the add sta API.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 69 ++++++++++++++++++++++
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  1 +
- 2 files changed, 70 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 90 ++++++++++++++++++----------
+ 1 file changed, 58 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 69be88765cab..6580af0ade39 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -2186,6 +2186,75 @@ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
- /**************************************************************
-  * extern function start with ex_halbtc8723b1ant_
-  **************************************************************/
-+void ex_halbtc8723b1ant_power_on_setting(struct btc_coexist *btcoexist)
-+{
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	struct btc_board_info *board_info = &btcoexist->board_info;
-+	u8 u8tmp = 0x0;
-+	u16 u16tmp = 0x0;
-+	u32 value;
-+
-+	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+		 "xxxxxxxxxxxxxxxx Execute 8723b 1-Ant PowerOn Setting xxxxxxxxxxxxxxxx!!\n");
-+
-+	btcoexist->stop_coex_dm = true;
-+
-+	btcoexist->btc_write_1byte(btcoexist, 0x67, 0x20);
-+
-+	/* enable BB, REG_SYS_FUNC_EN such that we can write 0x948 correctly. */
-+	u16tmp = btcoexist->btc_read_2byte(btcoexist, 0x2);
-+	btcoexist->btc_write_2byte(btcoexist, 0x2, u16tmp | BIT0 | BIT1);
-+
-+	/* set GRAN_BT = 1 */
-+	btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
-+	/* set WLAN_ACT = 0 */
-+	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
-+
-+	/* S0 or S1 setting and Local register setting(By the setting fw can get
-+	 * ant number, S0/S1, ... info)
-+	 *
-+	 * Local setting bit define
-+	 *	BIT0: "0" for no antenna inverse; "1" for antenna inverse
-+	 *	BIT1: "0" for internal switch; "1" for external switch
-+	 *	BIT2: "0" for one antenna; "1" for two antenna
-+	 * NOTE: here default all internal switch and 1-antenna ==> BIT1=0 and
-+	 * BIT2 = 0
-+	 */
-+	if (btcoexist->chip_interface == BTC_INTF_USB) {
-+		/* fixed at S0 for USB interface */
-+		btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
-+
-+		u8tmp |= 0x1; /* antenna inverse */
-+		btcoexist->btc_write_local_reg_1byte(btcoexist, 0xfe08, u8tmp);
-+
-+		board_info->btdm_ant_pos = BTC_ANTENNA_AT_AUX_PORT;
-+	} else {
-+		/* for PCIE and SDIO interface, we check efuse 0xc3[6] */
-+		if (board_info->single_ant_path == 0) {
-+			/* set to S1 */
-+			btcoexist->btc_write_4byte(btcoexist, 0x948, 0x280);
-+			board_info->btdm_ant_pos = BTC_ANTENNA_AT_MAIN_PORT;
-+			value = 1;
-+		} else if (board_info->single_ant_path == 1) {
-+			/* set to S0 */
-+			btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
-+			u8tmp |= 0x1; /* antenna inverse */
-+			board_info->btdm_ant_pos = BTC_ANTENNA_AT_AUX_PORT;
-+			value = 0;
-+		}
-+
-+		btcoexist->btc_set(btcoexist, BTC_SET_ACT_ANTPOSREGRISTRY_CTRL,
-+				   &value);
-+
-+		if (btcoexist->chip_interface == BTC_INTF_PCI)
-+			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x384,
-+							     u8tmp);
-+		else if (btcoexist->chip_interface == BTC_INTF_SDIO)
-+			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x60,
-+							     u8tmp);
-+	}
-+}
-+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 2d68cee41306..7d6a5dbb50ca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1700,25 +1700,11 @@ static int iwl_mvm_add_int_sta_common(struct iwl_mvm *mvm,
+ 	return ret;
+ }
  
- void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
- 				      bool wifi_only)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index d51e92a2b3aa..d7c1806b094a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -190,6 +190,7 @@ struct coex_sta_8723b_1ant {
- /*************************************************************************
-  * The following is interface which will notify coex module.
-  *************************************************************************/
-+void ex_halbtc8723b1ant_power_on_setting(struct btc_coexist *btcoexist);
- void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
- 				      bool wifi_only);
- void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist);
+-int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
++static void iwl_mvm_enable_aux_queue(struct iwl_mvm *mvm)
+ {
+ 	unsigned int wdg_timeout = iwlmvm_mod_params.tfd_q_hang_detect ?
+ 					mvm->cfg->base_params->wd_timeout :
+ 					IWL_WATCHDOG_DISABLED;
+-	int ret;
+-
+-	lockdep_assert_held(&mvm->mutex);
+-
+-	/* Map Aux queue to fifo - needs to happen before adding Aux station */
+-	if (!iwl_mvm_is_dqa_supported(mvm))
+-		iwl_mvm_enable_ac_txq(mvm, mvm->aux_queue, mvm->aux_queue,
+-				      IWL_MVM_TX_FIFO_MCAST, 0, wdg_timeout);
+-
+-	/* Allocate aux station and assign to it the aux queue */
+-	ret = iwl_mvm_allocate_int_sta(mvm, &mvm->aux_sta, BIT(mvm->aux_queue),
+-				       NL80211_IFTYPE_UNSPECIFIED);
+-	if (ret)
+-		return ret;
+ 
+ 	if (iwl_mvm_is_dqa_supported(mvm)) {
+ 		struct iwl_trans_txq_scd_cfg cfg = {
+@@ -1731,14 +1717,43 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
+ 
+ 		iwl_mvm_enable_txq(mvm, mvm->aux_queue, mvm->aux_queue, 0, &cfg,
+ 				   wdg_timeout);
++	} else {
++		iwl_mvm_enable_ac_txq(mvm, mvm->aux_queue, mvm->aux_queue,
++				      IWL_MVM_TX_FIFO_MCAST, 0, wdg_timeout);
+ 	}
++}
+ 
+-	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->aux_sta, NULL,
+-					 MAC_INDEX_AUX, 0);
++int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
++{
++	int ret;
++
++	lockdep_assert_held(&mvm->mutex);
+ 
++	/* Allocate aux station and assign to it the aux queue */
++	ret = iwl_mvm_allocate_int_sta(mvm, &mvm->aux_sta, BIT(mvm->aux_queue),
++				       NL80211_IFTYPE_UNSPECIFIED);
+ 	if (ret)
++		return ret;
++
++	/* Map Aux queue to fifo - needs to happen before adding Aux station */
++	if (!iwl_mvm_has_new_tx_api(mvm))
++		iwl_mvm_enable_aux_queue(mvm);
++
++	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->aux_sta, NULL,
++					 MAC_INDEX_AUX, 0);
++	if (ret) {
+ 		iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
+-	return ret;
++		return ret;
++	}
++
++	/*
++	 * For a000 firmware and on we cannot add queue to a station unknown
++	 * to firmware so enable queue here - after the station was added
++	 */
++	if (iwl_mvm_has_new_tx_api(mvm))
++		iwl_mvm_enable_aux_queue(mvm);
++
++	return 0;
+ }
+ 
+ int iwl_mvm_add_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+@@ -1789,22 +1804,21 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	struct iwl_mvm_int_sta *bsta = &mvmvif->bcast_sta;
+ 	static const u8 _baddr[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+ 	const u8 *baddr = _baddr;
++	int queue = 0;
+ 	int ret;
++	unsigned int wdg_timeout =
++		iwl_mvm_get_wd_timeout(mvm, vif, false, false);
++	struct iwl_trans_txq_scd_cfg cfg = {
++		.fifo = IWL_MVM_TX_FIFO_VO,
++		.sta_id = mvmvif->bcast_sta.sta_id,
++		.tid = IWL_MAX_TID_COUNT,
++		.aggregate = false,
++		.frame_limit = IWL_FRAME_LIMIT,
++	};
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	if (iwl_mvm_is_dqa_supported(mvm)) {
+-		struct iwl_trans_txq_scd_cfg cfg = {
+-			.fifo = IWL_MVM_TX_FIFO_VO,
+-			.sta_id = mvmvif->bcast_sta.sta_id,
+-			.tid = IWL_MAX_TID_COUNT,
+-			.aggregate = false,
+-			.frame_limit = IWL_FRAME_LIMIT,
+-		};
+-		unsigned int wdg_timeout =
+-			iwl_mvm_get_wd_timeout(mvm, vif, false, false);
+-		int queue;
+-
+ 		if (vif->type == NL80211_IFTYPE_AP)
+ 			queue = mvm->probe_queue;
+ 		else if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+@@ -1812,9 +1826,11 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		else if (WARN(1, "Missing required TXQ for adding bcast STA\n"))
+ 			return -EINVAL;
+ 
+-		iwl_mvm_enable_txq(mvm, queue, vif->hw_queue[0], 0, &cfg,
+-				   wdg_timeout);
+ 		bsta->tfd_queue_msk |= BIT(queue);
++
++		if (!iwl_mvm_has_new_tx_api(mvm))
++			iwl_mvm_enable_txq(mvm, queue, vif->hw_queue[0], 0,
++					   &cfg, wdg_timeout);
+ 	}
+ 
+ 	if (vif->type == NL80211_IFTYPE_ADHOC)
+@@ -1825,8 +1841,18 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	ret = iwl_mvm_add_int_sta_common(mvm, bsta, baddr,
+ 					 mvmvif->id, mvmvif->color);
++	if (ret)
++		return ret;
+ 
+-	return ret;
++	/*
++	 * For a000 firmware and on we cannot add queue to a station unknown
++	 * to firmware so enable queue here - after the station was added
++	 */
++	if (iwl_mvm_has_new_tx_api(mvm))
++		iwl_mvm_enable_txq(mvm, queue, vif->hw_queue[0], 0, &cfg,
++				   wdg_timeout);
++
++	return 0;
+ }
+ 
+ static void iwl_mvm_free_bcast_sta_queues(struct iwl_mvm *mvm,
 -- 
-2.12.0
+2.11.0
