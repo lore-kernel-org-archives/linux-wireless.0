@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2454 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750988AbdDDFmM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45724 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750745AbdDMOHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 01:42:12 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-        <tamizhchelvam@codeaurora.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv3 0/2] cfg80211: mac80211: BTCOEX feature support
-Date: Tue, 4 Apr 2017 11:12:36 +0530
-Message-ID: <1491284558-1915-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170404_074216_706240_2AF10E9F)
+        Thu, 13 Apr 2017 10:07:43 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/6] brcmfmac: rename brcmf_fws_{de, }init to brcmf_fws{at,
+ de}tach
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1491480882-13877-2-git-send-email-arend.vanspriel@broadcom.com>
+References: <1491480882-13877-2-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170413140743.2E67460AA0@smtp.codeaurora.org> (sfid-20170413_160747_765916_26A8E34A)
+Date: Thu, 13 Apr 2017 14:07:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> This is a non-functional change to align the fwsignal module to
+> the naming pattern used throughout the driver.
+> 
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-This patchset add support for BTCOEX feature to enable/disable and
-modifying btcoex priority value via nl80211
+6 patches applied to wireless-drivers-next.git, thanks.
 
-Tamizh chelvam (2):
-  cfg80211: Add support to enable or disable btcoex and  set
-    btcoex_priority
-  mac80211: Add support to enable or disable btcoex and set btcoex
-    priority value
-
-v3 :
-  * Introduced NL80211_EXT_FEATURE_BTCOEX_PRIORITY to expose
-    btcoex priority support and removed bool variable.
-
-v2 :
-  * Introduced NL80211_CMD_SET_BTCOEX to enable/disable btcoex and
-    to set/modify btcoex_priority.
-  * Added bool variable in wiphy structure to advertise btcoex_priority
-    feature and removed BITMAP calculation for btcoex_priority value.
-
- include/net/cfg80211.h       |   35 ++++++++++++++++++++++++++++++++
- include/net/mac80211.h       |    5 +++++
- include/uapi/linux/nl80211.h |   20 +++++++++++++++++++
- net/mac80211/cfg.c           |    9 +++++++++
- net/mac80211/driver-ops.h    |   15 ++++++++++++++
- net/mac80211/trace.h         |   20 +++++++++++++++++++
- net/wireless/nl80211.c       |   45 ++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |   13 ++++++++++++
- net/wireless/trace.h         |   17 ++++++++++++++++
- 9 files changed, 179 insertions(+)
+ffb9f18ad8f0 brcmfmac: rename brcmf_fws_{de,}init to brcmf_fws{at,de}tach
+fc0471e3e884 brcmfmac: ignore interfaces when fwsignal is disabled
+acf8ac41dd73 brcmfmac: remove reference to fwsignal data from struct brcmf_pub
+4835f37e3baf brcmfmac: add length checks in scheduled scan result handler
+6594e1e83436 brcmfmac: remove bogus check in scheduled scan result handler
+6ea51fc708ae brcmfmac: only add channels and ssids once in scan request
 
 -- 
-1.7.9.5
+https://patchwork.kernel.org/patch/9666943/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
