@@ -1,159 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53803 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1437751AbdDZPLj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 11:11:39 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 2/5] mac80211: move ieee80211_tx_status_noskb below ieee80211_tx_status
-Date: Wed, 26 Apr 2017 17:11:36 +0200
-Message-Id: <20170426151139.87304-2-nbd@nbd.name> (sfid-20170426_173351_287974_89FF0E85)
-In-Reply-To: <20170426151139.87304-1-nbd@nbd.name>
-References: <20170426151139.87304-1-nbd@nbd.name>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48288 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750745AbdDMONA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Apr 2017 10:13:00 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v3] rt2x00: reverse external PA capability flag logic
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170410132940.GA3308@makrotopia.org>
+References: <20170410132940.GA3308@makrotopia.org>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org
+Message-Id: <20170413141259.D5C9460807@smtp.codeaurora.org> (sfid-20170413_161336_689980_E79E01A4)
+Date: Thu, 13 Apr 2017 14:12:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Makes further cleanups more readable
+Daniel Golle <daniel@makrotopia.org> wrote:
+> Consequently refer to external PA instead of inverting the logic and
+> use an internal PA capability flag which is a bit confusing.
+> Currently this is used for Rt3352 only, but MT7620A also allows for an
+> external PA which will be supported by a follow up patch.
+> 
+> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/status.c | 116 +++++++++++++++++++++++++-------------------------
- 1 file changed, 58 insertions(+), 58 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index e655b3abb84a..2b3f02f56db3 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -631,64 +631,6 @@ static int ieee80211_tx_get_rates(struct ieee80211_hw *hw,
- 	return rates_idx;
- }
- 
--void ieee80211_tx_status_noskb(struct ieee80211_hw *hw,
--			       struct ieee80211_sta *pubsta,
--			       struct ieee80211_tx_info *info)
--{
--	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_supported_band *sband;
--	struct ieee80211_tx_status status = {};
--	int retry_count;
--	bool acked, noack_success;
--
--	ieee80211_tx_get_rates(hw, info, &retry_count);
--
--	sband = hw->wiphy->bands[info->band];
--
--	acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
--	noack_success = !!(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED);
--
--	if (pubsta) {
--		struct sta_info *sta;
--
--		sta = container_of(pubsta, struct sta_info, sta);
--
--		if (!acked)
--			sta->status_stats.retry_failed++;
--		sta->status_stats.retry_count += retry_count;
--
--		if (acked) {
--			sta->status_stats.last_ack = jiffies;
--
--			if (sta->status_stats.lost_packets)
--				sta->status_stats.lost_packets = 0;
--
--			/* Track when last TDLS packet was ACKed */
--			if (test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH))
--				sta->status_stats.last_tdls_pkt_time = jiffies;
--		} else {
--			ieee80211_lost_packet(sta, info);
--		}
--
--		status.sta = pubsta;
--		status.info = info;
--		rate_control_tx_status(local, sband, &status);
--	}
--
--	if (acked || noack_success) {
--		I802_DEBUG_INC(local->dot11TransmittedFrameCount);
--		if (!pubsta)
--			I802_DEBUG_INC(local->dot11MulticastTransmittedFrameCount);
--		if (retry_count > 0)
--			I802_DEBUG_INC(local->dot11RetryCount);
--		if (retry_count > 1)
--			I802_DEBUG_INC(local->dot11MultipleRetryCount);
--	} else {
--		I802_DEBUG_INC(local->dot11FailedCount);
--	}
--}
--EXPORT_SYMBOL(ieee80211_tx_status_noskb);
--
- void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
- 			  struct ieee80211_supported_band *sband,
- 			  int retry_count, int shift, bool send_to_cooked)
-@@ -959,6 +901,64 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ieee80211_tx_status);
- 
-+void ieee80211_tx_status_noskb(struct ieee80211_hw *hw,
-+			       struct ieee80211_sta *pubsta,
-+			       struct ieee80211_tx_info *info)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_tx_status status = {};
-+	int retry_count;
-+	bool acked, noack_success;
-+
-+	ieee80211_tx_get_rates(hw, info, &retry_count);
-+
-+	sband = hw->wiphy->bands[info->band];
-+
-+	acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
-+	noack_success = !!(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED);
-+
-+	if (pubsta) {
-+		struct sta_info *sta;
-+
-+		sta = container_of(pubsta, struct sta_info, sta);
-+
-+		if (!acked)
-+			sta->status_stats.retry_failed++;
-+		sta->status_stats.retry_count += retry_count;
-+
-+		if (acked) {
-+			sta->status_stats.last_ack = jiffies;
-+
-+			if (sta->status_stats.lost_packets)
-+				sta->status_stats.lost_packets = 0;
-+
-+			/* Track when last TDLS packet was ACKed */
-+			if (test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH))
-+				sta->status_stats.last_tdls_pkt_time = jiffies;
-+		} else {
-+			ieee80211_lost_packet(sta, info);
-+		}
-+
-+		status.sta = pubsta;
-+		status.info = info;
-+		rate_control_tx_status(local, sband, &status);
-+	}
-+
-+	if (acked || noack_success) {
-+		I802_DEBUG_INC(local->dot11TransmittedFrameCount);
-+		if (!pubsta)
-+			I802_DEBUG_INC(local->dot11MulticastTransmittedFrameCount);
-+		if (retry_count > 0)
-+			I802_DEBUG_INC(local->dot11RetryCount);
-+		if (retry_count > 1)
-+			I802_DEBUG_INC(local->dot11MultipleRetryCount);
-+	} else {
-+		I802_DEBUG_INC(local->dot11FailedCount);
-+	}
-+}
-+EXPORT_SYMBOL(ieee80211_tx_status_noskb);
-+
- void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
- {
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+1f242a3de702 rt2x00: reverse external PA capability flag logic
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9672665/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
