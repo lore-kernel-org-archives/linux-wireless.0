@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mic92-4-82-224-21-170.fbx.proxad.net ([82.224.21.170]:44778
-        "EHLO dtbo.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751470AbdDNJxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 05:53:46 -0400
-Date: Fri, 14 Apr 2017 11:53:42 +0200
-From: Damien =?UTF-8?B?VGjDqWJhdWx0?= <damien@dtbo.net>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: Add Dell Wireless 1601 with wowlan capability
-Message-ID: <20170414115333.64abcba2@anakin> (sfid-20170414_115351_113261_29984896)
-In-Reply-To: <20170406135110.3f4d1f92@anakin>
-References: <20170406135110.3f4d1f92@anakin>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33037 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbdDMGsg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Apr 2017 02:48:36 -0400
+Received: by mail-pf0-f195.google.com with SMTP id c198so8870810pfc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 23:48:36 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v4 2/4] mwifiex: fall back mwifiex_dbg to pr_info when adapter->dev not set
+Date: Thu, 13 Apr 2017 06:48:20 +0000
+Message-Id: <1492066102-31251-2-git-send-email-huxinming820@gmail.com> (sfid-20170413_084840_370517_1186ECDB)
+In-Reply-To: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
+References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Xinming Hu <huxm@marvell.com>
 
-Sorry about this, but when I first sent this patch it didn't reach the
-maintainers in Cc because of spam filters. My MX IP is now in spamhaus
-PBL whitelist so this should work this time.
+mwifiex_dbg will do nothing before adapter->dev get assigned. several logs
+lost in this case. it can be avoided by fall back to pr_info.
 
-
-Add the Dell Wireless 1601 card as an AR9462 in the ath9k pci list.
-Note that the wowlan feature is supported and has been tested
-successfully.
-
-Signed-off-by: Damien Th=C3=A9bault <damien@dtbo.net>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Reviewed-by: Dmitry Torokhov <dtor@chromium.org>
 ---
- drivers/net/wireless/ath/ath9k/pci.c | 5 +++++
- 1 file changed, 5 insertions(+)
+v2: enhance adapter->dev null case.(Brain)
+v3: use va_list in pr_info.(Dmitry)
+v4: same as v3
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/at=
-h/ath9k/pci.c
-index aff473dfa10d..7b7627f85d3a 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -383,6 +383,11 @@ static const struct pci_device_id ath_pci_id_table[] =
-=3D {
- 			 0x10CF, /* Fujitsu */
- 			 0x1783),
- 	  .driver_data =3D ATH9K_PCI_WOW },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0034,
-+			 PCI_VENDOR_ID_DELL,
-+			 0x020B),
-+	  .driver_data =3D ATH9K_PCI_WOW },
-=20
- 	/* Killer Wireless (2x2) */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
---=20
-2.12.2
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 98fd491..16cd14e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1750,7 +1750,7 @@ void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
+ 	struct va_format vaf;
+ 	va_list args;
+ 
+-	if (!adapter->dev || !(adapter->debug_mask & mask))
++	if (!(adapter->debug_mask & mask))
+ 		return;
+ 
+ 	va_start(args, fmt);
+@@ -1758,7 +1758,10 @@ void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	dev_info(adapter->dev, "%pV", &vaf);
++	if (adapter->dev)
++		dev_info(adapter->dev, "%pV", &vaf);
++	else
++		pr_info("%pV", &vaf);
+ 
+ 	va_end(args);
+ }
+-- 
+1.8.1.4
