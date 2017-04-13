@@ -1,122 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54348 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:51250 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1954317AbdDYUaQ (ORCPT
+        with ESMTP id S1754357AbdDMPZT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 16:30:16 -0400
+        Thu, 13 Apr 2017 11:25:19 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 25 Apr 2017 23:22:28 +0300
-Message-Id: <20170425202243.7844-11-luca@coelho.fi> (sfid-20170425_223022_216950_6B8D7C77)
-In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
-References: <20170425202243.7844-1-luca@coelho.fi>
-Subject: [PATCH 10/25] iwlwifi: mvm: Ignore wifi mcc update in the driver while associated
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 13 Apr 2017 18:24:41 +0300
+Message-Id: <20170413152507.9648-1-luca@coelho.fi> (sfid-20170413_172530_497882_E0250AA2)
+Subject: [PATCH 00/26] iwlwifi: updates intended for v4.12 2017-04-13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Wifi mcc (mobile country code) update is forbidden while associated.
-Currently, FW prevents these updates and the driver is unaware to
-this logic. From now on, the FW sends every wifi mcc update to the
-driver. The driver in his turn needs to decide whether to
-ignore it or not, depends on the association state.
+Hi,
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c   |  9 ++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 29 ++++++++++++++++++++++++++
- 3 files changed, 37 insertions(+), 2 deletions(-)
+This is the second patch set intended for v4.12.  These are the changes:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index ab87c0203b6f..1bb4249fc6f4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1827,6 +1827,7 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 				     u32 size);
- void iwl_mvm_reorder_timer_expired(unsigned long data);
- struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm);
-+bool iwl_mvm_is_vif_assoc(struct iwl_mvm *mvm);
- 
- void iwl_mvm_inactivity_check(struct iwl_mvm *mvm);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index eade099b6dbf..283c41df622c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -34,7 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -817,6 +817,11 @@ void iwl_mvm_rx_chub_update_mcc(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (iwl_mvm_is_vif_assoc(mvm) && notif->source_id == MCC_SOURCE_WIFI) {
-+		IWL_DEBUG_LAR(mvm, "Ignore mcc update while associated\n");
-+		return;
-+	}
-+
- 	if (WARN_ON_ONCE(!iwl_mvm_is_lar_supported(mvm)))
- 		return;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 987edc98a203..175e927493d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1063,6 +1063,35 @@ struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm)
- 	return bss_iter_data.vif;
- }
- 
-+struct iwl_sta_iter_data {
-+	bool assoc;
-+};
-+
-+static void iwl_mvm_sta_iface_iterator(void *_data, u8 *mac,
-+				       struct ieee80211_vif *vif)
-+{
-+	struct iwl_sta_iter_data *data = _data;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (vif->bss_conf.assoc)
-+		data->assoc = true;
-+}
-+
-+bool iwl_mvm_is_vif_assoc(struct iwl_mvm *mvm)
-+{
-+	struct iwl_sta_iter_data data = {
-+		.assoc = false,
-+	};
-+
-+	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
-+						   IEEE80211_IFACE_ITER_NORMAL,
-+						   iwl_mvm_sta_iface_iterator,
-+						   &data);
-+	return data.assoc;
-+}
-+
- unsigned int iwl_mvm_get_wd_timeout(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif,
- 				    bool tdls, bool cmd_q)
+ * A large amount of work on the A000 device series;
+ * A couple of cleanup patches;
+ * Dynamic SAR support;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: tell the firmware about the U-APSD parameters
+
+Goodstein, Mordechay (1):
+  iwlwifi: mvm: move new API code to the end
+
+Haim Dreyfuss (1):
+  iwlwifi: mvm: refactor SAR init to prepare for dynamic SAR
+
+Luca Coelho (3):
+  iwlwifi: mvm: spin off SAR profile selection function
+  iwlwifi: mvm: add support for EWRD (Dynamic SAR) ACPI table
+  iwlwifi: mvm: remove unnecessary debugging from UMAC scan
+
+Sara Sharon (20):
+  iwlwifi: mvm: read new secure boot registers
+  iwlwifi: mvm: add queues after adding station
+  iwlwifi: cleanup unused function
+  iwlwifi: mvm: prepare for station count change
+  iwlwifi: mvm: use same scan API for all a000 devices
+  iwlwifi: mvm: disable multi-queue for a000 devices
+  iwlwifi: mvm: support new TX API
+  iwlwifi: pcie: introduce a000 TX queues management
+  iwlwifi: mvm: support a000 SCD queue configuration
+  iwlwifi: mvm: support moving to mgmt tid
+  iwlwifi: pcie: copy TX functions to new transport
+  iwlwifi: pcie: cleanup old transport code from gen2
+  iwlwifi: pcie: support new TX command
+  iwlwifi: pcie: rewrite TFD creation
+  iwlwifi: pcie: support host commands in new transport
+  iwlwifi: pcie: support new write pointer width
+  iwlwifi: pcie: remove block and freeze operations from new transport
+  iwlwifi: pcie: prepare for dynamic queue allocation
+  iwlwifi: pcie: introduce new stop_device
+  iwlwifi: pcie: alloc queues dynamically
+
+ drivers/net/wireless/intel/iwlwifi/Makefile        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  10 -
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h      |   2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  71 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    |   4 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-scan.h   |  14 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    |  16 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  42 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 298 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  16 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  17 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  12 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  71 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |  85 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sf.c        |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 192 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tdls.c      |  22 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tof.c       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  84 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  45 +-
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  42 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   9 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   | 147 +++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  48 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 996 +++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 207 ++---
+ 34 files changed, 1996 insertions(+), 484 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+
 -- 
 2.11.0
