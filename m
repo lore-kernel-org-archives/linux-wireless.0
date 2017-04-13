@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52720 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753681AbdDRWRr (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34553 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755407AbdDMSH1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:17:47 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:10 +0300
-Message-Id: <20170418221729.28372-7-luca@coelho.fi> (sfid-20170419_001756_589137_C653AE05)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 06/25] iwlwifi: mvm: remove unneeded reg write in iwl_mvm_up()
+        Thu, 13 Apr 2017 14:07:27 -0400
+Received: by mail-oi0-f65.google.com with SMTP id t14so4185351oif.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:27 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 12/19] rtlwifi: btcoex: 21a 2ant: ignore wifi if it is at 5G band
+Date: Thu, 13 Apr 2017 13:07:03 -0500
+Message-Id: <20170413180710.19953-13-Larry.Finger@lwfinger.net> (sfid-20170413_200804_020226_01D148D6)
+In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Not only that this write is not needed (as FW does this
-itself), on newer HW this register is write protected
-so trying to write there will cause problems.
+When wifi is at 5G band, it does not intefere with 2.4G bt signal,
+hence we can just ignore it and transmit normally as nothing happened.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 3 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 4 ----
- 2 files changed, 7 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index e1aa1f7836fc..4bceaccee62f 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -294,9 +294,6 @@
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 4030b6429c1d..bb609f078a01 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -1364,6 +1364,7 @@ static void btc8821a2ant_coex_all_off(struct btc_coexist *btcoexist)
+ static void btc8821a2ant_coex_under_5g(struct btc_coexist *btcoexist)
+ {
+ 	btc8821a2ant_coex_all_off(btcoexist);
++	btc8821a2ant_ignore_wlan_act(btcoexist, NORMAL_EXEC, true);
+ }
  
- /*********************** END TX SCHEDULER *************************************/
- 
--/* tcp checksum offload */
--#define RX_EN_CSUM		(0x00a00d88)
--
- /* Oscillator clock */
- #define OSC_CLK				(0xa04068)
- #define OSC_CLK_FORCE_CONTROL		(0x8)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 2a4c952ef01a..bfccbadd1a6e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1475,10 +1475,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 			goto error;
- 	}
- 
--	if (iwl_mvm_is_csum_supported(mvm) &&
--	    mvm->cfg->features & NETIF_F_RXCSUM)
--		iwl_trans_write_prph(mvm->trans, RX_EN_CSUM, 0x3);
--
- 	/* allow FW/transport low power modes if not during restart */
- 	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_UCODE_DOWN);
+ static void btc8821a2ant_init_coex_dm(struct btc_coexist *btcoexist)
 -- 
-2.11.0
+2.12.0
