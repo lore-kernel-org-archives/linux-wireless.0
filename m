@@ -1,137 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932928AbdDEL6X (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34374 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754811AbdDMSHR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 07:58:23 -0400
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 02/11] wil6210: restore power save state after internal FW reset
-Date: Wed,  5 Apr 2017 14:58:05 +0300
-Message-Id: <1491393494-11816-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_142543_493392_B63F1C1E)
-In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 13 Apr 2017 14:07:17 -0400
+Received: by mail-oi0-f66.google.com with SMTP id t14so4184254oif.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:16 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/19] rtlwifi: btcoex: 21a 2ant: limit rx aggregation size to avoid bt interrupt
+Date: Thu, 13 Apr 2017 13:06:52 -0500
+Message-Id: <20170413180710.19953-2-Larry.Finger@lwfinger.net> (sfid-20170413_200800_148591_7BAA60F9)
+In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-The power save profile is set to default state in case of FW reset,
-regardless of the state before the reset took place.
-Fix this by saving the current power save profile and restore it
-in case of FW reset.
+Larger packets have higher opportunity to be interrupt by bt signal.
+In order to shorten the transmission time, control the packet
+aggregation size.
 
-Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 12 +-----------
- drivers/net/wireless/ath/wil6210/main.c     | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  4 ++++
- 3 files changed, 29 insertions(+), 11 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 28 ++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 1981ec2..474ab80 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1563,12 +1563,6 @@ static int wil_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 	enum wmi_ps_profile_type ps_profile;
--	int rc;
--
--	if (!test_bit(WMI_FW_CAPABILITY_PS_CONFIG, wil->fw_capabilities)) {
--		wil_err(wil, "set_power_mgmt not supported\n");
--		return -EOPNOTSUPP;
--	}
- 
- 	wil_dbg_misc(wil, "enabled=%d, timeout=%d\n",
- 		     enabled, timeout);
-@@ -1578,11 +1572,7 @@ static int wil_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- 	else
- 		ps_profile = WMI_PS_PROFILE_TYPE_PS_DISABLED;
- 
--	rc  = wmi_ps_dev_profile_cfg(wil, ps_profile);
--	if (rc)
--		wil_err(wil, "wmi_ps_dev_profile_cfg failed (%d)\n", rc);
--
--	return rc;
-+	return wil_ps_update(wil, ps_profile);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index f36dab9291b1..3e671d409e61 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -244,6 +244,27 @@ static u8 btc8821a2ant_wifi_rssi_state(struct btc_coexist *btcoexist,
+ 	return wifi_rssi_state;
  }
  
- static const struct cfg80211_ops wil_cfg80211_ops = {
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7e72096..9aa81ce 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -576,6 +576,9 @@ int wil_priv_init(struct wil6210_priv *wil)
- 
- 	if (rx_ring_overflow_thrsh == WIL6210_RX_HIGH_TRSH_INIT)
- 		rx_ring_overflow_thrsh = WIL6210_RX_HIGH_TRSH_DEFAULT;
-+
-+	wil->ps_profile =  WMI_PS_PROFILE_TYPE_DEFAULT;
-+
- 	return 0;
- 
- out_wmi_wq:
-@@ -903,6 +906,24 @@ void wil_abort_scan(struct wil6210_priv *wil, bool sync)
- 	}
- }
- 
-+int wil_ps_update(struct wil6210_priv *wil, enum wmi_ps_profile_type ps_profile)
++static
++void btc8821a2ant_limited_rx(struct btc_coexist *btcoexist, bool force_exec,
++			     bool rej_ap_agg_pkt, bool bt_ctrl_agg_buf_size,
++			     u8 agg_buf_size)
 +{
-+	int rc;
++	bool reject_rx_agg = rej_ap_agg_pkt;
++	bool bt_ctrl_rx_agg_size = bt_ctrl_agg_buf_size;
++	u8 rx_agg_size = agg_buf_size;
 +
-+	if (!test_bit(WMI_FW_CAPABILITY_PS_CONFIG, wil->fw_capabilities)) {
-+		wil_err(wil, "set_power_mgmt not supported\n");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	rc  = wmi_ps_dev_profile_cfg(wil, ps_profile);
-+	if (rc)
-+		wil_err(wil, "wmi_ps_dev_profile_cfg failed (%d)\n", rc);
-+	else
-+		wil->ps_profile = ps_profile;
-+
-+	return rc;
++	/* Rx Aggregation related setting */
++	btcoexist->btc_set(btcoexist, BTC_SET_BL_TO_REJ_AP_AGG_PKT,
++			   &reject_rx_agg);
++	/* decide BT control aggregation buf size or not */
++	btcoexist->btc_set(btcoexist, BTC_SET_BL_BT_CTRL_AGG_SIZE,
++			   &bt_ctrl_rx_agg_size);
++	/* aggregation buf size, works when BT control Rx aggregation size */
++	btcoexist->btc_set(btcoexist, BTC_SET_U1_AGG_BUF_SIZE, &rx_agg_size);
++	/* real update aggregation setting */
++	btcoexist->btc_set(btcoexist, BTC_SET_ACT_AGGREGATE_CTRL, NULL);
 +}
 +
- /*
-  * We reset all the structures, and we reset the UMAC.
-  * After calling this routine, you're expected to reload
-@@ -1033,6 +1054,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 			return rc;
- 		}
+ static void btc8821a2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -1141,6 +1162,8 @@ static bool btc8821a2ant_is_common_action(struct btc_coexist *btcoexist)
+ 		low_pwr_disable = true;
+ 		btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
+ 				   &low_pwr_disable);
++		btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false,
++					0x8);
  
-+		if (wil->ps_profile != WMI_PS_PROFILE_TYPE_DEFAULT)
-+			wil_ps_update(wil, wil->ps_profile);
-+
- 		wil_collect_fw_info(wil);
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], Wifi IPS + BT LPS!!\n");
+@@ -1447,6 +1470,7 @@ static void btc8821a2ant_action_sco(struct btc_coexist *btcoexist)
+ 						       15, 0);
+ 	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
  
- 		if (wil->platform_ops.notify) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index fee1891..9cedc2d 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -691,6 +691,8 @@ struct wil6210_priv {
- 	/* High Access Latency Policy voting */
- 	struct wil_halp halp;
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 4);
  
-+	enum wmi_ps_profile_type ps_profile;
-+
- #ifdef CONFIG_PM
- #ifdef CONFIG_PM_SLEEP
- 	struct notifier_block pm_notify;
-@@ -812,6 +814,8 @@ void wil_memcpy_toio_halp_vote(struct wil6210_priv *wil,
- void wil_if_remove(struct wil6210_priv *wil);
- int wil_priv_init(struct wil6210_priv *wil);
- void wil_priv_deinit(struct wil6210_priv *wil);
-+int wil_ps_update(struct wil6210_priv *wil,
-+		  enum wmi_ps_profile_type ps_profile);
- int wil_reset(struct wil6210_priv *wil, bool no_fw);
- void wil_fw_error_recovery(struct wil6210_priv *wil);
- void wil_set_recovery_state(struct wil6210_priv *wil, int state);
+ 	if (BTC_RSSI_HIGH(bt_rssi_state))
+@@ -1526,6 +1550,7 @@ static void btc8821a2ant_action_hid(struct btc_coexist *btcoexist)
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+ 	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
+ 
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	if (BTC_RSSI_HIGH(bt_rssi_state))
+@@ -1816,6 +1841,7 @@ static void btc8821a2ant_action_pan_hs(struct btc_coexist *btcoexist)
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+ 	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
+ 
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+@@ -1959,6 +1985,7 @@ static void btc8821a2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+ 	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
+ 
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	if (BTC_RSSI_HIGH(bt_rssi_state))
+@@ -2038,6 +2065,7 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+ 	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
+ 
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	if (BTC_RSSI_HIGH(bt_rssi_state))
 -- 
-1.9.1
+2.12.0
