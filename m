@@ -1,134 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51870 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753008AbdDNJFI (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:58825 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755557AbdDMCoa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 05:05:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        "Goodstein, Mordechay" <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 14 Apr 2017 12:02:01 +0300
-Message-Id: <20170414090210.31397-18-luca@coelho.fi> (sfid-20170414_110514_700354_1E0CA32A)
-In-Reply-To: <20170414090210.31397-1-luca@coelho.fi>
-References: <20170414090210.31397-1-luca@coelho.fi>
-Subject: [PATCH v2 17/26] iwlwifi: mvm: move new API code to the end
+        Wed, 12 Apr 2017 22:44:30 -0400
+Date: Thu, 13 Apr 2017 08:14:23 +0530
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <arend.vanspriel@broadcom.com>, <linux-wireless@vger.kernel.org>,
+        <devel@driverdev.osuosl.org>, <ganesh.krishna@microchip.com>
+Subject: Re: [PATCH v3] staging: wilc1000: New cfg packet format in
+ handle_set_wfi_drv_handler
+Message-ID: <20170413081423.333c25fa@aditya-ubuntu> (sfid-20170413_044434_508170_C8A390B8)
+In-Reply-To: <20170411173546.GA29399@kroah.com>
+References: <1491928903-2866-1-git-send-email-aditya.shankar@microchip.com>
+        <20170411173546.GA29399@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Goodstein, Mordechay" <mordechay.goodstein@intel.com>
+On Tue, 11 Apr 2017 19:35:46 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-By moving all the code that depends on the new API
-we avoid unnecessary indentation in the code.
+> On Tue, Apr 11, 2017 at 10:11:43PM +0530, Aditya Shankar wrote:
+> > Change the config packet format used in handle_set_wfi_drv_handler()
+> > to align the host driver with the new format used in the wilc firmware.  
+> 
+> So does this break devices with "old" firmware?
+> 
+> Where is the "new" firmware?  What is enforcing the usage only of new
+> firmware?
+> 
+> thanks,
+> 
+> greg k-h
 
-Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Yes, this new change would break devices with firmware older than ver 14.2(released on our vendor tree in March 2016). The older firmware in the linux-firmware repository is close to 2 years old and not being used with the staging driver even before this change  was submitted. Developers picked up the firmware mostly from one of our vendor trees on github.
+
+To resolve this confusion about firmware location, I submitted a patch to linux-firmware to make the latest firmware available through this channel. Below are the details. The driver currently does not enforce usage of new firmware but would fail to properly configure the older firmware.
+
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 69 +++++++++++++++--------------
- 1 file changed, 36 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 861d54641d1e..655bd1384158 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016 Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -649,6 +649,9 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
- 		.mvm = mvm,
- 	};
- 	int expected_size;
-+	int i;
-+	u8 *energy;
-+	__le32 *bytes, *air_time;
- 
- 	if (iwl_mvm_is_cdb_supported(mvm))
- 		expected_size = sizeof(*stats);
-@@ -674,38 +677,6 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
- 		le64_to_cpu(stats->general.common.on_time_scan);
- 
- 	data.general = &stats->general;
--	if (iwl_mvm_has_new_rx_api(mvm)) {
--		int i;
--		u8 *energy;
--		__le32 *bytes, *air_time;
--
--		if (!iwl_mvm_is_cdb_supported(mvm)) {
--			struct iwl_notif_statistics_v11 *v11 =
--				(void *)&pkt->data;
--
--			energy = (void *)&v11->load_stats.avg_energy;
--			bytes = (void *)&v11->load_stats.byte_count;
--			air_time = (void *)&v11->load_stats.air_time;
--		} else {
--			energy = (void *)&stats->load_stats.avg_energy;
--			bytes = (void *)&stats->load_stats.byte_count;
--			air_time = (void *)&stats->load_stats.air_time;
--		}
--
--		rcu_read_lock();
--		for (i = 0; i < ARRAY_SIZE(mvm->fw_id_to_mac_id); i++) {
--			struct iwl_mvm_sta *sta;
--
--			if (!energy[i])
--				continue;
--
--			sta = iwl_mvm_sta_from_staid_rcu(mvm, i);
--			if (!sta)
--				continue;
--			sta->avg_energy = energy[i];
--		}
--		rcu_read_unlock();
--	}
- 
- 	iwl_mvm_rx_stats_check_trigger(mvm, pkt);
- 
-@@ -713,7 +684,39 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
- 					    IEEE80211_IFACE_ITER_NORMAL,
- 					    iwl_mvm_stat_iterator,
- 					    &data);
-+
-+	if (!iwl_mvm_has_new_rx_api(mvm))
-+		return;
-+
-+	if (!iwl_mvm_is_cdb_supported(mvm)) {
-+		struct iwl_notif_statistics_v11 *v11 =
-+			(void *)&pkt->data;
-+
-+		energy = (void *)&v11->load_stats.avg_energy;
-+		bytes = (void *)&v11->load_stats.byte_count;
-+		air_time = (void *)&v11->load_stats.air_time;
-+	} else {
-+		energy = (void *)&stats->load_stats.avg_energy;
-+		bytes = (void *)&stats->load_stats.byte_count;
-+		air_time = (void *)&stats->load_stats.air_time;
-+	}
-+
-+	rcu_read_lock();
-+	for (i = 0; i < ARRAY_SIZE(mvm->fw_id_to_mac_id); i++) {
-+		struct iwl_mvm_sta *sta;
-+
-+		if (!energy[i])
-+			continue;
-+
-+		sta = iwl_mvm_sta_from_staid_rcu(mvm, i);
-+		if (!sta)
-+			continue;
-+		sta->avg_energy = energy[i];
-+	}
-+	rcu_read_unlock();
-+
- 	return;
-+
-  invalid:
- 	IWL_ERR(mvm, "received invalid statistics size (%d)!\n",
- 		iwl_rx_packet_payload_len(pkt));
--- 
-2.11.0
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>, "Aditya Shankar" <aditya.shankar@microchip.com>
+Subject: [PATCH] linux-firmware: wilc1000: Update firmware for wilc1000
+Date: Wed, 5 Apr 2017 13:57:19 +0530
+
+
+This commit updates the wilc1000 firmware
+to the latest version and replaces the three older
+firmware binaries as we no longer need seperate binaries
+for all the wlan modes.
+
+---
+
+Thanks,
+Aditya
