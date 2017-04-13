@@ -1,108 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36630 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755282AbdDMSHT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47682 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753903AbdDMOLo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:07:19 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so13575806oif.3
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:19 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
+        Thu, 13 Apr 2017 10:11:44 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/14] rtlwifi: btcoex: 21a 1ant: fw settings for softap mode
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170410162310.7515-2-Larry.Finger@lwfinger.net>
+References: <20170410162310.7515-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-wireless@vger.kernel.org,
         Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>
-Subject: [PATCH 04/19] rtlwifi: btcoex: 21a 2ant: update bt profiling information
-Date: Thu, 13 Apr 2017 13:06:55 -0500
-Message-Id: <20170413180710.19953-5-Larry.Finger@lwfinger.net> (sfid-20170413_200922_376161_753399D0)
-In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
-References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170413141139.0106D60D7F@smtp.codeaurora.org> (sfid-20170413_161158_944590_6374A70D)
+Date: Thu, 13 Apr 2017 14:11:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> 
+> For ap mode, adjust fw settings to operate properly.
+> 
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Pkshih <pkshih@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-This function updates the information of bt profiling to help us decide
-the network status and dispatch the resource properly.
+14 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 51 +++++++++++++++++++++-
- 1 file changed, 49 insertions(+), 2 deletions(-)
+1bdd83392f7f rtlwifi: btcoex: 21a 1ant: fw settings for softap mode
+19baccc4561f rtlwifi: btcoex: 21a 1ant: add function to check wifi status
+3121b4ddd181 rtlwifi: btcoex: 21a 1ant: coex table setting for new fw
+f0c40cf09dd1 rtlwifi: btcoex: 21a 1ant: mask profile bit for connect-ilde
+e605103c443e rtlwifi: btcoex: 21a 1ant: remove setting for 2 antennas
+4f78287e5ed9 rtlwifi: btcoex: 21a 1ant: set antenna control path for PTA
+06a75324d543 rtlwifi: btcoex: 21a 1ant: add multi port action for miracast and P2P
+edf8fa7b66f0 rtlwifi: btcoex: 21a 1ant: action when associating/authenticating
+bcdffd050c80 rtlwifi: btcoex: 21a 1ant: If wifi only, do not initiate coex mechanism
+19afb92222af rtlwifi: btcoex: 21a 1ant: move bt_disabled to global struct
+ee828085176e rtlwifi: btcoex: 21a 1ant: consider more cases when bt inquiry
+cb52b1185947 rtlwifi: btcoex: 21a 1ant: monitor bt profiling when scan
+da0fd9ccb432 rtlwifi: btcoex: 21a 1ant: do not switch antenna when wifi is under 5G channel
+4da5e7ea1352 rtlwifi: btcoex: 21a 1ant: avoid LPS/IPS mismatch for pnp notify
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index e23670a23e4d..a9ce79d7f4b4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -359,6 +359,54 @@ static void btc8821a2ant_query_bt_info(struct btc_coexist *btcoexist)
- 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
- }
- 
-+static void btc8821a2ant_update_bt_link_info(struct btc_coexist *btcoexist)
-+{
-+	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
-+	bool bt_hs_on = false;
-+
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
-+
-+	bt_link_info->bt_link_exist = coex_sta->bt_link_exist;
-+	bt_link_info->sco_exist = coex_sta->sco_exist;
-+	bt_link_info->a2dp_exist = coex_sta->a2dp_exist;
-+	bt_link_info->pan_exist = coex_sta->pan_exist;
-+	bt_link_info->hid_exist = coex_sta->hid_exist;
-+
-+	/* work around for HS mode. */
-+	if (bt_hs_on) {
-+		bt_link_info->pan_exist = true;
-+		bt_link_info->bt_link_exist = true;
-+	}
-+
-+	/* check if Sco only */
-+	if (bt_link_info->sco_exist && !bt_link_info->a2dp_exist &&
-+	    !bt_link_info->pan_exist && !bt_link_info->hid_exist)
-+		bt_link_info->sco_only = true;
-+	else
-+		bt_link_info->sco_only = false;
-+
-+	/* check if A2dp only */
-+	if (!bt_link_info->sco_exist && bt_link_info->a2dp_exist &&
-+	    !bt_link_info->pan_exist && !bt_link_info->hid_exist)
-+		bt_link_info->a2dp_only = true;
-+	else
-+		bt_link_info->a2dp_only = false;
-+
-+	/* check if Pan only */
-+	if (!bt_link_info->sco_exist && !bt_link_info->a2dp_exist &&
-+	    bt_link_info->pan_exist && !bt_link_info->hid_exist)
-+		bt_link_info->pan_only = true;
-+	else
-+		bt_link_info->pan_only = false;
-+
-+	/* check if Hid only */
-+	if (!bt_link_info->sco_exist && !bt_link_info->a2dp_exist &&
-+	    !bt_link_info->pan_exist && bt_link_info->hid_exist)
-+		bt_link_info->hid_only = true;
-+	else
-+		bt_link_info->hid_only = false;
-+}
-+
- static u8 btc8821a2ant_action_algorithm(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -2856,8 +2904,7 @@ void ex_btc8821a2ant_bt_info_notify(struct btc_coexist *btcoexist,
- 			coex_dm->bt_status = BT_8821A_2ANT_BT_STATUS_IDLE;
- 		}
- 
--		if (bt_hs_on)
--			coex_dm->bt_status = BT_8821A_2ANT_BT_STATUS_NON_IDLE;
-+		btc8821a2ant_update_bt_link_info(btcoexist);
- 	}
- 
- 	if (BT_8821A_2ANT_BT_STATUS_NON_IDLE == coex_dm->bt_status)
 -- 
-2.12.0
+https://patchwork.kernel.org/patch/9673247/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
