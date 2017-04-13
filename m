@@ -1,78 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51720 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55262 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751382AbdDMIci (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 04:32:38 -0400
+        id S1752864AbdDMNhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Apr 2017 09:37:38 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: ilan.peer@intel.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: use per-interface power level
-Date: Thu, 13 Apr 2017 10:32:34 +0200
-Message-Id: <20170413083234.1072-1-johannes@sipsolutions.net> (sfid-20170413_103242_551196_661A5FA6)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] mac80211: keep a separate list of monitor interfaces that are up
+Date: Thu, 13 Apr 2017 15:37:33 +0200
+Message-Id: <20170413133733.9761-1-johannes@sipsolutions.net> (sfid-20170413_153743_073382_FFA08D5D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When channel contexts are used, there's no global power level
-(the power_level is always 0). Use the per-interface TX power
-in mac80211_hwsim to have a proper setting for both cases.
-
-This fixes the bgscan_simple and bgscan_learn test cases when
-the number of channels advertised by hwsim is >1 by default.
+In addition to keeping monitor interfaces on the regular list of
+interfaces, keep those that are up and not in cooked mode on a
+separate list. This saves having to iterate all interfaces when
+delivering to monitor interfaces.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/iface.c       | 19 +++++++++++++++++--
+ net/mac80211/main.c        |  1 +
+ net/mac80211/rx.c          | 11 +----------
+ 4 files changed, 22 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4e58513d24e8..7ac45af44144 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -558,8 +558,6 @@ struct mac80211_hwsim_data {
- 	/* wmediumd portid responsible for netgroup of this radio */
- 	u32 wmediumd;
- 
--	int power_level;
--
- 	/* difference between this hw's clock and the real clock, in usecs */
- 	s64 tsf_offset;
- 	s64 bcn_delta;
-@@ -1207,7 +1205,9 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	if (info->control.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
- 		rx_status.flag |= RX_FLAG_SHORT_GI;
- 	/* TODO: simulate real signal strength (and optional packet loss) */
--	rx_status.signal = data->power_level - 50;
-+	rx_status.signal = -50;
-+	if (info->control.vif)
-+		rx_status.signal += info->control.vif->bss_conf.txpower;
- 
- 	if (data->ps != PS_DISABLED)
- 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-@@ -1633,7 +1633,6 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 	}
- 	mutex_unlock(&data->mutex);
- 
--	data->power_level = conf->power_level;
- 	if (!data->started || !data->beacon_int)
- 		tasklet_hrtimer_cancel(&data->beacon_timer);
- 	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
-@@ -2253,7 +2252,6 @@ static const char mac80211_hwsim_gstrings_stats[][ETH_GSTRING_LEN] = {
- 	"d_tx_failed",
- 	"d_ps_mode",
- 	"d_group",
--	"d_tx_power",
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0e718437d080..cf6d5abb65a3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -839,6 +839,8 @@ struct txq_info {
+ struct ieee80211_if_mntr {
+ 	u32 flags;
+ 	u8 mu_follow_addr[ETH_ALEN] __aligned(2);
++
++	struct list_head list;
  };
  
- #define MAC80211_HWSIM_SSTATS_LEN ARRAY_SIZE(mac80211_hwsim_gstrings_stats)
-@@ -2290,7 +2288,6 @@ static void mac80211_hwsim_get_et_stats(struct ieee80211_hw *hw,
- 	data[i++] = ar->tx_failed;
- 	data[i++] = ar->ps;
- 	data[i++] = ar->group;
--	data[i++] = ar->power_level;
+ /**
+@@ -1259,6 +1261,7 @@ struct ieee80211_local {
  
- 	WARN_ON(i != MAC80211_HWSIM_SSTATS_LEN);
- }
+ 	/* see iface.c */
+ 	struct list_head interfaces;
++	struct list_head mon_list; /* only that are IFF_UP && !cooked */
+ 	struct mutex iflist_mtx;
+ 
+ 	/*
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 5bb0c5012819..3bd5b81f5d81 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -676,7 +676,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 
+ 	set_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_WDS:
+ 		/* Create STA entry for the WDS peer */
+ 		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
+ 				     GFP_KERNEL);
+@@ -697,8 +698,17 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 
+ 		rate_control_rate_init(sta);
+ 		netif_carrier_on(dev);
+-	} else if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE) {
++		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
+ 		rcu_assign_pointer(local->p2p_sdata, sdata);
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
++			break;
++		list_add_tail_rcu(&sdata->u.mntr.list, &local->mon_list);
++		break;
++	default:
++		break;
+ 	}
+ 
+ 	/*
+@@ -817,6 +827,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	case NL80211_IFTYPE_AP:
+ 		cancel_work_sync(&sdata->u.ap.request_smps_work);
+ 		break;
++	case NL80211_IFTYPE_MONITOR:
++		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
++			break;
++		list_del_rcu(&sdata->u.mntr.list);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 56fb47953b72..ae408a96c407 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -603,6 +603,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 		ARRAY_SIZE(local->ext_capa);
+ 
+ 	INIT_LIST_HEAD(&local->interfaces);
++	INIT_LIST_HEAD(&local->mon_list);
+ 
+ 	__hw_addr_init(&local->mc_list);
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index e35c42ebb7a5..638dc63a51bf 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -593,16 +593,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	skb->pkt_type = PACKET_OTHERHOST;
+ 	skb->protocol = htons(ETH_P_802_2);
+ 
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
+-			continue;
+-
+-		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
+-			continue;
+-
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-
++	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
+ 		if (prev_dev) {
+ 			skb2 = skb_clone(skb, GFP_ATOMIC);
+ 			if (skb2) {
 -- 
 2.11.0
