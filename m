@@ -1,71 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:34498 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752900AbdDKOrv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51492 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755109AbdDMP2L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 10:47:51 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH] net: rfkill: gpio: Add OBDA8723 ACPI HID
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <d63b1718-910a-09e2-7a2a-f34c08c11ce6@lwfinger.net>
-Date: Tue, 11 Apr 2017 16:47:46 +0200
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        russianneuromancer@ya.ru,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Message-Id: <BC65C7D5-04AB-4882-8201-48FC1309A43F@holtmann.org> (sfid-20170411_164814_430929_536FD5A7)
-References: <20170408210520.2799-1-hdegoede@redhat.com>
- <D47F8D1B-8EE0-4754-A0F2-EC823A9BDA11@holtmann.org>
- <d1206383-7fad-55ca-0717-5e485b9bee92@redhat.com>
- <0939E68A-DBF5-40BF-B83B-73AF234EB60B@holtmann.org>
- <d63b1718-910a-09e2-7a2a-f34c08c11ce6@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+        Thu, 13 Apr 2017 11:28:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        "Goodstein, Mordechay" <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 13 Apr 2017 18:24:58 +0300
+Message-Id: <20170413152507.9648-18-luca@coelho.fi> (sfid-20170413_172856_866994_C436E973)
+In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
+References: <20170413152507.9648-1-luca@coelho.fi>
+Subject: [PATCH 17/26] iwlwifi: mvm: move new API code to the end
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+From: "Goodstein, Mordechay" <mordechay.goodstein@intel.com>
 
->>>>> The OBDA8723 ACPI HID is used on quite a few Bay Trail based tablets
->>>>> for bluetooth rfkill functionality.
->>>>> 
->>>>> Tested-by: russianneuromancer@ya.ru <russianneuromancer@ya.ru>
->>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>>>> ---
->>>>> net/rfkill/rfkill-gpio.c | 1 +
->>>>> 1 file changed, 1 insertion(+)
->>>>> 
->>>>> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
->>>>> index 76c01cb..50ca65e 100644
->>>>> --- a/net/rfkill/rfkill-gpio.c
->>>>> +++ b/net/rfkill/rfkill-gpio.c
->>>>> @@ -163,6 +163,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
->>>>> static const struct acpi_device_id rfkill_acpi_match[] = {
->>>>> 	{ "BCM4752", RFKILL_TYPE_GPS },
->>>>> 	{ "LNV4752", RFKILL_TYPE_GPS },
->>>>> +	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
->>>>> 	{ },
->>>>> };
->>>> 
->>>> NAK. We are integrating these with hci_bcm.c or hci_intel.c drivers.
->>> 
->>> This is for the bluetooth side of the rtl8723bs driver which recently
->>> (yesterday) got merged in into drivers/staging. Which still needs
->>> hciattach from userspace. I completely agree that eventually we should
->>> fix that. In the mean time it would be nice if we could carry this
->>> one line patch to give people using the staging driver working bluetooth.
->> 
->> why are Bluetooth drivers in staging? I objected to them before. The only reason to have them in staging would be people being to lazy to clean things up.
-> 
-> The Bluetooth driver is not in staging. It is only the wifi part; however, having a driver for that hardware in the kernel makes it easier for users to handle the BT part of the device. As Hans stated, the current BT driver runs in userspace. Until we actually produce hci_rtk, having this one line patch will be helpful.
+By moving all the code that depends on the new API
+we avoid unnecessary indentation in the code.
 
-I dislike RFKILL switches for Bluetooth device power control. It creates nasty userspace hacks. I have seen them and it is not a good idea. And I have seen the modified hciattach to make this devices work. That one itself is such a nasty hack. Frankly once you see struct sk_buff you should run away scared ;)
+Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 69 +++++++++++++++--------------
+ 1 file changed, 36 insertions(+), 33 deletions(-)
 
-Lets get hci_rtk.c upstream. Even if it has limited support at the beginning. Also we are moving towards serdev right now and these chips will benefit greatly here.
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 861d54641d1e..655bd1384158 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016 Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -649,6 +649,9 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 		.mvm = mvm,
+ 	};
+ 	int expected_size;
++	int i;
++	u8 *energy;
++	__le32 *bytes, *air_time;
+ 
+ 	if (iwl_mvm_is_cdb_supported(mvm))
+ 		expected_size = sizeof(*stats);
+@@ -674,38 +677,6 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 		le64_to_cpu(stats->general.common.on_time_scan);
+ 
+ 	data.general = &stats->general;
+-	if (iwl_mvm_has_new_rx_api(mvm)) {
+-		int i;
+-		u8 *energy;
+-		__le32 *bytes, *air_time;
+-
+-		if (!iwl_mvm_is_cdb_supported(mvm)) {
+-			struct iwl_notif_statistics_v11 *v11 =
+-				(void *)&pkt->data;
+-
+-			energy = (void *)&v11->load_stats.avg_energy;
+-			bytes = (void *)&v11->load_stats.byte_count;
+-			air_time = (void *)&v11->load_stats.air_time;
+-		} else {
+-			energy = (void *)&stats->load_stats.avg_energy;
+-			bytes = (void *)&stats->load_stats.byte_count;
+-			air_time = (void *)&stats->load_stats.air_time;
+-		}
+-
+-		rcu_read_lock();
+-		for (i = 0; i < ARRAY_SIZE(mvm->fw_id_to_mac_id); i++) {
+-			struct iwl_mvm_sta *sta;
+-
+-			if (!energy[i])
+-				continue;
+-
+-			sta = iwl_mvm_sta_from_staid_rcu(mvm, i);
+-			if (!sta)
+-				continue;
+-			sta->avg_energy = energy[i];
+-		}
+-		rcu_read_unlock();
+-	}
+ 
+ 	iwl_mvm_rx_stats_check_trigger(mvm, pkt);
+ 
+@@ -713,7 +684,39 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 					    IEEE80211_IFACE_ITER_NORMAL,
+ 					    iwl_mvm_stat_iterator,
+ 					    &data);
++
++	if (!iwl_mvm_has_new_rx_api(mvm))
++		return;
++
++	if (!iwl_mvm_is_cdb_supported(mvm)) {
++		struct iwl_notif_statistics_v11 *v11 =
++			(void *)&pkt->data;
++
++		energy = (void *)&v11->load_stats.avg_energy;
++		bytes = (void *)&v11->load_stats.byte_count;
++		air_time = (void *)&v11->load_stats.air_time;
++	} else {
++		energy = (void *)&stats->load_stats.avg_energy;
++		bytes = (void *)&stats->load_stats.byte_count;
++		air_time = (void *)&stats->load_stats.air_time;
++	}
++
++	rcu_read_lock();
++	for (i = 0; i < ARRAY_SIZE(mvm->fw_id_to_mac_id); i++) {
++		struct iwl_mvm_sta *sta;
++
++		if (!energy[i])
++			continue;
++
++		sta = iwl_mvm_sta_from_staid_rcu(mvm, i);
++		if (!sta)
++			continue;
++		sta->avg_energy = energy[i];
++	}
++	rcu_read_unlock();
++
+ 	return;
++
+  invalid:
+ 	IWL_ERR(mvm, "received invalid statistics size (%d)!\n",
+ 		iwl_rx_packet_payload_len(pkt));
+-- 
+2.11.0
