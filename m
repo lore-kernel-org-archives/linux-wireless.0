@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35684 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947917AbdDZEyY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37166 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753612AbdDMN7E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 00:54:24 -0400
-Received: by mail-pf0-f194.google.com with SMTP id a188so13975684pfa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Apr 2017 21:54:23 -0700 (PDT)
-Date: Tue, 25 Apr 2017 22:54:16 -0600
-From: Jason Litzinger <jlitzingerdev@gmail.com>
-To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        dan.carpenter@oracle.com
-Subject: Re: [PATCH RFC] staging: wilc1000: Refactor handling of HT caps
- fields
-Message-ID: <20170426045416.GA20613@arch-tinker.localdomain> (sfid-20170426_065428_611733_499C2961)
-References: <20170426044625.20529-1-jlitzingerdev@gmail.com>
+        Thu, 13 Apr 2017 09:59:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: Re: [PATCH v4 4/4] mwifiex: pcie: extract wifi part from combo firmware during function level reset
+References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
+        <1492066102-31251-4-git-send-email-huxinming820@gmail.com>
+Date: Thu, 13 Apr 2017 16:58:54 +0300
+In-Reply-To: <1492066102-31251-4-git-send-email-huxinming820@gmail.com>
+        (Xinming Hu's message of "Thu, 13 Apr 2017 06:48:22 +0000")
+Message-ID: <87wpaobe8x.fsf@purkki.adurom.net> (sfid-20170413_155912_788321_DCBEABE5)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170426044625.20529-1-jlitzingerdev@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +			strStaParams.ht_capa = *params->ht_capa;
-Doh, that's completely wrong.  I had a few iterations of this and sent
-the wrong version.  There's an embedded array in that struct (not an
-embedded struct as I though during one read through).
+Xinming Hu <huxinming820@gmail.com> writes:
 
-Will fix and re-send, sorry for the spam.
+> From: Xinming Hu <huxm@marvell.com>
+>
+> A seprate wifi-only firmware was download during pcie function level reset.
+> It is in fact the tail part of wifi/bt combo firmware. Per Brian's and
+> Dmitry's suggestion, this patch extract the wifi part from combo firmware.
+>
+> After that, we can discard the redudant image in linux-firmware repo.
 
--Jason
+If you mean with discarding removing the actual image from
+linux-firmware, then you cannot do that. The image is still needed so
+that linux-firmware works with older kernels.
+
+-- 
+Kalle Valo
