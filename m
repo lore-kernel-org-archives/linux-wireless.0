@@ -1,121 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:33505 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751263AbdCaWu2 (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59628 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751473AbdDMMHH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 18:50:28 -0400
-Received: by mail-pg0-f42.google.com with SMTP id x125so83293260pgb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 15:50:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
-References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com> <1490865547-10208-3-git-send-email-huxinming820@gmail.com>
-From: Dmitry Torokhov <dtor@google.com>
-Date: Fri, 31 Mar 2017 15:50:27 -0700
-Message-ID: <CAE_wzQ-6irwa5_HeQuRk3kOcLBrYR9N9XNFPg_xx7tmWcHdgGA@mail.gmail.com> (sfid-20170401_005031_853840_5698375E)
-Subject: Re: [PATCH 3/3] mwifiex: pcie: avoid hardcode wifi-only firmware name
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+        Thu, 13 Apr 2017 08:07:07 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 07/10] brcmfmac: move scheduled scan wiphy param setting to pno module
+Date: Thu, 13 Apr 2017 13:06:33 +0100
+Message-Id: <1492085196-4574-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170413_140713_554174_538F5E45)
+In-Reply-To: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 30, 2017 at 2:19 AM, Xinming Hu <huxinming820@gmail.com> wrote:
-> From: Xinming Hu <huxm@marvell.com>
->
-> Wifi-only firmware name should be chipset specific.
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 8 +++++++-
->  drivers/net/wireless/marvell/mwifiex/pcie.h | 6 ++++++
->  2 files changed, 13 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 59cb01a..282aa9a 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -351,6 +351,12 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
->         struct pcie_service_card *card = pci_get_drvdata(pdev);
->         struct mwifiex_adapter *adapter = card->adapter;
->
-> +       if (!card->pcie.flr_support) {
-> +               pr_err("%s: FLR disabled in current chipset\n", __func__);
-> +               return;
-> +       }
-> +
-> +       adapter = card->adapter;
->         if (!adapter) {
->                 dev_err(&pdev->dev, "%s: adapter structure is not valid\n",
->                         __func__);
-> @@ -3047,7 +3053,7 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
->          * during pcie FLR, so that bluetooth part of firmware which is
->          * already running doesn't get affected.
->          */
-> -       strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
-> +       strcpy(adapter->fw_name, card->pcie.wifi_fw_name);
->
->         /* tx_buf_size might be changed to 3584 by firmware during
->          * data transfer, we should reset it to default size.
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-> index 00e8ee5..d6c8526 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-> @@ -285,6 +285,8 @@ struct mwifiex_pcie_device {
->         struct memory_type_mapping *mem_type_mapping_tbl;
->         u8 num_mem_types;
->         bool can_ext_scan;
-> +       u8 flr_support;
+As pno module is providing scheduled scan functionality have it taking
+care of setting related wiphy parameters as well.
 
-This sounds like a boolean, but given that you can key off
-wifi_fw_name being NULL I am not sure it is needed.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 18 +++++-------------
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.h    |  2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 10 ++++++++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h |  8 ++++++++
+ 4 files changed, 25 insertions(+), 13 deletions(-)
 
-> +       char *wifi_fw_name;
-
-const char *.
-
-That said, I consider the whole wifi-only firmware business is quite
-fragile. Can we have unified firmware and have driver figure out what
-part shoudl be [re]loaded?
-
->  };
->
->  static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
-> @@ -293,6 +295,7 @@ struct mwifiex_pcie_device {
->         .tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
->         .can_dump_fw = false,
->         .can_ext_scan = true,
-> +       .flr_support = 0,
->  };
->
->  static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
-> @@ -303,6 +306,7 @@ struct mwifiex_pcie_device {
->         .mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
->         .num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
->         .can_ext_scan = true,
-> +       .flr_support = 0,
->  };
->
->  static const struct mwifiex_pcie_device mwifiex_pcie8997 = {
-> @@ -313,6 +317,8 @@ struct mwifiex_pcie_device {
->         .mem_type_mapping_tbl = mem_type_mapping_tbl_w8997,
->         .num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8997),
->         .can_ext_scan = true,
-> +       .flr_support = 1,
-> +       .wifi_fw_name = "mrvl/pcie8997_wlan_v4.bin",
->  };
->
->  struct mwifiex_evt_buf_desc {
-> --
-> 1.8.1.4
->
-
-Thanks.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 1ddad30..9244b0b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6353,16 +6353,6 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	return -ENOMEM;
+ }
+ 
+-static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
+-{
+-	/* scheduled scan settings */
+-	wiphy->max_sched_scan_reqs = 1;
+-	wiphy->max_sched_scan_ssids = BRCMF_PNO_MAX_PFN_COUNT;
+-	wiphy->max_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
+-	wiphy->max_sched_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
+-	wiphy->max_sched_scan_plan_interval = BRCMF_PNO_SCHED_SCAN_MAX_PERIOD;
+-}
+-
+ #ifdef CONFIG_PM
+ static const struct wiphy_wowlan_support brcmf_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
+@@ -6409,6 +6399,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	const struct ieee80211_iface_combination *combo;
+ 	struct ieee80211_supported_band *band;
+ 	u16 max_interfaces = 0;
++	bool gscan;
+ 	__le32 bandlist[3];
+ 	u32 n_bands;
+ 	int err, i;
+@@ -6457,9 +6448,10 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+ 	wiphy->mgmt_stypes = brcmf_txrx_stypes;
+ 	wiphy->max_remain_on_channel_duration = 5000;
+-	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO))
+-		brcmf_wiphy_pno_params(wiphy);
+-
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
++		gscan = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_GSCAN);
++		brcmf_pno_wiphy_params(wiphy, gscan);
++	}
+ 	/* vendor commands/events support */
+ 	wiphy->vendor_commands = brcmf_vendor_cmds;
+ 	wiphy->n_vendor_commands = BRCMF_VNDR_CMDS_LAST - 1;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 8f19d95..a1c2e0a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -24,6 +24,8 @@
+ #include "fwil_types.h"
+ #include "p2p.h"
+ 
++#define BRCMF_SCAN_IE_LEN_MAX		2048
++
+ #define WL_NUM_SCAN_MAX			10
+ #define WL_TLV_INFO_MAX			1024
+ #define WL_BSS_INFO_MAX			2048
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index 9a25e79..cc0e6a4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -241,3 +241,13 @@ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 	return ret;
+ }
+ 
++void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
++{
++	/* scheduled scan settings */
++	wiphy->max_sched_scan_reqs = gscan ? 2 : 1;
++	wiphy->max_sched_scan_ssids = BRCMF_PNO_MAX_PFN_COUNT;
++	wiphy->max_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
++	wiphy->max_sched_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
++	wiphy->max_sched_scan_plan_interval = BRCMF_PNO_SCHED_SCAN_MAX_PERIOD;
++}
++
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+index bae55b2..07ec51f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+@@ -37,4 +37,12 @@
+ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 			       struct cfg80211_sched_scan_request *req);
+ 
++/**
++ * brcmf_pno_wiphy_params - fill scheduled scan parameters in wiphy instance.
++ *
++ * @wiphy: wiphy instance to be used.
++ * @gscan: indicates whether the device has support for g-scan feature.
++ */
++void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan);
++
+ #endif /* _BRCMF_PNO_H */
 -- 
-Dmitry
+1.9.1
