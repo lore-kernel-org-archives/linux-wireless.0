@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0109.hostedemail.com ([216.40.44.109]:46729 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752223AbdDQR2r (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51308 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754623AbdDMPZe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 13:28:47 -0400
-Message-ID: <1492450106.8661.11.camel@perches.com> (sfid-20170417_192913_023003_4E1C3A92)
-Subject: Re: [PATCH 12/13] rtlwifi: btcoex: 21a 1ant: fix some coding style
- issues
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Date: Mon, 17 Apr 2017 10:28:26 -0700
-In-Reply-To: <869a1d9b-79dc-9d5a-c4f3-efb99c1b1ff7@lwfinger.net>
-References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
-         <20170417000700.29057-13-Larry.Finger@lwfinger.net>
-         <1492445382.8661.9.camel@perches.com>
-         <869a1d9b-79dc-9d5a-c4f3-efb99c1b1ff7@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Thu, 13 Apr 2017 11:25:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 13 Apr 2017 18:24:44 +0300
+Message-Id: <20170413152507.9648-4-luca@coelho.fi> (sfid-20170413_172548_698114_C35D5E18)
+In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
+References: <20170413152507.9648-1-luca@coelho.fi>
+Subject: [PATCH 03/26] iwlwifi: cleanup unused function
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-04-17 at 12:13 -0500, Larry Finger wrote:
-> On 04/17/2017 11:09 AM, Joe Perches wrote:
-> > On Sun, 2017-04-16 at 19:06 -0500, Larry Finger wrote:
-> > > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> > > 
-> > > Fix alignment for coding style consistency.
-> > 
-> > aside:
-> > 
-> > Are all the btcoexist variants for this code identical?
-> > 
-> > 8192e2ant.c 8723b1ant.c 8723b2ant.c 8821a1ant.c 8821a2ant.c
-> > 
-> > Maybe some of these functions should be centralized.
-> 
-> They are not identical, but some of the functions could certainly be centralized.
+From: Sara Sharon <sara.sharon@intel.com>
 
-I was writing specifically about functions not modules.
+iwl_has_secure_boot() isn't getting called anywhere. Clean it up.
 
-> The problem is that the btcoex software at Realtek is multi platform, and 
-> written by a group that has not been too eager to implement this kind of 
-> suggestion. If we were to force the issue, then the maintenance load on the 
-> separate Linux group at Realtek would be greatly increased. This current set of 
-> updates has already been delayed for at least two years while they found the 
-> resources to be able to adhere to the "small change" policy of Linux. For that 
-> reason alone, I would not be in favor of forcing the issue.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-No worries, it just looked pretty mindless to copy/paste
-relatively large blocks of code and then do trivial
-whitespace fixes to them individually and separately.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 717e089ff036..06034a71a190 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -90,16 +90,6 @@ enum iwl_device_family {
+ 	IWL_DEVICE_FAMILY_8000,
+ };
+ 
+-static inline bool iwl_has_secure_boot(u32 hw_rev,
+-				       enum iwl_device_family family)
+-{
+-	/* return 1 only for family 8000 B0 */
+-	if ((family == IWL_DEVICE_FAMILY_8000) && (hw_rev & 0xC))
+-		return true;
+-
+-	return false;
+-}
+-
+ /*
+  * LED mode
+  *    IWL_LED_DEFAULT:  use device default
+-- 
+2.11.0
