@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:35636 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751008AbdDCImS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 04:42:18 -0400
-Date: Mon, 3 Apr 2017 10:42:13 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johan Hovold <johan@kernel.org>,
-        Sujith Manoharan <Sujith.Manoharan@atheros.com>
-Subject: Re: [PATCH 1/2] wireless: ath9k_htc: fix NULL-deref at probe
-Message-ID: <20170403084213.GE25742@localhost> (sfid-20170403_104300_620229_F17C3A9C)
-References: <20170313124421.28587-1-johan@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170313124421.28587-1-johan@kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50376 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751193AbdDMGcm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Apr 2017 02:32:42 -0400
+Message-ID: <1492065153.28255.1.camel@sipsolutions.net> (sfid-20170413_083245_593688_29397ADF)
+Subject: Re: [PATCHv4 0/2] cfg80211: mac80211: BTCOEX feature support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh Chelvam Raja <c_traja@qti.qualcomm.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "tamizhchelvam@codeaurora.org" <tamizhchelvam@codeaurora.org>,
+        "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>
+Date: Thu, 13 Apr 2017 08:32:33 +0200
+In-Reply-To: <efe890d95d374af7b7a8839811afe0d8@aphydexm01f.ap.qualcomm.com>
+References: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
+         <50d867d1-740c-85b9-2bab-6ef49c4d87c1@broadcom.com>
+         <efe890d95d374af7b7a8839811afe0d8@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 01:44:20PM +0100, Johan Hovold wrote:
-> Make sure to check the number of endpoints to avoid dereferencing a
-> NULL-pointer or accessing memory beyond the endpoint array should a
-> malicious device lack the expected endpoints.
+On Wed, 2017-04-12 at 07:08 +0000, Tamizh Chelvam Raja wrote:
+> > 
+> > So you make a distinction between WMM ACs, but what about the
+> > different
+> > types/profiles of BT traffic?
+> > 
 > 
-> Fixes: 36bcce430657 ("ath9k_htc: Handle storage devices")
-> Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> Signed-off-by: Johan Hovold <johan@kernel.org>
+> [Tamizh] There will be BT high and BT low traffic. It will be decided
+> by BT module. Firmware internally checks BT low traffic with wlan
+> traffic. If we enable some of wlan frames as high priority, those
+> frames will have more priority than BT low traffic.
 
-Is this one still in your queue, Kalle?
+That ("firmware internally..." etc.) really sounds more like an
+argument *not* to apply this patch ...
 
-As I mentioned earlier, I should have added a
+Everyone has their favourite BT coex control. We could possibly
+implement this in our driver, but I'm not sure we'd *want* to, since
+it's so far from what we actually do today.
 
-Cc: stable <stable@vger.kernel.org>     # 2.6.39
+Do we really need more than toggling it on/off?
 
-but left it out as I mistakingly thought the net recommendations to do
-so applied also to wireless.
+Actually, I probably should've asked this much earlier - but what use
+cases do you see for this? What can a user, or userspace application
+like NM, really try to set here? It seems the use cases for this would
+be rather constrained?
 
-Thanks,
-Johan
+johannes
