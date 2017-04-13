@@ -1,504 +1,1200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51876 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753590AbdDNJFM (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34669 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755320AbdDMSHe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 05:05:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 14 Apr 2017 12:02:10 +0300
-Message-Id: <20170414090210.31397-27-luca@coelho.fi> (sfid-20170414_110519_902184_90616A0E)
-In-Reply-To: <20170414090210.31397-1-luca@coelho.fi>
-References: <20170414090210.31397-1-luca@coelho.fi>
-Subject: [PATCH v2 26/26] iwlwifi: pcie: alloc queues dynamically
+        Thu, 13 Apr 2017 14:07:34 -0400
+Received: by mail-oi0-f68.google.com with SMTP id t14so4186054oif.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:33 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 19/19] rtlwifi: btcoex: 21a 2ant: refine tdma duration adjust function
+Date: Thu, 13 Apr 2017 13:07:10 -0500
+Message-Id: <20170413180710.19953-20-Larry.Finger@lwfinger.net> (sfid-20170413_202544_008766_580D2CFE)
+In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Change queue allocation to be dynamic. On transport init only
-the command queue is being allocated. Other queues are allocated
-on demand.
-This is due to the huge amount of queues we will soon enable (512)
-and as a preparation for TX Virtual Queue Manager feature (TVQM),
-where firmware will assign the actual queue number on demand.
-This includes also allocation of the byte count table per queue
-and not as a contiguous chunk of memory.
+1. Add more cases to adjust the wifi duration and add a case with
+the max interval of 3 for some future uses.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+2. rename tdma_adj -> ps_tdma_du_adj to indicate that this member is
+for power saving tdma duration adjustment
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  13 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   5 +-
- .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   5 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 179 +++++++++++++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  68 ++------
- 6 files changed, 199 insertions(+), 73 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 968 +++++++++++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |   3 +-
+ 2 files changed, 893 insertions(+), 78 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index bb7b25976e90..405ae3799f5e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -241,6 +241,7 @@ struct iwl_pcie_first_tb_buf {
-  * @wd_timeout: queue watchdog timeout (jiffies) - per queue
-  * @frozen: tx stuck queue timer is frozen
-  * @frozen_expiry_remainder: remember how long until the timer fires
-+ * @bc_tbl: byte count table of the queue (relevant only for gen2 transport)
-  * @write_ptr: 1-st empty entry (index) host_w
-  * @read_ptr: last used entry (index) host_r
-  * @dma_addr:  physical addr for BD's
-@@ -280,6 +281,7 @@ struct iwl_txq {
- 	int block;
- 	unsigned long wd_timeout;
- 	struct sk_buff_head overflow_q;
-+	struct iwl_dma_ptr bc_tbl;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 3bdf691c9d08..0ef83727fdf4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -1716,9 +1716,9 @@ static bool btc8821a2ant_is_common_action(struct btc_coexist *btcoexist)
+ 	return common;
+ }
  
- 	int write_ptr;
- 	int read_ptr;
-@@ -769,6 +771,13 @@ void iwl_pcie_txq_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq);
- int iwl_queue_space(const struct iwl_txq *q);
- int iwl_pcie_apm_stop_master(struct iwl_trans *trans);
- void iwl_pcie_conf_msix_hw(struct iwl_trans_pcie *trans_pcie);
-+int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
-+		      int slots_num, u32 txq_id);
-+int iwl_pcie_txq_alloc(struct iwl_trans *trans,
-+		       struct iwl_txq *txq, int slots_num, u32 txq_id);
-+int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
-+			   struct iwl_dma_ptr *ptr, size_t size);
-+void iwl_pcie_free_dma_ptr(struct iwl_trans *trans, struct iwl_dma_ptr *ptr);
+-static void btc8821a2ant_tdma_dur_adj(struct btc_coexist *btcoexist,
+-				      bool sco_hid, bool tx_pause,
+-				      u8 max_interval)
++static void btc8821a2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
++					      bool sco_hid, bool tx_pause,
++					      u8 max_interval)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	static long up, dn, m, n, wait_count;
+@@ -1732,80 +1732,84 @@ static void btc8821a2ant_tdma_dur_adj(struct btc_coexist *btcoexist,
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], TdmaDurationAdjust()\n");
  
- /* transport gen 2 exported functions */
- int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
-@@ -786,5 +795,7 @@ int iwl_trans_pcie_gen2_send_hcmd(struct iwl_trans *trans,
- void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans,
- 				     bool low_power);
- void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power);
--
-+void iwl_pcie_gen2_txq_unmap(struct iwl_trans *trans, int txq_id);
-+void iwl_pcie_gen2_tx_free(struct iwl_trans *trans);
-+void iwl_pcie_gen2_tx_stop(struct iwl_trans *trans);
- #endif /* __iwl_trans_int_pcie_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 0338c5f41ce6..f98f2d2b8a1b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1419,8 +1419,11 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	iwl_trans_fw_error(trans);
- 	local_bh_enable();
+-	if (coex_dm->reset_tdma_adjust) {
+-		coex_dm->reset_tdma_adjust = false;
++	if (coex_dm->auto_tdma_adjust) {
++		coex_dm->auto_tdma_adjust = false;
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], first run TdmaDurationAdjust()!!\n");
+ 		if (sco_hid) {
+ 			if (tx_pause) {
+ 				if (max_interval == 1) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 13);
+-					coex_dm->tdma_adj_type = 13;
++							NORMAL_EXEC, true, 13);
++					coex_dm->ps_tdma_du_adj_type = 13;
+ 				} else if (max_interval == 2) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 14);
+-					coex_dm->tdma_adj_type = 14;
++							NORMAL_EXEC, true, 14);
++					coex_dm->ps_tdma_du_adj_type = 14;
++				} else if (max_interval == 3) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 15);
++					coex_dm->ps_tdma_du_adj_type = 15;
+ 				} else {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 15);
+-					coex_dm->tdma_adj_type = 15;
++							NORMAL_EXEC, true, 15);
++					coex_dm->ps_tdma_du_adj_type = 15;
+ 				}
+ 			} else {
+ 				if (max_interval == 1) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 9);
+-					coex_dm->tdma_adj_type = 9;
++							NORMAL_EXEC, true, 9);
++					coex_dm->ps_tdma_du_adj_type = 9;
+ 				} else if (max_interval == 2) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 10);
+-					coex_dm->tdma_adj_type = 10;
++							NORMAL_EXEC, true, 10);
++					coex_dm->ps_tdma_du_adj_type = 10;
++				} else if (max_interval == 3) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 11);
++					coex_dm->ps_tdma_du_adj_type = 11;
+ 				} else {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 11);
+-					coex_dm->tdma_adj_type = 11;
++							NORMAL_EXEC, true, 11);
++					coex_dm->ps_tdma_du_adj_type = 11;
+ 				}
+ 			}
+ 		} else {
+ 			if (tx_pause) {
+ 				if (max_interval == 1) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 5);
+-					coex_dm->tdma_adj_type = 5;
++							NORMAL_EXEC, true, 5);
++					coex_dm->ps_tdma_du_adj_type = 5;
+ 				} else if (max_interval == 2) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 6);
+-					coex_dm->tdma_adj_type = 6;
++							NORMAL_EXEC, true, 6);
++					coex_dm->ps_tdma_du_adj_type = 6;
++				} else if (max_interval == 3) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 7);
++					coex_dm->ps_tdma_du_adj_type = 7;
+ 				} else {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 7);
+-					coex_dm->tdma_adj_type = 7;
++							NORMAL_EXEC, true, 7);
++					coex_dm->ps_tdma_du_adj_type = 7;
+ 				}
+ 			} else {
+ 				if (max_interval == 1) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 1);
+-					coex_dm->tdma_adj_type = 1;
++							NORMAL_EXEC, true, 1);
++					coex_dm->ps_tdma_du_adj_type = 1;
+ 				} else if (max_interval == 2) {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 2);
+-					coex_dm->tdma_adj_type = 2;
++							NORMAL_EXEC, true, 2);
++					coex_dm->ps_tdma_du_adj_type = 2;
++				} else if (max_interval == 3) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 3);
++					coex_dm->ps_tdma_du_adj_type = 3;
+ 				} else {
+ 					btc8821a2ant_ps_tdma(btcoexist,
+-							     NORMAL_EXEC,
+-							     true, 3);
+-					coex_dm->tdma_adj_type = 3;
++							NORMAL_EXEC, true, 3);
++					coex_dm->ps_tdma_du_adj_type = 3;
+ 				}
+ 			}
+ 		}
+@@ -1902,18 +1906,716 @@ static void btc8821a2ant_tdma_dur_adj(struct btc_coexist *btcoexist,
  
--	for (i = 0; i < trans->cfg->base_params->num_of_queues; i++)
-+	for (i = 0; i < trans->cfg->base_params->num_of_queues; i++) {
-+		if (!trans_pcie->txq[i])
-+			continue;
- 		del_timer(&trans_pcie->txq[i]->stuck_timer);
-+	}
- 
- 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 	wake_up(&trans_pcie->wait_command_queue);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 4d5d35501fdc..ef8f563a48d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -177,7 +177,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- 	if (test_and_clear_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
- 		IWL_DEBUG_INFO(trans,
- 			       "DEVICE_ENABLED bit was set and is now cleared\n");
--		iwl_pcie_tx_stop(trans);
-+		iwl_pcie_gen2_tx_stop(trans);
- 		iwl_pcie_rx_stop(trans);
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], max Interval = %d\n", max_interval);
++
++		if (max_interval == 1) {
++			if (tx_pause) {
++				if (coex_dm->cur_ps_tdma == 71) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 5);
++					coex_dm->ps_tdma_du_adj_type = 5;
++				} else if (coex_dm->cur_ps_tdma == 1) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 5);
++					coex_dm->ps_tdma_du_adj_type = 5;
++				} else if (coex_dm->cur_ps_tdma == 2) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 6);
++					coex_dm->ps_tdma_du_adj_type = 6;
++				} else if (coex_dm->cur_ps_tdma == 3) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 7);
++					coex_dm->ps_tdma_du_adj_type = 7;
++				} else if (coex_dm->cur_ps_tdma == 4) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 8);
++					coex_dm->ps_tdma_du_adj_type = 8;
++				}
++				if (coex_dm->cur_ps_tdma == 9) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 13);
++					coex_dm->ps_tdma_du_adj_type = 13;
++				} else if (coex_dm->cur_ps_tdma == 10) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 14);
++					coex_dm->ps_tdma_du_adj_type = 14;
++				} else if (coex_dm->cur_ps_tdma == 11) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 15);
++					coex_dm->ps_tdma_du_adj_type = 15;
++				} else if (coex_dm->cur_ps_tdma == 12) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 16);
++					coex_dm->ps_tdma_du_adj_type = 16;
++				}
++
++				if (result == -1) {
++					if (coex_dm->cur_ps_tdma == 5) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 6);
++						coex_dm->ps_tdma_du_adj_type =
++							6;
++					} else if (coex_dm->cur_ps_tdma == 6) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 7) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 8);
++						coex_dm->ps_tdma_du_adj_type =
++							8;
++					} else if (coex_dm->cur_ps_tdma == 13) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 14);
++						coex_dm->ps_tdma_du_adj_type =
++							14;
++					} else if (coex_dm->cur_ps_tdma == 14) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 15) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 16);
++						coex_dm->ps_tdma_du_adj_type =
++							16;
++					}
++				} else if (result == 1) {
++					if (coex_dm->cur_ps_tdma == 8) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 7) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 6);
++						coex_dm->ps_tdma_du_adj_type =
++							6;
++					} else if (coex_dm->cur_ps_tdma == 6) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 5);
++						coex_dm->ps_tdma_du_adj_type =
++							5;
++					} else if (coex_dm->cur_ps_tdma == 16) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 15) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 14);
++						coex_dm->ps_tdma_du_adj_type =
++							14;
++					} else if (coex_dm->cur_ps_tdma == 14) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 13);
++						coex_dm->ps_tdma_du_adj_type =
++							13;
++					}
++				}
++			} else {
++				if (coex_dm->cur_ps_tdma == 5) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 71);
++					coex_dm->ps_tdma_du_adj_type = 71;
++				} else if (coex_dm->cur_ps_tdma == 6) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 2);
++					coex_dm->ps_tdma_du_adj_type = 2;
++				} else if (coex_dm->cur_ps_tdma == 7) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 3);
++					coex_dm->ps_tdma_du_adj_type = 3;
++				} else if (coex_dm->cur_ps_tdma == 8) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 4);
++					coex_dm->ps_tdma_du_adj_type = 4;
++				}
++				if (coex_dm->cur_ps_tdma == 13) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 9);
++					coex_dm->ps_tdma_du_adj_type = 9;
++				} else if (coex_dm->cur_ps_tdma == 14) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 10);
++					coex_dm->ps_tdma_du_adj_type = 10;
++				} else if (coex_dm->cur_ps_tdma == 15) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 11);
++					coex_dm->ps_tdma_du_adj_type = 11;
++				} else if (coex_dm->cur_ps_tdma == 16) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 12);
++					coex_dm->ps_tdma_du_adj_type = 12;
++				}
++
++				if (result == -1) {
++					if (coex_dm->cur_ps_tdma == 71) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 1);
++						coex_dm->ps_tdma_du_adj_type =
++							1;
++					} else if (coex_dm->cur_ps_tdma == 1) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 2);
++						coex_dm->ps_tdma_du_adj_type =
++							2;
++					} else if (coex_dm->cur_ps_tdma == 2) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 3) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 4);
++						coex_dm->ps_tdma_du_adj_type =
++							4;
++					} else if (coex_dm->cur_ps_tdma == 9) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 10);
++						coex_dm->ps_tdma_du_adj_type =
++							10;
++					} else if (coex_dm->cur_ps_tdma == 10) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 11) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 12);
++						coex_dm->ps_tdma_du_adj_type =
++							12;
++					}
++				} else if (result == 1) {
++					if (coex_dm->cur_ps_tdma == 4) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 3) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 2);
++						coex_dm->ps_tdma_du_adj_type =
++							2;
++					} else if (coex_dm->cur_ps_tdma == 2) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 1);
++						coex_dm->ps_tdma_du_adj_type =
++							1;
++					} else if (coex_dm->cur_ps_tdma == 1) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 71);
++						coex_dm->ps_tdma_du_adj_type =
++							71;
++					} else if (coex_dm->cur_ps_tdma == 12) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 11) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 10);
++						coex_dm->ps_tdma_du_adj_type =
++							10;
++					} else if (coex_dm->cur_ps_tdma == 10) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 9);
++						coex_dm->ps_tdma_du_adj_type =
++							9;
++					}
++				}
++			}
++		} else if (max_interval == 2) {
++			if (tx_pause) {
++				if (coex_dm->cur_ps_tdma == 1) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 6);
++					coex_dm->ps_tdma_du_adj_type = 6;
++				} else if (coex_dm->cur_ps_tdma == 2) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 6);
++					coex_dm->ps_tdma_du_adj_type = 6;
++				} else if (coex_dm->cur_ps_tdma == 3) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 7);
++					coex_dm->ps_tdma_du_adj_type = 7;
++				} else if (coex_dm->cur_ps_tdma == 4) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 8);
++					coex_dm->ps_tdma_du_adj_type = 8;
++				}
++				if (coex_dm->cur_ps_tdma == 9) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 14);
++					coex_dm->ps_tdma_du_adj_type = 14;
++				} else if (coex_dm->cur_ps_tdma == 10) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 14);
++					coex_dm->ps_tdma_du_adj_type = 14;
++				} else if (coex_dm->cur_ps_tdma == 11) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 15);
++					coex_dm->ps_tdma_du_adj_type = 15;
++				} else if (coex_dm->cur_ps_tdma == 12) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 16);
++					coex_dm->ps_tdma_du_adj_type = 16;
++				}
++				if (result == -1) {
++					if (coex_dm->cur_ps_tdma == 5) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 6);
++						coex_dm->ps_tdma_du_adj_type =
++							6;
++					} else if (coex_dm->cur_ps_tdma == 6) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 7) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 8);
++						coex_dm->ps_tdma_du_adj_type =
++							8;
++					} else if (coex_dm->cur_ps_tdma == 13) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 14);
++						coex_dm->ps_tdma_du_adj_type =
++							14;
++					} else if (coex_dm->cur_ps_tdma == 14) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 15) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 16);
++						coex_dm->ps_tdma_du_adj_type =
++							16;
++					}
++				} else if (result == 1) {
++					if (coex_dm->cur_ps_tdma == 8) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 7) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 6);
++						coex_dm->ps_tdma_du_adj_type =
++							6;
++					} else if (coex_dm->cur_ps_tdma == 6) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 6);
++						coex_dm->ps_tdma_du_adj_type =
++							6;
++					} else if (coex_dm->cur_ps_tdma == 16) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 15) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 14);
++						coex_dm->ps_tdma_du_adj_type =
++							14;
++					} else if (coex_dm->cur_ps_tdma == 14) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 14);
++						coex_dm->ps_tdma_du_adj_type =
++							14;
++					}
++				}
++			} else {
++				if (coex_dm->cur_ps_tdma == 5) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 2);
++					coex_dm->ps_tdma_du_adj_type = 2;
++				} else if (coex_dm->cur_ps_tdma == 6) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 2);
++					coex_dm->ps_tdma_du_adj_type = 2;
++				} else if (coex_dm->cur_ps_tdma == 7) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 3);
++					coex_dm->ps_tdma_du_adj_type = 3;
++				} else if (coex_dm->cur_ps_tdma == 8) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 4);
++					coex_dm->ps_tdma_du_adj_type = 4;
++				}
++				if (coex_dm->cur_ps_tdma == 13) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 10);
++					coex_dm->ps_tdma_du_adj_type = 10;
++				} else if (coex_dm->cur_ps_tdma == 14) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 10);
++					coex_dm->ps_tdma_du_adj_type = 10;
++				} else if (coex_dm->cur_ps_tdma == 15) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 11);
++					coex_dm->ps_tdma_du_adj_type = 11;
++				} else if (coex_dm->cur_ps_tdma == 16) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 12);
++					coex_dm->ps_tdma_du_adj_type = 12;
++				}
++				if (result == -1) {
++					if (coex_dm->cur_ps_tdma == 1) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 2);
++						coex_dm->ps_tdma_du_adj_type =
++							2;
++					} else if (coex_dm->cur_ps_tdma == 2) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 3) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 4);
++						coex_dm->ps_tdma_du_adj_type =
++							4;
++					} else if (coex_dm->cur_ps_tdma == 9) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 10);
++						coex_dm->ps_tdma_du_adj_type =
++							10;
++					} else if (coex_dm->cur_ps_tdma == 10) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 11) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 12);
++						coex_dm->ps_tdma_du_adj_type =
++							12;
++					}
++				} else if (result == 1) {
++					if (coex_dm->cur_ps_tdma == 4) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 3) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 2);
++						coex_dm->ps_tdma_du_adj_type =
++							2;
++					} else if (coex_dm->cur_ps_tdma == 2) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 2);
++						coex_dm->ps_tdma_du_adj_type =
++							2;
++					} else if (coex_dm->cur_ps_tdma == 12) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 11) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 10);
++						coex_dm->ps_tdma_du_adj_type =
++							10;
++					} else if (coex_dm->cur_ps_tdma == 10) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 10);
++						coex_dm->ps_tdma_du_adj_type =
++							10;
++					}
++				}
++			}
++		} else if (max_interval == 3) {
++			if (tx_pause) {
++				if (coex_dm->cur_ps_tdma == 1) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 7);
++					coex_dm->ps_tdma_du_adj_type = 7;
++				} else if (coex_dm->cur_ps_tdma == 2) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 7);
++					coex_dm->ps_tdma_du_adj_type = 7;
++				} else if (coex_dm->cur_ps_tdma == 3) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 7);
++					coex_dm->ps_tdma_du_adj_type = 7;
++				} else if (coex_dm->cur_ps_tdma == 4) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 8);
++					coex_dm->ps_tdma_du_adj_type = 8;
++				}
++				if (coex_dm->cur_ps_tdma == 9) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 15);
++					coex_dm->ps_tdma_du_adj_type = 15;
++				} else if (coex_dm->cur_ps_tdma == 10) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 15);
++					coex_dm->ps_tdma_du_adj_type = 15;
++				} else if (coex_dm->cur_ps_tdma == 11) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 15);
++					coex_dm->ps_tdma_du_adj_type = 15;
++				} else if (coex_dm->cur_ps_tdma == 12) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 16);
++					coex_dm->ps_tdma_du_adj_type = 16;
++				}
++				if (result == -1) {
++					if (coex_dm->cur_ps_tdma == 5) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 6) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 7) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 8);
++						coex_dm->ps_tdma_du_adj_type =
++							8;
++					} else if (coex_dm->cur_ps_tdma == 13) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 14) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 15) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 16);
++						coex_dm->ps_tdma_du_adj_type =
++							16;
++					}
++				} else if (result == 1) {
++					if (coex_dm->cur_ps_tdma == 8) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 7) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 6) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 7);
++						coex_dm->ps_tdma_du_adj_type =
++							7;
++					} else if (coex_dm->cur_ps_tdma == 16) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 15) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					} else if (coex_dm->cur_ps_tdma == 14) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 15);
++						coex_dm->ps_tdma_du_adj_type =
++							15;
++					}
++				}
++			} else {
++				if (coex_dm->cur_ps_tdma == 5) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 3);
++					coex_dm->ps_tdma_du_adj_type = 3;
++				} else if (coex_dm->cur_ps_tdma == 6) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 3);
++					coex_dm->ps_tdma_du_adj_type = 3;
++				} else if (coex_dm->cur_ps_tdma == 7) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 3);
++					coex_dm->ps_tdma_du_adj_type = 3;
++				} else if (coex_dm->cur_ps_tdma == 8) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 4);
++					coex_dm->ps_tdma_du_adj_type = 4;
++				}
++				if (coex_dm->cur_ps_tdma == 13) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 11);
++					coex_dm->ps_tdma_du_adj_type = 11;
++				} else if (coex_dm->cur_ps_tdma == 14) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 11);
++					coex_dm->ps_tdma_du_adj_type = 11;
++				} else if (coex_dm->cur_ps_tdma == 15) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 11);
++					coex_dm->ps_tdma_du_adj_type = 11;
++				} else if (coex_dm->cur_ps_tdma == 16) {
++					btc8821a2ant_ps_tdma(btcoexist,
++							NORMAL_EXEC, true, 12);
++					coex_dm->ps_tdma_du_adj_type = 12;
++				}
++				if (result == -1) {
++					if (coex_dm->cur_ps_tdma == 1) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 2) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 3) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 4);
++						coex_dm->ps_tdma_du_adj_type =
++							4;
++					} else if (coex_dm->cur_ps_tdma == 9) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 10) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 11) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 12);
++						coex_dm->ps_tdma_du_adj_type =
++							12;
++					}
++				} else if (result == 1) {
++					if (coex_dm->cur_ps_tdma == 4) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 3) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 2) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 3);
++						coex_dm->ps_tdma_du_adj_type =
++							3;
++					} else if (coex_dm->cur_ps_tdma == 12) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 11) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					} else if (coex_dm->cur_ps_tdma == 10) {
++						btc8821a2ant_ps_tdma(
++							btcoexist, NORMAL_EXEC,
++							true, 11);
++						coex_dm->ps_tdma_du_adj_type =
++							11;
++					}
++				}
++			}
++		}
  	}
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 6a565d35f071..ed1034e58cb4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1813,7 +1813,10 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	/* if current PsTdma not match with the recorded one
+ 	 * (when scan, dhcp...), then we have to adjust it back to
+ 	 * the previous recorded one.
+ 	 */
+-	if (coex_dm->cur_ps_tdma != coex_dm->tdma_adj_type) {
+-		bool	scan = false, link = false, roam = false;
++	if (coex_dm->cur_ps_tdma != coex_dm->ps_tdma_du_adj_type) {
++		bool scan = false, link = false, roam = false;
  
- 	iwl_pcie_synchronize_irqs(trans);
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], PsTdma type dismatch!!!, cur_ps_tdma = %d, recordPsTdma = %d\n",
+-			 coex_dm->cur_ps_tdma, coex_dm->tdma_adj_type);
++			 coex_dm->cur_ps_tdma, coex_dm->ps_tdma_du_adj_type);
  
--	iwl_pcie_tx_free(trans);
-+	if (trans->cfg->gen2)
-+		iwl_pcie_gen2_tx_free(trans);
-+	else
-+		iwl_pcie_tx_free(trans);
- 	iwl_pcie_rx_free(trans);
+ 		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
+ 		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_LINK, &link);
+@@ -1921,14 +2623,12 @@ static void btc8821a2ant_tdma_dur_adj(struct btc_coexist *btcoexist,
  
- 	if (trans_pcie->msix_enabled) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index b938a6a3b169..446e837613a5 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -56,22 +56,42 @@
- #include "internal.h"
- #include "mvm/fw-api.h"
- 
-+ /*
-+ * iwl_pcie_gen2_tx_stop - Stop all Tx DMA channels
-+ */
-+void iwl_pcie_gen2_tx_stop(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	int txq_id;
-+
-+	/*
-+	 * This function can be called before the op_mode disabled the
-+	 * queues. This happens when we have an rfkill interrupt.
-+	 * Since we stop Tx altogether - mark the queues as stopped.
-+	 */
-+	memset(trans_pcie->queue_stopped, 0, sizeof(trans_pcie->queue_stopped));
-+	memset(trans_pcie->queue_used, 0, sizeof(trans_pcie->queue_used));
-+
-+	/* Unmap DMA from host system and free skb's */
-+	for (txq_id = 0; txq_id < ARRAY_SIZE(trans_pcie->txq); txq_id++) {
-+		if (!trans_pcie->txq[txq_id])
-+			continue;
-+		iwl_pcie_gen2_txq_unmap(trans, txq_id);
-+	}
-+}
-+
- /*
-  * iwl_pcie_txq_update_byte_tbl - Set up entry in Tx byte-count array
-  */
--static void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans *trans,
--					  struct iwl_txq *txq, u16 byte_cnt,
--					   int num_tbs)
-+static void iwl_pcie_gen2_update_byte_tbl(struct iwl_txq *txq, u16 byte_cnt,
-+					  int num_tbs)
- {
--	struct iwlagn_scd_bc_tbl *scd_bc_tbl;
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct iwlagn_scd_bc_tbl *scd_bc_tbl = txq->bc_tbl.addr;
- 	int write_ptr = txq->write_ptr;
- 	u8 filled_tfd_size, num_fetch_chunks;
- 	u16 len = byte_cnt;
- 	__le16 bc_ent;
- 
--	scd_bc_tbl = trans_pcie->scd_bc_tbls.addr;
--
- 	len = DIV_ROUND_UP(len, 4);
- 
- 	if (WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX))
-@@ -90,7 +110,7 @@ static void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans *trans,
- 	num_fetch_chunks = DIV_ROUND_UP(filled_tfd_size, 64) - 1;
- 
- 	bc_ent = cpu_to_le16(len | (num_fetch_chunks << 12));
--	scd_bc_tbl[txq->id].tfd_offset[write_ptr] = bc_ent;
-+	scd_bc_tbl->tfd_offset[write_ptr] = bc_ent;
- }
- 
- /*
-@@ -192,7 +212,7 @@ static int iwl_pcie_gen2_set_tb(struct iwl_trans *trans,
- 	struct iwl_tfh_tb *tb = &tfd->tbs[idx];
- 
- 	/* Each TFD can point to a maximum max_tbs Tx buffers */
--	if (tfd->num_tbs >= trans_pcie->max_tbs) {
-+	if (le16_to_cpu(tfd->num_tbs) >= trans_pcie->max_tbs) {
- 		IWL_ERR(trans, "Error can not send more than %d chunks\n",
- 			trans_pcie->max_tbs);
- 		return -EINVAL;
-@@ -334,7 +354,7 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		if (!scan && !link && !roam) {
+ 			btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
+-					     coex_dm->tdma_adj_type);
++					     coex_dm->ps_tdma_du_adj_type);
+ 		} else {
+ 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 				 "[BTCoex], roaming/link/scan is under progress, will adjust next time!!!\n");
+ 		}
  	}
- 
- 	/* Set up entry for this TFD in Tx byte-count array */
--	iwl_pcie_gen2_update_byte_tbl(trans, txq, le16_to_cpu(tx_cmd->len),
-+	iwl_pcie_gen2_update_byte_tbl(txq, le16_to_cpu(tx_cmd->len),
- 				      iwl_pcie_gen2_get_num_tbs(trans, tfd));
- 
- 	/* start timer if queue currently empty */
-@@ -781,26 +801,99 @@ void iwl_pcie_gen2_txq_unmap(struct iwl_trans *trans, int txq_id)
- 	iwl_wake_queue(trans, txq);
+-
+-	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 0x6);
  }
  
-+/*
-+ * iwl_pcie_txq_free - Deallocate DMA queue.
-+ * @txq: Transmit queue to deallocate.
-+ *
-+ * Empty queue by removing and destroying all BD's.
-+ * Free all buffers.
-+ * 0-fill, but do not free "txq" descriptor structure.
-+ */
-+static void iwl_pcie_gen2_txq_free(struct iwl_trans *trans, int txq_id)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct iwl_txq *txq = trans_pcie->txq[txq_id];
-+	struct device *dev = trans->dev;
-+	int i;
-+
-+	if (WARN_ON(!txq))
-+		return;
-+
-+	iwl_pcie_gen2_txq_unmap(trans, txq_id);
-+
-+	/* De-alloc array of command/tx buffers */
-+	if (txq_id == trans_pcie->cmd_queue)
-+		for (i = 0; i < txq->n_window; i++) {
-+			kzfree(txq->entries[i].cmd);
-+			kzfree(txq->entries[i].free_buf);
+ /* SCO only or SCO+PAN(HS)*/
+@@ -2082,7 +2782,7 @@ static void btc8821a2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 						       15, 0);
+ 	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
+ 
+-	/* fw dac swing is called in btc8821a2ant_tdma_dur_adj()
++	/* fw dac swing is called in btc8821a2ant_tdma_duration_adjust()
+ 	 * btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 	 */
+ 
+@@ -2097,9 +2797,11 @@ static void btc8821a2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 		/* fw mechanism */
+ 		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, false, 1);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  false, 1);
+ 		} else {
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, true, 1);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  true, 1);
+ 		}
+ 
+ 		/* sw mechanism */
+@@ -2119,9 +2821,11 @@ static void btc8821a2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 		/* fw mechanism */
+ 		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, false, 1);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  false, 1);
+ 		} else {
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, true, 1);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  true, 1);
+ 		}
+ 
+ 		/* sw mechanism */
+@@ -2160,10 +2864,12 @@ static void btc8821a2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ 		/* fw mechanism */
+ 		if (bt_info_ext&BIT0) {
+ 			/* a2dp basic rate */
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, true, 2);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  true, 2);
+ 		} else {
+ 			/* a2dp edr rate */
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, true, 1);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  true, 1);
+ 		}
+ 
+ 		/* sw mechanism */
+@@ -2183,10 +2889,12 @@ static void btc8821a2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ 		/* fw mechanism */
+ 		if (bt_info_ext&BIT0) {
+ 			/* a2dp basic rate */
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, true, 2);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  true, 2);
+ 		} else {
+ 			/* a2dp edr rate */
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, true, 1);
++			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
++							  true, 1);
+ 		}
+ 
+ 		/* sw mechanism */
+@@ -2384,12 +3092,27 @@ static void btc8821a2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
+ 		/* fw mechanism */
+ 		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false,
+-						  false, 3);
+-		else
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false,
+-						  true, 3);
++		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++			if (bt_info_ext&BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, false, 3);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, false, 3);
++			}
++		} else {
++			if (bt_info_ext&BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, true, 3);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, true, 3);
++			}
 +		}
-+
-+	/* De-alloc circular buffer of TFDs */
-+	if (txq->tfds) {
-+		dma_free_coherent(dev,
-+				  trans_pcie->tfd_size * TFD_QUEUE_SIZE_MAX,
-+				  txq->tfds, txq->dma_addr);
-+		dma_free_coherent(dev,
-+				  sizeof(*txq->first_tb_bufs) * txq->n_window,
-+				  txq->first_tb_bufs, txq->first_tb_dma);
-+	}
-+
-+	kfree(txq->entries);
-+
-+	del_timer_sync(&txq->stuck_timer);
-+
-+	iwl_pcie_free_dma_ptr(trans, &txq->bc_tbl);
-+	kfree(txq);
-+	trans_pcie->txq[txq_id] = NULL;
-+
-+	clear_bit(txq_id, trans_pcie->queue_used);
-+}
-+
- int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
- 				 struct iwl_tx_queue_cfg_cmd *cmd,
- 				 int cmd_id,
- 				 unsigned int timeout)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_txq *txq = trans_pcie->txq[cmd->scd_queue];
-+	struct iwl_txq *txq;
- 	struct iwl_host_cmd hcmd = {
- 		.id = cmd_id,
- 		.len = { sizeof(*cmd) },
- 		.data = { cmd, },
- 		.flags = 0,
- 	};
-+	int ret, qid = cmd->scd_queue;
- 	u16 ssn = le16_to_cpu(cmd->ssn);
  
-+	txq = kzalloc(sizeof(*txq), GFP_KERNEL);
-+	if (!txq)
-+		return -ENOMEM;
-+	ret = iwl_pcie_alloc_dma_ptr(trans, &txq->bc_tbl,
-+				     sizeof(struct iwlagn_scd_bc_tbl));
-+	if (ret) {
-+		IWL_ERR(trans, "Scheduler BC Table allocation failed\n");
-+		kfree(txq);
-+		return -ENOMEM;
-+	}
-+
- 	if (test_and_set_bit(cmd->scd_queue, trans_pcie->queue_used)) {
- 		WARN_ONCE(1, "queue %d already used", cmd->scd_queue);
- 		return -EINVAL;
- 	}
- 
-+	trans_pcie->txq[qid] = txq;
-+
-+	ret = iwl_pcie_txq_alloc(trans, txq, TFD_TX_CMD_SLOTS, qid);
-+	if (ret) {
-+		IWL_ERR(trans, "Tx %d queue init failed\n", qid);
-+		goto error;
-+	}
-+	ret = iwl_pcie_txq_init(trans, txq, TFD_TX_CMD_SLOTS, qid);
-+	if (ret) {
-+		IWL_ERR(trans, "Tx %d queue alloc failed\n", qid);
-+		goto error;
-+	}
-+
- 	txq->wd_timeout = msecs_to_jiffies(timeout);
- 
- 	/*
-@@ -816,12 +909,14 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
- 			    cmd->scd_queue, ssn & 0xff);
- 
- 	cmd->tfdq_addr = cpu_to_le64(txq->dma_addr);
--	cmd->byte_cnt_addr = cpu_to_le64(trans_pcie->scd_bc_tbls.dma +
--					 cmd->scd_queue *
--					 sizeof(struct iwlagn_scd_bc_tbl));
--	cmd->cb_size = cpu_to_le64(TFD_QUEUE_CB_SIZE(TFD_QUEUE_SIZE_MAX));
-+	cmd->byte_cnt_addr = cpu_to_le64(txq->bc_tbl.dma);
-+	cmd->cb_size = cpu_to_le32(TFD_QUEUE_CB_SIZE(TFD_QUEUE_SIZE_MAX));
- 
- 	return iwl_trans_send_cmd(trans, &hcmd);
-+
-+error:
-+	iwl_pcie_gen2_txq_free(trans, cmd->scd_queue);
-+	return -ENOMEM;
- }
- 
- void iwl_trans_pcie_dyn_txq_free(struct iwl_trans *trans, int queue)
-@@ -845,3 +940,57 @@ void iwl_trans_pcie_dyn_txq_free(struct iwl_trans *trans, int queue)
- 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", queue);
- }
- 
-+void iwl_pcie_gen2_tx_free(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	int i;
-+
-+	memset(trans_pcie->queue_used, 0, sizeof(trans_pcie->queue_used));
-+
-+	/* Free all TX queues */
-+	for (i = 0; i < ARRAY_SIZE(trans_pcie->txq); i++) {
-+		if (!trans_pcie->txq[i])
-+			continue;
-+
-+		iwl_pcie_gen2_txq_free(trans, i);
-+	}
-+}
-+
-+int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct iwl_txq *cmd_queue;
-+	int txq_id = trans_pcie->cmd_queue, ret;
-+
-+	/* alloc and init the command queue */
-+	if (!trans_pcie->txq[txq_id]) {
-+		cmd_queue = kzalloc(sizeof(*cmd_queue), GFP_KERNEL);
-+		if (!cmd_queue) {
-+			IWL_ERR(trans, "Not enough memory for command queue\n");
-+			return -ENOMEM;
+ 		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+@@ -2407,10 +3130,27 @@ static void btc8821a2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ 	} else {
+ 		/* fw mechanism */
+ 		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, false, 3);
+-		else
+-			btc8821a2ant_tdma_dur_adj(btcoexist, false, true, 3);
++		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++			if (bt_info_ext&BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, false, 3);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, false, 3);
++			}
++		} else {
++			if (bt_info_ext&BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, true, 3);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							false, true, 3);
++			}
 +		}
-+		trans_pcie->txq[txq_id] = cmd_queue;
-+		ret = iwl_pcie_txq_alloc(trans, cmd_queue, TFD_CMD_SLOTS,
-+					 txq_id);
-+		if (ret) {
-+			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
-+			goto error;
+ 
+ 		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+@@ -2538,7 +3278,28 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 
+ 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
+ 		/* fw mechanism */
+-		btc8821a2ant_tdma_dur_adj(btcoexist, true, true, 3);
++		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
++		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++			if (bt_info_ext&BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							true, true, 3);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							true, true, 3);
++			}
++		} else {
++			if (bt_info_ext&BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							true, true, 3);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							true, true, 3);
++			}
 +		}
-+	} else {
-+		cmd_queue = trans_pcie->txq[txq_id];
-+	}
+ 
+ 		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+@@ -2559,22 +3320,24 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			if (bt_info_ext&BIT0) {
+ 				/* a2dp basic rate */
+-				btc8821a2ant_tdma_dur_adj(btcoexist, true,
+-							  false, 3);
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							true, false, 3);
+ 			} else {
+ 				/* a2dp edr rate */
+-				btc8821a2ant_tdma_dur_adj(btcoexist, true,
+-							  false, 3);
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++							true, false, 3);
+ 			}
+ 		} else {
+ 			if (bt_info_ext&BIT0) {
+ 				/* a2dp basic rate */
+-				btc8821a2ant_tdma_dur_adj(btcoexist, true,
+-							  true, 3);
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  3);
+ 			} else {
+ 				/* a2dp edr rate */
+-				btc8821a2ant_tdma_dur_adj(btcoexist, true,
+-							  true, 3);
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  3);
+ 			}
+ 		}
+ 
+@@ -2622,7 +3385,32 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 
+ 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
+ 		/* fw mechanism */
+-		btc8821a2ant_tdma_dur_adj(btcoexist, true, true, 2);
++		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
++		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++			if (bt_info_ext & BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
++			}
++		} else {
++			if (bt_info_ext & BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
++			}
++		}
+ 
+ 		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+@@ -2639,7 +3427,33 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 		}
+ 	} else {
+ 		/* fw mechanism */
+-		btc8821a2ant_tdma_dur_adj(btcoexist, true, true, 2);
++		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
++		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++			if (bt_info_ext & BIT0) {
++				/* a2dp basic rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
 +
-+	ret = iwl_pcie_txq_init(trans, cmd_queue, TFD_CMD_SLOTS, txq_id);
-+	if (ret) {
-+		IWL_ERR(trans, "Tx %d queue alloc failed\n", txq_id);
-+		goto error;
-+	}
-+	set_bit(txq_id, trans_pcie->queue_used);
-+
-+	return 0;
-+
-+error:
-+	iwl_pcie_gen2_tx_free(trans);
-+	return ret;
-+}
-+
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 9ea92ac3920e..df31e14bc33d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -126,8 +126,8 @@ static int iwl_queue_init(struct iwl_txq *q, int slots_num, u32 id)
- 	return 0;
- }
++			} else {
++				/* a2dp edr rate */
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
++			}
++		} else {
++			if (bt_info_ext & BIT0) {
++				/*a2dp basic rate*/
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
++			} else {
++				/*a2dp edr rate*/
++				btc8821a2ant_tdma_duration_adjust(btcoexist,
++								  true, true,
++								  2);
++			}
++		}
  
--static int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
--				  struct iwl_dma_ptr *ptr, size_t size)
-+int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
-+			   struct iwl_dma_ptr *ptr, size_t size)
- {
- 	if (WARN_ON(ptr->addr))
- 		return -EINVAL;
-@@ -140,8 +140,7 @@ static int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
- 	return 0;
- }
- 
--static void iwl_pcie_free_dma_ptr(struct iwl_trans *trans,
--				  struct iwl_dma_ptr *ptr)
-+void iwl_pcie_free_dma_ptr(struct iwl_trans *trans, struct iwl_dma_ptr *ptr)
- {
- 	if (unlikely(!ptr->addr))
- 		return;
-@@ -484,9 +483,8 @@ static int iwl_pcie_txq_build_tfd(struct iwl_trans *trans, struct iwl_txq *txq,
- 	return num_tbs;
- }
- 
--static int iwl_pcie_txq_alloc(struct iwl_trans *trans,
--			       struct iwl_txq *txq, int slots_num,
--			       u32 txq_id)
-+int iwl_pcie_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq,
-+		       int slots_num, u32 txq_id)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	size_t tfd_sz = trans_pcie->tfd_size * TFD_QUEUE_SIZE_MAX;
-@@ -551,8 +549,8 @@ static int iwl_pcie_txq_alloc(struct iwl_trans *trans,
- 
- }
- 
--static int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
--			      int slots_num, u32 txq_id)
-+int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
-+		      int slots_num, u32 txq_id)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int ret;
-@@ -778,6 +776,13 @@ void iwl_trans_pcie_tx_reset(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int txq_id;
- 
-+	/*
-+	 * we should never get here in gen2 trans mode return early to avoid
-+	 * having invalid accesses
-+	 */
-+	if (WARN_ON_ONCE(trans->cfg->gen2))
-+		return;
-+
- 	for (txq_id = 0; txq_id < trans->cfg->base_params->num_of_queues;
- 	     txq_id++) {
- 		struct iwl_txq *txq = trans_pcie->txq[txq_id];
-@@ -1025,51 +1030,6 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 	return ret;
- }
- 
--int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
--{
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	int ret;
--	int txq_id, slots_num;
--	bool alloc = false;
--
--	if (!trans_pcie->txq_memory) {
--		/* TODO: change this when moving to new TX alloc model */
--		ret = iwl_pcie_tx_alloc(trans);
--		if (ret)
--			goto error;
--		alloc = true;
--	}
--
--	spin_lock(&trans_pcie->irq_lock);
--
--	/* Tell NIC where to find the "keep warm" buffer */
--	iwl_write_direct32(trans, FH_KW_MEM_ADDR_REG,
--			   trans_pcie->kw.dma >> 4);
--
--	spin_unlock(&trans_pcie->irq_lock);
--
--	/* TODO: remove this when moving to new TX alloc model */
--	for (txq_id = 0; txq_id < trans->cfg->base_params->num_of_queues;
--	     txq_id++) {
--		slots_num = (txq_id == trans_pcie->cmd_queue) ?
--					TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
--		ret = iwl_pcie_txq_init(trans, trans_pcie->txq[txq_id],
--					slots_num, txq_id);
--		if (ret) {
--			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
--			goto error;
--		}
--	}
--
--	return 0;
--
--error:
--	/* Upon error, free only if we allocated something */
--	if (alloc)
--		iwl_pcie_tx_free(trans);
--	return ret;
--}
--
- static inline void iwl_pcie_txq_progress(struct iwl_txq *txq)
- {
- 	lockdep_assert_held(&txq->lock);
+ 		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index 603e446b5953..535ca10e910b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -87,8 +87,9 @@ struct coex_dm_8821a_2ant {
+ 	u8		pre_ps_tdma;
+ 	u8		cur_ps_tdma;
+ 	u8		ps_tdma_para[5];
+-	u8		tdma_adj_type;
++	u8		ps_tdma_du_adj_type;
+ 	bool		reset_tdma_adjust;
++	bool		auto_tdma_adjust;
+ 	bool		pre_ps_tdma_on;
+ 	bool		cur_ps_tdma_on;
+ 	bool		pre_bt_auto_report;
 -- 
-2.11.0
+2.12.0
