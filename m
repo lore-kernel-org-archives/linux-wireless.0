@@ -1,91 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:34985 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1422830AbdD1R3x (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36678 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755225AbdDMSHW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 13:29:53 -0400
-Received: by mail-pf0-f181.google.com with SMTP id v14so51554646pfd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2017 10:29:53 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] mwifiex: pcie: add card_reset() support
-Date: Fri, 28 Apr 2017 10:28:47 -0700
-Message-Id: <20170428172847.34888-1-briannorris@chromium.org> (sfid-20170428_193048_612269_EA9DEE53)
+        Thu, 13 Apr 2017 14:07:22 -0400
+Received: by mail-oi0-f65.google.com with SMTP id b187so13576106oif.3
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/19] rtlwifi: btcoex: 21a 2ant: suffer less tx penalty from retry
+Date: Thu, 13 Apr 2017 13:06:58 -0500
+Message-Id: <20170413180710.19953-8-Larry.Finger@lwfinger.net> (sfid-20170413_200802_922880_758C32B3)
+In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar to the SDIO driver, we should implement this so that we will
-automatically reset the device whenever there's a command timeout or
-similar.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Change h2c parameter to decrease tx penalty.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
-I still haven't found the reset sequence to work 100% reliably, but it's
-definitely better than nothing.
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/marvell/mwifiex/pcie.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ac62bce50e96..aaec4fdd7777 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2822,6 +2822,13 @@ static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
- 	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
- }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 4abfddcf2d11..1a1e4136d48e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -693,11 +693,11 @@ static void btc8821a2ant_set_sw_penalty_tx_rate_adaptive(
+ 		/* normal rate except MCS7/6/5, OFDM54/48/36 */
+ 		h2c_parameter[2] = 0x00;
+ 		/* MCS7 or OFDM54 */
+-		h2c_parameter[3] = 0xf7;
++		h2c_parameter[3] = 0xf5;
+ 		/* MCS6 or OFDM48 */
+-		h2c_parameter[4] = 0xf8;
++		h2c_parameter[4] = 0xa0;
+ 		/* MCS5 or OFDM36 */
+-		h2c_parameter[5] = 0xf9;
++		h2c_parameter[5] = 0xa0;
+ 	}
  
-+static void mwifiex_pcie_card_reset_work(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+
-+	pci_reset_function(card->dev);
-+}
-+
- static void mwifiex_pcie_work(struct work_struct *work)
- {
- 	struct pcie_service_card *card =
-@@ -2830,6 +2837,9 @@ static void mwifiex_pcie_work(struct work_struct *work)
- 	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
- 			       &card->work_flags))
- 		mwifiex_pcie_device_dump_work(card->adapter);
-+	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
-+			       &card->work_flags))
-+		mwifiex_pcie_card_reset_work(card->adapter);
- }
- 
- /* This function dumps FW information */
-@@ -2845,6 +2855,18 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
- 	schedule_work(&card->work);
- }
- 
-+static void mwifiex_pcie_card_reset(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+
-+	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
-+		return;
-+
-+	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
-+
-+	schedule_work(&card->work);
-+}
-+
- static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
-@@ -3274,6 +3296,7 @@ static struct mwifiex_if_ops pcie_ops = {
- 	.cleanup_mpa_buf =		NULL,
- 	.init_fw_port =			mwifiex_pcie_init_fw_port,
- 	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
-+	.card_reset =			mwifiex_pcie_card_reset,
- 	.reg_dump =			mwifiex_pcie_reg_dump,
- 	.device_dump =			mwifiex_pcie_device_dump,
- 	.down_dev =			mwifiex_pcie_down_dev,
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
 -- 
-2.13.0.rc0.306.g87b477812d-goog
+2.12.0
