@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33088 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753947AbdDLOCe (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51280 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754623AbdDMPZb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 10:02:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jiri Pirko <jiri@resnulli.us>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH net-next v5 4/5] netlink: pass extended ACK struct to parsing functions
-References: <20170412123408.22012-1-johannes@sipsolutions.net>
-        <20170412123408.22012-5-johannes@sipsolutions.net>
-        <20170412131708.GC1952@nanopsycho>
-Date: Wed, 12 Apr 2017 17:02:27 +0300
-In-Reply-To: <20170412131708.GC1952@nanopsycho> (Jiri Pirko's message of "Wed,
-        12 Apr 2017 15:17:08 +0200")
-Message-ID: <8737ddd8r0.fsf@purkki.adurom.net> (sfid-20170412_160312_022646_C1398F2C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 13 Apr 2017 11:25:31 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 13 Apr 2017 18:24:47 +0300
+Message-Id: <20170413152507.9648-7-luca@coelho.fi> (sfid-20170413_172536_386445_E06609DA)
+In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
+References: <20170413152507.9648-1-luca@coelho.fi>
+Subject: [PATCH 06/26] iwlwifi: mvm: disable multi-queue for a000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Pirko <jiri@resnulli.us> writes:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> Wed, Apr 12, 2017 at 02:34:07PM CEST, johannes@sipsolutions.net wrote:
->>From: Johannes Berg <johannes.berg@intel.com>
->>
->>Pass the new extended ACK reporting struct to all of the
->
-> Johannes, I wonder, is there a reason you ignore my comments about
-> narrow descriptions? Why don't you use the whole line?
+Firmware isn't configuring multi RX queue hardware yet in
+the self init mode.
+Disable it for now until we have an API that enables it.
 
-Seriously, you ask that with totally unnecessary 3800 lines of quotes?
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-(Or at least I assume so, I didn't bother to check if you had any
-comments there as it would have taken forever to find them.)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 61cafb541554..4c5088643b2b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1240,7 +1240,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	}
+ 
+ 	/* Init RSS configuration */
+-	if (iwl_mvm_has_new_rx_api(mvm)) {
++	/* TODO - remove a000 disablement when we have RXQ config API */
++	if (iwl_mvm_has_new_rx_api(mvm) && !iwl_mvm_has_new_tx_api(mvm)) {
+ 		ret = iwl_send_rss_cfg_cmd(mvm);
+ 		if (ret) {
+ 			IWL_ERR(mvm, "Failed to configure RSS queues: %d\n",
 -- 
-Kalle Valo
+2.11.0
