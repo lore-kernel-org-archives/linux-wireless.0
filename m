@@ -1,111 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46531 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753706AbdDEHLL (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33265 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755089AbdDMGsg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 03:11:11 -0400
-Subject: [PATCH 4/7] ath10k: add ath10k_sdio_write()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 5 Apr 2017 10:07:08 +0300
-Message-ID: <149137602808.4898.9375951462565501167.stgit@potku.adurom.net> (sfid-20170405_091134_220373_0977FD46)
-In-Reply-To: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
-References: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Thu, 13 Apr 2017 02:48:36 -0400
+Received: by mail-pg0-f67.google.com with SMTP id 79so9365482pgf.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 23:48:36 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v4 4/4] mwifiex: pcie: extract wifi part from combo firmware during function level reset
+Date: Thu, 13 Apr 2017 06:48:22 +0000
+Message-Id: <1492066102-31251-4-git-send-email-huxinming820@gmail.com> (sfid-20170413_084843_232648_359AF786)
+In-Reply-To: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
+References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/sdio.c |   48 +++++++++++++++++++++++---------
- 1 file changed, 34 insertions(+), 14 deletions(-)
+From: Xinming Hu <huxm@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index bbd8317de861..beb1749672f0 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -368,6 +368,34 @@ static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf, size_t len)
+A seprate wifi-only firmware was download during pcie function level reset.
+It is in fact the tail part of wifi/bt combo firmware. Per Brian's and
+Dmitry's suggestion, this patch extract the wifi part from combo firmware.
+
+After that, we can discard the redudant image in linux-firmware repo.
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
+v2: extract wifi part from combo firmware(Dimtry and Brain)
+    add more description(Kalle)
+v3: same as v2
+v4: add sequence comments, code enhance(Brain)
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h   | 18 ++++++
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 93 ++++++++++++++++++++++++++---
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  3 +-
+ 3 files changed, 106 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 0b68374..6cf9ab9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -43,6 +43,24 @@ struct tx_packet_hdr {
+ 	struct rfc_1042_hdr rfc1042_hdr;
+ } __packed;
+ 
++struct mwifiex_fw_header {
++	__le32 dnld_cmd;
++	__le32 base_addr;
++	__le32 data_length;
++	__le32 crc;
++} __packed;
++
++struct mwifiex_fw_data {
++	struct mwifiex_fw_header header;
++	__le32 seq_num;
++	u8 data[1];
++} __packed;
++
++#define MWIFIEX_FW_DNLD_CMD_1 0x1
++#define MWIFIEX_FW_DNLD_CMD_5 0x5
++#define MWIFIEX_FW_DNLD_CMD_6 0x6
++#define MWIFIEX_FW_DNLD_CMD_7 0x7
++
+ #define B_SUPPORTED_RATES               5
+ #define G_SUPPORTED_RATES               9
+ #define BG_SUPPORTED_RATES              13
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index a07cb0a..7b24bb4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1956,6 +1956,73 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
  	return ret;
  }
  
-+static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const void *buf, size_t len)
-+{
-+	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
-+	struct sdio_func *func = ar_sdio->func;
-+	int ret;
++/* Combo firmware image is a combination of
++ * (1) combo crc heaer, start with CMD5
++ * (2) bluetooth image, start with CMD7, end with CMD6, data wrapped in CMD1.
++ * (3) wifi image.
++ *
++ * This function bypass the header and bluetooth part, return
++ * the offset of tail wifi-only part.
++ */
 +
-+	sdio_claim_host(func);
++static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
++				   const void *firmware, u32 firmware_len) {
++	const struct mwifiex_fw_data *fwdata;
++	u32 offset = 0, data_len, dnld_cmd;
++	int ret = 0;
++	bool cmd7_before = false;
 +
-+	/* For some reason toio() doesn't have const for the buffer, need
-+	 * an ugly hack to workaround that.
-+	 */
-+	ret = sdio_memcpy_toio(func, addr, (void *)buf, len);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to write to address 0x%x: %d\n",
-+			    addr, ret);
-+		goto out;
++	while (1) {
++		if (offset >= firmware_len) {
++			mwifiex_dbg(adapter, ERROR,
++				    "extract wifi-only fw failure!");
++			ret = -1;
++			goto done;
++		}
++
++		fwdata = firmware + offset;
++		dnld_cmd = le32_to_cpu(fwdata->header.dnld_cmd);
++		data_len = le32_to_cpu(fwdata->header.data_length);
++
++		switch (dnld_cmd) {
++		case MWIFIEX_FW_DNLD_CMD_1:
++			if (!cmd7_before) {
++				mwifiex_dbg(adapter, ERROR,
++					    "no cmd7 before cmd1!");
++				ret = -1;
++				goto done;
++			}
++			offset += data_len + sizeof(fwdata->header);
++			break;
++		case MWIFIEX_FW_DNLD_CMD_5:
++			offset += data_len + sizeof(fwdata->header);
++			break;
++		case MWIFIEX_FW_DNLD_CMD_6:
++			offset += data_len + sizeof(fwdata->header);
++			if (offset >= firmware_len) {
++				mwifiex_dbg(adapter, ERROR,
++					    "extract wifi-only fw failure!");
++				ret = -1;
++			} else {
++				ret = offset;
++			}
++			goto done;
++		case MWIFIEX_FW_DNLD_CMD_7:
++			cmd7_before = true;
++			offset += sizeof(fwdata->header);
++			break;
++		default:
++			mwifiex_dbg(adapter, ERROR, "unknown dnld_cmd %d\n",
++				    dnld_cmd);
++			ret = -1;
++			goto done;
++		}
 +	}
 +
-+	ath10k_dbg(ar, ATH10K_DBG_SDIO, "sdio write addr 0x%x buf 0x%p len %zu\n",
-+		   addr, buf, len);
-+	ath10k_dbg_dump(ar, ATH10K_DBG_SDIO_DUMP, NULL, "sdio write ", buf, len);
-+
-+out:
-+	sdio_release_host(func);
-+
++done:
 +	return ret;
 +}
 +
- /* HIF mbox functions */
+ /*
+  * This function downloads the firmware to the card.
+  *
+@@ -1971,7 +2038,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 	u32 firmware_len = fw->fw_len;
+ 	u32 offset = 0;
+ 	struct sk_buff *skb;
+-	u32 txlen, tx_blocks = 0, tries, len;
++	u32 txlen, tx_blocks = 0, tries, len, val;
+ 	u32 block_retry_cnt = 0;
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+@@ -1998,6 +2065,24 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 		goto done;
+ 	}
  
- static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
-@@ -1131,9 +1159,7 @@ static int ath10k_sdio_bmi_exchange_msg(struct ath10k *ar,
- 		addr = ar_sdio->mbox_info.htc_addr;
++	ret = mwifiex_read_reg(adapter, PCIE_SCRATCH_13_REG, &val);
++	if (ret) {
++		mwifiex_dbg(adapter, FATAL, "Failed to read scratch register 13\n");
++		goto done;
++	}
++
++	/* PCIE FLR case: extract wifi part from combo firmware*/
++	if (val == MWIFIEX_PCIE_FLR_HAPPENS) {
++		ret = mwifiex_extract_wifi_fw(adapter, firmware, firmware_len);
++		if (ret < 0) {
++			mwifiex_dbg(adapter, ERROR, "Failed to extract wifi fw\n");
++			goto done;
++		}
++		offset = ret;
++		mwifiex_dbg(adapter, MSG,
++			    "info: dnld wifi firmware from %d bytes\n", offset);
++	}
++
+ 	/* Perform firmware data transfer */
+ 	do {
+ 		u32 ireg_intr = 0;
+@@ -3060,12 +3145,6 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
+ 	struct pci_dev *pdev = card->dev;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
  
- 		memcpy(ar_sdio->bmi_buf, req, req_len);
--		ret = ath10k_sdio_read_write_sync(ar, addr, ar_sdio->bmi_buf,
--						  req_len,
--						  HIF_WR_SYNC_BYTE_INC);
-+		ret = ath10k_sdio_write(ar, addr, ar_sdio->bmi_buf, req_len);
- 		if (ret) {
- 			ath10k_warn(ar,
- 				    "unable to send the bmi data to the device: %d\n",
-@@ -1361,10 +1387,8 @@ static int ath10k_sdio_hif_disable_intrs(struct ath10k *ar)
- 	mutex_lock(&irq_data->mtx);
+-	/* Bluetooth is not on pcie interface. Download Wifi only firmware
+-	 * during pcie FLR, so that bluetooth part of firmware which is
+-	 * already running doesn't get affected.
+-	 */
+-	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
+-
+ 	/* tx_buf_size might be changed to 3584 by firmware during
+ 	 * data transfer, we should reset it to default size.
+ 	 */
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 7e2450c..f7ce9b6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -35,7 +35,6 @@
+ #define PCIE8897_B0_FW_NAME "mrvl/pcie8897_uapsta.bin"
+ #define PCIEUART8997_FW_NAME_V4 "mrvl/pcieuart8997_combo_v4.bin"
+ #define PCIEUSB8997_FW_NAME_V4 "mrvl/pcieusb8997_combo_v4.bin"
+-#define PCIE8997_DEFAULT_WIFIFW_NAME "mrvl/pcie8997_wlan_v4.bin"
  
- 	memset(regs, 0, sizeof(*regs));
--	ret = ath10k_sdio_read_write_sync(ar,
--					  MBOX_INT_STATUS_ENABLE_ADDRESS,
--					  &regs->int_status_en, sizeof(*regs),
--					  HIF_WR_SYNC_BYTE_INC);
-+	ret = ath10k_sdio_write(ar, MBOX_INT_STATUS_ENABLE_ADDRESS,
-+				&regs->int_status_en, sizeof(*regs));
- 	if (ret)
- 		ath10k_warn(ar, "unable to disable sdio interrupts: %d\n", ret);
+ #define PCIE_VENDOR_ID_MARVELL              (0x11ab)
+ #define PCIE_VENDOR_ID_V2_MARVELL           (0x1b4b)
+@@ -120,6 +119,8 @@
+ #define MWIFIEX_SLEEP_COOKIE_SIZE			4
+ #define MWIFIEX_MAX_DELAY_COUNT				100
  
-@@ -1498,10 +1522,8 @@ static int ath10k_sdio_hif_enable_intrs(struct ath10k *ar)
- 		FIELD_PREP(MBOX_COUNTER_INT_STATUS_ENABLE_BIT_MASK,
- 			   ATH10K_SDIO_TARGET_DEBUG_INTR_MASK);
- 
--	ret = ath10k_sdio_read_write_sync(ar,
--					  MBOX_INT_STATUS_ENABLE_ADDRESS,
--					  &regs->int_status_en, sizeof(*regs),
--					  HIF_WR_SYNC_BYTE_INC);
-+	ret = ath10k_sdio_write(ar, MBOX_INT_STATUS_ENABLE_ADDRESS,
-+				&regs->int_status_en, sizeof(*regs));
- 	if (ret)
- 		ath10k_warn(ar,
- 			    "failed to update mbox interrupt status register : %d\n",
-@@ -1596,9 +1618,7 @@ static int ath10k_sdio_hif_diag_write_mem(struct ath10k *ar, u32 address,
- 	int ret;
- 
- 	/* set write data */
--	ret = ath10k_sdio_read_write_sync(ar, MBOX_WINDOW_DATA_ADDRESS,
--					  (u8 *)data, nbytes,
--					  HIF_WR_SYNC_BYTE_INC);
-+	ret = ath10k_sdio_write(ar, MBOX_WINDOW_DATA_ADDRESS, data, nbytes);
- 	if (ret) {
- 		ath10k_warn(ar,
- 			    "failed to write 0x%p to mbox window data addrress: %d\n",
++#define MWIFIEX_PCIE_FLR_HAPPENS 0xFEDCBABA
++
+ struct mwifiex_pcie_card_reg {
+ 	u16 cmd_addr_lo;
+ 	u16 cmd_addr_hi;
+-- 
+1.9.1
