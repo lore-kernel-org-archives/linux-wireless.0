@@ -1,43 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44676 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1434115AbdDZI2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 04:28:20 -0400
-Message-ID: <1493195298.2464.11.camel@sipsolutions.net> (sfid-20170426_103038_274988_E2075505)
-Subject: Re: [PATCH 0/9] cfg80211/mac80211 patches from our internal tree
- 2017-04-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend@broadcom.com>
-Date: Wed, 26 Apr 2017 10:28:18 +0200
-In-Reply-To: <1493194297.14233.0.camel@coelho.fi>
-References: <20170426075854.13546-1-luca@coelho.fi>
-         <1493194138.2464.10.camel@sipsolutions.net>
-         <1493194297.14233.0.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:51434 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754687AbdDMP1F (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Apr 2017 11:27:05 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 13 Apr 2017 18:25:04 +0300
+Message-Id: <20170413152507.9648-24-luca@coelho.fi> (sfid-20170413_172709_524805_3B8C794E)
+In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
+References: <20170413152507.9648-1-luca@coelho.fi>
+Subject: [PATCH 23/26] iwlwifi: pcie: remove block and freeze operations from new transport
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-04-26 at 11:11 +0300, Luca Coelho wrote:
-> On Wed, 2017-04-26 at 10:08 +0200, Johannes Berg wrote:
-> > > Avraham Stern (3):
-> > >   mac80211: Add support for BSS max idle period element
-> > >   cfg80211: unify cfg80211_roamed() and cfg80211_roamed_bss()
-> > >   cfg80211/nl80211: add authorized flag to roaming event
-> > 
-> > I'm going to let these get a bit more time on the list.
-> > 
-> > Arend, it'd be nice if you could take a look as well.
-> 
-> Yes, especially for the changes I made in the other drivers.  They
-> look kind of ugly, IMHO.
+From: Sara Sharon <sara.sharon@intel.com>
 
-I actually think they're a structural improvement since then we don't
-have to touch everything for any kind of extension, and don't get so
-many arguments ...
+New transport will be used only by op modes that supports
+buffer station offload - hence those will never be called.
+Clean it up.
 
-In fact, I'll probably apply that patch before I send the last pull
-request, so we have it in during the merge window.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  3 ---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 22 +++-------------------
+ 2 files changed, 3 insertions(+), 22 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 16a057398de2..d39ca944f484 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2925,9 +2925,6 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
+ 
+ 	.txq_alloc = iwl_trans_pcie_dyn_txq_alloc,
+ 	.txq_free = iwl_trans_pcie_dyn_txq_free,
+-
+-	.freeze_txq_timer = iwl_trans_pcie_freeze_txq_timer,
+-	.block_txq_ptrs = iwl_trans_pcie_block_txq_ptrs,
+ };
+ 
+ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index e8eb11282795..2019ccda31c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -107,9 +107,7 @@ static void iwl_pcie_gen2_txq_inc_wr_ptr(struct iwl_trans *trans,
+ 	 * if not in power-save mode, uCode will never sleep when we're
+ 	 * trying to tx (during RFKILL, we're not trying to tx).
+ 	 */
+-	if (!txq->block)
+-		iwl_write32(trans, HBUS_TARG_WRPTR,
+-			    txq->write_ptr | (txq->id << 16));
++	iwl_write32(trans, HBUS_TARG_WRPTR, txq->write_ptr | (txq->id << 16));
+ }
+ 
+ static u8 iwl_pcie_gen2_get_num_tbs(struct iwl_trans *trans,
+@@ -341,19 +339,8 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 
+ 	/* start timer if queue currently empty */
+ 	if (txq->read_ptr == txq->write_ptr) {
+-		if (txq->wd_timeout) {
+-			/*
+-			 * If the TXQ is active, then set the timer, if not,
+-			 * set the timer in remainder so that the timer will
+-			 * be armed with the right value when the station will
+-			 * wake up.
+-			 */
+-			if (!txq->frozen)
+-				mod_timer(&txq->stuck_timer,
+-					  jiffies + txq->wd_timeout);
+-			else
+-				txq->frozen_expiry_remainder = txq->wd_timeout;
+-		}
++		if (txq->wd_timeout)
++			mod_timer(&txq->stuck_timer, jiffies + txq->wd_timeout);
+ 		IWL_DEBUG_RPM(trans, "Q: %d first tx - take ref\n", txq->id);
+ 		iwl_trans_ref(trans);
+ 	}
+@@ -843,9 +830,6 @@ void iwl_trans_pcie_dyn_txq_free(struct iwl_trans *trans, int queue)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	trans_pcie->txq[queue].frozen_expiry_remainder = 0;
+-	trans_pcie->txq[queue].frozen = false;
+-
+ 	/*
+ 	 * Upon HW Rfkill - we stop the device, and then stop the queues
+ 	 * in the op_mode. Just for the sake of the simplicity of the op_mode,
+-- 
+2.11.0
