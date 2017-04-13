@@ -1,102 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:35550 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754660AbdDMS0E (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:26:04 -0400
-Received: by mail-qt0-f182.google.com with SMTP id n46so52211439qta.2
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:26:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87efx5ply6.fsf@alrua-kau>
-References: <20170405161810.30671-1-toke@toke.dk> <20170406093826.16626-1-toke@toke.dk>
- <1491475915.10124.75.camel@edumazet-glaptop3.roam.corp.google.com> <87efx5ply6.fsf@alrua-kau>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Thu, 13 Apr 2017 11:26:02 -0700
-Message-ID: <CAA93jw7eYQ9dJ=tYuw5RDC7exf+mkc95U0jHP8FarAx0VuSwWA@mail.gmail.com> (sfid-20170413_202659_556505_DA3E8E55)
-Subject: Re: [Make-wifi-fast] [PATCH v3] mac80211: Dynamically set CoDel
- parameters per station
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:54596 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750746AbdDMMiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Apr 2017 08:38:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: keep a separate list of monitor interfaces that are up
+Date: Thu, 13 Apr 2017 14:38:00 +0200
+Message-Id: <20170413123800.19552-1-johannes@sipsolutions.net> (sfid-20170413_143807_269744_8673AC24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 6, 2017 at 8:58 AM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke=
-.dk> wrote:
-> Eric Dumazet <eric.dumazet@gmail.com> writes:
->
->> On Thu, 2017-04-06 at 11:38 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrot=
-e:
->>
->>> +
->>> +    if (thr && thr < STA_SLOW_THRESHOLD * sta->local->num_sta) {
->>> +            sta->cparams.target =3D MS2TIME(50);
->>> +            sta->cparams.interval =3D MS2TIME(300);
->>> +            sta->cparams.ecn =3D false;
->>> +    } else {
->>> +            sta->cparams.target =3D MS2TIME(20);
->>> +            sta->cparams.interval =3D MS2TIME(100);
->>> +            sta->cparams.ecn =3D true;
->>> +    }
->>> +}
->>
->> Why ECN is flipped on/off like that ?
->
-> The reasoning is that at really low bandwidths we're better off dropping
-> the packet and getting potentially latency-sensitive data queued behind
-> it through (see Dave's various rants with the topic "Packets have
-> mass").
+From: Johannes Berg <johannes.berg@intel.com>
 
-My general take on wifi is that if you are running at - particularly,
-stuck at - a low rate (sub 6mbits in the case of this code) - you have
-so many other problems like retransmits, interference, etc, in the
-first place, that the presence or absence of codel here is just a
-small contributor to that noise.
+In addition to keeping monitor interfaces on the regular list of
+interfaces, keep those that are up and not in cooked mode on a
+separate list. This saves having to iterate all interfaces when
+delivering to monitor interfaces.
 
-We could leave ecn at whatever it is set to here and not flip it on or
-off. It does seem sane to twiddle the parameters enough to make sure
-codel doesn't trigger at less than a MTU vs the achieved rate.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/iface.c       | 19 +++++++++++++++++--
+ net/mac80211/main.c        |  1 +
+ net/mac80211/rx.c          | 11 +----------
+ 4 files changed, 22 insertions(+), 12 deletions(-)
 
->> ECN really should be an admin choice.
->
-> Well, the trouble is that the mac80211 queues don't really have an admin
-> interface currently. So it'll always use ECN (before this change).
-
-Should we add a sysfs api to this?
-
->> Also, this change in parameters looks suspect to me, adding a bimodal
->> behavior. I would consult Kathleen and Van on this possibility.
-
-It's sort of trimodal, actually. I think a more effective approach
-would be codel's default were the normal 5% of 100ms, bumping it up
-(as per the above) when we're having bad connectivity.... and we tried
-to tackle excessive retransmits harder, and addressed  the side
-impacts of multicast, instead, as much bigger parts of the problem.
-
-> Yeah, I agree that it's somewhat of a hack from a theoretical point of
-> view. I've also been experimenting with Kathy's recommended way of
-> dealing with bursty MACs (turning off CoDel when there's less than an
-> MTU's worth of data left), but have not had a lot of success with it.
-
-I'm not in a position to resume trying myself.
-
-> Guess I can go back and try some variants on that, unless someone else
-> has better ideas?
-
-Just as stuck as you are!
-
->
-> -Toke
-> _______________________________________________
-> Make-wifi-fast mailing list
-> Make-wifi-fast@lists.bufferbloat.net
-> https://lists.bufferbloat.net/listinfo/make-wifi-fast
-
-
-
---=20
-Dave T=C3=A4ht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0e718437d080..cf6d5abb65a3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -839,6 +839,8 @@ struct txq_info {
+ struct ieee80211_if_mntr {
+ 	u32 flags;
+ 	u8 mu_follow_addr[ETH_ALEN] __aligned(2);
++
++	struct list_head list;
+ };
+ 
+ /**
+@@ -1259,6 +1261,7 @@ struct ieee80211_local {
+ 
+ 	/* see iface.c */
+ 	struct list_head interfaces;
++	struct list_head mon_list; /* only that are IFF_UP && !cooked */
+ 	struct mutex iflist_mtx;
+ 
+ 	/*
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 5bb0c5012819..3bd5b81f5d81 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -676,7 +676,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 
+ 	set_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_WDS:
+ 		/* Create STA entry for the WDS peer */
+ 		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
+ 				     GFP_KERNEL);
+@@ -697,8 +698,17 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 
+ 		rate_control_rate_init(sta);
+ 		netif_carrier_on(dev);
+-	} else if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE) {
++		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
+ 		rcu_assign_pointer(local->p2p_sdata, sdata);
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
++			break;
++		list_add_tail_rcu(&sdata->u.mntr.list, &local->mon_list);
++		break;
++	default:
++		break;
+ 	}
+ 
+ 	/*
+@@ -817,6 +827,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	case NL80211_IFTYPE_AP:
+ 		cancel_work_sync(&sdata->u.ap.request_smps_work);
+ 		break;
++	case NL80211_IFTYPE_MONITOR:
++		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
++			break;
++		list_del_rcu(&sdata->u.mntr.list);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 56fb47953b72..ae408a96c407 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -603,6 +603,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 		ARRAY_SIZE(local->ext_capa);
+ 
+ 	INIT_LIST_HEAD(&local->interfaces);
++	INIT_LIST_HEAD(&local->mon_list);
+ 
+ 	__hw_addr_init(&local->mc_list);
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index e35c42ebb7a5..8be24f8c73d6 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -593,16 +593,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	skb->pkt_type = PACKET_OTHERHOST;
+ 	skb->protocol = htons(ETH_P_802_2);
+ 
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
+-			continue;
+-
+-		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
+-			continue;
+-
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-
++	list_for_each_entry_rcu(sdata, &local->mon_list, list) {
+ 		if (prev_dev) {
+ 			skb2 = skb_clone(skb, GFP_ATOMIC);
+ 			if (skb2) {
+-- 
+2.11.0
