@@ -1,135 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38786 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752876AbdDHSe5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 14:34:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3/5] netlink: allow sending extended ACK with cookie on success
-Date: Sat,  8 Apr 2017 20:34:42 +0200
-Message-Id: <20170408183444.2796-4-johannes@sipsolutions.net> (sfid-20170408_203534_586243_5CB46F28)
-In-Reply-To: <20170408183444.2796-1-johannes@sipsolutions.net>
-References: <20170408183444.2796-1-johannes@sipsolutions.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:51642 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751612AbdDNJCZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Apr 2017 05:02:25 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 14 Apr 2017 12:01:44 +0300
+Message-Id: <20170414090210.31397-1-luca@coelho.fi> (sfid-20170414_110229_483339_8F86B72A)
+Subject: [PATCH v2 00/26] iwlwifi: updates intended for v4.12 2017-04-13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Now that we have extended error reporting and a new message format
-for netlink ACK messages, also extend this to be able to return
-arbitrary cookie data on success.
+Hi,
 
-This will allow, for example, nl80211 to not send an extra message
-for cookies identifying newly created objects, but return those
-directly in the ACK message.
+This is v2 of the second patch set intended for v4.12.  These are the
+changes:
 
-The cookie data size is currently limited to 32 bytes (since Jamal
-talked about using SHA1 for identifiers.)
+ * A large amount of work on the A000 device series;
+ * A couple of cleanup patches;
+ * Dynamic SAR support;
 
-Thanks to Jamal Hadi Salim for bringing up this idea during the
-discussions.
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/netlink.h      |  3 +++
- include/uapi/linux/netlink.h |  4 ++++
- net/netlink/af_netlink.c     | 38 ++++++++++++++++++++++++--------------
- 3 files changed, 31 insertions(+), 14 deletions(-)
+In v2, I fixed SAR compilation when CONFIG_ACPI is not set (thanks to
+kbuildbot) and also squashed some other SAR fixes.
 
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-index 47562e940e9c..2133353b9a30 100644
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -62,6 +62,9 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
- 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
- }
- 
-+/* this can be increased when necessary - don't expose to userland */
-+#define NETLINK_MAX_COOKIE_LEN	32
-+
- /**
-  * struct netlink_ext_ack - netlink extended ACK report struct
-  * @_msg: message string to report - don't access directly, use
-diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
-index d1564557d645..7892095b1a16 100644
---- a/include/uapi/linux/netlink.h
-+++ b/include/uapi/linux/netlink.h
-@@ -118,12 +118,16 @@ struct nlmsgerr {
-  * @NLMSGERR_ATTR_OFFS: error offset in the original message (u32)
-  * @NLMSGERR_ATTR_ATTR: top-level attribute that caused the error
-  *	(or is missing, u16)
-+ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
-+ *	be used - in the success case - to identify a created
-+ *	object or operation or similar (binary)
-  */
- enum nlmsgerr_attrs {
- 	NLMSGERR_ATTR_UNUSED,
- 	NLMSGERR_ATTR_MSG,
- 	NLMSGERR_ATTR_OFFS,
- 	NLMSGERR_ATTR_ATTR,
-+	NLMSGERR_ATTR_COOKIE,
- };
- 
- #define NETLINK_ADD_MEMBERSHIP		1
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index c74f56a4fcf1..98e55a59c97e 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -2311,6 +2311,9 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 			if (extack->missing_attr)
- 				acksize += nla_total_size(sizeof(u16));
- 		}
-+	} else if (nlk->flags & NETLINK_F_EXT_ACK) {
-+		if (extack && extack->cookie_len)
-+			acksize += nla_total_size(extack->cookie_len);
- 	}
- 
- 	skb = nlmsg_new(acksize, GFP_KERNEL);
-@@ -2336,20 +2339,27 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
- 						 : sizeof(*nlh));
- 
--	if (err && nlk->flags & NETLINK_F_EXT_ACK && extack) {
--		if (extack->_msg)
--			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
--					       extack->_msg));
--		if (extack->bad_attr &&
--		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
--			     (u8 *)extack->bad_attr >= in_skb->data +
--						       in_skb->len))
--			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
--					    (u8 *)extack->bad_attr -
--					    in_skb->data));
--		if (extack->missing_attr)
--			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
--					    extack->missing_attr));
-+	if (nlk->flags & NETLINK_F_EXT_ACK) {
-+		if (err && extack) {
-+			if (extack->_msg)
-+				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
-+						       extack->_msg));
-+			if (extack->bad_attr &&
-+			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
-+				     (u8 *)extack->bad_attr >= in_skb->data +
-+							       in_skb->len))
-+				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
-+						    (u8 *)extack->bad_attr -
-+						    in_skb->data));
-+			if (extack->missing_attr)
-+				WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
-+						    extack->missing_attr));
-+		} else if (!err && extack) {
-+			if (extack->cookie_len)
-+				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
-+						extack->cookie_len,
-+						extack->cookie));
-+		}
- 	}
- 
- 	netlink_unicast(in_skb->sk, skb, NETLINK_CB(in_skb).portid, MSG_DONTWAIT);
+Please review.
+
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: tell the firmware about the U-APSD parameters
+
+Goodstein, Mordechay (1):
+  iwlwifi: mvm: move new API code to the end
+
+Haim Dreyfuss (1):
+  iwlwifi: mvm: refactor SAR init to prepare for dynamic SAR
+
+Luca Coelho (3):
+  iwlwifi: mvm: spin off SAR profile selection function
+  iwlwifi: mvm: add support for EWRD (Dynamic SAR) ACPI table
+  iwlwifi: mvm: remove unnecessary debugging from UMAC scan
+
+Sara Sharon (20):
+  iwlwifi: mvm: read new secure boot registers
+  iwlwifi: mvm: add queues after adding station
+  iwlwifi: cleanup unused function
+  iwlwifi: mvm: prepare for station count change
+  iwlwifi: mvm: use same scan API for all a000 devices
+  iwlwifi: mvm: disable multi-queue for a000 devices
+  iwlwifi: mvm: support new TX API
+  iwlwifi: pcie: introduce a000 TX queues management
+  iwlwifi: mvm: support a000 SCD queue configuration
+  iwlwifi: mvm: support moving to mgmt tid
+  iwlwifi: pcie: copy TX functions to new transport
+  iwlwifi: pcie: cleanup old transport code from gen2
+  iwlwifi: pcie: support new TX command
+  iwlwifi: pcie: rewrite TFD creation
+  iwlwifi: pcie: support host commands in new transport
+  iwlwifi: pcie: support new write pointer width
+  iwlwifi: pcie: remove block and freeze operations from new transport
+  iwlwifi: pcie: prepare for dynamic queue allocation
+  iwlwifi: pcie: introduce new stop_device
+  iwlwifi: pcie: alloc queues dynamically
+
+ drivers/net/wireless/intel/iwlwifi/Makefile        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  10 -
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h      |   2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  71 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |   6 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    |   4 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-scan.h   |  14 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    |  16 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  42 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 318 +++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  16 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  27 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  12 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  71 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |  85 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sf.c        |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 192 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tdls.c      |  22 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tof.c       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  84 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  45 +-
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  42 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   9 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   | 147 +++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  48 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 996 +++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 207 ++---
+ 34 files changed, 2026 insertions(+), 488 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+
 -- 
 2.11.0
