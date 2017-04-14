@@ -1,29 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:36072 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752659AbdDQKHp (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60552 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751993AbdDNQTj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2017 06:07:45 -0400
-From: Vincent Legoll <vincent.legoll@gmail.com>
-To: linux-kernel@vger.kernel.org, zajec5@gmail.com,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH RFC] Make BCMA a menuconfig to ease disabling it all
-Date: Mon, 17 Apr 2017 12:07:29 +0200
-Message-Id: <20170417100730.3648-1-vincent.legoll@gmail.com> (sfid-20170417_120818_028782_7B59EF9B)
-In-Reply-To: <CAEwRq=oz=8T489QZtjcHB03rv_mFY6WAyOUkgMTOrsJuDEPPdw@mail.gmail.com>
-References: <CAEwRq=oz=8T489QZtjcHB03rv_mFY6WAyOUkgMTOrsJuDEPPdw@mail.gmail.com>
+        Fri, 14 Apr 2017 12:19:39 -0400
+Subject: Re: How to debug DMAR errors?
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <a21d8845-ae8d-fae0-b1b4-7bf6751b04b5@candelatech.com>
+ <CAKgT0UcEKTsc6-tSHXMHFybnE4NQASKWHziq2SV+spOCLJGH-g@mail.gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <fdbc5502-e388-b614-4f09-fa7de9a4f40e@candelatech.com> (sfid-20170414_181951_032359_5B6C9587)
+Date: Fri, 14 Apr 2017 09:19:36 -0700
+MIME-Version: 1.0
+In-Reply-To: <CAKgT0UcEKTsc6-tSHXMHFybnE4NQASKWHziq2SV+spOCLJGH-g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hello,
 
-this is more what I wanted to achieve, an easily disableable BCMA menuconfig.
+On 04/14/2017 08:45 AM, Alexander Duyck wrote:
+> On Thu, Apr 13, 2017 at 11:12 AM, Ben Greear <greearb@candelatech.com> wrote:
+>> Hello,
+>>
+>> I have been seeing a regular occurrence of DMAR errors, looking something
+>> like this when testing my ath10k driver/firmware under some specific loads
+>> (maximum receive of 512 byte frames in AP mode):
+>>
+>> DMAR: DRHD: handling fault status reg 3
+>> DMAR: [DMA Read] Request device [05:00.0] fault addr fd99f000 [fault reason
+>> 06] PTE Read access is not set
+>> ath10k_pci 0000:05:00.0: firmware crashed! (uuid
+>> 594b1393-ae35-42b5-9dec-74ff0c6791ff)
+>>
+>> So, I am wondering if there is any way I can get more information about what
+>> this fd99f000 address
+>> is?
+>>
+>> Once this problem hits, the entire OS locks hard (not even sysrq-boot will
+>> do anything),
+>> so I guess I would need the DMAR logic to print out more info on that
+>> address somehow.
+>>
+>> Thanks,
+>> Ben
+>
+> There isn't much more info to give you. The problem is that the device
+> at 5:00.0 attempted to read at fd99f000 even though it didn't have
+> permissions. In response this should trigger a PCI Master Abort
+> message to that function. It looks like the firmware for the device
+> doesn't handle that and so that is likely why things got hung.
+>
+> Really you would need to interrogate the ath10k_pci to see if there
+> is/was a mapping somewhere for that address and what it was supposed
+> to be used for.
 
-This is working as intended on x86_64 defconfig, whereas it is harder to disable
-for ARCH=arm because of "select"s. But that's less of an issue, as those arch's
-defconfigs may very well want the feature enbled, and that would make sense.
+I'm working on a hook in DMAR logic to call into ath10k_pci when the
+error is seen, so the ath10k can dump debug info, including recent DMA
+addresses.
 
-Any input appreciated.
+My code is an awful hack so far, but if someone could add a clean way to register
+DMAR error callbacks, I think that would be very welcome.  It might could tie into
+automated dma map/unmap debugging logic, and at the least, someone could write custom debugging callbacks
+for the driver(s) in question.
 
-Thanks
+Thanks,
+Ben
+
+>
+> - Alex
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
