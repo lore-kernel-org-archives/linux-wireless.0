@@ -1,112 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36714 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752770AbdDDXlE (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:32860 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752456AbdDNQlL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 19:41:04 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so27282732oif.3
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 16:41:04 -0700 (PDT)
-Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
-To: Hans de Goede <hdegoede@redhat.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-References: <20170329174751.13184-1-hdegoede@redhat.com>
- <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
- <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
- <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com>
- <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
-Cc: Bastien Nocera <hadess@hadess.net>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net> (sfid-20170405_014132_814274_891C83B6)
-Date: Tue, 4 Apr 2017 18:41:02 -0500
+        Fri, 14 Apr 2017 12:41:11 -0400
+Subject: Re: How to debug DMAR errors?
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <a21d8845-ae8d-fae0-b1b4-7bf6751b04b5@candelatech.com>
+ <CAKgT0UcEKTsc6-tSHXMHFybnE4NQASKWHziq2SV+spOCLJGH-g@mail.gmail.com>
+ <fdbc5502-e388-b614-4f09-fa7de9a4f40e@candelatech.com>
+ <CAKgT0UcPCMvs2OFkWGTs_TbKoxkLcnxjodroMDo82W4ptCfu3Q@mail.gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <884e0ae5-f9a2-734d-b46c-5b22678fbe6d@candelatech.com> (sfid-20170414_184143_743307_3196DA0E)
+Date: Fri, 14 Apr 2017 09:41:04 -0700
 MIME-Version: 1.0
-In-Reply-To: <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
+In-Reply-To: <CAKgT0UcPCMvs2OFkWGTs_TbKoxkLcnxjodroMDo82W4ptCfu3Q@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/04/2017 04:53 PM, Hans de Goede wrote:
-> Hi,
->
-> On 04/04/2017 11:38 PM, Arend Van Spriel wrote:
+
+
+On 04/14/2017 09:24 AM, Alexander Duyck wrote:
+> On Fri, Apr 14, 2017 at 9:19 AM, Ben Greear <greearb@candelatech.com> wrote:
 >>
 >>
->> On 4-4-2017 20:53, Hans de Goede wrote:
->>> Hi,
+>> On 04/14/2017 08:45 AM, Alexander Duyck wrote:
 >>>
->>> On 04/04/2017 08:31 PM, Larry Finger wrote:
->>>> On 03/29/2017 12:47 PM, Hans de Goede wrote:
->>>>> The rtl8723bs is found on quite a few systems used by Linux users,
->>>>> such as on Atom systems (Intel Computestick and various other
->>>>> Atom based devices) and on many (budget) ARM boards such as
->>>>> the CHIP.
->>>>>
->>>>> The plan moving forward with this is for the new clean,
->>>>> written from scratch, rtl8xxxu driver to eventually gain
->>>>> support for sdio devices. But there is no clear timeline
->>>>> for that, so lets add this driver included in staging for now.
+>>> On Thu, Apr 13, 2017 at 11:12 AM, Ben Greear <greearb@candelatech.com>
+>>> wrote:
 >>>>
->>>> Hans,
+>>>> Hello,
 >>>>
->>>> I started looking at the Smatch errors. This one may be the result of
->>>> a serious problem:
+>>>> I have been seeing a regular occurrence of DMAR errors, looking something
+>>>> like this when testing my ath10k driver/firmware under some specific
+>>>> loads
+>>>> (maximum receive of 512 byte frames in AP mode):
 >>>>
->>>>   CHECK   drivers/staging/rtl8723bs/core/rtw_debug.c
->>>> drivers/staging/rtl8723bs/core/rtw_debug.c:454 proc_get_survey_info()
->>>> error: we previously assumed 'phead' could be null (see line 453)
->>>> drivers/staging/rtl8723bs/core/rtw_debug.c:455 proc_get_survey_info()
->>>> warn: variable dereferenced before check 'phead' (see line 454)
+>>>> DMAR: DRHD: handling fault status reg 3
+>>>> DMAR: [DMA Read] Request device [05:00.0] fault addr fd99f000 [fault
+>>>> reason
+>>>> 06] PTE Read access is not set
+>>>> ath10k_pci 0000:05:00.0: firmware crashed! (uuid
+>>>> 594b1393-ae35-42b5-9dec-74ff0c6791ff)
 >>>>
->>>> A snippet of the code in question is as follows:
+>>>> So, I am wondering if there is any way I can get more information about
+>>>> what
+>>>> this fd99f000 address
+>>>> is?
 >>>>
->>>>         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
->>>>         phead = get_list_head(queue);
->>>>         plist = phead ? get_next(phead) : NULL;
->>>>         plist = get_next(phead);
->>>>         if ((!phead) || (!plist)) {
->>>>                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
->>>>                 return 0;
->>>>         }
+>>>> Once this problem hits, the entire OS locks hard (not even sysrq-boot
+>>>> will
+>>>> do anything),
+>>>> so I guess I would need the DMAR logic to print out more info on that
+>>>> address somehow.
 >>>>
->>>> This code comes directly from the hadess repo, but I am suspicious of
->>>> the double call to get_next(phead). I cannot imagine any valid reason
->>>> to skip every other entry on that list.
+>>>> Thanks,
+>>>> Ben
 >>>
->>> If you look closer and simplify the first getnext line what is written is:
 >>>
->>>          plist = get_next(phead);
->>>          plist = get_next(phead);
+>>> There isn't much more info to give you. The problem is that the device
+>>> at 5:00.0 attempted to read at fd99f000 even though it didn't have
+>>> permissions. In response this should trigger a PCI Master Abort
+>>> message to that function. It looks like the firmware for the device
+>>> doesn't handle that and so that is likely why things got hung.
 >>>
->>> Which indeed looks like it could use improvement, but I don't
->>> think it is seriously broken.
+>>> Really you would need to interrogate the ath10k_pci to see if there
+>>> is/was a mapping somewhere for that address and what it was supposed
+>>> to be used for.
 >>
->> So get_list_head(queue) can never return NULL?
+>>
+>> I'm working on a hook in DMAR logic to call into ath10k_pci when the
+>> error is seen, so the ath10k can dump debug info, including recent DMA
+>> addresses.
+>>
+>> My code is an awful hack so far, but if someone could add a clean way to
+>> register
+>> DMAR error callbacks, I think that would be very welcome.  It might could
+>> tie into
+>> automated dma map/unmap debugging logic, and at the least, someone could
+>> write custom debugging callbacks
+>> for the driver(s) in question.
+>>
+>> Thanks,
+>> Ben
+>>
 >
-> I don't know.
+> You might look at coding up something to add pci_error_handlers for
+> the pci_driver in the ath10k_pci driver. The PCI Master Abort should
+> trigger an error that you could then capture in the driver and handle
+> at least dumping it via your own implementation of the error handlers.
+> If nothing else I suspect there are probably some sort of descriptor
+> rings you could probably dump. I'm suspecting this is some sort of Tx
+> issue since the problem was a read fault, but I suppose there are
+> other paths in the driver that might trigger DMA read requests.
+
+This is a thick firmware driver, so the firmware could also be screwing up
+and accessing something it should not.  There are some existing work-arounds
+in it to deal with sketchy behaviour already, maybe more are needed.
+
+Anyway, once I added the debugging code, I didn't see it crash again, so
+might be a while before I know more.
+
+Thanks,
+Ben
+
 >
->> Otherwise I don't know
->> how close I need to get for a simplified look ;-)
+> - Alex
 >
-> I simplified things so as to make clear that Larry's worry was
-> not really a problem, I do agree the smatch complaint is valid.
 
-I think the following fixes the problem:
-
-diff --git a/drivers/staging/rtl8723bs/core/rtw_debug.c 
-b/drivers/staging/rtl8723bs/core/rtw_debug.c
-index d34747b29309..51cef55d3f76 100644
---- a/drivers/staging/rtl8723bs/core/rtw_debug.c
-+++ b/drivers/staging/rtl8723bs/core/rtw_debug.c
-@@ -451,7 +451,6 @@ int proc_get_survey_info(struct seq_file *m, void *v)
-         spin_lock_bh(&(pmlmepriv->scanned_queue.lock));
-         phead = get_list_head(queue);
-         plist = phead ? get_next(phead) : NULL;
--       plist = get_next(phead);
-         if ((!phead) || (!plist)) {
-                 spin_unlock_bh(&(pmlmepriv->scanned_queue.lock));
-                 return 0;
-
-Pointer plist is set in the 3rd line, thus the second set of it can be removed.
-
-Larry
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
