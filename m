@@ -1,250 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33698 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751792AbdDKBh3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51660 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751693AbdDNJCe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 21:37:29 -0400
-Received: by mail-pf0-f181.google.com with SMTP id s16so41207517pfs.0
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 18:37:29 -0700 (PDT)
-Date: Mon, 10 Apr 2017 18:37:25 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [PATCH v3 4/4] mwifiex: pcie: extract wifi part from combo
- firmware during function level reset
-Message-ID: <20170411013724.GA135531@google.com> (sfid-20170411_033914_059118_92155253)
-References: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
- <1491815374-6555-4-git-send-email-huxinming820@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491815374-6555-4-git-send-email-huxinming820@gmail.com>
+        Fri, 14 Apr 2017 05:02:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 14 Apr 2017 12:01:46 +0300
+Message-Id: <20170414090210.31397-3-luca@coelho.fi> (sfid-20170414_110238_132742_921F0BAF)
+In-Reply-To: <20170414090210.31397-1-luca@coelho.fi>
+References: <20170414090210.31397-1-luca@coelho.fi>
+Subject: [PATCH v2 02/26] iwlwifi: mvm: add queues after adding station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Sara Sharon <sara.sharon@intel.com>
 
-On Mon, Apr 10, 2017 at 09:09:34AM +0000, Xinming Hu wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> A seperate wifi-only firmware was download during pcie function level reset.
-> It is in fact the tail part of wifi/bt combo firmware. Per Brian's and
-> Dmitry's suggestion, this patch extract the wifi part from combo firmware.
-> 
-> After that, we can discard the redudant image in linux-firmware repo.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> ---
-> v2: extract wifi part from combo firmware(Dimtry and Brain)
->     add more description(Kalle)
-> v3: same as v2
-> ---
->  drivers/net/wireless/marvell/mwifiex/fw.h   | 18 +++++++
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 83 ++++++++++++++++++++++++++---
->  drivers/net/wireless/marvell/mwifiex/pcie.h |  2 +
->  3 files changed, 96 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-> index 0b68374..6cf9ab9 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/fw.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-> @@ -43,6 +43,24 @@ struct tx_packet_hdr {
->  	struct rfc_1042_hdr rfc1042_hdr;
->  } __packed;
->  
-> +struct mwifiex_fw_header {
-> +	__le32 dnld_cmd;
-> +	__le32 base_addr;
-> +	__le32 data_length;
-> +	__le32 crc;
-> +} __packed;
-> +
-> +struct mwifiex_fw_data {
-> +	struct mwifiex_fw_header header;
-> +	__le32 seq_num;
-> +	u8 data[1];
-> +} __packed;
-> +
-> +#define MWIFIEX_FW_DNLD_CMD_1 0x1
-> +#define MWIFIEX_FW_DNLD_CMD_5 0x5
-> +#define MWIFIEX_FW_DNLD_CMD_6 0x6
-> +#define MWIFIEX_FW_DNLD_CMD_7 0x7
-> +
->  #define B_SUPPORTED_RATES               5
->  #define G_SUPPORTED_RATES               9
->  #define BG_SUPPORTED_RATES              13
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index a07cb0a..ebf00d9 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -1956,6 +1956,63 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
->  	return ret;
->  }
->  
-> +/* Extract wifi part from wifi-bt combo firmware image.
-> + */
-> +
-> +static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
-> +				   u8 *firmware, u32 firmware_len) {
+Currently aux & broadcast queues are added before calling add
+station, which results with a SCD_QUEUE_CFG command sent with
+a station id unknown yet to fw.
+While this works for pre-a000 firmware, the a000 fw requires
+the order to be reversed.
+The reason the change is only for a000 devices and not for
+previous devices is that we cannot reverse the order since
+the tfd_queue_mask containing the aux queue will cause FW to
+assert on adding a queue mask with a queue that is not enabled.
+This is not a problem in a000 fw since the tfd_queue_mask was
+removed from the add sta API.
 
-Can you make 'firmware' const? Also, to help below, it might work better
-as 'const void *'.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 90 ++++++++++++++++++----------
+ 1 file changed, 58 insertions(+), 32 deletions(-)
 
-> +	struct mwifiex_fw_data fwdata;
-> +	u32 offset = 0, data_len, dnld_cmd;
-> +	int ret = 0;
-> +	bool cmd7_before = false;
-> +
-> +	while (1) {
-> +		if (offset + sizeof(fwdata.header) >= firmware_len) {
-> +			mwifiex_dbg(adapter, ERROR,
-> +				    "extract wifi-only firmware failure!");
-> +			ret = -1;
-> +			goto done;
-> +		}
-> +
-> +		memcpy(&fwdata.header, firmware + offset,
-> +		       sizeof(fwdata.header));
-
-Do you actually need to copy this? Can't you just keep a pointer to the
-location? e.g.
-
-	const struct mwifiex_fw_data *fwdata;
-...
-	fwdata = firmware + offset;
-
-> +		dnld_cmd = le32_to_cpu(fwdata.header.dnld_cmd);
-> +		data_len = le32_to_cpu(fwdata.header.data_length);
-> +
-> +		switch (dnld_cmd) {
-> +		case MWIFIEX_FW_DNLD_CMD_1:
-> +			if (!cmd7_before) {
-> +				mwifiex_dbg(adapter, ERROR,
-> +					    "no cmd7 before cmd1!");
-> +				ret = -1;
-> +				goto done;
-> +			}
-> +			offset += data_len + sizeof(fwdata.header);
-
-Technically, we need an overflow check to make sure that 'data_len'
-isn't some bogus value that overflows 'offset'.
-
-> +			break;
-> +		case MWIFIEX_FW_DNLD_CMD_5:
-> +			offset += data_len + sizeof(fwdata.header);
-
-Same here.
-
-> +			break;
-> +		case MWIFIEX_FW_DNLD_CMD_6:
-
-Can we have a comment, either here or above this function, to describe
-what this sequence is? Or particularly, what is this terminating
-condition? "CMD_6" doesn't really tell me that this is the start of the
-Wifi blob.
-
-> +			offset += data_len + sizeof(fwdata.header);
-
-You don't check for overflow here. Check this before returning this
-(either here, or in the 'done' label).
-
-> +			ret = offset;
-> +			goto done;
-> +		case MWIFIEX_FW_DNLD_CMD_7:
-> +			if (!cmd7_before)
-
-^^ This 'if' isn't really needed.
-
-> +				cmd7_before = true;
-> +			offset += sizeof(fwdata.header);
-> +			break;
-> +		default:
-> +			mwifiex_dbg(adapter, ERROR, "unknown dnld_cmd %d\n",
-> +				    dnld_cmd);
-> +			ret = -1;
-> +			goto done;
-> +		}
-> +	}
-> +
-> +done:
-> +	return ret;
-> +}
-> +
->  /*
->   * This function downloads the firmware to the card.
->   *
-> @@ -1971,7 +2028,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
->  	u32 firmware_len = fw->fw_len;
->  	u32 offset = 0;
->  	struct sk_buff *skb;
-> -	u32 txlen, tx_blocks = 0, tries, len;
-> +	u32 txlen, tx_blocks = 0, tries, len, val;
->  	u32 block_retry_cnt = 0;
->  	struct pcie_service_card *card = adapter->card;
->  	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
-> @@ -1998,6 +2055,24 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
->  		goto done;
->  	}
->  
-> +	ret = mwifiex_read_reg(adapter, PCIE_SCRATCH_13_REG, &val);
-> +	if (ret) {
-> +		mwifiex_dbg(adapter, FATAL, "Failed to read scratch register 13\n");
-> +		goto done;
-> +	}
-> +
-> +	/* PCIE FLR case: extract wifi part from combo firmware*/
-> +	if (val == MWIFIEX_PCIE_FLR_HAPPENS) {
-> +		ret = mwifiex_extract_wifi_fw(adapter, firmware, firmware_len);
-> +		if (ret < 0) {
-> +			mwifiex_dbg(adapter, ERROR, "Failed to extract wifi fw\n");
-> +			goto done;
-> +		}
-> +		offset = ret;
-> +		mwifiex_dbg(adapter, MSG,
-> +			    "info: dnld wifi firmware from %d bytes\n", offset);
-> +	}
-> +
->  	/* Perform firmware data transfer */
->  	do {
->  		u32 ireg_intr = 0;
-> @@ -3060,12 +3135,6 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
->  	struct pci_dev *pdev = card->dev;
->  	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
->  
-> -	/* Bluetooth is not on pcie interface. Download Wifi only firmware
-> -	 * during pcie FLR, so that bluetooth part of firmware which is
-> -	 * already running doesn't get affected.
-> -	 */
-> -	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
-
-Now that there's no users, delete PCIE8997_DEFAULT_WIFIFW_NAME from
-pcie.h.
-
-Brian
-
-> -
->  	/* tx_buf_size might be changed to 3584 by firmware during
->  	 * data transfer, we should reset it to default size.
->  	 */
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-> index 7e2450c..54aecda 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-> @@ -120,6 +120,8 @@
->  #define MWIFIEX_SLEEP_COOKIE_SIZE			4
->  #define MWIFIEX_MAX_DELAY_COUNT				100
->  
-> +#define MWIFIEX_PCIE_FLR_HAPPENS 0xFEDCBABA
-> +
->  struct mwifiex_pcie_card_reg {
->  	u16 cmd_addr_lo;
->  	u16 cmd_addr_hi;
-> -- 
-> 1.8.1.4
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 2d68cee41306..7d6a5dbb50ca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1700,25 +1700,11 @@ static int iwl_mvm_add_int_sta_common(struct iwl_mvm *mvm,
+ 	return ret;
+ }
+ 
+-int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
++static void iwl_mvm_enable_aux_queue(struct iwl_mvm *mvm)
+ {
+ 	unsigned int wdg_timeout = iwlmvm_mod_params.tfd_q_hang_detect ?
+ 					mvm->cfg->base_params->wd_timeout :
+ 					IWL_WATCHDOG_DISABLED;
+-	int ret;
+-
+-	lockdep_assert_held(&mvm->mutex);
+-
+-	/* Map Aux queue to fifo - needs to happen before adding Aux station */
+-	if (!iwl_mvm_is_dqa_supported(mvm))
+-		iwl_mvm_enable_ac_txq(mvm, mvm->aux_queue, mvm->aux_queue,
+-				      IWL_MVM_TX_FIFO_MCAST, 0, wdg_timeout);
+-
+-	/* Allocate aux station and assign to it the aux queue */
+-	ret = iwl_mvm_allocate_int_sta(mvm, &mvm->aux_sta, BIT(mvm->aux_queue),
+-				       NL80211_IFTYPE_UNSPECIFIED);
+-	if (ret)
+-		return ret;
+ 
+ 	if (iwl_mvm_is_dqa_supported(mvm)) {
+ 		struct iwl_trans_txq_scd_cfg cfg = {
+@@ -1731,14 +1717,43 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
+ 
+ 		iwl_mvm_enable_txq(mvm, mvm->aux_queue, mvm->aux_queue, 0, &cfg,
+ 				   wdg_timeout);
++	} else {
++		iwl_mvm_enable_ac_txq(mvm, mvm->aux_queue, mvm->aux_queue,
++				      IWL_MVM_TX_FIFO_MCAST, 0, wdg_timeout);
+ 	}
++}
+ 
+-	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->aux_sta, NULL,
+-					 MAC_INDEX_AUX, 0);
++int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
++{
++	int ret;
++
++	lockdep_assert_held(&mvm->mutex);
+ 
++	/* Allocate aux station and assign to it the aux queue */
++	ret = iwl_mvm_allocate_int_sta(mvm, &mvm->aux_sta, BIT(mvm->aux_queue),
++				       NL80211_IFTYPE_UNSPECIFIED);
+ 	if (ret)
++		return ret;
++
++	/* Map Aux queue to fifo - needs to happen before adding Aux station */
++	if (!iwl_mvm_has_new_tx_api(mvm))
++		iwl_mvm_enable_aux_queue(mvm);
++
++	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->aux_sta, NULL,
++					 MAC_INDEX_AUX, 0);
++	if (ret) {
+ 		iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
+-	return ret;
++		return ret;
++	}
++
++	/*
++	 * For a000 firmware and on we cannot add queue to a station unknown
++	 * to firmware so enable queue here - after the station was added
++	 */
++	if (iwl_mvm_has_new_tx_api(mvm))
++		iwl_mvm_enable_aux_queue(mvm);
++
++	return 0;
+ }
+ 
+ int iwl_mvm_add_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+@@ -1789,22 +1804,21 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	struct iwl_mvm_int_sta *bsta = &mvmvif->bcast_sta;
+ 	static const u8 _baddr[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+ 	const u8 *baddr = _baddr;
++	int queue = 0;
+ 	int ret;
++	unsigned int wdg_timeout =
++		iwl_mvm_get_wd_timeout(mvm, vif, false, false);
++	struct iwl_trans_txq_scd_cfg cfg = {
++		.fifo = IWL_MVM_TX_FIFO_VO,
++		.sta_id = mvmvif->bcast_sta.sta_id,
++		.tid = IWL_MAX_TID_COUNT,
++		.aggregate = false,
++		.frame_limit = IWL_FRAME_LIMIT,
++	};
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	if (iwl_mvm_is_dqa_supported(mvm)) {
+-		struct iwl_trans_txq_scd_cfg cfg = {
+-			.fifo = IWL_MVM_TX_FIFO_VO,
+-			.sta_id = mvmvif->bcast_sta.sta_id,
+-			.tid = IWL_MAX_TID_COUNT,
+-			.aggregate = false,
+-			.frame_limit = IWL_FRAME_LIMIT,
+-		};
+-		unsigned int wdg_timeout =
+-			iwl_mvm_get_wd_timeout(mvm, vif, false, false);
+-		int queue;
+-
+ 		if (vif->type == NL80211_IFTYPE_AP)
+ 			queue = mvm->probe_queue;
+ 		else if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+@@ -1812,9 +1826,11 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		else if (WARN(1, "Missing required TXQ for adding bcast STA\n"))
+ 			return -EINVAL;
+ 
+-		iwl_mvm_enable_txq(mvm, queue, vif->hw_queue[0], 0, &cfg,
+-				   wdg_timeout);
+ 		bsta->tfd_queue_msk |= BIT(queue);
++
++		if (!iwl_mvm_has_new_tx_api(mvm))
++			iwl_mvm_enable_txq(mvm, queue, vif->hw_queue[0], 0,
++					   &cfg, wdg_timeout);
+ 	}
+ 
+ 	if (vif->type == NL80211_IFTYPE_ADHOC)
+@@ -1825,8 +1841,18 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	ret = iwl_mvm_add_int_sta_common(mvm, bsta, baddr,
+ 					 mvmvif->id, mvmvif->color);
++	if (ret)
++		return ret;
+ 
+-	return ret;
++	/*
++	 * For a000 firmware and on we cannot add queue to a station unknown
++	 * to firmware so enable queue here - after the station was added
++	 */
++	if (iwl_mvm_has_new_tx_api(mvm))
++		iwl_mvm_enable_txq(mvm, queue, vif->hw_queue[0], 0, &cfg,
++				   wdg_timeout);
++
++	return 0;
+ }
+ 
+ static void iwl_mvm_free_bcast_sta_queues(struct iwl_mvm *mvm,
+-- 
+2.11.0
