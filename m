@@ -1,135 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54552 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:51884 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1956644AbdDZH7N (ORCPT
+        with ESMTP id S1753782AbdDNJFQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 03:59:13 -0400
+        Fri, 14 Apr 2017 05:05:16 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Avraham Stern <avraham.stern@intel.com>,
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 26 Apr 2017 10:58:50 +0300
-Message-Id: <20170426075854.13546-6-luca@coelho.fi> (sfid-20170426_095927_974275_914D4475)
-In-Reply-To: <20170426075854.13546-1-luca@coelho.fi>
-References: <20170426075854.13546-1-luca@coelho.fi>
-Subject: [PATCH 5/9] cfg80211/nl80211: add authorized flag to roaming event
+Date: Fri, 14 Apr 2017 12:02:00 +0300
+Message-Id: <20170414090210.31397-17-luca@coelho.fi> (sfid-20170414_110608_583355_774D7E3B)
+In-Reply-To: <20170414090210.31397-1-luca@coelho.fi>
+References: <20170414090210.31397-1-luca@coelho.fi>
+Subject: [PATCH v2 16/26] iwlwifi: mvm: tell the firmware about the U-APSD parameters
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Drivers that initiate roaming while being connected to a network that
-uses 802.1X authentication need to inform user space if 802.1X
-authentication is further required after roaming.
-For example, when using the Fast transition protocol, roaming within
-the mobility domain does not require new 802.1X authentication, but
-roaming to another mobility domain does.
-In addition, some drivers may not support 802.1X authentication
-(so it has to be done in user space), while other drivers do.
+Newer firmware versions will be able to handle all the
+WMM-PS flows internally when we act as a GO. The firwmare
+relies on the fact that the drivers puts frames for
+different peers in different queues (DQA) to achieve this.
+The driver will not be aware of the power state of the peers
+anymore.
 
-Add a flag to the roaming notification to indicate if user space is
-required to do 802.1X authentication after the roaming or not.
-This flag will only be used for networks that use 802.1X
-authentication. For networks that do not use 802.1X authentication it
-is assumed that no further action is required from user space after
-the roaming notification.
+Tell the firmware about the WMM-PS parameters of earch peer
+that connects to us so that it can know what are the
+trigger-enabled ACs, the delivery-enableds ACs and the
+Service Period length.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+This API change is backward compatible since older firmware
+versions will simply ignore the newly added values.
+
+Since we don't support ieee80211 TSPECs for now, just copy
+the trigger-enabled ACs to the delivery enabled ones.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h       |  4 ++++
- include/uapi/linux/nl80211.h | 14 ++++++++++++++
- net/wireless/nl80211.c       |  4 +++-
- net/wireless/sme.c           |  1 +
- 4 files changed, 22 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h | 11 ++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c        | 10 ++++++----
+ 2 files changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 115f6fc5a34d..f9f4fde2dc09 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5384,6 +5384,9 @@ cfg80211_connect_timeout(struct net_device *dev, const u8 *bssid,
-  * @req_ie_len: association request IEs length
-  * @resp_ie: association response IEs (may be %NULL)
-  * @resp_ie_len: assoc response IEs length
-+ * @authorized: true if the 802.1X authentication was done by the driver or is
-+ *	not needed (e.g., when Fast Transition protocol was used), false
-+ *	otherwise. Ignored for networks that don't use 802.1X authentication.
-  */
- struct cfg80211_roam_info {
- 	struct ieee80211_channel *channel;
-@@ -5393,6 +5396,7 @@ struct cfg80211_roam_info {
- 	size_t req_ie_len;
- 	const u8 *resp_ie;
- 	size_t resp_ie_len;
-+	bool authorized;
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+index 4f8648f53879..e79df1c53d68 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+@@ -179,7 +179,7 @@ enum iwl_sta_key_flag {
+  * enum iwl_sta_modify_flag - indicate to the fw what flag are being changed
+  * @STA_MODIFY_QUEUE_REMOVAL: this command removes a queue
+  * @STA_MODIFY_TID_DISABLE_TX: this command modifies %tid_disable_tx
+- * @STA_MODIFY_UAPSD_ACS: this command modifies %uapsd_trigger_acs
++ * @STA_MODIFY_UAPSD_ACS: this command modifies %uapsd_acs
+  * @STA_MODIFY_ADD_BA_TID: this command modifies %add_immediate_ba_tid
+  * @STA_MODIFY_REMOVE_BA_TID: this command modifies %remove_immediate_ba_tid
+  * @STA_MODIFY_SLEEPING_STA_TX_COUNT: this command modifies %sleep_tx_count
+@@ -354,8 +354,9 @@ struct iwl_mvm_add_sta_cmd_v7 {
+  * @tfd_queue_msk: tfd queues used by this station.
+  *	Obselete for new TX API (9 and above).
+  * @rx_ba_window: aggregation window size
+- * @scd_queue_bank: queue bank in used. Each bank contains 32 queues. 0 means
+- *	that the queues used by this station are in the first 32.
++ * @sp_length: the size of the SP as it appears in the WME IE
++ * @uapsd_acs:  4 LS bits are trigger enabled ACs, 4 MS bits are the deliver
++ *	enabled ACs.
+  *
+  * The device contains an internal table of per-station information, with info
+  * on security keys, aggregation parameters, and Tx rates for initial Tx
+@@ -385,8 +386,8 @@ struct iwl_mvm_add_sta_cmd {
+ 	__le16 beamform_flags;
+ 	__le32 tfd_queue_msk;
+ 	__le16 rx_ba_window;
+-	u8 scd_queue_bank;
+-	u8 uapsd_trigger_acs;
++	u8 sp_length;
++	u8 uapsd_acs;
+ } __packed; /* ADD_STA_CMD_API_S_VER_9 */
  
  /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6095a6c4c412..7bdbce7c4147 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -546,6 +546,12 @@
-  *	well to remain backwards compatible.
-  * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
-  *	sent as an event when the card/driver roamed by itself.
-+ *	When used as an event, and the driver roamed in a network that requires
-+ *	802.1X authentication, %NL80211_ATTR_CONNECTION_AUTHORIZED should be set
-+ *	if the 802.1X authentication was done by the driver or if roaming was
-+ *	done using Fast Transition protocol (in which case 802.1X authentication
-+ *	is not needed). If %NL80211_ATTR_CONNECTION_AUTHORIZED is not set,
-+ *	user space is responsible for the 802.1X authentication.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-  *	userspace that a connection was dropped by the AP or due to other
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
-@@ -2081,6 +2087,12 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PMK: PMK for the PMKSA identified by %NL80211_ATTR_PMKID.
-  *	This is used with @NL80211_CMD_SET_PMKSA.
-  *
-+ * @NL80211_ATTR_CONNECTION_AUTHORIZED: A flag attribute used with
-+ *	%NL80211_CMD_ROAM to indicate that 802.1X authentication was done by the
-+ *	driver or is not needed (because roaming used the Fast Transition
-+ *	protocol). Only valid for roaming in networks that require 802.1X
-+ *	authentication.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2500,6 +2512,8 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index ffbfd34d8e92..20a8f529760f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -215,13 +215,15 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		add_sta_cmd.modify_mask |= STA_MODIFY_UAPSD_ACS;
  
- 	NL80211_ATTR_PMK,
+ 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
+-			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_BK);
++			add_sta_cmd.uapsd_acs |= BIT(AC_BK);
+ 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BE)
+-			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_BE);
++			add_sta_cmd.uapsd_acs |= BIT(AC_BE);
+ 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VI)
+-			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_VI);
++			add_sta_cmd.uapsd_acs |= BIT(AC_VI);
+ 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
+-			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_VO);
++			add_sta_cmd.uapsd_acs |= BIT(AC_VO);
++		add_sta_cmd.uapsd_acs |= add_sta_cmd.uapsd_acs << 4;
++		add_sta_cmd.sp_length = sta->max_sp;
+ 	}
  
-+	NL80211_ATTR_CONNECTION_AUTHORIZED,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ab9036e2d622..f3bf20584222 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13621,7 +13621,9 @@ void nl80211_send_roamed(struct cfg80211_registered_device *rdev,
- 		     info->req_ie)) ||
- 	    (info->resp_ie &&
- 	     nla_put(msg, NL80211_ATTR_RESP_IE, info->resp_ie_len,
--		     info->resp_ie)))
-+		     info->resp_ie)) ||
-+	    (info->authorized &&
-+	     nla_put_flag(msg, NL80211_ATTR_CONNECTION_AUTHORIZED)))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 532a0007ce82..0a49b88070d0 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -960,6 +960,7 @@ void cfg80211_roamed(struct net_device *dev, struct cfg80211_roam_info *info,
- 	ev->rm.resp_ie_len = info->resp_ie_len;
- 	memcpy((void *)ev->rm.resp_ie, info->resp_ie, info->resp_ie_len);
- 	ev->rm.bss = info->bss;
-+	ev->rm.authorized = info->authorized;
- 
- 	spin_lock_irqsave(&wdev->event_lock, flags);
- 	list_add_tail(&ev->list, &wdev->event_list);
+ 	status = ADD_STA_SUCCESS;
 -- 
 2.11.0
