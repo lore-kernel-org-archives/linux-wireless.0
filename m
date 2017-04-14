@@ -1,67 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36627 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753141AbdDJQX2 (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:33772 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752624AbdDNVvp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 12:23:28 -0400
-Received: by mail-oi0-f67.google.com with SMTP id b187so23325750oif.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:28 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 14/14] rtlwifi: btcoex: 21a 1ant: avoid LPS/IPS mismatch for pnp notify
-Date: Mon, 10 Apr 2017 11:23:10 -0500
-Message-Id: <20170410162310.7515-15-Larry.Finger@lwfinger.net> (sfid-20170410_182338_330308_2EE0D4BE)
-In-Reply-To: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
-References: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
+        Fri, 14 Apr 2017 17:51:45 -0400
+Received: by mail-pf0-f170.google.com with SMTP id s16so44883053pfs.0
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2017 14:51:45 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>, stable@vger.kernel.org
+Subject: [PATCH 1/4] mwifiex: pcie: fix cmd_buf use-after-free in remove/reset
+Date: Fri, 14 Apr 2017 14:51:17 -0700
+Message-Id: <20170414215120.145038-1-briannorris@chromium.org> (sfid-20170414_235252_983805_B154258E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Command buffers (skb's) are allocated by the main driver, and freed upon
+the last use. That last use is often in mwifiex_free_cmd_buffer(). In
+the meantime, if the command buffer gets used by the PCI driver, we map
+it as DMA-able, and store the mapping information in the 'cb' memory.
 
-When driver is going to sleep, it does not leave LPS/IPS, thus the
-BTCoex may have mismatch when driver wakes up. To avoid that, BTCoex
-needs to clear the IPS/LPS state when it receives a pnp notify, then
-it can properly set up the hw when driver wakes up.
+However, if a command was in-flight when resetting the device (and
+therefore was still mapped), we don't get a chance to unmap this memory
+until after the core has cleaned up its command handling.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Let's keep a refcount within the PCI driver, so we ensure the memory
+only gets freed after we've finished unmapping it.
+
+Noticed by KASAN when forcing a reset via:
+
+  echo 1 > /sys/bus/pci/.../reset
+
+The same code path can presumably be exercised in remove() and
+shutdown().
+
+[  205.390377] mwifiex_pcie 0000:01:00.0: info: shutdown mwifiex...
+[  205.400393] ==================================================================
+[  205.407719] BUG: KASAN: use-after-free in mwifiex_unmap_pci_memory.isra.14+0x4c/0x100 [mwifiex_pcie] at addr ffffffc0ad471b28
+[  205.419040] Read of size 16 by task bash/1913
+[  205.423421] =============================================================================
+[  205.431625] BUG skbuff_head_cache (Tainted: G    B          ): kasan: bad access detected
+[  205.439815] -----------------------------------------------------------------------------
+[  205.439815]
+[  205.449534] INFO: Allocated in __build_skb+0x48/0x114 age=1311 cpu=4 pid=1913
+[  205.456709] 	alloc_debug_processing+0x124/0x178
+[  205.461282] 	___slab_alloc.constprop.58+0x528/0x608
+[  205.466196] 	__slab_alloc.isra.54.constprop.57+0x44/0x54
+[  205.471542] 	kmem_cache_alloc+0xcc/0x278
+[  205.475497] 	__build_skb+0x48/0x114
+[  205.479019] 	__netdev_alloc_skb+0xe0/0x170
+[  205.483244] 	mwifiex_alloc_cmd_buffer+0x68/0xdc [mwifiex]
+[  205.488759] 	mwifiex_init_fw+0x40/0x6cc [mwifiex]
+[  205.493584] 	_mwifiex_fw_dpc+0x158/0x520 [mwifiex]
+[  205.498491] 	mwifiex_reinit_sw+0x2c4/0x398 [mwifiex]
+[  205.503510] 	mwifiex_pcie_reset_notify+0x114/0x15c [mwifiex_pcie]
+[  205.509643] 	pci_reset_notify+0x5c/0x6c
+[  205.513519] 	pci_reset_function+0x6c/0x7c
+[  205.517567] 	reset_store+0x68/0x98
+[  205.521003] 	dev_attr_store+0x54/0x60
+[  205.524705] 	sysfs_kf_write+0x9c/0xb0
+[  205.528413] INFO: Freed in __kfree_skb+0xb0/0xbc age=131 cpu=4 pid=1913
+[  205.535064] 	free_debug_processing+0x264/0x370
+[  205.539550] 	__slab_free+0x84/0x40c
+[  205.543075] 	kmem_cache_free+0x1c8/0x2a0
+[  205.547030] 	__kfree_skb+0xb0/0xbc
+[  205.550465] 	consume_skb+0x164/0x178
+[  205.554079] 	__dev_kfree_skb_any+0x58/0x64
+[  205.558304] 	mwifiex_free_cmd_buffer+0xa0/0x158 [mwifiex]
+[  205.563817] 	mwifiex_shutdown_drv+0x578/0x5c4 [mwifiex]
+[  205.569164] 	mwifiex_shutdown_sw+0x178/0x310 [mwifiex]
+[  205.574353] 	mwifiex_pcie_reset_notify+0xd4/0x15c [mwifiex_pcie]
+[  205.580398] 	pci_reset_notify+0x5c/0x6c
+[  205.584274] 	pci_dev_save_and_disable+0x24/0x6c
+[  205.588837] 	pci_reset_function+0x30/0x7c
+[  205.592885] 	reset_store+0x68/0x98
+[  205.596324] 	dev_attr_store+0x54/0x60
+[  205.600017] 	sysfs_kf_write+0x9c/0xb0
+...
+[  205.800488] Call trace:
+[  205.802980] [<ffffffc00020a69c>] dump_backtrace+0x0/0x190
+[  205.808415] [<ffffffc00020a96c>] show_stack+0x20/0x28
+[  205.813506] [<ffffffc0005d020c>] dump_stack+0xa4/0xcc
+[  205.818598] [<ffffffc0003be44c>] print_trailer+0x158/0x168
+[  205.824120] [<ffffffc0003be5f0>] object_err+0x4c/0x5c
+[  205.829210] [<ffffffc0003c45bc>] kasan_report+0x334/0x500
+[  205.834641] [<ffffffc0003c3994>] check_memory_region+0x20/0x14c
+[  205.840593] [<ffffffc0003c3b14>] __asan_loadN+0x14/0x1c
+[  205.845879] [<ffffffbffc46171c>] mwifiex_unmap_pci_memory.isra.14+0x4c/0x100 [mwifiex_pcie]
+[  205.854282] [<ffffffbffc461864>] mwifiex_pcie_delete_cmdrsp_buf+0x94/0xa8 [mwifiex_pcie]
+[  205.862421] [<ffffffbffc462028>] mwifiex_pcie_free_buffers+0x11c/0x158 [mwifiex_pcie]
+[  205.870302] [<ffffffbffc4620d4>] mwifiex_pcie_down_dev+0x70/0x80 [mwifiex_pcie]
+[  205.877736] [<ffffffbffc1397a8>] mwifiex_shutdown_sw+0x190/0x310 [mwifiex]
+[  205.884658] [<ffffffbffc4606b4>] mwifiex_pcie_reset_notify+0xd4/0x15c [mwifiex_pcie]
+[  205.892446] [<ffffffc000635f54>] pci_reset_notify+0x5c/0x6c
+[  205.898048] [<ffffffc00063a044>] pci_dev_save_and_disable+0x24/0x6c
+[  205.904350] [<ffffffc00063cf0c>] pci_reset_function+0x30/0x7c
+[  205.910134] [<ffffffc000641118>] reset_store+0x68/0x98
+[  205.915312] [<ffffffc000771588>] dev_attr_store+0x54/0x60
+[  205.920750] [<ffffffc00046f53c>] sysfs_kf_write+0x9c/0xb0
+[  205.926182] [<ffffffc00046dfb0>] kernfs_fop_write+0x184/0x1f8
+[  205.931963] [<ffffffc0003d64f4>] __vfs_write+0x6c/0x17c
+[  205.937221] [<ffffffc0003d7164>] vfs_write+0xf0/0x1c4
+[  205.942310] [<ffffffc0003d7da0>] SyS_write+0x78/0xd8
+[  205.947312] [<ffffffc000204634>] el0_svc_naked+0x24/0x28
+...
+[  205.998268] ==================================================================
+
+This bug has been around in different forms for a while. It was sort of
+noticed in commit 955ab095c51a ("mwifiex: Do not kfree cmd buf while
+unregistering PCIe"), but it just fixed the double-free, without
+acknowledging the potential for use-after-free.
+
+Fixes: fc3314609047 ("mwifiex: use pci_alloc/free_consistent APIs for PCIe")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c  | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 0509ffab9e6f..5e9f3b0f7a25 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -2905,11 +2905,18 @@ void ex_btc8821a1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- 	if (BTC_WIFI_PNP_SLEEP == pnp_state) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Pnp notify to SLEEP\n");
-+		/* BT should clear UnderIPS/UnderLPS state to avoid mismatch
-+		 * state after wakeup.
-+		 */
-+		coex_sta->under_ips = false;
-+		coex_sta->under_lps = false;
- 		btcoexist->stop_coex_dm = true;
--		btc8821a1ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
- 		btc8821a1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
- 					      0x0, 0x0);
--		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 9);
-+		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 0);
-+		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
-+		btc8821a1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT, false,
-+					  true);
- 	} else if (BTC_WIFI_PNP_WAKE_UP == pnp_state) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Pnp notify to WAKE UP\n");
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 92ffb1ba17e6..99e8a5cfda1b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1035,6 +1035,7 @@ static int mwifiex_pcie_delete_cmdrsp_buf(struct mwifiex_adapter *adapter)
+ 	if (card && card->cmd_buf) {
+ 		mwifiex_unmap_pci_memory(adapter, card->cmd_buf,
+ 					 PCI_DMA_TODEVICE);
++		dev_kfree_skb_any(card->cmd_buf);
+ 	}
+ 	return 0;
+ }
+@@ -1601,6 +1602,11 @@ mwifiex_pcie_send_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
+ 		return -1;
+ 
+ 	card->cmd_buf = skb;
++	/*
++	 * Need to keep a reference, since core driver might free up this
++	 * buffer before we've unmapped it.
++	 */
++	skb_get(skb);
+ 
+ 	/* To send a command, the driver will:
+ 		1. Write the 64bit physical address of the data buffer to
+@@ -1703,6 +1709,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 	if (card->cmd_buf) {
+ 		mwifiex_unmap_pci_memory(adapter, card->cmd_buf,
+ 					 PCI_DMA_TODEVICE);
++		dev_kfree_skb_any(card->cmd_buf);
+ 		card->cmd_buf = NULL;
+ 	}
+ 
 -- 
-2.12.0
+2.12.2.762.g0e3151a226-goog
