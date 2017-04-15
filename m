@@ -1,94 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51434 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754687AbdDMP1F (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35020 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754522AbdDOUcQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 11:27:05 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 13 Apr 2017 18:25:04 +0300
-Message-Id: <20170413152507.9648-24-luca@coelho.fi> (sfid-20170413_172709_524805_3B8C794E)
-In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
-References: <20170413152507.9648-1-luca@coelho.fi>
-Subject: [PATCH 23/26] iwlwifi: pcie: remove block and freeze operations from new transport
+        Sat, 15 Apr 2017 16:32:16 -0400
+Received: by mail-oi0-f67.google.com with SMTP id a21so5610984oic.2
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:16 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>
+Subject: [PATCH 11/14] rtlwifi: btcoex: 21a 2ant: macro for bt rssi threshold
+Date: Sat, 15 Apr 2017 15:31:57 -0500
+Message-Id: <20170415203200.22979-12-Larry.Finger@lwfinger.net> (sfid-20170415_223232_393920_0B47D936)
+In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-New transport will be used only by op modes that supports
-buffer station offload - hence those will never be called.
-Clean it up.
+Using macro to control the bt threshold.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  3 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 22 +++-------------------
- 2 files changed, 3 insertions(+), 22 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 16a057398de2..d39ca944f484 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2925,9 +2925,6 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 626b73fd97a5..5a8e4b80006b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3145,7 +3145,8 @@ static void btc8821a2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ 	u32 wifi_bw;
  
- 	.txq_alloc = iwl_trans_pcie_dyn_txq_alloc,
- 	.txq_free = iwl_trans_pcie_dyn_txq_free,
--
--	.freeze_txq_timer = iwl_trans_pcie_freeze_txq_timer,
--	.block_txq_ptrs = iwl_trans_pcie_block_txq_ptrs,
- };
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+-	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
++	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
++				2, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 0);
  
- struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index e8eb11282795..2019ccda31c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -107,9 +107,7 @@ static void iwl_pcie_gen2_txq_inc_wr_ptr(struct iwl_trans *trans,
- 	 * if not in power-save mode, uCode will never sleep when we're
- 	 * trying to tx (during RFKILL, we're not trying to tx).
- 	 */
--	if (!txq->block)
--		iwl_write32(trans, HBUS_TARG_WRPTR,
--			    txq->write_ptr | (txq->id << 16));
-+	iwl_write32(trans, HBUS_TARG_WRPTR, txq->write_ptr | (txq->id << 16));
- }
- 
- static u8 iwl_pcie_gen2_get_num_tbs(struct iwl_trans *trans,
-@@ -341,19 +339,8 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 
- 	/* start timer if queue currently empty */
- 	if (txq->read_ptr == txq->write_ptr) {
--		if (txq->wd_timeout) {
--			/*
--			 * If the TXQ is active, then set the timer, if not,
--			 * set the timer in remainder so that the timer will
--			 * be armed with the right value when the station will
--			 * wake up.
--			 */
--			if (!txq->frozen)
--				mod_timer(&txq->stuck_timer,
--					  jiffies + txq->wd_timeout);
--			else
--				txq->frozen_expiry_remainder = txq->wd_timeout;
--		}
-+		if (txq->wd_timeout)
-+			mod_timer(&txq->stuck_timer, jiffies + txq->wd_timeout);
- 		IWL_DEBUG_RPM(trans, "Q: %d first tx - take ref\n", txq->id);
- 		iwl_trans_ref(trans);
- 	}
-@@ -843,9 +830,6 @@ void iwl_trans_pcie_dyn_txq_free(struct iwl_trans *trans, int queue)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
--	trans_pcie->txq[queue].frozen_expiry_remainder = 0;
--	trans_pcie->txq[queue].frozen = false;
--
- 	/*
- 	 * Upon HW Rfkill - we stop the device, and then stop the queues
- 	 * in the op_mode. Just for the sake of the simplicity of the op_mode,
+ 	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
+ 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
 -- 
-2.11.0
+2.12.0
