@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12646 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932091AbdDPWpx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 18:45:53 -0400
-Date: Mon, 17 Apr 2017 00:45:49 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nfc: fix get_unaligned_...() misuses
-Message-ID: <20170416224537.GB694@zurbaran.ger.intel.com> (sfid-20170417_004620_230706_3BD7C933)
-References: <20170406164847.GU29622@ZenIV.linux.org.uk>
- <20170406165859.GV29622@ZenIV.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170406165859.GV29622@ZenIV.linux.org.uk>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34023 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754953AbdDOUcS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 15 Apr 2017 16:32:18 -0400
+Received: by mail-oi0-f67.google.com with SMTP id t14so12826120oif.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:18 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>
+Subject: [PATCH 13/14] rtlwifi: btcoex: 21a 2ant: just return when wifi is under ips
+Date: Sat, 15 Apr 2017 15:31:59 -0500
+Message-Id: <20170415203200.22979-14-Larry.Finger@lwfinger.net> (sfid-20170415_223232_537677_5290FD04)
+In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 05:58:59PM +0100, Al Viro wrote:
-> On Thu, Apr 06, 2017 at 05:48:47PM +0100, Al Viro wrote:
-> > * use unaligned.h, not unaligned/access_ok.h
-> 
-> ... which got misspelled in that patch, sorry...  Fixed variant follows:
-> 
-> commit b3e79ba1708c9b74781079c9f8617448fce36b51
-> Author: Al Viro <viro@zeniv.linux.org.uk>
-> Date:   Thu Apr 6 12:42:14 2017 -0400
-> 
->     nfc: fix get_unaligned_...() misuses
->     
->     * use unaligned.h, not unaligned/access_ok.h
->     * if a local variable of type uint16_t is unaligned, your compiler is FUBAR
->     * the whole point of get_unaligned_... is to avoid memcpy + ..._to_cpu().
->       Using it *after* memcpy() (into aligned object, no less) is pointless.
->     
->     Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-Partly applied to nfc-next. The unaligned/access_ok.h replacements were
-already applied.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Cheers,
-Samuel.
+If wifi is in power saving mode, do nothing.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+  ---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 22cb8aa8208d..0aa36247e402 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3483,6 +3483,12 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 		return;
+ 	}
+ 
++	if (coex_sta->under_ips) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], wifi is under IPS !!!\n");
++		return;
++	}
++
+ 	algorithm = btc8821a2ant_action_algorithm(btcoexist);
+ 	if (coex_sta->c2h_bt_inquiry_page &&
+ 	    (BT_8821A_2ANT_COEX_ALGO_PANHS != algorithm)) {
+-- 
+2.12.0
