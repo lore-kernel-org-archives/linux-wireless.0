@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:33843 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751564AbdDCSdv (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59621 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751511AbdDOIze (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 14:33:51 -0400
-Received: by mail-pg0-f51.google.com with SMTP id 21so128467277pgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Apr 2017 11:33:51 -0700 (PDT)
-Date: Mon, 3 Apr 2017 11:33:47 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Dmitry Torokhov <dtor@chromium.org>
-Cc: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Sat, 15 Apr 2017 04:55:34 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
         Kalle Valo <kvalo@qca.qualcomm.com>,
-        Rajat Jain <rajatja@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
         Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 1/3] mwifiex: remove unnecessary wakeup interrupt number
- sanity check
-Message-ID: <20170403183346.GA116262@google.com> (sfid-20170403_203356_879798_B4CF6C9A)
-References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
- <CAE_wzQ9x8-dNCEbJw9+XnSK6fPaUa-K29jc0hjB91xUaFvRFhQ@mail.gmail.com>
+        Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: RE:  Re: Re: Re: [PATCH v3 4/4] mwifiex: pcie: extract wifi part from
+ combo firmware during function level reset
+Date: Sat, 15 Apr 2017 08:55:17 +0000
+Message-ID: <1f0552b6af0a41aa864a5b716f85eaa4@SC-EXCH02.marvell.com> (sfid-20170415_105540_540269_95840692)
+References: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
+ <1491815374-6555-4-git-send-email-huxinming820@gmail.com>
+ <20170411013724.GA135531@google.com>
+ <45a8fcd4f0384fa7b622cf3a87b41ea8@SC-EXCH02.marvell.com>
+ <20170413174954.GA66124@google.com>
+ <111627ea9fbd477e83622e8df51f109b@SC-EXCH02.marvell.com>
+ <20170414165534.GA102425@google.com>
+In-Reply-To: <20170414165534.GA102425@google.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE_wzQ9x8-dNCEbJw9+XnSK6fPaUa-K29jc0hjB91xUaFvRFhQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 31, 2017 at 03:37:01PM -0700, Dmitry Torokhov wrote:
-> On Thu, Mar 30, 2017 at 2:19 AM, Xinming Hu <huxinming820@gmail.com> wrote:
-> > From: Xinming Hu <huxm@marvell.com>
-> >
-> > Sanity check of interrupt number in interrupt handler is unnecessary and
-> > confusion, remove it.
-> 
-> I'd reworded the explanation a bit: "If wakeup interrupt handler is
-> called, we know that the wakeup interrupt number is valid, there is no
-> need to check it."
-
-Either way works for me (modulo grammar), though Dmitry's is more
-informative. So +1.
-
-> Otherwise:
-> 
-> Reviewed-by: Dmitry Torokhov <dtor@chromium.org>
-
-Ooh, me too!
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-I believe this same pattern occurs in btmrvl_sdio. Possibly others.
-
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > ---
-> >  drivers/net/wireless/marvell/mwifiex/main.c | 8 +++-----
-> >  1 file changed, 3 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-> > index 30f4994..5e82602 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> > @@ -1503,11 +1503,9 @@ static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
-> >  {
-> >         struct mwifiex_adapter *adapter = priv;
-> >
-> > -       if (adapter->irq_wakeup >= 0) {
-> > -               dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
-> > -               adapter->wake_by_wifi = true;
-> > -               disable_irq_nosync(irq);
-> > -       }
-> > +       dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
-> > +       adapter->wake_by_wifi = true;
-> > +       disable_irq_nosync(irq);
-> >
-> >         /* Notify PM core we are wakeup source */
-> >         pm_wakeup_event(adapter->dev, 0);
-> > --
-> > 1.8.1.4
-> >
+SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
+Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo0
+1MIxNcjVIDA6NTYNCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxs
+ZSBWYWxvOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsNCj4gQW1pdGt1bWFy
+IEthcndhcjsgQ2F0aHkgTHVvOyBHYW5hcGF0aGkgQmhhdA0KPiBTdWJqZWN0OiBbRVhUXSBSZTog
+UmU6IFJlOiBbUEFUQ0ggdjMgNC80XSBtd2lmaWV4OiBwY2llOiBleHRyYWN0IHdpZmkgcGFydCBm
+cm9tDQo+IGNvbWJvIGZpcm13YXJlIGR1cmluZyBmdW5jdGlvbiBsZXZlbCByZXNldA0KPiANCj4g
+RXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gSGksDQo+IA0KPiBPbiBGcmks
+IEFwciAxNCwgMjAxNyBhdCAwMzoyODoyOEFNICswMDAwLCBYaW5taW5nIEh1IHdyb3RlOg0KPiA+
+IEFjY29yZGluZyB0byB0aGUgZmlybXdhcmUgZG93bmxvYWQgcHJvdG9jb2wsIGV2ZXJ5IENNRCBz
+aG91bGQgbm90IGV4Y2VlZA0KPiBNV0lGSUVYX1VQTERfU0laRS4NCj4gPiB3ZSBjYW4gYWRkIGEg
+c2FuaXR5IGNoZWNrICwgbGlrZSwNCj4gPiBpZiAoZGF0YV9sZW4gPiBNV0lGSUVYX1VQTERfU0la
+RSAtIHNpemVvZihmd2RhdGEtPmhlYWRlcikpDQo+ID4gCSplcnJvcioNCj4gDQo+IEkgd2FzIHBy
+aW1hcmlseSBpbnRlcmVzdGVkIGluIHByb3RlY3RpbmcgdGhlIGtlcm5lbCBpdHNlbGYuIE9uY2Ug
+dGhlIGtlcm5lbCBzdGFydHMNCj4gcGFyc2luZyB0aGUgZmlybXdhcmUsIHdlIGhhdmUgdG8gbWFr
+ZSBzdXJlIGEgYmFkIGZpcm13YXJlIGZpbGUgd29uJ3QgZW5kIHVwDQo+IHdpdGggdXMgbG9vcGlu
+ZyBpbmZpbml0ZWx5LCByZWFkaW5nL3dyaXRpbmcgaW52YWxpZCBtZW1vcnksIG9yIG90aGVyd2lz
+ZQ0KPiBleHBvc2luZyBzZWN1cml0eSBvciBzdGFiaWxpdHkgaXNzdWVzLiBJIHdhc24ndCBuZWNl
+c3NhcmlseSBpbnRlcmVzdGVkIGluIHZhbGlkYXRpbmcNCj4gZXZlcnkgcmVxdWlyZW1lbnQgb2Yg
+dGhlIGVuZC1wb2ludCBkZXZpY2UuIEZvciBleGFtcGxlLCB3ZSdyZSBub3QgYm90aGVyaW5nDQo+
+IGNoZWNraW5nIHRoZSBDUkNzLiBJIGZpZ3VyZWQgdGhhdCB0aGlzIHdhcyBhbGwgdGhlIGpvYiBv
+ZiB5b3VyIFdpZmkgY2FyZCdzIGJvb3QNCj4gUk9NLg0KPiANCj4gU28sIHdlICpjYW4qIGltcGxl
+bWVudCBjaGVja3MgbGlrZSB0aGlzLCBidXQgSSdkIHJlYWxseSBob3BlIHdlIGRvbid0IG5lZWQg
+dGhpcw0KPiBwYXJ0aWN1bGFyIG9uZSwgYmVjYXVzZSB5b3VyIGNhcmQgc2hvdWxkIGJlIHRha2lu
+ZyBjYXJlIG9mIHRoYXQuDQo+IA0KDQpHb3QgaXQsIHdlIHdpbGwga2VlcCBpbiBtaW5kIHRvIGNo
+ZWNrIHRoZSBwb3NzaWJsZSBvdmVyZmxvdyBpbiBmdXR1cmUsIGVpdGhlciB1c2luZyBnZW5lcmFs
+DQpwcm90ZWN0IG9yIHVuZGVyIGxpbWl0IGJ5IG91ciBkZXZpY2UgcmVxdWlyZW1lbnQuDQoNCj4g
+UGxlYXNlIGNvbnNpZGVyIHJldmlld2luZyBteSBsYXRlc3Qgc3VibWlzc2lvbi4NCj4gDQoNClN1
+cmUuDQoNClRoYW5rcywNClNpbW9uDQo+IFJlZ2FyZHMsDQo+IEJyaWFuDQo=
