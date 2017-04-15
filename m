@@ -1,84 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36820 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968205AbdDTGzg (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36348 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754704AbdDOUcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 02:55:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi-next 2017-04-19-2
-References: <1492664371.31741.91.camel@coelho.fi>
-        <1492664686.31741.93.camel@coelho.fi>
-Date: Thu, 20 Apr 2017 09:55:30 +0300
-In-Reply-To: <1492664686.31741.93.camel@coelho.fi> (Luca Coelho's message of
-        "Thu, 20 Apr 2017 08:04:46 +0300")
-Message-ID: <8760hz7el9.fsf@kamboji.qca.qualcomm.com> (sfid-20170420_085604_341679_DF4330C1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Sat, 15 Apr 2017 16:32:12 -0400
+Received: by mail-oi0-f65.google.com with SMTP id b187so22210817oif.3
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:11 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 06/14] rtlwifi: btcoex: 21a 2ant: set tdma based on rssi state amd limit rx agg size
+Date: Sat, 15 Apr 2017 15:31:52 -0500
+Message-Id: <20170415203200.22979-7-Larry.Finger@lwfinger.net> (sfid-20170415_223234_987655_6DC7E312)
+In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> On Thu, 2017-04-20 at 07:59 +0300, Luca Coelho wrote:
->> Here's v2 of=C2=A0my second pull-request intended for v4.12.  It include=
-s the
->> last three patch series I sent out, namely 2017-04-13, 2017-04-19 and
->> the 2 fixes by Johannes that I sent a few minutes ago.
->>=20
->> I also removed the "bump API to 31" patch.  I'll send a diff=C2=A0between
->> this tag and the HEAD of the patches I sent in the 2017-04-19 series.
->
-> This is the diffenrece between my pending branch (which contains all the
-> patches up to 2017-04-19) and this pull-request.  For the record of what
-> I had to change.
->
->
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-> b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-> index 904e17956e2c..b9718c0cf174 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-> @@ -70,8 +70,8 @@
-> =C2=A0#include "iwl-agn-hw.h"
-> =C2=A0
-> =C2=A0/* Highest firmware API version supported */
-> -#define IWL8000_UCODE_API_MAX=C2=A0=C2=A031
-> -#define IWL8265_UCODE_API_MAX=C2=A0=C2=A031
-> +#define IWL8000_UCODE_API_MAX=C2=A0=C2=A030
-> +#define IWL8265_UCODE_API_MAX=C2=A0=C2=A030
-> =C2=A0
-> =C2=A0/* Lowest firmware API version supported */
-> =C2=A0#define IWL8000_UCODE_API_MIN=C2=A0=C2=A017
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-> b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-> index 42a6e723191e..110ceefccc15 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-> @@ -55,7 +55,7 @@
-> =C2=A0#include "iwl-agn-hw.h"
-> =C2=A0
-> =C2=A0/* Highest firmware API version supported */
-> -#define IWL9000_UCODE_API_MAX=C2=A0=C2=A031
-> +#define IWL9000_UCODE_API_MAX=C2=A0=C2=A030
-> =C2=A0
-> =C2=A0/* Lowest firmware API version supported */
-> =C2=A0#define IWL9000_UCODE_API_MIN=C2=A0=C2=A030
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> index 6d745c36f1d8..097cb45c8ad9 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> @@ -55,7 +55,7 @@
-> =C2=A0#include "iwl-agn-hw.h"
-> =C2=A0
-> =C2=A0/* Highest firmware API version supported */
-> -#define IWL_A000_UCODE_API_MAX 31
-> +#define IWL_A000_UCODE_API_MAX 30
+Monitor the rssi state to set the tdma and limit rx aggregation size to
+fit the bt profiling.
 
-Good that you dropped this. I was a bit worried that if it the API bump
-was too soon and inconvenient for the users.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 51 ++++++++++------------
+ 1 file changed, 23 insertions(+), 28 deletions(-)
 
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index bbce0cbe2e9a..9df5b4c195ff 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -2875,33 +2875,40 @@ static void btc8821a2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state, bt_info_ext;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 
+-	bt_info_ext = coex_sta->bt_info_ext;
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+-	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
++	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
++				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
++	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
++		2, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 0);
++
++	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
++
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
++	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	if (BTC_RSSI_HIGH(bt_rssi_state))
+ 		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
+ 	else
+ 		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+ 
+-	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
++	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
++		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++		btc8821a2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++					      0x0, 0x0);
++	} else {
++		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 13);
++		btc8821a2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
++					      0x4);
++	}
+ 
+-	if (wifi_bw == BTC_WIFI_BW_HT40) {
+-		/* fw mechanism */
+-		if (bt_info_ext&BIT0) {
+-			/* a2dp basic rate */
+-			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
+-							  true, 2);
+-		} else {
+-			/* a2dp edr rate */
+-			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
+-							  true, 1);
+-		}
++	btc8821a2ant_tdma_duration_adjust(btcoexist, false, true, 2);
+ 
+-		/* sw mechanism */
++	/* sw mechanism */
++	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
++	if (wifi_bw == BTC_WIFI_BW_HT40) {
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, true, false,
+@@ -2915,18 +2922,6 @@ static void btc8821a2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ 						   false, 0x18);
+ 		}
+ 	} else {
+-		/* fw mechanism */
+-		if (bt_info_ext&BIT0) {
+-			/* a2dp basic rate */
+-			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
+-							  true, 2);
+-		} else {
+-			/* a2dp edr rate */
+-			btc8821a2ant_tdma_duration_adjust(btcoexist, false,
+-							  true, 1);
+-		}
+-
+-		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, false, false,
+-- 
+2.12.0
