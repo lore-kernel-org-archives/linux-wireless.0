@@ -1,48 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:37596 "EHLO mail.us.es"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934449AbdDGTqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:46:07 -0400
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-        by mail.us.es (Postfix) with ESMTP id ACAB1170D2C
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:46:03 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 9E206DA391
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:46:03 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id C97D7DA38C
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:46:00 +0200 (CEST)
-Date: Fri, 7 Apr 2017 21:45:57 +0200
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-Message-ID: <20170407194557.GA23613@salvia> (sfid-20170407_214850_727826_5DACE531)
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
- <20170407.115315.23470877439489670.davem@davemloft.net>
- <1491591552.5800.1.camel@sipsolutions.net>
- <20170407190601.GA22991@salvia>
- <1491592185.5800.7.camel@sipsolutions.net>
- <20170407192134.GA23205@salvia>
- <1491593357.5800.13.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491593357.5800.13.camel@sipsolutions.net>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34989 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756597AbdDPTEg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Apr 2017 15:04:36 -0400
+Received: by mail-oi0-f66.google.com with SMTP id a21so8126685oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 12:04:36 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 02/10] rtlwifi: btcoex: 21a 2ant: refine btc8821a2ant_action_hid_a2dp
+Date: Sun, 16 Apr 2017 14:04:20 -0500
+Message-Id: <20170416190428.23857-3-Larry.Finger@lwfinger.net> (sfid-20170416_210441_417234_CC310E71)
+In-Reply-To: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
+References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 09:29:17PM +0200, Johannes Berg wrote:
-> On Fri, 2017-04-07 at 21:21 +0200, Pablo Neira Ayuso wrote:
-> > I think the most flexible way is to pass the container error
-> > structure to nla_parse() so it sets this for you. This would also
-> > save tons of "malformed attribute" strings.
-> 
-> Yes, for sure. The thing is we'll probalby have to pass down the
-> request skb *and* the error struct so that we can get the offset, and
-> this seems like the generic thing that we really should try to get the
-> most information generated.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-We only need to store the pointer to the attribute in the error
-container structure. We can calculate the offset from nl_err() by
-pasing the skbuff as parameter there, right?
+For hid a2dp profiling, decrease the bt power because of the distance of
+bt is usually short, and do not adjust the wifi duration to a longer
+period since it may be interrupted by bt easily, set tdma instead.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 108 ++++++++-------------
+ 1 file changed, 42 insertions(+), 66 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index a0f2eb53a011..60386c7571e8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3295,19 +3295,46 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state, bt_info_ext;
+ 	u32 wifi_bw;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
++	u8 ap_num = 0;
+ 
+-	bt_info_ext = coex_sta->bt_info_ext;
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+-	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
++	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
++				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
++	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
++				3, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 37);
+ 
+-	if (BTC_RSSI_HIGH(bt_rssi_state))
+-		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, true);
+-	else
+-		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
++	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
++
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
++	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
++	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
++		if (BTC_RSSI_HIGH(bt_rssi_state))
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else if (BTC_RSSI_MEDIUM(bt_rssi_state))
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++	} else {
++		/* only 802.11N mode we have to dec bt power to 4 degree */
++		if (BTC_RSSI_HIGH(bt_rssi_state)) {
++			btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM,
++					   &ap_num);
++			if (ap_num < 10)
++				btc8821a2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 4);
++			else
++				btc8821a2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 2);
++		} else if (BTC_RSSI_MEDIUM(bt_rssi_state)) {
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		} else {
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++		}
++	}
+ 
+ 	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
+ 		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+@@ -3319,36 +3346,15 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 					      0x4);
+ 	}
+ 
+-	if (BTC_WIFI_BW_HT40 == wifi_bw) {
+-		/* fw mechanism */
+-		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		} else {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		}
++	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
++	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
++	} else {
++		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
++	}
+ 
+-		/* sw mechanism */
++	/* sw mechanism */
++	if (wifi_bw == BTC_WIFI_BW_HT40) {
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, true, true,
+@@ -3362,36 +3368,6 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 						   false, 0x18);
+ 		}
+ 	} else {
+-		/* fw mechanism */
+-		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		} else {
+-			if (bt_info_ext & BIT0) {
+-				/*a2dp basic rate*/
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/*a2dp edr rate*/
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		}
+-
+-		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, false, true,
+-- 
+2.12.0
