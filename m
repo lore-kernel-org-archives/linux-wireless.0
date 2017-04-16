@@ -1,50 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39572 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751846AbdDCLlX (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34993 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756663AbdDPTEh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 07:41:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-ppp@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ganeshgr@chelsio.com,
-        nbd@openwrt.org, blogic@openwrt.org, matthias.bgg@gmail.com,
-        yishaih@mellanox.com, saeedm@mellanox.com, matanb@mellanox.com,
-        leonro@mellanox.com, ajk@comnets.uni-bremen.de, paulus@samba.org,
-        j@w1.fi, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org, Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Subject: Re: [PATCH 16/16] drivers, net, intersil: convert request_context.refcount from atomic_t to refcount_t
-References: <1490691403-4016-1-git-send-email-elena.reshetova@intel.com>
-        <1490691403-4016-17-git-send-email-elena.reshetova@intel.com>
-Date: Mon, 03 Apr 2017 14:41:08 +0300
-In-Reply-To: <1490691403-4016-17-git-send-email-elena.reshetova@intel.com>
-        (Elena Reshetova's message of "Tue, 28 Mar 2017 11:56:43 +0300")
-Message-ID: <87zifxn2gb.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_134204_032360_97E6F625)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 16 Apr 2017 15:04:37 -0400
+Received: by mail-oi0-f65.google.com with SMTP id a21so8126717oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 12:04:37 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 03/10] rtlwifi: btcoex: 21a 2ant: set wifi standby when halting of entering ips
+Date: Sun, 16 Apr 2017 14:04:21 -0500
+Message-Id: <20170416190428.23857-4-Larry.Finger@lwfinger.net> (sfid-20170416_210442_738673_E42FC1D4)
+In-Reply-To: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
+References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Elena Reshetova <elena.reshetova@intel.com> writes:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
->
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
+If the wifi is going to halt or entering power saving, set it standby
+and allocate resource to bt.
 
-The prefix should be "orinoco_usb:", I'll fix that.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 60386c7571e8..162d40ddf06d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3555,6 +3555,26 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 	}
+ }
+ 
++static void btc8821a2ant_wifi_off_hw_cfg(struct btc_coexist *btcoexist)
++{
++	u8 h2c_parameter[2] = {0};
++	u32 fw_ver = 0;
++
++	/* set wlan_act to low */
++	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
++
++	/* WiFi goto standby while GNT_BT 0-->1 */
++	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x780);
++	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
++	if (fw_ver >= 0x180000) {
++		/* Use H2C to set GNT_BT to HIGH */
++		h2c_parameter[0] = 1;
++		btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1, h2c_parameter);
++	} else {
++		btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
++	}
++}
++
+ /**************************************************************
+  * extern function start with ex_btc8821a2ant_
+  **************************************************************/
+@@ -3841,6 +3861,7 @@ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], IPS ENTER notify\n");
+ 		coex_sta->under_ips = true;
++		btc8821a2ant_wifi_off_hw_cfg(btcoexist);
+ 		btc8821a2ant_coex_all_off(btcoexist);
+ 	} else if (BTC_IPS_LEAVE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -4084,6 +4105,7 @@ void ex_btc8821a2ant_halt_notify(struct btc_coexist *btcoexist)
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], Halt notify\n");
+ 
++	btc8821a2ant_wifi_off_hw_cfg(btcoexist);
+ 	btc8821a2ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
+ 	ex_btc8821a2ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
+ }
 -- 
-Kalle Valo
+2.12.0
