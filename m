@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:36499 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968634AbdDZJF2 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35007 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756663AbdDPTEl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 05:05:28 -0400
-Received: by mail-qk0-f172.google.com with SMTP id u75so69223952qka.3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 02:05:27 -0700 (PDT)
-Subject: Re: [PATCH V3 1/9] nl80211: allow multiple active scheduled scan
- requests
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
- <1492776308-15120-2-git-send-email-arend.vanspriel@broadcom.com>
- <1493149747.15192.0.camel@sipsolutions.net>
- <3ce6aed5-7d00-3446-a39b-b5da4b788358@broadcom.com>
- <1493196583.2464.14.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <4323eaab-39c2-1946-a4dd-3d37361e3d8c@broadcom.com> (sfid-20170426_112906_075614_48AC1547)
-Date: Wed, 26 Apr 2017 11:05:22 +0200
-MIME-Version: 1.0
-In-Reply-To: <1493196583.2464.14.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 16 Apr 2017 15:04:41 -0400
+Received: by mail-oi0-f68.google.com with SMTP id a21so8126844oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 12:04:40 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/10] rtlwifi: btcoex: 21a 2ant: init wlan when leave ips
+Date: Sun, 16 Apr 2017 14:04:25 -0500
+Message-Id: <20170416190428.23857-8-Larry.Finger@lwfinger.net> (sfid-20170416_210446_856536_C291D262)
+In-Reply-To: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
+References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
+If the wifi is leaving ips, re-init the coex mechanisms, and before it is
+going into ips, the bt can just ignore the wifi activities.
 
-On 4/26/2017 10:49 AM, Johannes Berg wrote:
-> FWIW:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git/commit/?id=978812b3f43dda86e20588cfe0a4a244c4fab141
-> 
-> 
-> On Wed, 2017-04-26 at 10:46 +0200, Arend van Spriel wrote:
-> 
->> Sure. In the worker we are already iterating so I guess we could.
->> The number of internal fields in struct cfg80211_sched_scan_request
->> with one of them being the list_head. Thinking about hiding those
->> from the drivers. Is it worth it?
-> 
-> I guess it could be done, but I'm tending towards doing that less
-> again, I have no strong preference in this case. If it was something
-> that seems likely to get abused, perhaps, but here...
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Ok. As long as drivers don't think they can use the list_head to push it 
-on a private list. The internal use comment does not end up in 
-kerneldoc. So maybe we can improve that? Would work for me.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 56972d36fe84..531598366327 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3899,11 +3899,15 @@ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 			 "[BTCoex], IPS ENTER notify\n");
+ 		coex_sta->under_ips = true;
+ 		btc8821a2ant_wifi_off_hw_cfg(btcoexist);
++		btc8821a2ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
+ 		btc8821a2ant_coex_all_off(btcoexist);
+ 	} else if (BTC_IPS_LEAVE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], IPS LEAVE notify\n");
+ 		coex_sta->under_ips = false;
++		ex_btc8821a2ant_init_hwconfig(btcoexist);
++		btc8821a2ant_init_coex_dm(btcoexist);
++		btc8821a2ant_query_bt_info(btcoexist);
+ 	}
+ }
+ 
+-- 
+2.12.0
