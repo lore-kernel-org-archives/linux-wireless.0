@@ -1,46 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:33492 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752086AbdDKTMG (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35019 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756597AbdDPTEs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 15:12:06 -0400
-Received: by mail-pf0-f177.google.com with SMTP id s16so2796014pfs.0
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2017 12:12:06 -0700 (PDT)
-Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
-To: David Miller <davem@davemloft.net>
-References: <20170411173143.GA1899@salvia>
- <20170411.134225.398046538225438175.davem@davemloft.net>
- <cb6106f2-3128-da79-69bf-a10b249db054@cumulusnetworks.com>
- <20170411.150527.283014710949232666.davem@davemloft.net>
-Cc: pablo@netfilter.org, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        jhs@mojatatu.com, jbenc@redhat.com, jiri@resnulli.us
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <76edbeae-f050-092a-2b6a-01cb7d68cd36@cumulusnetworks.com> (sfid-20170411_211210_754008_7AB8D0E0)
-Date: Tue, 11 Apr 2017 13:12:03 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170411.150527.283014710949232666.davem@davemloft.net>
-Content-Type: text/plain; charset=windows-1252
+        Sun, 16 Apr 2017 15:04:48 -0400
+Received: by mail-oi0-f66.google.com with SMTP id a21so8126927oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 12:04:48 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 10/10] rtlwifi: btcoex: 21a 2ant: remove unused antenna detection variables
+Date: Sun, 16 Apr 2017 14:04:28 -0500
+Message-Id: <20170416190428.23857-11-Larry.Finger@lwfinger.net> (sfid-20170416_210453_612620_11E4BF89)
+In-Reply-To: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
+References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/11/17 1:05 PM, David Miller wrote:
-> From: David Ahern <dsa@cumulusnetworks.com>
-> Date: Tue, 11 Apr 2017 12:57:59 -0600
-> 
->> On 4/11/17 11:42 AM, David Miller wrote:
->>> David, if you have a specific case where it's absolutely impossible
->>> to resolve this when the library is converted to support extended
->>> ACKs, please mention it.
->>
->> I don't have a specific library in mind. It is more the disjoint nature
->> of a socket option and message parsing, and thinking through the API.
-> 
-> Would you prefer it being passed via a control message at sendmsg()
-> time?  That would require more changes to userland programs, and also
-> increase the per-request overhead in the kernel as it parses this CMSG
-> every single time.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Johannes' v4 adds a flag in the response that the parser can use to
-definitely know the size of the errmsg.msg that was returned. That seems
-sufficient to me. Did you disagree with that suggestion?
+PSD and LNA are for antenna detection, but we do not use them for 8821A.
+Remove them and the corresponding display messages.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 13 -------------
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  4 ----
+ 2 files changed, 17 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index e61016f660a8..3b4c892fc233 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3747,14 +3747,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
+ 		    ((BTC_WIFI_TRAFFIC_TX == wifi_traffic_dir) ?
+ 		     "uplink" : "downlink")));
+ 
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "\r\n %-35s = [%s/ %d/ %d] ", "BT [status/ rssi/ retryCnt]",
+-		   ((coex_sta->c2h_bt_inquiry_page) ? ("inquiry/page scan") :
+-		    ((BT_8821A_2ANT_BT_STATUS_IDLE == coex_dm->bt_status)
+-		     ? "idle" : ((BT_8821A_2ANT_BT_STATUS_CON_IDLE ==
+-		     coex_dm->bt_status) ? "connected-idle" : "busy"))),
+-		    coex_sta->bt_rssi, coex_sta->bt_retry_cnt);
+-
+ 	if (stack_info->profile_notified) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 			 "\r\n %-35s = %d / %d / %d / %d", "SCO/HID/PAN/A2DP",
+@@ -3790,11 +3782,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s",
+ 		 "============[Sw mechanism]============");
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "\r\n %-35s = %d/ %d/ %d/ %d ",
+-		 "SM1[ShRf/ LpRA/ LimDig/ btLna]",
+-		 coex_dm->cur_rf_rx_lpf_shrink, coex_dm->cur_low_penalty_ra,
+-		 coex_dm->limited_dig, coex_dm->cur_bt_lna_constrain);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 		 "\r\n %-35s = %d/ %d/ %d(0x%x) ",
+ 		 "SM2[AgcT/ AdcB/ SwDacSwing(lvl)]",
+ 		 coex_dm->cur_agc_table_en, coex_dm->cur_adc_back_off,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index 74edfd75875a..a1603e2d44e3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -79,10 +79,6 @@ struct coex_dm_8821a_2ant {
+ 	/* fw mechanism */
+ 	bool		pre_dec_bt_pwr_lvl;
+ 	bool		cur_dec_bt_pwr_lvl;
+-	bool		pre_bt_lna_constrain;
+-	bool		cur_bt_lna_constrain;
+-	u8		pre_bt_psd_mode;
+-	u8		cur_bt_psd_mode;
+ 	u8		pre_fw_dac_swing_lvl;
+ 	u8		cur_fw_dac_swing_lvl;
+ 	bool		cur_ignore_wlan_act;
+-- 
+2.12.0
