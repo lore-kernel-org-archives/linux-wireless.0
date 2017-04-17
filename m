@@ -1,136 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35598 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S942481AbdDTHWK (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36004 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932328AbdDQALU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:22:10 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/4] mwifiex: pcie: fix cmd_buf use-after-free in remove/reset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170414215120.145038-1-briannorris@chromium.org>
-References: <20170414215120.145038-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>, stable@vger.kernel.org
-Message-Id: <20170420072210.0454B6114F@smtp.codeaurora.org> (sfid-20170420_092249_375745_1EFFB7E9)
-Date: Thu, 20 Apr 2017 07:22:10 +0000 (UTC)
+        Sun, 16 Apr 2017 20:11:20 -0400
+Received: by mail-oi0-f66.google.com with SMTP id b187so25356193oif.3
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:20 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 04/27] rtlwifi: btcoex: 23b 1ant: monitor wifi and BT counter
+Date: Sun, 16 Apr 2017 19:10:48 -0500
+Message-Id: <20170417001111.29384-5-Larry.Finger@lwfinger.net> (sfid-20170417_021140_465905_0C5C717E)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> Command buffers (skb's) are allocated by the main driver, and freed upon
-> the last use. That last use is often in mwifiex_free_cmd_buffer(). In
-> the meantime, if the command buffer gets used by the PCI driver, we map
-> it as DMA-able, and store the mapping information in the 'cb' memory.
-> 
-> However, if a command was in-flight when resetting the device (and
-> therefore was still mapped), we don't get a chance to unmap this memory
-> until after the core has cleaned up its command handling.
-> 
-> Let's keep a refcount within the PCI driver, so we ensure the memory
-> only gets freed after we've finished unmapping it.
-> 
-> Noticed by KASAN when forcing a reset via:
-> 
->   echo 1 > /sys/bus/pci/.../reset
-> 
-> The same code path can presumably be exercised in remove() and
-> shutdown().
-> 
-> [  205.390377] mwifiex_pcie 0000:01:00.0: info: shutdown mwifiex...
-> [  205.400393] ==================================================================
-> [  205.407719] BUG: KASAN: use-after-free in mwifiex_unmap_pci_memory.isra.14+0x4c/0x100 [mwifiex_pcie] at addr ffffffc0ad471b28
-> [  205.419040] Read of size 16 by task bash/1913
-> [  205.423421] =============================================================================
-> [  205.431625] BUG skbuff_head_cache (Tainted: G    B          ): kasan: bad access detected
-> [  205.439815] -----------------------------------------------------------------------------
-> [  205.439815]
-> [  205.449534] INFO: Allocated in __build_skb+0x48/0x114 age=1311 cpu=4 pid=1913
-> [  205.456709] 	alloc_debug_processing+0x124/0x178
-> [  205.461282] 	___slab_alloc.constprop.58+0x528/0x608
-> [  205.466196] 	__slab_alloc.isra.54.constprop.57+0x44/0x54
-> [  205.471542] 	kmem_cache_alloc+0xcc/0x278
-> [  205.475497] 	__build_skb+0x48/0x114
-> [  205.479019] 	__netdev_alloc_skb+0xe0/0x170
-> [  205.483244] 	mwifiex_alloc_cmd_buffer+0x68/0xdc [mwifiex]
-> [  205.488759] 	mwifiex_init_fw+0x40/0x6cc [mwifiex]
-> [  205.493584] 	_mwifiex_fw_dpc+0x158/0x520 [mwifiex]
-> [  205.498491] 	mwifiex_reinit_sw+0x2c4/0x398 [mwifiex]
-> [  205.503510] 	mwifiex_pcie_reset_notify+0x114/0x15c [mwifiex_pcie]
-> [  205.509643] 	pci_reset_notify+0x5c/0x6c
-> [  205.513519] 	pci_reset_function+0x6c/0x7c
-> [  205.517567] 	reset_store+0x68/0x98
-> [  205.521003] 	dev_attr_store+0x54/0x60
-> [  205.524705] 	sysfs_kf_write+0x9c/0xb0
-> [  205.528413] INFO: Freed in __kfree_skb+0xb0/0xbc age=131 cpu=4 pid=1913
-> [  205.535064] 	free_debug_processing+0x264/0x370
-> [  205.539550] 	__slab_free+0x84/0x40c
-> [  205.543075] 	kmem_cache_free+0x1c8/0x2a0
-> [  205.547030] 	__kfree_skb+0xb0/0xbc
-> [  205.550465] 	consume_skb+0x164/0x178
-> [  205.554079] 	__dev_kfree_skb_any+0x58/0x64
-> [  205.558304] 	mwifiex_free_cmd_buffer+0xa0/0x158 [mwifiex]
-> [  205.563817] 	mwifiex_shutdown_drv+0x578/0x5c4 [mwifiex]
-> [  205.569164] 	mwifiex_shutdown_sw+0x178/0x310 [mwifiex]
-> [  205.574353] 	mwifiex_pcie_reset_notify+0xd4/0x15c [mwifiex_pcie]
-> [  205.580398] 	pci_reset_notify+0x5c/0x6c
-> [  205.584274] 	pci_dev_save_and_disable+0x24/0x6c
-> [  205.588837] 	pci_reset_function+0x30/0x7c
-> [  205.592885] 	reset_store+0x68/0x98
-> [  205.596324] 	dev_attr_store+0x54/0x60
-> [  205.600017] 	sysfs_kf_write+0x9c/0xb0
-> ...
-> [  205.800488] Call trace:
-> [  205.802980] [<ffffffc00020a69c>] dump_backtrace+0x0/0x190
-> [  205.808415] [<ffffffc00020a96c>] show_stack+0x20/0x28
-> [  205.813506] [<ffffffc0005d020c>] dump_stack+0xa4/0xcc
-> [  205.818598] [<ffffffc0003be44c>] print_trailer+0x158/0x168
-> [  205.824120] [<ffffffc0003be5f0>] object_err+0x4c/0x5c
-> [  205.829210] [<ffffffc0003c45bc>] kasan_report+0x334/0x500
-> [  205.834641] [<ffffffc0003c3994>] check_memory_region+0x20/0x14c
-> [  205.840593] [<ffffffc0003c3b14>] __asan_loadN+0x14/0x1c
-> [  205.845879] [<ffffffbffc46171c>] mwifiex_unmap_pci_memory.isra.14+0x4c/0x100 [mwifiex_pcie]
-> [  205.854282] [<ffffffbffc461864>] mwifiex_pcie_delete_cmdrsp_buf+0x94/0xa8 [mwifiex_pcie]
-> [  205.862421] [<ffffffbffc462028>] mwifiex_pcie_free_buffers+0x11c/0x158 [mwifiex_pcie]
-> [  205.870302] [<ffffffbffc4620d4>] mwifiex_pcie_down_dev+0x70/0x80 [mwifiex_pcie]
-> [  205.877736] [<ffffffbffc1397a8>] mwifiex_shutdown_sw+0x190/0x310 [mwifiex]
-> [  205.884658] [<ffffffbffc4606b4>] mwifiex_pcie_reset_notify+0xd4/0x15c [mwifiex_pcie]
-> [  205.892446] [<ffffffc000635f54>] pci_reset_notify+0x5c/0x6c
-> [  205.898048] [<ffffffc00063a044>] pci_dev_save_and_disable+0x24/0x6c
-> [  205.904350] [<ffffffc00063cf0c>] pci_reset_function+0x30/0x7c
-> [  205.910134] [<ffffffc000641118>] reset_store+0x68/0x98
-> [  205.915312] [<ffffffc000771588>] dev_attr_store+0x54/0x60
-> [  205.920750] [<ffffffc00046f53c>] sysfs_kf_write+0x9c/0xb0
-> [  205.926182] [<ffffffc00046dfb0>] kernfs_fop_write+0x184/0x1f8
-> [  205.931963] [<ffffffc0003d64f4>] __vfs_write+0x6c/0x17c
-> [  205.937221] [<ffffffc0003d7164>] vfs_write+0xf0/0x1c4
-> [  205.942310] [<ffffffc0003d7da0>] SyS_write+0x78/0xd8
-> [  205.947312] [<ffffffc000204634>] el0_svc_naked+0x24/0x28
-> ...
-> [  205.998268] ==================================================================
-> 
-> This bug has been around in different forms for a while. It was sort of
-> noticed in commit 955ab095c51a ("mwifiex: Do not kfree cmd buf while
-> unregistering PCIe"), but it just fixed the double-free, without
-> acknowledging the potential for use-after-free.
-> 
-> Fixes: fc3314609047 ("mwifiex: use pci_alloc/free_consistent APIs for PCIe")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-4 patches applied to wireless-drivers-next.git, thanks.
+In field debug, we check wifi and BT counter to analyze problems.
 
-3c8cb9ad032d mwifiex: pcie: fix cmd_buf use-after-free in remove/reset
-9ae3fbd109d9 mwifiex: reset timeout flag when resetting device
-35e67d3d58b9 mwifiex: pcie: clear outstanding work when resetting
-fb9e67bee3ab mwifiex: don't leak 'chan_stats' on reset
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 143 +++++++++++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  15 +++
+ 2 files changed, 147 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 15c16e524356..851c11d18d9c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -210,11 +210,24 @@ static void halbtc8723b1ant_limited_rx(struct btc_coexist *btcoexist,
+ 	btcoexist->btc_set(btcoexist, BTC_SET_ACT_AGGREGATE_CTRL, NULL);
+ }
+ 
++static void halbtc8723b1ant_query_bt_info(struct btc_coexist *btcoexist)
++{
++	u8 h2c_parameter[1] = {0};
++
++	coex_sta->c2h_bt_info_req_sent = true;
++
++	/* trigger */
++	h2c_parameter[0] |= BIT(0);
++
++	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
++}
++
+ static void halbtc8723b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
+ 	u32 reg_hp_txrx, reg_lp_txrx, u32tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0;
+ 	u32 reg_lp_tx = 0, reg_lp_rx = 0;
++	static u32 num_of_bt_counter_chk;
+ 
+ 	reg_hp_txrx = 0x770;
+ 	reg_lp_txrx = 0x774;
+@@ -232,25 +245,122 @@ static void halbtc8723b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 	coex_sta->low_priority_tx = reg_lp_tx;
+ 	coex_sta->low_priority_rx = reg_lp_rx;
+ 
++	if ((coex_sta->low_priority_tx > 1050) &&
++	    (!coex_sta->c2h_bt_inquiry_page))
++		coex_sta->pop_event_cnt++;
++
+ 	/* reset counter */
+ 	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
++
++	/* This part is for wifi FW and driver to update BT's status as
++	 * disabled.
++	 *
++	 * The flow is as the following
++	 * 1. disable BT
++	 * 2. if all BT Tx/Rx counter = 0, after 6 sec we query bt info
++	 * 3. Because BT will not rsp from mailbox, so wifi fw will know BT is
++	 * disabled
++	 *
++	 * 4. FW will rsp c2h for BT that driver will know BT is disabled.
++	 */
++	if ((reg_hp_tx == 0) && (reg_hp_rx == 0) && (reg_lp_tx == 0) &&
++	    (reg_lp_rx == 0)) {
++		num_of_bt_counter_chk++;
++		if (num_of_bt_counter_chk == 3)
++			halbtc8723b1ant_query_bt_info(btcoexist);
++	} else {
++		num_of_bt_counter_chk = 0;
++	}
+ }
+ 
+-static void halbtc8723b1ant_query_bt_info(struct btc_coexist *btcoexist)
++static void halbtc8723b1ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ {
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-	u8 h2c_parameter[1] = {0};
++	s32 wifi_rssi = 0;
++	bool wifi_busy = false, wifi_under_b_mode = false;
++	static u8 cck_lock_counter;
++	u32 total_cnt;
+ 
+-	coex_sta->c2h_bt_info_req_sent = true;
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
++	btcoexist->btc_get(btcoexist, BTC_GET_S4_WIFI_RSSI, &wifi_rssi);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_UNDER_B_MODE,
++			   &wifi_under_b_mode);
+ 
+-	/* trigger */
+-	h2c_parameter[0] |= BIT0;
++	if (coex_sta->under_ips) {
++		coex_sta->crc_ok_cck = 0;
++		coex_sta->crc_ok_11g = 0;
++		coex_sta->crc_ok_11n = 0;
++		coex_sta->crc_ok_11n_agg = 0;
++
++		coex_sta->crc_err_cck = 0;
++		coex_sta->crc_err_11g = 0;
++		coex_sta->crc_err_11n = 0;
++		coex_sta->crc_err_11n_agg = 0;
++	} else {
++		coex_sta->crc_ok_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf88);
++		coex_sta->crc_ok_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf94);
++		coex_sta->crc_ok_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf90);
++		coex_sta->crc_ok_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfb8);
++
++		coex_sta->crc_err_cck =
++			btcoexist->btc_read_4byte(btcoexist, 0xf84);
++		coex_sta->crc_err_11g =
++			btcoexist->btc_read_2byte(btcoexist, 0xf96);
++		coex_sta->crc_err_11n =
++			btcoexist->btc_read_2byte(btcoexist, 0xf92);
++		coex_sta->crc_err_11n_agg =
++			btcoexist->btc_read_2byte(btcoexist, 0xfba);
++	}
+ 
+-	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-		 "[BTCoex], Query Bt Info, FW write 0x61 = 0x%x\n",
+-		 h2c_parameter[0]);
++	/* reset counter */
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x1);
++	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xf16, 0x1, 0x0);
++
++	if ((wifi_busy) && (wifi_rssi >= 30) && (!wifi_under_b_mode)) {
++		total_cnt = coex_sta->crc_ok_cck + coex_sta->crc_ok_11g +
++			    coex_sta->crc_ok_11n + coex_sta->crc_ok_11n_agg;
++
++		if ((coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) ||
++		    (coex_dm->bt_status ==
++		     BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) ||
++		    (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY)) {
++			if (coex_sta->crc_ok_cck >
++			    (total_cnt - coex_sta->crc_ok_cck)) {
++				if (cck_lock_counter < 3)
++					cck_lock_counter++;
++			} else {
++				if (cck_lock_counter > 0)
++					cck_lock_counter--;
++			}
+ 
+-	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
++		} else {
++			if (cck_lock_counter > 0)
++				cck_lock_counter--;
++		}
++	} else {
++		if (cck_lock_counter > 0)
++			cck_lock_counter--;
++	}
++
++	if (!coex_sta->pre_ccklock) {
++		if (cck_lock_counter >= 3)
++			coex_sta->cck_lock = true;
++		else
++			coex_sta->cck_lock = false;
++	} else {
++		if (cck_lock_counter == 0)
++			coex_sta->cck_lock = false;
++		else
++			coex_sta->cck_lock = true;
++	}
++
++	if (coex_sta->cck_lock)
++		coex_sta->cck_ever_lock = true;
++
++	coex_sta->pre_ccklock = coex_sta->cck_lock;
+ }
+ 
+ static bool btc8723b1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+@@ -1738,6 +1848,7 @@ static void halbtc8723b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 	}
+ }
+ 
++/* force coex mechanism to reset */
+ static void halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
+ 	/* sw all off */
+@@ -1745,6 +1856,7 @@ static void halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ 
+ 	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
+ 	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
++	coex_sta->pop_event_cnt = 0;
+ }
+ 
+ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
+@@ -2574,6 +2686,9 @@ void ex_halbtc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
+ void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++#if (BT_AUTO_REPORT_ONLY_8723B_1ANT != 0)
++	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
++#endif
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+ 	static u8 dis_ver_info_cnt;
+@@ -2608,9 +2723,15 @@ void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
+ 
+ #if (BT_AUTO_REPORT_ONLY_8723B_1ANT == 0)
+ 	halbtc8723b1ant_query_bt_info(btcoexist);
+-	halbtc8723b1ant_monitor_bt_ctr(btcoexist);
+ 	halbtc8723b1ant_monitor_bt_enable_disable(btcoexist);
+ #else
++	halbtc8723b1ant_monitor_bt_ctr(btcoexist);
++	halbtc8723b1ant_monitor_wifi_ctr(btcoexist);
++
++	if ((coex_sta->high_priority_tx + coex_sta->high_priority_rx < 50) &&
++	    bt_link_info->hid_exist)
++		bt_link_info->hid_exist = false;
++
+ 	if (btc8723b1ant_is_wifi_status_changed(btcoexist) ||
+ 	    coex_dm->auto_tdma_adjust) {
+ 		halbtc8723b1ant_run_coexist_mechanism(btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 786324783633..c3472fbb12ef 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -160,6 +160,21 @@ struct coex_sta_8723b_1ant {
+ 	bool c2h_bt_inquiry_page;
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
++	bool cck_ever_lock;
++	u32 pop_event_cnt;
++
++	u32 crc_ok_cck;
++	u32 crc_ok_11g;
++	u32 crc_ok_11n;
++	u32 crc_ok_11n_agg;
++
++	u32 crc_err_cck;
++	u32 crc_err_11g;
++	u32 crc_err_11n;
++	u32 crc_err_11n_agg;
++
++	bool cck_lock;
++	bool pre_ccklock;
+ };
+ 
+ /*************************************************************************
 -- 
-https://patchwork.kernel.org/patch/9681823/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
