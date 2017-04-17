@@ -1,99 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:34603 "EHLO
-        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751626AbdDHS0U (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:36437 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756963AbdDQKLL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 14:26:20 -0400
-Received: by mail-io0-f175.google.com with SMTP id a103so283701ioj.1
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 11:26:20 -0700 (PDT)
-Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
- <20170408174900.12820-2-johannes@sipsolutions.net>
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <46f42c2a-db2a-78b5-37c8-0ee5bb0443f8@cumulusnetworks.com> (sfid-20170408_202641_382361_A54DC948)
-Date: Sat, 8 Apr 2017 14:26:18 -0400
+        Mon, 17 Apr 2017 06:11:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170408174900.12820-2-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20170417100730.3648-1-vincent.legoll@gmail.com>
+References: <CAEwRq=oz=8T489QZtjcHB03rv_mFY6WAyOUkgMTOrsJuDEPPdw@mail.gmail.com>
+ <20170417100730.3648-1-vincent.legoll@gmail.com>
+From: Vincent Legoll <vincent.legoll@gmail.com>
+Date: Mon, 17 Apr 2017 12:11:10 +0200
+Message-ID: <CAEwRq=p0LMng+ztMNBbtHwYFq-Y26KyxbcZuiBxL-jK1+Wgkyw@mail.gmail.com> (sfid-20170417_121137_294529_122E269F)
+Subject: Re: [PATCH RFC] Make BCMA a menuconfig to ease disabling it all
+To: Linux Kernel ML <linux-kernel@vger.kernel.org>, zajec5@gmail.com,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/8/17 1:48 PM, Johannes Berg wrote:
-> @@ -2267,21 +2284,37 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
->  }
->  EXPORT_SYMBOL(__netlink_dump_start);
->  
-> -void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
-> +void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
-> +		 const struct netlink_ext_ack *extack)
->  {
->  	struct sk_buff *skb;
->  	struct nlmsghdr *rep;
->  	struct nlmsgerr *errmsg;
->  	size_t payload = sizeof(*errmsg);
-> +	size_t acksize = sizeof(*errmsg);
->  	struct netlink_sock *nlk = nlk_sk(NETLINK_CB(in_skb).sk);
->  
->  	/* Error messages get the original request appened, unless the user
-> -	 * requests to cap the error message.
-> +	 * requests to cap the error message, and get extra error data if
-> +	 * requested.
->  	 */
-> -	if (!(nlk->flags & NETLINK_F_CAP_ACK) && err)
-> -		payload += nlmsg_len(nlh);
-> +	if (err) {
-> +		if (!(nlk->flags & NETLINK_F_CAP_ACK))
-> +			payload += nlmsg_len(nlh);
-> +		acksize = payload;
-> +		if (nlk->flags & NETLINK_F_EXT_ACK) {
-> +			if (extack && extack->_msg)
-> +				acksize +=
-> +					nla_total_size(strlen(extack->_msg) + 1);
-> +			if (extack && extack->bad_attr)
-> +				acksize += nla_total_size(sizeof(u32));
-> +			if (extack &&
-> +			    (extack->missing_attr || extack->bad_attr))
-> +				acksize += nla_total_size(sizeof(u16));
+Argh,
 
-If you create a v3, the extack check can by pulled up to the (flags &
-NETLINK_F_EXT_ACK) check.
+looks like the "--in-reply-to" did not hook it up properly...
 
+This was intended as a reply to:
+http://lkml.iu.edu/hypermail/linux/kernel/1704.1/04654.html
+Re: [PATCH] Make AMBA a menuconfig to ease disabling it all
+from (Fri Apr 14 2017 - 08:33:57 EST)
 
-> +		}
-> +	}
->  
-> -	skb = nlmsg_new(payload, GFP_KERNEL);
-> +	skb = nlmsg_new(acksize, GFP_KERNEL);
->  	if (!skb) {
->  		struct sock *sk;
->  
-> @@ -2300,14 +2333,35 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
->  			  NLMSG_ERROR, payload, 0);
->  	errmsg = nlmsg_data(rep);
->  	errmsg->error = err;
-> -	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh->nlmsg_len : sizeof(*nlh));
-> +	memcpy(&errmsg->msg, nlh,
-> +	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
-> +						 : sizeof(*nlh));
-> +
-> +	if (err && nlk->flags & NETLINK_F_EXT_ACK) {
-> +		if (extack && extack->_msg)
-> +			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
-> +					       extack->_msg));
-> +		if (extack && extack->bad_attr &&
-> +		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
-> +			     (u8 *)extack->bad_attr >= in_skb->data +
-> +						       in_skb->len))
-> +			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
-> +					    (u8 *)extack->bad_attr -
-> +					    in_skb->data));
-> +		if (extack && extack->missing_attr)
-> +			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
-> +					    extack->missing_attr));
+Sorry
 
-same here
+-- 
+Vincent Legoll
