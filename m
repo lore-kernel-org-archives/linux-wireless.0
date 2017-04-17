@@ -1,50 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17260 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751192AbdDMMsF (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35198 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756803AbdDQAcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 08:48:05 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [01/11] wil6210: fix sequence for scan-abort during reset
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1491393494-11816-2-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1491393494-11816-2-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-ID: <752a48d0f3834e95b31123e43a02b4d9@euamsexm01a.eu.qualcomm.com> (sfid-20170413_144809_866531_1EFA99AD)
-Date: Thu, 13 Apr 2017 14:47:32 +0200
+        Sun, 16 Apr 2017 20:32:12 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Maxim Samoylov <max7255@gmail.com>,
+        Stable <stable@vger.kernel.org>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH] rtlwifi: rtl8821ae: setup 8812ae RFE according to device type
+Date: Sun, 16 Apr 2017 19:32:07 -0500
+Message-Id: <20170417003207.32347-1-Larry.Finger@lwfinger.net> (sfid-20170417_023218_735940_C3952831)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-> From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-> 
-> Communication with FW must be done before wil->status
-> is initialized in order to properly handle cases where
-> communication with FW halts during reset sequence.
-> 
-> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Current channel switch implementation sets 8812ae RFE reg value assuming
+that device always has type 2.
 
-11 patches applied to ath-next branch of ath.git, thanks.
+Extend possible RFE types set and write corresponding reg values.
 
-82e9f6465554 wil6210: fix sequence for scan-abort during reset
-8b068c032a5c wil6210: restore power save state after internal FW reset
-52a457020a89 wil6210: support 8KB RX buffers
-90ffabb08b7d wil6210: align to latest auto generated wmi.h
-b819447dfc4b wil6210: fix protection against connections during reset
-a3839fbcf035 wil6210: protect against sporadic interrupt during suspend flow
-4d4f8132f72b wil6210: fix check for sparrow D0 FW file
-0f6edfe2bbbb wil6210: fix memory access violation in wil_memcpy_from/toio_32
-bd50e2688a78 wil6210: remove HALP voting in debugfs ioblob
-98a830a98dab wil6210: fix array out of bounds access in pmc
-3161adddf309 wil6210: prevent access to 11AD device if resume fails
+Source for new code is
+http://dlcdnet.asus.com/pub/ASUS/wireless/PCE-AC51/DR_PCE_AC51_20232801152016.zip
 
+Signed-off-by: Maxim Samoylov <max7255@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   | 122 ++++++++++++++++++---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/reg.h   |   1 +
+ 2 files changed, 107 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+index 94a5e587a1cd..aa3ccc740521 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+@@ -358,6 +358,107 @@ bool rtl8821ae_phy_rf_config(struct ieee80211_hw *hw)
+ 	return rtl8821ae_phy_rf6052_config(hw);
+ }
+ 
++static void _rtl8812ae_phy_set_rfe_reg_24g(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	u8 tmp;
++
++	switch (rtlhal->rfe_type) {
++	case 3:
++		rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD, 0x54337770);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x54337770);
++		rtl_set_bbreg(hw, RA_RFE_INV, BMASKRFEINV, 0x010);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x010);
++		rtl_set_bbreg(hw, 0x900, 0x00000303, 0x1);
++		break;
++	case 4:
++		rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD, 0x77777777);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x77777777);
++		rtl_set_bbreg(hw, RA_RFE_INV, BMASKRFEINV, 0x001);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x001);
++		break;
++	case 5:
++		rtl_write_byte(rtlpriv, RA_RFE_PINMUX + 2, 0x77);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x77777777);
++		tmp = rtl_read_byte(rtlpriv, RA_RFE_INV + 3);
++		rtl_write_byte(rtlpriv, RA_RFE_INV + 3, tmp & ~0x1);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x000);
++		break;
++	case 1:
++		if (rtlpriv->btcoexist.bt_coexistence) {
++			rtl_set_bbreg(hw, RA_RFE_PINMUX, 0xffffff, 0x777777);
++			rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD,
++				      0x77777777);
++			rtl_set_bbreg(hw, RA_RFE_INV, 0x33f00000, 0x000);
++			rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x000);
++			break;
++		}
++	case 0:
++	case 2:
++	default:
++		rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD, 0x77777777);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x77777777);
++		rtl_set_bbreg(hw, RA_RFE_INV, BMASKRFEINV, 0x000);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x000);
++		break;
++	}
++}
++
++static void _rtl8812ae_phy_set_rfe_reg_5g(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	u8 tmp;
++
++	switch (rtlhal->rfe_type) {
++	case 0:
++		rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD, 0x77337717);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x77337717);
++		rtl_set_bbreg(hw, RA_RFE_INV, BMASKRFEINV, 0x010);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x010);
++		break;
++	case 1:
++		if (rtlpriv->btcoexist.bt_coexistence) {
++			rtl_set_bbreg(hw, RA_RFE_PINMUX, 0xffffff, 0x337717);
++			rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD,
++				      0x77337717);
++			rtl_set_bbreg(hw, RA_RFE_INV, 0x33f00000, 0x000);
++			rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x000);
++		} else {
++			rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD,
++				      0x77337717);
++			rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD,
++				      0x77337717);
++			rtl_set_bbreg(hw, RA_RFE_INV, BMASKRFEINV, 0x000);
++			rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x000);
++		}
++		break;
++	case 3:
++		rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD, 0x54337717);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x54337717);
++		rtl_set_bbreg(hw, RA_RFE_INV, BMASKRFEINV, 0x010);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x010);
++		rtl_set_bbreg(hw, 0x900, 0x00000303, 0x1);
++		break;
++	case 5:
++		rtl_write_byte(rtlpriv, RA_RFE_PINMUX + 2, 0x33);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x77337777);
++		tmp = rtl_read_byte(rtlpriv, RA_RFE_INV + 3);
++		rtl_write_byte(rtlpriv, RA_RFE_INV + 3, tmp | 0x1);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x010);
++		break;
++	case 2:
++	case 4:
++	default:
++		rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD, 0x77337777);
++		rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD, 0x77337777);
++		rtl_set_bbreg(hw, RA_RFE_INV, BMASKRFEINV, 0x010);
++		rtl_set_bbreg(hw, RB_RFE_INV, BMASKRFEINV, 0x010);
++		break;
++	}
++}
++
+ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
+ 			   u8 rf_path)
+ {
+@@ -552,14 +653,9 @@ void rtl8821ae_phy_switch_wirelessband(struct ieee80211_hw *hw, u8 band)
+ 			/* 0x82C[1:0] = 2b'00 */
+ 			rtl_set_bbreg(hw, 0x82c, 0x3, 0);
+ 		}
+-		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
+-			rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD,
+-				      0x77777777);
+-			rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD,
+-				      0x77777777);
+-			rtl_set_bbreg(hw, RA_RFE_INV, 0x3ff00000, 0x000);
+-			rtl_set_bbreg(hw, RB_RFE_INV, 0x3ff00000, 0x000);
+-		}
++
++		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE)
++			_rtl8812ae_phy_set_rfe_reg_24g(hw);
+ 
+ 		rtl_set_bbreg(hw, RTXPATH, 0xf0, 0x1);
+ 		rtl_set_bbreg(hw, RCCK_RX, 0x0f000000, 0x1);
+@@ -614,14 +710,8 @@ void rtl8821ae_phy_switch_wirelessband(struct ieee80211_hw *hw, u8 band)
+ 			/* 0x82C[1:0] = 2'b00 */
+ 			rtl_set_bbreg(hw, 0x82c, 0x3, 1);
+ 
+-		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
+-			rtl_set_bbreg(hw, RA_RFE_PINMUX, BMASKDWORD,
+-				      0x77337777);
+-			rtl_set_bbreg(hw, RB_RFE_PINMUX, BMASKDWORD,
+-				      0x77337777);
+-			rtl_set_bbreg(hw, RA_RFE_INV, 0x3ff00000, 0x010);
+-			rtl_set_bbreg(hw, RB_RFE_INV, 0x3ff00000, 0x010);
+-		}
++		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE)
++			_rtl8812ae_phy_set_rfe_reg_5g(hw);
+ 
+ 		rtl_set_bbreg(hw, RTXPATH, 0xf0, 0);
+ 		rtl_set_bbreg(hw, RCCK_RX, 0x0f000000, 0xf);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+index 1d6110f9c1fb..ed69dbe178ff 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+@@ -2424,6 +2424,7 @@
+ #define	BMASKH4BITS			0xf0000000
+ #define BMASKOFDM_D			0xffc00000
+ #define	BMASKCCK			0x3f3f3f3f
++#define BMASKRFEINV			0x3ff00000
+ 
+ #define BRFREGOFFSETMASK		0xfffff
+ 
 -- 
-https://patchwork.kernel.org/patch/9663843/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
