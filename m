@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33037 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751323AbdDMGsg (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34177 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757051AbdDQAHU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 02:48:36 -0400
-Received: by mail-pf0-f195.google.com with SMTP id c198so8870810pfc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 23:48:36 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v4 2/4] mwifiex: fall back mwifiex_dbg to pr_info when adapter->dev not set
-Date: Thu, 13 Apr 2017 06:48:20 +0000
-Message-Id: <1492066102-31251-2-git-send-email-huxinming820@gmail.com> (sfid-20170413_084840_370517_1186ECDB)
-In-Reply-To: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
-References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
+        Sun, 16 Apr 2017 20:07:20 -0400
+Received: by mail-oi0-f68.google.com with SMTP id t14so15960535oif.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:20 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 10/13] rtlwifi: btcoex: 21a 1ant: re-init coex after wifi leaves IPS
+Date: Sun, 16 Apr 2017 19:06:57 -0500
+Message-Id: <20170417000700.29057-11-Larry.Finger@lwfinger.net> (sfid-20170417_020750_478433_A4489BDC)
+In-Reply-To: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-mwifiex_dbg will do nothing before adapter->dev get assigned. several logs
-lost in this case. it can be avoided by fall back to pr_info.
+Before entering IPS, set the PTA control to default value and re-init it
+after it leaves IPS to avoid running some redundant code in
+run_coexist_mechanism.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Reviewed-by: Dmitry Torokhov <dtor@chromium.org>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
-v2: enhance adapter->dev null case.(Brain)
-v3: use va_list in pr_info.(Dmitry)
-v4: same as v3
----
- drivers/net/wireless/marvell/mwifiex/main.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 98fd491..16cd14e 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1750,7 +1750,7 @@ void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
- 	struct va_format vaf;
- 	va_list args;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 6b1ded6a0576..b8d5b73011ba 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -2473,7 +2473,7 @@ void ex_btc8821a1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 		btc8821a1ant_set_ant_path(btcoexist,
+ 					  BTC_ANT_PATH_BT, false, true);
+ 		/* set PTA control */
+-		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 0);
+ 		btc8821a1ant_coex_table_with_type(btcoexist,
+ 						  NORMAL_EXEC, 0);
+ 	} else if (BTC_IPS_LEAVE == type) {
+@@ -2481,7 +2481,9 @@ void ex_btc8821a1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 			 "[BTCoex], IPS LEAVE notify\n");
+ 		coex_sta->under_ips = false;
  
--	if (!adapter->dev || !(adapter->debug_mask & mask))
-+	if (!(adapter->debug_mask & mask))
- 		return;
- 
- 	va_start(args, fmt);
-@@ -1758,7 +1758,10 @@ void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	dev_info(adapter->dev, "%pV", &vaf);
-+	if (adapter->dev)
-+		dev_info(adapter->dev, "%pV", &vaf);
-+	else
-+		pr_info("%pV", &vaf);
- 
- 	va_end(args);
+-		btc8821a1ant_run_coexist_mechanism(btcoexist);
++		btc8821a1ant_init_hw_config(btcoexist, false, false);
++		btc8821a1ant_init_coex_dm(btcoexist);
++		btc8821a1ant_query_bt_info(btcoexist);
+ 	}
  }
+ 
 -- 
-1.8.1.4
+2.12.0
