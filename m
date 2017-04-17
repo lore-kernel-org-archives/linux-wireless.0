@@ -1,49 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54270 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752753AbdDKTng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 15:43:36 -0400
-Message-ID: <1491939809.27324.1.camel@sipsolutions.net> (sfid-20170411_214351_042937_AEB4468E)
-Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>, pablo@netfilter.org
-Cc: dsa@cumulusnetworks.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, jhs@mojatatu.com, jbenc@redhat.com,
-        jiri@resnulli.us
-Date: Tue, 11 Apr 2017 21:43:29 +0200
-In-Reply-To: <20170411.134225.398046538225438175.davem@davemloft.net>
-References: <1491894172.31620.2.camel@sipsolutions.net>
-         <9a68aa01-474c-7054-30c2-473ee1250abe@cumulusnetworks.com>
-         <20170411173143.GA1899@salvia>
-         <20170411.134225.398046538225438175.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36072 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932428AbdDQALf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Apr 2017 20:11:35 -0400
+Received: by mail-oi0-f67.google.com with SMTP id b187so25356769oif.3
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:35 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 20/27] rtlwifi: btcoex: 23b 1ant: check more cases when bt is queing
+Date: Sun, 16 Apr 2017 19:11:04 -0500
+Message-Id: <20170417001111.29384-21-Larry.Finger@lwfinger.net> (sfid-20170417_021157_497228_C42F0BA8)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-04-11 at 13:42 -0400, David Miller wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> > Then, the library needs to be extended to enable this handling to
-> > modify the way it needs to handle errors, together with the
-> > setsockopt().
+If bt is queing, we need to set the packet priority properly.
+Originally we only consider if wifi was connected or not, but now we
+also consider if bt is under abnormal scan or wifi is scanning, roaming
+or linking, and set the coex table.
 
-So I'd tend to agree, but
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 57 +++++++++++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  1 +
+ 2 files changed, 40 insertions(+), 18 deletions(-)
 
- * it was easy to solve this, with the flags I added
- * the flags reduce the amount of parsing dependencies, for example, it
-   is then no longer necessary to check if error == 0 to know if the
-   message was capped or not (when not requested), since the flag
-   indicates it
- * having the flag that TLVs were set lets us not store if the
-   setsockopt failed or not - this can be useful in the error report
-   case (but not in the success/cookie case) since it avoids extra
-   state that needs to be passed around
- * libnl, which seems pretty common, allows just passing a single
-   pointer around as state, which is often already used for something
-   else, meaning a bigger refactoring can be required to pass the extra
-   state
-
-So yes, in theory we don't need this, but in practice it does make the
-userland parsing code quite a bit easier.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 5377f55b162a..b3e043e8fec3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1705,35 +1705,56 @@ static void halbtc8723b1ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ {
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false, ap_enable = false;
++	bool wifi_busy = false, bt_busy = false;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_AP_MODE_ENABLE,
+ 			   &ap_enable);
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+ 			   &wifi_connected);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
++	btcoexist->btc_set(btcoexist, BTC_SET_BL_BT_TRAFFIC_BUSY, &bt_busy);
+ 
+-	if (!wifi_connected) {
+-		halbtc8723b1ant_power_save_state(btcoexist,
+-						 BTC_PS_WIFI_NATIVE, 0x0, 0x0);
++	if (coex_sta->bt_abnormal_scan) {
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 33);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
++	} else if (!wifi_connected && !coex_sta->wifi_is_high_pri_task) {
++		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++						 0x0, 0x0);
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
+-	} else if (bt_link_info->sco_exist || bt_link_info->hid_only) {
+-		/* SCO/HID-only busy */
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
++					     NORMAL_EXEC, false, false);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
++	} else if (bt_link_info->sco_exist || bt_link_info->hid_exist ||
++		   bt_link_info->a2dp_exist) {
++		/* SCO/HID/A2DP busy */
+ 		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
+ 						 0x0, 0x0);
+-		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
+-	} else {
+-		if (ap_enable)
+-			halbtc8723b1ant_power_save_state(btcoexist,
+-							 BTC_PS_WIFI_NATIVE,
+-							 0x0, 0x0);
++		if (coex_sta->c2h_bt_remote_name_req)
++			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
++						33);
+ 		else
+-			halbtc8723b1ant_power_save_state(btcoexist,
+-							 BTC_PS_LPS_ON,
+-							 0x50, 0x4);
++			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
++						32);
+ 
+-		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 30);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
++	} else if (bt_link_info->pan_exist || wifi_busy) {
++		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++						 0x0, 0x0);
++		if (coex_sta->c2h_bt_remote_name_req)
++			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
++						33);
++		else
++			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
++						32);
++
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
++	} else {
++		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++						 0x0, 0x0);
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
++					     NORMAL_EXEC, false, false);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index beeed22aa3dc..fca78bc7a945 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -150,6 +150,7 @@ struct coex_sta_8723b_1ant {
+ 	bool pan_exist;
+ 	bool bt_hi_pri_link_exist;
+ 	u8 num_of_profile;
++	bool bt_abnormal_scan;
+ 
+ 	bool under_lps;
+ 	bool under_ips;
+-- 
+2.12.0
