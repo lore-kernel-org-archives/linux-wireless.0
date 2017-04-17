@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:36436 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967709AbdD0V2v (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32906 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756972AbdDQAHM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2017 17:28:51 -0400
-Received: by mail-qk0-f173.google.com with SMTP id u75so38780712qka.3
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2017 14:28:51 -0700 (PDT)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org, sameo@linux.intel.com
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com,
-        wharms@bfs.de, Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH v4] NFC: trf7970a: Correct register settings for 27MHz clock
-Date: Thu, 27 Apr 2017 17:28:46 -0400
-Message-Id: <1493328526-28395-1-git-send-email-geoff@kuvee.com> (sfid-20170427_233041_194224_2630557C)
+        Sun, 16 Apr 2017 20:07:12 -0400
+Received: by mail-oi0-f68.google.com with SMTP id a189so578887oib.0
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:12 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/13] rtlwifi: btcoex: 21a 1ant: normal mode for retry limit when connected
+Date: Sun, 16 Apr 2017 19:06:54 -0500
+Message-Id: <20170417000700.29057-8-Larry.Finger@lwfinger.net> (sfid-20170417_020726_490123_230C056C)
+In-Reply-To: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In prior commits the selected clock frequency does not propagate
-correctly to what is written to the TRF7970A_MODULATOR_SYS_CLK_CTRL
-register.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+When wifi is connected, use normal mode to set retry limit.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/nfc/trf7970a.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 6ed5d7e..f7fee7d 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2067,6 +2067,13 @@ static int trf7970a_probe(struct spi_device *spi)
- 		return -EINVAL;
- 	}
- 
-+	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
-+		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
-+		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
-+	} else {
-+		trf->modulator_sys_clk_ctrl = 0;
-+	}
-+
- 	ret = devm_request_threaded_irq(trf->dev, spi->irq, NULL,
- 					trf7970a_irq,
- 					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 0877ca020e63..5b624e76303d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -2028,11 +2028,11 @@ static void btc8821a1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 			    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 				btc8821a1ant_limited_tx(btcoexist,
+ 							NORMAL_EXEC, 1, 1,
+-							1, 1);
++							0, 1);
+ 			} else {
+ 				btc8821a1ant_limited_tx(btcoexist,
+ 							NORMAL_EXEC, 1, 1,
+-							1, 1);
++							0, 1);
+ 			}
+ 		} else {
+ 			btc8821a1ant_limited_tx(btcoexist, NORMAL_EXEC,
 -- 
-2.7.4
+2.12.0
