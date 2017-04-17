@@ -1,107 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f182.google.com ([209.85.217.182]:33792 "EHLO
-        mail-ua0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751189AbdDHFM6 (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35807 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932307AbdDQALV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 01:12:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170322194240.1488-1-nbd@nbd.name>
-References: <20170322194240.1488-1-nbd@nbd.name>
-From: Weedy <weedy2887@gmail.com>
-Date: Sat, 8 Apr 2017 01:12:37 -0400
-Message-ID: <CAFE24U10xk0ZmcHL6zUYk=vMqNTxE_uMZVAv2Q0Leyi1iBTCdA@mail.gmail.com> (sfid-20170408_071303_533849_E3783C4A)
-Subject: Re: [PATCH] ath9k_hw: fix channel maximum power level test
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        stable@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Sun, 16 Apr 2017 20:11:21 -0400
+Received: by mail-oi0-f67.google.com with SMTP id a21so8760264oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:21 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 05/27] rtlwifi: btcoex: 23b 1ant: check if BT high priority packet exist
+Date: Sun, 16 Apr 2017 19:10:49 -0500
+Message-Id: <20170417001111.29384-6-Larry.Finger@lwfinger.net> (sfid-20170417_021128_738616_DD413260)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 March 2017 at 15:42, Felix Fietkau <nbd@nbd.name> wrote:
-> The tx power applied by set_txpower is limited by the CTL (conformance
-> test limit) entries in the EEPROM. These can change based on the user
-> configured regulatory domain.
-> Depending on the EEPROM data this can cause the tx power to become too
-> limited, if the original regdomain CTLs impose lowr limits than the CTLs
-> of the user configured regdomain.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-When merged, should this this fix this annoyance? Or is TP-Link just
-shipping junk cal data?
+If there are BT high priority packets, we arrange more time to BT.
+To make user experience to  be better, HID and SCO are also seen as
+high priority packet exist.
 
-root@LEDE:~# iw phy
-Wiphy phy1
-...
-        Frequencies:
-            * 5180 MHz [36] (21.0 dBm)
-            * 5200 MHz [40] (21.0 dBm)
-            * 5220 MHz [44] (21.0 dBm)
-            * 5240 MHz [48] (21.0 dBm)
-            * 5260 MHz [52] (21.0 dBm) (radar detection)
-            * 5280 MHz [56] (21.0 dBm) (radar detection)
-            * 5300 MHz [60] (21.0 dBm) (radar detection)
-            * 5320 MHz [64] (21.0 dBm) (radar detection)
-            * 5500 MHz [100] (21.0 dBm) (radar detection)
-            * 5520 MHz [104] (21.0 dBm) (radar detection)
-            * 5540 MHz [108] (21.0 dBm) (radar detection)
-            * 5560 MHz [112] (21.0 dBm) (radar detection)
-            * 5580 MHz [116] (21.0 dBm) (radar detection)
-            * 5600 MHz [120] (disabled)
-            * 5620 MHz [124] (disabled)
-            * 5640 MHz [128] (disabled)
-            * 5660 MHz [132] (21.0 dBm) (radar detection)
-            * 5680 MHz [136] (21.0 dBm) (radar detection)
-            * 5700 MHz [140] (21.0 dBm) (radar detection)
-            * 5745 MHz [149] (21.0 dBm)
-            * 5765 MHz [153] (21.0 dBm)
-            * 5785 MHz [157] (21.0 dBm)
-            * 5805 MHz [161] (21.0 dBm)
-            * 5825 MHz [165] (21.0 dBm)
-root@LEDE:~# iw reg get
-global
-country CA: DFS-FCC
-    (2402 - 2472 @ 40), (N/A, 30), (N/A)
-    (5150 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
-    (5250 - 5350 @ 80), (N/A, 24), (0 ms), DFS, AUTO-BW
-    (5470 - 5600 @ 80), (N/A, 24), (0 ms), DFS
-    (5650 - 5730 @ 80), (N/A, 24), (0 ms), DFS
-    (5735 - 5835 @ 80), (N/A, 30), (N/A)
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c  | 11 +++++++++++
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h  |  1 +
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  1 +
+ 3 files changed, 13 insertions(+)
 
-phy#1
-country US: DFS-FCC
-    (2402 - 2472 @ 40), (N/A, 30), (N/A)
-    (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
-    (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
-    (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
-    (5735 - 5835 @ 80), (N/A, 30), (N/A)
-    (57240 - 63720 @ 2160), (N/A, 40), (N/A)
-
-root@LEDE:~# iw phy phy1 set txpower fixed 1500
-root@LEDE:~# iwinfo
-wlan1     ESSID: nah
-          Access Point: still nah
-          Mode: Master  Channel: 48 (5.240 GHz)
-          Tx-Power: 15 dBm  Link Quality: 44/70
-          Signal: -66 dBm  Noise: -90 dBm
-          Bit Rate: 147.5 MBit/s
-          Encryption: WPA2 PSK (CCMP)
-          Type: nl80211  HW Mode(s): 802.11an
-          Hardware: 168C:0033 168C:A120 [Atheros AR9580]
-          TX power offset: none
-          Frequency offset: none
-          Supports VAPs: yes  PHY name: phy1
-
-root@LEDE:~# iw phy phy1 set txpower fixed 2000
-root@LEDE:~# iwinfo
-wlan1     ESSID: nah
-          Access Point: still nah
-          Mode: Master  Channel: 48 (5.240 GHz)
-          Tx-Power: 17 dBm  Link Quality: 45/70
-          Signal: -65 dBm  Noise: -90 dBm
-          Bit Rate: 177.5 MBit/s
-          Encryption: WPA2 PSK (CCMP)
-          Type: nl80211  HW Mode(s): 802.11an
-          Hardware: 168C:0033 168C:A120 [Atheros AR9580]
-          TX power offset: none
-          Frequency offset: none
-          Supports VAPs: yes  PHY name: phy1
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 851c11d18d9c..52b138d548f3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -407,6 +407,7 @@ static void halbtc8723b1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ 	bt_link_info->a2dp_exist = coex_sta->a2dp_exist;
+ 	bt_link_info->pan_exist = coex_sta->pan_exist;
+ 	bt_link_info->hid_exist = coex_sta->hid_exist;
++	bt_link_info->bt_hi_pri_link_exist = coex_sta->bt_hi_pri_link_exist;
+ 
+ 	/* work around for HS mode. */
+ 	if (bt_hs_on) {
+@@ -2563,6 +2564,8 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 		coex_sta->a2dp_exist = false;
+ 		coex_sta->hid_exist = false;
+ 		coex_sta->sco_exist = false;
++
++		coex_sta->bt_hi_pri_link_exist = false;
+ 	} else {
+ 		/* connection exists */
+ 		coex_sta->bt_link_exist = true;
+@@ -2582,6 +2585,14 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 			coex_sta->sco_exist = true;
+ 		else
+ 			coex_sta->sco_exist = false;
++
++		/* Add Hi-Pri Tx/Rx counter to avoid false detection */
++		if (((coex_sta->hid_exist) || (coex_sta->sco_exist)) &&
++		    (coex_sta->high_priority_tx + coex_sta->high_priority_rx >=
++		     160) &&
++		    (!coex_sta->c2h_bt_inquiry_page))
++			coex_sta->bt_hi_pri_link_exist = true;
++
+ 	}
+ 
+ 	halbtc8723b1ant_update_bt_link_info(btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index c3472fbb12ef..b86a28f519aa 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -143,6 +143,7 @@ struct coex_sta_8723b_1ant {
+ 	bool a2dp_exist;
+ 	bool hid_exist;
+ 	bool pan_exist;
++	bool bt_hi_pri_link_exist;
+ 
+ 	bool under_lps;
+ 	bool under_ips;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index c8271135aaaa..911db7680478 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -468,6 +468,7 @@ struct btc_statistics {
+ 
+ struct btc_bt_link_info {
+ 	bool bt_link_exist;
++	bool bt_hi_pri_link_exist;
+ 	bool sco_exist;
+ 	bool sco_only;
+ 	bool a2dp_exist;
+-- 
+2.12.0
