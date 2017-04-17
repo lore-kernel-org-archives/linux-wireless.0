@@ -1,54 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:34209 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753042AbdDFXH2 (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:36072 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752659AbdDQKHp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 19:07:28 -0400
-Received: by mail-pg0-f43.google.com with SMTP id 21so48672731pgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 16:07:28 -0700 (PDT)
-Date: Thu, 6 Apr 2017 16:07:26 -0700
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
-        Michael Davidson <md@google.com>,
-        Greg Hackmann <ghackmann@google.com>
-Subject: Re: [PATCH] mac80211: Fix clang warning about constant operand in
- logical operation
-Message-ID: <20170406230726.GB78690@google.com> (sfid-20170407_010830_100802_3B681266)
-References: <20170406185633.91065-1-mka@chromium.org>
- <1491505878.11399.4.camel@sipsolutions.net>
- <20170406192452.GE145051@google.com>
- <1491513145.11399.8.camel@sipsolutions.net>
- <20170406224238.GA78690@google.com>
- <1491519117.11399.10.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1491519117.11399.10.camel@sipsolutions.net>
+        Mon, 17 Apr 2017 06:07:45 -0400
+From: Vincent Legoll <vincent.legoll@gmail.com>
+To: linux-kernel@vger.kernel.org, zajec5@gmail.com,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH RFC] Make BCMA a menuconfig to ease disabling it all
+Date: Mon, 17 Apr 2017 12:07:29 +0200
+Message-Id: <20170417100730.3648-1-vincent.legoll@gmail.com> (sfid-20170417_120818_028782_7B59EF9B)
+In-Reply-To: <CAEwRq=oz=8T489QZtjcHB03rv_mFY6WAyOUkgMTOrsJuDEPPdw@mail.gmail.com>
+References: <CAEwRq=oz=8T489QZtjcHB03rv_mFY6WAyOUkgMTOrsJuDEPPdw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Fri, Apr 07, 2017 at 12:51:57AM +0200 Johannes Berg ha dit:
 
-> On Thu, 2017-04-06 at 15:42 -0700, Matthias Kaehlcke wrote:
-> > 
-> > Thanks, it would also require to move the initialization of
-> > ieee80211_default_rc_algo into an ifdef. If you can live with such a
-> > solution I'm happy to change it.
-> 
-> I think that'd be something I can live with, yeah.
-> 
-> > > 	git grep 'IS_ENABLED(' | grep '&&'
-> > 
-> > Indeed the warning is not triggered by these constructs. It seems
-> > clang only emits the warning when the constant operand is not
-> > boolean.
-> 
-> That points to just adding "> 0" to the condition here as another
-> alternative solution, I guess? With a comment to make sure it's not
-> removed again, that'd seem like the best thing to do.
+Hello,
 
-Good point, that's more digestible. I'll send an updated change soon.
+this is more what I wanted to achieve, an easily disableable BCMA menuconfig.
 
-Matthias
+This is working as intended on x86_64 defconfig, whereas it is harder to disable
+for ARCH=arm because of "select"s. But that's less of an issue, as those arch's
+defconfigs may very well want the feature enbled, and that would make sense.
+
+Any input appreciated.
+
+Thanks
