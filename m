@@ -1,61 +1,529 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:34348 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428509AbdDYNSx (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34236 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932394AbdDQAL0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 09:18:53 -0400
-Received: by mail-io0-f177.google.com with SMTP id a103so213893157ioj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Apr 2017 06:18:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170424133603.3697-1-colin.king@canonical.com>
-References: <20170424133603.3697-1-colin.king@canonical.com>
-From: Geoff Lansberry <geoff@kuvee.com>
-Date: Tue, 25 Apr 2017 09:18:12 -0400
-Message-ID: <CAO7Z3WL=iE++iJ5uGyrk3erG1U1OucH7csvWxdtw3eUqq3ca1A@mail.gmail.com> (sfid-20170425_151939_500727_3A4C1A64)
-Subject: Re: [PATCH] NFC: trf7970a: fix check of clock frequencies, use &&
- instead of ||
-To: Colin King <colin.king@canonical.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Sun, 16 Apr 2017 20:11:26 -0400
+Received: by mail-oi0-f68.google.com with SMTP id t14so15969075oif.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:26 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 10/27] rtlwifi: btcoex: 23b 1ant: adjust wifi duration for bt a2dp
+Date: Sun, 16 Apr 2017 19:10:54 -0500
+Message-Id: <20170417001111.29384-11-Larry.Finger@lwfinger.net> (sfid-20170417_021155_788638_75DE8128)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 24, 2017 at 9:36 AM, Colin King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> The "or" condition (clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
-> (clk_freq != TRF7970A_13MHZ_CLOCK_FREQUE) will always be true because
-> clk_freq cannot be equal to two different values at the same time. Use
-> the  && operator instead of || to fix this.
->
-> Detected by CoverityScan, CID#1430468 ("Constant expression result")
->
-> Fixes: 837eb4d21ecde7 ("NFC: trf7970a: add device tree option for 27MHz clock")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/nfc/trf7970a.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-> index 2d1c8ca6e679..00eb6cd2b22f 100644
-> --- a/drivers/nfc/trf7970a.c
-> +++ b/drivers/nfc/trf7970a.c
-> @@ -2071,8 +2071,8 @@ static int trf7970a_probe(struct spi_device *spi)
->         }
->
->         of_property_read_u32(np, "clock-frequency", &clk_freq);
-> -       if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
-> -               (clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
-> +       if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) &&
-> +               (clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
->                 dev_err(trf->dev,
->                         "clock-frequency (%u Hz) unsupported\n",
->                         clk_freq);
-> --
-> 2.11.0
->
-Nice catch.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Acked-by: Geoff Lansberry <geoff@kuvee.com>
+The larger the bt a2dp bit pool is, the more time bt needs to receive
+them. If we do not adjust the wifi duration, the voice quality will be
+low. Hence we reduce the time that wifi holds, to improve the a2dp
+service.
+
+If the bt is slave, it may receive a packet at any time, so we
+need to mark them as high priority packets in case of packet loss
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 326 +++++++++++++++------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +
+ 2 files changed, 246 insertions(+), 82 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index ce73dcbe81f3..bb79ffe75235 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -981,62 +981,149 @@ static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
+ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 				    bool force_exec, bool turn_on, u8 type)
+ {
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_busy = false;
+ 	u8 rssi_adjust_val = 0;
++	u8 ps_tdma_byte0_val = 0x51;
++	u8 ps_tdma_byte3_val = 0x10;
++	u8 ps_tdma_byte4_val = 0x50;
++	s8 wifi_duration_adjust = 0x0;
++	static bool pre_wifi_busy;
+ 
+ 	coex_dm->cur_ps_tdma_on = turn_on;
+ 	coex_dm->cur_ps_tdma = type;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
+ 
+-	if (!force_exec) {
+-		if (coex_dm->cur_ps_tdma_on)
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-				 "[BTCoex], ******** TDMA(on, %d) *********\n",
+-				 coex_dm->cur_ps_tdma);
+-		else
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-				 "[BTCoex], ******** TDMA(off, %d) ********\n",
+-				 coex_dm->cur_ps_tdma);
++	if (wifi_busy != pre_wifi_busy) {
++		force_exec = true;
++		pre_wifi_busy = wifi_busy;
++	}
+ 
++	if (!force_exec) {
+ 		if ((coex_dm->pre_ps_tdma_on == coex_dm->cur_ps_tdma_on) &&
+ 		    (coex_dm->pre_ps_tdma == coex_dm->cur_ps_tdma))
+ 			return;
+ 	}
++
++	if (coex_sta->scan_ap_num <= 5) {
++		wifi_duration_adjust = 5;
++
++		if (coex_sta->a2dp_bit_pool >= 35)
++			wifi_duration_adjust = -10;
++		else if (coex_sta->a2dp_bit_pool >= 45)
++			wifi_duration_adjust = -15;
++	} else if (coex_sta->scan_ap_num >= 40) {
++		wifi_duration_adjust = -15;
++
++		if (coex_sta->a2dp_bit_pool < 35)
++			wifi_duration_adjust = -5;
++		else if (coex_sta->a2dp_bit_pool < 45)
++			wifi_duration_adjust = -10;
++	} else if (coex_sta->scan_ap_num >= 20) {
++		wifi_duration_adjust = -10;
++
++		if (coex_sta->a2dp_bit_pool >= 45)
++			wifi_duration_adjust = -15;
++	} else {
++		wifi_duration_adjust = 0;
++
++		if (coex_sta->a2dp_bit_pool >= 35)
++			wifi_duration_adjust = -10;
++		else if (coex_sta->a2dp_bit_pool >= 45)
++			wifi_duration_adjust = -15;
++	}
++
++	if ((type == 1) || (type == 2) || (type == 9) || (type == 11) ||
++	    (type == 101) || (type == 102) || (type == 109) || (type == 101)) {
++		if (!coex_sta->force_lps_on) {
++			/* Native power save TDMA, only for A2DP-only case
++			 * 1/2/9/11 while wifi noisy threshold > 30
++			 */
++
++			/* no null-pkt */
++			ps_tdma_byte0_val = 0x61;
++			/* no tx-pause at BT-slot */
++			ps_tdma_byte3_val = 0x11;
++			/* 0x778 = d/1 toggle, no dynamic slot */
++			ps_tdma_byte4_val = 0x10;
++		} else {
++			/* null-pkt */
++			ps_tdma_byte0_val = 0x51;
++			/* tx-pause at BT-slot */
++			ps_tdma_byte3_val = 0x10;
++			/* 0x778 = d/1 toggle, dynamic slot */
++			ps_tdma_byte4_val = 0x50;
++		}
++	} else if ((type == 3) || (type == 13) || (type == 14) ||
++		   (type == 103) || (type == 113) || (type == 114)) {
++		/* null-pkt */
++		ps_tdma_byte0_val = 0x51;
++		/* tx-pause at BT-slot */
++		ps_tdma_byte3_val = 0x10;
++		/* 0x778 = d/1 toggle, no dynamic slot */
++		ps_tdma_byte4_val = 0x10;
++	} else { /* native power save case */
++		/* no null-pkt */
++		ps_tdma_byte0_val = 0x61;
++		/* no tx-pause at BT-slot */
++		ps_tdma_byte3_val = 0x11;
++		/* 0x778 = d/1 toggle, no dynamic slot */
++		ps_tdma_byte4_val = 0x11;
++		/* psTdmaByte4Va is not define for 0x778 = d/1, 1/1 case */
++	}
++
++	/* if (bt_link_info->slave_role) */
++	if ((bt_link_info->slave_role) && (bt_link_info->a2dp_exist))
++		/* 0x778 = 0x1 at wifi slot (no blocking BT Low-Pri pkts) */
++		ps_tdma_byte4_val = ps_tdma_byte4_val | 0x1;
++
++	if (type > 100) {
++		/* set antenna control by SW	 */
++		ps_tdma_byte0_val = ps_tdma_byte0_val | 0x82;
++		/* set antenna no toggle, control by antenna diversity */
++		ps_tdma_byte3_val = ps_tdma_byte3_val | 0x60;
++	}
++
+ 	if (turn_on) {
+ 		switch (type) {
+ 		default:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x1a,
+-						       0x1a, 0x0, 0x50);
++						      0x1a, 0x0,
++						      ps_tdma_byte4_val);
+ 			break;
+ 		case 1:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x3a,
+-						       0x03, 0x10, 0x50);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val,
++				0x3a + wifi_duration_adjust, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 
+ 			rssi_adjust_val = 11;
+ 			break;
+ 		case 2:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x2b,
+-						       0x03, 0x10, 0x50);
+-			rssi_adjust_val = 14;
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val,
++				0x2d + wifi_duration_adjust, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 			break;
+ 		case 3:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x1d,
+-						       0x1d, 0x0, 0x52);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x30, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 			break;
+ 		case 4:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x93, 0x15,
+-						       0x3, 0x14, 0x0);
+-			rssi_adjust_val = 17;
++						      0x3, 0x14, 0x0);
+ 			break;
+ 		case 5:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x61, 0x15,
+-						       0x3, 0x11, 0x10);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x1f, 0x3,
++				ps_tdma_byte3_val, 0x11);
+ 			break;
+ 		case 6:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x61, 0x20,
+-						       0x3, 0x11, 0x13);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x20, 0x3,
++				ps_tdma_byte3_val, 0x11);
+ 			break;
+ 		case 7:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x13, 0xc,
+@@ -1044,33 +1131,44 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 			break;
+ 		case 8:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x93, 0x25,
+-						       0x3, 0x10, 0x0);
++						      0x3, 0x10, 0x0);
+ 			break;
+ 		case 9:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51,  0x21,
+-						       0x3, 0x10, 0x50);
+-			rssi_adjust_val = 18;
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x21, 0x3,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 			break;
+ 		case 10:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x13, 0xa,
+ 						       0xa, 0x0, 0x40);
+ 			break;
+ 		case 11:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x15,
+-						       0x03, 0x10, 0x50);
+-			rssi_adjust_val = 20;
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x21, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 			break;
+ 		case 12:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x0a,
+-						       0x0a, 0x0, 0x50);
++						      0x0a, 0x0, 0x50);
+ 			break;
+ 		case 13:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x15,
+-						       0x15, 0x0, 0x50);
++			if (coex_sta->scan_ap_num <= 3)
++				halbtc8723b1ant_set_fw_ps_tdma(
++					btcoexist, ps_tdma_byte0_val, 0x40, 0x3,
++					ps_tdma_byte3_val, ps_tdma_byte4_val);
++			else
++				halbtc8723b1ant_set_fw_ps_tdma(
++					btcoexist, ps_tdma_byte0_val, 0x21, 0x3,
++					ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 			break;
+ 		case 14:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x21,
+-						       0x3, 0x10, 0x52);
++			if (coex_sta->scan_ap_num <= 3)
++				halbtc8723b1ant_set_fw_ps_tdma(
++					btcoexist, 0x51, 0x30, 0x3, 0x10, 0x50);
++			else
++				halbtc8723b1ant_set_fw_ps_tdma(
++					btcoexist, ps_tdma_byte0_val, 0x21, 0x3,
++					ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 			break;
+ 		case 15:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x13, 0xa,
+@@ -1078,97 +1176,166 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 			break;
+ 		case 16:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x93, 0x15,
+-						       0x3, 0x10, 0x0);
+-			rssi_adjust_val = 18;
++						      0x3, 0x10, 0x0);
+ 			break;
+ 		case 18:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x93, 0x25,
+-						       0x3, 0x10, 0x0);
+-			rssi_adjust_val = 14;
++						      0x3, 0x10, 0x0);
+ 			break;
+ 		case 20:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x61, 0x35,
+-						       0x03, 0x11, 0x10);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x3f, 0x03,
++				ps_tdma_byte3_val, 0x10);
+ 			break;
+ 		case 21:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x61, 0x25,
+-						       0x03, 0x11, 0x11);
++						      0x03, 0x11, 0x11);
+ 			break;
+ 		case 22:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x61, 0x25,
+-						       0x03, 0x11, 0x10);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x25, 0x03,
++				ps_tdma_byte3_val, 0x10);
+ 			break;
+ 		case 23:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x25,
+-						       0x3, 0x31, 0x18);
+-			rssi_adjust_val = 22;
++						      0x3, 0x31, 0x18);
+ 			break;
+ 		case 24:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x15,
+-						       0x3, 0x31, 0x18);
+-			rssi_adjust_val = 22;
++						      0x3, 0x31, 0x18);
+ 			break;
+ 		case 25:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xe3, 0xa,
+ 						       0x3, 0x31, 0x18);
+-			rssi_adjust_val = 22;
+ 			break;
+ 		case 26:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xe3, 0xa,
+ 						       0x3, 0x31, 0x18);
+-			rssi_adjust_val = 22;
+ 			break;
+ 		case 27:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x25,
+-						       0x3, 0x31, 0x98);
+-			rssi_adjust_val = 22;
++						      0x3, 0x31, 0x98);
+ 			break;
+ 		case 28:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x69, 0x25,
+-						       0x3, 0x31, 0x0);
++						      0x3, 0x31, 0x0);
+ 			break;
+ 		case 29:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xab, 0x1a,
+-						       0x1a, 0x1, 0x10);
++						      0x1a, 0x1, 0x10);
+ 			break;
+ 		case 30:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x14,
+-						       0x3, 0x10, 0x50);
++			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x30,
++						       0x3, 0x10, 0x10);
+ 			break;
+ 		case 31:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xd3, 0x1a,
+-						       0x1a, 0, 0x58);
++						      0x1a, 0, 0x58);
+ 			break;
+ 		case 32:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x61, 0xa,
+-						       0x3, 0x10, 0x0);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x35, 0x3,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
+ 			break;
+ 		case 33:
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xa3, 0x25,
+-						       0x3, 0x30, 0x90);
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x35, 0x3,
++				ps_tdma_byte3_val, 0x10);
+ 			break;
+ 		case 34:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x53, 0x1a,
+-						       0x1a, 0x0, 0x10);
++						      0x1a, 0x0, 0x10);
+ 			break;
+ 		case 35:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x63, 0x1a,
+-						       0x1a, 0x0, 0x10);
++						      0x1a, 0x0, 0x10);
+ 			break;
+ 		case 36:
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0xd3, 0x12,
+-						       0x3, 0x14, 0x50);
++						      0x3, 0x14, 0x50);
+ 			break;
+-		/* SoftAP only with no sta associated, BT disable,
+-		 * TDMA mode for power saving
+-		 * here softap mode screen off will cost 70-80mA for phone
+-		 */
+ 		case 40:
++			/* SoftAP only with no sta associated,BT disable ,TDMA
++			 * mode for power saving
++			 *
++			 * here softap mode screen off will cost 70-80mA for
++			 * phone
++			 */
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x23, 0x18,
+-						       0x00, 0x10, 0x24);
++						      0x00, 0x10, 0x24);
++			break;
++
++		case 101:
++			/* for 1-Ant translate to 2-Ant	 */
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val,
++				0x3a + wifi_duration_adjust, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 102:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val,
++				0x2d + wifi_duration_adjust, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 103:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x3a, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 105:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x15, 0x3,
++				ps_tdma_byte3_val, 0x11);
++			break;
++		case 106:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x20, 0x3,
++				ps_tdma_byte3_val, 0x11);
++			break;
++		case 109:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x21, 0x3,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 111:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x21, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 113:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x21, 0x3,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 114:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x21, 0x3,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 120:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x3f, 0x03,
++				ps_tdma_byte3_val, 0x10);
++			break;
++		case 122:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x25, 0x03,
++				ps_tdma_byte3_val, 0x10);
++			break;
++		case 132:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x25, 0x03,
++				ps_tdma_byte3_val, ps_tdma_byte4_val);
++			break;
++		case 133:
++			halbtc8723b1ant_set_fw_ps_tdma(
++				btcoexist, ps_tdma_byte0_val, 0x25, 0x03,
++				ps_tdma_byte3_val, 0x11);
+ 			break;
+ 		}
+ 	} else {
++		/* disable PS tdma */
+ 		switch (type) {
+ 		case 8: /* PTA Control */
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x8, 0x0,
+@@ -1183,19 +1350,10 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 			/* Software control, Antenna at BT side */
+ 			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x0, 0x0,
+ 						       0x0, 0x0, 0x0);
+-			halbtc8723b1ant_set_ant_path(btcoexist,
+-						     BTC_ANT_PATH_BT,
+-						     FORCE_EXEC,
+-						     false, false);
+ 			break;
+-		case 9:
+-			/* Software control, Antenna at WiFi side */
+-			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x0, 0x0,
+-						       0x0, 0x0, 0x0);
+-			halbtc8723b1ant_set_ant_path(btcoexist,
+-						     BTC_ANT_PATH_WIFI,
+-						     FORCE_EXEC,
+-						     false, false);
++		case 1: /* 2-Ant, 0x778=3, antenna control by ant diversity */
++			halbtc8723b1ant_set_fw_ps_tdma(btcoexist, 0x0, 0x0, 0x0,
++						       0x48, 0x0);
+ 			break;
+ 		}
+ 	}
+@@ -1593,6 +1751,10 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
+ {
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
++	if ((coex_sta->low_priority_rx >= 950) && (!coex_sta->under_ips))
++		bt_link_info->slave_role = true;
++	else
++		bt_link_info->slave_role = false;
+ 
+ 	if (bt_link_info->hid_only) { /* HID */
+ 		btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist, wifi_status);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 48d7c8aef72b..3469645f8a2d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -182,6 +182,8 @@ struct coex_sta_8723b_1ant {
+ 
+ 	bool cck_lock;
+ 	bool pre_ccklock;
++
++	u8 a2dp_bit_pool;
+ };
+ 
+ /*************************************************************************
+-- 
+2.12.0
