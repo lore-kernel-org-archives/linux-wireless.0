@@ -1,104 +1,255 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:36552 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1427263AbdDVWBq (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34875 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932430AbdDQALk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2017 18:01:46 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: battlemesh@ml.ninux.org, gnunet-developers@gnu.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [Battlemesh] wifibroadcast
-Date: Sun, 23 Apr 2017 00:01:41 +0200
-Message-ID: <1806801.tVQKAhPZbv@prime> (sfid-20170423_000150_578218_07394F22)
-In-Reply-To: <20170422153703.GE1681@makrotopia.org>
-References: <CANjd3nfeiGgaHMcgOyKOKhRRKEwnn43VgC4GRcw-fuCkCdg2zQ@mail.gmail.com> <2945991.ay5rM9MeUZ@prime> <20170422153703.GE1681@makrotopia.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart8783359.V50GRE38a8"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+        Sun, 16 Apr 2017 20:11:40 -0400
+Received: by mail-oi0-f65.google.com with SMTP id a21so8760979oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:39 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 24/27] rtlwifi: btcoex: 23b 1ant: fine tune for wifi connected
+Date: Sun, 16 Apr 2017 19:11:08 -0500
+Message-Id: <20170417001111.29384-25-Larry.Finger@lwfinger.net> (sfid-20170417_021158_712452_ACC78DC2)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart8783359.V50GRE38a8
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="us-ascii"
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Hi Daniel,
+Fine tune the parameters in cases of bt_acl_busy and scan when wifi is
+connected.
 
-On Saturday, April 22, 2017 5:37:03 PM CEST Daniel Golle wrote:
-> Hi Simon,
->=20
-> On Fri, Apr 21, 2017 at 09:55:03PM +0200, Simon Wunderlich wrote:
-> > Hi Daniel,
-> >=20
-> > >     mac80211: Parse legacy and HT rate in injected frames
-> >=20
-> > Yup, Sven was so kind and helped with this. :D
-> >=20
-> > I'm experimenting with some opportunistic routing ideas ...
->=20
-> I just realized that the radiotap headers are still not part of the
-> UAPI exported by the kernel. How is one supposed to go about this
-> issue? Have lots of diverging local copies of ieee80211_radiotap.h?
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 114 ++++++++++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +
+ 2 files changed, 79 insertions(+), 37 deletions(-)
 
-Propose a patch and send it to linux wireless to move it? :)
-
-> And change all the kernel-specific types (u16 and such) into their
-> corresponding userland types (u_int16)...?
-
-Hmm, uapi is full with __u16, __u32, ... see linux/types.h
-
->=20
-> I'd be glad if you can share your idea about proper and/or intentional
-> use of the kernel's radiotap capabilities...
-
-Well, there is a radiotap parser in the kernel which is quite useful for=20
-reading (net/wireless/radiotap.c). And there is a radiotap library which al=
-so=20
-does parsing [1] (seems it's based on the kernel implementation), reference=
-d=20
-from=20radiotap.org [2]. What is missing (or at least I didn't find it and=20
-implemented something on my own) is a library/function to build radiotap=20
-headers (i.e. for writing). There are quite a few things to consider (paddi=
-ng,=20
-alignment, etc). To make it useful, you would also need to build ieee80211=
-=20
-headers at the same time ...
-
-I have some rough working C code for all of that (integrated into something=
-=20
-bigger), not sure if it would be useful to make a library out of it.
-
-I don't have an idea about "proper" usage though. Since Johannes seems to=20
-maintain most of that radiotap stuff, I'm CC'ing him and linux-wireless. Ma=
-ybe=20
-there is already more than what we know. :)
-
-Cheers,
-      Simon
-
-[1] https://github.com/radiotap/radiotap-library/blob/master/radiotap.c
-[2] http://www.radiotap.org/
---nextPart8783359.V50GRE38a8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEE1ilQI7G+y+fdhnrfoSvjmEKSnqEFAlj70sUACgkQoSvjmEKS
-nqFb0w//UqmR7ix/vU0oMbegHhBkLQ5AVviXcx93382SKwshFltFh+7KhXE4+gAk
-umX0qWmWIJDuHjKM1HI86Oq1+lEtoLuZQX7ZP4CHZ2A2KvystM2A7wQngNTNln73
-F2iTb05/zPaShVKAALPZpDwDCrrSoDCqBpincFLXIvKbLreA5d6zIxEqxrP8XZ9v
-SVF3jUFATI8iXUYzn/853BXXfB6DOC85wC09fssXDrx98kroXDx0JKo7qFmjf1rU
-KLoD3IHuTvSsE8h8iKB0N9ZSq1sdrYrYVbozdG4Sux5rhvz9HlrqVzKpbR69vzsH
-hOZqGS6zR/K7vXk15M54w1jl0Wn7h3BH/krD0+DFfB+TAusBIqE5JmK30JJECzAM
-OsEGzsYmGJPsw5CLAkaG9jRueJQ72iQfT+yUeG2R1rVE72HBA50AYSQWAMAOPP0T
-ITZ/4ObMGyWzoESXHCNcpjSUxtwW8UFlereghAdvFJgydlfAtFjNHNfbjE4cUTTO
-Vb99+Usmy6NP+vQrJf4UKNfYkm5ub7rbvAD+JmCigykK7deyd8bFL/qRNcpmckY4
-ff4eGkjc+9tgc65E3BIZK8yG29IhsR2xplaE3wR0FtBL/Gr68Xtdz6K4fBcDTuLd
-JkDZemPoIgUIpTW1zHGMKIdIlXwmoTUnLnZ+oUxxAgoUJ8G6NfM=
-=jcF5
------END PGP SIGNATURE-----
-
---nextPart8783359.V50GRE38a8--
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 0eae27aca67a..a338b72aed95 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1842,9 +1842,9 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
+ 	} else if (bt_link_info->a2dp_only) { /* A2DP */
+ 		if (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-						false, 8);
++						true, 32);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+-							     NORMAL_EXEC, 2);
++							     NORMAL_EXEC, 4);
+ 			coex_dm->auto_tdma_adjust = false;
+ 		} else {
+ 			btc8723b1ant_tdma_dur_adj_for_acl(btcoexist,
+@@ -1853,28 +1853,29 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
+ 							     NORMAL_EXEC, 1);
+ 			coex_dm->auto_tdma_adjust = true;
+ 		}
+-	} else if (bt_link_info->hid_exist &&
+-		bt_link_info->a2dp_exist) { /* HID + A2DP */
++	} else if (((bt_link_info->a2dp_exist) && (bt_link_info->pan_exist)) ||
++		   (bt_link_info->hid_exist && bt_link_info->a2dp_exist &&
++		    bt_link_info->pan_exist)) {
++		/* A2DP + PAN(OPP,FTP), HID + A2DP + PAN(OPP,FTP) */
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
++		coex_dm->auto_tdma_adjust = false;
++	} else if (bt_link_info->hid_exist && bt_link_info->a2dp_exist) {
++		/* HID + A2DP */
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,	true, 14);
+ 		coex_dm->auto_tdma_adjust = false;
+ 
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 6);
+-	 /* PAN(OPP,FTP), HID + PAN(OPP,FTP) */
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
+ 	} else if (bt_link_info->pan_only ||
+-		   (bt_link_info->hid_exist && bt_link_info->pan_exist)) {
++			(bt_link_info->hid_exist && bt_link_info->pan_exist)) {
++		/* PAN(OPP,FTP), HID + PAN(OPP,FTP) */
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 3);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 6);
+-		coex_dm->auto_tdma_adjust = false;
+-	 /* A2DP + PAN(OPP,FTP), HID + A2DP + PAN(OPP,FTP) */
+-	} else if ((bt_link_info->a2dp_exist && bt_link_info->pan_exist) ||
+-		   (bt_link_info->hid_exist && bt_link_info->a2dp_exist &&
+-		    bt_link_info->pan_exist)) {
+-		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
+ 		coex_dm->auto_tdma_adjust = false;
+ 	} else {
+-		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 11);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
++		/* BT no-profile busy (0x9) */
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 33);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
+ 		coex_dm->auto_tdma_adjust = false;
+ 	}
+ }
+@@ -1954,21 +1955,22 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
+ 
+ 	/* tdma and coex table */
+ 	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
+-		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
++		if (bt_link_info->a2dp_exist) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-						true, 22);
++						true, 32);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+-							     NORMAL_EXEC, 1);
+-		} else if (bt_link_info->pan_only) {
++							     NORMAL_EXEC, 4);
++		} else if (bt_link_info->a2dp_exist &&
++			   bt_link_info->pan_exist) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-						true, 20);
++						true, 22);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+-							     NORMAL_EXEC, 2);
++							     NORMAL_EXEC, 4);
+ 		} else {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 						true, 20);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+-							     NORMAL_EXEC, 1);
++							     NORMAL_EXEC, 4);
+ 		}
+ 	} else if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
+ 		   coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
+@@ -1976,6 +1978,8 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
+ 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
+ 	} else {
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
++					     NORMAL_EXEC, false, false);
+ 		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
+ 	}
+ }
+@@ -1983,23 +1987,34 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
+ static void halbtc8723b1ant_action_wifi_connected_special_packet(
+ 						struct btc_coexist *btcoexist)
+ {
+-	bool hs_connecting = false;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
++	bool wifi_busy = false;
+ 
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_CONNECTING, &hs_connecting);
++	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
++
++	/* no special packet process for both WiFi and BT very busy */
++	if ((wifi_busy) &&
++	    ((bt_link_info->pan_exist) || (coex_sta->num_of_profile >= 2)))
++		return;
+ 
+ 	halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
+ 					 0x0, 0x0);
+ 
+ 	/* tdma and coex table */
+-	if ((BT_8723B_1ANT_BT_STATUS_CONNECTED_IDLE == coex_dm->bt_status) ||
+-	    (bt_link_info->sco_exist) || (bt_link_info->hid_only) ||
+-	    (bt_link_info->a2dp_only) || (bt_link_info->pan_only)) {
+-		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+-	} else {
++	if ((bt_link_info->sco_exist) || (bt_link_info->hid_exist)) {
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 5);
++	} else if (bt_link_info->a2dp_exist) {
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
++	} else if (bt_link_info->pan_exist) {
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
++	} else {
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
++					     NORMAL_EXEC, false, false);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
+ 	}
+ }
+ 
+@@ -2044,10 +2059,29 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ 	if (!ap_enable &&
+ 	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY &&
+ 	    !btcoexist->bt_link_info.hid_only) {
+-		if (!wifi_busy && btcoexist->bt_link_info.a2dp_only)
+-			halbtc8723b1ant_power_save_state(btcoexist,
++		if (btcoexist->bt_link_info.a2dp_only) {
++			if (!wifi_busy) {
++				halbtc8723b1ant_power_save_state(btcoexist,
+ 							 BTC_PS_WIFI_NATIVE,
+ 							 0x0, 0x0);
++			} else { /* busy */
++				if (coex_sta->scan_ap_num >=
++				    BT_8723B_1ANT_WIFI_NOISY_THRESH)
++					/* no force LPS, no PS-TDMA,
++					 * use pure TDMA
++					 */
++					halbtc8723b1ant_power_save_state(
++						btcoexist, BTC_PS_WIFI_NATIVE,
++						0x0, 0x0);
++				else
++					halbtc8723b1ant_power_save_state(
++						btcoexist, BTC_PS_LPS_ON, 0x50,
++						0x4);
++			}
++		} else if ((!coex_sta->pan_exist) && (!coex_sta->a2dp_exist) &&
++			   (!coex_sta->hid_exist))
++			halbtc8723b1ant_power_save_state(
++				btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
+ 		else
+ 			halbtc8723b1ant_power_save_state(btcoexist,
+ 							 BTC_PS_LPS_ON,
+@@ -2071,6 +2105,9 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ 		} else {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 						false, 8);
++			halbtc8723b1ant_set_ant_path(btcoexist,
++						     BTC_ANT_PATH_PTA,
++						     NORMAL_EXEC, false, false);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+ 							     NORMAL_EXEC, 2);
+ 		}
+@@ -2087,9 +2124,12 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ 				    BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
+ 		} else {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-						false, 8);
++						true, 32);
++			halbtc8723b1ant_set_ant_path(btcoexist,
++						     BTC_ANT_PATH_PTA,
++						     NORMAL_EXEC, false, false);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+-							     NORMAL_EXEC, 2);
++							     NORMAL_EXEC, 4);
+ 		}
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 36e0a6b5ec58..1e00b6a9b6b8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -41,6 +41,8 @@
+ 
+ #define	BTC_RSSI_COEX_THRESH_TOL_8723B_1ANT		2
+ 
++#define BT_8723B_1ANT_WIFI_NOISY_THRESH			50
++
+ enum _BT_INFO_SRC_8723B_1ANT {
+ 	BT_INFO_SRC_8723B_1ANT_WIFI_FW			= 0x0,
+ 	BT_INFO_SRC_8723B_1ANT_BT_RSP			= 0x1,
+-- 
+2.12.0
