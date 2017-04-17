@@ -1,174 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29923 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751193AbdDMIaT (ORCPT
+Received: from mail-wr0-f178.google.com ([209.85.128.178]:33845 "EHLO
+        mail-wr0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756854AbdDQAsk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 04:30:19 -0400
-Subject: [PATCH v7 05/10] ath10k: various sdio related definitions
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 13 Apr 2017 11:29:51 +0300
-Message-ID: <149207219123.4590.11769261524266840078.stgit@potku.adurom.net> (sfid-20170413_103023_080715_870C2161)
-In-Reply-To: <149207201649.4590.5821794186383265138.stgit@potku.adurom.net>
-References: <149207201649.4590.5821794186383265138.stgit@potku.adurom.net>
+        Sun, 16 Apr 2017 20:48:40 -0400
+Received: by mail-wr0-f178.google.com with SMTP id z109so76026444wrb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:48:39 -0700 (PDT)
+Received: from [192.168.1.20] ([45.243.13.58])
+        by smtp.gmail.com with ESMTPSA id z92sm12055412wrb.41.2017.04.16.17.48.35
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 16 Apr 2017 17:48:36 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+From: hamed <hmahmoud1288@gmail.com>
+Subject: RTL8821AE 802.11ac problem after kernel upgrade
+Message-ID: <4b32be10-a3fe-da9d-5832-a89fdb53eb13@gmail.com> (sfid-20170417_024844_662173_37766FB4)
+Date: Mon, 17 Apr 2017 02:48:34 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/mixed;
+ boundary="------------E58E6DAA5610F50F1C4F71B6"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+This is a multi-part message in MIME format.
+--------------E58E6DAA5610F50F1C4F71B6
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Debug masks for SDIO HIF layer.
-Address definitions for SDIO/mbox based chipsets.
-Augmented struct host_interest with more members.
+hi,
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h      |    3 ++
- drivers/net/wireless/ath/ath10k/debug.h     |    2 +
- drivers/net/wireless/ath/ath10k/hw.h        |   53 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 ++++++++++++
- 4 files changed, 82 insertions(+)
+my wifi works well on kernel version " 4.9.13-200.fc25.x86_64" , but it
+become so unstable & keeps disconnecting frequently if i use newer
+kernels , i sent attachments  & i hope i can be useful in solving such
+problem , thanks for your concern.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index bf091514ecc6..8fc08a5043db 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -91,6 +91,7 @@ struct ath10k;
- enum ath10k_bus {
- 	ATH10K_BUS_PCI,
- 	ATH10K_BUS_AHB,
-+	ATH10K_BUS_SDIO,
- };
- 
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
-@@ -100,6 +101,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- 		return "pci";
- 	case ATH10K_BUS_AHB:
- 		return "ahb";
-+	case ATH10K_BUS_SDIO:
-+		return "sdio";
- 	}
- 
- 	return "unknown";
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 2368f47314ae..257d10985c6e 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -38,6 +38,8 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
- 	ATH10K_DBG_PCI_PS	= 0x00004000,
- 	ATH10K_DBG_AHB		= 0x00008000,
-+	ATH10K_DBG_SDIO		= 0x00010000,
-+	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 8aca62bca348..977839f30bf5 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -857,6 +857,59 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
- #define QCA9887_EEPROM_ADDR_LO_MASK		0x00ff0000
- #define QCA9887_EEPROM_ADDR_LO_LSB		16
- 
-+#define MBOX_RESET_CONTROL_ADDRESS		0x00000000
-+#define MBOX_HOST_INT_STATUS_ADDRESS		0x00000800
-+#define MBOX_HOST_INT_STATUS_ERROR_LSB		7
-+#define MBOX_HOST_INT_STATUS_ERROR_MASK		0x00000080
-+#define MBOX_HOST_INT_STATUS_CPU_LSB		6
-+#define MBOX_HOST_INT_STATUS_CPU_MASK		0x00000040
-+#define MBOX_HOST_INT_STATUS_COUNTER_LSB	4
-+#define MBOX_HOST_INT_STATUS_COUNTER_MASK	0x00000010
-+#define MBOX_CPU_INT_STATUS_ADDRESS		0x00000801
-+#define MBOX_ERROR_INT_STATUS_ADDRESS		0x00000802
-+#define MBOX_ERROR_INT_STATUS_WAKEUP_LSB	2
-+#define MBOX_ERROR_INT_STATUS_WAKEUP_MASK	0x00000004
-+#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_LSB	1
-+#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_MASK	0x00000002
-+#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_LSB	0
-+#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_MASK	0x00000001
-+#define MBOX_COUNTER_INT_STATUS_ADDRESS		0x00000803
-+#define MBOX_COUNTER_INT_STATUS_COUNTER_LSB	0
-+#define MBOX_COUNTER_INT_STATUS_COUNTER_MASK	0x000000ff
-+#define MBOX_RX_LOOKAHEAD_VALID_ADDRESS		0x00000805
-+#define MBOX_INT_STATUS_ENABLE_ADDRESS		0x00000828
-+#define MBOX_INT_STATUS_ENABLE_ERROR_LSB	7
-+#define MBOX_INT_STATUS_ENABLE_ERROR_MASK	0x00000080
-+#define MBOX_INT_STATUS_ENABLE_CPU_LSB		6
-+#define MBOX_INT_STATUS_ENABLE_CPU_MASK		0x00000040
-+#define MBOX_INT_STATUS_ENABLE_INT_LSB		5
-+#define MBOX_INT_STATUS_ENABLE_INT_MASK		0x00000020
-+#define MBOX_INT_STATUS_ENABLE_COUNTER_LSB	4
-+#define MBOX_INT_STATUS_ENABLE_COUNTER_MASK	0x00000010
-+#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_LSB	0
-+#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_MASK	0x0000000f
-+#define MBOX_CPU_INT_STATUS_ENABLE_ADDRESS	0x00000819
-+#define MBOX_CPU_INT_STATUS_ENABLE_BIT_LSB	0
-+#define MBOX_CPU_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
-+#define MBOX_ERROR_STATUS_ENABLE_ADDRESS	0x0000081a
-+#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_LSB  1
-+#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_MASK 0x00000002
-+#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_LSB   0
-+#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_MASK  0x00000001
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_ADDRESS	0x0000081b
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_LSB	0
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
-+#define MBOX_COUNT_ADDRESS			0x00000820
-+#define MBOX_COUNT_DEC_ADDRESS			0x00000840
-+#define MBOX_WINDOW_DATA_ADDRESS		0x00000874
-+#define MBOX_WINDOW_WRITE_ADDR_ADDRESS		0x00000878
-+#define MBOX_WINDOW_READ_ADDR_ADDRESS		0x0000087c
-+#define MBOX_CPU_DBG_SEL_ADDRESS		0x00000883
-+#define MBOX_CPU_DBG_ADDRESS			0x00000884
-+#define MBOX_RTC_BASE_ADDRESS			0x00000000
-+#define MBOX_GPIO_BASE_ADDRESS			0x00005000
-+#define MBOX_MBOX_BASE_ADDRESS			0x00008000
-+
- #define RTC_STATE_V_GET(x) (((x) & RTC_STATE_V_MASK) >> RTC_STATE_V_LSB)
- 
- /* Register definitions for first generation ath10k cards. These cards include
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index cbac9e4252d6..8bded5da9d0d 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -205,6 +205,24 @@ struct host_interest {
- 	 */
- 	/* Bit 1 - unused */
- 	u32 hi_fw_swap;					/* 0x104 */
-+
-+	/* global arenas pointer address, used by host driver debug */
-+	u32 hi_dynamic_mem_arenas_addr;			/* 0x108 */
-+
-+	/* allocated bytes of DRAM use by allocated */
-+	u32 hi_dynamic_mem_allocated;			/* 0x10C */
-+
-+	/* remaining bytes of DRAM */
-+	u32 hi_dynamic_mem_remaining;			/* 0x110 */
-+
-+	/* memory track count, configured by host */
-+	u32 hi_dynamic_mem_track_max;			/* 0x114 */
-+
-+	/* minidump buffer */
-+	u32 hi_minidump;				/* 0x118 */
-+
-+	/* bdata's sig and key addr */
-+	u32 hi_bd_sig_key;				/* 0x11c */
- } __packed;
- 
- #define HI_ITEM(item)  offsetof(struct host_interest, item)
-@@ -319,6 +337,12 @@ struct host_interest {
- #define HI_ACS_FLAGS_USE_WWAN       (1 << 1)
- /* Use test VAP */
- #define HI_ACS_FLAGS_TEST_VAP       (1 << 2)
-+/* SDIO/mailbox ACS flag definitions */
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_SET       (1 << 0)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET    (1 << 1)
-+#define HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE        (1 << 2)
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_FW_ACK    (1 << 16)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_FW_ACK (1 << 17)
- 
- /*
-  * CONSOLE FLAGS
+
+--------------E58E6DAA5610F50F1C4F71B6
+Content-Type: text/plain; charset=UTF-8;
+ name="kernels-installed.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="kernels-installed.txt"
+
+a2VybmVsLTQuOS4xMy0yMDAuZmMyNS54ODZfNjQgKCB3aWZpIHdvcmtzIGdvb2Qgb24gdGhh
+dCkKa2VybmVsLTQuOS4xNC0yMDAuZmMyNS54ODZfNjQgICggd2lmaSBrZWVwcyBkaXNjb25u
+ZWN0aW5nKQprZXJuZWwtNC4xMC41LTIwMC5mYzI1Lng4Nl82NCAgKHdpZmkga2VlcHMgZGlj
+b25uZWN0aW5nKQo=
+--------------E58E6DAA5610F50F1C4F71B6
+Content-Type: text/plain; charset=UTF-8;
+ name="inxi-output.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="inxi-output.txt"
+
+G1sxOzM0bVN5c3RlbTogICAbWzA7MzdtIBtbMTszNG1Ib3N0OhtbMDszN20gU0NPUlBJT04g
+G1sxOzM0bUtlcm5lbDobWzA7MzdtIDQuOS4xMy0yMDAuZmMyNS54ODZfNjQgeDg2XzY0ICg2
+NCBiaXQpIBtbMTszNG1EZXNrdG9wOhtbMDszN20gTi9BG1swOzM3bQobWzE7MzRtICAgICAg
+ICAgIBtbMDszN20gG1sxOzM0bURpc3RybzobWzA7MzdtIEZlZG9yYSByZWxlYXNlIDI1IChU
+d2VudHkgRml2ZSkbWzA7MzdtChtbMTszNG1NYWNoaW5lOiAgG1swOzM3bSAbWzE7MzRtRGV2
+aWNlOhtbMDszN20gbGFwdG9wIBtbMTszNG1TeXN0ZW06G1swOzM3bSBMRU5PVk8gG1sxOzM0
+bXByb2R1Y3Q6G1swOzM3bSA4MFQ3IBtbMTszNG12OhtbMDszN20gTGVub3ZvIGlkZWFwYWQg
+MTEwLTE1SUJSIBtbMTszNG1zZXJpYWw6G1swOzM3bSBQRjBKVkFLORtbMDszN20KG1sxOzM0
+bSAgICAgICAgICAbWzA7MzdtIBtbMTszNG1Nb2JvOhtbMDszN20gTEVOT1ZPIBtbMTszNG1t
+b2RlbDobWzA7MzdtIDAwUkQxNUlQRzA3NiAbWzE7MzRtdjobWzA7MzdtIE5PIERQSyAbWzE7
+MzRtc2VyaWFsOhtbMDszN20gUEYwSlZBSzkgG1sxOzM0bVVFRkk6G1swOzM3bSBMRU5PVk8g
+G1sxOzM0bXY6G1swOzM3bSAxR0NOMTVXVyAbWzE7MzRtZGF0ZTobWzA7MzdtIDA0LzA3LzIw
+MTYbWzA7MzdtChtbMTszNG1CYXR0ZXJ5ICAgG1swOzM3bSAbWzE7MzRtQkFUMDobWzA7Mzdt
+IBtbMTszNG1jaGFyZ2U6G1swOzM3bSAyMy45IFdoIDEwMC4xJSAbWzE7MzRtY29uZGl0aW9u
+OhtbMDszN20gMjMuOS8yMy44IFdoICgxMDAlKRtbMDszN20KG1sxOzM0bUNQVTogICAgICAb
+WzA7MzdtIBtbMTszNG1EdWFsIGNvcmUbWzA7MzdtIEludGVsIENlbGVyb24gTjMwNjAgKC1N
+Q1AtKRtbMDszN20gG1sxOzM0bWNhY2hlOhtbMDszN20gMTAyNCBLQhtbMDszN20gChtbMTsz
+NG0gICAgICAgICAgG1swOzM3bSAbWzE7MzRtY2xvY2sgc3BlZWRzOhtbMDszN20gG1sxOzM0
+bW1heDobWzA7MzdtIDI0ODAgTUh6IBtbMTszNG0xOhtbMDszN20gMTUyNyBNSHogG1sxOzM0
+bTI6G1swOzM3bSAxOTMxIE1IehtbMDszN20KG1sxOzM0bUdyYXBoaWNzOiAbWzA7MzdtIBtb
+MTszNG1DYXJkOhtbMDszN20gSW50ZWwgQXRvbS9DZWxlcm9uL1BlbnRpdW0gUHJvY2Vzc29y
+IHg1LUU4MDAwL0ozeHh4L04zeHh4IEludGVncmF0ZWQgR3JhcGhpY3MgQ29udHJvbGxlchtb
+MDszN20KG1sxOzM0bSAgICAgICAgICAbWzA7MzdtIBtbMTszNG1EaXNwbGF5IFNlcnZlcjob
+WzA7MzdtIFgub3JnIDEuMTkuMSAbWzE7MzRtZHJpdmVyOhtbMDszN20gTi9BIBtbMTszNG10
+dHkgc2l6ZTobWzA7MzdtIDE1MHgzNSAbWzE7MzRtQWR2YW5jZWQgRGF0YTobWzA7MzdtIE4v
+QSBmb3Igcm9vdBtbMDszN20KG1sxOzM0bUF1ZGlvOiAgICAbWzA7MzdtIBtbMTszNG1DYXJk
+G1swOzM3bSBJbnRlbCBBdG9tL0NlbGVyb24vUGVudGl1bSBQcm9jZXNzb3IgeDUtRTgwMDAv
+SjN4eHgvTjN4eHggU2VyaWVzIEhpZ2ggRGVmaW5pdGlvbiBBdWRpbyBDb250cm9sbGVyG1sw
+OzM3bQobWzE7MzRtICAgICAgICAgIBtbMDszN20gG1sxOzM0bWRyaXZlcjobWzA7MzdtIHNu
+ZF9oZGFfaW50ZWwbWzA7MzdtChtbMTszNG0gICAgICAgICAgG1swOzM3bSAbWzE7MzRtU291
+bmQ6G1swOzM3bSBBZHZhbmNlZCBMaW51eCBTb3VuZCBBcmNoaXRlY3R1cmUgG1sxOzM0bXY6
+G1swOzM3bSBrNC45LjEzLTIwMC5mYzI1Lng4Nl82NBtbMDszN20KG1sxOzM0bU5ldHdvcms6
+ICAbWzA7MzdtIBtbMTszNG1DYXJkLTE6G1swOzM3bSBSZWFsdGVrIFJUTDg4MjFBRSA4MDIu
+MTFhYyBQQ0llIFdpcmVsZXNzIE5ldHdvcmsgQWRhcHRlciAbWzE7MzRtZHJpdmVyOhtbMDsz
+N20gcnRsODgyMWFlG1swOzM3bQobWzE7MzRtICAgICAgICAgIBtbMDszN20gG1sxOzM0bUlG
+OhtbMDszN20gd2xwMnMwIBtbMTszNG1zdGF0ZTobWzA7MzdtIHVwIBtbMTszNG1tYWM6G1sw
+OzM3bSAzMDpmNzo3Mjo2ZToyYzo3ZBtbMDszN20KG1sxOzM0bSAgICAgICAgICAbWzA7Mzdt
+IBtbMTszNG1DYXJkLTI6G1swOzM3bSBSZWFsdGVrIFJUTDgxMDEvMi82RSBQQ0kgRXhwcmVz
+cyBGYXN0L0dpZ2FiaXQgRXRoZXJuZXQgY29udHJvbGxlciAbWzE7MzRtZHJpdmVyOhtbMDsz
+N20gcjgxNjkbWzA7MzdtChtbMTszNG0gICAgICAgICAgG1swOzM3bSAbWzE7MzRtSUY6G1sw
+OzM3bSBlbnAzczAgG1sxOzM0bXN0YXRlOhtbMDszN20gZG93biAbWzE7MzRtbWFjOhtbMDsz
+N20gYzg6NWI6NzY6MDI6OGM6ODEbWzA7MzdtChtbMTszNG1Ecml2ZXM6ICAgG1swOzM3bSAb
+WzE7MzRtSEREIFRvdGFsIFNpemU6G1swOzM3bSA1MDAuMUdCICgyNi45JSB1c2VkKRtbMDsz
+N20KG1sxOzM0bSAgICAgICAgICAbWzA7MzdtIBtbMTszNG1JRC0xOhtbMDszN20gL2Rldi9z
+ZGEgG1sxOzM0bW1vZGVsOhtbMDszN20gVE9TSElCQV9NUTAxQUJGMCAbWzE7MzRtc2l6ZTob
+WzA7MzdtIDUwMC4xR0IbWzA7MzdtChtbMTszNG1QYXJ0aXRpb246G1swOzM3bSAbWzE7MzRt
+SUQtMTobWzA7MzdtIC8gG1sxOzM0bXNpemU6G1swOzM3bSA1MEcgG1sxOzM0bXVzZWQ6G1sw
+OzM3bSAxNUcgKDMxJSkgG1sxOzM0bWZzOhtbMDszN20gZXh0NCAbWzE7MzRtZGV2OhtbMDsz
+N20gL2Rldi9kbS0xG1swOzM3bQobWzE7MzRtICAgICAgICAgIBtbMDszN20gG1sxOzM0bUlE
+LTI6G1swOzM3bSAvYm9vdCAbWzE7MzRtc2l6ZTobWzA7MzdtIDQ3N00gG1sxOzM0bXVzZWQ6
+G1swOzM3bSAyNTZNICg1OCUpIBtbMTszNG1mczobWzA7MzdtIGV4dDQgG1sxOzM0bWRldjob
+WzA7MzdtIC9kZXYvc2RhMhtbMDszN20KG1sxOzM0bSAgICAgICAgICAbWzA7MzdtIBtbMTsz
+NG1JRC0zOhtbMDszN20gL2hvbWUgG1sxOzM0bXNpemU6G1swOzM3bSAyMTdHIBtbMTszNG11
+c2VkOhtbMDszN20gMTA4RyAoNTMlKSAbWzE7MzRtZnM6G1swOzM3bSBleHQ0IBtbMTszNG1k
+ZXY6G1swOzM3bSAvZGV2L2RtLTMbWzA7MzdtChtbMTszNG0gICAgICAgICAgG1swOzM3bSAb
+WzE7MzRtSUQtNDobWzA7MzdtIHN3YXAtMSAbWzE7MzRtc2l6ZTobWzA7MzdtIDQuMTZHQiAb
+WzE7MzRtdXNlZDobWzA7MzdtIDAuMDhHQiAoMiUpIBtbMTszNG1mczobWzA7MzdtIHN3YXAg
+G1sxOzM0bWRldjobWzA7MzdtIC9kZXYvZG0tMhtbMDszN20KG1sxOzM0bVJBSUQ6ICAgICAb
+WzA7MzdtIE5vIFJBSUQgZGV2aWNlczogL3Byb2MvbWRzdGF0LCBtZF9tb2Qga2VybmVsIG1v
+ZHVsZSBwcmVzZW50G1swOzM3bQobWzE7MzRtU2Vuc29yczogIBtbMDszN20gG1sxOzM0bVN5
+c3RlbSBUZW1wZXJhdHVyZXM6IGNwdTobWzA7MzdtIDU3LjBDIBtbMTszNG1tb2JvOhtbMDsz
+N20gTi9BG1swOzM3bQobWzE7MzRtICAgICAgICAgIBtbMDszN20gG1sxOzM0bUZhbiBTcGVl
+ZHMgKGluIHJwbSk6IGNwdTobWzA7MzdtIE4vQRtbMDszN20KG1sxOzM0bUluZm86ICAgICAb
+WzA7MzdtIBtbMTszNG1Qcm9jZXNzZXM6G1swOzM3bSAyMTcgG1sxOzM0bVVwdGltZTobWzA7
+MzdtIDYgZGF5cyAbWzE7MzRtTWVtb3J5OhtbMDszN20gMjYwNS4xLzM4NjUuMk1CIBtbMTsz
+NG1DbGllbnQ6G1swOzM3bSBTaGVsbCAoc3VkbykgG1sxOzM0bWlueGk6G1swOzM3bSAyLjMu
+OBtbMDszN20gG1swOzM3bQobWzBt
+--------------E58E6DAA5610F50F1C4F71B6
+Content-Type: text/plain; charset=UTF-8;
+ name="wifi-driver.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="wifi-driver.txt"
+
+ICAqLW5ldHdvcmsKICAgICAgIGRlc2NyaXB0aW9uOiBXaXJlbGVzcyBpbnRlcmZhY2UKICAg
+ICAgIHByb2R1Y3Q6IFJUTDg4MjFBRSA4MDIuMTFhYyBQQ0llIFdpcmVsZXNzIE5ldHdvcmsg
+QWRhcHRlcgogICAgICAgdmVuZG9yOiBSZWFsdGVrIFNlbWljb25kdWN0b3IgQ28uLCBMdGQu
+CiAgICAgICBwaHlzaWNhbCBpZDogMAogICAgICAgYnVzIGluZm86IHBjaUAwMDAwOjAyOjAw
+LjAKICAgICAgIGxvZ2ljYWwgbmFtZTogd2xwMnMwCiAgICAgICB2ZXJzaW9uOiAwMAogICAg
+ICAgc2VyaWFsOiAzMDpmNzo3Mjo2ZToyYzo3ZAogICAgICAgd2lkdGg6IDY0IGJpdHMKICAg
+ICAgIGNsb2NrOiAzM01IegogICAgICAgY2FwYWJpbGl0aWVzOiBidXNfbWFzdGVyIGNhcF9s
+aXN0IGV0aGVybmV0IHBoeXNpY2FsIHdpcmVsZXNzCiAgICAgICBjb25maWd1cmF0aW9uOiBi
+cm9hZGNhc3Q9eWVzIGRyaXZlcj1ydGw4ODIxYWUgZHJpdmVydmVyc2lvbj00LjkuMTMtMjAw
+LmZjMjUueDg2XzY0IGZpcm13YXJlPU4vQSBpcD0xOTIuMTY4LjEuMjAgbGF0ZW5jeT0wIGxp
+bms9eWVzIG11bHRpY2FzdD15ZXMgd2lyZWxlc3M9SUVFRSA4MDIuMTEKICAgICAgIHJlc291
+cmNlczogaXJxOjEyMSBpb3BvcnQ6MjAwMChzaXplPTI1NikgbWVtb3J5OjkxMjAwMDAwLTkx
+MjAzZmZmCiAgKi1uZXR3b3JrCiAgICAgICBkZXNjcmlwdGlvbjogRXRoZXJuZXQgaW50ZXJm
+YWNlCiAgICAgICBwcm9kdWN0OiBSVEw4MTAxLzIvNkUgUENJIEV4cHJlc3MgRmFzdC9HaWdh
+Yml0IEV0aGVybmV0IGNvbnRyb2xsZXIKICAgICAgIHZlbmRvcjogUmVhbHRlayBTZW1pY29u
+ZHVjdG9yIENvLiwgTHRkLgogICAgICAgcGh5c2ljYWwgaWQ6IDAKICAgICAgIGJ1cyBpbmZv
+OiBwY2lAMDAwMDowMzowMC4wCiAgICAgICBsb2dpY2FsIG5hbWU6IGVucDNzMAogICAgICAg
+dmVyc2lvbjogMDcKICAgICAgIHNlcmlhbDogYzg6NWI6NzY6MDI6OGM6ODEKICAgICAgIHNp
+emU6IDEwTWJpdC9zCiAgICAgICBjYXBhY2l0eTogMTAwTWJpdC9zCiAgICAgICB3aWR0aDog
+NjQgYml0cwogICAgICAgY2xvY2s6IDMzTUh6CiAgICAgICBjYXBhYmlsaXRpZXM6IGJ1c19t
+YXN0ZXIgY2FwX2xpc3QgZXRoZXJuZXQgcGh5c2ljYWwgdHAgbWlpIDEwYnQgMTBidC1mZCAx
+MDBidCAxMDBidC1mZCBhdXRvbmVnb3RpYXRpb24KICAgICAgIGNvbmZpZ3VyYXRpb246IGF1
+dG9uZWdvdGlhdGlvbj1vbiBicm9hZGNhc3Q9eWVzIGRyaXZlcj1yODE2OSBkcml2ZXJ2ZXJz
+aW9uPTIuM0xLLU5BUEkgZHVwbGV4PWhhbGYgZmlybXdhcmU9cnRsODEwNmUtMV8wLjAuMSAw
+Ni8yOS8xMiBsYXRlbmN5PTAgbGluaz1ubyBtdWx0aWNhc3Q9eWVzIHBvcnQ9TUlJIHNwZWVk
+PTEwTWJpdC9zCiAgICAgICByZXNvdXJjZXM6IGlycToxMTcgaW9wb3J0OjEwMDAoc2l6ZT0y
+NTYpIG1lbW9yeTo5MTEwMDAwMC05MTEwMGZmZiBtZW1vcnk6OTEwMDAwMDAtOTEwMDNmZmYK
+ICAqLW5ldHdvcms6MCBESVNBQkxFRAogICAgICAgZGVzY3JpcHRpb246IEV0aGVybmV0IGlu
+dGVyZmFjZQogICAgICAgcGh5c2ljYWwgaWQ6IDIKICAgICAgIGxvZ2ljYWwgbmFtZTogdmly
+YnIwLW5pYwogICAgICAgc2VyaWFsOiA1Mjo1NDowMDpiNjpjYTo1ZgogICAgICAgc2l6ZTog
+MTBNYml0L3MKICAgICAgIGNhcGFiaWxpdGllczogZXRoZXJuZXQgcGh5c2ljYWwKICAgICAg
+IGNvbmZpZ3VyYXRpb246IGF1dG9uZWdvdGlhdGlvbj1vZmYgYnJvYWRjYXN0PXllcyBkcml2
+ZXI9dHVuIGRyaXZlcnZlcnNpb249MS42IGR1cGxleD1mdWxsIGxpbms9bm8gbXVsdGljYXN0
+PXllcyBwb3J0PXR3aXN0ZWQgcGFpciBzcGVlZD0xME1iaXQvcwogICotbmV0d29yazoxCiAg
+ICAgICBkZXNjcmlwdGlvbjogRXRoZXJuZXQgaW50ZXJmYWNlCiAgICAgICBwaHlzaWNhbCBp
+ZDogMwogICAgICAgbG9naWNhbCBuYW1lOiB2aXJicjAKICAgICAgIHNlcmlhbDogNTI6NTQ6
+MDA6YjY6Y2E6NWYKICAgICAgIGNhcGFiaWxpdGllczogZXRoZXJuZXQgcGh5c2ljYWwKICAg
+ICAgIGNvbmZpZ3VyYXRpb246IGJyb2FkY2FzdD15ZXMgZHJpdmVyPWJyaWRnZSBkcml2ZXJ2
+ZXJzaW9uPTIuMyBmaXJtd2FyZT1OL0EgaXA9MTkyLjE2OC4xMjIuMSBsaW5rPW5vIG11bHRp
+Y2FzdD15ZXMK
+--------------E58E6DAA5610F50F1C4F71B6--
