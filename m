@@ -1,68 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48802 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751466AbdDCJzr (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35713 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756772AbdDQAHG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 05:55:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Tobin C. Harding" <me@tobin.cc>
-Cc: Wolfram Sang <wsa@the-dreams.de>, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@linuxdriverproject.org, Tycho Andersen <tycho@tycho.ws>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFC] remove custom Michael MIC implementation
-References: <1490935659-7196-1-git-send-email-me@tobin.cc>
-        <20170331075851.GB1435@katana> <20170331102113.GA2930@eros>
-        <87fuhq6par.fsf@purkki.adurom.net> <20170403090359.GK3755@eros>
-Date: Mon, 03 Apr 2017 12:55:41 +0300
-In-Reply-To: <20170403090359.GK3755@eros> (Tobin C. Harding's message of "Mon,
-        3 Apr 2017 19:03:59 +1000")
-Message-ID: <87o9wdolwi.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_115619_364412_CE427CC2)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 16 Apr 2017 20:07:06 -0400
+Received: by mail-oi0-f67.google.com with SMTP id a21so8751450oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:06 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/13] rtlwifi: btcoex: 21a 1ant: set tdma and coex table when wifi is idle
+Date: Sun, 16 Apr 2017 19:06:48 -0500
+Message-Id: <20170417000700.29057-2-Larry.Finger@lwfinger.net> (sfid-20170417_020723_078265_63EA4338)
+In-Reply-To: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Tobin C. Harding" <me@tobin.cc> writes:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
->> >> But if you want a clean WEXT driver first, this is a step in the right
->> >> direction.
->> >
->> > Let's go for a CFG80211 driver and get out of staging :) So next step
->> > is I guess study the ath6kl driver, learn how CFG80211 is done and
->> > implement that interface in ks7010? Oh, and test that it works.
->> 
->> Please keep linux-wireless list in loop so that people on that list can
->> help.
->
-> How newbie friendly is the linux-wireless list please?
+When wifi is idle, bt could have more resources to transmit, so set the
+tdma and coex table to achieve this.
 
-I would claim quite friendly, but I'm finnish and our definition of
-"friendly" seems to be very different from rest of the world ;)
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 34 +++++++++++++++-------
+ 1 file changed, 23 insertions(+), 11 deletions(-)
 
-> I am having trouble separating the data path code from the control
-> path. I think I will spend a few more days on it though before asking
-> any questions.
-
-People do send questions to the list and most of the time they get
-answered. So go for it.
-
-There's also an irc channel which usually is helpful:
-
-https://wireless.wiki.kernel.org/en/users/support#linux_wireless_user_irc_channel
-
-> Except one: do you know off the top of your head of a canonical
-> implementation of a softmac wi-fi driver.
-
-You mean a mac80211 driver? mac80211_hwsim is the simplest one, but
-that's not a real driver as it's a simulator. Just grep
-ieee80211_register() to find all the drivers. Smaller drivers like
-rtl8xxxu or wl1251 might be good starting points to get familiar with
-the stack.
-
-And I guess you already saw the documentation:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/mac80211
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 5e9f3b0f7a25..c98441dbf882 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -1212,8 +1212,8 @@ static void btc8821a1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 						    0x1a, 0, 0x58);
+ 			break;
+ 		case 32:
+-			btc8821a1ant_set_fw_ps_tdma(btcoexist, 0x61, 0xa,
+-						    0x3, 0x10, 0x0);
++			btc8821a1ant_set_fw_ps_tdma(btcoexist, 0x61, 0x35,
++						    0x3, 0x11, 0x11);
+ 			break;
+ 		case 33:
+ 			btc8821a1ant_set_fw_ps_tdma(btcoexist, 0xa3, 0x25,
+@@ -1231,6 +1231,10 @@ static void btc8821a1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 			btc8821a1ant_set_fw_ps_tdma(btcoexist, 0xd3, 0x12,
+ 						    0x3, 0x14, 0x50);
+ 			break;
++		case 43:
++			btc8821a1ant_set_fw_ps_tdma(btcoexist, 0x51, 0x30,
++						    0x3, 0x10, 0x11);
++			break;
+ 		}
+ 	} else {
+ 		/* disable PS tdma */
+@@ -1619,15 +1623,23 @@ static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
+ 		return;
+ 	} else if (bt_link_info->a2dp_only) {
+ 		/* A2DP */
+-		if ((bt_rssi_state != BTC_RSSI_STATE_HIGH) &&
+-		    (bt_rssi_state != BTC_RSSI_STATE_STAY_HIGH)) {
++		if (wifi_status == BT_8821A_1ANT_WIFI_STATUS_CONNECTED_IDLE) {
++			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
++			btc8821a1ant_coex_table_with_type(btcoexist,
++							  NORMAL_EXEC, 1);
++			coex_dm->auto_tdma_adjust = false;
++		} else if ((bt_rssi_state != BTC_RSSI_STATE_HIGH) &&
++			   (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 14);
++			btc8821a1ant_coex_table_with_type(btcoexist,
++							  NORMAL_EXEC, 1);
++		} else {
+ 			/* for low BT RSSI */
+-			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-					     true, 11);
++			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 14);
++			btc8821a1ant_coex_table_with_type(btcoexist,
++							  NORMAL_EXEC, 1);
+ 			coex_dm->auto_tdma_adjust = false;
+ 		}
+-
+-		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
+ 	} else if (bt_link_info->hid_exist && bt_link_info->a2dp_exist) {
+ 		/* HID+A2DP */
+ 		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+@@ -1638,7 +1650,7 @@ static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
+ 		} else {
+ 			/*for low BT RSSI*/
+ 			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-					     true, 11);
++					     true, 14);
+ 			coex_dm->auto_tdma_adjust = false;
+ 		}
+ 
+@@ -1647,13 +1659,13 @@ static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
+ 		(bt_link_info->hid_exist && bt_link_info->pan_exist)) {
+ 		/* PAN(OPP, FTP), HID+PAN(OPP, FTP) */
+ 		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 3);
+-		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
++		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 6);
+ 		coex_dm->auto_tdma_adjust = false;
+ 	} else if (((bt_link_info->a2dp_exist) && (bt_link_info->pan_exist)) ||
+ 		   (bt_link_info->hid_exist && bt_link_info->a2dp_exist &&
+ 		    bt_link_info->pan_exist)) {
+ 		/* A2DP+PAN(OPP, FTP), HID+A2DP+PAN(OPP, FTP) */
+-		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
++		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 43);
+ 		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
+ 		coex_dm->auto_tdma_adjust = false;
+ 	} else {
 -- 
-Kalle Valo
+2.12.0
