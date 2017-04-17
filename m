@@ -1,68 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56682 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937883AbdDTIEL (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35719 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751894AbdDQAHH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 04:04:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi-next 2017-04-19-2
-References: <1492664371.31741.91.camel@coelho.fi>
-Date: Thu, 20 Apr 2017 11:04:05 +0300
-In-Reply-To: <1492664371.31741.91.camel@coelho.fi> (Luca Coelho's message of
-        "Thu, 20 Apr 2017 07:59:31 +0300")
-Message-ID: <87o9vr5wui.fsf@kamboji.qca.qualcomm.com> (sfid-20170420_100422_692780_E867B49D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Sun, 16 Apr 2017 20:07:07 -0400
+Received: by mail-oi0-f67.google.com with SMTP id a21so8751502oic.2
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:07:07 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 02/13] rtlwifi: btcoex: 21a 1ant: more bt profiling when wifi receives special packet
+Date: Sun, 16 Apr 2017 19:06:49 -0500
+Message-Id: <20170417000700.29057-3-Larry.Finger@lwfinger.net> (sfid-20170417_020724_275456_B8F6D2D1)
+In-Reply-To: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> Here's v2 of=C2=A0my second pull-request intended for v4.12.  It includes=
- the
-> last three patch series I sent out, namely 2017-04-13, 2017-04-19 and
-> the 2 fixes by Johannes that I sent a few minutes ago.
->
-> I also removed the "bump API to 31" patch.  I'll send a diff=C2=A0between
-> this tag and the HEAD of the patches I sent in the 2017-04-19 series.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 26ecfe01790381c4caa65ec9cce484c623f092=
-c4:
->
->   brcmfmac: only build fwsignal module for CONFIG_BRCMFMAC_PROTO_BCDC (20=
-17-04-19 14:39:44 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
-tags/iwlwifi-next-for-kalle-2017-04-19-2
->
-> for you to fetch changes up to 718ceb22a0ccd0b3a02a4bd401d944a1eb16f3ce:
->
->   iwlwifi: pcie: free context info in case of failures (2017-04-20 07:28:=
-03 +0300)
->
-> ----------------------------------------------------------------
-> Another series of patches intended for v4.12.  These are the changes:
->
->  * Heavy work for the A000 device series;
->  * Some cleanup patches;
->  * A few fixes;
->  * Dynamic SAR support;
->  * Geographical SAR support;
->  * Support a few new PCI device IDs;
->
-> ----------------------------------------------------------------
+Consider bt profiling is sco or hid to set coex table and tdma.
 
-Pulled, thanks.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 31 ++++++++++------------
+ 1 file changed, 14 insertions(+), 17 deletions(-)
 
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index c98441dbf882..1844b9102e30 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -1753,29 +1753,26 @@ void btc8821a1ant_action_wifi_connected_scan(struct btc_coexist *btcoexist)
+ static void btc8821a1ant_act_wifi_conn_sp_pkt(struct btc_coexist *btcoexist)
+ {
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+-	bool hs_connecting = false;
+-
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_CONNECTING, &hs_connecting);
+ 
+ 	btc8821a1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
+ 				      0x0, 0x0);
+ 
+ 	/* tdma and coex table */
+-	if (coex_dm->bt_status == BT_8821A_1ANT_BT_STATUS_ACL_BUSY) {
+-		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
+-			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-					     true, 22);
+-			btc8821a1ant_coex_table_with_type(btcoexist,
+-							  NORMAL_EXEC, 1);
+-		} else {
+-			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-					     true, 20);
+-			btc8821a1ant_coex_table_with_type(btcoexist,
+-							  NORMAL_EXEC, 1);
+-		}
+-	} else {
+-		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
++	if ((bt_link_info->sco_exist) || (bt_link_info->hid_exist) ||
++	    (bt_link_info->a2dp_exist)) {
++		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
++		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
++	}
++
++	if ((bt_link_info->hid_exist) && (bt_link_info->a2dp_exist)) {
++		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 14);
+ 		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
++	} else if (bt_link_info->pan_exist) {
++		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
++		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
++	} else {
++		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
+ 	}
+ }
+ 
+-- 
+2.12.0
