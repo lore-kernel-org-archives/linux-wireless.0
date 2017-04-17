@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33804 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1035829AbdDUGih (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43872 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932201AbdDQFOc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 02:38:37 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 17 Apr 2017 01:14:32 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [EXT] Re: [PATCH] MAINTAINERS: drop akarwar from mwifiex
+Date: Mon, 17 Apr 2017 05:14:28 +0000
+Message-ID: <ee636a2ebeb0421cbb77bcadb74f26b3@SC-EXCH02.marvell.com> (sfid-20170417_071452_884967_A4FBDFC1)
+References: <20170412174255.15021-1-briannorris@chromium.org>
+ <87k26obg69.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87k26obg69.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: [01/13] rtlwifi: btcoex: 21a 1ant: set tdma and coex table when
- wifi is idle
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170417000700.29057-2-Larry.Finger@lwfinger.net>
-References: <20170417000700.29057-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20170421063835.F323F611C3@smtp.codeaurora.org> (sfid-20170421_083840_681013_1C0888A8)
-Date: Fri, 21 Apr 2017 06:38:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi Kalle/Brian,
+
+> Brian Norris <briannorris@chromium.org> writes:
 > 
-> When wifi is idle, bt could have more resources to transmit, so set the
-> tdma and coex table to achieve this.
+> > His email is bouncing, and I expect he's not doing this work any
+> more.
+> >
+> > Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+> > Cc: Nishant Sarmukadam <nishants@marvell.com>
+> > Cc: Ganapathi Bhat <gbhat@marvell.com>
+> > Cc: Xinming Hu <huxm@marvell.com>
+> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > ---
+> > Or alternatively, we can update his email address. I just don't want
+> > to keep seeing bounced emails :)
 > 
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Pkshih <pkshih@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+> Me neither :) So Amitkumar, which one do you prefer?
+> 
+Yes. Amit's official mail id (akarwar@marvell.com) can be removed.
+> --
+> Kalle Valo
 
-Requested by Larry
 
-13 patches set to Changes Requested.
-
-9683295 [01/13] rtlwifi: btcoex: 21a 1ant: set tdma and coex table when wifi is idle
-9683307 [02/13] rtlwifi: btcoex: 21a 1ant: more bt profiling when wifi receives special packet
-9683297 [03/13] rtlwifi: btcoex: 21a 1ant: shorten wifi slot when connected scan
-9683299 [04/13] rtlwifi: btcoex: 21a 1ant: react to special packet when wifi is not scanning
-9683301 [05/13] rtlwifi: btcoex: 21a 1ant: coex table and tdma settings for softap mode
-9683319 [06/13] rtlwifi: btcoex: 21a 1ant: wifi slot time adjustment
-9683303 [07/13] rtlwifi: btcoex: 21a 1ant: normal mode for retry limit when connected
-9683305 [08/13] rtlwifi: btcoex: 21a 1ant: mark packet high priority when scanning
-9683315 [09/13] rtlwifi: btcoex: 21a 1ant: use default value when initiating coex
-9683317 [10/13] rtlwifi: btcoex: 21a 1ant: re-init coex after wifi leaves IPS
-9683311 [11/13] rtlwifi: btcoex: 21a 1ant: treat ARP as special packet
-9683309 [12/13] rtlwifi: btcoex: 21a 1ant: fix some coding style issues
-9683313 [13/13] rtlwifi: btcoex: 21a 1ant: add bt_tx_rx_mask into bt info
-
--- 
-https://patchwork.kernel.org/patch/9683295/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Ganapathi
