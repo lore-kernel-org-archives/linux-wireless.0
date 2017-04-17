@@ -1,27 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:32962 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751693AbdDNISd (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:47934 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754919AbdDQTcV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 04:18:33 -0400
-Received: by mail-qk0-f172.google.com with SMTP id h67so64589363qke.0
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2017 01:18:33 -0700 (PDT)
+        Mon, 17 Apr 2017 15:32:21 -0400
+Date: Mon, 17 Apr 2017 21:32:12 +0200
+From: Daniel Golle <daniel@makrotopia.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 2/2] rt2800: do VCO calibration after programming ALC
+Message-ID: <20170417193200.GA3446@makrotopia.org> (sfid-20170417_213224_682846_B4220344)
 MIME-Version: 1.0
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 14 Apr 2017 10:18:32 +0200
-Message-ID: <CA+BoTQmvjw30M76ESL=Bmpj2ysOQ-f7AbfPD3=TtDWAOt7=HJg@mail.gmail.com> (sfid-20170414_101839_144278_36814FF7)
-Subject: Email change
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+Somehow AP doesn't come up and the first scan fails if we don't do
+VCO calibration every time.
+The vendor driver duplicates the VCO calibration function into the
+channel switching logic, we can do the same with less duplication.
 
-I'm parting ways with Tieto today so my email is going  to become
-defunct. I'll be reachable via: kazikcz at gmail dot com.
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-
-Micha=C5=82
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 7135519a638c..870bf315f98b 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -3407,6 +3407,8 @@ static void rt2800_config_alc(struct rt2x00_dev *rt2x00dev,
+ 			rt2800_rfcsr_write(rt2x00dev, 42, 0x5b);
+ 	}
+ 	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, mac_sys_ctrl);
++
++	rt2800_vco_calibration(rt2x00dev);
+ }
+ 
+ static void rt2800_bbp_write_with_rx_chain(struct rt2x00_dev *rt2x00dev,
+-- 
+2.12.2
