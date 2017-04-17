@@ -1,254 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:33511 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932756AbdCaWq7 (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33001 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932402AbdDQALZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2017 18:46:59 -0400
-Received: by mail-pg0-f50.google.com with SMTP id x125so83240998pgb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2017 15:46:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1490865547-10208-2-git-send-email-huxinming820@gmail.com>
-References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com> <1490865547-10208-2-git-send-email-huxinming820@gmail.com>
-From: Dmitry Torokhov <dtor@google.com>
-Date: Fri, 31 Mar 2017 15:46:58 -0700
-Message-ID: <CAE_wzQ890=BCQviifEkcgfFO7XA+SNeFCUgn_Bx9_4n9uB1nsg@mail.gmail.com> (sfid-20170401_004703_739849_D7F3CFF1)
-Subject: Re: [PATCH 2/3] mwifiex: using general print function during device intialization
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+        Sun, 16 Apr 2017 20:11:25 -0400
+Received: by mail-oi0-f65.google.com with SMTP id a189so587337oib.0
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:25 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 09/27] rtlwifi: btcoex: 23b 1ant: need these information when scan
+Date: Sun, 16 Apr 2017 19:10:53 -0500
+Message-Id: <20170417001111.29384-10-Larry.Finger@lwfinger.net> (sfid-20170417_021217_481999_F0CE86DC)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 30, 2017 at 2:19 AM, Xinming Hu <huxinming820@gmail.com> wrote:
-> From: Xinming Hu <huxm@marvell.com>
->
-> adapter->dev is initialized after mwifiex_register done, before that
-> print message by general pr_* function
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-No, we should move away from naked pr_*() as much as possible. Please
-change  mwifiex_register() to accept "dev" parameter and assign
-adapter->dev early enough so that the standard mwifiex_err() calls are
-usable.
+Log the scan procedure, and update ap_num for future usage when scan done.
 
-Also consider changing _mwifiex_dbg() to handle cases when
-adapter->dev is NULL and fall back to pr_<level>.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 30 ++++++++++++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  1 +
+ 2 files changed, 29 insertions(+), 2 deletions(-)
 
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 78 ++++++++++++-----------------
->  drivers/net/wireless/marvell/mwifiex/sdio.c |  3 +-
->  2 files changed, 34 insertions(+), 47 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index e381def..59cb01a 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -60,7 +60,7 @@ static int mwifiex_pcie_probe_of(struct device *dev)
->
->         mapping.addr = pci_map_single(card->dev, skb->data, size, flags);
->         if (pci_dma_mapping_error(card->dev, mapping.addr)) {
-> -               mwifiex_dbg(adapter, ERROR, "failed to map pci memory!\n");
-> +               pr_err("failed to map pci memory!\n");
->                 return -1;
->         }
->         mapping.len = size;
-> @@ -594,7 +594,7 @@ static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
->                 skb = mwifiex_alloc_dma_align_buf(MWIFIEX_RX_DATA_BUF_SIZE,
->                                                   GFP_KERNEL);
->                 if (!skb) {
-> -                       mwifiex_dbg(adapter, ERROR,
-> +                       pr_err(
->                                     "Unable to allocate skb for RX ring.\n");
->                         kfree(card->rxbd_ring_vbase);
->                         return -ENOMEM;
-> @@ -651,8 +651,7 @@ static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
->                 /* Allocate skb here so that firmware can DMA data from it */
->                 skb = dev_alloc_skb(MAX_EVENT_SIZE);
->                 if (!skb) {
-> -                       mwifiex_dbg(adapter, ERROR,
-> -                                   "Unable to allocate skb for EVENT buf.\n");
-> +                       pr_err("Unable to allocate skb for EVENT buf.\n");
->                         kfree(card->evtbd_ring_vbase);
->                         return -ENOMEM;
->                 }
-> @@ -818,16 +817,14 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
->                                                      card->txbd_ring_size,
->                                                      &card->txbd_ring_pbase);
->         if (!card->txbd_ring_vbase) {
-> -               mwifiex_dbg(adapter, ERROR,
-> -                           "allocate consistent memory (%d bytes) failed!\n",
-> -                           card->txbd_ring_size);
-> +               pr_err("allocate consistent memory (%d bytes) failed!\n",
-> +                      card->txbd_ring_size);
->                 return -ENOMEM;
->         }
-> -       mwifiex_dbg(adapter, DATA,
-> -                   "info: txbd_ring - base: %p, pbase: %#x:%x, len: %x\n",
-> -                   card->txbd_ring_vbase, (unsigned int)card->txbd_ring_pbase,
-> -                   (u32)((u64)card->txbd_ring_pbase >> 32),
-> -                   card->txbd_ring_size);
-> +       pr_notice("info: txbd_ring - base: %p, pbase: %#x:%x, len: %x\n",
-> +                 card->txbd_ring_vbase, (unsigned int)card->txbd_ring_pbase,
-> +                 (u32)((u64)card->txbd_ring_pbase >> 32),
-> +                 card->txbd_ring_size);
->
->         return mwifiex_init_txq_ring(adapter);
->  }
-> @@ -875,24 +872,21 @@ static int mwifiex_pcie_create_rxbd_ring(struct mwifiex_adapter *adapter)
->                 card->rxbd_ring_size = sizeof(struct mwifiex_pcie_buf_desc) *
->                                        MWIFIEX_MAX_TXRX_BD;
->
-> -       mwifiex_dbg(adapter, INFO,
-> -                   "info: rxbd_ring: Allocating %d bytes\n",
-> -                   card->rxbd_ring_size);
-> +       pr_info("info: rxbd_ring: Allocating %d bytes\n",
-> +               card->rxbd_ring_size);
->         card->rxbd_ring_vbase = pci_alloc_consistent(card->dev,
->                                                      card->rxbd_ring_size,
->                                                      &card->rxbd_ring_pbase);
->         if (!card->rxbd_ring_vbase) {
-> -               mwifiex_dbg(adapter, ERROR,
-> -                           "allocate consistent memory (%d bytes) failed!\n",
-> -                           card->rxbd_ring_size);
-> +               pr_err("allocate consistent memory (%d bytes) failed!\n",
-> +                      card->rxbd_ring_size);
->                 return -ENOMEM;
->         }
->
-> -       mwifiex_dbg(adapter, DATA,
-> -                   "info: rxbd_ring - base: %p, pbase: %#x:%x, len: %#x\n",
-> -                   card->rxbd_ring_vbase, (u32)card->rxbd_ring_pbase,
-> -                   (u32)((u64)card->rxbd_ring_pbase >> 32),
-> -                   card->rxbd_ring_size);
-> +       pr_notice("info: rxbd_ring - base: %p, pbase: %#x:%x, len: %#x\n",
-> +                 card->rxbd_ring_vbase, (u32)card->rxbd_ring_pbase,
-> +                 (u32)((u64)card->rxbd_ring_pbase >> 32),
-> +                 card->rxbd_ring_size);
->
->         return mwifiex_init_rxq_ring(adapter);
->  }
-> @@ -939,24 +933,21 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
->         card->evtbd_ring_size = sizeof(struct mwifiex_evt_buf_desc) *
->                                 MWIFIEX_MAX_EVT_BD;
->
-> -       mwifiex_dbg(adapter, INFO,
-> -                   "info: evtbd_ring: Allocating %d bytes\n",
-> +       pr_info("info: evtbd_ring: Allocating %d bytes\n",
->                 card->evtbd_ring_size);
->         card->evtbd_ring_vbase = pci_alloc_consistent(card->dev,
->                                                       card->evtbd_ring_size,
->                                                       &card->evtbd_ring_pbase);
->         if (!card->evtbd_ring_vbase) {
-> -               mwifiex_dbg(adapter, ERROR,
-> -                           "allocate consistent memory (%d bytes) failed!\n",
-> -                           card->evtbd_ring_size);
-> +               pr_err("allocate consistent memory (%d bytes) failed!\n",
-> +                      card->evtbd_ring_size);
->                 return -ENOMEM;
->         }
->
-> -       mwifiex_dbg(adapter, EVENT,
-> -                   "info: CMDRSP/EVT bd_ring - base: %p pbase: %#x:%x len: %#x\n",
-> -                   card->evtbd_ring_vbase, (u32)card->evtbd_ring_pbase,
-> -                   (u32)((u64)card->evtbd_ring_pbase >> 32),
-> -                   card->evtbd_ring_size);
-> +       pr_notice("info: CMDRSP/EVT bd_ring - base: %p pbase: %#x:%x len: %#x\n",
-> +                 card->evtbd_ring_vbase, (u32)card->evtbd_ring_pbase,
-> +                 (u32)((u64)card->evtbd_ring_pbase >> 32),
-> +                 card->evtbd_ring_size);
->
->         return mwifiex_pcie_init_evt_ring(adapter);
->  }
-> @@ -995,8 +986,7 @@ static int mwifiex_pcie_alloc_cmdrsp_buf(struct mwifiex_adapter *adapter)
->         /* Allocate memory for receiving command response data */
->         skb = dev_alloc_skb(MWIFIEX_UPLD_SIZE);
->         if (!skb) {
-> -               mwifiex_dbg(adapter, ERROR,
-> -                           "Unable to allocate skb for command response data.\n");
-> +               pr_err("Unable to allocate skb for command response data.\n");
->                 return -ENOMEM;
->         }
->         skb_put(skb, MWIFIEX_UPLD_SIZE);
-> @@ -1045,17 +1035,15 @@ static int mwifiex_pcie_alloc_sleep_cookie_buf(struct mwifiex_adapter *adapter)
->         card->sleep_cookie_vbase = pci_alloc_consistent(card->dev, sizeof(u32),
->                                                      &card->sleep_cookie_pbase);
->         if (!card->sleep_cookie_vbase) {
-> -               mwifiex_dbg(adapter, ERROR,
-> -                           "pci_alloc_consistent failed!\n");
-> +               pr_err("pci_alloc_consistent failed!\n");
->                 return -ENOMEM;
->         }
->         /* Init val of Sleep Cookie */
->         tmp = FW_AWAKE_COOKIE;
->         put_unaligned(tmp, card->sleep_cookie_vbase);
->
-> -       mwifiex_dbg(adapter, INFO,
-> -                   "alloc_scook: sleep cookie=0x%x\n",
-> -                   get_unaligned(card->sleep_cookie_vbase));
-> +       pr_info("alloc_scook: sleep cookie=0x%x\n",
-> +               get_unaligned(card->sleep_cookie_vbase));
->
->         return 0;
->  }
-> @@ -3069,32 +3057,32 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
->         card->cmdrsp_buf = NULL;
->         ret = mwifiex_pcie_create_txbd_ring(adapter);
->         if (ret) {
-> -               mwifiex_dbg(adapter, ERROR, "Failed to create txbd ring\n");
-> +               pr_err("Failed to create txbd ring\n");
->                 goto err_cre_txbd;
->         }
->
->         ret = mwifiex_pcie_create_rxbd_ring(adapter);
->         if (ret) {
-> -               mwifiex_dbg(adapter, ERROR, "Failed to create rxbd ring\n");
-> +               pr_err("Failed to create rxbd ring\n");
->                 goto err_cre_rxbd;
->         }
->
->         ret = mwifiex_pcie_create_evtbd_ring(adapter);
->         if (ret) {
-> -               mwifiex_dbg(adapter, ERROR, "Failed to create evtbd ring\n");
-> +               pr_err("Failed to create evtbd ring\n");
->                 goto err_cre_evtbd;
->         }
->
->         ret = mwifiex_pcie_alloc_cmdrsp_buf(adapter);
->         if (ret) {
-> -               mwifiex_dbg(adapter, ERROR, "Failed to allocate cmdbuf buffer\n");
-> +               pr_err("Failed to allocate cmdbuf buffer\n");
->                 goto err_alloc_cmdbuf;
->         }
->
->         if (reg->sleep_cookie) {
->                 ret = mwifiex_pcie_alloc_sleep_cookie_buf(adapter);
->                 if (ret) {
-> -                       mwifiex_dbg(adapter, ERROR, "Failed to allocate sleep_cookie buffer\n");
-> +                       pr_err("Failed to allocate sleep_cookie buffer\n");
->                         goto err_alloc_cookie;
->                 }
->         } else {
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index 58d3da0..596282e 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -631,8 +631,7 @@ static int mwifiex_init_sdio_ioport(struct mwifiex_adapter *adapter)
->         else
->                 return -1;
->  cont:
-> -       mwifiex_dbg(adapter, INFO,
-> -                   "info: SDIO FUNC1 IO port: %#x\n", adapter->ioport);
-> +       pr_info("info: SDIO FUNC1 IO port: %#x\n", adapter->ioport);
->
->         /* Set Host interrupt reset to read to clear */
->         if (!mwifiex_read_reg(adapter, card->reg->host_int_rsr_reg, &reg))
-> --
-> 1.8.1.4
->
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 0a6c67452e8d..ce73dcbe81f3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -2397,13 +2397,39 @@ void ex_halbtc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	bool wifi_connected = false, bt_hs_on = false;
++	u8 u8tmpa, u8tmpb;
++	u32 u32tmp;
+ 	u32 wifi_link_status = 0;
+ 	u32 num_of_wifi_link = 0;
+ 	bool bt_ctrl_agg_buf_size = false;
+ 	u8 agg_buf_size = 5;
+ 
+-	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
+-	    btcoexist->bt_info.bt_disabled)
++	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
++		return;
++
++	if (type == BTC_SCAN_START) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], SCAN START notify\n");
++		/* Force antenna setup for no scan result issue */
++		halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
++					     FORCE_EXEC, false, false);
++		u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x948);
++		u8tmpa = btcoexist->btc_read_1byte(btcoexist, 0x765);
++		u8tmpb = btcoexist->btc_read_1byte(btcoexist, 0x67);
++
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], 0x948=0x%x, 0x765=0x%x, 0x67=0x%x\n",
++			 u32tmp, u8tmpa, u8tmpb);
++	} else {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], SCAN FINISH notify\n");
++
++		btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM,
++				   &coex_sta->scan_ap_num);
++	}
++
++	if (coex_sta->bt_disabled)
+ 		return;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 1d1885974777..48d7c8aef72b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -165,6 +165,7 @@ struct coex_sta_8723b_1ant {
+ 	bool c2h_bt_inquiry_page;
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
++	u8 scan_ap_num;
+ 	bool cck_ever_lock;
+ 	bool force_lps_on;
+ 	u32 pop_event_cnt;
+-- 
+2.12.0
