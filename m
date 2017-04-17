@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:34814 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939875AbdD1Quw (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34958 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932599AbdDQKHs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 12:50:52 -0400
-Received: by mail-pf0-f171.google.com with SMTP id e64so13815553pfd.1
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2017 09:50:52 -0700 (PDT)
-Date: Fri, 28 Apr 2017 09:50:48 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>
-Subject: Re: [4/4] mwifiex: pcie: de-duplicate buffer allocation code
-Message-ID: <20170428165046.GA98398@google.com> (sfid-20170428_185058_772739_3EC632C4)
-References: <20170311013924.73348-5-briannorris@chromium.org>
- <20170320170835.5ED1C609C6@smtp.codeaurora.org>
- <20170320200550.GA12143@google.com>
- <874lym7roy.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874lym7roy.fsf@kamboji.qca.qualcomm.com>
+        Mon, 17 Apr 2017 06:07:48 -0400
+From: Vincent Legoll <vincent.legoll@gmail.com>
+To: linux-kernel@vger.kernel.org, zajec5@gmail.com,
+        linux-wireless@vger.kernel.org
+Cc: Vincent Legoll <vincent.legoll@gmail.com>
+Subject: [PATCH] Make BCMA a menuconfig to ease disabling it all
+Date: Mon, 17 Apr 2017 12:07:30 +0200
+Message-Id: <20170417100730.3648-2-vincent.legoll@gmail.com> (sfid-20170417_120818_560761_AC7812F4)
+In-Reply-To: <20170417100730.3648-1-vincent.legoll@gmail.com>
+References: <CAEwRq=oz=8T489QZtjcHB03rv_mFY6WAyOUkgMTOrsJuDEPPdw@mail.gmail.com>
+ <20170417100730.3648-1-vincent.legoll@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 02:14:05PM +0200, Kalle Valo wrote:
-> What I could do is to wait for the patches 1-3 trickle down to w-d-next
-> and then apply this patch. It usually takes few weeks, but with bad luck
-> it might happen only after the merge window. Would that work?
+No need to get into the submenu to disable all BCMA-related config entries
 
-Is this going to get picked up?
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+---
+ drivers/bcma/Kconfig | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-Brian
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index b5c48a8..54f81c5 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -3,11 +3,8 @@ config BCMA_POSSIBLE
+ 	depends on HAS_IOMEM && HAS_DMA
+ 	default y
+ 
+-menu "Broadcom specific AMBA"
+-	depends on BCMA_POSSIBLE
+-
+-config BCMA
+-	tristate "BCMA support"
++menuconfig BCMA
++	tristate "Broadcom specific AMBA"
+ 	depends on BCMA_POSSIBLE
+ 	help
+ 	  Bus driver for Broadcom specific Advanced Microcontroller Bus
+@@ -117,5 +114,3 @@ config BCMA_DEBUG
+ 	  This turns on additional debugging messages.
+ 
+ 	  If unsure, say N
+-
+-endmenu
+-- 
+2.9.3
