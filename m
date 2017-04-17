@@ -1,34 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:57736 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754235AbdD1SrN (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34207 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932381AbdDQALT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 14:47:13 -0400
-Date: Fri, 28 Apr 2017 14:47:08 -0400 (EDT)
-Message-Id: <20170428.144708.265950341264933754.davem@davemloft.net> (sfid-20170428_204921_129934_946DF0F2)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2017-04-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170428175658.1961-1-johannes@sipsolutions.net>
-References: <20170428175658.1961-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Sun, 16 Apr 2017 20:11:19 -0400
+Received: by mail-oi0-f68.google.com with SMTP id t14so15968863oif.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:19 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 03/27] rtlwifi: btcoex: 23b 1ant: TDMA duration for ACL busy
+Date: Sun, 16 Apr 2017 19:10:47 -0500
+Message-Id: <20170417001111.29384-4-Larry.Finger@lwfinger.net> (sfid-20170417_021127_582885_3410FD6F)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 28 Apr 2017 19:56:57 +0200
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> Since I had many API changes pending I decided to go ahead and
-> take the opportunity to get them before the merge window, which
-> is a natural tree synchronization point :)
+BT ACL is a special case, so we create a routine to deal this case.
 
-Awesome :)
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 54 +++++++++++++---------
+ 1 file changed, 31 insertions(+), 23 deletions(-)
 
-> I meant to sent this earlier today but forgot due to some debug
-> (unrelated to this code, in our internal tree), sorry about that.
-> 
-> Please pull and let me know if there's any problem.
-
-Pulled, thanks Johannes.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index cece31ec33d5..15c16e524356 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1095,6 +1095,11 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 		/* acquire the BT TRx retry count from BT_Info byte2 */
+ 		retry_count = coex_sta->bt_retry_cnt;
+ 		bt_info_ext = coex_sta->bt_info_ext;
++
++		if ((coex_sta->low_priority_tx) > 1050 ||
++		    (coex_sta->low_priority_rx) > 1250)
++			retry_count++;
++
+ 		result = 0;
+ 		wait_count++;
+ 		/* no retry in the last 2-second duration */
+@@ -1106,6 +1111,9 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				dn = 0;
+ 
+ 			if (up >= n) {
++				/* if retry count during continuous n*2 seconds
++				 * is 0, enlarge WiFi duration
++				 */
+ 				wait_count = 0;
+ 				n = 3;
+ 				up = 0;
+@@ -1115,6 +1123,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 					 "[BTCoex], Increase wifi duration!!\n");
+ 			}
+ 		} else if (retry_count <= 3) {
++			/* <=3 retry in the last 2-second duration */
+ 			up--;
+ 			dn++;
+ 
+@@ -1122,12 +1131,20 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				up = 0;
+ 
+ 			if (dn == 2) {
++				/* if continuous 2 retry count(every 2 seconds)
++				 * >0 and < 3, reduce WiFi duration
++				 */
+ 				if (wait_count <= 2)
++					/* avoid loop between the two levels */
+ 					m++;
+ 				else
+ 					m = 1;
+ 
+ 				if (m >= 20)
++					/* maximum of m = 20 ' will recheck if
++					 * need to adjust wifi duration in
++					 * maximum time interval 120 seconds
++					 */
+ 					m = 20;
+ 
+ 				n = 3 * m;
+@@ -1139,12 +1156,20 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 					 "[BTCoex], Decrease wifi duration for retryCounter<3!!\n");
+ 			}
+ 		} else {
++			/* retry count > 3, once retry count > 3, to reduce
++			 * WiFi duration
++			 */
+ 			if (wait_count == 1)
++				/* to avoid loop between the two levels */
+ 				m++;
+ 			else
+ 				m = 1;
+ 
+ 			if (m >= 20)
++				/* maximum of m = 20 ' will recheck if need to
++				 * adjust wifi duration in maximum time interval
++				 * 120 seconds
++				 */
+ 				m = 20;
+ 
+ 			n = 3 * m;
+@@ -1157,13 +1182,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 		}
+ 
+ 		if (result == -1) {
+-			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
+-			    ((coex_dm->cur_ps_tdma == 1) ||
+-			     (coex_dm->cur_ps_tdma == 2))) {
+-				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-							true, 9);
+-				coex_dm->ps_tdma_du_adj_type = 9;
+-			} else if (coex_dm->cur_ps_tdma == 1) {
++			if (coex_dm->cur_ps_tdma == 1) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 2);
+ 				coex_dm->ps_tdma_du_adj_type = 2;
+@@ -1177,13 +1196,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				coex_dm->ps_tdma_du_adj_type = 11;
+ 			}
+ 		} else if (result == 1) {
+-			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
+-			    ((coex_dm->cur_ps_tdma == 1) ||
+-			     (coex_dm->cur_ps_tdma == 2))) {
+-				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-							true, 9);
+-				coex_dm->ps_tdma_du_adj_type = 9;
+-			} else if (coex_dm->cur_ps_tdma == 11) {
++			if (coex_dm->cur_ps_tdma == 11) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 9);
+ 				coex_dm->ps_tdma_du_adj_type = 9;
+@@ -1196,11 +1209,6 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 							true, 1);
+ 				coex_dm->ps_tdma_du_adj_type = 1;
+ 			}
+-		} else {
+-			/* if busy / idle change */
+-			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-				 "[BTCoex],********* TDMA(on, %d) ********\n",
+-				 coex_dm->cur_ps_tdma);
+ 		}
+ 
+ 		if (coex_dm->cur_ps_tdma != 1 && coex_dm->cur_ps_tdma != 2 &&
+@@ -1368,12 +1376,12 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+ 							     NORMAL_EXEC, 2);
+ 			coex_dm->auto_tdma_adjust = false;
+-		} else { /* for low BT RSSI */
+-			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-						true, 11);
++		} else {
++			btc8723b1ant_tdma_dur_adj_for_acl(btcoexist,
++							  wifi_status);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+ 							     NORMAL_EXEC, 1);
+-			coex_dm->auto_tdma_adjust = false;
++			coex_dm->auto_tdma_adjust = true;
+ 		}
+ 	} else if (bt_link_info->hid_exist &&
+ 		bt_link_info->a2dp_exist) { /* HID + A2DP */
+-- 
+2.12.0
