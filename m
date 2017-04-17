@@ -1,67 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40358 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762201AbdDYHtS (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34280 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932440AbdDQALg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 03:49:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: James Hughes <james.hughes@raspberrypi.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Subject: Re: [PATCH v2] brcmfmac: Make skb header writable before use
-References: <20170424130322.476-1-james.hughes@raspberrypi.org>
-        <ef75a194-2e0b-6586-7b31-2eb83128d2bc@broadcom.com>
-        <ddb49ce2-9968-534e-dd17-b1bf21513c5d@broadcom.com>
-Date: Tue, 25 Apr 2017 10:49:11 +0300
-In-Reply-To: <ddb49ce2-9968-534e-dd17-b1bf21513c5d@broadcom.com> (Arend Van
-        Spriel's message of "Tue, 25 Apr 2017 09:46:16 +0200")
-Message-ID: <87h91d0vwo.fsf@kamboji.qca.qualcomm.com> (sfid-20170425_094925_823840_883496E6)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 16 Apr 2017 20:11:36 -0400
+Received: by mail-oi0-f66.google.com with SMTP id t14so15969514oif.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:36 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 21/27] rtlwifi: btcoex: 23b 1ant: remove verbose log from periodic function
+Date: Sun, 16 Apr 2017 19:11:05 -0500
+Message-Id: <20170417001111.29384-22-Larry.Finger@lwfinger.net> (sfid-20170417_021216_250171_B2216152)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> On 25-4-2017 9:38, Arend Van Spriel wrote:
->> On 24-4-2017 15:03, James Hughes wrote:
->>> The driver was making changes to the skb_header without
->>> ensuring it was writable (i.e. uncloned).
->>> This patch also removes some boiler plate header size
->>> checking/adjustment code as that is also handled by the
->>> skb_cow_header function used to make header writable.
->>>
->>> This patch depends on
->>> brcmfmac: Ensure pointer correctly set if skb data location changes
->>>
->>> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
->>> ---
->>> Changes in v2
->>>   Makes the _cow_ call at the entry point of the skb in to the
->>>   stack, means only needs to be done once, and error handling
->>>   is easier.
->>>   Split a separate minor bug fix off to a separate patch (which
->>>   this patch depends on)
->> 
->> Hi James,
->> 
->> Can you please indicate in this section that you want it applied for
->> 4.12 as it is an important fix. Probably will have to wait until after
->> the merge window before it can get in the wireless-drivers repo.
->
-> Hi Kalle,
->
-> I should have checked kernel mailing list first as Linus added another
-> rc cycle. So can this patch still go in wireless-drivers-next for 4.12
-> kernel.
+Simplify the debug trace log.
 
-Yup, I'll queue it for 4.12.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 33 ----------------------
+ 1 file changed, 33 deletions(-)
 
-> I want it for stable as well, but I will look at that when it lands
-> upstream.
-
-Ok, so I don't add any stable tag during commit.
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index b3e043e8fec3..b41a338478aa 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -2350,11 +2350,6 @@ void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
+ 			 "\r\n ==========================================");
+ 	}
+ 
+-	if (!board_info->bt_exist) {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n BT not exists !!!");
+-		return;
+-	}
+-
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = %d/ %d/ %d",
+ 		 "Ant PG Num/ Ant Mech/ Ant Pos:",
+ 		 board_info->pg_ant_num, board_info->btdm_ant_num,
+@@ -3311,38 +3306,10 @@ void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
+ #if (BT_AUTO_REPORT_ONLY_8723B_1ANT != 0)
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ #endif
+-	struct btc_board_info *board_info = &btcoexist->board_info;
+-	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+-	static u8 dis_ver_info_cnt;
+-	u32 fw_ver = 0, bt_patch_ver = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], ==========================Periodical===========================\n");
+ 
+-	if (dis_ver_info_cnt <= 5) {
+-		dis_ver_info_cnt += 1;
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], Ant PG Num/ Ant Mech/ Ant Pos = %d/ %d/ %d\n",
+-			 board_info->pg_ant_num, board_info->btdm_ant_num,
+-			 board_info->btdm_ant_pos);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], BT stack/ hci ext ver = %s / %d\n",
+-			 stack_info->profile_notified ? "Yes" : "No",
+-			 stack_info->hci_version);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_BT_PATCH_VER,
+-				   &bt_patch_ver);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], CoexVer/ FwVer/ PatchVer = %d_%x/ 0x%x/ 0x%x(%d)\n",
+-			 glcoex_ver_date_8723b_1ant,
+-			 glcoex_ver_8723b_1ant, fw_ver,
+-			 bt_patch_ver, bt_patch_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
+-	}
+-
+ #if (BT_AUTO_REPORT_ONLY_8723B_1ANT == 0)
+ 	halbtc8723b1ant_query_bt_info(btcoexist);
+ 	halbtc8723b1ant_monitor_bt_enable_disable(btcoexist);
 -- 
-Kalle Valo
+2.12.0
