@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33330 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755416AbdDMSH3 (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:36598 "EHLO
+        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757103AbdDQRNN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:07:29 -0400
-Received: by mail-oi0-f68.google.com with SMTP id t63so13603995oih.0
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:28 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
+        Mon, 17 Apr 2017 13:13:13 -0400
+Received: by mail-oi0-f44.google.com with SMTP id r203so148646707oib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2017 10:13:07 -0700 (PDT)
+Subject: Re: [PATCH 12/13] rtlwifi: btcoex: 21a 1ant: fix some coding style
+ issues
+To: Joe Perches <joe@perches.com>, kvalo@codeaurora.org
+References: <20170417000700.29057-1-Larry.Finger@lwfinger.net>
+ <20170417000700.29057-13-Larry.Finger@lwfinger.net>
+ <1492445382.8661.9.camel@perches.com>
 Cc: linux-wireless@vger.kernel.org,
         Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 14/19] rtlwifi: btcoex: 21a 2ant: let PTA circuit control the switch
-Date: Thu, 13 Apr 2017 13:07:05 -0500
-Message-Id: <20170413180710.19953-15-Larry.Finger@lwfinger.net> (sfid-20170413_200804_623047_CB35EB83)
-In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
-References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <869a1d9b-79dc-9d5a-c4f3-efb99c1b1ff7@lwfinger.net> (sfid-20170417_191410_192760_0B3C2BEB)
+Date: Mon, 17 Apr 2017 12:13:00 -0500
+MIME-Version: 1.0
+In-Reply-To: <1492445382.8661.9.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On 04/17/2017 11:09 AM, Joe Perches wrote:
+> On Sun, 2017-04-16 at 19:06 -0500, Larry Finger wrote:
+>> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+>>
+>> Fix alignment for coding style consistency.
+>
+> aside:
+>
+> Are all the btcoexist variants for this code identical?
+>
+> 8192e2ant.c 8723b1ant.c 8723b2ant.c 8821a1ant.c 8821a2ant.c
+>
+> Maybe some of these functions should be centralized.
 
-Register 0xcb4 determines if the PTA circuit can control the swtich
+They are not identical, but some of the functions could certainly be centralized.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 1 -
- 1 file changed, 1 deletion(-)
+The problem is that the btcoex software at Realtek is multi platform, and 
+written by a group that has not been too eager to implement this kind of 
+suggestion. If we were to force the issue, then the maintenance load on the 
+separate Linux group at Realtek would be greatly increased. This current set of 
+updates has already been delayed for at least two years while they found the 
+resources to be able to adhere to the "small change" policy of Linux. For that 
+reason alone, I would not be in favor of forcing the issue.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 7b2fb62947da..6faa53ee821d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -1109,7 +1109,6 @@ static void btc8821a2ant_set_ant_path(struct btc_coexist *btcoexist,
- 		btcoexist->btc_write_4byte(btcoexist, 0x4c, u4tmp);
- 
- 		btcoexist->btc_write_4byte(btcoexist, 0x974, 0x3ff);
--		btcoexist->btc_write_1byte(btcoexist, 0xcb4, 0x77);
- 
- 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT) {
- 			/* tell firmware "antenna inverse"  ==> WRONG firmware
--- 
-2.12.0
+Larry
