@@ -1,116 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35298 "EHLO
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36054 "EHLO
         mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753161AbdDJQX0 (ORCPT
+        with ESMTP id S932430AbdDQALb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 12:23:26 -0400
-Received: by mail-oi0-f68.google.com with SMTP id g204so13131950oib.2
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:26 -0700 (PDT)
+        Sun, 16 Apr 2017 20:11:31 -0400
+Received: by mail-oi0-f68.google.com with SMTP id b187so25356596oif.3
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:31 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 10/14] rtlwifi: btcoex: 21a 1ant: move bt_disabled to global struct
-Date: Mon, 10 Apr 2017 11:23:06 -0500
-Message-Id: <20170410162310.7515-11-Larry.Finger@lwfinger.net> (sfid-20170410_182343_937273_89DD3D12)
-In-Reply-To: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
-References: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
+Subject: [PATCH 15/27] rtlwifi: btcoex: 23b 1ant: Add rf status notification
+Date: Sun, 16 Apr 2017 19:10:59 -0500
+Message-Id: <20170417001111.29384-16-Larry.Finger@lwfinger.net> (sfid-20170417_021142_897137_D4E35C7B)
+In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Move the bt disable flag to a global structure to indicate that bt is
-turned off.
+If driver announce wifi RF status is off, btc can switch antenna to BT.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
 Cc: Steven Ting <steventing@realtek.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 24 ++++++++++------------
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  1 +
- 2 files changed, 12 insertions(+), 13 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 37 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  2 ++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  3 ++
+ 3 files changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 86eab6a4ada2..c6114b32c0ca 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -2168,7 +2168,7 @@ void ex_btc8821a1ant_display_coex_info(struct btc_coexist *btcoexist)
- 		 "uplink" : "downlink")));
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
- 		   "\r\n %-35s = [%s/ %d/ %d] ", "BT [status/ rssi/ retryCnt]",
--		   ((btcoexist->bt_info.bt_disabled) ? ("disabled") :
-+		   ((coex_sta->bt_disabled) ? ("disabled") :
- 		   ((coex_sta->c2h_bt_inquiry_page) ? ("inquiry/page scan") :
- 		   ((BT_8821A_1ANT_BT_STATUS_NON_CONNECTED_IDLE ==
- 		     coex_dm->bt_status) ?
-@@ -2394,9 +2394,10 @@ void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
- 	u32 num_of_wifi_link = 0;
- 	u8 agg_buf_size = 5;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 44a4855fc9aa..e37fd63c5ebe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -3089,6 +3089,43 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 	halbtc8723b1ant_run_coexist_mechanism(btcoexist);
+ }
  
--	if (btcoexist->manual_control ||
--	    btcoexist->stop_coex_dm ||
--	    btcoexist->bt_info.bt_disabled)
-+	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
-+		return;
++void ex_halbtc8723b1ant_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
++{
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	u32 u32tmp;
++	u8 u8tmpa, u8tmpb, u8tmpc;
 +
-+	if (coex_sta->bt_disabled)
- 		return;
++	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++		 "[BTCoex], RF Status notify\n");
++
++	if (type == BTC_RF_ON) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], RF is turned ON!!\n");
++		btcoexist->stop_coex_dm = false;
++	} else if (type == BTC_RF_OFF) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], RF is turned OFF!!\n");
++
++		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
++						 0x0, 0x0);
++		halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 0);
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT,
++					     FORCE_EXEC, false, true);
++
++		halbtc8723b1ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
++		btcoexist->stop_coex_dm = true;
++
++		u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x948);
++		u8tmpa = btcoexist->btc_read_1byte(btcoexist, 0x765);
++		u8tmpb = btcoexist->btc_read_1byte(btcoexist, 0x67);
++		u8tmpc = btcoexist->btc_read_1byte(btcoexist, 0x76e);
++
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "############# [BTCoex], 0x948=0x%x, 0x765=0x%x, 0x67=0x%x, 0x76e=0x%x\n",
++			 u32tmp, u8tmpa, u8tmpb, u8tmpc);
++	}
++}
++
+ void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 67b35d72ebd0..3dd431ac1a51 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -210,6 +210,8 @@ void ex_halbtc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 					      u8 type);
+ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				       u8 *tmpbuf, u8 length);
++void ex_halbtc8723b1ant_rf_status_notify(struct btc_coexist *btcoexist,
++					 u8 type);
+ void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist);
+ void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnpstate);
+ void ex_halbtc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 911db7680478..b6c814d1089a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -30,6 +30,9 @@
+ #define		NORMAL_EXEC				false
+ #define		FORCE_EXEC				true
  
- 	btcoexist->btc_get(btcoexist,
-@@ -2456,9 +2457,8 @@ void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
- 	bool bt_ctrl_agg_buf_size = false;
- 	u8 agg_buf_size = 5;
- 
--	if (btcoexist->manual_control ||
--	    btcoexist->stop_coex_dm ||
--	    btcoexist->bt_info.bt_disabled)
-+	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
-+	    coex_sta->bt_disabled)
- 		return;
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
-@@ -2508,9 +2508,8 @@ void ex_btc8821a1ant_media_status_notify(struct btc_coexist *btcoexist,
- 	u32 wifi_bw;
- 	u8 wifi_central_chnl;
- 
--	if (btcoexist->manual_control ||
--	    btcoexist->stop_coex_dm ||
--	    btcoexist->bt_info.bt_disabled)
-+	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
-+	    coex_sta->bt_disabled)
- 		return;
- 
- 	if (BTC_MEDIA_CONNECT == type) {
-@@ -2559,9 +2558,8 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
- 	u32 num_of_wifi_link = 0;
- 	u8 agg_buf_size = 5;
- 
--	if (btcoexist->manual_control ||
--	    btcoexist->stop_coex_dm ||
--	    btcoexist->bt_info.bt_disabled)
-+	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
-+	    coex_sta->bt_disabled)
- 		return;
- 
- 	coex_sta->special_pkt_period_cnt = 0;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-index 9f50a1427388..2dec38ab7746 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-@@ -140,6 +140,7 @@ struct coex_dm_8821a_1ant {
- };
- 
- struct coex_sta_8821a_1ant {
-+	bool	bt_disabled;
- 	bool	bt_link_exist;
- 	bool	sco_exist;
- 	bool	a2dp_exist;
++#define		BTC_RF_OFF				0x0
++#define		BTC_RF_ON				0x1
++
+ #define		BTC_RF_A				RF90_PATH_A
+ #define		BTC_RF_B				RF90_PATH_B
+ #define		BTC_RF_C				RF90_PATH_C
 -- 
 2.12.0
