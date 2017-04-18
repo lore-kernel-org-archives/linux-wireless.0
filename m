@@ -1,225 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55408 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751212AbdDMNua (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 09:50:30 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: rewrite monitor mode delivery logic
-Date: Thu, 13 Apr 2017 15:50:27 +0200
-Message-Id: <20170413135027.26161-1-johannes@sipsolutions.net> (sfid-20170413_155033_789227_40747097)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35319 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752866AbdDRQiC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Apr 2017 12:38:02 -0400
+Received: by mail-wm0-f68.google.com with SMTP id d79so415910wmi.2
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Apr 2017 09:38:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3170657.DNPqgEf8fi@prime>
+References: <20170323133048.30062-2-sw@simonwunderlich.de> <20170418143654.8AC0A60FAA@smtp.codeaurora.org>
+ <3170657.DNPqgEf8fi@prime>
+From: Steve deRosier <derosier@gmail.com>
+Date: Tue, 18 Apr 2017 09:38:00 -0700
+Message-ID: <CALLGbRKADjbZ72W0XD_dU-6YtCHGY2koM4AjUVKdCuHAqCpb3Q@mail.gmail.com> (sfid-20170418_183806_857684_F774ED16)
+Subject: Re: [v2,1/3] ath9k: Support channels in licensed bands
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        Ben Greear <greearb@candelatech.com>,
+        Julian Calaby <julian.calaby@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-The monitor mode delivery logic makes it hard to add any
-kind of filtering in an efficient way, because the monitor
-SKB is created first and then passed to all interfaces.
+(sorry, resending due to my not noticing that gmail had changed my
+default compose mode to HTML. Why does it randomly do that
+sometimes?!?!)
 
-Rewrite the logic to create the monitor SKB the first time
-it's actually needed, and then keep delivering it.
+On Tue, Apr 18, 2017 at 7:50 AM, Simon Wunderlich <sw@simonwunderlich.de> wrote:
+>
+> Hi,
+>
+> On Tuesday, April 18, 2017 2:36:54 PM CEST Kalle Valo wrote:
+> > Simon Wunderlich <sw@simonwunderlich.de> wrote:
+> > > From: Ben Greear <greearb@candelatech.com>
+> > >
+> > > Many chips support channels in licensed bands. Add support for those,
+> > > along with a corresponding kernel config option to disable them by
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 151 +++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 92 insertions(+), 59 deletions(-)
+...
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 45fcf28acc3c..50d8f8435830 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -533,6 +533,59 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	}
- }
- 
-+static struct sk_buff *
-+ieee80211_make_monitor_skb(struct ieee80211_local *local,
-+			   struct sk_buff **origskb,
-+			   struct ieee80211_rate *rate,
-+			   int rtap_vendor_space, bool use_origskb)
-+{
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(*origskb);
-+	int rt_hdrlen, needed_headroom;
-+	struct sk_buff *skb;
-+
-+	/* room for the radiotap header based on driver features */
-+	rt_hdrlen = ieee80211_rx_radiotap_hdrlen(local, status, *origskb);
-+	needed_headroom = rt_hdrlen - rtap_vendor_space;
-+
-+	if (use_origskb) {
-+		/* only need to expand headroom if necessary */
-+		skb = *origskb;
-+		*origskb = NULL;
-+
-+		/*
-+		 * This shouldn't trigger often because most devices have an
-+		 * RX header they pull before we get here, and that should
-+		 * be big enough for our radiotap information. We should
-+		 * probably export the length to drivers so that we can have
-+		 * them allocate enough headroom to start with.
-+		 */
-+		if (skb_headroom(skb) < needed_headroom &&
-+		    pskb_expand_head(skb, needed_headroom, 0, GFP_ATOMIC)) {
-+			dev_kfree_skb(skb);
-+			return NULL;
-+		}
-+	} else {
-+		/*
-+		 * Need to make a copy and possibly remove radiotap header
-+		 * and FCS from the original.
-+		 */
-+		skb = skb_copy_expand(*origskb, needed_headroom, 0, GFP_ATOMIC);
-+
-+		if (!skb)
-+			return NULL;
-+	}
-+
-+	/* prepend radiotap information */
-+	ieee80211_add_rx_radiotap_header(local, skb, rate, rt_hdrlen, true);
-+
-+	skb_reset_mac_header(skb);
-+	skb->ip_summed = CHECKSUM_UNNECESSARY;
-+	skb->pkt_type = PACKET_OTHERHOST;
-+	skb->protocol = htons(ETH_P_802_2);
-+
-+	return skb;
-+}
-+
- /*
-  * This function copies a received frame to all monitor interfaces and
-  * returns a cleaned-up SKB that no longer includes the FCS nor the
-@@ -544,13 +597,12 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(origskb);
- 	struct ieee80211_sub_if_data *sdata;
--	int rt_hdrlen, needed_headroom;
--	struct sk_buff *skb, *skb2;
--	struct net_device *prev_dev = NULL;
-+	struct sk_buff *monskb = NULL;
- 	int present_fcs_len = 0;
- 	unsigned int rtap_vendor_space = 0;
- 	struct ieee80211_sub_if_data *monitor_sdata =
- 		rcu_dereference(local->monitor_sdata);
-+	bool only_monitor = false;
- 
- 	if (unlikely(status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA)) {
- 		struct ieee80211_vendor_radiotap *rtap = (void *)origskb->data;
-@@ -583,9 +635,11 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 		return NULL;
- 	}
- 
-+	only_monitor = should_drop_frame(origskb, present_fcs_len,
-+					 rtap_vendor_space);
-+
- 	if (!local->monitors || (status->flag & RX_FLAG_SKIP_MONITOR)) {
--		if (should_drop_frame(origskb, present_fcs_len,
--				      rtap_vendor_space)) {
-+		if (only_monitor) {
- 			dev_kfree_skb(origskb);
- 			return NULL;
- 		}
-@@ -597,67 +651,46 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 
- 	ieee80211_handle_mu_mimo_mon(monitor_sdata, origskb, rtap_vendor_space);
- 
--	/* room for the radiotap header based on driver features */
--	rt_hdrlen = ieee80211_rx_radiotap_hdrlen(local, status, origskb);
--	needed_headroom = rt_hdrlen - rtap_vendor_space;
--
--	if (should_drop_frame(origskb, present_fcs_len, rtap_vendor_space)) {
--		/* only need to expand headroom if necessary */
--		skb = origskb;
--		origskb = NULL;
--
--		/*
--		 * This shouldn't trigger often because most devices have an
--		 * RX header they pull before we get here, and that should
--		 * be big enough for our radiotap information. We should
--		 * probably export the length to drivers so that we can have
--		 * them allocate enough headroom to start with.
--		 */
--		if (skb_headroom(skb) < needed_headroom &&
--		    pskb_expand_head(skb, needed_headroom, 0, GFP_ATOMIC)) {
--			dev_kfree_skb(skb);
--			return NULL;
--		}
--	} else {
--		/*
--		 * Need to make a copy and possibly remove radiotap header
--		 * and FCS from the original.
--		 */
--		skb = skb_copy_expand(origskb, needed_headroom, 0, GFP_ATOMIC);
--		remove_monitor_info(origskb, present_fcs_len,
--				    rtap_vendor_space);
--
--		if (!skb)
--			return origskb;
--	}
--
--	/* prepend radiotap information */
--	ieee80211_add_rx_radiotap_header(local, skb, rate, rt_hdrlen, true);
--
--	skb_reset_mac_header(skb);
--	skb->ip_summed = CHECKSUM_UNNECESSARY;
--	skb->pkt_type = PACKET_OTHERHOST;
--	skb->protocol = htons(ETH_P_802_2);
--
- 	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
--		if (prev_dev) {
--			skb2 = skb_clone(skb, GFP_ATOMIC);
--			if (skb2) {
--				skb2->dev = prev_dev;
--				netif_receive_skb(skb2);
-+		bool last_monitor = list_is_last(&sdata->u.mntr.list,
-+						 &local->mon_list);
-+
-+		if (!monskb)
-+			monskb = ieee80211_make_monitor_skb(local, &origskb,
-+							    rate,
-+							    rtap_vendor_space,
-+							    only_monitor &&
-+							    last_monitor);
-+
-+		if (monskb) {
-+			struct sk_buff *skb;
-+
-+			if (last_monitor) {
-+				skb = monskb;
-+				monskb = NULL;
-+			} else {
-+				skb = skb_clone(monskb, GFP_ATOMIC);
-+			}
-+
-+			if (skb) {
-+				skb->dev = sdata->dev;
-+				ieee80211_rx_stats(skb->dev, skb->len);
-+				netif_receive_skb(skb);
- 			}
- 		}
- 
--		prev_dev = sdata->dev;
--		ieee80211_rx_stats(sdata->dev, skb->len);
-+		if (last_monitor)
-+			break;
- 	}
- 
--	if (prev_dev) {
--		skb->dev = prev_dev;
--		netif_receive_skb(skb);
--	} else
--		dev_kfree_skb(skb);
-+	/* this happens if last_monitor was erroneously false */
-+	dev_kfree_skb(monskb);
-+
-+	/* ditto */
-+	if (!origskb)
-+		return NULL;
- 
-+	remove_monitor_info(origskb, present_fcs_len, rtap_vendor_space);
- 	return origskb;
- }
- 
--- 
-2.11.0
+> > I am not sure that we should support unlicensed bands in Linux and hence
+> > hesitant to apply these. My view is that due to regulatory restrictions we
+> > should not make it too easy to use unlicensed bands. But I'm open for
+> > discussion, this is a challenging area and my knowledge here is limited.
+>
+...
+>
+>
+> In my personal view, we have quite a few obstacles which I consider "enough",
+> but would be interesting to hear others opinions ...
+>
+
+I'll throw in my 2-cents. This patch is treading on very dangerous
+ground. I can't speak to other regulatory environments, but at least
+the FCC is cracking down on even the possibility that anyone can
+operate a WiFi device outside the regulatory bounds.
+
+I know this is going to be TLDR, but please bear with me.
+
+The testing groups are (incorrectly in my opinion) interpreting the
+current FCC guidelines to be that no one with the device could ever
+get in and change it to operate outside the permitted frequencies and
+powers. And I'm not even talking about having a command-line interface
+and issuing a command as sudo. To the degree that if it's even
+possible to recompile a driver or otherwise change the source code and
+put that changed code on the device they're denying modular
+certifications.
+
+The end result is we have a lot of chip manufacturers' scrambling to
+do things like require eeproms, signed board files, etc. Module
+manufacturers (think of things like Laird's msd45nbt, msd50nbt, or the
+Sterling LWB) are scrambling even harder trying to think of ways to
+force chips to fail to function if they aren't using their regulatory
+file or other strategies to manage to fulfill their customer's needs
+while still getting it to pass through the regulatory agencies.
+
+@Simon, with much respect: With the current regulatory environment,
+those obstacles which you are considering "enough", the testing boards
+aren't considering "enough".
+
+I happen to agree with you that it's more than enough. And just
+because it's possible for a customer of a module who is integrating a
+device to operate it out of the regulatory bounds, doesn't mean it
+shouldn't get the modular certification. In fact, depending on the
+exact situations, it might be _necessary_ for them to make setting
+adjustments for their products. And the reality is, anyone with a
+soldering iron can make the thing operate outside the regulatory
+domain anyway. The whole thing just makes it impossible for modular
+operators and for the Linux community instead of solving any real
+problems.
+
+What's going on in the FCC regulatory environment has stark
+implications that those of us in the Linux wireless community can't
+afford to ignore anymore. This is a direct threat to mac80211, Open
+Source and the ability to do anything sane with our devices. And even
+if you're more practical (like me) about these things, think of it:
+each manufacturer being forced to make it harder and harder for anyone
+to change the code or work with their chips - you think it's hard to
+work with a Marvell or Broadcom chip right now with minimal and
+non-accessible documentation? Imagine how it's going to be when
+everything is locked behind Secure Boot and signed proprietary drivers
+where the hardware itself is locked so it can only work with the (bad
+quality and buggy) closed-source driver.
+
+I brought this up at Wireless Summit at the last LPC and basically got
+a room of shrugs. Admittedly I wasn't terribly eloquent on the subject
+so it's solely my fault I didn't impress. I know that most of us are
+representing various companies (though not I anymore) and each has
+their own proprietary way to deal with it and no one wants to rock the
+boat*. And many of the people in the room are just implementing code
+to make stuff work and don't actually know that much depth about the
+regulatory environment in which we're working. But we all need to get
+together and come up with a better solution.
+
+What's going on right now doesn't serve our interests. I know it's an
+agenda being pushed by someone and while I have a few suspects I
+really don't know for sure. In any case, who it's being pushed by and
+for doesn't matter too much - we as a community aren't pushing back as
+a cohesive group; we aren't even talking about it! And so, we're going
+to get the short end of the stick.
+
+So, with re: to the patch, that's the environment it will live in.
+Personally I don't really care one way or another specifically to what
+Simon's patch does. But he opened the door to discussion and it seemed
+like an appropriate opportunity. I don't mind that it opens more
+functionality, functionality that the chip in question supports. I'd
+even regard this as a good thing, especially considering the
+"obstacles" in place. And keeping it out doesn't solve anything to do
+with the root of the problem either.
+
+As for merging it, I guess my only test would be: is this a
+functionality that the community as a whole benefits from? Either
+because more than one person would be using it, or we have a vested
+interest in keeping a cohesive codebase that doesn't require people to
+use it a crazy maintenance overhead by requiring patching every time
+they upgrade? But that's always the same questions with any patch.
+
+In either case, patch merged or not: we still have an important
+discussion to have about what we're going to do about the FCC
+regulatory problems - before someone "solves" it for us in a way that
+hurts us all.
+
+If you got this far, thanks for reading this.
+
+Thanks,
+- Steve
+
+
+footnote:
+* Personally, I think that many of the devices in the past and
+currently are getting certifications by clever wording on the
+documents and getting through on a wink and a nod. And no one wants to
+talk about it because that means acknowledging that fact and risking
+newer devices having a more difficult time getting through.
