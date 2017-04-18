@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33015 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1953164AbdDYWn6 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52690 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753681AbdDRWRn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 18:43:58 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH v5 3/9] NFC: trf7970a: Fix inaccurate comment in trf7970a_probe()
-Date: Tue, 25 Apr 2017 15:43:50 -0700
-Message-Id: <20170425224356.11498-4-mgreer@animalcreek.com> (sfid-20170426_004410_430793_E3378C3A)
-In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
-References: <20170425224356.11498-1-mgreer@animalcreek.com>
+        Tue, 18 Apr 2017 18:17:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:06 +0300
+Message-Id: <20170418221729.28372-3-luca@coelho.fi> (sfid-20170419_001754_380822_90DC6B7A)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 02/25] iwlwifi: mvm: fix accessing fw_id_to_mac_id
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As of commit ce69b95ca4e4 ("NFC: Make EN2 pin optional in the
-TRF7970A driver"), only the GPIO for the 'EN' enable pin needs
-to be specified in the device tree so update the comments that
-says both 'EN' and 'EN2' must be specified.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+Access should be by rcu_dereference. Issue was found by sparse.
+
+Fixes: 65e254821cee ("iwlwifi: mvm: use firmware station PM notification for AP_LINK_PS")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/nfc/trf7970a.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 1a87525a88cd..5d5a8b0e57d4 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2046,7 +2046,7 @@ static int trf7970a_probe(struct spi_device *spi)
- 	if (of_property_read_bool(np, "irq-status-read-quirk"))
- 		trf->quirks |= TRF7970A_QUIRK_IRQ_STATUS_READ;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5f9d5339fc3d..26cf3dfcc108 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2424,7 +2424,7 @@ void iwl_mvm_sta_pm_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		return;
  
--	/* There are two enable pins - both must be present */
-+	/* There are two enable pins - only EN must be present in the DT */
- 	trf->en_gpio = of_get_named_gpio(np, "ti,enable-gpios", 0);
- 	if (!gpio_is_valid(trf->en_gpio)) {
- 		dev_err(trf->dev, "No EN GPIO property\n");
+ 	rcu_read_lock();
+-	sta = mvm->fw_id_to_mac_id[notif->sta_id];
++	sta = rcu_dereference(mvm->fw_id_to_mac_id[notif->sta_id]);
+ 	if (WARN_ON(IS_ERR_OR_NULL(sta))) {
+ 		rcu_read_unlock();
+ 		return;
 -- 
-2.12.0
+2.11.0
