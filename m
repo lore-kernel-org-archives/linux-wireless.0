@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:33296 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S979499AbdDYAZm (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52920 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756244AbdDRWXH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 20:25:42 -0400
-Received: by mail-oi0-f49.google.com with SMTP id y11so122445496oie.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 17:25:42 -0700 (PDT)
-Subject: Re: WPA authorization with RTL8723DS
-To: Adam Casson <adam.casson@inscopemedical.com>,
-        linux-wireless@vger.kernel.org
-References: <CAPdsbMvE=_-oQ9wWLPQkUuF_Q3JeHCKo-0NrPt0hRRPo8khH9Q@mail.gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <b5eeb1fc-aea0-1489-ffa4-40b4e1dc1873@lwfinger.net> (sfid-20170425_022547_310922_E382F3D0)
-Date: Mon, 24 Apr 2017 19:25:39 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAPdsbMvE=_-oQ9wWLPQkUuF_Q3JeHCKo-0NrPt0hRRPo8khH9Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 18 Apr 2017 18:23:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:29 +0300
+Message-Id: <20170418221729.28372-26-luca@coelho.fi> (sfid-20170419_002339_980014_2E0275B8)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 25/25] iwlwifi: mvm: allow block ack response without data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2017 03:25 PM, Adam Casson wrote:
-> I'm trying to build a product around the Next Thing Co CHIP Pro
-> (nextthing.co/pages/chippro) and have found that the RTL8723DS wifi/BT
-> chip is fairly unstable, particularly when trying to implement WPA
-> authorization. A previous version of this SoM uses the RTL8723BS which
-> is similar in structure and driver, but this new 8723DS is different
-> enough to warrant a separate code branch from both Realtek and the
-> manufacturer of the SoM. However, Realtek has not publically released
-> a driver for the new 8723DS chip. We have received no support from the
-> SoM manufacturer, so we're looking for some external help so that we
-> can maybe salvage the considerable work we've put into developing
-> around this SoM.
->
-> Some additional details about how the device was being used are below.
->
-> Use hopstapd (configuration for open and WPA included) to configure
-> the Chip Pro as an access point. Launch hostapd (command line also
-> provided in logs).
->
-> Gadget buildroot git commit e550a93f2b08c771f0dd75919bb042ad86faa763
->
-> WPA version 2 (as specified in the provided hostapd config).
->
-> Client types tested:
->
-> - rtl8188eu usb dongle on Ubuntu 16.04 workstation
-> - 2013 Mac Book Pro running 10.12 Sierra
->
-> Same results with both (WPA auth failed). Both clients have been
-> tested successfully with a wide range of WPA2 access points.
->
-> Thanks for any help you can provide!
+From: Sara Sharon <sara.sharon@intel.com>
 
-I was not aware that a 8723D chip had been released. If there is a PCI version 
-(8723DE), then there is probably not a Linux driver for it.
+When FW fails to get block ack, it will send the notification with
+0 items in the TFD queue elements. Allow this and handle accordingly.
 
-Certainly, the 8723D driver would differ from the one for 8723B.
+Fixes: c46e7724bfe9 ("iwlwifi: mvm: support new BA notification response")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-I have written to my contacts at Realtek to see if I can learn what drivers are 
-available. I will let you know what I hear.
-
-Larry
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 65308c4ad8b8..a3de91e5e543 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1782,6 +1782,9 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		ba_info.status.status_driver_data[0] =
+ 			(void *)(uintptr_t)ba_res->reduced_txp;
+ 
++		if (!le16_to_cpu(ba_res->tfd_cnt))
++			goto out;
++
+ 		/*
+ 		 * TODO:
+ 		 * When supporting multi TID aggregations - we need to move
+@@ -1799,6 +1802,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 				   le16_to_cpu(ba_res->tfd[0].tfd_index),
+ 				   &ba_info, le32_to_cpu(ba_res->tx_rate));
+ 
++out:
+ 		IWL_DEBUG_TX_REPLY(mvm,
+ 				   "BA_NOTIFICATION Received from sta_id = %d, flags %x, sent:%d, acked:%d\n",
+ 				   sta_id, le32_to_cpu(ba_res->flags),
+-- 
+2.11.0
