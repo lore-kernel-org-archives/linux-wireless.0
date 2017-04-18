@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51930 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2993056AbdD1MCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 08:02:06 -0400
-Message-ID: <1493380923.2431.13.camel@sipsolutions.net> (sfid-20170428_140435_442993_8E5000B6)
-Subject: Re: [RFC] cfg80211: add control port state to struct
- cfg80211_connect_resp_params
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 28 Apr 2017 14:02:03 +0200
-In-Reply-To: <c0b5817a-c4fa-8f7c-2632-cf22aa09d71b@broadcom.com> (sfid-20170426_204655_775269_D5AEED53)
-References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1493131210.2609.2.camel@sipsolutions.net>
-         <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
-         <1493145418.2609.5.camel@sipsolutions.net>
-         <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com>
-         <1493191249.2464.6.camel@sipsolutions.net>
-         <c0b5817a-c4fa-8f7c-2632-cf22aa09d71b@broadcom.com>
-         (sfid-20170426_204655_775269_D5AEED53)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:52744 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757601AbdDRWRt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Apr 2017 18:17:49 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, David Spinadel <david.spinadel@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:13 +0300
+Message-Id: <20170418221729.28372-10-luca@coelho.fi> (sfid-20170419_001801_324953_643ECA96)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 09/25] iwlwifi: mvm: change TX_CMD_SEC_KEY_FROM_TABLE value
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: David Spinadel <david.spinadel@intel.com>
 
-> I tested the 4-way-hs (both Personal and 802.1X) with boolean
-> parameter similar to what is proposed in the patch for roaming
-> "cfg80211/nl80211: add authorized flag to roaming event" and it works
-> fine. So I can extend it for use in connect result. Just had one
-> issue regarding the type, ie. flag vs. u8 because of how things are
-> done in wpa_supplicant supporting QCA roam+auth vendor-specific
-> event.
+Change the value of TX_CMD_SEC_KEY_FROM_TABLE flag
+in TX_CMD security flags to accommodate a FW API change.
 
-Ok.
+Bump min API for 9000 series devices to 30 to keep the driver aligned
+aligned the FW.
 
-We have lots of related but somewhat conflicting things in flight right
-now, and we need somebody to go collect them all into a consistent
-patchset, preferably even with the 4-way-HS offload [1] thrown in. That
-needs rebasing anyway because it introduces the _PMK attribute that
-Jouni already added for FILS now.
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c      | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Do you want to pick that up? I probably can't do it soon - I'm likely
-busy with other things the next week or two, then travel again, ...
-
-johannes
-
-[1] https://patchwork.kernel.org/patch/9584201/
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index d265b279b2ca..110ceefccc15 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -58,7 +58,7 @@
+ #define IWL9000_UCODE_API_MAX	30
+ 
+ /* Lowest firmware API version supported */
+-#define IWL9000_UCODE_API_MIN	17
++#define IWL9000_UCODE_API_MIN	30
+ 
+ /* NVM versions */
+ #define IWL9000_NVM_VERSION		0x0a1d
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index e9f055706a6f..81b98915b1a4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -174,7 +174,7 @@ enum iwl_tx_cmd_sec_ctrl {
+ 	TX_CMD_SEC_EXT			= 0x04,
+ 	TX_CMD_SEC_GCMP			= 0x05,
+ 	TX_CMD_SEC_KEY128		= 0x08,
+-	TX_CMD_SEC_KEY_FROM_TABLE	= 0x08,
++	TX_CMD_SEC_KEY_FROM_TABLE	= 0x10,
+ };
+ 
+ /* TODO: how does these values are OK with only 16 bit variable??? */
+-- 
+2.11.0
