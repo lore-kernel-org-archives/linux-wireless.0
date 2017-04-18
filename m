@@ -1,98 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:48533 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750753AbdDSEDC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60332 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752766AbdDRMaQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 00:03:02 -0400
-Date: Wed, 19 Apr 2017 14:02:58 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: Re: ks7010 endianness question
-Message-ID: <20170419040258.GB17058@eros> (sfid-20170419_060306_338768_460EBA12)
-References: <20170419033446.GA17058@eros>
+        Tue, 18 Apr 2017 08:30:16 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2017-04-13
+References: <1492086857.31741.20.camel@coelho.fi>
+        <87lgqy6x6n.fsf@codeaurora.org> <87h91m6w6f.fsf@qca.qualcomm.com>
+        <1492503743.31741.35.camel@coelho.fi>
+Date: Tue, 18 Apr 2017 15:30:08 +0300
+In-Reply-To: <1492503743.31741.35.camel@coelho.fi> (Luca Coelho's message of
+        "Tue, 18 Apr 2017 11:22:23 +0300")
+Message-ID: <87bmrtc2zz.fsf@kamboji.qca.qualcomm.com> (sfid-20170418_143020_200407_E4A74F89)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170419033446.GA17058@eros>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 19, 2017 at 01:34:46PM +1000, Tobin C. Harding wrote:
-> Hi Wolfram,
-> 
-> May I please ask you with an ks7010 driver endianness question?
-> 
-> Comments on the hostif_hdr data structure (ks_hostif.h) state that the
-> target uses little endian byte order.
-> 
-> /*
->  * HOST-MAC I/F data structure
->  * Byte alignmet Little Endian
->  */
-> 
-> struct hostif_hdr {
-> 	u16 size;
-> 	u16 event;
-> } __packed;
-> 
-> On the rx data path this header is unpacked using get_WORD()
-> 
-> void hostif_receive(struct ks_wlan_private *priv, unsigned char *p,
-> 		    unsigned int size)
-> {
-> 	DPRINTK(4, "\n");
-> 
-> 	devio_rec_ind(priv, p, size);
-> 
-> 	priv->rxp = p;
-> 	priv->rx_size = size;
-> 
-> 	if (get_WORD(priv) == priv->rx_size) {	/* length check !! */
-> 		hostif_event_check(priv);	/* event check */
-> 	}
-> }
-> 
-> get_WORD() inverts the byte order
-> 
-> static inline u16 get_WORD(struct ks_wlan_private *priv)
-> {
-> 	u16 data;
-> 
-> 	data = (get_BYTE(priv) & 0xff);
-> 	data |= ((get_BYTE(priv) << 8) & 0xff00);
-> 	return data;
-> }
-> 
-> Am I missing something? It seems that this code will only work if the
-> host and the target have differing endianness. It seems unlikely that
-> the driver was tested solely on a big-endian machine, is the comment
-> wrong - is the target actually big-endian?
+Luca Coelho <luca@coelho.fi> writes:
 
-Further investigation suggests that the target is actually using
-network byte order (implying that the comment is wrong).
+> On Tue, 2017-04-18 at 06:56 +0000, Kalle Valo wrote:
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>> 
+>> > Luca Coelho <luca@coelho.fi> writes:
+>> > 
+>> > >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+>> > > tags/iwlwifi-next-for-kalle-2017-04-13
+>> > > 
+>> > > for you to fetch changes up to 87d0e1af9db3bff4ec2f68fd4d032f89c23867a4:
+>> > > 
+>> > >   iwlwifi: mvm: separate queue mapping from queue enablement
+>> > > (2017-04-11 15:25:00 +0300)
+>> > > 
+>> > > ----------------------------------------------------------------
+>> > > Patches intended for v4.12:
+>> > > 
+>> > >   * Some small fixes here and there;
+>> > >   * The usual cleanups and small improvements;
+>> > >   * Work to support A000 devices continues;
+>> > >   * New FW API version;
+>> > >   * Some debugging improvements;
+>> > > 
+>> > > ----------------------------------------------------------------
+>> > 
+>> > This one has few conflicts. I can fix those manually, but can you give
+>> > some guidance how?
+>> 
+>> I think I got it now, see below for the diff I did. Can you please
+>> check that?
+>> 
+>> The resolution is also in the pending branch:
+>> 
+>> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/log/?h=pending
+>
+>
+> Yes, looks good! Thanks for resolving it and sorry for not foreseeing it
+> to give you a heads up.
 
-static void hostif_data_indication(struct ks_wlan_private *priv)
-{
-        ...
-        
-	auth_type = get_WORD(priv);	/* AuthType */
-	get_WORD(priv);	                /* Reserve Area */
+Good, thanks. I pushed it to master branch now.
 
-	eth_hdr = (struct ether_hdr *)(priv->rxp);
-	eth_proto = ntohs(eth_hdr->h_proto);
-
-        ...
-
-
-I think we can call this question resolved. Remove the comment and
-change the hostif_hdr description to
-
-struct hostif_hdr {
-	__be16 size;
- 	__be16 event;
-} __packed;
-
-Are you happy with this?
-
-thanks,
-Tobin.
+-- 
+Kalle Valo
