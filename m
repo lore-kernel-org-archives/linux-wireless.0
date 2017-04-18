@@ -1,79 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f53.google.com ([74.125.83.53]:34923 "EHLO
-        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751543AbdDHTHI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16738 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752425AbdDRMIY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 15:07:08 -0400
-Received: by mail-pg0-f53.google.com with SMTP id 81so87448567pgh.2
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 12:07:08 -0700 (PDT)
-Subject: Re: [PATCH v2 3/5] netlink: allow sending extended ACK with cookie on
- success
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20170408183444.2796-1-johannes@sipsolutions.net>
- <20170408183444.2796-4-johannes@sipsolutions.net>
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <3176866b-3e8d-4669-796f-8292d68a5511@cumulusnetworks.com> (sfid-20170408_210804_139302_FC77DBAA)
-Date: Sat, 8 Apr 2017 15:07:04 -0400
+        Tue, 18 Apr 2017 08:08:24 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Jouni Malinen" <j@w1.fi>
+Subject: Re: [PATCH V2 3/3] cfg80211: Share Channel DFS state across wiphys of
+ same DFS domain
+Date: Tue, 18 Apr 2017 12:08:00 +0000
+Message-ID: <58F6019A.1060401@qti.qualcomm.com> (sfid-20170418_140827_764023_576E6EDD)
+References: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
+         <1488195275-29371-4-git-send-email-vthiagar@qti.qualcomm.com>
+ <1492512604.2472.20.camel@sipsolutions.net>
+In-Reply-To: <1492512604.2472.20.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170408183444.2796-4-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-since a v3 is coming another small cleanup ...
-
-
-On 4/8/17 2:34 PM, Johannes Berg wrote:
-> diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-> index c74f56a4fcf1..98e55a59c97e 100644
-> --- a/net/netlink/af_netlink.c
-> +++ b/net/netlink/af_netlink.c
-> @@ -2336,20 +2339,27 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
->  	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
->  						 : sizeof(*nlh));
->  
-> -	if (err && nlk->flags & NETLINK_F_EXT_ACK && extack) {
-> -		if (extack->_msg)
-> -			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
-> -					       extack->_msg));
-> -		if (extack->bad_attr &&
-> -		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
-> -			     (u8 *)extack->bad_attr >= in_skb->data +
-> -						       in_skb->len))
-> -			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
-> -					    (u8 *)extack->bad_attr -
-> -					    in_skb->data));
-> -		if (extack->missing_attr)
-> -			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
-> -					    extack->missing_attr));
-> +	if (nlk->flags & NETLINK_F_EXT_ACK) {
-> +		if (err && extack) {
-
-push the extack into the flags if check
-
-> +			if (extack->_msg)
-> +				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
-> +						       extack->_msg));
-> +			if (extack->bad_attr &&
-> +			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
-> +				     (u8 *)extack->bad_attr >= in_skb->data +
-> +							       in_skb->len))
-> +				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
-> +						    (u8 *)extack->bad_attr -
-> +						    in_skb->data));
-> +			if (extack->missing_attr)
-> +				WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
-> +						    extack->missing_attr));
-> +		} else if (!err && extack) {
-
-and here too
-
-> +			if (extack->cookie_len)
-> +				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
-> +						extack->cookie_len,
-> +						extack->cookie));
-> +		}
+T24gVHVlc2RheSAxOCBBcHJpbCAyMDE3IDA0OjIwIFBNLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+Pg0KPj4gK3ZvaWQgcmVndWxhdG9yeV9wcm9wYWdhdGVfZGZzX3N0YXRlKHN0cnVjdCB3aXBoeSAq
+d2lwaHksDQo+PiArCQkJCSAgICBzdHJ1Y3QgY2ZnODAyMTFfY2hhbl9kZWYNCj4+ICpjaGFuZGVm
+LA0KPj4gKwkJCQkgICAgZW51bSBubDgwMjExX2Rmc19zdGF0ZQ0KPj4gZGZzX3N0YXRlLA0KPj4g
+KwkJCQkgICAgZW51bSBubDgwMjExX3JhZGFyX2V2ZW50IGV2ZW50KQ0KPj4gK3sNCj4+ICsJc3Ry
+dWN0IGNmZzgwMjExX3JlZ2lzdGVyZWRfZGV2aWNlICpyZGV2Ow0KPj4gKw0KPj4gKwlBU1NFUlRf
+UlROTCgpOw0KPj4gKw0KPj4gKwlpZiAoV0FSTl9PTighY2ZnODAyMTFfY2hhbmRlZl92YWxpZChj
+aGFuZGVmKSkpDQo+PiArCQlyZXR1cm47DQo+PiArDQo+PiArCWlmIChXQVJOX09OKCEoY2hhbmRl
+Zi0+Y2hhbi0+ZmxhZ3MgJiBJRUVFODAyMTFfQ0hBTl9SQURBUikpKQ0KPj4gKwkJcmV0dXJuOw0K
+Pg0KPg0KPiBUaGlzIHdhcm4gb24gcmVsaWFibHkgdHJpZ2dlcnMgZm9yIG1lIHdoZW4gSSBydW4g
+dGhlICJhcF92aHQxNjAiIGh3c2ltDQo+IHRlc3QgZnJvbSB3cGFfc3VwcGxpY2FudC4NCj4NCj4g
+SSB0aGluayB0aGVyZSBtaWdodCBiZSBzb21lIGNvbmZ1c2lvbiBhYm91dCB0aGlzIHdoZW4gcGFy
+dHMgb2YgdGhlIDE2MA0KPiBNSHogY2hhbm5lbCByZXF1aXJlIHJhZGFyIGFuZCBwYXJ0cyBkb24n
+dD8gQnV0IEkgaGF2ZW4ndCBsb29rZWQgaW50bw0KPiB0aGlzIGF0IGFsbC4NCg0KQ29ycmVjdCwg
+d2hlbiBzb21lIHBhcnQgb2YgYSBiaWdnZXIgYmFuZHdpZHRoIGNoYW5uZWwgZmFsbHMgaW4gREZT
+IGNoYW5uZWwgcmFuZ2UNCmNoYW5uZWwgZGVmaW5pdGlvbiBvZiB0aGF0IGNoYW5uZWwncyBjZW50
+ZXIgZnJlcSBpcyBtYXkgbm90IGJlIGEgcmFkYXIgY2hhbm5lbCBhbmQNCmJhaWxpbmcgb3V0IGJh
+c2VkIG9uIHRoZSBjaGFubmVsIGZsYWcgdGhlcmUgaXMgbm90IHJpZ2h0Lg0KDQpTb3JyeSBmb3Ig
+dGhlIGJ1ZyBhbmQgdGhhbmtzIGZvciByZXBvcnRpbmcgaXQuDQoNCj4NCj4gUGxlYXNlIHNlbmQg
+bWUgYSBmaXggQVNBUCBzbyBKb3VuaSBkb2Vzbid0IHNob3V0IGF0IG1lIGZvciB0ZXN0DQo+IGZh
+aWx1cmVzIDopDQoNClN1cmUuDQoNClZhc2FudGg=
