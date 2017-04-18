@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35239 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753141AbdDJQXY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56750 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750758AbdDROgz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 12:23:24 -0400
-Received: by mail-oi0-f66.google.com with SMTP id g204so13131313oib.2
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:19 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/14] rtlwifi: btcoex: 21a 1ant: mask profile bit for connect-ilde
-Date: Mon, 10 Apr 2017 11:23:00 -0500
-Message-Id: <20170410162310.7515-5-Larry.Finger@lwfinger.net> (sfid-20170410_182336_319340_5794A223)
-In-Reply-To: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
-References: <20170410162310.7515-1-Larry.Finger@lwfinger.net>
+        Tue, 18 Apr 2017 10:36:55 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,1/3] ath9k: Support channels in licensed bands
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170323133048.30062-2-sw@simonwunderlich.de>
+References: <20170323133048.30062-2-sw@simonwunderlich.de>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: ath10k@lists.infradead.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        Ben Greear <greearb@candelatech.com>,
+        Julian Calaby <julian.calaby@gmail.com>,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Message-Id: <20170418143654.7C2E460F92@smtp.codeaurora.org> (sfid-20170418_163659_910861_D174535D)
+Date: Tue, 18 Apr 2017 14:36:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Simon Wunderlich <sw@simonwunderlich.de> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Many chips support channels in licensed bands. Add support for those,
+> along with a corresponding kernel config option to disable them by
+> default. Note that these channels are not selectable even if the
+> option has been compiled unless the user modifies the regulatory
+> database to explicitly enable the corresponding channels.
+> 
+> NOTE:  These channels must not be used in most regulatory
+> domains unless you have a license from the FCC or similar!
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> [Hide this support behind a Kconfig option]
+> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+> [only use the 20 mhz channels, add 5 ghz, change to 4.9ghz to licensed bands, simplify]
+> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+> Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
 
-Mask out the connect-idle bit.
+I am not sure that we should support unlicensed bands in Linux and hence
+hesitant to apply these. My view is that due to regulatory restrictions we
+should not make it too easy to use unlicensed bands. But I'm open for
+discussion, this is a challenging area and my knowledge here is limited.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 3a117eaf1b21..88bf70f27669 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -2606,7 +2606,12 @@ void ex_btc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 
- 	btc8821a1ant_update_bt_link_info(btcoexist);
- 
--	if (!(bt_info&BT_INFO_8821A_1ANT_B_CONNECTION)) {
-+	/* mask profile bit for connect-ilde identification
-+	 * (for CSR case: A2DP idle --> 0x41)
-+	 */
-+	bt_info = bt_info & 0x1f;
-+
-+	if (!(bt_info & BT_INFO_8821A_1ANT_B_CONNECTION)) {
- 		coex_dm->bt_status = BT_8821A_1ANT_BT_STATUS_NON_CONNECTED_IDLE;
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], BtInfoNotify(), BT Non-Connected idle!!!\n");
 -- 
-2.12.0
+https://patchwork.kernel.org/patch/9641105/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
