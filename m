@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60658 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S947075AbdDTTcU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 15:32:20 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH net] mac80211: reject ToDS broadcast data frames
-Date: Thu, 20 Apr 2017 21:32:16 +0200
-Message-Id: <20170420193216.17087-1-johannes@sipsolutions.net> (sfid-20170420_213228_194538_E72EB132)
+Received: from paleale.coelho.fi ([176.9.41.70]:52856 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752453AbdDRWV4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Apr 2017 18:21:56 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:28 +0300
+Message-Id: <20170418221729.28372-25-luca@coelho.fi> (sfid-20170419_002159_590230_4EAED627)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 24/25] iwlwifi: bump API to 31
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-AP/AP_VLAN modes don't accept any real 802.11 multicast data
-frames, but since they do need to accept broadcast management
-frames the same is currently permitted for data frames. This
-opens a security problem because such frames would be decrypted
-with the GTK, and could even contain unicast L3 frames.
+Omit 7265D and 3168 since those are now stuck on 30.
 
-Since the spec says that ToDS frames must always have the BSSID
-as the RA (addr1), reject any other data frames.
-
-The problem was originally reported in "Predicting, Decrypting,
-and Abusing WPA2/802.11 Group Keys" at usenix
-https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/vanhoef
-and brought to my attention by Jouni.
-
-Cc: stable@vger.kernel.org
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
---
-Dave, I didn't want to send you a new pull request for a single
-commit yet again - can you apply this one patch as is?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/rx.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 4b12c70c85f0..4d7543d1a62c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3639,6 +3639,27 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 			    !ether_addr_equal(bssid, hdr->addr1))
- 				return false;
- 		}
-+
-+		/*
-+		 * 802.11-2016 Table 9-26 says that for data frames, A1 must be
-+		 * the BSSID - we've checked that already but may have accepted
-+		 * the wildcard (ff:ff:ff:ff:ff:ff).
-+		 *
-+		 * It also says:
-+		 *	The BSSID of the Data frame is determined as follows:
-+		 *	a) If the STA is contained within an AP or is associated
-+		 *	   with an AP, the BSSID is the address currently in use
-+		 *	   by the STA contained in the AP.
-+		 *
-+		 * So we should not accept data frames with an address that's
-+		 * multicast.
-+		 *
-+		 * Accepting it also opens a security problem because stations
-+		 * could encrypt it with the GTK and inject traffic that way.
-+		 */
-+		if (ieee80211_is_data(hdr->frame_control) && multicast)
-+			return false;
-+
- 		return true;
- 	case NL80211_IFTYPE_WDS:
- 		if (bssid || !ieee80211_is_data(hdr->frame_control))
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index b9718c0cf174..904e17956e2c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -70,8 +70,8 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	30
+-#define IWL8265_UCODE_API_MAX	30
++#define IWL8000_UCODE_API_MAX	31
++#define IWL8265_UCODE_API_MAX	31
+ 
+ /* Lowest firmware API version supported */
+ #define IWL8000_UCODE_API_MIN	17
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 110ceefccc15..42a6e723191e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL9000_UCODE_API_MAX	30
++#define IWL9000_UCODE_API_MAX	31
+ 
+ /* Lowest firmware API version supported */
+ #define IWL9000_UCODE_API_MIN	30
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index 097cb45c8ad9..6d745c36f1d8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_A000_UCODE_API_MAX	30
++#define IWL_A000_UCODE_API_MAX	31
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_A000_UCODE_API_MIN	24
 -- 
 2.11.0
