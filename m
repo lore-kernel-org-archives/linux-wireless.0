@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:50387 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1953168AbdDYWn7 (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:35031 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755066AbdDRKJU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 18:43:59 -0400
-From: Mark Greer <mgreer@animalcreek.com>
+        Tue, 18 Apr 2017 06:09:20 -0400
+Date: Tue, 18 Apr 2017 12:09:16 +0200
+From: Johan Hovold <johan@kernel.org>
 To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH v5 2/9] NFC: trf7970a: Don't de-assert EN2 unless it was asserted
-Date: Tue, 25 Apr 2017 15:43:49 -0700
-Message-Id: <20170425224356.11498-3-mgreer@animalcreek.com> (sfid-20170426_004427_182244_8478D251)
-In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
-References: <20170425224356.11498-1-mgreer@animalcreek.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Subject: Re: [PATCH v2 0/8] NFC: fix device allocation and nfcmrvl crashes
+Message-ID: <20170418100916.GB2823@localhost> (sfid-20170418_120939_806222_FA70436A)
+References: <20170330101542.15384-1-johan@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the trf7970a part has the bug related to 'en2-rf-quirk',
-the GPIO connected to the EN2 pin will not be asserted by the
-driver when powering up so it shouldn't be de-asserted when
-powering down.
+On Thu, Mar 30, 2017 at 12:15:34PM +0200, Johan Hovold wrote:
+> This started out with the observation that the nfcmrvl_uart driver
+> unconditionally dereferenced the tty class device despite the fact that
+> not every tty has an associated struct device (Unix98 ptys). Some
+> further changes were needed in the common nfcmrvl code to fully address
+> this, some of which also incidentally fixed a few related bugs (e.g.
+> resource leaks in error paths).
+> 
+> While fixing this I stumbled over a regression in NFC core that lead to
+> broken registration error paths and misnamed workqueues.
+> 
+> Note that this has only been tested by configuring the n_hci line
+> discipline for different ttys without any actual NFC hardware connected.
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- drivers/nfc/trf7970a.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> Johan Hovold (8):
+>   NFC: fix broken device allocation
+>   NFC: nfcmrvl_uart: add missing tty-device sanity check
+>   NFC: nfcmrvl: do not use device-managed resources
+>   NFC: nfcmrvl: use nfc-device for firmware download
+>   NFC: nfcmrvl: fix firmware-management initialisation
+>   NFC: nfcmrvl_uart: fix device-node leak during probe
+>   NFC: nfcmrvl_usb: use interface as phy device
+>   NFC: nfcmrvl: allow gpio 0 for reset signalling
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 2d1c8ca6e679..1a87525a88cd 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -1940,8 +1940,10 @@ static int trf7970a_power_down(struct trf7970a *trf)
- 	}
- 
- 	gpio_set_value(trf->en_gpio, 0);
--	if (gpio_is_valid(trf->en2_gpio))
--		gpio_set_value(trf->en2_gpio, 0);
-+
-+	if (!(trf->quirks & TRF7970A_QUIRK_EN2_MUST_STAY_LOW))
-+		if (gpio_is_valid(trf->en2_gpio))
-+			gpio_set_value(trf->en2_gpio, 0);
- 
- 	ret = regulator_disable(trf->regulator);
- 	if (ret)
--- 
-2.12.0
+Any chance of getting these into 4.12, Samuel?
+
+Note that patches 2 and 4 fixes NULL-derefs that can be triggered by an
+unprivileged user.
+
+Thanks,
+Johan
