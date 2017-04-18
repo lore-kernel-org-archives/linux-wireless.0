@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37896 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753661AbdDFTL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 15:11:27 -0400
-Message-ID: <1491505878.11399.4.camel@sipsolutions.net> (sfid-20170406_211247_598039_9ED10F21)
-Subject: Re: [PATCH] mac80211: Fix clang warning about constant operand in
- logical operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthias Kaehlcke <mka@chromium.org>,
-        "David S . Miller" <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
-        Michael Davidson <md@google.com>,
-        Greg Hackmann <ghackmann@google.com>
-Date: Thu, 06 Apr 2017 21:11:18 +0200
-In-Reply-To: <20170406185633.91065-1-mka@chromium.org> (sfid-20170406_205658_084798_12B3FAFB)
-References: <20170406185633.91065-1-mka@chromium.org>
-         (sfid-20170406_205658_084798_12B3FAFB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:52728 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757574AbdDRWRs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Apr 2017 18:17:48 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:11 +0300
+Message-Id: <20170418221729.28372-8-luca@coelho.fi> (sfid-20170419_001756_010143_E8140E0B)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 07/25] iwlwifi: mvm: do not turn on RX_FLAG_AMSDU_MORE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-04-06 at 11:56 -0700, Matthias Kaehlcke wrote:
-> Clang raises a warning about the expression 'strlen(CONFIG_XXX)'
-> being
-> used in a logical operation. Clangs' builtin strlen function resolves
-> the
-> expression to a constant at compile time, which causes clang to
-> generate
-> a 'constant-logical-operand' warning.
-> 
-> Split the if statement in two to avoid using the const expression in
-> a logical operation.
-> 
-I don't really see all much point in doing this for the warning's
-sake... hopefully it doesn't actually generate worse code, but I think
-the code ends up looking worse and people will forever wonder what the
-goto is really doing there.
+From: Sara Sharon <sara.sharon@intel.com>
 
-johannes
+This flag is used for mac80211 reordering. As we do reordering
+ourselves, turning it on is misleading and pointless.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 29c9c56ed3fa..44072c3c4b5f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -917,9 +917,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			u8 *qc = ieee80211_get_qos_ctl(hdr);
+ 
+ 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+-			if (!(desc->amsdu_info &
+-			      IWL_RX_MPDU_AMSDU_LAST_SUBFRAME))
+-				rx_status->flag |= RX_FLAG_AMSDU_MORE;
+ 		}
+ 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID)
+ 			iwl_mvm_agg_rx_received(mvm, baid);
+-- 
+2.11.0
