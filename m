@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:36115 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752336AbdDCNQU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31299 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751890AbdDRMJh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 09:16:20 -0400
-Date: Mon, 3 Apr 2017 15:16:16 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Johan Hovold <johan@kernel.org>,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sujith Manoharan <Sujith.Manoharan@atheros.com>
-Subject: Re: [PATCH 1/2] wireless: ath9k_htc: fix NULL-deref at probe
-Message-ID: <20170403131616.GA3119@localhost> (sfid-20170403_151711_033740_4751ADBC)
-References: <20170313124421.28587-1-johan@kernel.org>
- <20170403084213.GE25742@localhost>
- <87shlpomvx.fsf@kamboji.qca.qualcomm.com>
- <87k271myos.fsf@kamboji.qca.qualcomm.com>
+        Tue, 18 Apr 2017 08:09:37 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH] cfg80211: Fix dfs state propagation for non-DFS center channel
+Date: Tue, 18 Apr 2017 17:39:19 +0530
+Message-ID: <1492517359-5994-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170418_140940_967496_242EBE27)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87k271myos.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 03, 2017 at 01:02:28PM +0000, Kalle Valo wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
-> > Johan Hovold <johan@kernel.org> writes:
-> >
-> >> On Mon, Mar 13, 2017 at 01:44:20PM +0100, Johan Hovold wrote:
-> >>> Make sure to check the number of endpoints to avoid dereferencing a
-> >>> NULL-pointer or accessing memory beyond the endpoint array should a
-> >>> malicious device lack the expected endpoints.
-> >>> 
-> >>> Fixes: 36bcce430657 ("ath9k_htc: Handle storage devices")
-> >>> Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> >>> Signed-off-by: Johan Hovold <johan@kernel.org>
-> >>
-> >> Is this one still in your queue, Kalle?
-> >
-> > Yes, I'm just lacking behing:
-> >
-> > https://patchwork.kernel.org/patch/9620723/
-> 
-> Meant "lagging" of course. Mondays..
-> 
-> >> As I mentioned earlier, I should have added a
-> >>
-> >> Cc: stable <stable@vger.kernel.org>     # 2.6.39
-> >>
-> >> but left it out as I mistakingly thought the net recommendations to do
-> >> so applied also to wireless.
-> >
-> > Ok, I'll add that.
-> 
-> But is 2.6.39 really correct? Shouldn't it be 2.6.39+ so that it means
-> all versions since 2.6.39?
+When part of a bigger bandwidth (160 MHz) channel falls in DFS
+channel range it is possible that the  center frequency may not
+necessarily be a radar channel. Remove the sanity check on channel
+flag for IEEE80211_CHAN_RADAR in regulatory_propagate_dfs_state(),
+this should fix the dfs state propagation for non-DFS center freq
+which has DFS channels in it's bandwidth, should also fix unnecessary
+WARN_ON() spam in regulatory_propagate_dfs_state().
 
-Either way is fine, the stable maintainers apply them to all later
-versions.
+Fixes: 8976672736d6 ("cfg80211: Share Channel DFS state across wiphys of same DFS domain")
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ net/wireless/reg.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-I notice now that adding a plus sign is more common, but it's still a
-1:2 ratio judging from quick grep, while the stable-kernel-rules.rst
-actually uses a minus sign...
-
-Thanks,
-Johan
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a38f315..5fae296 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -3244,9 +3244,6 @@ void regulatory_propagate_dfs_state(struct wiphy *wiphy,
+ 	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
+ 		return;
+ 
+-	if (WARN_ON(!(chandef->chan->flags & IEEE80211_CHAN_RADAR)))
+-		return;
+-
+ 	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
+ 		if (wiphy == &rdev->wiphy)
+ 			continue;
+-- 
+1.9.1
