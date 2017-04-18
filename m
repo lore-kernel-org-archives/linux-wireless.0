@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34162 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48790 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1948048AbdDYOkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 10:40:14 -0400
-Message-ID: <1493131210.2609.2.camel@sipsolutions.net> (sfid-20170425_164025_916817_27465441)
-Subject: Re: [RFC] cfg80211: add control port state to struct
- cfg80211_connect_resp_params
+        id S1756368AbdDRLfW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Apr 2017 07:35:22 -0400
+Message-ID: <1492515315.2472.24.camel@sipsolutions.net> (sfid-20170418_133537_495759_1899DEE4)
+Subject: Re: [RFC 1/3] bpf/wireless: add wifimon program type
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 25 Apr 2017 16:40:10 +0200
-In-Reply-To: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Daniel Borkmann <daniel@iogearbox.net>,
+        Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, ast@kernel.org
+Date: Tue, 18 Apr 2017 13:35:15 +0200
+In-Reply-To: <1492514882.2472.22.camel@sipsolutions.net>
+References: <20170412110726.9689-1-johannes@sipsolutions.net>
+         <1492007254.2855.10.camel@sipsolutions.net>
+         <20170412.111913.497795978751789475.davem@davemloft.net>
+         <1492011040.2855.18.camel@sipsolutions.net>
+         <20170414185144.GB41922@ast-mbp.thefacebook.com>
+         (sfid-20170414_205150_417889_20631AEB) <1492509349.2472.15.camel@sipsolutions.net>
+         <58F5F148.1090700@iogearbox.net>
+         <1492514882.2472.22.camel@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-04-21 at 22:01 +0100, Arend van Spriel wrote:
+So actually, come to think of it ...
 
-> I have been working on 4-way handshake offloading and one of the
-> things discussed was the addition of PORT_AUTHORIZED flag. So
-> this is what I came up with, but I suppose wpa_supplicant wants
-> to know whether it can expect this attribute or not. One option
-> is to have PORT_UNAUTHORIZED flag instead. Another option would
-> be introducing it as nl80211 protocol feature although not sure
-> if it could be considered as such. What do you guys think?
-
-I think it could be, but I'm not really sure it matters?
-
-> +	    (cr->port_state != CONTROL_PORT_STATE_UNAUTHORIZED &&
-> +	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)) ||
->  	    (cr->req_ie &&
+> > The mapping in samples/bpf/bpf_helpers.h, for example, for
+> > mentioned
+> > bpf_skb_load_bytes() would also work out of the box, since it takes
+> > a
+> > void *ctx as an argument, so you can just pass the __wifi_sk_buff
+> > pointer as ctx there from program side.
 > 
-This doesn't really make sense - why does unspecified equal authorized?
+> Hah. That's what I was missing - I always assumed the argument was
+> "struct __sk_buff *" without ever checking that assumption.
+
+Given this, I think I'll actually make a __wifi_sk_buff.
+
+> The thing is that __wifi_sk_buff doesn't have much information that's
+> generally useful available
+
+Because I just realized that this isn't true. To make sense of the SKB
+beyond the 802.11 header, which may not be possible at all though due
+to encryption happening in software later, it will have to know a few
+things like whether or not it was encrypted and if the IV was stripped
+etc.
+
+Actually, perhaps we should just restrict it to just look at the header
+;-)
 
 johannes
