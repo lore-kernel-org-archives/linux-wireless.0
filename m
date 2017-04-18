@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54429 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751913AbdDCJov (ORCPT
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:34296 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751520AbdDRTO7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 05:44:51 -0400
-Subject: Re: [PATCH] wlcore: fix spelling mistake in wl1271_warning 'iligal'
- -> 'illegal'
-To: Joe Perches <joe@perches.com>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20170403091530.18564-1-colin.king@canonical.com>
- <1491211256.27353.58.camel@perches.com>
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Colin Ian King <colin.king@canonical.com>
-Message-ID: <6473739f-5f3e-c32c-dad7-22b6c15d98cc@canonical.com> (sfid-20170403_114526_923281_209242B3)
-Date: Mon, 3 Apr 2017 10:44:49 +0100
+        Tue, 18 Apr 2017 15:14:59 -0400
+Received: by mail-pg0-f50.google.com with SMTP id s64so868447pgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Apr 2017 12:14:59 -0700 (PDT)
+Subject: Re: [PATCH V2 02/10] nl80211: allow multiple active scheduled scan
+ requests
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1492085196-4574-3-git-send-email-arend.vanspriel@broadcom.com>
+ <1492505589.2472.2.camel@sipsolutions.net>
+ <1492505735.2472.3.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ae245fa9-8415-5f23-f0c7-a4f95680bc3a@broadcom.com> (sfid-20170418_211502_996440_D64EAB73)
+Date: Tue, 18 Apr 2017 21:14:51 +0200
 MIME-Version: 1.0
-In-Reply-To: <1491211256.27353.58.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1492505735.2472.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/04/17 10:20, Joe Perches wrote:
-> On Mon, 2017-04-03 at 10:15 +0100, Colin King wrote:
->> From: Colin Ian King <colin.king@canonical.com>
->>
->> trivial fix to spelling mistake in wl1271_warning error message
->>
->> Signed-off-by: Colin Ian King <colin.king@canonical.com>
->> ---
->>  drivers/net/wireless/ti/wlcore/debugfs.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
->> index 58e148d7bc7b..416080adc181 100644
->> --- a/drivers/net/wireless/ti/wlcore/debugfs.c
->> +++ b/drivers/net/wireless/ti/wlcore/debugfs.c
->> @@ -1249,7 +1249,7 @@ static ssize_t fw_logger_write(struct file *file,
->>  	}
->>  
->>  	if (wl->conf.fwlog.output == 0) {
->> -		wl1271_warning("iligal opperation - fw logger disabled by default, please change mode via wlconf");
->> +		wl1271_warning("illegal opperation - fw logger disabled by default, please change mode via wlconf");
-> 
-> Hi Colin.
-> 
-> When you do these would you please fix all the typos on the
-> same line?  opperation -> operation
 
-Sure, I stupidly missed that.
 
+On 4/18/2017 10:55 AM, Johannes Berg wrote:
+> On Tue, 2017-04-18 at 10:53 +0200, Johannes Berg wrote:
+>> Hi Arend,
+>>
+>> Overall this looks good, and I've almost applied it - but I have a
+>> question on this patch.
+>>
+>> You have this list:
+>>
+>>> +	struct list_head sched_scan_req_list;
+>>>   	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
+>>
+>> but you kept this. In fact, it's even still *used*. I don't
+>> understand
+>> that part.
+>>
+>> Also, you used RCU primitives for the new list, but you never
+>> actually
+>> used them - except in one place (in nl80211_stop_sched_scan) where
+>> it's
+>> actually not needed at all and the _rcu should be removed (since it
+>> holds the lock)
+>>
+>> What's up with that?
 > 
-> Also, generally, invalid is a better word choice than illegal
-> for these situations.
+> Actually, I think I see what's up - you simply forgot to remove the
+> sched_scan_req member, and then didn't realize that it was still used
+> in nl80211_netlink_notify(), and that's the place that *does* need the
+> RCU stuff.
 
-Good point.
-> 
-> Thanks and cheers, Joe
-> 
+Yes. Sorry for screwing it up. Will rebase the series and fix it.
+
+Regards,
+Arend
