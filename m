@@ -1,133 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36093 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751663AbdDCBOi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Apr 2017 21:14:38 -0400
-Received: by mail-oi0-f68.google.com with SMTP id b187so17392091oif.3
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Apr 2017 18:14:38 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 08/12] rtlwifi: btcoex: 23b 2ant: coex table fine tune
-Date: Sun,  2 Apr 2017 20:14:18 -0500
-Message-Id: <20170403011428.6156-8-Larry.Finger@lwfinger.net> (sfid-20170403_031504_345728_961CE0AC)
-In-Reply-To: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
-References: <20170331164742.22374-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:48334 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755956AbdDRKuG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Apr 2017 06:50:06 -0400
+Message-ID: <1492512604.2472.20.camel@sipsolutions.net> (sfid-20170418_125009_969366_CDE58AB4)
+Subject: Re: [PATCH V2 3/3] cfg80211: Share Channel DFS state across wiphys
+ of same DFS domain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Date: Tue, 18 Apr 2017 12:50:04 +0200
+In-Reply-To: <1488195275-29371-4-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1488195275-29371-1-git-send-email-vthiagar@qti.qualcomm.com>
+         <1488195275-29371-4-git-send-email-vthiagar@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-set coex table fine tune, for register settings
+> +void regulatory_propagate_dfs_state(struct wiphy *wiphy,
+> +				    struct cfg80211_chan_def
+> *chandef,
+> +				    enum nl80211_dfs_state
+> dfs_state,
+> +				    enum nl80211_radar_event event)
+> +{
+> +	struct cfg80211_registered_device *rdev;
+> +
+> +	ASSERT_RTNL();
+> +
+> +	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
+> +		return;
+> +
+> +	if (WARN_ON(!(chandef->chan->flags & IEEE80211_CHAN_RADAR)))
+> +		return;
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - No changes.
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 52 +++++++++++++---------
- 1 file changed, 32 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 65497abcf719..3bed72eed70a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -915,55 +915,67 @@ static void btc8723b2ant_coex_table_with_type(struct btc_coexist *btcoexist,
- 	switch (type) {
- 	case 0:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55555555,
--					0x55555555, 0xffff, 0x3);
-+					0x55555555, 0xffffff, 0x3);
- 		break;
- 	case 1:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55555555,
--					0x5afa5afa, 0xffff, 0x3);
-+					0x5afa5afa, 0xffffff, 0x3);
- 		break;
- 	case 2:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
--					0x5a5a5a5a, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5ada5ada,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 3:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0xaaaaaaaa,
--					0xaaaaaaaa, 0xffff, 0x3);
-+					0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
- 	case 4:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0xffffffff,
--					0xffffffff, 0xffff, 0x3);
-+					0xffffffff, 0xffffff, 0x3);
- 		break;
- 	case 5:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
--					0x5fff5fff, 0xffff, 0x3);
-+					0x5fff5fff, 0xffffff, 0x3);
- 		break;
- 	case 6:
- 		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5a5a5a5a, 0xffff, 0x3);
-+					0x5a5a5a5a, 0xffffff, 0x3);
- 		break;
- 	case 7:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5afa5afa, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 8:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5aea5aea,
--					0x5aea5aea, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 9:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5aea5aea, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 10:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5aff5aff, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 11:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5a5f5a5f, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
- 		break;
- 	case 12:
--		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55ff55ff,
--					0x5f5f5f5f, 0xffff, 0x3);
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 13:
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					0xaaaaaaaa, 0xffffff, 0x3);
-+		break;
-+	case 14:
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 15:
-+		btc8723b2ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
- 	default:
- 		break;
--- 
-2.12.0
+This warn on reliably triggers for me when I run the "ap_vht160" hwsim
+test from wpa_supplicant.
+
+I think there might be some confusion about this when parts of the 160
+MHz channel require radar and parts don't? But I haven't looked into
+this at all.
+
+Please send me a fix ASAP so Jouni doesn't shout at me for test
+failures :)
+
+johannes
