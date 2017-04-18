@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:34540 "EHLO
-        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754210AbdDNPpQ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52406 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755461AbdDRIWc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 11:45:16 -0400
-MIME-Version: 1.0
-In-Reply-To: <a21d8845-ae8d-fae0-b1b4-7bf6751b04b5@candelatech.com>
-References: <a21d8845-ae8d-fae0-b1b4-7bf6751b04b5@candelatech.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Fri, 14 Apr 2017 08:45:15 -0700
-Message-ID: <CAKgT0UcEKTsc6-tSHXMHFybnE4NQASKWHziq2SV+spOCLJGH-g@mail.gmail.com> (sfid-20170414_174548_732283_19D4B783)
-Subject: Re: How to debug DMAR errors?
-To: Ben Greear <greearb@candelatech.com>
+        Tue, 18 Apr 2017 04:22:32 -0400
+Message-ID: <1492503743.31741.35.camel@coelho.fi> (sfid-20170418_102530_931352_E89B2877)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        linuxwifi <linuxwifi@intel.com>
+Date: Tue, 18 Apr 2017 11:22:23 +0300
+In-Reply-To: <87h91m6w6f.fsf@qca.qualcomm.com>
+References: <1492086857.31741.20.camel@coelho.fi>
+         <87lgqy6x6n.fsf@codeaurora.org> <87h91m6w6f.fsf@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi-next 2017-04-13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 11:12 AM, Ben Greear <greearb@candelatech.com> wrote:
-> Hello,
->
-> I have been seeing a regular occurrence of DMAR errors, looking something
-> like this when testing my ath10k driver/firmware under some specific loads
-> (maximum receive of 512 byte frames in AP mode):
->
-> DMAR: DRHD: handling fault status reg 3
-> DMAR: [DMA Read] Request device [05:00.0] fault addr fd99f000 [fault reason
-> 06] PTE Read access is not set
-> ath10k_pci 0000:05:00.0: firmware crashed! (uuid
-> 594b1393-ae35-42b5-9dec-74ff0c6791ff)
->
-> So, I am wondering if there is any way I can get more information about what
-> this fd99f000 address
-> is?
->
-> Once this problem hits, the entire OS locks hard (not even sysrq-boot will
-> do anything),
-> so I guess I would need the DMAR logic to print out more info on that
-> address somehow.
->
-> Thanks,
-> Ben
+On Tue, 2017-04-18 at 06:56 +0000, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+> > Luca Coelho <luca@coelho.fi> writes:
+> > 
+> > > Here's my first pull-request intended for v4.12.  This is generic
+> > > development work, nothing really stands out.  More
+> > > details in the tag description.
+> > > 
+> > > I have sent this out before, and kbuildbot reported success.
+> > > 
+> > > Please let me know if there are any issues.
+> > > 
+> > > Cheers,
+> > > Luca.
+> > > 
+> > > 
+> > > The following changes since commit 1aed89640a899cd695bbfc976a4356affa474646:
+> > > 
+> > >   mwifiex: apply radar flag (2017-04-05 15:54:52 +0300)
+> > > 
+> > > are available in the git repository at:
+> > > 
+> > >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+> > > tags/iwlwifi-next-for-kalle-2017-04-13
+> > > 
+> > > for you to fetch changes up to 87d0e1af9db3bff4ec2f68fd4d032f89c23867a4:
+> > > 
+> > >   iwlwifi: mvm: separate queue mapping from queue enablement (2017-04-11 15:25:00 +0300)
+> > > 
+> > > ----------------------------------------------------------------
+> > > Patches intended for v4.12:
+> > > 
+> > >   * Some small fixes here and there;
+> > >   * The usual cleanups and small improvements;
+> > >   * Work to support A000 devices continues;
+> > >   * New FW API version;
+> > >   * Some debugging improvements;
+> > > 
+> > > ----------------------------------------------------------------
+> > 
+> > This one has few conflicts. I can fix those manually, but can you give
+> > some guidance how?
+> 
+> I think I got it now, see below for the diff I did. Can you please
+> check that?
+> 
+> The resolution is also in the pending branch:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/log/?h=pending
 
-There isn't much more info to give you. The problem is that the device
-at 5:00.0 attempted to read at fd99f000 even though it didn't have
-permissions. In response this should trigger a PCI Master Abort
-message to that function. It looks like the firmware for the device
-doesn't handle that and so that is likely why things got hung.
 
-Really you would need to interrogate the ath10k_pci to see if there
-is/was a mapping somewhere for that address and what it was supposed
-to be used for.
+Yes, looks good! Thanks for resolving it and sorry for not foreseeing it
+to give you a heads up.
 
-- Alex
+
+--
+Cheers,
+Luca.
