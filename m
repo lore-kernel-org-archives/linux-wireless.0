@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50660 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753029AbdDKMjF (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:60938 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754821AbdDRJwU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 08:39:05 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 11 Apr 2017 15:37:35 +0300
-Message-Id: <20170411123742.12214-19-luca@coelho.fi> (sfid-20170411_144106_761606_D0DCC25F)
-In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
-References: <20170411123742.12214-1-luca@coelho.fi>
-Subject: [PATCH 18/25] iwlwifi: pcie: use WFPM_GP for debugging D3 flows
+        Tue, 18 Apr 2017 05:52:20 -0400
+Date: Tue, 18 Apr 2017 11:52:07 +0200
+From: Daniel Golle <daniel@makrotopia.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+Subject: [PATCH] rt2800: fix mt7620 E2 channel registers
+Message-ID: <20170418095202.GA7086@makrotopia.org> (sfid-20170418_115251_316619_D2539C23)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Tomislav Požega <pozega.tomislav@gmail.com>
 
-This register is helpful for debugging D3 issues.
-Driver turns all bits on, and then on exit reads the
-updated value there.
+update RF register 47 and 54 values according to vendor driver
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 13 +++++++++++++
- 2 files changed, 14 insertions(+)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 406ef301b8ab..3a8aeee3b55a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -378,6 +378,7 @@
- #define RADIO_REG_SYS_MANUAL_DFT_0	0xAD4078
- #define RFIC_REG_RD			0xAD0470
- #define WFPM_CTRL_REG			0xA03030
-+#define WFPM_GP2			0xA030B4
- enum {
- 	ENABLE_WFPM = BIT(31),
- 	WFPM_AUX_CTL_AUX_IF_MAC_OWNER_MSK	= 0x80000000,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 69f1b032260c..15bf5100d096 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1047,6 +1047,16 @@ static int iwl_pcie_load_given_ucode_8000(struct iwl_trans *trans,
- 	if (ret)
- 		return ret;
- 
-+	IWL_DEBUG_POWER(trans, "Original WFPM value = 0x%08X\n",
-+			iwl_read_prph(trans, WFPM_GP2));
-+
-+	/*
-+	 * Set default value. On resume reading the values that were
-+	 * zeored can provide debug data on the resume flow.
-+	 * This is for debugging only and has no functional impact.
-+	 */
-+	iwl_write_prph(trans, WFPM_GP2, 0x01010101);
-+
- 	/* configure the ucode to be ready to get the secured image */
- 	/* release CPU reset */
- 	iwl_write_prph(trans, RELEASE_CPU_RESET, RELEASE_CPU_RESET_BIT);
-@@ -1527,6 +1537,9 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
- 		}
- 	}
- 
-+	IWL_DEBUG_POWER(trans, "WFPM value upon resume = 0x%08X\n",
-+			iwl_read_prph(trans, WFPM_GP2));
-+
- 	val = iwl_read32(trans, CSR_RESET);
- 	if (val & CSR_RESET_REG_FLAG_NEVO_RESET)
- 		*status = IWL_D3_STATUS_RESET;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 86cffee6876a..8585cdc3de53 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -8145,9 +8145,11 @@ static void rt2800_init_rfcsr_6352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write_chanreg(rt2x00dev, 44, 0xB3);
+ 	rt2800_rfcsr_write_chanreg(rt2x00dev, 45, 0xD5);
+ 	rt2800_rfcsr_write_chanreg(rt2x00dev, 46, 0x27);
+-	rt2800_rfcsr_write_chanreg(rt2x00dev, 47, 0x69);
++	rt2800_rfcsr_write_bank(rt2x00dev, 4, 47, 0x67);
++	rt2800_rfcsr_write_bank(rt2x00dev, 6, 47, 0x69);
+ 	rt2800_rfcsr_write_chanreg(rt2x00dev, 48, 0xFF);
+-	rt2800_rfcsr_write_chanreg(rt2x00dev, 54, 0x20);
++	rt2800_rfcsr_write_bank(rt2x00dev, 4, 54, 0x27);
++	rt2800_rfcsr_write_bank(rt2x00dev, 6, 54, 0x20);
+ 	rt2800_rfcsr_write_chanreg(rt2x00dev, 55, 0x66);
+ 	rt2800_rfcsr_write_chanreg(rt2x00dev, 56, 0xFF);
+ 	rt2800_rfcsr_write_chanreg(rt2x00dev, 57, 0x1C);
 -- 
-2.11.0
+2.12.2
