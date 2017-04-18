@@ -1,203 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35250 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752837AbdDLLG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 07:06:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:52832 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754250AbdDRWVi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Apr 2017 18:21:38 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: aviya.erenfeld@intel.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/6] mac80211: use common code for monitor options in add/change
-Date: Wed, 12 Apr 2017 13:06:21 +0200
-Message-Id: <20170412110621.8981-6-johannes@sipsolutions.net> (sfid-20170412_130634_643028_12035135)
-In-Reply-To: <20170412110621.8981-1-johannes@sipsolutions.net>
-References: <20170412110621.8981-1-johannes@sipsolutions.net>
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:23 +0300
+Message-Id: <20170418221729.28372-20-luca@coelho.fi> (sfid-20170419_002141_034506_C6822EF3)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 19/25] iwlwifi: mvm: dump frames early on invalid rate
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Refactor the code to have common code for changing monitor
-options when adding and changing virtual interfaces. This
-will make it easier to add BPF filters to both paths. Note
-that this code carefully checks the error conditions first
-and only then applies the changes, to guarantee atomicity.
+Currently when rate isn't found (invalid rate or CCK rate in high
+band) driver is assigning rate -1, which causes mac80211 to dump
+it later with the cryptic rate value of 0xFF.
+Instead, warn early and dump the frame in mvm.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/cfg.c | 121 ++++++++++++++++++++++++++++-------------------------
- 1 file changed, 63 insertions(+), 58 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 13 ++++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 18 +++++++++++++-----
+ 2 files changed, 23 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index de52fe3e0ce6..4ff03c88022e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -22,31 +22,23 @@
- #include "mesh.h"
- #include "wme.h"
- 
--static int ieee80211_set_mu_mimo_follow(struct ieee80211_sub_if_data *sdata,
--					struct vif_params *params)
-+static void ieee80211_set_mu_mimo_follow(struct ieee80211_sub_if_data *sdata,
-+					 struct vif_params *params)
- {
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_sub_if_data *monitor_sdata;
- 	bool mu_mimo_groups = false;
- 	bool mu_mimo_follow = false;
- 
--	monitor_sdata = rtnl_dereference(local->monitor_sdata);
--
--	if (!monitor_sdata)
--		return -EOPNOTSUPP;
--
- 	if (params->vht_mumimo_groups) {
- 		u64 membership;
- 
- 		BUILD_BUG_ON(sizeof(membership) != WLAN_MEMBERSHIP_LEN);
- 
--		memcpy(monitor_sdata->vif.bss_conf.mu_group.membership,
-+		memcpy(sdata->vif.bss_conf.mu_group.membership,
- 		       params->vht_mumimo_groups, WLAN_MEMBERSHIP_LEN);
--		memcpy(monitor_sdata->vif.bss_conf.mu_group.position,
-+		memcpy(sdata->vif.bss_conf.mu_group.position,
- 		       params->vht_mumimo_groups + WLAN_MEMBERSHIP_LEN,
- 		       WLAN_USER_POSITION_LEN);
--		ieee80211_bss_info_change_notify(monitor_sdata,
--						 BSS_CHANGED_MU_GROUPS);
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_MU_GROUPS);
- 		/* don't care about endianness - just check for 0 */
- 		memcpy(&membership, params->vht_mumimo_groups,
- 		       WLAN_MEMBERSHIP_LEN);
-@@ -56,11 +48,63 @@ static int ieee80211_set_mu_mimo_follow(struct ieee80211_sub_if_data *sdata,
- 	if (params->vht_mumimo_follow_addr) {
- 		mu_mimo_follow =
- 			is_valid_ether_addr(params->vht_mumimo_follow_addr);
--		ether_addr_copy(monitor_sdata->u.mntr.mu_follow_addr,
-+		ether_addr_copy(sdata->u.mntr.mu_follow_addr,
- 				params->vht_mumimo_follow_addr);
- 	}
- 
--	monitor_sdata->vif.mu_mimo_owner = mu_mimo_groups || mu_mimo_follow;
-+	sdata->vif.mu_mimo_owner = mu_mimo_groups || mu_mimo_follow;
-+}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index eab6e2ad62e1..d4c0ca7ccb34 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -460,9 +460,16 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		if (rate_n_flags & RATE_MCS_BF_MSK)
+ 			rx_status->vht_flag |= RX_VHT_FLAG_BF;
+ 	} else {
+-		rx_status->rate_idx =
+-			iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
+-							    rx_status->band);
++		int rate = iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
++							       rx_status->band);
 +
-+static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
-+				     struct vif_params *params)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_sub_if_data *monitor_sdata;
-+
-+	/* check flags first */
-+	if (params->flags && ieee80211_sdata_running(sdata)) {
-+		u32 mask = MONITOR_FLAG_COOK_FRAMES | MONITOR_FLAG_ACTIVE;
-+
-+		/*
-+		 * Prohibit MONITOR_FLAG_COOK_FRAMES and
-+		 * MONITOR_FLAG_ACTIVE to be changed while the
-+		 * interface is up.
-+		 * Else we would need to add a lot of cruft
-+		 * to update everything:
-+		 *	cooked_mntrs, monitor and all fif_* counters
-+		 *	reconfigure hardware
-+		 */
-+		if ((params->flags & mask) != (sdata->u.mntr.flags & mask))
-+			return -EBUSY;
-+	}
-+
-+	/* also validate MU-MIMO change */
-+	monitor_sdata = rtnl_dereference(local->monitor_sdata);
-+
-+	if (!monitor_sdata &&
-+	    (params->vht_mumimo_groups || params->vht_mumimo_follow_addr))
-+		return -EOPNOTSUPP;
-+
-+	/* apply all changes now - no failures allowed */
-+
-+	ieee80211_set_mu_mimo_follow(monitor_sdata, params);
-+
-+	if (params->flags) {
-+		if (ieee80211_sdata_running(sdata)) {
-+			ieee80211_adjust_monitor_flags(sdata, -1);
-+			sdata->u.mntr.flags = params->flags;
-+			ieee80211_adjust_monitor_flags(sdata, 1);
-+
-+			ieee80211_configure_filter(local);
-+		} else {
-+			/*
-+			 * Because the interface is down, ieee80211_do_stop
-+			 * and ieee80211_do_open take care of "everything"
-+			 * mentioned in the comment above.
-+			 */
-+			sdata->u.mntr.flags = params->flags;
++		if (WARN(rate < 0 || rate > 0xFF,
++			 "Invalid rate flags 0x%x, band %d,\n",
++			 rate_n_flags, rx_status->band)) {
++			kfree_skb(skb);
++			return;
 +		}
-+	}
++		rx_status->rate_idx = rate;
+ 	}
  
- 	return 0;
- }
-@@ -83,13 +127,11 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 	sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 8601d25407b3..0f74a200e812 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -918,8 +918,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
  
- 	if (type == NL80211_IFTYPE_MONITOR) {
--		err = ieee80211_set_mu_mimo_follow(sdata, params);
-+		err = ieee80211_set_mon_options(sdata, params);
- 		if (err) {
- 			ieee80211_if_remove(sdata);
- 			return NULL;
+ 		if (iwl_mvm_is_nonagg_dup(sta, queue, rx_status, hdr, desc)) {
+ 			kfree_skb(skb);
+-			rcu_read_unlock();
+-			return;
++			goto out;
  		}
--
--		sdata->u.mntr.flags = params->flags;
+ 
+ 		/*
+@@ -985,9 +984,17 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		if (rate_n_flags & RATE_MCS_BF_MSK)
+ 			rx_status->vht_flag |= RX_VHT_FLAG_BF;
+ 	} else {
+-		rx_status->rate_idx =
+-			iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
+-							    rx_status->band);
++		int rate = iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
++							       rx_status->band);
++
++		if (WARN(rate < 0 || rate > 0xFF,
++			 "Invalid rate flags 0x%x, band %d,\n",
++			 rate_n_flags, rx_status->band)) {
++			kfree_skb(skb);
++			goto out;
++		}
++		rx_status->rate_idx = rate;
++
  	}
  
- 	return wdev;
-@@ -124,46 +166,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 	}
+ 	/* management stuff on default queue */
+@@ -1006,6 +1013,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	iwl_mvm_create_skb(skb, hdr, len, crypt_len, rxb);
+ 	if (!iwl_mvm_reorder(mvm, napi, queue, sta, skb, desc))
+ 		iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta);
++out:
+ 	rcu_read_unlock();
+ }
  
- 	if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
--		struct ieee80211_local *local = sdata->local;
--		int err;
--
--		err = ieee80211_set_mu_mimo_follow(sdata, params);
--		if (err)
--			return err;
--
--		if (!params->flags)
--			return 0;
--
--		if (ieee80211_sdata_running(sdata)) {
--			u32 mask = MONITOR_FLAG_COOK_FRAMES |
--				   MONITOR_FLAG_ACTIVE;
--
--			/*
--			 * Prohibit MONITOR_FLAG_COOK_FRAMES and
--			 * MONITOR_FLAG_ACTIVE to be changed while the
--			 * interface is up.
--			 * Else we would need to add a lot of cruft
--			 * to update everything:
--			 *	cooked_mntrs, monitor and all fif_* counters
--			 *	reconfigure hardware
--			 */
--			if ((params->flags & mask) !=
--			    (sdata->u.mntr.flags & mask))
--				return -EBUSY;
--
--			ieee80211_adjust_monitor_flags(sdata, -1);
--			sdata->u.mntr.flags = params->flags;
--			ieee80211_adjust_monitor_flags(sdata, 1);
--
--			ieee80211_configure_filter(local);
--		} else {
--			/*
--			 * Because the interface is down, ieee80211_do_stop
--			 * and ieee80211_do_open take care of "everything"
--			 * mentioned in the comment above.
--			 */
--			sdata->u.mntr.flags = params->flags;
--		}
-+		ret = ieee80211_set_mon_options(sdata, params);
-+		if (ret)
-+			return ret;
- 	}
- 
- 	return 0;
 -- 
 2.11.0
