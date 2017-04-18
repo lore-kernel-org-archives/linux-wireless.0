@@ -1,84 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59593 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751473AbdDMMHF (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56829 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751233AbdDRG4e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 08:07:05 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 00/10] cfg80211: support multiple scheduled scans
-Date: Thu, 13 Apr 2017 13:06:26 +0100
-Message-Id: <1492085196-4574-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170413_140709_987817_37B73F29)
+        Tue, 18 Apr 2017 02:56:34 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Luca Coelho <luca@coelho.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2017-04-13
+Date: Tue, 18 Apr 2017 06:56:28 +0000
+Message-ID: <87h91m6w6f.fsf@qca.qualcomm.com> (sfid-20170418_085638_485837_B013E0E8)
+References: <1492086857.31741.20.camel@coelho.fi>
+        <87lgqy6x6n.fsf@codeaurora.org>
+In-Reply-To: <87lgqy6x6n.fsf@codeaurora.org> (Kalle Valo's message of "Tue, 18
+        Apr 2017 09:34:40 +0300")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the RFC rounds here is multi-scheduled scan submission. What
-has been added since the RFC is support for user-space to specify a
-BSSID in the matchset (PATCH 3/10). As example this could be used for
-roaming algorithm done in user-space. The patches for scheduled scan
-notification api have been collapsed into a single patch and rtnl
-locking was needed for the cfg80211_sched_scan_results() function.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-This series also adds a driver implementation for the new features.
-Not surprisingly being brcmfmac.
+> Luca Coelho <luca@coelho.fi> writes:
+>
+>> Here's my first pull-request intended for v4.12.  This is generic
+>> development work, nothing really stands out.  More
+>> details in the tag description.
+>>
+>> I have sent this out before, and kbuildbot reported success.
+>>
+>> Please let me know if there are any issues.
+>>
+>> Cheers,
+>> Luca.
+>>
+>>
+>> The following changes since commit 1aed89640a899cd695bbfc976a4356affa474=
+646:
+>>
+>>   mwifiex: apply radar flag (2017-04-05 15:54:52 +0300)
+>>
+>> are available in the git repository at:
+>>
+>>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+>> tags/iwlwifi-next-for-kalle-2017-04-13
+>>
+>> for you to fetch changes up to 87d0e1af9db3bff4ec2f68fd4d032f89c23867a4:
+>>
+>>   iwlwifi: mvm: separate queue mapping from queue enablement (2017-04-11=
+ 15:25:00 +0300)
+>>
+>> ----------------------------------------------------------------
+>> Patches intended for v4.12:
+>>
+>>   * Some small fixes here and there;
+>>   * The usual cleanups and small improvements;
+>>   * Work to support A000 devices continues;
+>>   * New FW API version;
+>>   * Some debugging improvements;
+>>
+>> ----------------------------------------------------------------
+>
+> This one has few conflicts. I can fix those manually, but can you give
+> some guidance how?
 
-This series applies to master branch of the mac80211-next
-repository. In this version a couple of build issues reported
-by Kbuild test robot has been addressed where applicable. The
-conflict with wireless-drivers-next is still there, but we have
-a plan for that.
----
- changes:
-  V2:
-   - patch 5/10 changed to resolve kerneldoc issue.
-   - patch 8/10 and 10/10 resolving uninitialized warnings.
----
-Arend van Spriel (10):
-  nl80211: add request id in scheduled scan event messages
-  nl80211: allow multiple active scheduled scan requests
-  nl80211: add support for BSSIDs in scheduled scan matchsets
-  cfg80211: add request id parameter to .sched_scan_stop() signature
-  cfg80211: add request id to cfg80211_sched_scan_*() api
-  brcmfmac: add firmware feature detection for gscan feature
-  brcmfmac: move scheduled scan wiphy param setting to pno module
-  brcmfmac: add support multi-scheduled scan
-  brcmfmac: add mutex to protect pno requests
-  brcmfmac: add scheduled scan support for specified BSSIDs
+I think I got it now, see below for the diff I did. Can you please
+check that?
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |   6 +-
- drivers/net/wireless/ath/ath6kl/wmi.c              |   2 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  93 +++--
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   8 +-
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   1 +
- .../wireless/broadcom/brcm80211/brcmfmac/debug.h   |   2 +
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  22 +-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  75 ++++
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 455 ++++++++++++++++++---
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.h |  55 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   2 +-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |  10 +-
- drivers/net/wireless/marvell/mwifiex/main.c        |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_event.c   |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |   2 +-
- drivers/net/wireless/ti/wlcore/main.c              |   2 +-
- include/net/cfg80211.h                             |  41 +-
- include/uapi/linux/nl80211.h                       |  14 +-
- net/mac80211/cfg.c                                 |   3 +-
- net/mac80211/pm.c                                  |   2 +-
- net/mac80211/scan.c                                |   4 +-
- net/mac80211/util.c                                |   2 +-
- net/wireless/core.c                                |  27 +-
- net/wireless/core.h                                |  11 +-
- net/wireless/nl80211.c                             | 116 ++++--
- net/wireless/nl80211.h                             |   3 +-
- net/wireless/rdev-ops.h                            |   8 +-
- net/wireless/scan.c                                | 146 +++++--
- net/wireless/trace.h                               |  54 ++-
- 31 files changed, 941 insertions(+), 235 deletions(-)
+The resolution is also in the pending branch:
 
--- 
-1.9.1
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next=
+.git/log/?h=3Dpending
+
+diff --cc drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 9d28db7f56aa,2d68cee41306..a552955f72f7
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@@ -1806,11 -1805,10 +1805,11 @@@ int iwl_mvm_send_add_bcast_sta(struct i
+  			iwl_mvm_get_wd_timeout(mvm, vif, false, false);
+  		int queue;
+ =20
+ -		if (vif->type =3D=3D NL80211_IFTYPE_AP)
+ +		if (vif->type =3D=3D NL80211_IFTYPE_AP ||
+ +		    vif->type =3D=3D NL80211_IFTYPE_ADHOC)
+- 			queue =3D IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++ 			queue =3D mvm->probe_queue;
+  		else if (vif->type =3D=3D NL80211_IFTYPE_P2P_DEVICE)
+- 			queue =3D IWL_MVM_DQA_P2P_DEVICE_QUEUE;
++ 			queue =3D mvm->p2p_dev_queue;
+  		else if (WARN(1, "Missing required TXQ for adding bcast STA\n"))
+  			return -EINVAL;
+ =20
+@@@ -1864,29 -1836,18 +1863,23 @@@ static void iwl_mvm_free_bcast_sta_queu
+ =20
+  	lockdep_assert_held(&mvm->mutex);
+ =20
+ +	if (vif->type =3D=3D NL80211_IFTYPE_AP ||
+ +	    vif->type =3D=3D NL80211_IFTYPE_ADHOC)
+ +		iwl_mvm_disable_txq(mvm, vif->cab_queue, vif->cab_queue,
+ +				    IWL_MAX_TID_COUNT, 0);
+ +
+- 	if (mvmvif->bcast_sta.tfd_queue_msk &
+- 	    BIT(IWL_MVM_DQA_AP_PROBE_RESP_QUEUE)) {
+- 		iwl_mvm_disable_txq(mvm,
+- 				    IWL_MVM_DQA_AP_PROBE_RESP_QUEUE,
++ 	if (mvmvif->bcast_sta.tfd_queue_msk & BIT(mvm->probe_queue)) {
++ 		iwl_mvm_disable_txq(mvm, mvm->probe_queue,
+  				    vif->hw_queue[0], IWL_MAX_TID_COUNT,
+  				    0);
+- 		mvmvif->bcast_sta.tfd_queue_msk &=3D
+- 			~BIT(IWL_MVM_DQA_AP_PROBE_RESP_QUEUE);
++ 		mvmvif->bcast_sta.tfd_queue_msk &=3D ~BIT(mvm->probe_queue);
+  	}
+ =20
+- 	if (mvmvif->bcast_sta.tfd_queue_msk &
+- 	    BIT(IWL_MVM_DQA_P2P_DEVICE_QUEUE)) {
+- 		iwl_mvm_disable_txq(mvm,
+- 				    IWL_MVM_DQA_P2P_DEVICE_QUEUE,
++ 	if (mvmvif->bcast_sta.tfd_queue_msk & BIT(mvm->p2p_dev_queue)) {
++ 		iwl_mvm_disable_txq(mvm, mvm->p2p_dev_queue,
+  				    vif->hw_queue[0], IWL_MAX_TID_COUNT,
+  				    0);
+- 		mvmvif->bcast_sta.tfd_queue_msk &=3D
+- 			~BIT(IWL_MVM_DQA_P2P_DEVICE_QUEUE);
++ 		mvmvif->bcast_sta.tfd_queue_msk &=3D ~BIT(mvm->p2p_dev_queue);
+  	}
+  }
+ =20
+diff --cc drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 1ba0a6f55503,568b0793e84e..ffbbe7228f5d
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@@ -518,12 -517,11 +518,12 @@@ static int iwl_mvm_get_ctrl_vif_queue(s
+  		if (info->hw_queue =3D=3D info->control.vif->cab_queue)
+  			return info->hw_queue;
+ =20
+ -		WARN_ONCE(1, "fc=3D0x%02x", le16_to_cpu(fc));
+ +		WARN_ONCE(info->control.vif->type !=3D NL80211_IFTYPE_ADHOC,
+ +			  "fc=3D0x%02x", le16_to_cpu(fc));
+- 		return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++ 		return mvm->probe_queue;
+  	case NL80211_IFTYPE_P2P_DEVICE:
+  		if (ieee80211_is_mgmt(fc))
+- 			return IWL_MVM_DQA_P2P_DEVICE_QUEUE;
++ 			return mvm->p2p_dev_queue;
+  		if (info->hw_queue =3D=3D info->control.vif->cab_queue)
+  			return info->hw_queue;
+  =
