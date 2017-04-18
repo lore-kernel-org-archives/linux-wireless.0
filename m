@@ -1,143 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:35947 "EHLO
-        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1164862AbdD1Hqn (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52926 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757516AbdDRWXQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 03:46:43 -0400
-From: Shikha SINGH <shikha.singh@st.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
-        Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>,
-        Manoj KUMAR <manoj.kumar@st.com>,
-        Sylvain FIDELIS <sylvain.fidelis@st.com>,
-        Raphael COLLADO <Raphael.COLLADO@st.com>
-Subject: Re: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
-Date: Fri, 28 Apr 2017 07:45:36 +0000
-Message-ID: <1493365535720.2325@st.com> (sfid-20170428_094651_963751_EE258C32)
-References: <1469161579-4339-1-git-send-email-shikha.singh@st.com>
- <ad22efa9cb8c443eaa0828e25c0b207a@SFHDAG2NODE3.st.com>,<20170428072904.GC3717@zurbaran.ger.intel.com>
-In-Reply-To: <20170428072904.GC3717@zurbaran.ger.intel.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Tue, 18 Apr 2017 18:23:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:27 +0300
+Message-Id: <20170418221729.28372-24-luca@coelho.fi> (sfid-20170419_002340_840131_7DCD3B2C)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 23/25] iwlwifi: a000: fix memory offsets and lengths
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
-      OK. I will rebase on top of nfc-next and make a new release.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Thanks & Regards,
-Shikha    
-________________________________________
-From: Samuel Ortiz <sameo@linux.intel.com>
-Sent: Friday, April 28, 2017 12:59 PM
-To: Shikha SINGH
-Cc: linux-wireless@vger.kernel.org; linux-nfc@lists.01.org; Raunaque Mujeeb QUAISER; Manoj KUMAR; Sylvain FIDELIS; Raphael COLLADO
-Subject: Re: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
+Memory offsets and lengths for A000 HW is different
+than currently specified.
 
-Hi Shikha,
+Fixes: e34d975e40ff ("iwlwifi: Add a000 HW family support")
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-That one is next on my review list.
-Could you please rebase it on top of nfc-next though ?
-
-Cheers,
-Samuel.
-
-On Fri, Apr 28, 2017 at 04:31:16AM +0000, Shikha SINGH wrote:
-> Hello Samuel,
->        Could you please consider the below patch series for integration in Linux-NFC mainline?
-> A long time ago we released this patch series but did not get any review comments or update.
->
-> This release is important for our customers who always prefer to pick the release from mainline.
->
-> Thanks for your comments.
->
-> Thanks & Regards,
-> Shikha
->
-> >>-----Original Message-----
-> >>From: Shikha SINGH
-> >>Sent: Friday, July 22, 2016 9:56 AM
-> >>To: sameo@linux.intel.com; linux-nfc@lists.01.org
-> >>Cc: Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>; Manoj
-> >KUMAR
-> >><manoj.kumar@st.com>; Sylvain FIDELIS <sylvain.fidelis@st.com>; Patrick
-> >>SOHN <patrick.sohn@st.com>; Shikha SINGH <shikha.singh@st.com>;
-> >Raphael
-> >>COLLADO <Raphael.COLLADO@st.com>
-> >>Subject: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
-> >>
-> >>*** STMicrolectronics NFC v1.0 ***
-> >>This patch series introduces the following features:
-> >>
-> >>(a) A generic Digital NFC UART framework.
-> >>The framework itself is an LDISC registered with the tty core. Any NFC
-> >>transciever implementing the digital specs and connected on an UART (or
-> >>on an emulated tty, such as /dev/ttyUSBx, /dev/ttyACMx) interface with
-> >>the host, will require this support.
-> >>
-> >>(b) An ST NFC Transciever core framework. This implements the required
-> >>digital ops and exposes an interface for the underlying phy drivers
-> >>(UART/ SPI). The services of the phy drivers are required when the core
-> >>wants to transmit/receive frames.
-> >>Also it provides helper functions for the phy drivers, for example phy
-> >>drivers registers with the core when it detects a Transciever connected
-> >>on the corresponding interface.
-> >>The framework currently supports NFC Type 2, Type 4A, Type 4B, Type 5
-> >>tag read/write.
-> >>
-> >>(c) An ST NFC UART LDisc driver that registers with the Digital NFC
-> >>UART framework, and with the ST NFC Transciever core framework as the
-> >>UART Phy driver.
-> >>
-> >>(d) An ST NFC SPI driver that register with ST NFC Transceiver core
-> >>framework as SPI phy driver.
-> >>
-> >>(e) This patch series also removes all the references of old ST NFC
-> >>transceiver driver "st95hf".
-> >>
-> >>Shikha Singh (6):
-> >>  NFC: add generic UART support
-> >>  NFC: nfcst: Add ST NFC Transceiver core framework
-> >>  NFC: nfctst: Add UART LDisc Driver
-> >>  NFC: nfctst: Add ST NFC SPI Driver
-> >>  DT: bindings: net: nfc: stnfc binding doc
-> >>  DRIVERS: NFC: Remove st95hf
-> >>
-> >> .../devicetree/bindings/net/nfc/st95hf.txt         |   50 -
-> >> .../devicetree/bindings/net/nfc/stnfc.txt          |   50 +
-> >> drivers/nfc/Kconfig                                |    2 +-
-> >> drivers/nfc/Makefile                               |    2 +-
-> >> drivers/nfc/nfcst/Kconfig                          |   48 +
-> >> drivers/nfc/nfcst/Makefile                         |   12 +
-> >> drivers/nfc/nfcst/core.c                           | 1122 +++++++++++++++++
-> >> drivers/nfc/nfcst/spi.c                            |  492 ++++++++
-> >> drivers/nfc/nfcst/stnfcdev.h                       |   70 ++
-> >> drivers/nfc/nfcst/uart.c                           |  164 +++
-> >> drivers/nfc/st95hf/Kconfig                         |   10 -
-> >> drivers/nfc/st95hf/Makefile                        |    6 -
-> >> drivers/nfc/st95hf/core.c                          | 1273 --------------------
-> >> drivers/nfc/st95hf/spi.c                           |  167 ---
-> >> drivers/nfc/st95hf/spi.h                           |   64 -
-> >> include/net/nfc/digital_uart.h                     |  105 ++
-> >> include/uapi/linux/tty.h                           |    1 +
-> >> net/nfc/Kconfig                                    |   12 +
-> >> net/nfc/Makefile                                   |    3 +
-> >> net/nfc/digital_uart.c                             |  523 ++++++++
-> >> 20 files changed, 2604 insertions(+), 1572 deletions(-)  delete mode
-> >>100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
-> >> create mode 100644 Documentation/devicetree/bindings/net/nfc/stnfc.txt
-> >> create mode 100644 drivers/nfc/nfcst/Kconfig  create mode 100644
-> >>drivers/nfc/nfcst/Makefile  create mode 100644 drivers/nfc/nfcst/core.c
-> >>create mode 100644 drivers/nfc/nfcst/spi.c  create mode 100644
-> >>drivers/nfc/nfcst/stnfcdev.h  create mode 100644
-> >>drivers/nfc/nfcst/uart.c delete mode 100644 drivers/nfc/st95hf/Kconfig
-> >>delete mode 100644 drivers/nfc/st95hf/Makefile  delete mode 100644
-> >>drivers/nfc/st95hf/core.c delete mode 100644 drivers/nfc/st95hf/spi.c
-> >>delete mode 100644 drivers/nfc/st95hf/spi.h  create mode 100644
-> >>include/net/nfc/digital_uart.h create mode 100644
-> >>net/nfc/digital_uart.c
-> >>
-> >>--
-> >>1.9.1
->
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index 1c731b88d08c..097cb45c8ad9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -65,12 +65,12 @@
+ #define IWL_A000_TX_POWER_VERSION	0xffff /* meaningless */
+ 
+ /* Memory offsets and lengths */
+-#define IWL_A000_DCCM_OFFSET		0x800000
+-#define IWL_A000_DCCM_LEN		0x18000
++#define IWL_A000_DCCM_OFFSET		0x800000 /* LMAC1 */
++#define IWL_A000_DCCM_LEN		0x10000 /* LMAC1 */
+ #define IWL_A000_DCCM2_OFFSET		0x880000
+ #define IWL_A000_DCCM2_LEN		0x8000
+ #define IWL_A000_SMEM_OFFSET		0x400000
+-#define IWL_A000_SMEM_LEN		0x68000
++#define IWL_A000_SMEM_LEN		0xD0000
+ 
+ #define IWL_A000_JF_FW_PRE	"iwlwifi-Qu-a0-jf-b0-"
+ #define IWL_A000_HR_FW_PRE	"iwlwifi-Qu-a0-hr-a0-"
+-- 
+2.11.0
