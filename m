@@ -1,124 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53762 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750746AbdDMIao (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52736 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757578AbdDRWRs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 04:30:44 -0400
-Subject: [PATCH v7 08/10] ath10k: htc: ready_ext msg support
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 13 Apr 2017 11:30:33 +0300
-Message-ID: <149207223329.4590.6028438533326508621.stgit@potku.adurom.net> (sfid-20170413_103047_816583_0E09BCB8)
-In-Reply-To: <149207201649.4590.5821794186383265138.stgit@potku.adurom.net>
-References: <149207201649.4590.5821794186383265138.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Tue, 18 Apr 2017 18:17:48 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:12 +0300
+Message-Id: <20170418221729.28372-9-luca@coelho.fi> (sfid-20170419_001807_198587_A0395F49)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 08/25] iwlwifi: mvm: work around HW issue with AMSDU de-aggregation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Added support for extended ready message.
-The extended ready message contains the maximum bundle
-count supported by SDIO chipsets.
+Seems like HW is reversing addr3 in the MAC header of de-aggregated
+AMSDU. Reverse it back.
 
-It is transmitted by SDIO chipset only and replaces the
-"standard" ready message in this case.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htc.c |   28 ++++++++++++++++++++++------
- drivers/net/wireless/ath/ath10k/htc.h |    5 +++++
- 2 files changed, 27 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 15b805629336..e5c80f582ff5 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -586,8 +586,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 	unsigned long time_left;
- 	struct ath10k_htc_msg *msg;
- 	u16 message_id;
--	u16 credit_count;
--	u16 credit_size;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 44072c3c4b5f..c99775039f59 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -911,12 +911,19 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		 * Our hardware de-aggregates AMSDUs but copies the mac header
+ 		 * as it to the de-aggregated MPDUs. We need to turn off the
+ 		 * AMSDU bit in the QoS control ourselves.
++		 * In addition, HW reverses addr3 - reverse it back.
+ 		 */
+ 		if ((desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU) &&
+ 		    !WARN_ON(!ieee80211_is_data_qos(hdr->frame_control))) {
++			int i;
+ 			u8 *qc = ieee80211_get_qos_ctl(hdr);
++			u8 mac_addr[ETH_ALEN];
  
- 	time_left = wait_for_completion_timeout(&htc->ctl_resp,
- 						ATH10K_HTC_WAIT_TIMEOUT_HZ);
-@@ -624,16 +622,14 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 
- 	msg = (struct ath10k_htc_msg *)htc->control_resp_buffer;
- 	message_id   = __le16_to_cpu(msg->hdr.message_id);
--	credit_count = __le16_to_cpu(msg->ready.credit_count);
--	credit_size  = __le16_to_cpu(msg->ready.credit_size);
- 
- 	if (message_id != ATH10K_HTC_MSG_READY_ID) {
- 		ath10k_err(ar, "Invalid HTC ready msg: 0x%x\n", message_id);
- 		return -ECOMM;
- 	}
- 
--	htc->total_transmit_credits = credit_count;
--	htc->target_credit_size = credit_size;
-+	htc->total_transmit_credits = __le16_to_cpu(msg->ready.credit_count);
-+	htc->target_credit_size = __le16_to_cpu(msg->ready.credit_size);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_HTC,
- 		   "Target ready! transmit resources: %d size:%d\n",
-@@ -646,6 +642,19 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 		return -ECOMM;
- 	}
- 
-+	/* The only way to determine if the ready message is an extended
-+	 * message is from the size.
-+	 */
-+	if (htc->control_resp_len >=
-+	    sizeof(msg->hdr) + sizeof(msg->ready_ext)) {
-+		htc->max_msgs_per_htc_bundle =
-+			min_t(u8, msg->ready_ext.max_msgs_per_htc_bundle,
-+			      HTC_HOST_MAX_MSG_PER_BUNDLE);
-+		ath10k_dbg(ar, ATH10K_DBG_HTC,
-+			   "Extended ready message. RX bundle size: %d\n",
-+			   htc->max_msgs_per_htc_bundle);
-+	}
+ 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
 +
- 	return 0;
- }
- 
-@@ -841,6 +850,13 @@ int ath10k_htc_start(struct ath10k_htc *htc)
- 	msg->hdr.message_id =
- 		__cpu_to_le16(ATH10K_HTC_MSG_SETUP_COMPLETE_EX_ID);
- 
-+	if (ar->hif.bus == ATH10K_BUS_SDIO) {
-+		/* Extra setup params used by SDIO */
-+		msg->setup_complete_ext.flags =
-+			__cpu_to_le32(ATH10K_HTC_SETUP_COMPLETE_FLAGS_RX_BNDL_EN);
-+		msg->setup_complete_ext.max_msgs_per_bundled_recv =
-+			htc->max_msgs_per_htc_bundle;
-+	}
- 	ath10k_dbg(ar, ATH10K_DBG_HTC, "HTC is using TX credit flow control\n");
- 
- 	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index ae6003495649..24663b07eeac 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -112,6 +112,10 @@ enum ath10k_htc_conn_svc_status {
- 	ATH10K_HTC_CONN_SVC_STATUS_NO_MORE_EP   = 4
- };
- 
-+enum ath10k_htc_setup_complete_flags {
-+	ATH10K_HTC_SETUP_COMPLETE_FLAGS_RX_BNDL_EN = 1
-+};
-+
- struct ath10k_ath10k_htc_msg_hdr {
- 	__le16 message_id; /* @enum htc_message_id */
- } __packed;
-@@ -360,6 +364,7 @@ struct ath10k_htc {
- 
- 	int total_transmit_credits;
- 	int target_credit_size;
-+	u8 max_msgs_per_htc_bundle;
- };
- 
- int ath10k_htc_init(struct ath10k *ar);
++			for (i = 0; i < ETH_ALEN; i++)
++				mac_addr[i] = hdr->addr3[ETH_ALEN - i - 1];
++			ether_addr_copy(hdr->addr3, mac_addr);
+ 		}
+ 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID)
+ 			iwl_mvm_agg_rx_received(mvm, baid);
+-- 
+2.11.0
