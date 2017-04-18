@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:35834 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752232AbdDKO0E (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52684 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753326AbdDRWRm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 10:26:04 -0400
-Received: by mail-pf0-f171.google.com with SMTP id i5so49555382pfc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2017 07:26:04 -0700 (PDT)
-Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Pablo Neira Ayuso <pablo@netfilter.org>
-References: <20170408202434.12018-1-johannes@sipsolutions.net>
- <20170408202434.12018-2-johannes@sipsolutions.net>
- <fddba2c8-3b85-d5df-81c4-ef31c459e40c@cumulusnetworks.com>
- <1491838218.28432.5.camel@sipsolutions.net>
- <029e6587-c0e8-bdb0-49e9-2abe2946a7ff@cumulusnetworks.com>
- <20170411065908.GB1492@salvia> <1491894172.31620.2.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <9a68aa01-474c-7054-30c2-473ee1250abe@cumulusnetworks.com> (sfid-20170411_162608_269301_856B345A)
-Date: Tue, 11 Apr 2017 08:25:57 -0600
-MIME-Version: 1.0
-In-Reply-To: <1491894172.31620.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Tue, 18 Apr 2017 18:17:42 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:05 +0300
+Message-Id: <20170418221729.28372-2-luca@coelho.fi> (sfid-20170419_001753_003144_51F5C925)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 01/25] iwlwifi: mvm: remove unnecessary label in iwl_mvm_handle_rx_statistics()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/11/17 1:02 AM, Johannes Berg wrote:
-> On Tue, 2017-04-11 at 08:59 +0200, Pablo Neira Ayuso wrote:
->> CAP_ACK means: trim off the payload that the netlink error message
->> is embedding, just like ICMP error does.
->>
->> What is exactly your concern? If the user explicitly requests this
->> via socket option for this socket, then we're expecting they do the
->> right handling for what they're asking for.
-> 
-> I think David's concern was that when you want to parse the ACK in a
-> library (or application), you may not easily know if the application
-> (or library) requested capping.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-exactly.
+The "invalid" label was a bit ugly and unnecessary.  Remove it.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 655bd1384158..eab6e2ad62e1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -660,8 +660,11 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 	else
+ 		expected_size = sizeof(struct iwl_notif_statistics_v10);
+ 
+-	if (iwl_rx_packet_payload_len(pkt) != expected_size)
+-		goto invalid;
++	if (iwl_rx_packet_payload_len(pkt) != expected_size) {
++		IWL_ERR(mvm, "received invalid statistics size (%d)!\n",
++			iwl_rx_packet_payload_len(pkt));
++		return;
++	}
+ 
+ 	data.mac_id = stats->rx.general.mac_id;
+ 	data.beacon_filter_average_energy =
+@@ -714,12 +717,6 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 		sta->avg_energy = energy[i];
+ 	}
+ 	rcu_read_unlock();
+-
+-	return;
+-
+- invalid:
+-	IWL_ERR(mvm, "received invalid statistics size (%d)!\n",
+-		iwl_rx_packet_payload_len(pkt));
+ }
+ 
+ void iwl_mvm_rx_statistics(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+-- 
+2.11.0
