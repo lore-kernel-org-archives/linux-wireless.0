@@ -1,144 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59796 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1038923AbdDUMFV (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52816 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754250AbdDRWV1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 08:05:21 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 8/9] brcmfmac: add mutex to protect pno requests
-Date: Fri, 21 Apr 2017 13:05:07 +0100
-Message-Id: <1492776308-15120-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170421_140540_453251_F189C10A)
-In-Reply-To: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 18 Apr 2017 18:21:27 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:21 +0300
+Message-Id: <20170418221729.28372-18-luca@coelho.fi> (sfid-20170419_002131_520069_2BC2C62B)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 17/25] iwlwifi: mvm: support init extended command
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The request references kept in pno are accessed in user-space context
-and in firmware event handler context. As such we need to protect it
-with a lock. As both context allow sleep a mutex seems appropriate.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+When we load firmware in extended mode (as we do by default for
+now) driver should send a command what kind of commands ucode
+should stop and wait for before proceeding with phy calibrations.
+Support this command. Currently we only do NVM access - so mark
+this bit only.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 23 +++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 15 +++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    |  1 +
+ 3 files changed, 39 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index 5ae0680..81e8549 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -43,6 +43,7 @@
- struct brcmf_pno_info {
- 	int n_reqs;
- 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
-+	struct mutex req_lock;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 5086dc00346c..8302cf03ac28 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -327,6 +327,7 @@ enum iwl_phy_ops_subcmd_ids {
+ 
+ enum iwl_system_subcmd_ids {
+ 	SHARED_MEM_CFG_CMD = 0x0,
++	INIT_EXTENDED_CFG_CMD = 0x03,
  };
  
- #define ifp_to_pno(_ifp)	((_ifp)->drvr->config->pno)
-@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
- 		return -ENOSPC;
- 	}
- 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
-+	mutex_lock(&pi->req_lock);
- 	pi->reqs[pi->n_reqs++] = req;
-+	mutex_unlock(&pi->req_lock);
- 	return 0;
- }
+ enum iwl_data_path_subcmd_ids {
+@@ -2236,4 +2237,26 @@ struct iwl_nvm_access_complete_cmd {
+ 	__le32 reserved;
+ } __packed; /* NVM_ACCESS_COMPLETE_CMD_API_S_VER_1 */
  
- static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
++/**
++ * enum iwl_extended_cfg_flag - commands driver may send before
++ *	finishing init flow
++ * @IWL_INIT_DEBUG_CFG: driver is going to send debug config command
++ * @IWL_INIT_NVM: driver is going to send NVM_ACCESS commands
++ * @IWL_INIT_PHY: driver is going to send PHY_DB commands
++ */
++enum iwl_extended_cfg_flags {
++	IWL_INIT_DEBUG_CFG,
++	IWL_INIT_NVM,
++	IWL_INIT_PHY,
++};
++
++/**
++ * struct iwl_extended_cfg_cmd - mark what commands ucode should wait for
++ * before finishing init flows
++ * @init_flags: values from iwl_extended_cfg_flags
++ */
++struct iwl_init_extended_cfg_cmd {
++	__le32 init_flags;
++} __packed; /* INIT_EXTENDED_CFG_CMD_API_S_VER_1 */
++
+ #endif /* __fw_api_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index bce3cf5fab67..900f1e25b9da 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -836,6 +836,9 @@ int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
  {
--	int i;
-+	int i, err = 0;
-+
-+	mutex_lock(&pi->req_lock);
- 
- 	/* find request */
- 	for (i = 0; i < pi->n_reqs; i++) {
-@@ -71,7 +76,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 	/* request not found */
- 	if (WARN_ON(i == pi->n_reqs)) {
- 		brcmf_err("reqid not found\n");
--		return -ENOENT;
-+		err = -ENOENT;
-+		goto done;
+ 	struct iwl_notification_wait init_wait;
+ 	struct iwl_nvm_access_complete_cmd nvm_complete = {};
++	struct iwl_init_extended_cfg_cmd init_cfg = {
++		.init_flags = cpu_to_le32(BIT(IWL_INIT_NVM)),
++	};
+ 	static const u16 init_complete[] = {
+ 		INIT_COMPLETE_NOTIF,
+ 	};
+@@ -857,6 +860,18 @@ int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 		goto error;
  	}
  
- 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
-@@ -79,14 +85,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 
- 	/* if last we are done */
- 	if (!pi->n_reqs || i == pi->n_reqs)
--		return 0;
-+		goto done;
- 
- 	/* fill the gap with remaining requests */
- 	while (i <= pi->n_reqs - 1) {
- 		pi->reqs[i] = pi->reqs[i + 1];
- 		i++;
- 	}
--	return 0;
++	/* Send init config command to mark that we are sending NVM access
++	 * commands
++	 */
++	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(SYSTEM_GROUP,
++						INIT_EXTENDED_CFG_CMD), 0,
++				   sizeof(init_cfg), &init_cfg);
++	if (ret) {
++		IWL_ERR(mvm, "Failed to run init config command: %d\n",
++			ret);
++		goto error;
++	}
 +
-+done:
-+	mutex_unlock(&pi->req_lock);
-+	return err;
- }
+ 	/* Read the NVM only at driver load time, no need to do this twice */
+ 	if (read_nvm) {
+ 		/* Read nvm */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 488d3c948fe8..888053323c92 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -428,6 +428,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+  */
+ static const struct iwl_hcmd_names iwl_mvm_system_names[] = {
+ 	HCMD_NAME(SHARED_MEM_CFG_CMD),
++	HCMD_NAME(INIT_EXTENDED_CFG_CMD),
+ };
  
- static int brcmf_pno_channel_config(struct brcmf_if *ifp,
-@@ -489,6 +498,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
- 		return -ENOMEM;
- 
- 	cfg->pno = pi;
-+	mutex_init(&pi->req_lock);
- 	return 0;
- }
- 
-@@ -501,6 +511,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
- 	cfg->pno = NULL;
- 
- 	WARN_ON(pi->n_reqs);
-+	mutex_destroy(&pi->req_lock);
- 	kfree(pi);
- }
- 
-@@ -516,11 +527,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
- 
- u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
- {
--	/* bucket appears to be gone */
--	if (bucket >= pi->n_reqs)
--		return 0;
-+	u64 reqid = 0;
-+
-+	mutex_lock(&pi->req_lock);
-+
-+	if (bucket < pi->n_reqs)
-+		reqid = pi->reqs[bucket]->reqid;
- 
--	return pi->reqs[bucket]->reqid;
-+	mutex_unlock(&pi->req_lock);
-+	return reqid;
- }
- 
- u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
-@@ -531,6 +546,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 	u32 bucket_map = 0;
- 	int i, j;
- 
-+	mutex_lock(&pi->req_lock);
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		req = pi->reqs[i];
- 
-@@ -545,5 +561,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 			}
- 		}
- 	}
-+	mutex_unlock(&pi->req_lock);
- 	return bucket_map;
- }
+ /* Please keep this array *SORTED* by hex value.
 -- 
-1.9.1
+2.11.0
