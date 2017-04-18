@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35811 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751448AbdDJJJl (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52720 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753681AbdDRWRr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 05:09:41 -0400
-Received: by mail-pg0-f66.google.com with SMTP id g2so24967626pge.2
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 02:09:41 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v3 1/4] mwifiex: remove unnecessary wakeup interrupt number sanity check
-Date: Mon, 10 Apr 2017 09:09:31 +0000
-Message-Id: <1491815374-6555-1-git-send-email-huxinming820@gmail.com> (sfid-20170410_110944_408604_0397319E)
+        Tue, 18 Apr 2017 18:17:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Apr 2017 01:17:10 +0300
+Message-Id: <20170418221729.28372-7-luca@coelho.fi> (sfid-20170419_001756_589137_C653AE05)
+In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
+References: <20170418221729.28372-1-luca@coelho.fi>
+Subject: [PATCH 06/25] iwlwifi: mvm: remove unneeded reg write in iwl_mvm_up()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-If wakeup interrupt handler is called, we know that the wakeup
-interrupt number is valid, there is no need to check it.
+Not only that this write is not needed (as FW does this
+itself), on newer HW this register is write protected
+so trying to write there will cause problems.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Reviewed-by: Dmitry Torokhov <dtor@chromium.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-v2: modify description(Dimtry)
-v3: same as v2
----
- drivers/net/wireless/marvell/mwifiex/main.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 3 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 4 ----
+ 2 files changed, 7 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 0dfbac8..98fd491 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1513,11 +1513,9 @@ static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
- {
- 	struct mwifiex_adapter *adapter = priv;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index e1aa1f7836fc..4bceaccee62f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -294,9 +294,6 @@
  
--	if (adapter->irq_wakeup >= 0) {
--		dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
--		adapter->wake_by_wifi = true;
--		disable_irq_nosync(irq);
--	}
-+	dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
-+	adapter->wake_by_wifi = true;
-+	disable_irq_nosync(irq);
+ /*********************** END TX SCHEDULER *************************************/
  
- 	/* Notify PM core we are wakeup source */
- 	pm_wakeup_event(adapter->dev, 0);
+-/* tcp checksum offload */
+-#define RX_EN_CSUM		(0x00a00d88)
+-
+ /* Oscillator clock */
+ #define OSC_CLK				(0xa04068)
+ #define OSC_CLK_FORCE_CONTROL		(0x8)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 2a4c952ef01a..bfccbadd1a6e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1475,10 +1475,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 			goto error;
+ 	}
+ 
+-	if (iwl_mvm_is_csum_supported(mvm) &&
+-	    mvm->cfg->features & NETIF_F_RXCSUM)
+-		iwl_trans_write_prph(mvm->trans, RX_EN_CSUM, 0x3);
+-
+ 	/* allow FW/transport low power modes if not during restart */
+ 	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_UCODE_DOWN);
 -- 
-1.8.1.4
+2.11.0
