@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53154 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S941020AbdDTEff (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 00:35:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 20 Apr 2017 07:35:19 +0300
-Message-Id: <20170420043519.18615-3-luca@coelho.fi> (sfid-20170420_063640_097221_496A69EE)
-In-Reply-To: <20170420043519.18615-1-luca@coelho.fi>
-References: <20170420043519.18615-1-luca@coelho.fi>
-Subject: [PATCH 2/2] iwlwifi: pcie: free context info in case of failures
+Received: from mga07.intel.com ([134.134.136.100]:24496 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1763264AbdDSMwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Apr 2017 08:52:38 -0400
+Date: Wed, 19 Apr 2017 14:52:29 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Vincent Cuissard <cuissard@marvell.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] NFC: nfcmrvl: double free on error path
+Message-ID: <20170419125229.GE13724@zurbaran.ger.intel.com> (sfid-20170419_145452_477879_9ECC9897)
+References: <20170308052237.GA14542@mwanda>
+ <20170401221117.GD22034@zurbaran.ger.intel.com>
+ <20170419113354.6j7co2yuusdqsubl@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170419113354.6j7co2yuusdqsubl@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Apr 19, 2017 at 02:47:34PM +0300, Dan Carpenter wrote:
+> On Sun, Apr 02, 2017 at 12:11:17AM +0200, Samuel Ortiz wrote:
+> > Hi Dan,
+> > 
+> > On Wed, Mar 08, 2017 at 08:22:37AM +0300, Dan Carpenter wrote:
+> > > The nci_spi_send() function calls kfree_skb(skb) on both error and
+> > > success so this extra kfree_skb() is a double free.
+> > > 
+> > > Fixes: caf6e49bf6d0 ("NFC: nfcmrvl: add spi driver")
+> > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > > ---
+> > > Static analysis.  Not tested.
+> > Applied to nfc-next, thanks.
+> > 
+> 
+> This is still not showing up in linux-next.
+I sent a pending pull request containing it.
 
-If iwl_pcie_ctxt_info_init_fw_sec() fails, the previous allocated DMA
-memory needs to be freed (it even goes out of scope immediately.)
-Do that to prevent the leak.
-
-Fixes: eda50cde58de ("iwlwifi: pcie: add context information support")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index 854d61888f4d..1d95512361b2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -241,8 +241,11 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
- 
- 	/* allocate ucode sections in dram and set addresses */
- 	ret = iwl_pcie_ctxt_info_init_fw_sec(trans, fw, ctxt_info);
--	if (ret)
-+	if (ret) {
-+		dma_free_coherent(trans->dev, sizeof(*trans_pcie->ctxt_info),
-+				  ctxt_info, trans_pcie->ctxt_info_dma_addr);
- 		return ret;
-+	}
- 
- 	trans_pcie->ctxt_info = ctxt_info;
- 
--- 
-2.11.0
+Cheers,
+Samuel
