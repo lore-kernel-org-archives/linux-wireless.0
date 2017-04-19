@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53210 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S941837AbdDTHMH (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:60588 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1765437AbdDSWLm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:12:07 -0400
-Message-ID: <1492672317.31741.109.camel@coelho.fi> (sfid-20170420_091210_335684_000AEC6F)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Date: Thu, 20 Apr 2017 10:11:57 +0300
-In-Reply-To: <8760hz7el9.fsf@kamboji.qca.qualcomm.com>
-References: <1492664371.31741.91.camel@coelho.fi>
-         <1492664686.31741.93.camel@coelho.fi>
-         <8760hz7el9.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: pull-request: iwlwifi-next 2017-04-19-2
+        Wed, 19 Apr 2017 18:11:42 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH net-next] brcmfmac: fix build without CONFIG_BRCMFMAC_PROTO_BCDC
+Date: Thu, 20 Apr 2017 00:10:24 +0200
+Message-Id: <20170419221133.2180685-1-arnd@arndb.de> (sfid-20170420_001208_937000_55BCF676)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-04-20 at 09:55 +0300, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> > b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> > index 6d745c36f1d8..097cb45c8ad9 100644
-> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-> > @@ -55,7 +55,7 @@
-> >  #include "iwl-agn-hw.h"
-> >  
-> >  /* Highest firmware API version supported */
-> > -#define IWL_A000_UCODE_API_MAX 31
-> > +#define IWL_A000_UCODE_API_MAX 30
-> 
-> Good that you dropped this. I was a bit worried that if it the API bump
-> was too soon and inconvenient for the users.
+With CONFIG_BRCMFMAC_PROTO_BCDC unset, we cannot build the fwsignal.c file:
 
-Yes, we usually bump it up internally *before* we get all the actual API
-changes in the firmware, so both the driver and the FW evolve together.
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c: In function 'brcmf_fws_notify_credit_map':
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:1590:31: error: implicit declaration of function 'drvr_to_fws'; did you mean 'dev_to_psd'? [-Werror=implicit-function-declaration]
+  struct brcmf_fws_info *fws = drvr_to_fws(ifp->drvr);
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:1590:31: error: initialization makes pointer from integer without a cast [-Werror=int-conversion]
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:1621:31: error: initialization makes pointer from integer without a cast [-Werror=int-conversion]
 
-So, in practice, I should bump the API to 30 upstream when we reach the
-bump to 31 internally (which means 30 is frozen at that point).
+However, as pointed out in the changeset description for the patch that caused
+the problem, fwsignal.c is only required when CONFIG_BRCMFMAC_PROTO_BCDC is
+enabled, so we can simply change the Makefile to build it conditionally.
 
---
-Cheers,
-Luca.
+Fixes: acf8ac41dd73 ("brcmfmac: remove reference to fwsignal data from struct brcmf_pub")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+index 0383ba559edc..1f5a9b948abf 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+@@ -25,7 +25,6 @@ brcmfmac-objs += \
+ 		chip.o \
+ 		fwil.o \
+ 		fweh.o \
+-		fwsignal.o \
+ 		p2p.o \
+ 		proto.o \
+ 		common.o \
+@@ -36,7 +35,8 @@ brcmfmac-objs += \
+ 		vendor.o \
+ 		pno.o
+ brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
+-		bcdc.o
++		bcdc.o \
++		fwsignal.o
+ brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
+ 		commonring.o \
+ 		flowring.o \
+-- 
+2.9.0
