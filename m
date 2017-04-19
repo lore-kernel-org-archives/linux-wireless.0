@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39758 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751938AbdDFWwC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 18:52:02 -0400
-Message-ID: <1491519117.11399.10.camel@sipsolutions.net> (sfid-20170407_005340_114957_8A71221B)
-Subject: Re: [PATCH] mac80211: Fix clang warning about constant operand in
- logical operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthias Kaehlcke <mka@chromium.org>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
-        Michael Davidson <md@google.com>,
-        Greg Hackmann <ghackmann@google.com>
-Date: Fri, 07 Apr 2017 00:51:57 +0200
-In-Reply-To: <20170406224238.GA78690@google.com> (sfid-20170407_004241_473279_B0243983)
-References: <20170406185633.91065-1-mka@chromium.org>
-         <1491505878.11399.4.camel@sipsolutions.net>
-         <20170406192452.GE145051@google.com>
-         <1491513145.11399.8.camel@sipsolutions.net>
-         <20170406224238.GA78690@google.com> (sfid-20170407_004241_473279_B0243983)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:38234 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933758AbdDSLkM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Apr 2017 07:40:12 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmfmac: only build fwsignal module for
+ CONFIG_BRCMFMAC_PROTO_BCDC
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1492205257-18578-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1492205257-18578-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170419114011.661C161152@smtp.codeaurora.org> (sfid-20170419_134035_742362_6F81EDF5)
+Date: Wed, 19 Apr 2017 11:40:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-04-06 at 15:42 -0700, Matthias Kaehlcke wrote:
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> The fwsignal module is only referenced by the bcdc module and part of the
+> bcdc protocol. So only build it when CONFIG_BRCMFMAC_PROTO_BCDC is selected.
 > 
-> Thanks, it would also require to move the initialization of
-> ieee80211_default_rc_algo into an ifdef. If you can live with such a
-> solution I'm happy to change it.
+> Fixes: acf8ac41dd73 ("brcmfmac: remove reference to fwsignal data from struct brcmf_pub")
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-I think that'd be something I can live with, yeah.
+Patch applied to wireless-drivers-next.git, thanks.
 
-> > 	git grep 'IS_ENABLED(' | grep '&&'
-> 
-> Indeed the warning is not triggered by these constructs. It seems
-> clang only emits the warning when the constant operand is not
-> boolean.
+26ecfe017903 brcmfmac: only build fwsignal module for CONFIG_BRCMFMAC_PROTO_BCDC
 
-That points to just adding "> 0" to the condition here as another
-alternative solution, I guess? With a comment to make sure it's not
-removed again, that'd seem like the best thing to do.
+-- 
+https://patchwork.kernel.org/patch/9681805/
 
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
