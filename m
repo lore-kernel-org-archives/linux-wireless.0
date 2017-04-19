@@ -1,72 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:33760 "EHLO
-        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752650AbdDLPGs (ORCPT
+Received: from mail-yb0-f173.google.com ([209.85.213.173]:33304 "EHLO
+        mail-yb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968168AbdDSRNx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 11:06:48 -0400
-Received: by mail-oi0-f42.google.com with SMTP id b187so35036964oif.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 08:06:48 -0700 (PDT)
-Subject: Re: [PATCH net-next v5 1/5] netlink: extended ACK reporting
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20170412123408.22012-1-johannes@sipsolutions.net>
- <20170412123408.22012-2-johannes@sipsolutions.net>
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <dbc81431-487b-f218-a4c6-2caa44783d97@cumulusnetworks.com> (sfid-20170412_170709_250351_1D2FA2AD)
-Date: Wed, 12 Apr 2017 09:06:48 -0600
+        Wed, 19 Apr 2017 13:13:53 -0400
+Received: by mail-yb0-f173.google.com with SMTP id 81so9354397ybp.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Apr 2017 10:13:53 -0700 (PDT)
+Date: Wed, 19 Apr 2017 10:13:50 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: amit karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] MAINTAINERS: drop akarwar from mwifiex
+Message-ID: <20170419171349.GA73016@google.com> (sfid-20170419_191420_243480_0F79EA6D)
+References: <20170412174255.15021-1-briannorris@chromium.org>
+ <87k26obg69.fsf@kamboji.qca.qualcomm.com>
+ <CAEhWJFmmawzF8+=xNNv7XvpWZrg4nSSFqheeyQqFWRA0iu4f5Q@mail.gmail.com>
+ <87vaq079tw.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170412123408.22012-2-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87vaq079tw.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/12/17 6:34 AM, Johannes Berg wrote:
-> diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
-> index b2c9c26ea30f..7df88770e029 100644
-> --- a/include/uapi/linux/netlink.h
-> +++ b/include/uapi/linux/netlink.h
-> @@ -69,6 +69,10 @@ struct nlmsghdr {
->  #define NLM_F_CREATE	0x400	/* Create, if it does not exist	*/
->  #define NLM_F_APPEND	0x800	/* Add to end of list		*/
->  
-> +/* Flags for ACK message */
-> +#define NLM_F_CAPPED	0x100	/* request was capped */
-> +#define NLM_F_ACK_TLVS	0x200	/* extended ACK TVLs were included */
-> +
->  /*
->     4.4BSD ADD		NLM_F_CREATE|NLM_F_EXCL
->     4.4BSD CHANGE	NLM_F_REPLACE
-> @@ -101,6 +105,33 @@ struct nlmsghdr {
->  struct nlmsgerr {
->  	int		error;
->  	struct nlmsghdr msg;
-> +	/*
-> +	 * followed by the message contents unless NETLINK_CAP_ACK was set
-> +	 * or the ACK indicates success (error == 0)
-> +	 * message length is aligned with NLMSG_ALIGN()
-> +	 */
-> +	/*
-> +	 * followed by TLVs defined in enum nlmsgerr_attrs
-> +	 * if NETLINK_EXT_ACK was set
-> +	 */
-> +};
-> +
-> +/**
-> + * enum nlmsgerr_attrs - nlmsgerr attributes
-> + * @NLMSGERR_ATTR_UNUSED: unused
-> + * @NLMSGERR_ATTR_MSG: error message string (string)
-> + * @NLMSGERR_ATTR_OFFS: offset of the invalid attribute in the original
-> + *	 message, counting from the beginning of the header (u32)
-> + * @__NLMSGERR_ATTR_MAX: number of attributes
-> + * @NLMSGERR_ATTR_MAX: highest attribute number
-> + */
-> +enum nlmsgerr_attrs {
-> +	NLMSGERR_ATTR_UNUSED,
-> +	NLMSGERR_ATTR_MSG,
+On Wed, Apr 19, 2017 at 05:26:03PM +0300, Kalle Valo wrote:
+> amit karwar <amitkarwar@gmail.com> writes:
+> > Updating email address would be fine. Please replace
+> > akarwar@marvell.com with amitkarwar@gmail.com
+> 
+> Sounds good. Brian, can you cook up a new patch?
 
-There was a discussion about side effects of adding strings (bloat,
-internationalization). Should ATTR_MSG be removed until that is ironed
-out? Leaving it in suggests it is ok to start adding strings.
+Done.
