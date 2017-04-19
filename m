@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:56664 "EHLO mail.us.es"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933366AbdDGTCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:02:10 -0400
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-        by mail.us.es (Postfix) with ESMTP id A8A411395CF
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:02:06 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 9A3A4DA872
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:02:06 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 7738FDA86E
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:02:04 +0200 (CEST)
-Date: Fri, 7 Apr 2017 21:02:04 +0200
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-Message-ID: <20170407190204.GA22810@salvia> (sfid-20170407_210321_365533_42F0407F)
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
- <20170407.115315.23470877439489670.davem@davemloft.net>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17089 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764045AbdDSOGN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Apr 2017 10:06:13 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170407.115315.23470877439489670.davem@davemloft.net>
+Subject: Re: [v2] ath10k: Fix spectral scan for QCA99X0 family of chipsets
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1491838697-25393-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1491838697-25393-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <27dbd457e54f492897fba1ac6f8722d2@euamsexm01a.eu.qualcomm.com> (sfid-20170419_160626_381869_8B1F5D82)
+Date: Wed, 19 Apr 2017 16:06:05 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 11:53:15AM -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Fri,  7 Apr 2017 20:26:17 +0200
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> > So this is my first draft of what we'd talked about at netconf.
-> > I'm not super happy with the way we have to pass the extended
-> > error struct, but I don't see a way to implement reporting any
-> > dynamic information (like error offsets) in any other way.
-> > 
-> > Alexander Shishkin had a nice way of reporting static extended
-> > error data, but that isn't really suitable for reporting the
-> > offset or even reporting the broken attribute from nla_parse().
-> > 
-> > Speaking of nla_parse(), that'll be somewhat complicated to do
-> > since we'll have to track the offsets of where we're parsing,
-> > but it might be possible since the nlattrs are just pointers
-> > into the message, so (optionally?) passing the skb as well can
-> > allow us to fill the offset information.
+> spectral_bin length (number of bins per fft sample) is usually
+> a value where (2^n = value), n is an integer.  All of the QCA99X0
+> family of chipsets seems to report a spectral_bin length of
+> 2^n + 'm' bytes, where m = 4, 12 based on the chipset. This 'm'
+> bytes seems to carry some radar related info which is currently
+> discarded only for 'bin_len = 68' bytes. Extend this discarding of
+> irrelevant 'bin_len' for QCA9984, QCA9888, IPQ4019 as well by
+> introducing a hardware parameter 'spectral_bin_discard'. Also
+> for QCA988X based family of chipsets which doesn't seem to have this
+> issue and also for some of the hardware which I have not tested
+> like QCA6174/QCA9377 the existing behaviour is retained as it is.
 > 
-> I like it, nice work.
-> 
-> I know people want dynamically generated strings and stuff, and we can
-> get there, but I prefer that the first thing we commit is super simple.
-> 
-> Someone gave me a hard time about the fact that we've been talking
-> about this idea for years but nothing ever happens.
-> 
-> I'm tempted to apply this as-is just to show that person that things
-> do in fact happen.... eventually :-)
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-We can just send follow up patches to refine, I think it's a good
-start, Johannes?
+Patch applied to ath-next branch of ath.git, thanks.
 
-BTW, for this co-authored effort in designing this:
+a4aab099cc9e ath10k: fix spectral scan for QCA99X0 family of chipsets
 
-Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+-- 
+https://patchwork.kernel.org/patch/9672869/
 
-Thanks!
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
