@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:36738 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751997AbdDKS6B (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42358 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763532AbdDSO0K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 14:58:01 -0400
-Received: by mail-pg0-f51.google.com with SMTP id g2so2724308pge.3
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2017 11:58:01 -0700 (PDT)
-Subject: Re: [PATCH v3 1/5] netlink: extended ACK reporting
-To: David Miller <davem@davemloft.net>, pablo@netfilter.org
-References: <1491894172.31620.2.camel@sipsolutions.net>
- <9a68aa01-474c-7054-30c2-473ee1250abe@cumulusnetworks.com>
- <20170411173143.GA1899@salvia>
- <20170411.134225.398046538225438175.davem@davemloft.net>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, jhs@mojatatu.com, jbenc@redhat.com,
-        jiri@resnulli.us
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <cb6106f2-3128-da79-69bf-a10b249db054@cumulusnetworks.com> (sfid-20170411_205819_495129_F85A6308)
-Date: Tue, 11 Apr 2017 12:57:59 -0600
+        Wed, 19 Apr 2017 10:26:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: amit karwar <amitkarwar@gmail.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] MAINTAINERS: drop akarwar from mwifiex
+References: <20170412174255.15021-1-briannorris@chromium.org>
+        <87k26obg69.fsf@kamboji.qca.qualcomm.com>
+        <CAEhWJFmmawzF8+=xNNv7XvpWZrg4nSSFqheeyQqFWRA0iu4f5Q@mail.gmail.com>
+Date: Wed, 19 Apr 2017 17:26:03 +0300
+In-Reply-To: <CAEhWJFmmawzF8+=xNNv7XvpWZrg4nSSFqheeyQqFWRA0iu4f5Q@mail.gmail.com>
+        (amit karwar's message of "Mon, 17 Apr 2017 11:19:19 +0530")
+Message-ID: <87vaq079tw.fsf@kamboji.qca.qualcomm.com> (sfid-20170419_162637_177376_FA78722C)
 MIME-Version: 1.0
-In-Reply-To: <20170411.134225.398046538225438175.davem@davemloft.net>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/11/17 11:42 AM, David Miller wrote:
-> David, if you have a specific case where it's absolutely impossible
-> to resolve this when the library is converted to support extended
-> ACKs, please mention it.
+amit karwar <amitkarwar@gmail.com> writes:
 
-I don't have a specific library in mind. It is more the disjoint nature
-of a socket option and message parsing, and thinking through the API.
+> On Thu, Apr 13, 2017 at 6:47 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Brian Norris <briannorris@chromium.org> writes:
+>>
+>>> His email is bouncing, and I expect he's not doing this work any more.
+>>>
+>>> Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+>>> Cc: Nishant Sarmukadam <nishants@marvell.com>
+>>> Cc: Ganapathi Bhat <gbhat@marvell.com>
+>>> Cc: Xinming Hu <huxm@marvell.com>
+>>> Signed-off-by: Brian Norris <briannorris@chromium.org>
+>>> ---
+>>> Or alternatively, we can update his email address. I just don't want to keep
+>>> seeing bounced emails :)
+>>
+>> Me neither :) So Amitkumar, which one do you prefer?
+>>
+>
+> Updating email address would be fine. Please replace
+> akarwar@marvell.com with amitkarwar@gmail.com
+
+Sounds good. Brian, can you cook up a new patch?
+
+-- 
+Kalle Valo
