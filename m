@@ -1,65 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:59616 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752848AbdDGTU4 (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37301 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S944983AbdDTTs2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:20:56 -0400
-Date: Fri, 07 Apr 2017 12:20:53 -0700 (PDT)
-Message-Id: <20170407.122053.201153373954521345.davem@davemloft.net> (sfid-20170407_212103_460099_45875787)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, jiri@resnulli.us
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1491591552.5800.1.camel@sipsolutions.net>
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
-        <20170407.115315.23470877439489670.davem@davemloft.net>
-        <1491591552.5800.1.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 20 Apr 2017 15:48:28 -0400
+Received: by mail-wm0-f44.google.com with SMTP id m123so1352601wma.0
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2017 12:48:27 -0700 (PDT)
+Subject: Re: [PATCH] brcm80211: brcmfmac: Ensure that incoming skb's are
+ writable
+To: James Hughes <james.hughes@raspberrypi.org>,
+        netdev@vger.kernel.org, Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170420111651.10213-1-james.hughes@raspberrypi.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <b6891d80-cc5f-3bcd-72aa-1de2d9bb9144@broadcom.com> (sfid-20170420_214859_117957_6A4ED85D)
+Date: Thu, 20 Apr 2017 21:48:25 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170420111651.10213-1-james.hughes@raspberrypi.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 07 Apr 2017 20:59:12 +0200
++ linux-wireless
 
-> Alexander Shishkin's patch
-> https://patchwork.kernel.org/patch/7162421/
+On 4/20/2017 1:16 PM, James Hughes wrote:
+> The driver was adding header information to incoming skb
+> without ensuring the head was uncloned and hence writable.
 > 
-> was nice in a way because you could get away without passing the error
-> structure down all the time, but like I said it doesn't deal with
-> dynamic errors (even the offset/attr from nla_parse) and if it's not
-> done *everywhere* it risks leaking those exterr numbers (-1024..-4095)
-> to userspace through syscalls if it's used in a non-netlink path for
-> some reason (e.g. a single driver call being called through both
-> netlink and ioctl, and trying to return an extended error)
+> skb_cow_head has been used to ensure they are writable, however,
+> this required some changes to error handling to ensure that
+> if skb_cow_head failed it was not ignored.
+> 
+> This really needs to be reviewed by someone who is more familiar
+> with this code base to ensure any deallocation of skb's is
+> still correct.
+> 
+> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    | 15 ++++++++--
+>   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 23 +++++-----------
+>   .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 32 +++++++++++++++++-----
+>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  7 ++++-
+>   4 files changed, 51 insertions(+), 26 deletions(-)
+> 
 
-Alexander's patch is cute in that it annotates errors using the special
-section blobs.
+[...]
 
-But what it lacks fundamentally is context.  Therefore it can't be
-used to provide the offset or the bad attribute number.  So it can't
-meet our requirements.
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 5eaac13..08272e8 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -198,7 +198,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>   	int ret;
+>   	struct brcmf_if *ifp = netdev_priv(ndev);
+>   	struct brcmf_pub *drvr = ifp->drvr;
+> -	struct ethhdr *eh = (struct ethhdr *)(skb->data);
+> +	struct ethhdr *eh;
+>   
+>   	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
+>   
+> @@ -212,23 +212,14 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>   	}
+>   
+>   	/* Make sure there's enough room for any header */
+> -	if (skb_headroom(skb) < drvr->hdrlen) {
+> -		struct sk_buff *skb2;
+> -
+> -		brcmf_dbg(INFO, "%s: insufficient headroom\n",
+> -			  brcmf_ifname(ifp));
+> -		drvr->bus_if->tx_realloc++;
+> -		skb2 = skb_realloc_headroom(skb, drvr->hdrlen);
+> -		dev_kfree_skb(skb);
+> -		skb = skb2;
+> -		if (skb == NULL) {
+> -			brcmf_err("%s: skb_realloc_headroom failed\n",
+> -				  brcmf_ifname(ifp));
+> -			ret = -ENOMEM;
+> -			goto done;
+> -		}
 
-We've passed down new arguments into core method call chains for much
-less useful facilitites than this.  So that doesn't bother me.  And
-as that is a kernel internal matter, we can refine it later.
+What you are throwing away here is code that assures there is sufficient 
+headroom for protocol and bus layer in the tx path, because that is 
+determined by drvr->hdrlen. This is where the skb is handed to the 
+driver so if you could leave the functionality above *and* assure it is 
+writeable that would be the best solution as there is no need for all 
+the other changes down the tx path.
 
-Wrt. nla_parse(), we can solve that problem as follow-on patches too.
+> +	ret = skb_cow_head(skb, drvr->hdrlen);
+> +	if (ret) {
 
-So I consider this change ready as far as the implementation is
-concerned.
+So move the realloc code above here instead of simply freeing the skb.
 
-Ok, Jiri, start reading.  I will try to make you happy here.
+> +		dev_kfree_skb_any(skb);
+> +		goto done;
+>   	}
+>   
+> +	eh = (struct ethhdr *)(skb->data);
 
-Let's just discuss the UAPI, since people complain we don't talk
-about that enough :-)  For those playing at home it is three new
-attributes returned in a netlink ACK when the application asks
-for the extended response:
+Now this is actually a separate fix so I would like a separate patch for it.
 
-	NLMSGERR_ATTR_MSG	string	Extended error string
-	NLMSGERR_ATTR_OFFS	u32	Byte offset to netlink element causing error
-	NLMSGERR_ATTR_CODE	u32	Subsystem specific error code
-	NLMSGERR_ATTR_ATTR	u16	Netlink attribute triggering error or missing
+I have a RPi3 sitting on my desk so how can I replicate the issue. It 
+was something about broadcast/multicast traffic when using AP mode and a 
+bridge, right?
 
-So please consider this interface carefully.
+Regards,
+Arend
