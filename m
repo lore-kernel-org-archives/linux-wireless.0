@@ -1,134 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36072 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932428AbdDQALf (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:38841 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S943484AbdDTTNm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:35 -0400
-Received: by mail-oi0-f67.google.com with SMTP id b187so25356769oif.3
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:35 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 20/27] rtlwifi: btcoex: 23b 1ant: check more cases when bt is queing
-Date: Sun, 16 Apr 2017 19:11:04 -0500
-Message-Id: <20170417001111.29384-21-Larry.Finger@lwfinger.net> (sfid-20170417_021157_497228_C42F0BA8)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+        Thu, 20 Apr 2017 15:13:42 -0400
+Received: by mail-wm0-f52.google.com with SMTP id r190so645424wme.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2017 12:13:42 -0700 (PDT)
+Subject: Re: [PATCH] brcm80211: brcmfmac: Ensure that incoming skb's are
+ writable
+To: James Hughes <james.hughes@raspberrypi.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: netdev@vger.kernel.org, Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org
+References: <20170420111651.10213-1-james.hughes@raspberrypi.org>
+ <87y3uv48nv.fsf@kamboji.qca.qualcomm.com>
+ <CAE_XsMJGpKKdZ4E90tkzYwe+7KJ8JB5Rwrzga6aUi1LZG+wH4w@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <60f9d8a0-e8b5-ef05-ea78-caacfcf0ae67@broadcom.com> (sfid-20170420_211347_080375_42A9E629)
+Date: Thu, 20 Apr 2017 21:13:39 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAE_XsMJGpKKdZ4E90tkzYwe+7KJ8JB5Rwrzga6aUi1LZG+wH4w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 4/20/2017 2:09 PM, James Hughes wrote:
+> On 20 April 2017 at 12:31, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> + linux-wireless
+>>
+>> James Hughes <james.hughes@raspberrypi.org> writes:
+>>
+>>> The driver was adding header information to incoming skb
+>>> without ensuring the head was uncloned and hence writable.
+>>>
+>>> skb_cow_head has been used to ensure they are writable, however,
+>>> this required some changes to error handling to ensure that
+>>> if skb_cow_head failed it was not ignored.
+>>>
+>>> This really needs to be reviewed by someone who is more familiar
+>>> with this code base to ensure any deallocation of skb's is
+>>> still correct.
+>>>
+>>> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+>>
+>> You should also CC linux-wireless, otherwise patchwork won't see it.
+>>
+>> --
+>> Kalle Valo
+> 
+> Thanks Kalle, I wasn't subscribed to wireless, but have now done so. I
+> also failed to read the MAINTAINERS list correctly..
+> 
+> With regard to this particular patch, this is related to the recent
+> patches to use skb_cow_head in a number of USB net drivers to ensure
+> they can write headers correctly, and I suspect the same fault is
+> possible/likely in other drivers outside the USB net realm, as this
+> patch shows.
+> 
+> I'm not overly happy with the error handling in this patch, but that
+> said, the error handling over this entire driver does strike me as
+> suspect. Quite a few places where return codes are ignored, just in my
+> quick examination. So not really sure how to proceed past this patch,
+> if at all.
 
-If bt is queing, we need to set the packet priority properly.
-Originally we only consider if wifi was connected or not, but now we
-also consider if bt is under abnormal scan or wifi is scanning, roaming
-or linking, and set the coex table.
+I would appreciate it if you can provide details about the code you 
+consider suspect. I will respond on the patches soon.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 57 +++++++++++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  1 +
- 2 files changed, 40 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 5377f55b162a..b3e043e8fec3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1705,35 +1705,56 @@ static void halbtc8723b1ant_action_bt_inquiry(struct btc_coexist *btcoexist)
- {
- 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
- 	bool wifi_connected = false, ap_enable = false;
-+	bool wifi_busy = false, bt_busy = false;
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_AP_MODE_ENABLE,
- 			   &ap_enable);
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
- 			   &wifi_connected);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
-+	btcoexist->btc_set(btcoexist, BTC_SET_BL_BT_TRAFFIC_BUSY, &bt_busy);
- 
--	if (!wifi_connected) {
--		halbtc8723b1ant_power_save_state(btcoexist,
--						 BTC_PS_WIFI_NATIVE, 0x0, 0x0);
-+	if (coex_sta->bt_abnormal_scan) {
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 33);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
-+	} else if (!wifi_connected && !coex_sta->wifi_is_high_pri_task) {
-+		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
-+						 0x0, 0x0);
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
--	} else if (bt_link_info->sco_exist || bt_link_info->hid_only) {
--		/* SCO/HID-only busy */
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
-+					     NORMAL_EXEC, false, false);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
-+	} else if (bt_link_info->sco_exist || bt_link_info->hid_exist ||
-+		   bt_link_info->a2dp_exist) {
-+		/* SCO/HID/A2DP busy */
- 		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
- 						 0x0, 0x0);
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
--	} else {
--		if (ap_enable)
--			halbtc8723b1ant_power_save_state(btcoexist,
--							 BTC_PS_WIFI_NATIVE,
--							 0x0, 0x0);
-+		if (coex_sta->c2h_bt_remote_name_req)
-+			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
-+						33);
- 		else
--			halbtc8723b1ant_power_save_state(btcoexist,
--							 BTC_PS_LPS_ON,
--							 0x50, 0x4);
-+			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
-+						32);
- 
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 30);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+	} else if (bt_link_info->pan_exist || wifi_busy) {
-+		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
-+						 0x0, 0x0);
-+		if (coex_sta->c2h_bt_remote_name_req)
-+			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
-+						33);
-+		else
-+			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
-+						32);
-+
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+	} else {
-+		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
-+						 0x0, 0x0);
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
-+					     NORMAL_EXEC, false, false);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index beeed22aa3dc..fca78bc7a945 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -150,6 +150,7 @@ struct coex_sta_8723b_1ant {
- 	bool pan_exist;
- 	bool bt_hi_pri_link_exist;
- 	u8 num_of_profile;
-+	bool bt_abnormal_scan;
- 
- 	bool under_lps;
- 	bool under_ips;
--- 
-2.12.0
+Regards,
+Arend
