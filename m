@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55982 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33604 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S944515AbdDTLBT (ORCPT
+        with ESMTP id S1753646AbdDTHU1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 07:01:19 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rt2800: fix mt7620 E2 channel registers
+        Thu, 20 Apr 2017 03:20:27 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170418095202.GA7086@makrotopia.org>
-References: <20170418095202.GA7086@makrotopia.org>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Message-Id: <20170420110113.C67966114D@smtp.codeaurora.org> (sfid-20170420_130123_064905_3C6E2DAC)
-Date: Thu, 20 Apr 2017 11:01:13 +0000 (UTC)
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2017-04-19-2
+References: <1492664371.31741.91.camel@coelho.fi>
+        <1492664686.31741.93.camel@coelho.fi>
+        <8760hz7el9.fsf@kamboji.qca.qualcomm.com>
+        <1492672317.31741.109.camel@coelho.fi>
+Date: Thu, 20 Apr 2017 10:20:04 +0300
+In-Reply-To: <1492672317.31741.109.camel@coelho.fi> (Luca Coelho's message of
+        "Thu, 20 Apr 2017 10:11:57 +0300")
+Message-ID: <871ssn7dgb.fsf@kamboji.qca.qualcomm.com> (sfid-20170420_092152_812503_F4BB61BB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Golle <daniel@makrotopia.org> wrote:
-> From: Tomislav Požega <pozega.tomislav@gmail.com>
-> 
-> update RF register 47 and 54 values according to vendor driver
-> 
-> Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+Luca Coelho <luca@coelho.fi> writes:
 
-Patch applied to wireless-drivers-next.git, thanks.
+> On Thu, 2017-04-20 at 09:55 +0300, Kalle Valo wrote:
+>> Luca Coelho <luca@coelho.fi> writes:
+>> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+>> > b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+>> > index 6d745c36f1d8..097cb45c8ad9 100644
+>> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+>> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+>> > @@ -55,7 +55,7 @@
+>> > =C2=A0#include "iwl-agn-hw.h"
+>> > =C2=A0
+>> > =C2=A0/* Highest firmware API version supported */
+>> > -#define IWL_A000_UCODE_API_MAX 31
+>> > +#define IWL_A000_UCODE_API_MAX 30
+>>=20
+>> Good that you dropped this. I was a bit worried that if it the API bump
+>> was too soon and inconvenient for the users.
+>
+> Yes, we usually bump it up internally *before* we get all the actual API
+> changes in the firmware, so both the driver and the FW evolve together.
+>
+> So, in practice, I should bump the API to 30 upstream when we reach the
+> bump to 31 internally (which means 30 is frozen at that point).
 
-a0597834dc0e rt2800: fix mt7620 E2 channel registers
+Sorry, I got confused. I guess I haven't even still properly woken up. I
+was thinking the MIN API level and worried about forcing users to update
+the firmware image too early.
 
--- 
-https://patchwork.kernel.org/patch/9685263/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Kalle Valo
