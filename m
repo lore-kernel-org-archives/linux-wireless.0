@@ -1,79 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54166 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1954158AbdDYUXJ (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34001 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S946895AbdDTSyY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 16:23:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 25 Apr 2017 23:22:27 +0300
-Message-Id: <20170425202243.7844-10-luca@coelho.fi> (sfid-20170425_222329_484392_C56AC2E6)
-In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
-References: <20170425202243.7844-1-luca@coelho.fi>
-Subject: [PATCH 09/25] iwlwifi: mvm: don't reserve queue in TVQM mode
+        Thu, 20 Apr 2017 14:54:24 -0400
+Received: by mail-oi0-f66.google.com with SMTP id y11so10319150oie.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2017 11:54:24 -0700 (PDT)
+Subject: Re: [PATCH 00/14] rtlwifi: btcoex: Second set of changes for
+ rtl8821ae 2ant
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+ <87zifb65eh.fsf@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5df931fe-cbb8-a0f7-ec0f-a62180ca760d@lwfinger.net> (sfid-20170420_205427_987333_D75E3736)
+Date: Thu, 20 Apr 2017 13:54:22 -0500
+MIME-Version: 1.0
+In-Reply-To: <87zifb65eh.fsf@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 04/19/2017 11:59 PM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> These patches are the second set of patches for file
+>> btcoexist/halbtc8821a2ant.c.
+>>
+>> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Pkshih <pkshih@realtek.com>
+>> Cc: Birming Chiu <birming@realtek.com>
+>> Cc: Shaofu <shaofu@realtek.com>
+>> Cc: Steven Ting <steventing@realtek.com>
+>
+> BTW, please try to limit the amount of patches you send. I haven't
+> counted how many rtlwifi patches there are from the last week but it's
+> just too much, even if they are in smaller sets like this one. Reviewing
+> them is just too tedious when you see that you have something like 50
+> more still to go.
+>
+> If you send two sets with reasonable size[1] per week I don't have any
+> problems. But if you send five such sets per week I will get annoyed :)
+> So try to strect the submission a bit to stay below ~30 patches per week
+> limit, please.
+>
+> So I'm not sure if I'm able to apply all of pending rtlwifi patches
+> before the merge window opens, but I'll try.
+>
+> [1] a reasonable size is around a dozen patches per set
 
-The reserved queue is never used, save the trouble.
+Kalle,
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 6 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 7 ++++---
- 2 files changed, 9 insertions(+), 4 deletions(-)
+Sorry about the heavy load. I received the patches from Realtek late in the 4.12 
+cycle, and I was trying to make the deadline.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index e502a6e6bf90..b5b7214a811f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1188,6 +1188,10 @@ static int iwl_mvm_reserve_sta_stream(struct iwl_mvm *mvm,
- 	int queue;
- 	bool using_inactive_queue = false, same_sta = false;
- 
-+	/* queue reserving is disabled on new TX path */
-+	if (WARN_ON(iwl_mvm_has_new_tx_api(mvm)))
-+		return 0;
-+
- 	/*
- 	 * Check for inactive queues, so we don't reach a situation where we
- 	 * can't add a STA due to a shortage in queues that doesn't really exist
-@@ -1387,7 +1391,7 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 		mvm_sta->dup_data = dup_data;
- 	}
- 
--	if (iwl_mvm_is_dqa_supported(mvm)) {
-+	if (iwl_mvm_is_dqa_supported(mvm) && !iwl_mvm_has_new_tx_api(mvm)) {
- 		ret = iwl_mvm_reserve_sta_stream(mvm, sta,
- 						 ieee80211_vif_type_p2p(vif));
- 		if (ret)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 1dde05697c29..987edc98a203 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -592,15 +592,16 @@ int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 sta_id, u8 minq, u8 maxq)
- 
- 	lockdep_assert_held(&mvm->queue_info_lock);
- 
-+	/* This should not be hit with new TX path */
-+	if (WARN_ON(iwl_mvm_has_new_tx_api(mvm)))
-+		return -ENOSPC;
-+
- 	/* Start by looking for a free queue */
- 	for (i = minq; i <= maxq; i++)
- 		if (mvm->queue_info[i].hw_queue_refcount == 0 &&
- 		    mvm->queue_info[i].status == IWL_MVM_QUEUE_FREE)
- 			return i;
- 
--	if (iwl_mvm_has_new_tx_api(mvm))
--		return -ENOSPC;
--
- 	/*
- 	 * If no free queue found - settle for an inactive one to reconfigure
- 	 * Make sure that the inactive queue either already belongs to this STA,
--- 
-2.11.0
+Please drop the following sets of patches:
+
+[PATCH 00/10] rtlwifi: btcoex: Third set of changes for rtl8821ae 2ant
+[PATCH 00/13] rtlwifi: btcoex: Second set of 21a 1ant changes
+[PATCH 00/27] rtlwifi: btcoex: Changes for 23b 1ant
+[PATCH 0/2] rtlwifi: btcoex: Two more patches
+
+I believe that is all of the sets that have not yet been merged. We will fix the 
+issue of the conditionals that you asked about in a second E-mail. That is the 
+one that my Chinese Colleagues ask about in Chinese.
+
+These will be resubmitted for the 4.13 cycle in smaller sets and no more than 
+two sets per week.
+
+Thanks for all your efforts,
+
+Larry
