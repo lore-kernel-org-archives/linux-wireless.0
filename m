@@ -1,131 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51226 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756049AbdDGS02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 14:26:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 3/3] nl80211: add a few extended error strings
-Date: Fri,  7 Apr 2017 20:26:20 +0200
-Message-Id: <20170407182620.6438-4-johannes@sipsolutions.net> (sfid-20170407_202702_319944_0B645C66)
-In-Reply-To: <20170407182620.6438-1-johannes@sipsolutions.net>
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39088 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752044AbdDTE7Y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Apr 2017 00:59:24 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH 00/14] rtlwifi: btcoex: Second set of changes for rtl8821ae 2ant
+References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+Date: Thu, 20 Apr 2017 07:59:18 +0300
+In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Sat, 15 Apr 2017 15:31:46 -0500")
+Message-ID: <87zifb65eh.fsf@codeaurora.org> (sfid-20170420_065946_810396_9985E0BA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 33 ++++++++++++++++++---------------
- 1 file changed, 18 insertions(+), 15 deletions(-)
+> These patches are the second set of patches for file
+> btcoexist/halbtc8821a2ant.c.
+>
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Pkshih <pkshih@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9910aae08f1a..8808099db909 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -740,7 +740,8 @@ struct key_parse {
- 	bool def_uni, def_multi;
- };
- 
--static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
-+static int nl80211_parse_key_new(struct genl_info *info, struct nlattr *key,
-+				 struct key_parse *k)
- {
- 	struct nlattr *tb[NL80211_KEY_MAX + 1];
- 	int err = nla_parse_nested(tb, NL80211_KEY_MAX, key,
-@@ -777,7 +778,7 @@ static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
- 	if (tb[NL80211_KEY_TYPE]) {
- 		k->type = nla_get_u32(tb[NL80211_KEY_TYPE]);
- 		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES)
--			return -EINVAL;
-+			return genl_err_attr(info, -EINVAL, NL80211_KEY_TYPE);
- 	}
- 
- 	if (tb[NL80211_KEY_DEFAULT_TYPES]) {
-@@ -855,7 +856,7 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
- 	k->type = -1;
- 
- 	if (info->attrs[NL80211_ATTR_KEY])
--		err = nl80211_parse_key_new(info->attrs[NL80211_ATTR_KEY], k);
-+		err = nl80211_parse_key_new(info, info->attrs[NL80211_ATTR_KEY], k);
- 	else
- 		err = nl80211_parse_key_old(info, k);
- 
-@@ -863,23 +864,27 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
- 		return err;
- 
- 	if (k->def && k->defmgmt)
--		return -EINVAL;
-+		return genl_err_str(info, -EINVAL, "def && defmgmt is invalid");
- 
- 	if (k->defmgmt) {
- 		if (k->def_uni || !k->def_multi)
--			return -EINVAL;
-+			return genl_err_str(info, -EINVAL,
-+					    "defmgmt must be mcast");
- 	}
- 
- 	if (k->idx != -1) {
- 		if (k->defmgmt) {
- 			if (k->idx < 4 || k->idx > 5)
--				return -EINVAL;
-+				return genl_err_str(info, -EINVAL,
-+						    "defmgmt key idx not 4 or 5");
- 		} else if (k->def) {
- 			if (k->idx < 0 || k->idx > 3)
--				return -EINVAL;
-+				return genl_err_str(info, -EINVAL,
-+						    "def key idx not 0-3");
- 		} else {
- 			if (k->idx < 0 || k->idx > 5)
--				return -EINVAL;
-+				return genl_err_str(info, -EINVAL,
-+						    "key idx not 0-5");
- 		}
- 	}
- 
-@@ -888,8 +893,9 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
- 
- static struct cfg80211_cached_keys *
- nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
--		       struct nlattr *keys, bool *no_ht)
-+		       struct genl_info *info, bool *no_ht)
- {
-+	struct nlattr *keys = info->attrs[NL80211_ATTR_KEYS];
- 	struct key_parse parse;
- 	struct nlattr *key;
- 	struct cfg80211_cached_keys *result;
-@@ -914,7 +920,7 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
- 		memset(&parse, 0, sizeof(parse));
- 		parse.idx = -1;
- 
--		err = nl80211_parse_key_new(key, &parse);
-+		err = nl80211_parse_key_new(info, key, &parse);
- 		if (err)
- 			goto error;
- 		err = -EINVAL;
-@@ -8460,9 +8466,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	if (ibss.privacy && info->attrs[NL80211_ATTR_KEYS]) {
- 		bool no_ht = false;
- 
--		connkeys = nl80211_parse_connkeys(rdev,
--					  info->attrs[NL80211_ATTR_KEYS],
--					  &no_ht);
-+		connkeys = nl80211_parse_connkeys(rdev, info, &no_ht);
- 		if (IS_ERR(connkeys))
- 			return PTR_ERR(connkeys);
- 
-@@ -8853,8 +8857,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	if (connect.privacy && info->attrs[NL80211_ATTR_KEYS]) {
--		connkeys = nl80211_parse_connkeys(rdev,
--					  info->attrs[NL80211_ATTR_KEYS], NULL);
-+		connkeys = nl80211_parse_connkeys(rdev, info, NULL);
- 		if (IS_ERR(connkeys))
- 			return PTR_ERR(connkeys);
- 	}
+BTW, please try to limit the amount of patches you send. I haven't
+counted how many rtlwifi patches there are from the last week but it's
+just too much, even if they are in smaller sets like this one. Reviewing
+them is just too tedious when you see that you have something like 50
+more still to go.
+
+If you send two sets with reasonable size[1] per week I don't have any
+problems. But if you send five such sets per week I will get annoyed :)
+So try to strect the submission a bit to stay below ~30 patches per week
+limit, please.
+
+So I'm not sure if I'm able to apply all of pending rtlwifi patches
+before the merge window opens, but I'll try.
+
+[1] a reasonable size is around a dozen patches per set
+
 -- 
-2.11.0
+Kalle Valo
