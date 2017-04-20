@@ -1,61 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f53.google.com ([74.125.83.53]:35815 "EHLO
-        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752189AbdDEW1C (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 18:27:02 -0400
-Received: by mail-pg0-f53.google.com with SMTP id 81so17190642pgh.2
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Apr 2017 15:27:02 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] mwifiex: MAC randomization should not be persistent
-Date: Wed,  5 Apr 2017 15:26:40 -0700
-Message-Id: <20170405222640.4494-1-briannorris@chromium.org> (sfid-20170406_002855_349527_E7D6EBC2)
+Received: from mga14.intel.com ([192.55.52.115]:63713 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S970556AbdDTVhM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Apr 2017 17:37:12 -0400
+Date: Thu, 20 Apr 2017 23:37:07 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org, Linux NFC <linux-nfc@lists.01.org>
+Subject: [GIT] [4.12] NFC update
+Message-ID: <20170420213707.GA25763@zurbaran.ger.intel.com> (sfid-20170420_233717_121249_9B33A6A6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nl80211 provides the NL80211_SCAN_FLAG_RANDOM_ADDR for every scan
-request that should be randomized; the absence of such a flag means we
-should not randomize. However, mwifiex was stashing the latest
-randomization request and *always* using it for future scans, even those
-that didn't set the flag.
+Hi David,
 
-Let's zero out the randomization info whenever we get a scan request
-without NL80211_SCAN_FLAG_RANDOM_ADDR. I'd prefer to remove
-priv->random_mac entirely (and plumb the randomization MAC properly
-through the call sequence), but the spaghetti is a little difficult to
-unravel here for me.
+This is the NFC pull request for 4.12. We have:
 
-Fixes: c2a8f0ff9c6c ("mwifiex: support random MAC address for scanning")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-Should this be tagged for -stable?
+- Improvements for the pn533 command queue handling and device
+  registration order.
+- Removal of platform data for the pn544 and st21nfca drivers.
+- Additional device tree options to support more trf7970a hardware options.
+- Support for Sony's RC-S380P through the port100 driver.
+- Removal of the obsolte nfcwilink driver.
+- Headers inclusion cleanups (miscdevice.h, unaligned.h) for many drivers.
 
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+The following changes since commit eefe06e8ceea88f8397a8df0880ab5ca28dcada6:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 1e3bd435a694..2d7e8a372bf1 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2528,9 +2528,11 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 			priv->random_mac[i] |= get_random_int() &
- 					       ~(request->mac_addr_mask[i]);
- 		}
-+		ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
-+	} else {
-+		eth_zero_addr(priv->random_mac);
- 	}
- 
--	ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
- 	user_scan_cfg->num_ssids = request->n_ssids;
- 	user_scan_cfg->ssid_list = request->ssids;
- 
--- 
-2.12.2.715.g7642488e1d-goog
+  Merge branch 'bpf-prog-testing-framework' (2017-04-01 12:45:58 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-4.12-1
+
+for you to fetch changes up to 4ea206395d3aede32bab94a75ec573530486fa44:
+
+  nfc: fix get_unaligned_...() misuses (2017-04-17 00:42:22 +0200)
+
+----------------------------------------------------------------
+NFC 4.12 pull request
+
+This is the NFC pull request for 4.12. We have:
+
+- Improvements for the pn533 command queue handling and device
+  registration order.
+- Removal of platform data for the pn544 and st21nfca drivers.
+- Additional device tree options to support more trf7970a hardware options.
+- Support for Sony's RC-S380P through the port100 driver.
+- Removal of the obsolte nfcwilink driver.
+- Headers inclusion cleanups (miscdevice.h, unaligned.h) for many drivers.
+
+----------------------------------------------------------------
+Al Viro (1):
+      nfc: fix get_unaligned_...() misuses
+
+Andrey Rusalin (3):
+      NFC: pn533: change order of free_irq and dev unregistration
+      NFC: pn533: improve cmd queue handling
+      NFC: pn533: change order operations in dev registation
+
+Andy Shevchenko (12):
+      NFC: pn544: Get rid of platform data
+      NFC: pn544: Convert to use GPIO descriptor
+      NFC: pn544: Convert to use devm_request_threaded_irq()
+      NFC: pn544: Add GPIO ACPI mapping table
+      NFC: pn544: Get rid of code duplication in ->probe()
+      NFC: st21nfca: Fix obvious typo when check error code
+      NFC: st21nfca: Get rid of platform data
+      NFC: st21nfca: Get rid of "interesting" use of interrupt polarity
+      NFC: st21nfca: Covert to use GPIO descriptor
+      NFC: st21nfca: Use unified device property API meaningfully
+      NFC: netlink: Use error code from nfc_activate_target()
+      NFC: Add nfc_dbg() macro
+
+Christophe JAILLET (1):
+      NFC: st21nfca: Fix potential memory leak
+
+Corentin Labbe (3):
+      nfc: nxp-nci: Remove unneeded linux/miscdevice.h include
+      nfc: pn544: Remove unneeded linux/miscdevice.h include
+      nfc: st21nfca: Remove unneeded linux/miscdevice.h include
+
+Dan Carpenter (1):
+      NFC: nfcmrvl: double free on error path
+
+Geliang Tang (1):
+      NFC: nfcmrvl: drop duplicate header gpio.h
+
+Geoff Lansberry (2):
+      NFC: trf7970a: add device tree option for 27MHz clock
+      NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
+
+Guan Ben (1):
+      NFC: Make EN2 pin optional in the TRF7970A driver
+
+Guenter Roeck (1):
+      NFC: nxp-nci: Include unaligned.h instead of access_ok.h
+
+Michał Mirosław (1):
+      NFC: pn533: use constant off-stack buffer for sending acks
+
+Nicholas Mc Guire (1):
+      nfc: nxp-nci: use msleep for long delays
+
+OGAWA Hirofumi (4):
+      nfc: Add support RC-S380P to port100
+      nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
+      nfc: Fix RC-S380* needs zero-length packet
+      nfc: Fix hangup of RC-S380* in port100_send_ack()
+
+Rob Herring (1):
+      NFC: remove TI nfcwilink driver
+
+Samuel Ortiz (1):
+      MAINTAINERS: Remove Lauro and Aloisio from the NFC maintainers list
+
+Sudip Mukherjee (1):
+      nfc: fdp: fix NULL pointer dereference
+
+Tobias Klauser (1):
+      NFC: nfcmrvl: Include unaligned.h instead of access_ok.h
+
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |   8 +-
+ MAINTAINERS                                        |   2 -
+ drivers/nfc/Kconfig                                |  11 -
+ drivers/nfc/Makefile                               |   1 -
+ drivers/nfc/fdp/i2c.c                              |   6 +-
+ drivers/nfc/nfcmrvl/fw_dnld.c                      |   7 +-
+ drivers/nfc/nfcmrvl/spi.c                          |   6 +-
+ drivers/nfc/nfcwilink.c                            | 578 ---------------------
+ drivers/nfc/nxp-nci/firmware.c                     |   2 +-
+ drivers/nfc/nxp-nci/i2c.c                          |   7 +-
+ drivers/nfc/pn533/i2c.c                            |  34 +-
+ drivers/nfc/pn533/pn533.c                          |  82 +--
+ drivers/nfc/pn533/pn533.h                          |   1 +
+ drivers/nfc/pn533/usb.c                            |   8 +-
+ drivers/nfc/pn544/i2c.c                            | 221 ++------
+ drivers/nfc/port100.c                              |  44 +-
+ drivers/nfc/st21nfca/core.c                        |  12 +-
+ drivers/nfc/st21nfca/i2c.c                         | 123 +----
+ drivers/nfc/trf7970a.c                             |  98 +++-
+ include/linux/platform_data/pn544.h                |  43 --
+ include/linux/platform_data/st21nfca.h             |  33 --
+ include/net/nfc/nfc.h                              |   1 +
+ net/nfc/netlink.c                                  |  24 +-
+ 23 files changed, 289 insertions(+), 1063 deletions(-)
+ delete mode 100644 drivers/nfc/nfcwilink.c
+ delete mode 100644 include/linux/platform_data/pn544.h
+ delete mode 100644 include/linux/platform_data/st21nfca.h
