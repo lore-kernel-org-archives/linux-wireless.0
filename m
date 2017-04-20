@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54006 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965357AbdDZSrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 14:47:47 -0400
-Message-ID: <1493232464.8019.0.camel@sipsolutions.net> (sfid-20170426_204759_242861_5AF324DC)
-Subject: Re: [PATCH V3 4/9] cfg80211: add request id to
- cfg80211_sched_scan_*() api
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 26 Apr 2017 20:47:44 +0200
-In-Reply-To: <ca0b7756-7c48-9415-75b1-0ca8b321bac8@broadcom.com> (sfid-20170426_201820_698810_3A63A2A4)
-References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1492776308-15120-5-git-send-email-arend.vanspriel@broadcom.com>
-         <1493190994.2464.3.camel@sipsolutions.net>
-         <ca0b7756-7c48-9415-75b1-0ca8b321bac8@broadcom.com>
-         (sfid-20170426_201820_698810_3A63A2A4)
+Received: from paleale.coelho.fi ([176.9.41.70]:53134 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S939310AbdDTEV0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Apr 2017 00:21:26 -0400
+Message-ID: <1492662077.31741.89.camel@coelho.fi> (sfid-20170420_062959_260307_D60DB228)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Thu, 20 Apr 2017 07:21:17 +0300
+In-Reply-To: <1492630450.31741.87.camel@coelho.fi>
+References: <1492630450.31741.87.camel@coelho.fi>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi-next 2017-04-19
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-04-26 at 20:18 +0200, Arend Van Spriel wrote:
+On Wed, 2017-04-19 at 22:34 +0300, Luca Coelho wrote:
+> Hi Kalle,
 > 
-> I guess it is in you repo as I did not see anything related on the
-> mailing list.
+> Here's my second pull-request intended for v4.12.  It includes the last
+> two patch series I sent out, namely 2017-04-13 and 2017-04-19.
+> 
+> This pull request has a small difference from the patch sets I sent out,
+> because I had to do a similar merge conflict resolution as you did.  Let
+> me know if you want me to send v2 of those series to reflect these small
+> changes (just for the record).
+> 
+> Kbuildbot didn't report any issues (before my conflict resolution).
+> 
+> Please let me know if there are any issues.
 
-Yeah. But that should be up-to-date.
+Please hold on with this pull.  Kbuildbot found an issue that was
+introduced in my previous pull-req (the one you already pulled). 
 
->  So regarding this rework, do you want me to send the
-> series again or just this patch?
+Additionally, I want to remove the FW API bump to 31.
 
-Just this single patch is fine.
+Sorry for the trouble.
 
-johannes
+--
+Cheers,
+Luca.
