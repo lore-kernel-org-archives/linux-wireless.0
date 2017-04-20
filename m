@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49712 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750761AbdD1JTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 05:19:08 -0400
-Message-ID: <1493371140.2431.6.camel@sipsolutions.net> (sfid-20170428_111924_839852_24BECDFB)
-Subject: Re: [PATCH] mac80211: Fix possible sband related NULL pointer
- de-reference
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org
-Cc: mohammed@codeaurora.org, Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 28 Apr 2017 11:19:00 +0200
-In-Reply-To: <1493277338-25726-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1493277338-25726-1-git-send-email-mohammed@qca.qualcomm.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:53210 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S941837AbdDTHMH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Apr 2017 03:12:07 -0400
+Message-ID: <1492672317.31741.109.camel@coelho.fi> (sfid-20170420_091210_335684_000AEC6F)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Thu, 20 Apr 2017 10:11:57 +0300
+In-Reply-To: <8760hz7el9.fsf@kamboji.qca.qualcomm.com>
+References: <1492664371.31741.91.camel@coelho.fi>
+         <1492664686.31741.93.camel@coelho.fi>
+         <8760hz7el9.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi-next 2017-04-19-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-04-27 at 12:45 +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Thu, 2017-04-20 at 09:55 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> > b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> > index 6d745c36f1d8..097cb45c8ad9 100644
+> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> > @@ -55,7 +55,7 @@
+> >  #include "iwl-agn-hw.h"
+> >  
+> >  /* Highest firmware API version supported */
+> > -#define IWL_A000_UCODE_API_MAX 31
+> > +#define IWL_A000_UCODE_API_MAX 30
 > 
-> Existing API 'ieee80211_get_sdata_band' returns default 2 GHz band
-> even
-> if the channel context configuration is NULL. This crashes for
-> chipsets
-> which support 5 Ghz alone when it tries to access members of 'sband'.
-> Channel context configuration can be NULL in multivif case and when
-> channel switch is in progress (or) when it fails. Fix this by
-> replacing
-> the API 'ieee80211_get_sdata_band' with  'ieee80211_get_sband' which
-> returns a NULL pointer for sband when the channel configuration is
-> NULL.
+> Good that you dropped this. I was a bit worried that if it the API bump
+> was too soon and inconvenient for the users.
 
-Makes sense.
+Yes, we usually bump it up internally *before* we get all the actual API
+changes in the firmware, so both the driver and the FW evolve together.
 
-Applied, but could you point to the one that actually crashed?
+So, in practice, I should bump the API to 30 upstream when we reach the
+bump to 31 internally (which means 30 is frozen at that point).
 
-
-johannes
+--
+Cheers,
+Luca.
