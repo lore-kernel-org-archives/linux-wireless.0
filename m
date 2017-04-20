@@ -1,86 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:51826 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932616AbdDFQst (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37686 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751230AbdDTHYq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 12:48:49 -0400
-Date: Thu, 6 Apr 2017 17:48:47 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] nfc: fix get_unaligned_...() misuses
-Message-ID: <20170406164847.GU29622@ZenIV.linux.org.uk> (sfid-20170406_184944_118750_AE3DDD47)
+        Thu, 20 Apr 2017 03:24:46 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [01/19] rtlwifi: btcoex: 21a 2ant: limit rx aggregation size to
+ avoid bt interrupt
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170413180710.19953-2-Larry.Finger@lwfinger.net>
+References: <20170413180710.19953-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170420072445.F3AA661151@smtp.codeaurora.org> (sfid-20170420_092457_645069_D057C9B3)
+Date: Thu, 20 Apr 2017 07:24:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* use unaligned.h, not unaligned/access_ok.h
-* if a local variable of type uint16_t is unaligned, your compiler is FUBAR
-* the whole point of get_unaligned_... is to avoid memcpy + ..._to_cpu().
-  Using it *after* memcpy() (into aligned object, no less) is pointless.
-  
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> 
+> Larger packets have higher opportunity to be interrupt by bt signal.
+> In order to shorten the transmission time, control the packet
+> aggregation size.
+> 
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Pkshih <pkshih@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-diff --git a/drivers/nfc/nfcmrvl/fw_dnld.c b/drivers/nfc/nfcmrvl/fw_dnld.c
-index f8dcdf4b24f6..d3b04da0f16f 100644
---- a/drivers/nfc/nfcmrvl/fw_dnld.c
-+++ b/drivers/nfc/nfcmrvl/fw_dnld.c
-@@ -17,7 +17,7 @@
-  */
- 
- #include <linux/module.h>
--#include <linux/unaligned/access_ok.h>
-+#include <linux/unaligned.h>
- #include <linux/firmware.h>
- #include <linux/nfc.h>
- #include <net/nfc/nci.h>
-@@ -281,12 +281,11 @@ static int process_state_fw_dnld(struct nfcmrvl_private *priv,
- 			return -EINVAL;
- 		}
- 		skb_pull(skb, 1);
--		memcpy(&len, skb->data, 2);
-+		len = get_unaligned_le16(skb->data);
- 		skb_pull(skb, 2);
-+		comp_len = get_unaligned_le16(skb->data);
- 		memcpy(&comp_len, skb->data, 2);
- 		skb_pull(skb, 2);
--		len = get_unaligned_le16(&len);
--		comp_len = get_unaligned_le16(&comp_len);
- 		if (((~len) & 0xFFFF) != comp_len) {
- 			nfc_err(priv->dev, "bad len complement: %x %x %x",
- 				len, comp_len, (~len & 0xFFFF));
-diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
-index 5291797324ba..f27b03e3b5ae 100644
---- a/drivers/nfc/nxp-nci/firmware.c
-+++ b/drivers/nfc/nxp-nci/firmware.c
-@@ -24,7 +24,7 @@
- #include <linux/completion.h>
- #include <linux/firmware.h>
- #include <linux/nfc.h>
--#include <linux/unaligned/access_ok.h>
-+#include <linux/unaligned.h>
- 
- #include "nxp-nci.h"
- 
-diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-index 36099e557730..9da35d2898fc 100644
---- a/drivers/nfc/nxp-nci/i2c.c
-+++ b/drivers/nfc/nxp-nci/i2c.c
-@@ -36,7 +36,6 @@
- #include <linux/of_gpio.h>
- #include <linux/of_irq.h>
- #include <linux/platform_data/nxp-nci.h>
--#include <linux/unaligned/access_ok.h>
- 
- #include <net/nfc/nfc.h>
- 
-@@ -127,7 +126,7 @@ static int nxp_nci_i2c_fw_read(struct nxp_nci_i2c_phy *phy,
- 		goto fw_read_exit;
- 	}
- 
--	frame_len = (get_unaligned_be16(&header) & NXP_NCI_FW_FRAME_LEN_MASK) +
-+	frame_len = (be16_to_cpu(header) & NXP_NCI_FW_FRAME_LEN_MASK) +
- 		    NXP_NCI_FW_CRC_LEN;
- 
- 	*skb = alloc_skb(NXP_NCI_FW_HDR_LEN + frame_len, GFP_KERNEL);
+19 patches applied to wireless-drivers-next.git, thanks.
+
+930d2bf242d6 rtlwifi: btcoex: 21a 2ant: limit rx aggregation size to avoid bt interrupt
+4776d349071d rtlwifi: btcoex: 21a 2ant: monitor if bt is slave or not
+eebc58782eff rtlwifi: btcoex: 21a 2ant: monitor wifi counter to check network status
+4b1f6eaac344 rtlwifi: btcoex: 21a 2ant: update bt profiling information
+aed6b11e4fc2 rtlwifi: btcoex: 21a 2ant: finer adjustment of bt power
+7cc7f1a18bcc rtlwifi: btcoex: 21a 2ant: move from bt_stack_info to bt_link_info
+5a81969c1cc3 rtlwifi: btcoex: 21a 2ant: suffer less tx penalty from retry
+d9158ea1d1bd rtlwifi: btcoex: 21a 2ant: check power save state before pstdma
+d09199eb2038 rtlwifi: btcoex: 21a 2ant: do not check wifi bandwidth
+d4acd81ed268 rtlwifi: btcoex: 21a 2ant: centralized control of coex table
+3fd7ba4c764c rtlwifi: btcoex: 21a 2ant: check if wifi status changed
+9153c11cefa3 rtlwifi: btcoex: 21a 2ant: ignore wifi if it is at 5G band
+aae1e8f5a0f0 rtlwifi: btcoex: 21a 2ant: set coex table and tdma when bt inquiry
+8c670a1b1dae rtlwifi: btcoex: 21a 2ant: let PTA circuit control the switch
+8189d81890c1 rtlwifi: btcoex: 21a 2ant: slot time fine tune
+4b7649192687 rtlwifi: btcoex: 21a 2ant: tdma cases for low wifi/bt rssi
+3506bc286abe rtlwifi: btcoex: 21a 2ant: action for wifi is idle/linking/common
+20ec48e51d25 rtlwifi: btcoex: 21a 2ant: fix invalid argument passed
+3f775d5cee79 rtlwifi: btcoex: 21a 2ant: refine tdma duration adjust function
+
+-- 
+https://patchwork.kernel.org/patch/9679781/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
