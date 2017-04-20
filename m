@@ -1,118 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:22990 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60658 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S968979AbdDXSlc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 14:41:32 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 2/2] NFC: st21nfca: Get rid of code duplication in ->probe()
-Date: Mon, 24 Apr 2017 21:41:28 +0300
-Message-Id: <20170424184128.48061-2-andriy.shevchenko@linux.intel.com> (sfid-20170424_204253_408725_AB0B9A3D)
-In-Reply-To: <20170424184128.48061-1-andriy.shevchenko@linux.intel.com>
-References: <20170424184128.48061-1-andriy.shevchenko@linux.intel.com>
+        id S947075AbdDTTcU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Apr 2017 15:32:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH net] mac80211: reject ToDS broadcast data frames
+Date: Thu, 20 Apr 2017 21:32:16 +0200
+Message-Id: <20170420193216.17087-1-johannes@sipsolutions.net> (sfid-20170420_213228_194538_E72EB132)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since OF and ACPI case almost the same get rid of code duplication
-by moving gpiod_get() calls directly to ->probe().
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+AP/AP_VLAN modes don't accept any real 802.11 multicast data
+frames, but since they do need to accept broadcast management
+frames the same is currently permitted for data frames. This
+opens a security problem because such frames would be decrypted
+with the GTK, and could even contain unicast L3 frames.
+
+Since the spec says that ToDS frames must always have the BSSID
+as the RA (addr1), reject any other data frames.
+
+The problem was originally reported in "Predicting, Decrypting,
+and Abusing WPA2/802.11 Group Keys" at usenix
+https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/vanhoef
+and brought to my attention by Jouni.
+
+Cc: stable@vger.kernel.org
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+--
+Dave, I didn't want to send you a new pull request for a single
+commit yet again - can you apply this one patch as is?
 ---
- drivers/nfc/st21nfca/i2c.c | 62 ++++++++--------------------------------------
- 1 file changed, 10 insertions(+), 52 deletions(-)
+ net/mac80211/rx.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index a04f24334b54..525f72f49b73 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -61,8 +61,6 @@
- #define ST21NFCA_HCI_DRIVER_NAME "st21nfca_hci"
- #define ST21NFCA_HCI_I2C_DRIVER_NAME "st21nfca_hci_i2c"
- 
--#define ST21NFCA_GPIO_NAME_EN "enable"
--
- struct st21nfca_i2c_phy {
- 	struct i2c_client *i2c_dev;
- 	struct nfc_hci_dev *hdev;
-@@ -508,44 +506,10 @@ static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
- 	{},
- };
- 
--static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
--{
--	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--	int ret;
--
--	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_st21nfca_gpios);
--	if (ret)
--		return ret;
--
--	/* Get EN GPIO from ACPI */
--	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
--	if (IS_ERR(phy->gpiod_ena)) {
--		nfc_err(dev, "Unable to get ENABLE GPIO\n");
--		return PTR_ERR(phy->gpiod_ena);
--	}
--
--	return 0;
--}
--
--static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
--{
--	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--
--	/* Get GPIO from device tree */
--	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
--	if (IS_ERR(phy->gpiod_ena)) {
--		nfc_err(dev, "Failed to request enable pin\n");
--		return PTR_ERR(phy->gpiod_ena);
--	}
--
--	return 0;
--}
--
- static int st21nfca_hci_i2c_probe(struct i2c_client *client,
- 				  const struct i2c_device_id *id)
- {
-+	struct device *dev = &client->dev;
- 	struct st21nfca_i2c_phy *phy;
- 	int r;
- 
-@@ -572,21 +536,15 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
- 	mutex_init(&phy->phy_lock);
- 	i2c_set_clientdata(client, phy);
- 
--	if (client->dev.of_node) {
--		r = st21nfca_hci_i2c_of_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev, "No platform data\n");
--			return r;
--		}
--	} else if (ACPI_HANDLE(&client->dev)) {
--		r = st21nfca_hci_i2c_acpi_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev, "Cannot get ACPI data\n");
--			return r;
--		}
--	} else {
--		nfc_err(&client->dev, "st21nfca platform resources not available\n");
--		return -ENODEV;
-+	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_st21nfca_gpios);
-+	if (r)
-+		dev_dbg(dev, "Unable to add GPIO mapping table\n");
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 4b12c70c85f0..4d7543d1a62c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3639,6 +3639,27 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 			    !ether_addr_equal(bssid, hdr->addr1))
+ 				return false;
+ 		}
 +
-+	/* Get EN GPIO from resource provider */
-+	phy->gpiod_ena = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
-+	if (IS_ERR(phy->gpiod_ena)) {
-+		nfc_err(dev, "Unable to get ENABLE GPIO\n");
-+		return PTR_ERR(phy->gpiod_ena);
- 	}
- 
- 	phy->se_status.is_ese_present =
++		/*
++		 * 802.11-2016 Table 9-26 says that for data frames, A1 must be
++		 * the BSSID - we've checked that already but may have accepted
++		 * the wildcard (ff:ff:ff:ff:ff:ff).
++		 *
++		 * It also says:
++		 *	The BSSID of the Data frame is determined as follows:
++		 *	a) If the STA is contained within an AP or is associated
++		 *	   with an AP, the BSSID is the address currently in use
++		 *	   by the STA contained in the AP.
++		 *
++		 * So we should not accept data frames with an address that's
++		 * multicast.
++		 *
++		 * Accepting it also opens a security problem because stations
++		 * could encrypt it with the GTK and inject traffic that way.
++		 */
++		if (ieee80211_is_data(hdr->frame_control) && multicast)
++			return false;
++
+ 		return true;
+ 	case NL80211_IFTYPE_WDS:
+ 		if (bssid || !ieee80211_is_data(hdr->frame_control))
 -- 
 2.11.0
