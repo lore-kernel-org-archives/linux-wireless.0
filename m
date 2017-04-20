@@ -1,124 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35997 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751349AbdDND2e (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36820 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968205AbdDTGzg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 23:28:34 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: RE: Re: Re: [PATCH v3 4/4] mwifiex: pcie: extract wifi part from
- combo firmware during function level reset
-Date: Fri, 14 Apr 2017 03:28:28 +0000
-Message-ID: <111627ea9fbd477e83622e8df51f109b@SC-EXCH02.marvell.com> (sfid-20170414_052845_377742_00D7EC5C)
-References: <1491815374-6555-1-git-send-email-huxinming820@gmail.com>
- <1491815374-6555-4-git-send-email-huxinming820@gmail.com>
- <20170411013724.GA135531@google.com>
- <45a8fcd4f0384fa7b622cf3a87b41ea8@SC-EXCH02.marvell.com>
- <20170413174954.GA66124@google.com>
-In-Reply-To: <20170413174954.GA66124@google.com>
-Content-Type: text/plain; charset="utf-8"
+        Thu, 20 Apr 2017 02:55:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2017-04-19-2
+References: <1492664371.31741.91.camel@coelho.fi>
+        <1492664686.31741.93.camel@coelho.fi>
+Date: Thu, 20 Apr 2017 09:55:30 +0300
+In-Reply-To: <1492664686.31741.93.camel@coelho.fi> (Luca Coelho's message of
+        "Thu, 20 Apr 2017 08:04:46 +0300")
+Message-ID: <8760hz7el9.fsf@kamboji.qca.qualcomm.com> (sfid-20170420_085604_341679_DF4330C1)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
-Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE35bm0
-NOaciDE05pelIDE6NTANCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBL
-YWxsZSBWYWxvOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsNCj4gQW1pdGt1
-bWFyIEthcndhcjsgQ2F0aHkgTHVvOyBHYW5hcGF0aGkgQmhhdA0KPiBTdWJqZWN0OiBbRVhUXSBS
-ZTogUmU6IFtQQVRDSCB2MyA0LzRdIG13aWZpZXg6IHBjaWU6IGV4dHJhY3Qgd2lmaSBwYXJ0IGZy
-b20NCj4gY29tYm8gZmlybXdhcmUgZHVyaW5nIGZ1bmN0aW9uIGxldmVsIHJlc2V0DQo+IA0KPiBF
-eHRlcm5hbCBFbWFpbA0KPiANCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiBIaSwNCj4gDQo+IE9uIFRodSwg
-QXByIDEzLCAyMDE3IGF0IDA2OjQ3OjU5QU0gKzAwMDAsIFhpbm1pbmcgSHUgd3JvdGU6DQo+ID4g
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogQnJpYW4gTm9ycmlzIFtt
-YWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiA+ID4gU2VudDogMjAxN+W5tDTmnIgx
-MeaXpSA5OjM3DQo+ID4gPiBUbzogWGlubWluZyBIdQ0KPiA+ID4gQ2M6IExpbnV4IFdpcmVsZXNz
-OyBLYWxsZSBWYWxvOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsNCj4gPiA+
-IEFtaXRrdW1hciBLYXJ3YXI7IENhdGh5IEx1bzsgWGlubWluZyBIdTsgR2FuYXBhdGhpIEJoYXQN
-Cj4gPiA+IFN1YmplY3Q6IFtFWFRdIFJlOiBbUEFUQ0ggdjMgNC80XSBtd2lmaWV4OiBwY2llOiBl
-eHRyYWN0IHdpZmkgcGFydA0KPiA+ID4gZnJvbSBjb21ibyBmaXJtd2FyZSBkdXJpbmcgZnVuY3Rp
-b24gbGV2ZWwgcmVzZXQNCj4gPiA+DQo+ID4gPiBFeHRlcm5hbCBFbWFpbA0KPiA+ID4NCj4gDQo+
-ID4gPiBPbiBNb24sIEFwciAxMCwgMjAxNyBhdCAwOTowOTozNEFNICswMDAwLCBYaW5taW5nIEh1
-IHdyb3RlOg0KPiA+ID4gPiArCXdoaWxlICgxKSB7DQo+ID4gPiA+ICsJCWlmIChvZmZzZXQgKyBz
-aXplb2YoZndkYXRhLmhlYWRlcikgPj0gZmlybXdhcmVfbGVuKSB7DQo+ID4gPiA+ICsJCQltd2lm
-aWV4X2RiZyhhZGFwdGVyLCBFUlJPUiwNCj4gPiA+ID4gKwkJCQkgICAgImV4dHJhY3Qgd2lmaS1v
-bmx5IGZpcm13YXJlIGZhaWx1cmUhIik7DQo+ID4gPiA+ICsJCQlyZXQgPSAtMTsNCj4gPiA+ID4g
-KwkJCWdvdG8gZG9uZTsNCj4gPiA+ID4gKwkJfQ0KPiA+ID4gPiArDQo+ID4gPiA+ICsJCW1lbWNw
-eSgmZndkYXRhLmhlYWRlciwgZmlybXdhcmUgKyBvZmZzZXQsDQo+ID4gPiA+ICsJCSAgICAgICBz
-aXplb2YoZndkYXRhLmhlYWRlcikpOw0KPiA+ID4NCj4gPiA+IERvIHlvdSBhY3R1YWxseSBuZWVk
-IHRvIGNvcHkgdGhpcz8gQ2FuJ3QgeW91IGp1c3Qga2VlcCBhIHBvaW50ZXIgdG8gdGhlDQo+IGxv
-Y2F0aW9uPw0KPiA+ID4gZS5nLg0KPiA+ID4NCj4gPiA+IAljb25zdCBzdHJ1Y3QgbXdpZmlleF9m
-d19kYXRhICpmd2RhdGE7IC4uLg0KPiA+ID4gCWZ3ZGF0YSA9IGZpcm13YXJlICsgb2Zmc2V0Ow0K
-PiA+ID4NCj4gPg0KPiA+IE9rLg0KPiA+DQo+ID4gPiA+ICsJCWRubGRfY21kID0gbGUzMl90b19j
-cHUoZndkYXRhLmhlYWRlci5kbmxkX2NtZCk7DQo+ID4gPiA+ICsJCWRhdGFfbGVuID0gbGUzMl90
-b19jcHUoZndkYXRhLmhlYWRlci5kYXRhX2xlbmd0aCk7DQo+ID4gPiA+ICsNCj4gPiA+ID4gKwkJ
-c3dpdGNoIChkbmxkX2NtZCkgew0KPiA+ID4gPiArCQljYXNlIE1XSUZJRVhfRldfRE5MRF9DTURf
-MToNCj4gPiA+ID4gKwkJCWlmICghY21kN19iZWZvcmUpIHsNCj4gPiA+ID4gKwkJCQltd2lmaWV4
-X2RiZyhhZGFwdGVyLCBFUlJPUiwNCj4gPiA+ID4gKwkJCQkJICAgICJubyBjbWQ3IGJlZm9yZSBj
-bWQxISIpOw0KPiA+ID4gPiArCQkJCXJldCA9IC0xOw0KPiA+ID4gPiArCQkJCWdvdG8gZG9uZTsN
-Cj4gPiA+ID4gKwkJCX0NCj4gPiA+ID4gKwkJCW9mZnNldCArPSBkYXRhX2xlbiArIHNpemVvZihm
-d2RhdGEuaGVhZGVyKTsNCj4gPiA+DQo+ID4gPiBUZWNobmljYWxseSwgd2UgbmVlZCBhbiBvdmVy
-ZmxvdyBjaGVjayB0byBtYWtlIHN1cmUgdGhhdCAnZGF0YV9sZW4nDQo+ID4gPiBpc24ndCBzb21l
-IGJvZ3VzIHZhbHVlIHRoYXQgb3ZlcmZsb3dzICdvZmZzZXQnLg0KPiA+ID4NCj4gPg0KPiA+IFRo
-ZXJlIGlzIHRoZSBzYW5pdHkgY2hlY2sgZm9yIHRoZSBvZmZzZXQgYWZ0ZXIgYnlwYXNzIENNRDEv
-NS83IGluIHRoZQ0KPiA+IHN0YXJ0IG9mIHdoaWxlLWxvb3AsIGVuaGFuY2VkIGluIHY0IGFzLCBp
-ZiAob2Zmc2V0ID49IGZpcm13YXJlX2xlbikNCj4gDQo+IFRoYXQncyBub3QgYW4gZW5oYW5jZW1l
-bnQhISBUaGF0J3MgYSAqd2Vha2VyKiBjb25kaXRpb24sIGFuZCBpdCdzIHdyb25nLg0KPiBJZiAn
-b2Zmc2V0ID09IGZpcm13YXJlX2xlbiAtIDEnLCB0aGVuIHdlJ2xsIHN0aWxsIGJlIG91dCBvZiBi
-b3VuZHMgd2hlbiB3ZSByZWFkDQo+IHRoZSBuZXh0IGhlYWRlciBhdCAnb2Zmc2V0ICsgezEsIDIs
-IDMsIC4uLn0nLg0KPiANCj4gTXkgcG9pbnQgd2FzIHRoYXQgYWRkaW5nICdkYXRhX2xlbicgbWln
-aHQgYWN0dWFsbHkgb3ZlcmZsb3cgdGhlIHUzMiwgbm90IHRoYXQNCj4gdGhlIGJvdW5kcyBjaGVj
-ayAoJ29mZnNldCArIHNpemVvZiguLi5oZWFkZXIpID49IGZpcm13YXJlX2xlbicpIHdhcyB3cm9u
-Zy4NCj4gDQo+IEZvciB0aGlzIGtpbmQgb2Ygb3ZlcmZsb3cgY2hlY2ssIHlvdSBuZWVkIHRvIGRv
-IHRoZSBjaGVjayBoZXJlLCBub3QgYWZ0ZXIgeW91J3ZlDQo+IHNhdmVkIHRoZSBuZXcgb2Zmc2V0
-Lg0KPiANCj4gZS5nLiwgc3VwcG9zZSBkYXRhX2xlbiA9IDB4ZmZmZmZmZjAuIFRoZW46DQo+IA0K
-PiAJb2Zmc2V0ICs9IGRhdGFfbGVuICsgc2l6ZW9mKGZ3ZGF0YS5oZWFkZXIpOyA9Pg0KPiAJb2Zm
-c2V0ICs9IDB4ZmZmZmZmZjAgKyAxNjsNCj4gPT4NCj4gCW9mZnNldCArPSAwOw0KPiANCj4gYW5k
-IHRoZW4uLi53ZSBoYXZlIGFuIGluZmluaXRlIGxvb3AuIENoYW5naW5nIHRoZSBib3VuZHMgY2hl
-Y2sgYXQgdGhlIHN0YXJ0IG9mDQo+IHRoZSBsb29wIGRvZXMgbm90aGluZyB0byBoZWxwIHRoaXMu
-DQo+IA0KPiBTb21ldGhpbmcgbGlrZSB0aGlzIChwdXQgYmVmb3JlIHRoZSBhZGRpdGlvbikgaXMg
-c3VmZmljaWVudCwgSSB0aGluazoNCj4gDQo+IAlpZiAob2Zmc2V0ICsgZGF0YV9sZW4gKyBzaXpl
-b2YoZndkYXRhLmhlYWRlcikgPCBkYXRhX2xlbikNCj4gCQkuLi4gZXJyb3IgLi4uDQo+IA0KDQpU
-aGFua3MgZm9yIHRoZSBleHBsYWluLg0KQWNjb3JkaW5nIHRvIHRoZSBmaXJtd2FyZSBkb3dubG9h
-ZCBwcm90b2NvbCwgZXZlcnkgQ01EIHNob3VsZCBub3QgZXhjZWVkIE1XSUZJRVhfVVBMRF9TSVpF
-Lg0Kd2UgY2FuIGFkZCBhIHNhbml0eSBjaGVjayAsIGxpa2UsDQppZiAoZGF0YV9sZW4gPiBNV0lG
-SUVYX1VQTERfU0laRSAtIHNpemVvZihmd2RhdGEtPmhlYWRlcikpDQoJKmVycm9yKg0KDQpUaGFu
-a3MNClNpbW9uDQo+IE9yIHRoaXMgd291bGQgYWN0dWFsbHkgYWxsIGJlIHNsaWdodGx5IGNsZWFu
-ZXIgaWYgeW91IGp1c3QgZGlkIHRoaXMgb3V0c2lkZSB0aGUNCj4gJ3N3aXRjaCc6DQo+IA0KPiAJ
-Ly8gUHJlc3VtaW5nIHlvdSBhbHJlYWR5IGRpZCB0aGUgY2hlY2sgZm9yDQo+IAkvLyAgb2Zmc2V0
-ICsgc2l6ZW9mKGZ3ZGF0YS5oZWFkZXIpID49IGZpcm13YXJlX2xlbg0KPiAJb2Zmc2V0ICs9IHNp
-emVvZihmd2RhdGEuaGVhZGVyKTsNCj4gDQo+IFRoZW4gaW5zaWRlIHRoaXMgJ2Nhc2UnLCB5b3Ug
-aGF2ZToNCj4gDQo+IAlpZiAob2Zmc2V0ICsgZGF0YV9sZW4gPCBkYXRhX2xlbikNCj4gCQkuLi4g
-ZXJyb3Igb3V0IC4uLg0KPiAJb2Zmc2V0ICs9IGRhdGFfbGVuOw0KPiANCj4gPiA+ID4gKwkJCWJy
-ZWFrOw0KPiA+ID4gPiArCQljYXNlIE1XSUZJRVhfRldfRE5MRF9DTURfNToNCj4gPiA+ID4gKwkJ
-CW9mZnNldCArPSBkYXRhX2xlbiArIHNpemVvZihmd2RhdGEuaGVhZGVyKTsNCj4gPiA+DQo+ID4g
-PiBTYW1lIGhlcmUuDQo+ID4gPg0KPiA+ID4gPiArCQkJYnJlYWs7DQo+ID4gPiA+ICsJCWNhc2Ug
-TVdJRklFWF9GV19ETkxEX0NNRF82Og0KPiA+ID4NCj4gPiA+IENhbiB3ZSBoYXZlIGEgY29tbWVu
-dCwgZWl0aGVyIGhlcmUgb3IgYWJvdmUgdGhpcyBmdW5jdGlvbiwgdG8NCj4gPiA+IGRlc2NyaWJl
-IHdoYXQgdGhpcyBzZXF1ZW5jZSBpcz8gT3IgcGFydGljdWxhcmx5LCB3aGF0IGlzIHRoaXMgdGVy
-bWluYXRpbmcNCj4gY29uZGl0aW9uPyAiQ01EXzYiDQo+ID4gPiBkb2Vzbid0IHJlYWxseSB0ZWxs
-IG1lIHRoYXQgdGhpcyBpcyB0aGUgc3RhcnQgb2YgdGhlIFdpZmkgYmxvYi4NCj4gPiA+DQo+ID4g
-PiA+ICsJCQlvZmZzZXQgKz0gZGF0YV9sZW4gKyBzaXplb2YoZndkYXRhLmhlYWRlcik7DQo+ID4g
-Pg0KPiA+DQo+ID4gVGhlIHNlcXVlbmNlIGhhdmUgYmVlbiBhZGRlZCB0byBmdW5jdGlvbiBjb21t
-ZW50cyBpbiB2NC4NCj4gPg0KPiA+ID4gWW91IGRvbid0IGNoZWNrIGZvciBvdmVyZmxvdyBoZXJl
-LiBDaGVjayB0aGlzIGJlZm9yZSByZXR1cm5pbmcgdGhpcw0KPiA+ID4gKGVpdGhlciBoZXJlLCBv
-ciBpbiB0aGUgJ2RvbmUnIGxhYmVsKS4NCj4gPiA+DQo+ID4NCj4gPiBZZXMsIGFkZCBzYW5pdHkg
-Y2hlY2sgZm9yIHRoZSBvZmZzZXQgaW4gZW5kIG9mIENNRDYuDQo+ID4NCj4gPiA+ID4gKwkJCXJl
-dCA9IG9mZnNldDsNCj4gPiA+ID4gKwkJCWdvdG8gZG9uZTsNCj4gPiA+ID4gKwkJY2FzZSBNV0lG
-SUVYX0ZXX0ROTERfQ01EXzc6DQo+ID4gPiA+ICsJCQlpZiAoIWNtZDdfYmVmb3JlKQ0KPiA+ID4N
-Cj4gPiA+IF5eIFRoaXMgJ2lmJyBpc24ndCByZWFsbHkgbmVlZGVkLg0KPiA+DQo+ID4gRG9uZS4N
-Cj4gPg0KPiA+ID4NCj4gPiA+ID4gKwkJCQljbWQ3X2JlZm9yZSA9IHRydWU7DQo+ID4gPiA+ICsJ
-CQlvZmZzZXQgKz0gc2l6ZW9mKGZ3ZGF0YS5oZWFkZXIpOw0KPiA+ID4gPiArCQkJYnJlYWs7DQo+
-ID4gPiA+ICsJCWRlZmF1bHQ6DQo+ID4gPiA+ICsJCQltd2lmaWV4X2RiZyhhZGFwdGVyLCBFUlJP
-UiwgInVua25vd24gZG5sZF9jbWQgJWRcbiIsDQo+ID4gPiA+ICsJCQkJICAgIGRubGRfY21kKTsN
-Cj4gPiA+ID4gKwkJCXJldCA9IC0xOw0KPiA+ID4gPiArCQkJZ290byBkb25lOw0KPiA+ID4gPiAr
-CQl9DQo+ID4gPiA+ICsJfQ0KPiA+ID4gPiArDQo+ID4gPiA+ICtkb25lOg0KPiA+ID4gPiArCXJl
-dHVybiByZXQ7DQo+ID4gPiA+ICt9DQo+IA0KPiBbLi4uXQ0KPiANCj4gQnJpYW4NCg==
+Luca Coelho <luca@coelho.fi> writes:
+
+> On Thu, 2017-04-20 at 07:59 +0300, Luca Coelho wrote:
+>> Here's v2 of=C2=A0my second pull-request intended for v4.12.  It include=
+s the
+>> last three patch series I sent out, namely 2017-04-13, 2017-04-19 and
+>> the 2 fixes by Johannes that I sent a few minutes ago.
+>>=20
+>> I also removed the "bump API to 31" patch.  I'll send a diff=C2=A0between
+>> this tag and the HEAD of the patches I sent in the 2017-04-19 series.
+>
+> This is the diffenrece between my pending branch (which contains all the
+> patches up to 2017-04-19) and this pull-request.  For the record of what
+> I had to change.
+>
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+> b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+> index 904e17956e2c..b9718c0cf174 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+> @@ -70,8 +70,8 @@
+> =C2=A0#include "iwl-agn-hw.h"
+> =C2=A0
+> =C2=A0/* Highest firmware API version supported */
+> -#define IWL8000_UCODE_API_MAX=C2=A0=C2=A031
+> -#define IWL8265_UCODE_API_MAX=C2=A0=C2=A031
+> +#define IWL8000_UCODE_API_MAX=C2=A0=C2=A030
+> +#define IWL8265_UCODE_API_MAX=C2=A0=C2=A030
+> =C2=A0
+> =C2=A0/* Lowest firmware API version supported */
+> =C2=A0#define IWL8000_UCODE_API_MIN=C2=A0=C2=A017
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+> b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+> index 42a6e723191e..110ceefccc15 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+> @@ -55,7 +55,7 @@
+> =C2=A0#include "iwl-agn-hw.h"
+> =C2=A0
+> =C2=A0/* Highest firmware API version supported */
+> -#define IWL9000_UCODE_API_MAX=C2=A0=C2=A031
+> +#define IWL9000_UCODE_API_MAX=C2=A0=C2=A030
+> =C2=A0
+> =C2=A0/* Lowest firmware API version supported */
+> =C2=A0#define IWL9000_UCODE_API_MIN=C2=A0=C2=A030
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> index 6d745c36f1d8..097cb45c8ad9 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+> @@ -55,7 +55,7 @@
+> =C2=A0#include "iwl-agn-hw.h"
+> =C2=A0
+> =C2=A0/* Highest firmware API version supported */
+> -#define IWL_A000_UCODE_API_MAX 31
+> +#define IWL_A000_UCODE_API_MAX 30
+
+Good that you dropped this. I was a bit worried that if it the API bump
+was too soon and inconvenient for the users.
+
+--=20
+Kalle Valo
