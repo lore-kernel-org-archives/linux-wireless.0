@@ -1,63 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44056 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751384AbdDCNCe (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34299 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161769AbdDUPw0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 09:02:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Johan Hovold <johan@kernel.org>
-CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sujith Manoharan <Sujith.Manoharan@atheros.com>
-Subject: Re: [PATCH 1/2] wireless: ath9k_htc: fix NULL-deref at probe
-Date: Mon, 3 Apr 2017 13:02:28 +0000
-Message-ID: <87k271myos.fsf@kamboji.qca.qualcomm.com> (sfid-20170403_150313_258376_4BA3835D)
-References: <20170313124421.28587-1-johan@kernel.org>
-        <20170403084213.GE25742@localhost>      <87shlpomvx.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87shlpomvx.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Mon, 03 Apr 2017 12:34:26 +0300")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 21 Apr 2017 11:52:26 -0400
+Received: by mail-oi0-f68.google.com with SMTP id y11so19387980oie.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Apr 2017 08:52:26 -0700 (PDT)
+Subject: Re: [PATCH 00/14] rtlwifi: btcoex: Second set of changes for
+ rtl8821ae 2ant
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+ <87zifb65eh.fsf@codeaurora.org>
+ <5df931fe-cbb8-a0f7-ec0f-a62180ca760d@lwfinger.net>
+ <87lgqu45d0.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <d4c9dbc7-306a-df9b-cede-e0be462790e4@lwfinger.net> (sfid-20170421_175247_452144_E1CE8F95)
+Date: Fri, 21 Apr 2017 09:40:32 -0500
 MIME-Version: 1.0
+In-Reply-To: <87lgqu45d0.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-
-> Johan Hovold <johan@kernel.org> writes:
+On 04/21/2017 01:55 AM, Kalle Valo wrote:
+> But what should I do with this one:
 >
->> On Mon, Mar 13, 2017 at 01:44:20PM +0100, Johan Hovold wrote:
->>> Make sure to check the number of endpoints to avoid dereferencing a
->>> NULL-pointer or accessing memory beyond the endpoint array should a
->>> malicious device lack the expected endpoints.
->>>=20
->>> Fixes: 36bcce430657 ("ath9k_htc: Handle storage devices")
->>> Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>
->>> Signed-off-by: Johan Hovold <johan@kernel.org>
->>
->> Is this one still in your queue, Kalle?
->
-> Yes, I'm just lacking behing:
->
-> https://patchwork.kernel.org/patch/9620723/
+> rtlwifi: rtl8821ae: setup 8812ae RFE according to device type
+> https://patchwork.kernel.org/patch/9683395/
 
-Meant "lagging" of course. Mondays..
+Please apply that one. It should not conflict due to dropping the others.
 
->> As I mentioned earlier, I should have added a
->>
->> Cc: stable <stable@vger.kernel.org>     # 2.6.39
->>
->> but left it out as I mistakingly thought the net recommendations to do
->> so applied also to wireless.
->
-> Ok, I'll add that.
+Thanks,
 
-But is 2.6.39 really correct? Shouldn't it be 2.6.39+ so that it means
-all versions since 2.6.39?
-
---=20
-Kalle Valo=
+Larry
