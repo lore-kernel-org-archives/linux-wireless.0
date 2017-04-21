@@ -1,139 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51521 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758111AbdDRXWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 19:22:42 -0400
-Date: Wed, 19 Apr 2017 01:22:31 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [GIT] [4.12] NFC update
-Message-ID: <20170418232231.GA13724@zurbaran.ger.intel.com> (sfid-20170419_012257_004250_D40E3B2C)
+Received: from aserp1040.oracle.com ([141.146.126.69]:21715 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1040189AbdDUULQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Apr 2017 16:11:16 -0400
+Date: Fri, 21 Apr 2017 23:11:05 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: tom.leiming@gmail.com,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] ath9k-htc:respect usb buffer cacheline alignment in reg
+ in path
+Message-ID: <20170421201105.odl7rcm7ltpq2ow3@mwanda> (sfid-20170421_221120_098447_12298DCB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+Hello Ming Lei,
 
-This is the NFC pull request for 4.12. We have:
+The patch e6c6d33cb7d1: "ath9k-htc:respect usb buffer cacheline
+alignment in reg in path" from Apr 13, 2010, leads to the following
+static checker warning:
 
-- Improvements for the pn533 command queue handling and device
-  registration order.
-- Removal of platform data for the pn544 and st21nfca drivers.
-- Additional device tree options to support more trf7970a hardware options.
-- Support for Sony's RC-S380P through the port100 driver.
-- Removal of the obsolte nfcwilink driver.
-- Headers inclusion cleanups (miscdevice.h, unaligned.h) for many drivers.
+	drivers/net/wireless/ath/ath9k/hif_usb.c:745 ath9k_hif_usb_reg_in_cb()
+	warn: 'skb' was already freed.
 
-The following changes since commit eefe06e8ceea88f8397a8df0880ab5ca28dcada6:
+drivers/net/wireless/ath/ath9k/hif_usb.c
+   712          if (likely(urb->actual_length != 0)) {
+   713                  skb_put(skb, urb->actual_length);
+   714  
+   715                  /* Process the command first */
+   716                  ath9k_htc_rx_msg(hif_dev->htc_handle, skb,
+   717                                   skb->len, USB_REG_IN_PIPE);
+   718  
+   719  
+   720                  nskb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_ATOMIC);
+   721                  if (!nskb) {
+   722                          dev_err(&hif_dev->udev->dev,
+   723                                  "ath9k_htc: REG_IN memory allocation failure\n");
+   724                          urb->context = NULL;
+   725                          return;
+   726                  }
+   727  
+   728                  usb_fill_int_urb(urb, hif_dev->udev,
+   729                                   usb_rcvintpipe(hif_dev->udev,
+   730                                                   USB_REG_IN_PIPE),
+   731                                   nskb->data, MAX_REG_IN_BUF_SIZE,
+   732                                   ath9k_hif_usb_reg_in_cb, nskb, 1);
+   733          }
+   734  
+   735  resubmit:
+   736          usb_anchor_urb(urb, &hif_dev->reg_in_submitted);
+   737          ret = usb_submit_urb(urb, GFP_ATOMIC);
+   738          if (ret) {
+   739                  usb_unanchor_urb(urb);
+   740                  goto free;
+   741          }
+   742  
+   743          return;
+   744  free:
+   745          kfree_skb(skb);
+   746          urb->context = NULL;
+   747  }
 
-  Merge branch 'bpf-prog-testing-framework' (2017-04-01 12:45:58 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-4.12-1
-
-for you to fetch changes up to 4ea206395d3aede32bab94a75ec573530486fa44:
-
-  nfc: fix get_unaligned_...() misuses (2017-04-17 00:42:22 +0200)
-
-----------------------------------------------------------------
-Al Viro (1):
-      nfc: fix get_unaligned_...() misuses
-
-Andrey Rusalin (3):
-      NFC: pn533: change order of free_irq and dev unregistration
-      NFC: pn533: improve cmd queue handling
-      NFC: pn533: change order operations in dev registation
-
-Andy Shevchenko (12):
-      NFC: pn544: Get rid of platform data
-      NFC: pn544: Convert to use GPIO descriptor
-      NFC: pn544: Convert to use devm_request_threaded_irq()
-      NFC: pn544: Add GPIO ACPI mapping table
-      NFC: pn544: Get rid of code duplication in ->probe()
-      NFC: st21nfca: Fix obvious typo when check error code
-      NFC: st21nfca: Get rid of platform data
-      NFC: st21nfca: Get rid of "interesting" use of interrupt polarity
-      NFC: st21nfca: Covert to use GPIO descriptor
-      NFC: st21nfca: Use unified device property API meaningfully
-      NFC: netlink: Use error code from nfc_activate_target()
-      NFC: Add nfc_dbg() macro
-
-Christophe JAILLET (1):
-      NFC: st21nfca: Fix potential memory leak
-
-Corentin Labbe (3):
-      nfc: nxp-nci: Remove unneeded linux/miscdevice.h include
-      nfc: pn544: Remove unneeded linux/miscdevice.h include
-      nfc: st21nfca: Remove unneeded linux/miscdevice.h include
-
-Dan Carpenter (1):
-      NFC: nfcmrvl: double free on error path
-
-Geliang Tang (1):
-      NFC: nfcmrvl: drop duplicate header gpio.h
-
-Geoff Lansberry (2):
-      NFC: trf7970a: add device tree option for 27MHz clock
-      NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
-
-Guan Ben (1):
-      NFC: Make EN2 pin optional in the TRF7970A driver
-
-Guenter Roeck (1):
-      NFC: nxp-nci: Include unaligned.h instead of access_ok.h
-
-Michał Mirosław (1):
-      NFC: pn533: use constant off-stack buffer for sending acks
-
-Nicholas Mc Guire (1):
-      nfc: nxp-nci: use msleep for long delays
-
-OGAWA Hirofumi (4):
-      nfc: Add support RC-S380P to port100
-      nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
-      nfc: Fix RC-S380* needs zero-length packet
-      nfc: Fix hangup of RC-S380* in port100_send_ack()
-
-Rob Herring (1):
-      NFC: remove TI nfcwilink driver
-
-Samuel Ortiz (1):
-      MAINTAINERS: Remove Lauro and Aloisio from the NFC maintainers list
-
-Sudip Mukherjee (1):
-      nfc: fdp: fix NULL pointer dereference
-
-Tobias Klauser (1):
-      NFC: nfcmrvl: Include unaligned.h instead of access_ok.h
-
- .../devicetree/bindings/net/nfc/trf7970a.txt       |   8 +-
- MAINTAINERS                                        |   2 -
- drivers/nfc/Kconfig                                |  11 -
- drivers/nfc/Makefile                               |   1 -
- drivers/nfc/fdp/i2c.c                              |   6 +-
- drivers/nfc/nfcmrvl/fw_dnld.c                      |   7 +-
- drivers/nfc/nfcmrvl/spi.c                          |   6 +-
- drivers/nfc/nfcwilink.c                            | 578 ---------------------
- drivers/nfc/nxp-nci/firmware.c                     |   2 +-
- drivers/nfc/nxp-nci/i2c.c                          |   7 +-
- drivers/nfc/pn533/i2c.c                            |  34 +-
- drivers/nfc/pn533/pn533.c                          |  82 +--
- drivers/nfc/pn533/pn533.h                          |   1 +
- drivers/nfc/pn533/usb.c                            |   8 +-
- drivers/nfc/pn544/i2c.c                            | 221 ++------
- drivers/nfc/port100.c                              |  44 +-
- drivers/nfc/st21nfca/core.c                        |  12 +-
- drivers/nfc/st21nfca/i2c.c                         | 123 +----
- drivers/nfc/trf7970a.c                             |  98 +++-
- include/linux/platform_data/pn544.h                |  43 --
- include/linux/platform_data/st21nfca.h             |  33 --
- include/net/nfc/nfc.h                              |   1 +
- net/nfc/netlink.c                                  |  24 +-
- 23 files changed, 289 insertions(+), 1063 deletions(-)
- delete mode 100644 drivers/nfc/nfcwilink.c
- delete mode 100644 include/linux/platform_data/pn544.h
- delete mode 100644 include/linux/platform_data/st21nfca.h
+regards,
+dan carpenter
