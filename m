@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54140 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1954152AbdDYUXH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33804 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1035829AbdDUGih (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 16:23:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Dor Shaish <dor.shaish@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 25 Apr 2017 23:22:24 +0300
-Message-Id: <20170425202243.7844-7-luca@coelho.fi> (sfid-20170425_222323_899143_546E24B7)
-In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
-References: <20170425202243.7844-1-luca@coelho.fi>
-Subject: [PATCH 06/25] iwlwifi: mvm: freeze 7265D and 3168 on API version 29
+        Fri, 21 Apr 2017 02:38:37 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/13] rtlwifi: btcoex: 21a 1ant: set tdma and coex table when
+ wifi is idle
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170417000700.29057-2-Larry.Finger@lwfinger.net>
+References: <20170417000700.29057-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170421063835.F323F611C3@smtp.codeaurora.org> (sfid-20170421_083840_681013_1C0888A8)
+Date: Fri, 21 Apr 2017 06:38:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dor Shaish <dor.shaish@intel.com>
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> 
+> When wifi is idle, bt could have more resources to transmit, so set the
+> tdma and coex table to achieve this.
+> 
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Pkshih <pkshih@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-iwl7265D and iwl3168 are frozen on API version 29.
-Set the MAX API allowed level to 29 from now on.
+Requested by Larry
 
-Signed-off-by: Dor Shaish <dor.shaish@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+13 patches set to Changes Requested.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-index aeefd42d23ad..3b3e076571d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-@@ -73,8 +73,8 @@
- /* Highest firmware API version supported */
- #define IWL7260_UCODE_API_MAX	17
- #define IWL7265_UCODE_API_MAX	17
--#define IWL7265D_UCODE_API_MAX	30
--#define IWL3168_UCODE_API_MAX	30
-+#define IWL7265D_UCODE_API_MAX	29
-+#define IWL3168_UCODE_API_MAX	29
- 
- /* Lowest firmware API version supported */
- #define IWL7260_UCODE_API_MIN	17
+9683295 [01/13] rtlwifi: btcoex: 21a 1ant: set tdma and coex table when wifi is idle
+9683307 [02/13] rtlwifi: btcoex: 21a 1ant: more bt profiling when wifi receives special packet
+9683297 [03/13] rtlwifi: btcoex: 21a 1ant: shorten wifi slot when connected scan
+9683299 [04/13] rtlwifi: btcoex: 21a 1ant: react to special packet when wifi is not scanning
+9683301 [05/13] rtlwifi: btcoex: 21a 1ant: coex table and tdma settings for softap mode
+9683319 [06/13] rtlwifi: btcoex: 21a 1ant: wifi slot time adjustment
+9683303 [07/13] rtlwifi: btcoex: 21a 1ant: normal mode for retry limit when connected
+9683305 [08/13] rtlwifi: btcoex: 21a 1ant: mark packet high priority when scanning
+9683315 [09/13] rtlwifi: btcoex: 21a 1ant: use default value when initiating coex
+9683317 [10/13] rtlwifi: btcoex: 21a 1ant: re-init coex after wifi leaves IPS
+9683311 [11/13] rtlwifi: btcoex: 21a 1ant: treat ARP as special packet
+9683309 [12/13] rtlwifi: btcoex: 21a 1ant: fix some coding style issues
+9683313 [13/13] rtlwifi: btcoex: 21a 1ant: add bt_tx_rx_mask into bt info
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9683295/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
