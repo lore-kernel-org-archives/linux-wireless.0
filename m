@@ -1,67 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.195]:53843 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752760AbdDJOMH (ORCPT
+Received: from iron02.fraunhofer.de ([153.96.1.56]:5465 "EHLO
+        iron02.fraunhofer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1039116AbdDUMuz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 10:12:07 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Matthias Kaehlcke' <mka@chromium.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Grant Grundler <grundler@chromium.org>,
-        Michael Davidson <md@google.com>,
-        Greg Hackmann <ghackmann@google.com>
-Subject: RE: [PATCH] mac80211: Fix clang warning about constant operand in
- logical operation
-Date: Mon, 10 Apr 2017 14:12:00 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFCA9CE@AcuExch.aculab.com> (sfid-20170410_161309_064766_501AECDE)
-References: <20170406185633.91065-1-mka@chromium.org>
-In-Reply-To: <20170406185633.91065-1-mka@chromium.org>
-Content-Type: text/plain; charset="Windows-1252"
+        Fri, 21 Apr 2017 08:50:55 -0400
+Subject: Re: [v2,1/3] ath9k: Support channels in licensed bands
+To: Simon Wunderlich <sw@simonwunderlich.de>,
+        ath10k@lists.infradead.org
+Cc: Ben Greear <greearb@candelatech.com>,
+        Steve deRosier <derosier@gmail.com>,
+        Julian Calaby <julian.calaby@gmail.com>,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170323133048.30062-2-sw@simonwunderlich.de>
+ <CALLGbRK2d1wZpfLnXu_UDWxVPA9LvejFyEFpzMub56uLH0+DTw@mail.gmail.com>
+ <d4acedac-e28c-4c1c-d112-40557d52f3a2@candelatech.com>
+ <1811221.G4Vz0DPyQ8@prime>
+From: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+Message-ID: <12133a0e-b030-5b21-8de1-3bf7334d47df@fit.fraunhofer.de> (sfid-20170421_145058_974363_2F121124)
+Date: Fri, 21 Apr 2017 14:40:51 +0200
 MIME-Version: 1.0
+In-Reply-To: <1811221.G4Vz0DPyQ8@prime>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matthias Kaehlcke
-> Sent: 06 April 2017 19:57
-> Clang raises a warning about the expression 'strlen(CONFIG_XXX)' being
-> used in a logical operation. Clangs' builtin strlen function resolves the
-> expression to a constant at compile time, which causes clang to generate
-> a 'constant-logical-operand' warning.
-> 
-> Split the if statement in two to avoid using the const expression in a
-> logical operation.
-> 
-> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
-> ---
->  net/mac80211/rate.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-> index 206698bc93f4..68ff202d6380 100644
-> --- a/net/mac80211/rate.c
-> +++ b/net/mac80211/rate.c
-> @@ -173,9 +173,14 @@ ieee80211_rate_control_ops_get(const char *name)
->  		/* try default if specific alg requested but not found */
->  		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
-> 
-> +	if (ops)
-> +		goto unlock;
-> +
->  	/* try built-in one if specific alg requested but not found */
-> -	if (!ops && strlen(CONFIG_MAC80211_RC_DEFAULT))
-> +	if (strlen(CONFIG_MAC80211_RC_DEFAULT))
->  		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
-> +
-> +unlock:
+Hi all,
 
-Using the result of strlen() as a boolean should itself be a compilation error.
-You could change to code to the equivalent:
+as one of the parties who triggered this patch to be included into the 
+main line kernel, we do support Simon's or Ben's point of view.
 
-	if (!ops && CONFIG_MAC80211_RC_DEFAULT[0])
-		ops = ...
+Safeguards against accidental misuse are in place. Various patches are 
+(have been) already in the open, so if someone wants to be evil, it 
+can't be prevented.
 
-	David
+Also, these patches do not make up new channels out of the blue, they 
+merely enable channels which are allowed in certain countries under 
+specific regulations. To me it seems to be the task of the distribution 
+manager (or manufacturer) to ensure that only hardware/kernel features 
+are made available that are legal in the given jurisdiction.
+
+The default behavior is to disable those extra channels. If you are 
+building, i.e. First Responder solutions, you need to ensure that those 
+guys use the systems incl. the frequency spectrum accordingly.
+
+To be pragmatic and to avoid out-of-tree code maintenance, my vote would 
+be for integration into mainline.
+
+Best regards,
+
+Mathias
+
+
+
+
+Hence, for
+
+On 21-Apr-17 13:29, Simon Wunderlich wrote:
+> Hi,
+> 
+> On Tuesday, April 18, 2017 10:09:59 AM CEST Ben Greear wrote:
+>> [...]
+>>>      In my personal view, we have quite a few obstacles which I consider
+>>>      "enough", but would be interesting to hear others opinions ...
+>>>
+>>> I'll throw in my 2-cents. This patch is treading on very dangerous ground.
+>>> I can't speak to other regulatory environments, but at least the FCC is
+>>> cracking down on even the possibility that anyone can operate a WiFi
+>>> device outside the regulatory bounds.
+>> These patches make it slightly easier to use the licensed bands, but no one
+>> can accidentally use them due to the regdb and other constaints in these
+>> patches.
+>>
+>> So, I don't think these patches offer any fundamental new vulnerability
+>> that should concern the FCC.
+>>
+>> After all, someone who really wants to do evil can find and apply the
+>> patches without undue effort, and it could easily be that those applying
+>> the patches would then make it even easier to abuse the new channels due to
+>> laziness or poor coding choices.
+> 
+> I'm with Ben on this one. I also have followed the FCC actions in the past few
+> years, and I've also been involved into that [1,2,3]. There are mailing lists
+> on the topic if you want to get involved. I agree that the topic is important,
+> but I would prefer to not have this patch serving as battleground. :)
+> 
+> The patches proposed here, as Ben says, at least put proper warnings and
+> obstacles which users have to knowingly overcome (or read). It's probably
+> safer than keeping the driver as is and having people apply random patches
+> from the internet which they don't understand or hack the code themselves.
+> Frankly, it's not that hard to enable those channels.
+> 
+> As we have seen by the number of questions and people trying to bring this
+> patch in (Ben and Julian), there is quite some interest for supporting those
+> bands. I've also got a few requests from companies to have it supported
+> (Fraunhofer is one of those).
+> 
+> Cheers,
+>        Simon
+> 
+> 
+> [1] https://www.reddit.com/r/wireless/comments/3irr5b/
+> openwrt_vs_fcc_forced_firmware_lockdown/
+> [2] http://hackaday.com/2016/02/26/fcc-locks-down-router-firmware/
+> [3] https://libreplanet.org/wiki/Save_WiFi
+> 
