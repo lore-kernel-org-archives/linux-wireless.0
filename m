@@ -1,114 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36357 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754742AbdDOUcM (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59798 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1038949AbdDUMF1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Apr 2017 16:32:12 -0400
-Received: by mail-oi0-f65.google.com with SMTP id b187so22210908oif.3
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:12 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 07/14] rtlwifi: btcoex: 21a 2ant: add multiport action for p2p/miracast
-Date: Sat, 15 Apr 2017 15:31:53 -0500
-Message-Id: <20170415203200.22979-8-Larry.Finger@lwfinger.net> (sfid-20170415_223236_102768_DD4DFB65)
-In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+        Fri, 21 Apr 2017 08:05:27 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V3 9/9] brcmfmac: add scheduled scan support for specified BSSIDs
+Date: Fri, 21 Apr 2017 13:05:08 +0100
+Message-Id: <1492776308-15120-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170421_140541_524844_815F351E)
+In-Reply-To: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Add support to handle scheduled scan request containing BSSID in
+the matchsets. The firmware can send event upon finding BSSIDs and
+SSIDs. To get these in one event the bit REPORT_SEPARATELY needed
+to be removed from the flags in brcmf_pno_config().
 
-For p2p/miracast, the wifi may have multiple ports for different roles.
-Under this, we need extra settings for turning off the tdma and proper
-coex table parameters.
-
-We monnitor the number of links on a port to determine if it is for
-p2p/miracast or not.
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 47 ++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 11 ++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 58 ++++++++++++++++------
+ 2 files changed, 53 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 9df5b4c195ff..4471bd66a2e5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3495,11 +3495,31 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- 	}
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 45aaae8..b857d53 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -806,6 +806,17 @@ struct brcmf_pno_macaddr_le {
+ };
  
-+static void btc8821a2ant_action_wifi_multi_port(struct btc_coexist *btcoexist)
-+{
-+	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
-+	btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
+ /**
++ * struct brcmf_pno_bssid_le - bssid configuration for PNO scan.
++ *
++ * @bssid: BSS network identifier.
++ * @flags: flags for this BSSID.
++ */
++struct brcmf_pno_bssid_le {
++	u8 bssid[ETH_ALEN];
++	__le16 flags;
++};
 +
-+	/* sw all off */
-+	btc8821a2ant_sw_mechanism1(btcoexist, false, false, false, false);
-+	btc8821a2ant_sw_mechanism2(btcoexist, false, false, false, 0x18);
++/**
+  * struct brcmf_pktcnt_le - packet counters.
+  *
+  * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index 81e8549..9623157 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -120,7 +120,6 @@ static int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
+ 
+ 	/* set extra pno params */
+ 	flags = BIT(BRCMF_PNO_IMMEDIATE_SCAN_BIT) |
+-		BIT(BRCMF_PNO_REPORT_SEPARATELY_BIT) |
+ 		BIT(BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
+ 	pfn_param.repeat = BRCMF_PNO_REPEAT;
+ 	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
+@@ -205,6 +204,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
+ 			      bool active)
+ {
+ 	struct brcmf_pno_net_param_le pfn;
++	int err;
+ 
+ 	pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
+ 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
+@@ -215,7 +215,28 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
+ 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
+ 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
+ 	memcpy(pfn.ssid.SSID, ssid->ssid, ssid->ssid_len);
+-	return brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
 +
-+	/* hw all off */
-+	btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
-+
-+	btc8821a2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
-+	btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 1);
++	brcmf_dbg(SCAN, "adding ssid=%.32s (active=%d)\n", ssid->ssid, active);
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
++	if (err < 0)
++		brcmf_err("adding failed: err=%d\n", err);
++	return err;
 +}
 +
- static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
++static int brcmf_pno_add_bssid(struct brcmf_if *ifp, const u8 *bssid)
++{
++	struct brcmf_pno_bssid_le bssid_cfg;
++	int err;
++
++	memcpy(bssid_cfg.bssid, bssid, ETH_ALEN);
++	bssid_cfg.flags = 0;
++
++	brcmf_dbg(SCAN, "adding bssid=%pM\n", bssid);
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_add_bssid", &bssid_cfg,
++				       sizeof(bssid_cfg));
++	if (err < 0)
++		brcmf_err("adding failed: err=%d\n", err);
++	return err;
+ }
+ 
+ static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
+@@ -342,29 +363,29 @@ static int brcmf_pno_prep_fwconfig(struct brcmf_pno_info *pi,
+ 	return err;
+ }
+ 
+-static int brcmf_pno_config_ssids(struct brcmf_if *ifp,
+-				  struct brcmf_pno_info *pi)
++static int brcmf_pno_config_networks(struct brcmf_if *ifp,
++				     struct brcmf_pno_info *pi)
  {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
- 	bool wifi_under_5g = false;
- 	u8 algorithm = 0;
-+	u32 num_of_wifi_link = 0;
-+	u32 wifi_link_status = 0;
-+	bool miracast_plus_bt = false;
+ 	struct cfg80211_sched_scan_request *r;
+ 	struct cfg80211_match_set *ms;
+ 	bool active;
+-	int i, j, err;
++	int i, j, err = 0;
  
- 	if (btcoexist->manual_control) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-@@ -3525,6 +3545,33 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 		return;
+ 	for (i = 0; i < pi->n_reqs; i++) {
+ 		r = pi->reqs[i];
+ 
+ 		for (j = 0; j < r->n_match_sets; j++) {
+ 			ms = &r->match_sets[j];
+-			if (!ms->ssid.ssid_len)
+-				continue;
+-			active = brcmf_is_ssid_active(&ms->ssid, r);
+-			brcmf_dbg(SCAN, "adding %.32s (active=%d)\n",
+-				  ms->ssid.ssid, active);
+-			err = brcmf_pno_add_ssid(ifp, &ms->ssid, active);
+-			if (err < 0) {
+-				brcmf_err("adding failed: err=%d\n", err);
+-				return err;
++			if (ms->ssid.ssid_len) {
++				active = brcmf_is_ssid_active(&ms->ssid, r);
++				err = brcmf_pno_add_ssid(ifp, &ms->ssid,
++							 active);
+ 			}
++			if (!err && is_valid_ether_addr(ms->bssid))
++				err = brcmf_pno_add_bssid(ifp, ms->bssid);
++
++			if (err < 0)
++				return err;
+ 		}
  	}
+ 	return 0;
+@@ -428,7 +449,7 @@ static int brcmf_pno_config_sched_scans(struct brcmf_if *ifp)
+ 	if (err < 0)
+ 		goto clean;
  
-+	/* for P2P */
-+	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
-+			   &wifi_link_status);
-+	num_of_wifi_link = wifi_link_status >> 16;
-+
-+	if ((num_of_wifi_link >= 2) ||
-+	    (wifi_link_status & WIFI_P2P_GO_CONNECTED)) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "############# [BTCoex],  Multi-Port num_of_wifi_link = %d, wifi_link_status = 0x%x\n",
-+			 num_of_wifi_link, wifi_link_status);
-+
-+		if (bt_link_info->bt_link_exist)
-+			miracast_plus_bt = true;
-+		else
-+			miracast_plus_bt = false;
-+
-+		btcoexist->btc_set(btcoexist, BTC_SET_BL_MIRACAST_PLUS_BT,
-+				   &miracast_plus_bt);
-+		btc8821a2ant_action_wifi_multi_port(btcoexist);
-+
-+		return;
-+	}
-+
-+	miracast_plus_bt = false;
-+	btcoexist->btc_set(btcoexist, BTC_SET_BL_MIRACAST_PLUS_BT,
-+			   &miracast_plus_bt);
-+
- 	coex_dm->cur_algorithm = algorithm;
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], Algorithm = %d\n", coex_dm->cur_algorithm);
+-	err = brcmf_pno_config_ssids(ifp, pi);
++	err = brcmf_pno_config_networks(ifp, pi);
+ 	if (err < 0)
+ 		goto clean;
+ 
+@@ -555,7 +576,12 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 		for (j = 0; j < req->n_match_sets; j++) {
+ 			ms = &req->match_sets[j];
+ 			if (ms->ssid.ssid_len == ni->SSID_len &&
+-			    !strncmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
++			    !memcmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
++				bucket_map |= BIT(i);
++				break;
++			}
++			if (is_valid_ether_addr(ms->bssid) &&
++			    !memcmp(ms->bssid, ni->bssid, ETH_ALEN)) {
+ 				bucket_map |= BIT(i);
+ 				break;
+ 			}
 -- 
-2.12.0
+1.9.1
