@@ -1,74 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:63273 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1956638AbdDZH7F (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59758 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1038733AbdDUMFS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 03:59:05 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 26 Apr 2017 10:58:45 +0300
-Message-Id: <20170426075854.13546-1-luca@coelho.fi> (sfid-20170426_095912_313349_7D1A9468)
-Subject: [PATCH 0/9] cfg80211/mac80211 patches from our internal tree 2017-04-26
+        Fri, 21 Apr 2017 08:05:18 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V3 2/9] nl80211: add support for BSSIDs in scheduled scan matchsets
+Date: Fri, 21 Apr 2017 13:05:01 +0100
+Message-Id: <1492776308-15120-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170421_140544_122238_BE8A5168)
+In-Reply-To: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+This patch allows for the scheduled scan request to specify matchsets
+for specific BSSIDs.
 
-Hi,
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ include/net/cfg80211.h       |  6 +++++-
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/nl80211.c       | 41 +++++++++++++++++++++++++++++++----------
+ 3 files changed, 38 insertions(+), 11 deletions(-)
 
-Here are some mac80211 and cfg80211 patches from our internal tree.
-
- * New AKM suite selectors in the ieee80211 header;
- * Some improvements in the roaming API in cfg80211;
- * Support for max BSS idle period in mac80211;
- * Some cleanups and an optimization;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7721a9b..2142800 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1613,11 +1613,15 @@ static inline void get_random_mask_addr(u8 *buf, const u8 *addr, const u8 *mask)
+ /**
+  * struct cfg80211_match_set - sets of attributes to match
+  *
+- * @ssid: SSID to be matched; may be zero-length for no match (RSSI only)
++ * @ssid: SSID to be matched; may be zero-length in case of BSSID match
++ *	or no match (RSSI only)
++ * @bssid: BSSID to be matched; may be all-zero BSSID in case of SSID match
++ *	or no match (RSSI only)
+  * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
+  */
+ struct cfg80211_match_set {
+ 	struct cfg80211_ssid ssid;
++	u8 bssid[ETH_ALEN];
+ 	s32 rssi_thold;
+ };
  
-Please review.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (3):
-  mac80211: Add support for BSS max idle period element
-  cfg80211: unify cfg80211_roamed() and cfg80211_roamed_bss()
-  cfg80211/nl80211: add authorized flag to roaming event
-
-Emmanuel Grumbach (1):
-  mac80211: don't parse encrypted management frames in
-    ieee80211_frame_acked
-
-Johannes Berg (2):
-  ieee80211: fix kernel-doc parsing errors
-  mac80211: disentangle iflist_mtx and chanctx_mtx
-
-Luca Coelho (3):
-  ieee80211: add SUITE_B AKM selectors
-  ieee80211: add FT-802.1X AKM suite selector
-  mac80211: make multicast variable a bool in ieee80211_accept_frame()
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         | 10 ++-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 13 +++-
- drivers/net/wireless/rndis_wlan.c                  | 19 +++--
- drivers/staging/wlan-ng/cfg80211.c                 |  7 +-
- include/linux/ieee80211.h                          | 67 +++++++++++-----
- include/net/cfg80211.h                             | 62 +++++++--------
- include/net/mac80211.h                             | 14 +++-
- include/uapi/linux/nl80211.h                       | 14 ++++
- net/mac80211/cfg.c                                 |  6 +-
- net/mac80211/ieee80211_i.h                         |  1 +
- net/mac80211/main.c                                |  2 +
- net/mac80211/mlme.c                                | 14 +++-
- net/mac80211/rx.c                                  |  2 +-
- net/mac80211/status.c                              |  1 +
- net/mac80211/util.c                                | 18 ++++-
- net/wireless/core.h                                | 12 +--
- net/wireless/nl80211.c                             | 20 +++--
- net/wireless/nl80211.h                             |  5 +-
- net/wireless/sme.c                                 | 91 ++++++++++------------
- net/wireless/util.c                                |  4 +-
- 20 files changed, 231 insertions(+), 151 deletions(-)
-
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f34127d..925eb38 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3209,6 +3209,7 @@ enum nl80211_reg_rule_attr {
+  *	BSS-es in the specified band is to be adjusted before doing
+  *	RSSI-based BSS selection. The attribute value is a packed structure
+  *	value as specified by &struct nl80211_bss_select_rssi_adjust.
++ * @NL80211_SCHED_SCAN_MATCH_ATTR_BSSID: BSSID to be used for matching.
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_MAX: highest scheduled scan filter
+  *	attribute number currently defined
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST: internal use
+@@ -3220,6 +3221,7 @@ enum nl80211_sched_scan_match_attr {
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI,
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RELATIVE_RSSI,
+ 	NL80211_SCHED_SCAN_MATCH_ATTR_RSSI_ADJUST,
++	NL80211_SCHED_SCAN_MATCH_ATTR_BSSID,
+ 
+ 	/* keep last */
+ 	__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fe03d42..19cc70a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -497,6 +497,8 @@ enum nl80211_multicast_groups {
+ nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] = { .type = NLA_BINARY,
+ 						 .len = IEEE80211_MAX_SSID_LEN },
++	[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID] = { .type = NLA_BINARY,
++						  .len = ETH_ALEN },
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI] = { .type = NLA_U32 },
+ };
+ 
+@@ -7056,8 +7058,15 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 					       NULL);
+ 			if (err)
+ 				return ERR_PTR(err);
++
++			/* SSID and BSSID are mutually exclusive */
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] &&
++			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID])
++				return ERR_PTR(-EINVAL);
++
+ 			/* add other standalone attributes here */
+-			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID]) {
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] ||
++			    tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID]) {
+ 				n_match_sets++;
+ 				continue;
+ 			}
+@@ -7228,7 +7237,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 		nla_for_each_nested(attr,
+ 				    attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
+ 				    tmp) {
+-			struct nlattr *ssid, *rssi;
++			struct nlattr *ssid, *bssid, *rssi;
+ 
+ 			err = nla_parse_nested(tb,
+ 					       NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
+@@ -7237,7 +7246,8 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 			if (err)
+ 				goto out_free;
+ 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
+-			if (ssid) {
++			bssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID];
++			if (ssid || bssid) {
+ 				if (WARN_ON(i >= n_match_sets)) {
+ 					/* this indicates a programming error,
+ 					 * the loop above should have verified
+@@ -7247,14 +7257,25 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 					goto out_free;
+ 				}
+ 
+-				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
+-					err = -EINVAL;
+-					goto out_free;
++				if (ssid) {
++					if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
++						err = -EINVAL;
++						goto out_free;
++					}
++					memcpy(request->match_sets[i].ssid.ssid,
++					       nla_data(ssid), nla_len(ssid));
++					request->match_sets[i].ssid.ssid_len =
++						nla_len(ssid);
++				}
++				if (bssid) {
++					if (nla_len(bssid) != ETH_ALEN) {
++						err = -EINVAL;
++						goto out_free;
++					}
++					memcpy(request->match_sets[i].bssid,
++					       nla_data(bssid), ETH_ALEN);
+ 				}
+-				memcpy(request->match_sets[i].ssid.ssid,
+-				       nla_data(ssid), nla_len(ssid));
+-				request->match_sets[i].ssid.ssid_len =
+-					nla_len(ssid);
++
+ 				/* special attribute - old implementation w/a */
+ 				request->match_sets[i].rssi_thold =
+ 					default_match_rssi;
 -- 
-2.11.0
+1.9.1
