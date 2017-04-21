@@ -1,691 +1,495 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51450 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754580AbdDMP1R (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39774 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1037123AbdDUJIR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 11:27:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 13 Apr 2017 18:24:55 +0300
-Message-Id: <20170413152507.9648-15-luca@coelho.fi> (sfid-20170413_172721_699482_7721986C)
-In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
-References: <20170413152507.9648-1-luca@coelho.fi>
-Subject: [PATCH 14/26] iwlwifi: pcie: copy TX functions to new transport
+        Fri, 21 Apr 2017 05:08:17 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers-next 2017-04-21
+Date: Fri, 21 Apr 2017 12:08:10 +0300
+Message-ID: <87h91i3z7p.fsf@kamboji.qca.qualcomm.com> (sfid-20170421_111000_792227_3ECB6ABC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi Dave,
 
-This is just a copy-paste in order to make changes tracking
-easier.
+here's most likely the last pull request to net-next for 4.12, unless
+Linus delayes the start of merge window. More info in the signed tag
+below and please let me know if there are any problems.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  13 +
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 519 +++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  38 +-
- 4 files changed, 540 insertions(+), 32 deletions(-)
+Kalle
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 5e191579b9a9..b9afffae8a4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -650,6 +650,12 @@ static inline void iwl_enable_fw_load_int(struct iwl_trans *trans)
- 	}
- }
- 
-+static inline void *iwl_pcie_get_tfd(struct iwl_trans_pcie *trans_pcie,
-+				     struct iwl_txq *txq, int idx)
-+{
-+	return txq->tfds + trans_pcie->tfd_size * idx;
-+}
-+
- static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -759,6 +765,11 @@ int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
- void iwl_pcie_synchronize_irqs(struct iwl_trans *trans);
- bool iwl_trans_check_hw_rf_kill(struct iwl_trans *trans);
- void iwl_pcie_txq_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq);
-+int iwl_queue_space(const struct iwl_txq *q);
-+int iwl_fill_data_tbs_amsdu(struct iwl_trans *trans, struct sk_buff *skb,
-+			    struct iwl_txq *txq, u8 hdr_len,
-+			    struct iwl_cmd_meta *out_meta,
-+			    struct iwl_device_cmd *dev_cmd, u16 tb1_len);
- 
- /* transport gen 2 exported functions */
- int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
-@@ -769,5 +780,7 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
- 				 int cmd_id,
- 				 unsigned int timeout);
- void iwl_trans_pcie_dyn_txq_free(struct iwl_trans *trans, int queue);
-+int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
-+			   struct iwl_device_cmd *dev_cmd, int txq_id);
- 
- #endif /* __iwl_trans_int_pcie_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 9cd9c1f5a3dc..e1610241be07 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2920,7 +2920,7 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
- 
- 	.send_cmd = iwl_trans_pcie_send_hcmd,
- 
--	.tx = iwl_trans_pcie_tx,
-+	.tx = iwl_trans_pcie_gen2_tx,
- 	.reclaim = iwl_trans_pcie_reclaim,
- 
- 	.txq_alloc = iwl_trans_pcie_dyn_txq_alloc,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 7c93f266871e..2ddaf7a1a1b5 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -53,6 +53,525 @@
- #include "iwl-csr.h"
- #include "iwl-io.h"
- #include "internal.h"
-+#include "mvm/fw-api.h"
-+
-+/*
-+ * iwl_pcie_txq_update_byte_tbl - Set up entry in Tx byte-count array
-+ */
-+static void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans *trans,
-+					  struct iwl_txq *txq, u16 byte_cnt,
-+					   int num_tbs)
-+{
-+	struct iwlagn_scd_bc_tbl *scd_bc_tbl;
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	int write_ptr = txq->write_ptr;
-+	u8 filled_tfd_size, num_fetch_chunks;
-+	u16 len = byte_cnt;
-+	__le16 bc_ent;
-+
-+	scd_bc_tbl = trans_pcie->scd_bc_tbls.addr;
-+
-+	len = DIV_ROUND_UP(len, 4);
-+
-+	if (WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX))
-+		return;
-+
-+	filled_tfd_size = offsetof(struct iwl_tfh_tfd, tbs) +
-+				   num_tbs * sizeof(struct iwl_tfh_tb);
-+	/*
-+	 * filled_tfd_size contains the number of filled bytes in the TFD.
-+	 * Dividing it by 64 will give the number of chunks to fetch
-+	 * to SRAM- 0 for one chunk, 1 for 2 and so on.
-+	 * If, for example, TFD contains only 3 TBs then 32 bytes
-+	 * of the TFD are used, and only one chunk of 64 bytes should
-+	 * be fetched
-+	 */
-+	num_fetch_chunks = DIV_ROUND_UP(filled_tfd_size, 64) - 1;
-+
-+	bc_ent = cpu_to_le16(len | (num_fetch_chunks << 12));
-+	scd_bc_tbl[txq->id].tfd_offset[write_ptr] = bc_ent;
-+}
-+
-+/*
-+ * iwl_pcie_gen2_txq_inc_wr_ptr - Send new write index to hardware
-+ */
-+static void iwl_pcie_gen2_txq_inc_wr_ptr(struct iwl_trans *trans,
-+					 struct iwl_txq *txq)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	u32 reg = 0;
-+	int txq_id = txq->id;
-+
-+	lockdep_assert_held(&txq->lock);
-+
-+	/*
-+	 * explicitly wake up the NIC if:
-+	 * 1. shadow registers aren't enabled
-+	 * 2. NIC is woken up for CMD regardless of shadow outside this function
-+	 * 3. there is a chance that the NIC is asleep
-+	 */
-+	if (!trans->cfg->base_params->shadow_reg_enable &&
-+	    txq_id != trans_pcie->cmd_queue &&
-+	    test_bit(STATUS_TPOWER_PMI, &trans->status)) {
-+		/*
-+		 * wake up nic if it's powered down ...
-+		 * uCode will wake up, and interrupt us again, so next
-+		 * time we'll skip this part.
-+		 */
-+		reg = iwl_read32(trans, CSR_UCODE_DRV_GP1);
-+
-+		if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
-+			IWL_DEBUG_INFO(trans,
-+				       "Tx queue %d requesting wakeup, GP1 = 0x%x\n",
-+				       txq_id, reg);
-+			iwl_set_bit(trans, CSR_GP_CNTRL,
-+				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+			txq->need_update = true;
-+			return;
-+		}
-+	}
-+
-+	/*
-+	 * if not in power-save mode, uCode will never sleep when we're
-+	 * trying to tx (during RFKILL, we're not trying to tx).
-+	 */
-+	IWL_DEBUG_TX(trans, "Q:%d WR: 0x%x\n", txq_id, txq->write_ptr);
-+	if (!txq->block)
-+		iwl_write32(trans, HBUS_TARG_WRPTR,
-+			    txq->write_ptr | (txq_id << 8));
-+}
-+
-+static inline u8 iwl_pcie_gen2_get_num_tbs(struct iwl_trans *trans, void *_tfd)
-+{
-+	if (trans->cfg->use_tfh) {
-+		struct iwl_tfh_tfd *tfd = _tfd;
-+
-+		return le16_to_cpu(tfd->num_tbs) & 0x1f;
-+	} else {
-+		struct iwl_tfd *tfd = _tfd;
-+
-+		return tfd->num_tbs & 0x1f;
-+	}
-+}
-+
-+static inline dma_addr_t iwl_pcie_gen2_tb_get_addr(struct iwl_trans *trans,
-+						   void *_tfd, u8 idx)
-+{
-+	if (trans->cfg->use_tfh) {
-+		struct iwl_tfh_tfd *tfd = _tfd;
-+		struct iwl_tfh_tb *tb = &tfd->tbs[idx];
-+
-+		return (dma_addr_t)(le64_to_cpu(tb->addr));
-+	} else {
-+		struct iwl_tfd *tfd = _tfd;
-+		struct iwl_tfd_tb *tb = &tfd->tbs[idx];
-+		dma_addr_t addr = get_unaligned_le32(&tb->lo);
-+		dma_addr_t hi_len;
-+
-+		if (sizeof(dma_addr_t) <= sizeof(u32))
-+			return addr;
-+
-+		hi_len = le16_to_cpu(tb->hi_n_len) & 0xF;
-+
-+		/*
-+		 * shift by 16 twice to avoid warnings on 32-bit
-+		 * (where this code never runs anyway due to the
-+		 * if statement above)
-+		 */
-+		return addr | ((hi_len << 16) << 16);
-+	}
-+}
-+
-+static void iwl_pcie_gen2_tfd_unmap(struct iwl_trans *trans,
-+				    struct iwl_cmd_meta *meta,
-+				    struct iwl_txq *txq, int index)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	int i, num_tbs;
-+	void *tfd = iwl_pcie_get_tfd(trans_pcie, txq, index);
-+
-+	/* Sanity check on number of chunks */
-+	num_tbs = iwl_pcie_gen2_get_num_tbs(trans, tfd);
-+
-+	if (num_tbs >= trans_pcie->max_tbs) {
-+		IWL_ERR(trans, "Too many chunks: %i\n", num_tbs);
-+		/* @todo issue fatal error, it is quite serious situation */
-+		return;
-+	}
-+
-+	/* first TB is never freed - it's the bidirectional DMA data */
-+
-+	for (i = 1; i < num_tbs; i++) {
-+		if (meta->tbs & BIT(i))
-+			dma_unmap_page(trans->dev,
-+				       iwl_pcie_gen2_tb_get_addr(trans, tfd,
-+								 i),
-+				       iwl_pcie_gen2_tb_get_addr(trans, tfd,
-+								 i),
-+				       DMA_TO_DEVICE);
-+		else
-+			dma_unmap_single(trans->dev,
-+					 iwl_pcie_gen2_tb_get_addr(trans, tfd,
-+								   i),
-+					 iwl_pcie_gen2_tb_get_addr(trans, tfd,
-+								   i),
-+					 DMA_TO_DEVICE);
-+	}
-+
-+	if (trans->cfg->use_tfh) {
-+		struct iwl_tfh_tfd *tfd_fh = (void *)tfd;
-+
-+		tfd_fh->num_tbs = 0;
-+	} else {
-+		struct iwl_tfd *tfd_fh = (void *)tfd;
-+
-+		tfd_fh->num_tbs = 0;
-+	}
-+}
-+
-+static void iwl_pcie_gen2_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
-+{
-+	/* rd_ptr is bounded by TFD_QUEUE_SIZE_MAX and
-+	 * idx is bounded by n_window
-+	 */
-+	int rd_ptr = txq->read_ptr;
-+	int idx = get_cmd_index(txq, rd_ptr);
-+
-+	lockdep_assert_held(&txq->lock);
-+
-+	/* We have only q->n_window txq->entries, but we use
-+	 * TFD_QUEUE_SIZE_MAX tfds
-+	 */
-+	iwl_pcie_gen2_tfd_unmap(trans, &txq->entries[idx].meta, txq, rd_ptr);
-+
-+	/* free SKB */
-+	if (txq->entries) {
-+		struct sk_buff *skb;
-+
-+		skb = txq->entries[idx].skb;
-+
-+		/* Can be called from irqs-disabled context
-+		 * If skb is not NULL, it means that the whole queue is being
-+		 * freed and that the queue is not empty - free the skb
-+		 */
-+		if (skb) {
-+			iwl_op_mode_free_skb(trans->op_mode, skb);
-+			txq->entries[idx].skb = NULL;
-+		}
-+	}
-+}
-+
-+static inline void iwl_pcie_gen2_set_tb(struct iwl_trans *trans, void *tfd,
-+					u8 idx, dma_addr_t addr, u16 len)
-+{
-+	if (trans->cfg->use_tfh) {
-+		struct iwl_tfh_tfd *tfd_fh = (void *)tfd;
-+		struct iwl_tfh_tb *tb = &tfd_fh->tbs[idx];
-+
-+		put_unaligned_le64(addr, &tb->addr);
-+		tb->tb_len = cpu_to_le16(len);
-+
-+		tfd_fh->num_tbs = cpu_to_le16(idx + 1);
-+	} else {
-+		struct iwl_tfd *tfd_fh = (void *)tfd;
-+		struct iwl_tfd_tb *tb = &tfd_fh->tbs[idx];
-+
-+		u16 hi_n_len = len << 4;
-+
-+		put_unaligned_le32(addr, &tb->lo);
-+		hi_n_len |= iwl_get_dma_hi_addr(addr);
-+
-+		tb->hi_n_len = cpu_to_le16(hi_n_len);
-+
-+		tfd_fh->num_tbs = idx + 1;
-+	}
-+}
-+
-+int iwl_pcie_gen2_build_tfd(struct iwl_trans *trans, struct iwl_txq *txq,
-+			    dma_addr_t addr, u16 len, bool reset)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	void *tfd;
-+	u32 num_tbs;
-+
-+	tfd = txq->tfds + trans_pcie->tfd_size * txq->write_ptr;
-+
-+	if (reset)
-+		memset(tfd, 0, trans_pcie->tfd_size);
-+
-+	num_tbs = iwl_pcie_gen2_get_num_tbs(trans, tfd);
-+
-+	/* Each TFD can point to a maximum max_tbs Tx buffers */
-+	if (num_tbs >= trans_pcie->max_tbs) {
-+		IWL_ERR(trans, "Error can not send more than %d chunks\n",
-+			trans_pcie->max_tbs);
-+		return -EINVAL;
-+	}
-+
-+	if (WARN(addr & ~IWL_TX_DMA_MASK,
-+		 "Unaligned address = %llx\n", (unsigned long long)addr))
-+		return -EINVAL;
-+
-+	iwl_pcie_gen2_set_tb(trans, tfd, num_tbs, addr, len);
-+
-+	return num_tbs;
-+}
-+
-+static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
-+			     struct iwl_txq *txq, u8 hdr_len,
-+			     struct iwl_cmd_meta *out_meta,
-+			     struct iwl_device_cmd *dev_cmd, u16 tb1_len)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	u16 tb2_len;
-+	int i;
-+
-+	/*
-+	 * Set up TFD's third entry to point directly to remainder
-+	 * of skb's head, if any
-+	 */
-+	tb2_len = skb_headlen(skb) - hdr_len;
-+
-+	if (tb2_len > 0) {
-+		dma_addr_t tb2_phys = dma_map_single(trans->dev,
-+						     skb->data + hdr_len,
-+						     tb2_len, DMA_TO_DEVICE);
-+		if (unlikely(dma_mapping_error(trans->dev, tb2_phys))) {
-+			iwl_pcie_gen2_tfd_unmap(trans, out_meta, txq,
-+						txq->write_ptr);
-+			return -EINVAL;
-+		}
-+		iwl_pcie_gen2_build_tfd(trans, txq, tb2_phys, tb2_len, false);
-+	}
-+
-+	/* set up the remaining entries to point to the data */
-+	for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
-+		const skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
-+		dma_addr_t tb_phys;
-+		int tb_idx;
-+
-+		if (!skb_frag_size(frag))
-+			continue;
-+
-+		tb_phys = skb_frag_dma_map(trans->dev, frag, 0,
-+					   skb_frag_size(frag), DMA_TO_DEVICE);
-+
-+		if (unlikely(dma_mapping_error(trans->dev, tb_phys))) {
-+			iwl_pcie_gen2_tfd_unmap(trans, out_meta, txq,
-+						txq->write_ptr);
-+			return -EINVAL;
-+		}
-+		tb_idx = iwl_pcie_gen2_build_tfd(trans, txq, tb_phys,
-+						 skb_frag_size(frag), false);
-+
-+		out_meta->tbs |= BIT(tb_idx);
-+	}
-+
-+	trace_iwlwifi_dev_tx(trans->dev, skb,
-+			     iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr),
-+			     trans_pcie->tfd_size,
-+			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
-+			     skb->data + hdr_len, tb2_len);
-+	trace_iwlwifi_dev_tx_data(trans->dev, skb,
-+				  hdr_len, skb->len - hdr_len);
-+	return 0;
-+}
-+
-+#define TX_CMD_FLG_MH_PAD_MSK cpu_to_le32(TX_CMD_FLG_MH_PAD)
-+
-+int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
-+			   struct iwl_device_cmd *dev_cmd, int txq_id)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct ieee80211_hdr *hdr;
-+	struct iwl_tx_cmd *tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
-+	struct iwl_cmd_meta *out_meta;
-+	struct iwl_txq *txq;
-+	dma_addr_t tb0_phys, tb1_phys, scratch_phys;
-+	void *tb1_addr;
-+	void *tfd;
-+	u16 len, tb1_len;
-+	bool wait_write_ptr;
-+	__le16 fc;
-+	u8 hdr_len;
-+	u16 wifi_seq;
-+	bool amsdu;
-+
-+	txq = &trans_pcie->txq[txq_id];
-+
-+	if (WARN_ONCE(!test_bit(txq_id, trans_pcie->queue_used),
-+		      "TX on unused queue %d\n", txq_id))
-+		return -EINVAL;
-+
-+	if (unlikely(trans_pcie->sw_csum_tx &&
-+		     skb->ip_summed == CHECKSUM_PARTIAL)) {
-+		int offs = skb_checksum_start_offset(skb);
-+		int csum_offs = offs + skb->csum_offset;
-+		__wsum csum;
-+
-+		if (skb_ensure_writable(skb, csum_offs + sizeof(__sum16)))
-+			return -1;
-+
-+		csum = skb_checksum(skb, offs, skb->len - offs, 0);
-+		*(__sum16 *)(skb->data + csum_offs) = csum_fold(csum);
-+
-+		skb->ip_summed = CHECKSUM_UNNECESSARY;
-+	}
-+
-+	if (skb_is_nonlinear(skb) &&
-+	    skb_shinfo(skb)->nr_frags > IWL_PCIE_MAX_FRAGS(trans_pcie) &&
-+	    __skb_linearize(skb))
-+		return -ENOMEM;
-+
-+	/* mac80211 always puts the full header into the SKB's head,
-+	 * so there's no need to check if it's readable there
-+	 */
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
-+	hdr_len = ieee80211_hdrlen(fc);
-+
-+	spin_lock(&txq->lock);
-+
-+	if (iwl_queue_space(txq) < txq->high_mark) {
-+		iwl_stop_queue(trans, txq);
-+
-+		/* don't put the packet on the ring, if there is no room */
-+		if (unlikely(iwl_queue_space(txq) < 3)) {
-+			struct iwl_device_cmd **dev_cmd_ptr;
-+
-+			dev_cmd_ptr = (void *)((u8 *)skb->cb +
-+					       trans_pcie->dev_cmd_offs);
-+
-+			*dev_cmd_ptr = dev_cmd;
-+			__skb_queue_tail(&txq->overflow_q, skb);
-+
-+			spin_unlock(&txq->lock);
-+			return 0;
-+		}
-+	}
-+
-+	/* In AGG mode, the index in the ring must correspond to the WiFi
-+	 * sequence number. This is a HW requirements to help the SCD to parse
-+	 * the BA.
-+	 * Check here that the packets are in the right place on the ring.
-+	 */
-+	wifi_seq = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
-+	WARN_ONCE(txq->ampdu &&
-+		  (wifi_seq & 0xff) != txq->write_ptr,
-+		  "Q: %d WiFi Seq %d tfdNum %d",
-+		  txq_id, wifi_seq, txq->write_ptr);
-+
-+	/* Set up driver data for this TFD */
-+	txq->entries[txq->write_ptr].skb = skb;
-+	txq->entries[txq->write_ptr].cmd = dev_cmd;
-+
-+	dev_cmd->hdr.sequence =
-+		cpu_to_le16((u16)(QUEUE_TO_SEQ(txq_id) |
-+			    INDEX_TO_SEQ(txq->write_ptr)));
-+
-+	tb0_phys = iwl_pcie_get_first_tb_dma(txq, txq->write_ptr);
-+	scratch_phys = tb0_phys + sizeof(struct iwl_cmd_header) +
-+		       offsetof(struct iwl_tx_cmd, scratch);
-+
-+	tx_cmd->dram_lsb_ptr = cpu_to_le32(scratch_phys);
-+	tx_cmd->dram_msb_ptr = iwl_get_dma_hi_addr(scratch_phys);
-+
-+	/* Set up first empty entry in queue's array of Tx/cmd buffers */
-+	out_meta = &txq->entries[txq->write_ptr].meta;
-+	out_meta->flags = 0;
-+
-+	/*
-+	 * The second TB (tb1) points to the remainder of the TX command
-+	 * and the 802.11 header - dword aligned size
-+	 * (This calculation modifies the TX command, so do it before the
-+	 * setup of the first TB)
-+	 */
-+	len = sizeof(struct iwl_tx_cmd) + sizeof(struct iwl_cmd_header) +
-+	      hdr_len - IWL_FIRST_TB_SIZE;
-+	/* do not align A-MSDU to dword as the subframe header aligns it */
-+	amsdu = ieee80211_is_data_qos(fc) &&
-+		(*ieee80211_get_qos_ctl(hdr) &
-+		 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
-+	if (trans_pcie->sw_csum_tx || !amsdu) {
-+		tb1_len = ALIGN(len, 4);
-+		/* Tell NIC about any 2-byte padding after MAC header */
-+		if (tb1_len != len)
-+			tx_cmd->tx_flags |= TX_CMD_FLG_MH_PAD_MSK;
-+	} else {
-+		tb1_len = len;
-+	}
-+
-+	/*
-+	 * The first TB points to bi-directional DMA data, we'll
-+	 * memcpy the data into it later.
-+	 */
-+	iwl_pcie_gen2_build_tfd(trans, txq, tb0_phys, IWL_FIRST_TB_SIZE, true);
-+
-+	/* there must be data left over for TB1 or this code must be changed */
-+	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd) < IWL_FIRST_TB_SIZE);
-+
-+	/* map the data for TB1 */
-+	tb1_addr = ((u8 *)&dev_cmd->hdr) + IWL_FIRST_TB_SIZE;
-+	tb1_phys = dma_map_single(trans->dev, tb1_addr, tb1_len, DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(trans->dev, tb1_phys)))
-+		goto out_err;
-+	iwl_pcie_gen2_build_tfd(trans, txq, tb1_phys, tb1_len, false);
-+
-+	if (amsdu) {
-+		if (unlikely(iwl_fill_data_tbs_amsdu(trans, skb, txq, hdr_len,
-+						     out_meta, dev_cmd,
-+						     tb1_len)))
-+			goto out_err;
-+	} else if (unlikely(iwl_fill_data_tbs(trans, skb, txq, hdr_len,
-+				       out_meta, dev_cmd, tb1_len))) {
-+		goto out_err;
-+	}
-+
-+	/* building the A-MSDU might have changed this data, so memcpy it now */
-+	memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
-+	       IWL_FIRST_TB_SIZE);
-+
-+	tfd = iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr);
-+	/* Set up entry for this TFD in Tx byte-count array */
-+	iwl_pcie_gen2_update_byte_tbl(trans, txq, le16_to_cpu(tx_cmd->len),
-+				      iwl_pcie_gen2_get_num_tbs(trans, tfd));
-+
-+	wait_write_ptr = ieee80211_has_morefrags(fc);
-+
-+	/* start timer if queue currently empty */
-+	if (txq->read_ptr == txq->write_ptr) {
-+		if (txq->wd_timeout) {
-+			/*
-+			 * If the TXQ is active, then set the timer, if not,
-+			 * set the timer in remainder so that the timer will
-+			 * be armed with the right value when the station will
-+			 * wake up.
-+			 */
-+			if (!txq->frozen)
-+				mod_timer(&txq->stuck_timer,
-+					  jiffies + txq->wd_timeout);
-+			else
-+				txq->frozen_expiry_remainder = txq->wd_timeout;
-+		}
-+		IWL_DEBUG_RPM(trans, "Q: %d first tx - take ref\n", txq->id);
-+		iwl_trans_ref(trans);
-+	}
-+
-+	/* Tell device the write index *just past* this latest filled TFD */
-+	txq->write_ptr = iwl_queue_inc_wrap(txq->write_ptr);
-+	if (!wait_write_ptr)
-+		iwl_pcie_gen2_txq_inc_wr_ptr(trans, txq);
-+
-+	/*
-+	 * At this point the frame is "transmitted" successfully
-+	 * and we will get a TX status notification eventually.
-+	 */
-+	spin_unlock(&txq->lock);
-+	return 0;
-+out_err:
-+	spin_unlock(&txq->lock);
-+	return -1;
-+}
- 
- /*
-  * iwl_pcie_gen2_txq_unmap -  Unmap any remaining DMA mappings and free skb's
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 9c903270645c..9572330e22c0 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -71,7 +71,7 @@
-  *
-  ***************************************************/
- 
--static int iwl_queue_space(const struct iwl_txq *q)
-+int iwl_queue_space(const struct iwl_txq *q)
- {
- 	unsigned int max;
- 	unsigned int used;
-@@ -185,6 +185,7 @@ static void iwl_pcie_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
- 	__le16 bc_ent;
- 	struct iwl_tx_cmd *tx_cmd =
- 		(void *)txq->entries[txq->write_ptr].cmd->payload;
-+	u8 sta_id = tx_cmd->sta_id;
- 
- 	scd_bc_tbl = trans_pcie->scd_bc_tbls.addr;
- 
-@@ -207,26 +208,7 @@ static void iwl_pcie_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
- 	if (WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX))
- 		return;
- 
--	if (trans->cfg->use_tfh) {
--		u8 filled_tfd_size = offsetof(struct iwl_tfh_tfd, tbs) +
--				     num_tbs * sizeof(struct iwl_tfh_tb);
--		/*
--		 * filled_tfd_size contains the number of filled bytes in the
--		 * TFD.
--		 * Dividing it by 64 will give the number of chunks to fetch
--		 * to SRAM- 0 for one chunk, 1 for 2 and so on.
--		 * If, for example, TFD contains only 3 TBs then 32 bytes
--		 * of the TFD are used, and only one chunk of 64 bytes should
--		 * be fetched
--		 */
--		u8 num_fetch_chunks = DIV_ROUND_UP(filled_tfd_size, 64) - 1;
--
--		bc_ent = cpu_to_le16(len | (num_fetch_chunks << 12));
--	} else {
--		u8 sta_id = tx_cmd->sta_id;
--
--		bc_ent = cpu_to_le16(len | (sta_id << 12));
--	}
-+	bc_ent = cpu_to_le16(len | (sta_id << 12));
- 
- 	scd_bc_tbl[txq_id].tfd_offset[write_ptr] = bc_ent;
- 
-@@ -327,12 +309,6 @@ void iwl_pcie_txq_check_wrptrs(struct iwl_trans *trans)
- 	}
- }
- 
--static inline void *iwl_pcie_get_tfd(struct iwl_trans_pcie *trans_pcie,
--				     struct iwl_txq *txq, int idx)
--{
--	return txq->tfds + trans_pcie->tfd_size * idx;
--}
--
- static inline dma_addr_t iwl_pcie_tfd_tb_get_addr(struct iwl_trans *trans,
- 						  void *_tfd, u8 idx)
- {
-@@ -2104,10 +2080,10 @@ static void iwl_compute_pseudo_hdr_csum(void *iph, struct tcphdr *tcph,
- 	}
- }
- 
--static int iwl_fill_data_tbs_amsdu(struct iwl_trans *trans, struct sk_buff *skb,
--				   struct iwl_txq *txq, u8 hdr_len,
--				   struct iwl_cmd_meta *out_meta,
--				   struct iwl_device_cmd *dev_cmd, u16 tb1_len)
-+int iwl_fill_data_tbs_amsdu(struct iwl_trans *trans, struct sk_buff *skb,
-+			    struct iwl_txq *txq, u8 hdr_len,
-+			    struct iwl_cmd_meta *out_meta,
-+			    struct iwl_device_cmd *dev_cmd, u16 tb1_len)
- {
- 	struct iwl_tx_cmd *tx_cmd = (void *)dev_cmd->payload;
- 	struct iwl_trans_pcie *trans_pcie = txq->trans_pcie;
--- 
-2.11.0
+The following changes since commit d92be7a41ef15463eb816a4a2d42bf094b56dfce:
+
+  net: make struct net_device::min_header_len 8-bit (2017-04-12 13:59:21 -0=
+400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next=
+.git tags/wireless-drivers-next-for-davem-2017-04-21
+
+for you to fetch changes up to a0597834dc0e1af68f48f92b31617b360a14dfc8:
+
+  rt2800: fix mt7620 E2 channel registers (2017-04-20 14:00:54 +0300)
+
+----------------------------------------------------------------
+wireless-drivers-next patches for 4.12
+
+Quite a lot of patches for rtlwifi and iwlwifi this time, but changes
+also for other active wireless drivers.
+
+Major changes:
+
+ath9k
+
+* add support for Dell Wireless 1601 PCI device
+
+* add debugfs file to manually override noise floor
+
+ath10k
+
+* bump up FW API to 6 for a new QCA6174 firmware branch
+
+wil6210
+
+* support 8 kB RX buffers
+
+iwlwifi
+
+* work to support A000 devices continues
+
+* add support for FW API 30
+
+* add Geographical and Dynamic Specific Absorption Rate (SAR) support
+
+* support a few new PCI device IDs
+
+rtlwifi
+
+* work on adding Bluetooth coexistance support, not finished yet
+
+----------------------------------------------------------------
+Arend Van Spriel (7):
+      brcmfmac: rename brcmf_fws_{de,}init to brcmf_fws{at,de}tach
+      brcmfmac: ignore interfaces when fwsignal is disabled
+      brcmfmac: remove reference to fwsignal data from struct brcmf_pub
+      brcmfmac: add length checks in scheduled scan result handler
+      brcmfmac: remove bogus check in scheduled scan result handler
+      brcmfmac: only add channels and ssids once in scan request
+      brcmfmac: only build fwsignal module for CONFIG_BRCMFMAC_PROTO_BCDC
+
+Brian Norris (6):
+      mwifiex: MAC randomization should not be persistent
+      mwifiex: pcie: fix cmd_buf use-after-free in remove/reset
+      mwifiex: reset timeout flag when resetting device
+      mwifiex: pcie: clear outstanding work when resetting
+      mwifiex: don't leak 'chan_stats' on reset
+      MAINTAINERS: update Amitkumar's email address
+
+Damien Th=C3=A9bault (1):
+      ath9k: Add Dell Wireless 1601 with wowlan capability
+
+Dan Carpenter (1):
+      ath9k: off by one in ath9k_hw_nvram_read_array()
+
+Daniel Golle (3):
+      rt2x00: reverse external PA capability flag logic
+      rt2800: fix LNA gain assignment for MT7620
+      rt2800: do VCO calibration after programming ALC
+
+David Spinadel (1):
+      iwlwifi: mvm: change TX_CMD_SEC_KEY_FROM_TABLE value
+
+Dedy Lansky (3):
+      wil6210: align to latest auto generated wmi.h
+      wil6210: fix memory access violation in wil_memcpy_from/toio_32
+      wil6210: fix array out of bounds access in pmc
+
+Emmanuel Grumbach (5):
+      iwlwifi: mvm: add DQA_ENABLE_CMD to the command list
+      iwlwifi: pcie: print less data upon firmware crash
+      iwlwifi: mvm: tell the firmware about the U-APSD parameters
+      iwlwifi: mvm: provide the actual number of frames for the SP len
+      iwlwifi: split the handler and the wake parts of the notification inf=
+ra
+
+Ganapathi Bhat (1):
+      mwifiex: Fix invalid port issue
+
+Golan Ben-Ami (1):
+      iwlwifi: mvm: support MFUART dump in case of MFUART assert
+
+Goodstein, Mordechay (1):
+      iwlwifi: mvm: move new API code to the end
+
+Haim Dreyfuss (2):
+      iwlwifi: mvm: refactor SAR init to prepare for dynamic SAR
+      iwlwifi: mvm: add GEO_TX_POWER_LIMIT cmd for geographic tx power table
+
+Hamad Kadmany (3):
+      wil6210: fix sequence for scan-abort during reset
+      wil6210: fix protection against connections during reset
+      wil6210: fix check for sparrow D0 FW file
+
+Heiner Kallweit (1):
+      brcmfmac: properly align buffers on certain platforms with 64 bit DMA
+
+Joe Perches (1):
+      ath6kl: add __printf verification to ath6kl_dbg
+
+Johan Hovold (1):
+      ath9k_htc: fix NULL-deref at probe
+
+Johannes Berg (5):
+      iwlwifi: mvm: fix RX SKB header size and align it properly
+      iwlwifi: use upper_32_bits/lower_32_bits where appropriate
+      iwlwifi: pcie: use iwl_get_dma_hi_addr()
+      iwlwifi: pcie: fix mutex leak in gen2 start
+      iwlwifi: pcie: free context info in case of failures
+
+Kalle Valo (3):
+      Merge tag 'iwlwifi-next-for-kalle-2017-04-13' of git://git.kernel.org=
+/.../iwlwifi/iwlwifi-next
+      Merge tag 'iwlwifi-next-for-kalle-2017-04-19-2' of git://git.kernel.o=
+rg/.../iwlwifi/iwlwifi-next
+      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
+
+Lazar Alexei (1):
+      wil6210: restore power save state after internal FW reset
+
+Liad Kaufman (3):
+      iwlwifi: add support for 9000 HW B-step NICs
+      iwlwifi: mvm: remove unneeded reg write in iwl_mvm_up()
+      iwlwifi: a000: fix memory offsets and lengths
+
+Lior David (1):
+      wil6210: support 8KB RX buffers
+
+Luca Coelho (9):
+      iwlwifi: be more verbose about needed firmware
+      iwlwifi: remove support for deprecated RF
+      iwlwifi: mvm: bump max API to 30
+      iwlwifi: remove unnecessary dev_cmd_headroom parameter
+      iwlwifi: mvm: spin off SAR profile selection function
+      iwlwifi: mvm: add support for EWRD (Dynamic SAR) ACPI table
+      iwlwifi: mvm: remove unnecessary debugging from UMAC scan
+      iwlwifi: mvm: remove unnecessary label in iwl_mvm_handle_rx_statistic=
+s()
+      iwlwifi: pcie: remove RSA race workaround
+
+Maharaja Kennadyrajan (1):
+      ath10k: fix the Transmit Power Control stats display format
+
+Marcin Rokicki (3):
+      ath10k: fix block comments style
+      ath10k: use octal permission representation
+      ath10k: clean header files from bad block comments
+
+Matthias Kaehlcke (1):
+      ath9k: Add cast to u8 to FREQ2FBIN macro
+
+Maya Erez (3):
+      wil6210: protect against sporadic interrupt during suspend flow
+      wil6210: remove HALP voting in debugfs ioblob
+      wil6210: prevent access to 11AD device if resume fails
+
+Mohammed Shafi Shajakhan (7):
+      ath10k: fix NAPI enable/disable symmetry for AHB interface
+      ath10k: cancel coverage class work during stop and restart
+      ath10k: enable a HTC debug message during insufficient tx credits
+      ath10k: remove obselete Copy Engine comments
+      ath10k: fix compile time sanity check for CE4 buffer size
+      ath10k: fix spectral scan for QCA99X0 family of chipsets
+      ath: Fix updating radar flags for coutry code India
+
+Ryan Hsu (1):
+      ath10k: bump up FW API to 6
+
+Sara Sharon (48):
+      iwlwifi: mvm: support new binding API
+      iwlwifi: mvm: adjust new API of compressed BA
+      iwlwifi: mvm: cleanup pending frames in DQA mode
+      iwlwifi: mvm: add multicast station
+      iwlwifi: mvm: support new ADD_MODIFY_STA_KEY command
+      iwlwifi: mvm: optimize reorder timeout frame releasing
+      iwlwifi: mvm: don't assume static queue numbers
+      Revert "iwlwifi: introduce trans API to get byte count table"
+      iwlwifi: pcie: remove the active field in struct iwl_txq
+      iwlwifi: pcie: use WFPM_GP for debugging D3 flows
+      iwlwifi: pcie: introduce split point to a000 devices
+      iwlwifi: pcie: add context information support
+      iwlwifi: mvm: remove call for paging in new init flow
+      iwlwifi: mvm: separate queue mapping from queue enablement
+      iwlwifi: mvm: read new secure boot registers
+      iwlwifi: mvm: add queues after adding station
+      iwlwifi: cleanup unused function
+      iwlwifi: mvm: prepare for station count change
+      iwlwifi: mvm: use same scan API for all a000 devices
+      iwlwifi: mvm: disable multi-queue for a000 devices
+      iwlwifi: mvm: support new TX API
+      iwlwifi: pcie: introduce a000 TX queues management
+      iwlwifi: mvm: support a000 SCD queue configuration
+      iwlwifi: mvm: support moving to mgmt tid
+      iwlwifi: pcie: copy TX functions to new transport
+      iwlwifi: pcie: cleanup old transport code from gen2
+      iwlwifi: pcie: support new TX command
+      iwlwifi: pcie: rewrite TFD creation
+      iwlwifi: pcie: support host commands in new transport
+      iwlwifi: pcie: support new write pointer width
+      iwlwifi: pcie: remove block and freeze operations from new transport
+      iwlwifi: pcie: prepare for dynamic queue allocation
+      iwlwifi: pcie: introduce new stop_device
+      iwlwifi: pcie: alloc queues dynamically
+      iwlwifi: pcie: get rid of txq id assignment
+      iwlwifi: mvm: support new TX response for TVQM
+      iwlwifi: move to TVQM mode
+      iwlwifi: mvm: do not turn on RX_FLAG_AMSDU_MORE
+      iwlwifi: mvm: work around HW issue with AMSDU de-aggregation
+      iwlwifi: mvm: ignore BAID for SN smaller than SSN
+      iwlwifi: mvm: support change to a000 smem API
+      iwlwifi: support a000 CDB product
+      iwlwifi: mvm: support init extended command
+      iwlwifi: mvm: disable RX queue notification for a000 devices
+      iwlwifi: mvm: dump frames early on invalid rate
+      iwlwifi: mvm: flip address 4 of AMSDU frames
+      iwlwifi: mvm: support changing band for phy context
+      iwlwifi: mvm: allow block ack response without data
+
+Simon Wunderlich (1):
+      ath9k: add noise floor override option
+
+Tomislav Po=C5=BEega (2):
+      rt2800: fix mt7620 vco calibration registers
+      rt2800: fix mt7620 E2 channel registers
+
+Tzipi Peres (1):
+      iwlwifi: add four new 8265 and 8275 series PCI IDs
+
+Venkateswara Rao Naralasetty (1):
+      ath10k: fix station nss computation
+
+Xinming Hu (4):
+      mwifiex: remove unnecessary wakeup interrupt number sanity check
+      mwifiex: fall back mwifiex_dbg to pr_info when adapter->dev not set
+      mwifiex: pcie: correct scratch register name
+      mwifiex: pcie: extract wifi part from combo firmware during function =
+level reset
+
+Yan-Hsuan Chuang (71):
+      rtlwifi: btcoex: 23b 2ant: check PS state before setting tdma duration
+      rtlwifi: btcoex: 23b 2ant: rename tdma_adj_type to ps_tdma_du_adj_type
+      rtlwifi: btcoex: 23b 2ant: detect ap num and set GNT_BT properly
+      rtlwifi: btcoex: 23b 2ant: more cases for adjusting tdma duration
+      rtlwifi: btcoex: 23b 2ant: fix PTA unstable problem when hw init
+      rtlwifi: btcoex: 23b 2ant: add pnp notidy to avoid LPS/IPS mismatch
+      rtlwifi: btcoex: 23b 2ant: check more cases when bt is queuing
+      rtlwifi: btcoex: 23b 2ant: workaround for bt a2dp and hid
+      rtlwifi: btcoex: 23b 2ant: tell fw if external or internal switch is =
+used
+      rtlwifi: btcoex: 23b 2ant: let bt transmit when hw initialisation done
+      rtlwifi: btcoex: 23b 2ant: turn off ps and tdma mechanism when in con=
+current mode
+      rtlwifi: btcoex: 23b 2ant: turn off antenna when rssi is too high/low
+      rtlwifi: btcoex: 23b 2ant: set coex table when wifi is linking
+      rtlwifi: btcoex: 23b 2ant: set coex table when wifi is idle
+      rtlwifi: btcoex: 23b 2ant: treat too many low prio packets as retry
+      rtlwifi: btcoex: 23b 2ant: remove debugging code for 0x948
+      rtlwifi: btcoex: 23b 2ant: need those information when scan
+      rtlwifi: btcoex: 23b 2ant: wifi is not actually off in mp mode
+      rtlwifi: btcoex: 23b 2ant: power on settings for coex
+      rtlwifi: btcoex: 23b 2ant: before firmware ready settings
+      rtlwifi: btcoex: 23b 2ant: fine tune for bt pan_edr_a2dp
+      rtlwifi: btcoex: 23b 2ant: fine tune for bt hid_a2dp
+      rtlwifi: btcoex: 23b 2ant: notify more bt information
+      rtlwifi: btcoex: 23b 2ant: some hi-prio pkt will cause hid_exist
+      rtlwifi: btcoex: 21a 1ant: fw settings for softap mode
+      rtlwifi: btcoex: 21a 1ant: add function to check wifi status
+      rtlwifi: btcoex: 21a 1ant: coex table setting for new fw
+      rtlwifi: btcoex: 21a 1ant: mask profile bit for connect-ilde
+      rtlwifi: btcoex: 21a 1ant: remove setting for 2 antennas
+      rtlwifi: btcoex: 21a 1ant: set antenna control path for PTA
+      rtlwifi: btcoex: 21a 1ant: add multi port action for miracast and P2P
+      rtlwifi: btcoex: 21a 1ant: action when associating/authenticating
+      rtlwifi: btcoex: 21a 1ant: If wifi only, do not initiate coex mechani=
+sm
+      rtlwifi: btcoex: 21a 1ant: move bt_disabled to global struct
+      rtlwifi: btcoex: 21a 1ant: consider more cases when bt inquiry
+      rtlwifi: btcoex: 21a 1ant: monitor bt profiling when scan
+      rtlwifi: btcoex: 21a 1ant: do not switch antenna when wifi is under 5=
+G channel
+      rtlwifi: btcoex: 21a 1ant: avoid LPS/IPS mismatch for pnp notify
+      rtlwifi: btcoex: 21a 2ant: limit rx aggregation size to avoid bt inte=
+rrupt
+      rtlwifi: btcoex: 21a 2ant: monitor if bt is slave or not
+      rtlwifi: btcoex: 21a 2ant: monitor wifi counter to check network stat=
+us
+      rtlwifi: btcoex: 21a 2ant: update bt profiling information
+      rtlwifi: btcoex: 21a 2ant: finer adjustment of bt power
+      rtlwifi: btcoex: 21a 2ant: move from bt_stack_info to bt_link_info
+      rtlwifi: btcoex: 21a 2ant: suffer less tx penalty from retry
+      rtlwifi: btcoex: 21a 2ant: check power save state before pstdma
+      rtlwifi: btcoex: 21a 2ant: do not check wifi bandwidth
+      rtlwifi: btcoex: 21a 2ant: centralized control of coex table
+      rtlwifi: btcoex: 21a 2ant: check if wifi status changed
+      rtlwifi: btcoex: 21a 2ant: ignore wifi if it is at 5G band
+      rtlwifi: btcoex: 21a 2ant: set coex table and tdma when bt inquiry
+      rtlwifi: btcoex: 21a 2ant: let PTA circuit control the switch
+      rtlwifi: btcoex: 21a 2ant: slot time fine tune
+      rtlwifi: btcoex: 21a 2ant: tdma cases for low wifi/bt rssi
+      rtlwifi: btcoex: 21a 2ant: action for wifi is idle/linking/common
+      rtlwifi: btcoex: 21a 2ant: fix invalid argument passed
+      rtlwifi: btcoex: 21a 2ant: refine tdma duration adjust function
+      rtlwifi: btcoex: 21a 2ant: turn on sw dac swing and check if is sco_o=
+nly
+      rtlwifi: btcoex: 21a 2ant: add threshold to examine bt rssi
+      rtlwifi: btcoex: 21a 2ant: force wifi to use RF path A
+      rtlwifi: btcoex: 21a 2ant: more combinations of wifi/bt rssi state
+      rtlwifi: btcoex: 21a 2ant: fix some coding style issues
+      rtlwifi: btcoex: 21a 2ant: set tdma based on rssi state amd limit rx =
+agg size
+      rtlwifi: btcoex: 21a 2ant: add multiport action for p2p/miracast
+      rtlwifi: btcoex: 21a 2ant: monitor extra wifi rssi to examine network=
+ status
+      rtlwifi: btcoex: 21a 2ant: notify fw the number of APs
+      rtlwifi: btcoex: 21a 2ant: dec bt power according to bt rssi and set =
+tdma
+      rtlwifi: btcoex: 21a 2ant: macro for bt rssi threshold
+      rtlwifi: btcoex: 21a 2ant: do not limit rx agg size
+      rtlwifi: btcoex: 21a 2ant: just return when wifi is under ips
+      rtlwifi: btcoex: 21a 2ant: wifi is linking action
+
+ MAINTAINERS                                        |    2 +-
+ drivers/net/wireless/ath/ath10k/ahb.c              |    2 +-
+ drivers/net/wireless/ath/ath10k/bmi.h              |    3 +-
+ drivers/net/wireless/ath/ath10k/ce.c               |    5 +-
+ drivers/net/wireless/ath/ath10k/core.c             |   28 +-
+ drivers/net/wireless/ath/ath10k/core.h             |    9 +-
+ drivers/net/wireless/ath/ath10k/debug.c            |   93 +-
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c      |    9 +-
+ drivers/net/wireless/ath/ath10k/hif.h              |    6 +-
+ drivers/net/wireless/ath/ath10k/htc.c              |    6 +-
+ drivers/net/wireless/ath/ath10k/htt.h              |   24 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c           |    9 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c           |    6 +-
+ drivers/net/wireless/ath/ath10k/hw.h               |   11 +-
+ drivers/net/wireless/ath/ath10k/mac.c              |   58 +-
+ drivers/net/wireless/ath/ath10k/pci.c              |   13 +-
+ drivers/net/wireless/ath/ath10k/rx_desc.h          |   13 +-
+ drivers/net/wireless/ath/ath10k/spectral.c         |   32 +-
+ drivers/net/wireless/ath/ath10k/targaddrs.h        |   19 +-
+ drivers/net/wireless/ath/ath10k/thermal.c          |    5 +-
+ drivers/net/wireless/ath/ath10k/txrx.c             |    3 +-
+ drivers/net/wireless/ath/ath10k/wmi-ops.h          |    3 +-
+ drivers/net/wireless/ath/ath10k/wmi.c              |   16 +-
+ drivers/net/wireless/ath/ath10k/wmi.h              |   30 +-
+ drivers/net/wireless/ath/ath6kl/debug.h            |    2 +
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c         |    2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c              |    2 +-
+ drivers/net/wireless/ath/ath9k/calib.c             |    5 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |   62 +
+ drivers/net/wireless/ath/ath9k/eeprom.c            |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom.h            |    2 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.c           |    3 +
+ drivers/net/wireless/ath/ath9k/hw.h                |    1 +
+ drivers/net/wireless/ath/ath9k/pci.c               |    5 +
+ drivers/net/wireless/ath/regd.c                    |   19 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |   12 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c         |    5 +-
+ drivers/net/wireless/ath/wil6210/fw_inc.c          |    4 +-
+ drivers/net/wireless/ath/wil6210/main.c            |   65 +-
+ drivers/net/wireless/ath/wil6210/pm.c              |   27 +-
+ drivers/net/wireless/ath/wil6210/pmc.c             |    4 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c      |   12 +-
+ drivers/net/wireless/ath/wil6210/txrx.c            |   24 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h         |   13 +-
+ drivers/net/wireless/ath/wil6210/wmi.c             |   14 +-
+ drivers/net/wireless/ath/wil6210/wmi.h             |   73 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/Makefile  |    4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |   35 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.h    |    1 +
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   39 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |    2 -
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         |   53 +-
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         |    4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |    4 +
+ drivers/net/wireless/intel/iwlwifi/Makefile        |    1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c      |    4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c      |    4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c      |   48 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c      |   31 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   25 +-
+ .../net/wireless/intel/iwlwifi/iwl-context-info.h  |  203 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |    1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   34 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h        |    6 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   |    5 +
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c        |    4 +-
+ .../net/wireless/intel/iwlwifi/iwl-notif-wait.c    |   10 +-
+ .../net/wireless/intel/iwlwifi/iwl-notif-wait.h    |   25 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h      |    9 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c     |    7 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  105 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/binding.c   |   17 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c      |    2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |   26 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |    2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |    2 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    |    4 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  |   43 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-scan.h   |   14 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    |   50 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |   91 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |  107 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c    |  287 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  520 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |    9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   48 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   83 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   26 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c  |   21 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  111 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   87 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |   85 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sf.c        |    6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  486 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |    3 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tdls.c      |   22 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tof.c       |    2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |    2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  132 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  108 +-
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |  277 +++
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |   24 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   93 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   57 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |  374 ++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  284 +--
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 1018 +++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  237 +-
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    |    4 +-
+ drivers/net/wireless/marvell/mwifiex/fw.h          |   18 +
+ drivers/net/wireless/marvell/mwifiex/main.c        |   20 +-
+ drivers/net/wireless/marvell/mwifiex/pcie.c        |  127 +-
+ drivers/net/wireless/marvell/mwifiex/pcie.h        |   16 +-
+ drivers/net/wireless/marvell/mwifiex/sdio.c        |    4 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |   72 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h        |    4 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 1661 ++++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   22 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  408 +++-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |    2 +
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 2357 +++++++++++++++-=
+----
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |   29 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   20 +
+ 123 files changed, 8770 insertions(+), 2181 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-context-info.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
