@@ -1,118 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34286 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932433AbdDQALi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47804 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1037553AbdDUKnZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:38 -0400
-Received: by mail-oi0-f68.google.com with SMTP id t14so15969550oif.1
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:38 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 23/27] rtlwifi: btcoex: 23b 1ant: coex table fine tune
-Date: Sun, 16 Apr 2017 19:11:07 -0500
-Message-Id: <20170417001111.29384-24-Larry.Finger@lwfinger.net> (sfid-20170417_021215_651701_840217C5)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+        Fri, 21 Apr 2017 06:43:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: pcie: missing unlock on error path
+References: <20170421103937.jko3eguvfn3i6r3v@mwanda>
+Date: Fri, 21 Apr 2017 13:43:18 +0300
+In-Reply-To: <20170421103937.jko3eguvfn3i6r3v@mwanda> (Dan Carpenter's message
+        of "Fri, 21 Apr 2017 13:39:38 +0300")
+Message-ID: <87vapy2g8p.fsf@kamboji.qca.qualcomm.com> (sfid-20170421_124330_250204_4AC12A00)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Set register settings for coex table fine tune.
+> We should unlock before returning.
+>
+> Fixes: eda50cde58de ("iwlwifi: pcie: add context information support")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+> index 302310dfef9e..4e84955d55c8 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+> @@ -212,8 +212,10 @@ int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
+>  		goto out;
+>  	}
+>  
+> -	if (iwl_pcie_ctxt_info_init(trans, fw))
+> -		return -ENOMEM;
+> +	if (iwl_pcie_ctxt_info_init(trans, fw)) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 56 +++++++++++++++++++---
- 1 file changed, 50 insertions(+), 6 deletions(-)
+This was recently fixed:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 8a1fe5c75d4f..0eae27aca67a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -558,24 +558,68 @@ static void halbtc8723b1ant_coex_table_with_type(struct btc_coexist *btcoexist,
- 		break;
- 	case 3:
- 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
--					   0xaaaaaaaa, 0xffffff, 0x3);
-+					   0x5a5a5a5a, 0xffffff, 0x3);
- 		break;
- 	case 4:
--		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
--					   0x5aaa5aaa, 0xffffff, 0x3);
-+		if ((coex_sta->cck_ever_lock) && (coex_sta->scan_ap_num <= 5))
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x55555555, 0xaaaa5a5a,
-+						   0xffffff, 0x3);
-+		else
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x55555555, 0x5a5a5a5a,
-+						   0xffffff, 0x3);
- 		break;
- 	case 5:
--		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
--					   0xaaaa5a5a, 0xffffff, 0x3);
-+		if ((coex_sta->cck_ever_lock) && (coex_sta->scan_ap_num <= 5))
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x5a5a5a5a, 0x5aaa5a5a,
-+						   0xffffff, 0x3);
-+		else
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x5a5a5a5a, 0x5aaa5a5a,
-+						   0xffffff, 0x3);
- 		break;
- 	case 6:
- 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
--					   0xaaaa5a5a, 0xffffff, 0x3);
-+					   0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
- 	case 7:
- 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0xaaaaaaaa,
- 					   0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
-+	case 8:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 9:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 10:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 11:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 12:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 13:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					   0xaaaaaaaa, 0xffffff, 0x3);
-+		break;
-+	case 14:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 15:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0xaaaaaaaa, 0xffffff, 0x3);
-+		break;
- 	default:
- 		break;
- 	}
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=97b00d877bb8c2e499b9d0c07b65bd92b4e91ddd
+
 -- 
-2.12.0
+Kalle Valo
