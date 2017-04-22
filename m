@@ -1,44 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54130 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1954128AbdDYUXH (ORCPT
+Received: from smtprelay0079.hostedemail.com ([216.40.44.79]:44804 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1424895AbdDVPAl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 16:23:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sharon Dvir <sharon.dvir@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 25 Apr 2017 23:22:21 +0300
-Message-Id: <20170425202243.7844-4-luca@coelho.fi> (sfid-20170425_222325_106361_794EFE8C)
-In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
-References: <20170425202243.7844-1-luca@coelho.fi>
-Subject: [PATCH 03/25] iwlwifi: mvm: check if returned value is NULL
+        Sat, 22 Apr 2017 11:00:41 -0400
+Message-ID: <1492873234.30293.38.camel@perches.com> (sfid-20170422_170342_096736_C7B88F3F)
+Subject: Re: [PATCH] staging: wilc1000: Fixes Alignment should match open
+ parenthesis
+From: Joe Perches <joe@perches.com>
+To: richard@netpro.work, gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Date: Sat, 22 Apr 2017 08:00:34 -0700
+In-Reply-To: <20170422062830.30715-1-richard@netpro.work>
+References: <20170422062830.30715-1-richard@netpro.work>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sharon Dvir <sharon.dvir@intel.com>
+On Sat, 2017-04-22 at 07:28 +0100, richard@netpro.work wrote:
+> This patch fixes the following checkpatch.pl
+> check: CHECK: Alignment should match open parenthesis
 
-While freeing inactive queue, check mvmsta to be valid before
-dereferencing it.  Found by Klocwork.
+Please strive for improved code for human readers and
+not just shutting up checkpatch.
 
-Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 ++
- 1 file changed, 2 insertions(+)
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+[]
+> @@ -870,12 +870,12 @@ static int wilc_mac_open(struct net_device *ndev)
+>  				if (memcmp(wl->vif[i ^ 1]->bssid,
+>  					   wl->vif[i ^ 1]->src_addr, 6))
+>  					wilc_set_wfi_drv_handler(vif,
+> -							 wilc_get_vif_idx(vif),
+> -							 0);
+> +					                         wilc_get_vif_idx(vif),
+> +					                         0);
+>  				else
+>  					wilc_set_wfi_drv_handler(vif,
+> -							 wilc_get_vif_idx(vif),
+> -							 1);
+> +					                         wilc_get_vif_idx(vif),
+> +					                         1);
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index a2a1fa06b781..fc6d854b04b6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -495,6 +495,8 @@ static int iwl_mvm_free_inactive_queue(struct iwl_mvm *mvm, int queue,
- 	spin_unlock_bh(&mvm->queue_info_lock);
- 
- 	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, sta_id);
-+	if (WARN_ON(!mvmsta))
-+		return -EINVAL;
- 
- 	disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
- 	/* Disable the queue */
--- 
-2.11.0
+Depending on alignment, perhaps a good bit of this code
+could use ether_addr_<foo> functions.
+
+				wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
+							 ether_addr_equals(wl->vif[i ^ 1]->bssid,
+									   wl->vif[i ^ 1]->src_addr));
+
+The code could also be restructured to reduce
+indentation by using if / continue;
+
+		if (ndev != wl->vif[i]->ndev)
+			continue;
+
+Using a temporary for the repeated use of
+wilc_get_vif_idx(vif) would also help code length.
+
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+[]
+> @@ -1301,16 +1301,16 @@ static int set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+>  
+>  	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
+>  		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
+> -				 ETH_ALEN)) {
+> +		            ETH_ALEN)) {
+
+		ether_addr_equals()
+
+>  			flag = PMKID_FOUND;
+>  			break;
+>  		}
+>  	}
+>  	if (i < WILC_MAX_NUM_PMKIDS) {
+>  		memcpy(priv->pmkid_list.pmkidlist[i].bssid, pmksa->bssid,
+> -			    ETH_ALEN);
+> +		       ETH_ALEN);
+
+		ether_addr_copy()
+
+etc.
