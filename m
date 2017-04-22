@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38894 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753441AbdDFMOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 08:14:04 -0400
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: brcmfmac: don't warn user if requested nvram fails
-Message-ID: <09063fc2-af77-ced6-ed90-ab20e2884969@redhat.com> (sfid-20170406_141435_567977_07BE3220)
-Date: Thu, 6 Apr 2017 14:14:02 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35568 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1043800AbdDVKPY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Apr 2017 06:15:24 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>,
+        "# v4 . 9+" <stable@vger.kernel.org>
+Subject: [PATCH 2/2] staging: vt6656: use off stack for in buffer USB transfers.
+Date: Sat, 22 Apr 2017 11:14:58 +0100
+Message-Id: <20170422101458.4566-2-tvboxspy@gmail.com> (sfid-20170422_121532_758572_7FA9EAFF)
+In-Reply-To: <20170422101458.4566-1-tvboxspy@gmail.com>
+References: <20170422101458.4566-1-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Since 4.9 mandated USB buffers to be heap allocated. This causes
+the driver to fail.
 
-I noticed your patch-series on the lwn.net kernel page,
-and I took a peek :)
+Create buffer for USB transfers.
 
-I don't think that this patch:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v4.9+
+---
+ drivers/staging/vt6656/usbpipe.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/commit/?h=20170329-driver-data-v2-try3&id=3968dd3031d1ff7e7be4acfb810948c70c2d4490
-
-Is a good idea, specifically the "do not warn" part,
-although the brcmfmac driver will indeed try to continue
-without a nvram file, in my experience it almost all
-the time will not work properly without the nvram file.
-
-Arend, should we maybe just make the missing nvram file
-a fatal error ?
-
-###
-
-While on the subject of nvram file loading, I want to make
-some changes to how brcmfmac does this, for pcie
-devices I want it to first try:
-
-brcmfmac-4xxx-sdio-<pci-subsys-vid>-<pci-subsys-pid>.txt
-and only if that is not present fallback to
-brcmfmac-4xxx-sdio.txt, so that we can include the
-brcmfmac-4xxx-sdio-<pci-subsys-vid>-<pci-subsys-pid>.txt
-in the linux-firmware repo and have things just work.
-
-Likewise for sdio devices on devicetree platforms
-first try brcmfmac-4xxx-sdio-<model>.txt.
-
-And for sdio devices on ACPI/x86 systems I want to
-do something similar too.
-
-Luis, do you think it would be a good idea to add
-.optional_postfix member to driver_data_req_params
-for this? I believe other sdio based wifi devices
-may want to do the same, or should this be handled
-in the driver by doing 2 driver_data_request_async
-calls (the 2nd when the 1st fails) ?
-
-Regards,
-
-Hans
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index ea5a7c65ad1b..dc11a05be8c4 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -85,15 +85,28 @@ int vnt_control_in(struct vnt_private *priv, u8 request, u16 value,
+ 		    u16 index, u16 length, u8 *buffer)
+ {
+ 	int status;
++	u8 *usb_buffer;
+ 
+ 	if (test_bit(DEVICE_FLAGS_DISCONNECTED, &priv->flags))
+ 		return STATUS_FAILURE;
+ 
+ 	mutex_lock(&priv->usb_lock);
+ 
++	usb_buffer = kmalloc(length, GFP_KERNEL);
++	if (!usb_buffer) {
++		mutex_unlock(&priv->usb_lock);
++		return -ENOMEM;
++	}
++
+ 	status = usb_control_msg(priv->usb,
+-				usb_rcvctrlpipe(priv->usb, 0), request, 0xc0,
+-				value, index, buffer, length, USB_CTL_WAIT);
++				 usb_rcvctrlpipe(priv->usb, 0),
++				 request, 0xc0, value,
++				 index, usb_buffer, length, USB_CTL_WAIT);
++
++	if (status == length)
++		memcpy(buffer, usb_buffer, length);
++
++	kfree(usb_buffer);
+ 
+ 	mutex_unlock(&priv->usb_lock);
+ 
+-- 
+2.11.0
