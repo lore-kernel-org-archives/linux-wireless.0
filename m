@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:57648 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752493AbdDCVjP (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:35423 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1426070AbdDVRDy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 17:39:15 -0400
-Date: Tue, 4 Apr 2017 07:39:10 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Tycho Andersen <tycho@tycho.ws>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devel@linuxdriverproject.org
-Subject: Re: [PATCH RFC] remove custom Michael MIC implementation
-Message-ID: <20170403213910.GA7480@eros> (sfid-20170403_233950_288643_89A1EB57)
-References: <1490935659-7196-1-git-send-email-me@tobin.cc>
- <20170331075851.GB1435@katana>
- <20170331102113.GA2930@eros>
- <87fuhq6par.fsf@purkki.adurom.net>
- <20170403090359.GK3755@eros>
- <87y3vhx1ju.fsf@alrua-karlstad>
- <9bfd1405-fd32-e896-b6f0-09ffedeaac33@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <9bfd1405-fd32-e896-b6f0-09ffedeaac33@broadcom.com>
+        Sat, 22 Apr 2017 13:03:54 -0400
+From: Maksim Salau <maksim.salau@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Wolfram Sang <wsa-dev@sang-engineering.com>,
+        Mugunthan V N <mugunthanvnm@ti.com>,
+        Florian Westphal <fw@strlen.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Maksim Salau <maksim.salau@gmail.com>
+Subject: [PATCH] net: wireless: orinoco: usb: Fix buffer on stack
+Date: Sat, 22 Apr 2017 20:03:06 +0300
+Message-Id: <20170422170306.11668-1-maksim.salau@gmail.com> (sfid-20170422_190450_840945_D948910C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 03, 2017 at 12:15:15PM +0200, Arend Van Spriel wrote:
-> seems we are missing out again?
+Allocate buffer on HEAP instead of STACK for a local variable
+that is to be sent using usb_control_msg().
 
-Sorry, I don't understand what this comment means?
+Signed-off-by: Maksim Salau <maksim.salau@gmail.com>
+---
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
-> On 3-4-2017 11:50, Toke Høiland-Jørgensen wrote:
-> > "Tobin C. Harding" <me@tobin.cc> writes:
-> > 
-> >> Except one: do you know off the top of your head of a canonical
-> >> implementation of a softmac wi-fi driver.
-> > 
-> > I'll suggest taking a look at the ath9k driver :)
-> 
-> Looking at ks7010 driver it looks like it has 802.11 stack in firmware
-> and not sure if Renesas is actively supporting this effort to come up
-> with mac80211-friendly firmware or provide detailed chip info.
-
-Thanks for taking a look. If the ks7010 driver has 802.11 stack in
-firmware does that mean it is not compatible with using the kernel
-mac80211 stack with the current firmware? I do not have my hopes up
-about getting any chip information out of Renesas, all I think we have
-to go in is the current WEXT driver.
-
-This is an exercise in learning for me, but I do not want to take any
-ones time up with a project that is not that useful. Is getting the
-ks7010 driver out of staging something that is of use to the kernel
-community or are there other wi-fi tasks that our time is better spent
-on?
-
-thanks,
-Tobin.
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index bca6935..eb4528b 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -770,18 +770,31 @@ static int ezusb_submit_in_urb(struct ezusb_priv *upriv)
+ 
+ static inline int ezusb_8051_cpucs(struct ezusb_priv *upriv, int reset)
+ {
+-	u8 res_val = reset;	/* avoid argument promotion */
++	int ret;
++	u8 *res_val = NULL;
+ 
+ 	if (!upriv->udev) {
+ 		err("%s: !upriv->udev", __func__);
+ 		return -EFAULT;
+ 	}
+-	return usb_control_msg(upriv->udev,
++
++	res_val = kmalloc(sizeof(*res_val), GFP_KERNEL);
++
++	if (!res_val)
++		return -ENOMEM;
++
++	*res_val = reset;	/* avoid argument promotion */
++
++	ret =  usb_control_msg(upriv->udev,
+ 			       usb_sndctrlpipe(upriv->udev, 0),
+ 			       EZUSB_REQUEST_FW_TRANS,
+ 			       USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+-			       USB_DIR_OUT, EZUSB_CPUCS_REG, 0, &res_val,
+-			       sizeof(res_val), DEF_TIMEOUT);
++			       USB_DIR_OUT, EZUSB_CPUCS_REG, 0, res_val,
++			       sizeof(*res_val), DEF_TIMEOUT);
++
++	kfree(res_val);
++
++	return ret;
+ }
+ 
+ static int ezusb_firmware_download(struct ezusb_priv *upriv,
+-- 
+2.9.3
