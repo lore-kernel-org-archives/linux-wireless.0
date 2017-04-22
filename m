@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42482 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754100AbdDEMo1 (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:18717 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1422773AbdDVJnM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 08:44:27 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sat, 22 Apr 2017 05:43:12 -0400
+Date: Sat, 22 Apr 2017 12:42:48 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        linuxwifi <linuxwifi@intel.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Sharon, Sara" <sara.sharon@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: pcie: off by one in
+ iwl_trans_pcie_dyn_txq_alloc()
+Message-ID: <20170422094248.4l2cf6bpgbnqtujd@mwanda> (sfid-20170422_114324_634062_594CF3B1)
+References: <20170421194619.sjc33647odsfkcfl@mwanda>
+ <1492804774.19290.5.camel@sipsolutions.net>
+ <20170421201200.4y4tzlxmktacskr6@mwanda>
+ <1492844542.31741.127.camel@intel.com>
 MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: fix use-after-free for FW reinit errors
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170328235933.950-1-briannorris@chromium.org>
-References: <20170328235933.950-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>, <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20170405124426.83E2360E0E@smtp.codeaurora.org> (sfid-20170405_144740_482819_259B64BF)
-Date: Wed,  5 Apr 2017 12:44:26 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1492844542.31741.127.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> If we fail to reinit the FW when resetting the device (in the
-> synchronous version of mwifiex_init_hw_fw() -> mwifiex_fw_dpc()),
-> mwifiex_fw_dpc() will tear down the interface and free up the adapter.
-> But we don't actually check for all failure cases of mwifiex_fw_dpc(),
-> so some of them fall through and dereference adapter->fw_done with a
-> freed adapter, causing a use-after-free bug.
+On Sat, Apr 22, 2017 at 07:02:23AM +0000, Coelho, Luciano wrote:
+> On Fri, 2017-04-21 at 23:12 +0300, Dan Carpenter wrote:
+> > Heh.  I raced this one through to see if I could beat you to the punch.
 > 
-> In any case, mwifiex_fw_dpc() will always signal FW completion -- in the
-> error OR success case -- so at best, this was repeat work. Let's not do
-> it.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Yeah, this patch is in our internal tree.  But maybe we can take Dan's
+> for upstream for his efforts? :)
 
-2 patches applied to wireless-drivers-next.git, thanks.
+No no.
 
-ce8fad9a1f09 mwifiex: fix use-after-free for FW reinit errors
-755b37c93a06 mwifiex: catch mwifiex_fw_dpc() errors properly in reset
-
--- 
-https://patchwork.kernel.org/patch/9650725/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+regards,
+dan carpenter
