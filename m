@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52920 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756244AbdDRWXH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:23:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:29 +0300
-Message-Id: <20170418221729.28372-26-luca@coelho.fi> (sfid-20170419_002339_980014_2E0275B8)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 25/25] iwlwifi: mvm: allow block ack response without data
+Received: from m50-132.163.com ([123.125.50.132]:49669 "EHLO m50-132.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1044778AbdDWLzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 23 Apr 2017 07:55:24 -0400
+From: Pan Bian <bianpan201602@163.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+Subject: [PATCH 1/1] staging: wilc1000: fix unchecked return value
+Date: Sun, 23 Apr 2017 19:53:58 +0800
+Message-Id: <1492948438-17389-1-git-send-email-bianpan201602@163.com> (sfid-20170423_135609_699380_544BA2D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Pan Bian <bianpan2016@163.com>
 
-When FW fails to get block ack, it will send the notification with
-0 items in the TFD queue elements. Allow this and handle accordingly.
+Function dev_alloc_skb() will return a NULL pointer if there is no
+enough memory. However, in function WILC_WFI_mon_xmit(), its return
+value is used without validation. This may result in a bad memory access
+bug. This patch fixes the bug.
 
-Fixes: c46e7724bfe9 ("iwlwifi: mvm: support new BA notification response")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Pan Bian <bianpan2016@163.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/staging/wilc1000/linux_mon.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 65308c4ad8b8..a3de91e5e543 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1782,6 +1782,9 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		ba_info.status.status_driver_data[0] =
- 			(void *)(uintptr_t)ba_res->reduced_txp;
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index f328d75..c9782d4 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -197,6 +197,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
  
-+		if (!le16_to_cpu(ba_res->tfd_cnt))
-+			goto out;
-+
- 		/*
- 		 * TODO:
- 		 * When supporting multi TID aggregations - we need to move
-@@ -1799,6 +1802,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 				   le16_to_cpu(ba_res->tfd[0].tfd_index),
- 				   &ba_info, le32_to_cpu(ba_res->tx_rate));
+ 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
+ 		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		if (!skb2)
++			return -ENOMEM;
  
-+out:
- 		IWL_DEBUG_TX_REPLY(mvm,
- 				   "BA_NOTIFICATION Received from sta_id = %d, flags %x, sent:%d, acked:%d\n",
- 				   sta_id, le32_to_cpu(ba_res->flags),
+ 		memcpy(skb_put(skb2, skb->len), skb->data, skb->len);
+ 
 -- 
-2.11.0
+1.9.1
