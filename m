@@ -1,65 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:44863 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S981112AbdDYSkn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 14:40:43 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH v4 0/9] NFC: trf7970a: Fixups & convert to desc-based GPIO
-Date: Tue, 25 Apr 2017 11:40:27 -0700
-Message-Id: <20170425184036.1212-1-mgreer@animalcreek.com> (sfid-20170425_204049_335283_DE4519E4)
+Received: from m50-133.163.com ([123.125.50.133]:36765 "EHLO m50-133.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1427705AbdDWHBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 23 Apr 2017 03:01:54 -0400
+From: Pan Bian <bianpan2016@163.com>
+To: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, Pan Bian <bianpan2016@163.com>
+Subject: [PATCH 1/1] mt7601u: check return value of alloc_skb
+Date: Sun, 23 Apr 2017 15:00:23 +0800
+Message-Id: <1492930823-17249-1-git-send-email-bianpan2016@163.com> (sfid-20170423_090219_346441_7830741A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These trf7970a driver patches do the following things:
- - add Mark Greer as the maintainer of the trf7970a driver
- - some minor fixups
- - remove support for 'vin-voltage-override' DT property
- - change the DTS example to indicate that EN and EN2 are active high GPIOs
- - convert the driver to use the descriptor-based GPIO interface
- - apply Lindent coding style fixes
+Function alloc_skb() will return a NULL pointer if there is no enough
+memory. However, in function mt7601u_mcu_msg_alloc(), its return value
+is not validated before it is used. This patch fixes it.
 
-Based on nfc-next/master 4ea206395d3a ("nfc: fix get_unaligned_...() misuses")
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+ drivers/net/wireless/mediatek/mt7601u/mcu.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-v3->v4:
- - Rebased on nfc-next/master because patches in that branch conflict
-   with the v3 version of this patch series.
- - Removed "NFC: trf7970a: Don't manage EN2 when not specified in DT"
-   because a similar patch has already been accepted.
- - Added "NFC: trf7970a: Clean up coding style issues" because the reason
-   I removed it in v3 no longer exists.
- - Reordered the patches to make more sense (I think)
-
-v2->v3:
- - Removed "[PATCH v2 5/7] NFC: trf7970a: Clean up coding style issues"
-   because it will make merging patches from Geoff Lansberry and others
-   hard to apply.  I will resubmit once those patches have been merged
-   or rejected.
- - Added a patch to remove 'vin-voltage-override' DT property support as
-   proper DT regulator set up makes it unnecessary.
-
-v1->v2:
- - Commit description fixups only; no functional changes.
-
-Mark Greer (9):
-  MAINTAINERS: NFC: trf7970a: Add Mark Greer as maintainer
-  NFC: trf7970a: Don't de-assert EN2 unless it was asserted
-  NFC: trf7970a: Fix inaccurate comment in trf7970a_probe()
-  NFC: trf7970a: Only check 'en2-rf-quirk' if EN2 is specified
-  NFC: trf7970a: Remove useless comment
-  NFC: trf7970a: Remove support for 'vin-voltage-override' DT property
-  NFC: trf7970a: Enable pins are active high not active low
-  NFC: trf7970a: Convert to descriptor based GPIO interface
-  NFC: trf7970a: Clean up coding style issues
-
- .../devicetree/bindings/net/nfc/trf7970a.txt       |   6 +-
- MAINTAINERS                                        |   8 +
- drivers/nfc/Kconfig                                |   2 +-
- drivers/nfc/trf7970a.c                             | 363 ++++++++++-----------
- 4 files changed, 185 insertions(+), 194 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+index dbdfb3f..a9f5f39 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
++++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+@@ -66,8 +66,10 @@ static inline void trace_mt_mcu_msg_send_cs(struct mt7601u_dev *dev,
+ 	WARN_ON(len % 4); /* if length is not divisible by 4 we need to pad */
+ 
+ 	skb = alloc_skb(len + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
+-	skb_reserve(skb, MT_DMA_HDR_LEN);
+-	memcpy(skb_put(skb, len), data, len);
++	if (skb) {
++		skb_reserve(skb, MT_DMA_HDR_LEN);
++		memcpy(skb_put(skb, len), data, len);
++	}
+ 
+ 	return skb;
+ }
+@@ -170,6 +172,8 @@ static int mt7601u_mcu_function_select(struct mt7601u_dev *dev,
+ 	};
+ 
+ 	skb = mt7601u_mcu_msg_alloc(dev, &msg, sizeof(msg));
++	if (!skb)
++		return -ENOMEM;
+ 	return mt7601u_mcu_msg_send(dev, skb, CMD_FUN_SET_OP, func == 5);
+ }
+ 
+@@ -205,6 +209,8 @@ int mt7601u_mcu_tssi_read_kick(struct mt7601u_dev *dev, int use_hvga)
+ 	};
+ 
+ 	skb = mt7601u_mcu_msg_alloc(dev, &msg, sizeof(msg));
++	if (!skb)
++		return -ENOMEM;
+ 	return mt7601u_mcu_msg_send(dev, skb, CMD_CALIBRATION_OP, true);
+ }
+ 
 -- 
-2.12.0
+1.9.1
