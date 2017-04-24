@@ -1,77 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34001 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S946895AbdDTSyY (ORCPT
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:33068 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1174452AbdDXUZu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 14:54:24 -0400
-Received: by mail-oi0-f66.google.com with SMTP id y11so10319150oie.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2017 11:54:24 -0700 (PDT)
-Subject: Re: [PATCH 00/14] rtlwifi: btcoex: Second set of changes for
- rtl8821ae 2ant
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
- <87zifb65eh.fsf@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5df931fe-cbb8-a0f7-ec0f-a62180ca760d@lwfinger.net> (sfid-20170420_205427_987333_D75E3736)
-Date: Thu, 20 Apr 2017 13:54:22 -0500
+        Mon, 24 Apr 2017 16:25:50 -0400
+Received: by mail-oi0-f54.google.com with SMTP id y11so117012548oie.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 13:25:45 -0700 (PDT)
+Received: from mail-oi0-f43.google.com (mail-oi0-f43.google.com. [209.85.218.43])
+        by smtp.gmail.com with ESMTPSA id h10sm8509203otb.39.2017.04.24.13.25.42
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 24 Apr 2017 13:25:42 -0700 (PDT)
+Received: by mail-oi0-f43.google.com with SMTP id j201so149219286oih.2
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 13:25:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87zifb65eh.fsf@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+From: Adam Casson <adam.casson@inscopemedical.com>
+Date: Mon, 24 Apr 2017 16:25:11 -0400
+Message-ID: <CAPdsbMvE=_-oQ9wWLPQkUuF_Q3JeHCKo-0NrPt0hRRPo8khH9Q@mail.gmail.com> (sfid-20170424_222619_941094_0D79E42A)
+Subject: WPA authorization with RTL8723DS
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/19/2017 11:59 PM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> These patches are the second set of patches for file
->> btcoexist/halbtc8821a2ant.c.
->>
->> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Pkshih <pkshih@realtek.com>
->> Cc: Birming Chiu <birming@realtek.com>
->> Cc: Shaofu <shaofu@realtek.com>
->> Cc: Steven Ting <steventing@realtek.com>
->
-> BTW, please try to limit the amount of patches you send. I haven't
-> counted how many rtlwifi patches there are from the last week but it's
-> just too much, even if they are in smaller sets like this one. Reviewing
-> them is just too tedious when you see that you have something like 50
-> more still to go.
->
-> If you send two sets with reasonable size[1] per week I don't have any
-> problems. But if you send five such sets per week I will get annoyed :)
-> So try to strect the submission a bit to stay below ~30 patches per week
-> limit, please.
->
-> So I'm not sure if I'm able to apply all of pending rtlwifi patches
-> before the merge window opens, but I'll try.
->
-> [1] a reasonable size is around a dozen patches per set
+I'm trying to build a product around the Next Thing Co CHIP Pro
+(nextthing.co/pages/chippro) and have found that the RTL8723DS wifi/BT
+chip is fairly unstable, particularly when trying to implement WPA
+authorization. A previous version of this SoM uses the RTL8723BS which
+is similar in structure and driver, but this new 8723DS is different
+enough to warrant a separate code branch from both Realtek and the
+manufacturer of the SoM. However, Realtek has not publically released
+a driver for the new 8723DS chip. We have received no support from the
+SoM manufacturer, so we're looking for some external help so that we
+can maybe salvage the considerable work we've put into developing
+around this SoM.
 
-Kalle,
+Some additional details about how the device was being used are below.
 
-Sorry about the heavy load. I received the patches from Realtek late in the 4.12 
-cycle, and I was trying to make the deadline.
+Use hopstapd (configuration for open and WPA included) to configure
+the Chip Pro as an access point. Launch hostapd (command line also
+provided in logs).
 
-Please drop the following sets of patches:
+Gadget buildroot git commit e550a93f2b08c771f0dd75919bb042ad86faa763
 
-[PATCH 00/10] rtlwifi: btcoex: Third set of changes for rtl8821ae 2ant
-[PATCH 00/13] rtlwifi: btcoex: Second set of 21a 1ant changes
-[PATCH 00/27] rtlwifi: btcoex: Changes for 23b 1ant
-[PATCH 0/2] rtlwifi: btcoex: Two more patches
+WPA version 2 (as specified in the provided hostapd config).
 
-I believe that is all of the sets that have not yet been merged. We will fix the 
-issue of the conditionals that you asked about in a second E-mail. That is the 
-one that my Chinese Colleagues ask about in Chinese.
+Client types tested:
 
-These will be resubmitted for the 4.13 cycle in smaller sets and no more than 
-two sets per week.
+- rtl8188eu usb dongle on Ubuntu 16.04 workstation
+- 2013 Mac Book Pro running 10.12 Sierra
 
-Thanks for all your efforts,
+Same results with both (WPA auth failed). Both clients have been
+tested successfully with a wide range of WPA2 access points.
 
-Larry
+Thanks for any help you can provide!
+Adam
