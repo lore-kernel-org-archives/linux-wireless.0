@@ -1,108 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51480 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754981AbdDMP14 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 11:27:56 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 13 Apr 2017 18:24:57 +0300
-Message-Id: <20170413152507.9648-17-luca@coelho.fi> (sfid-20170413_172855_622684_C73E6AF6)
-In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
-References: <20170413152507.9648-1-luca@coelho.fi>
-Subject: [PATCH 16/26] iwlwifi: mvm: tell the firmware about the U-APSD parameters
+Received: from mga14.intel.com ([192.55.52.115]:22990 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S968979AbdDXSlc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Apr 2017 14:41:32 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 2/2] NFC: st21nfca: Get rid of code duplication in ->probe()
+Date: Mon, 24 Apr 2017 21:41:28 +0300
+Message-Id: <20170424184128.48061-2-andriy.shevchenko@linux.intel.com> (sfid-20170424_204253_408725_AB0B9A3D)
+In-Reply-To: <20170424184128.48061-1-andriy.shevchenko@linux.intel.com>
+References: <20170424184128.48061-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Since OF and ACPI case almost the same get rid of code duplication
+by moving gpiod_get() calls directly to ->probe().
 
-Newer firmware versions will be able to handle all the
-WMM-PS flows internally when we act as a GO. The firwmare
-relies on the fact that the drivers puts frames for
-different peers in different queues (DQA) to achieve this.
-The driver will not be aware of the power state of the peers
-anymore.
-
-Tell the firmware about the WMM-PS parameters of earch peer
-that connects to us so that it can know what are the
-trigger-enabled ACs, the delivery-enableds ACs and the
-Service Period length.
-
-This API change is backward compatible since older firmware
-versions will simply ignore the newly added values.
-
-Since we don't support ieee80211 TSPECs for now, just copy
-the trigger-enabled ACs to the delivery enabled ones.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h | 11 ++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c        | 10 ++++++----
- 2 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/nfc/st21nfca/i2c.c | 62 ++++++++--------------------------------------
+ 1 file changed, 10 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-index 4f8648f53879..e79df1c53d68 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-@@ -179,7 +179,7 @@ enum iwl_sta_key_flag {
-  * enum iwl_sta_modify_flag - indicate to the fw what flag are being changed
-  * @STA_MODIFY_QUEUE_REMOVAL: this command removes a queue
-  * @STA_MODIFY_TID_DISABLE_TX: this command modifies %tid_disable_tx
-- * @STA_MODIFY_UAPSD_ACS: this command modifies %uapsd_trigger_acs
-+ * @STA_MODIFY_UAPSD_ACS: this command modifies %uapsd_acs
-  * @STA_MODIFY_ADD_BA_TID: this command modifies %add_immediate_ba_tid
-  * @STA_MODIFY_REMOVE_BA_TID: this command modifies %remove_immediate_ba_tid
-  * @STA_MODIFY_SLEEPING_STA_TX_COUNT: this command modifies %sleep_tx_count
-@@ -354,8 +354,9 @@ struct iwl_mvm_add_sta_cmd_v7 {
-  * @tfd_queue_msk: tfd queues used by this station.
-  *	Obselete for new TX API (9 and above).
-  * @rx_ba_window: aggregation window size
-- * @scd_queue_bank: queue bank in used. Each bank contains 32 queues. 0 means
-- *	that the queues used by this station are in the first 32.
-+ * @sp_length: the size of the SP as it appears in the WME IE
-+ * @uapsd_acs:  4 LS bits are trigger enabled ACs, 4 MS bits are the deliver
-+ *	enabled ACs.
-  *
-  * The device contains an internal table of per-station information, with info
-  * on security keys, aggregation parameters, and Tx rates for initial Tx
-@@ -385,8 +386,8 @@ struct iwl_mvm_add_sta_cmd {
- 	__le16 beamform_flags;
- 	__le32 tfd_queue_msk;
- 	__le16 rx_ba_window;
--	u8 scd_queue_bank;
--	u8 uapsd_trigger_acs;
-+	u8 sp_length;
-+	u8 uapsd_acs;
- } __packed; /* ADD_STA_CMD_API_S_VER_9 */
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index a04f24334b54..525f72f49b73 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -61,8 +61,6 @@
+ #define ST21NFCA_HCI_DRIVER_NAME "st21nfca_hci"
+ #define ST21NFCA_HCI_I2C_DRIVER_NAME "st21nfca_hci_i2c"
  
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index ffbfd34d8e92..20a8f529760f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -215,13 +215,15 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		add_sta_cmd.modify_mask |= STA_MODIFY_UAPSD_ACS;
+-#define ST21NFCA_GPIO_NAME_EN "enable"
+-
+ struct st21nfca_i2c_phy {
+ 	struct i2c_client *i2c_dev;
+ 	struct nfc_hci_dev *hdev;
+@@ -508,44 +506,10 @@ static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
+ 	{},
+ };
  
- 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
--			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_BK);
-+			add_sta_cmd.uapsd_acs |= BIT(AC_BK);
- 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BE)
--			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_BE);
-+			add_sta_cmd.uapsd_acs |= BIT(AC_BE);
- 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VI)
--			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_VI);
-+			add_sta_cmd.uapsd_acs |= BIT(AC_VI);
- 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
--			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_VO);
-+			add_sta_cmd.uapsd_acs |= BIT(AC_VO);
-+		add_sta_cmd.uapsd_acs |= add_sta_cmd.uapsd_acs << 4;
-+		add_sta_cmd.sp_length = sta->max_sp;
+-static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+-{
+-	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-	int ret;
+-
+-	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_st21nfca_gpios);
+-	if (ret)
+-		return ret;
+-
+-	/* Get EN GPIO from ACPI */
+-	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_ena)) {
+-		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+-		return PTR_ERR(phy->gpiod_ena);
+-	}
+-
+-	return 0;
+-}
+-
+-static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+-{
+-	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-
+-	/* Get GPIO from device tree */
+-	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
+-	if (IS_ERR(phy->gpiod_ena)) {
+-		nfc_err(dev, "Failed to request enable pin\n");
+-		return PTR_ERR(phy->gpiod_ena);
+-	}
+-
+-	return 0;
+-}
+-
+ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 				  const struct i2c_device_id *id)
+ {
++	struct device *dev = &client->dev;
+ 	struct st21nfca_i2c_phy *phy;
+ 	int r;
+ 
+@@ -572,21 +536,15 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 	mutex_init(&phy->phy_lock);
+ 	i2c_set_clientdata(client, phy);
+ 
+-	if (client->dev.of_node) {
+-		r = st21nfca_hci_i2c_of_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev, "No platform data\n");
+-			return r;
+-		}
+-	} else if (ACPI_HANDLE(&client->dev)) {
+-		r = st21nfca_hci_i2c_acpi_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev, "Cannot get ACPI data\n");
+-			return r;
+-		}
+-	} else {
+-		nfc_err(&client->dev, "st21nfca platform resources not available\n");
+-		return -ENODEV;
++	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_st21nfca_gpios);
++	if (r)
++		dev_dbg(dev, "Unable to add GPIO mapping table\n");
++
++	/* Get EN GPIO from resource provider */
++	phy->gpiod_ena = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
++	if (IS_ERR(phy->gpiod_ena)) {
++		nfc_err(dev, "Unable to get ENABLE GPIO\n");
++		return PTR_ERR(phy->gpiod_ena);
  	}
  
- 	status = ADD_STA_SUCCESS;
+ 	phy->se_status.is_ese_present =
 -- 
 2.11.0
