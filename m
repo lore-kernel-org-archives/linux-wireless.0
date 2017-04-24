@@ -1,132 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38144 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:22990 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752153AbdDHRtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 13:49:10 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] netlink: allow sending extended ACK with cookie on success
-Date: Sat,  8 Apr 2017 19:48:58 +0200
-Message-Id: <20170408174900.12820-4-johannes@sipsolutions.net> (sfid-20170408_194927_157587_3A9F8CB6)
-In-Reply-To: <20170408174900.12820-1-johannes@sipsolutions.net>
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
+        id S1171488AbdDXSld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Apr 2017 14:41:33 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Christophe Ricard <christophe.ricard@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/2] NFC: st21nfca: Add GPIO ACPI mapping table
+Date: Mon, 24 Apr 2017 21:41:27 +0300
+Message-Id: <20170424184128.48061-1-andriy.shevchenko@linux.intel.com> (sfid-20170424_204254_075396_C8FBC370)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In order to make GPIO ACPI library stricter prepare users of
+gpiod_get_index() to correctly behave when there no mapping is
+provided by firmware.
 
-Now that we have extended error reporting and a new message format
-for netlink ACK messages, also extend this to be able to return
-arbitrary cookie data on success.
+Here we add explicit mapping between _CRS GpioIo() resources and
+their names used in the driver.
 
-This will allow, for example, nl80211 to not send an extra message
-for cookies identifying newly created objects, but return those
-directly in the ACK message.
-
-The cookie data size is currently limited to 32 bytes (since Jamal
-talked about using SHA1 for identifiers.)
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- include/linux/netlink.h      |  3 +++
- include/uapi/linux/netlink.h |  4 ++++
- net/netlink/af_netlink.c     | 38 ++++++++++++++++++++++++--------------
- 3 files changed, 31 insertions(+), 14 deletions(-)
+ drivers/nfc/st21nfca/i2c.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-index 47562e940e9c..2133353b9a30 100644
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -62,6 +62,9 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
- 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
- }
- 
-+/* this can be increased when necessary - don't expose to userland */
-+#define NETLINK_MAX_COOKIE_LEN	32
-+
- /**
-  * struct netlink_ext_ack - netlink extended ACK report struct
-  * @_msg: message string to report - don't access directly, use
-diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
-index d1564557d645..7892095b1a16 100644
---- a/include/uapi/linux/netlink.h
-+++ b/include/uapi/linux/netlink.h
-@@ -118,12 +118,16 @@ struct nlmsgerr {
-  * @NLMSGERR_ATTR_OFFS: error offset in the original message (u32)
-  * @NLMSGERR_ATTR_ATTR: top-level attribute that caused the error
-  *	(or is missing, u16)
-+ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
-+ *	be used - in the success case - to identify a created
-+ *	object or operation or similar (binary)
-  */
- enum nlmsgerr_attrs {
- 	NLMSGERR_ATTR_UNUSED,
- 	NLMSGERR_ATTR_MSG,
- 	NLMSGERR_ATTR_OFFS,
- 	NLMSGERR_ATTR_ATTR,
-+	NLMSGERR_ATTR_COOKIE,
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 02a920ca07c8..a04f24334b54 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -501,14 +501,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
+ 	.disable = st21nfca_hci_i2c_disable,
  };
  
- #define NETLINK_ADD_MEMBERSHIP		1
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index 02cffb0a3904..bc1c9e8dd7ef 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -2312,6 +2312,9 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 			    (extack->missing_attr || extack->bad_attr))
- 				acksize += nla_total_size(sizeof(u16));
- 		}
-+	} else if (nlk->flags & NETLINK_F_EXT_ACK) {
-+		if (extack && extack->cookie_len)
-+			acksize += nla_total_size(extack->cookie_len);
- 	}
++static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
++
++static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
++	{ "enable-gpios", &enable_gpios, 1 },
++	{},
++};
++
+ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
++	int ret;
++
++	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_st21nfca_gpios);
++	if (ret)
++		return ret;
  
- 	skb = nlmsg_new(acksize, GFP_KERNEL);
-@@ -2337,20 +2340,27 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 	       !(nlk->flags & NETLINK_F_CAP_ACK) ? nlh->nlmsg_len
- 						 : sizeof(*nlh));
+ 	/* Get EN GPIO from ACPI */
+-	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+-					      GPIOD_OUT_LOW);
++	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
+ 	if (IS_ERR(phy->gpiod_ena)) {
+ 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+ 		return PTR_ERR(phy->gpiod_ena);
+@@ -523,8 +534,7 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 	struct device *dev = &client->dev;
  
--	if (err && nlk->flags & NETLINK_F_EXT_ACK) {
--		if (extack && extack->_msg)
--			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
--					       extack->_msg));
--		if (extack && extack->bad_attr &&
--		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
--			     (u8 *)extack->bad_attr >= in_skb->data +
--						       in_skb->len))
--			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
--					    (u8 *)extack->bad_attr -
--					    in_skb->data));
--		if (extack && extack->missing_attr)
--			WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
--					    extack->missing_attr));
-+	if (nlk->flags & NETLINK_F_EXT_ACK) {
-+		if (err) {
-+			if (extack && extack->_msg)
-+				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
-+						       extack->_msg));
-+			if (extack && extack->bad_attr &&
-+			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
-+				     (u8 *)extack->bad_attr >= in_skb->data +
-+							       in_skb->len))
-+				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
-+						    (u8 *)extack->bad_attr -
-+						    in_skb->data));
-+			if (extack && extack->missing_attr)
-+				WARN_ON(nla_put_u16(skb, NLMSGERR_ATTR_ATTR,
-+						    extack->missing_attr));
-+		} else {
-+			if (extack && extack->cookie_len)
-+				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
-+						extack->cookie_len,
-+						extack->cookie));
-+		}
- 	}
+ 	/* Get GPIO from device tree */
+-	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
+-					      GPIOD_OUT_HIGH);
++	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
+ 	if (IS_ERR(phy->gpiod_ena)) {
+ 		nfc_err(dev, "Failed to request enable pin\n");
+ 		return PTR_ERR(phy->gpiod_ena);
+@@ -618,6 +628,7 @@ static int st21nfca_hci_i2c_remove(struct i2c_client *client)
+ 	if (phy->powered)
+ 		st21nfca_hci_i2c_disable(phy);
  
- 	netlink_unicast(in_skb->sk, skb, NETLINK_CB(in_skb).portid, MSG_DONTWAIT);
++	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
+ 	return 0;
+ }
+ 
 -- 
 2.11.0
