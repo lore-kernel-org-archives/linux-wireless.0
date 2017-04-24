@@ -1,82 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:38227 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753123AbdDDVbS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 17:31:18 -0400
-Received: by mail-wm0-f46.google.com with SMTP id t189so39151185wmt.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 14:31:17 -0700 (PDT)
-Subject: Re: [PATCH RFC] remove custom Michael MIC implementation
-To: "Tobin C. Harding" <me@tobin.cc>
-References: <1490935659-7196-1-git-send-email-me@tobin.cc>
- <20170331075851.GB1435@katana> <20170331102113.GA2930@eros>
- <87fuhq6par.fsf@purkki.adurom.net> <20170403090359.GK3755@eros>
- <87y3vhx1ju.fsf@alrua-karlstad>
- <9bfd1405-fd32-e896-b6f0-09ffedeaac33@broadcom.com>
- <20170403213910.GA7480@eros>
-Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+Received: from m12-11.163.com ([220.181.12.11]:60973 "EHLO m12-11.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1163769AbdDXAko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 23 Apr 2017 20:40:44 -0400
+From: Pan Bian <bianpan201603@163.com>
+To: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Tycho Andersen <tycho@tycho.ws>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devel@linuxdriverproject.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <060699f7-df85-8530-17bc-6174efb946f2@broadcom.com> (sfid-20170404_233153_828564_49A92176)
-Date: Tue, 4 Apr 2017 23:31:14 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170403213910.GA7480@eros>
-Content-Type: text/plain; charset=windows-1252
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+Subject: [PATCH 1/1] rndis_wlan: add return value validation
+Date: Mon, 24 Apr 2017 08:40:28 +0800
+Message-Id: <1492994428-16090-1-git-send-email-bianpan201603@163.com> (sfid-20170424_024132_232521_95E80D24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Pan Bian <bianpan2016@163.com>
 
+Function create_singlethread_workqueue() will return a NULL pointer if
+there is no enough memory, and its return value should be validated
+before using. However, in function rndis_wlan_bind(), its return value
+is not checked. This may cause NULL dereference bugs. This patch fixes
+it.
 
-On 3-4-2017 23:39, Tobin C. Harding wrote:
-> On Mon, Apr 03, 2017 at 12:15:15PM +0200, Arend Van Spriel wrote:
->> seems we are missing out again?
-> 
-> Sorry, I don't understand what this comment means?
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+ drivers/net/wireless/rndis_wlan.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-My bad. I had to reset my email account in thunderbird and now it needs
-to learn anew what is spam and what is not. So I missed out on the
-conversation as some messages (a lot actually) ended up in my spam folder.
-
->> On 3-4-2017 11:50, Toke Høiland-Jørgensen wrote:
->>> "Tobin C. Harding" <me@tobin.cc> writes:
->>>
->>>> Except one: do you know off the top of your head of a canonical
->>>> implementation of a softmac wi-fi driver.
->>>
->>> I'll suggest taking a look at the ath9k driver :)
->>
->> Looking at ks7010 driver it looks like it has 802.11 stack in firmware
->> and not sure if Renesas is actively supporting this effort to come up
->> with mac80211-friendly firmware or provide detailed chip info.
-> 
-> Thanks for taking a look. If the ks7010 driver has 802.11 stack in
-> firmware does that mean it is not compatible with using the kernel
-> mac80211 stack with the current firmware? I do not have my hopes up
-> about getting any chip information out of Renesas, all I think we have
-> to go in is the current WEXT driver.
-
-Indeed. That is my gut feeling as well and if that is truly the case
-your best option would be a cfg80211-based driver like ath6kl, mwifiex,
-and brcmfmac.
-
-> This is an exercise in learning for me, but I do not want to take any
-> ones time up with a project that is not that useful. Is getting the
-> ks7010 driver out of staging something that is of use to the kernel
-> community or are there other wi-fi tasks that our time is better spent
-> on?
-
-If there are linux users with this hardware than sure. Especially if it
-revised to interface with the latest wireless subsystem so tools like iw
-can operate on it.
-
-Also I suppose it is preferred if a driver is maintained. I do not see
-the ks7010 listed in the MAINTAINERS file yet.
-
-> thanks,
-> Tobin.
-> 
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 785334f..92a1bde 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -3427,6 +3427,10 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 
+ 	/* because rndis_command() sleeps we need to use workqueue */
+ 	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
++	if (!priv->workqueue) {
++		wiphy_free(wiphy);
++		return -ENOMEM;
++	}
+ 	INIT_WORK(&priv->work, rndis_wlan_worker);
+ 	INIT_DELAYED_WORK(&priv->dev_poller_work, rndis_device_poller);
+ 	INIT_DELAYED_WORK(&priv->scan_work, rndis_get_scan_results);
+-- 
+1.9.1
