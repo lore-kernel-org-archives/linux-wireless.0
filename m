@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51280 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754623AbdDMPZb (ORCPT
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:36229 "EHLO
+        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933364AbdDXHqp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 11:25:31 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 13 Apr 2017 18:24:47 +0300
-Message-Id: <20170413152507.9648-7-luca@coelho.fi> (sfid-20170413_172536_386445_E06609DA)
-In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
-References: <20170413152507.9648-1-luca@coelho.fi>
-Subject: [PATCH 06/26] iwlwifi: mvm: disable multi-queue for a000 devices
+        Mon, 24 Apr 2017 03:46:45 -0400
+Received: by mail-yw0-f174.google.com with SMTP id l18so14364576ywh.3
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 00:46:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87inludzh6.fsf@michaelmera.com>
+References: <20170424053902.1644-1-dev@michaelmera.com> <CAN6Sofawy9BmFaVgNw=gt=9VwLqNFdCQ2fa3DApvJTVCJpjoqg@mail.gmail.com>
+ <87inludzh6.fsf@michaelmera.com>
+From: Marcin Rokicki <marcin.rokicki@gmail.com>
+Date: Mon, 24 Apr 2017 09:46:43 +0200
+Message-ID: <CAN6SofY1Job1qpTwzmMAqE-+eK5vk01bNU5-WK8k28yL9YuS9w@mail.gmail.com> (sfid-20170424_094732_196754_767F62F8)
+Subject: Re: [PATCH] ath10k: fix out of bounds access to local buffer
+To: Michael Mera <dev@michaelmera.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+2017-04-24 9:41 GMT+02:00 Michael Mera <dev@michaelmera.com>:
+> Marcin Rokicki <marcin.rokicki@gmail.com> writes:
+>> Please send again to ath10k@lists.infradead.org with cc
+>> linux-wireless@vger.kernel.org
+>>
+>
+> Sorry for the mistake. Resent as requested.
 
-Firmware isn't configuring multi RX queue hardware yet in
-the self init mode.
-Disable it for now until we have an API that enables it.
+No problem.
+>
+> Just for the record, I followed instructions at:
+>   https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches?s[]=submit#who_to_address
+>
+> So, maybe this needs to be updated to reflect the ath10k case.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 61cafb541554..4c5088643b2b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1240,7 +1240,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	}
- 
- 	/* Init RSS configuration */
--	if (iwl_mvm_has_new_rx_api(mvm)) {
-+	/* TODO - remove a000 disablement when we have RXQ config API */
-+	if (iwl_mvm_has_new_rx_api(mvm) && !iwl_mvm_has_new_tx_api(mvm)) {
- 		ret = iwl_send_rss_cfg_cmd(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to configure RSS queues: %d\n",
--- 
-2.11.0
+Check this page:
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/sources
+>
+> Thanks,
+> Michael Mera
