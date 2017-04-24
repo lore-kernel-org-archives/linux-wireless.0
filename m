@@ -1,159 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58612 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756230AbdDGJX0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:53864 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1173836AbdDXSwj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 05:23:26 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 01/10] nl80211: add request id in scheduled scan event messages
-Date: Fri,  7 Apr 2017 10:23:01 +0100
-Message-Id: <1491556990-25143-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170407_112332_469134_57F6196A)
-In-Reply-To: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1491556990-25143-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 24 Apr 2017 14:52:39 -0400
+Message-ID: <1493059948.31741.161.camel@coelho.fi> (sfid-20170424_205305_174345_5CC14261)
+From: Luca Coelho <luca@coelho.fi>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linuxwifi@intel.com, linux-wireless@vger.kernel.org
+Date: Mon, 24 Apr 2017 21:52:28 +0300
+In-Reply-To: <20170424124017.GL22592@two.firstfloor.org>
+References: <20170424005400.GK22592@two.firstfloor.org>
+         <1493016631.31741.139.camel@coelho.fi>
+         <20170424124017.GL22592@two.firstfloor.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: 4.11-rc* iwlwifi instable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For multi-scheduled scan support in subsequent patch a request id
-will be added. This patch add this request id to the scheduled
-scan event messages. For now the request id will always be zero.
-With multi-scheduled scan its value will inform user-space to which
-scan the event relates.
+On Mon, 2017-04-24 at 05:40 -0700, Andi Kleen wrote:
+> > > Any fixes/workarounds?
+> > 
+> > It seems that you are using an old firmware version:
+> > 
+> > > [70585.074356] iwlwifi 0000:03:00.0: Loaded firmware version: 21.302800.0
+> > 
+> > We have already published version -27 for 4.11 and you're still using
+> > version -21.  You can get the latest version from here:
+> 
+> Ok if the old firmware is not supported anymore how about a warning
+> or an error? 
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- include/net/cfg80211.h |  2 ++
- net/wireless/nl80211.c | 23 +++++++++++------------
- net/wireless/nl80211.h |  3 +--
- net/wireless/scan.c    |  5 ++---
- 4 files changed, 16 insertions(+), 17 deletions(-)
+It is expected to work with -21.  If it really doesn't work with it
+anymore, but works with the newer ones, I'll bump the minimum supported
+version so we'll print an error and bail out.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 273b1dc..de3962d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1641,6 +1641,7 @@ struct cfg80211_bss_select_adjust {
- /**
-  * struct cfg80211_sched_scan_request - scheduled scan request description
-  *
-+ * @reqid: identifies this request.
-  * @ssids: SSIDs to scan for (passed in the probe_reqs in active scans)
-  * @n_ssids: number of SSIDs
-  * @n_channels: total number of channels to scan
-@@ -1685,6 +1686,7 @@ struct cfg80211_bss_select_adjust {
-  *	comparisions.
-  */
- struct cfg80211_sched_scan_request {
-+	u64 reqid;
- 	struct cfg80211_ssid *ssids;
- 	int n_ssids;
- 	u32 n_channels;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9910aae..d73f37e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7355,8 +7355,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 
- 	rcu_assign_pointer(rdev->sched_scan_req, sched_scan_req);
- 
--	nl80211_send_sched_scan(rdev, dev,
--				NL80211_CMD_START_SCHED_SCAN);
-+	nl80211_send_sched_scan(sched_scan_req, NL80211_CMD_START_SCHED_SCAN);
- 	return 0;
- 
- out_free:
-@@ -13203,18 +13202,19 @@ static int nl80211_prep_scan_msg(struct sk_buff *msg,
- 
- static int
- nl80211_prep_sched_scan_msg(struct sk_buff *msg,
--			    struct cfg80211_registered_device *rdev,
--			    struct net_device *netdev,
--			    u32 portid, u32 seq, int flags, u32 cmd)
-+			    struct cfg80211_sched_scan_request *req, u32 cmd)
- {
- 	void *hdr;
- 
--	hdr = nl80211hdr_put(msg, portid, seq, flags, cmd);
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, cmd);
- 	if (!hdr)
- 		return -1;
- 
--	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
--	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY,
-+			wiphy_to_rdev(req->wiphy)->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, req->dev->ifindex) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_COOKIE, req->reqid,
-+			      NL80211_ATTR_PAD))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-@@ -13274,8 +13274,7 @@ void nl80211_send_scan_msg(struct cfg80211_registered_device *rdev,
- 				NL80211_MCGRP_SCAN, GFP_KERNEL);
- }
- 
--void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
--			     struct net_device *netdev, u32 cmd)
-+void nl80211_send_sched_scan(struct cfg80211_sched_scan_request *req, u32 cmd)
- {
- 	struct sk_buff *msg;
- 
-@@ -13283,12 +13282,12 @@ void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
- 	if (!msg)
- 		return;
- 
--	if (nl80211_prep_sched_scan_msg(msg, rdev, netdev, 0, 0, 0, cmd) < 0) {
-+	if (nl80211_prep_sched_scan_msg(msg, req, cmd) < 0) {
- 		nlmsg_free(msg);
- 		return;
- 	}
- 
--	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(req->wiphy), msg, 0,
- 				NL80211_MCGRP_SCAN, GFP_KERNEL);
- }
- 
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 3cb17cd..d5f6860 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -16,8 +16,7 @@ struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
- 				       struct wireless_dev *wdev, bool aborted);
- void nl80211_send_scan_msg(struct cfg80211_registered_device *rdev,
- 			   struct sk_buff *msg);
--void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
--			     struct net_device *netdev, u32 cmd);
-+void nl80211_send_sched_scan(struct cfg80211_sched_scan_request *req, u32 cmd);
- void nl80211_common_reg_change_event(enum nl80211_commands cmd_id,
- 				     struct regulatory_request *request);
- 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 21be56b..6f4996c 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -321,8 +321,7 @@ void __cfg80211_sched_scan_results(struct work_struct *wk)
- 			spin_unlock_bh(&rdev->bss_lock);
- 			request->scan_start = jiffies;
- 		}
--		nl80211_send_sched_scan(rdev, request->dev,
--					NL80211_CMD_SCHED_SCAN_RESULTS);
-+		nl80211_send_sched_scan(request, NL80211_CMD_SCHED_SCAN_RESULTS);
- 	}
- 
- 	rtnl_unlock();
-@@ -379,7 +378,7 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 			return err;
- 	}
- 
--	nl80211_send_sched_scan(rdev, dev, NL80211_CMD_SCHED_SCAN_STOPPED);
-+	nl80211_send_sched_scan(sched_scan_req, NL80211_CMD_SCHED_SCAN_STOPPED);
- 
- 	RCU_INIT_POINTER(rdev->sched_scan_req, NULL);
- 	kfree_rcu(sched_scan_req, rcu_head);
--- 
-1.9.1
+
+> > https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-7265D-27.ucode
+> > 
+> > We have loads of fixes and improvements in this new version.  And
+> > hopefully it will make your problems go away. ;)
+> > 
+> > Please try it and let me know how it goes.
+> 
+> This is -27, but the driver looks for -28
+> 
+> [12382.760671] iwlwifi 0000:03:00.0: Direct firmware load for
+> iwlwifi-7265D-28.ucode failed with error -2
+> 
+> Where is version -28?
+
+TL;DR: this error message is harmless and the driver tries to load -27
+if -28 is not available.
+
+Long story: We upstream driver patches from our internal tree constantly
+and, at that point, we don't know which FW version will pass all the
+quality gates to be released officially.  The driver in 4.11 supports up
+to version -28.  We haven't release -28 yet, though (and maybe won't),
+so you get this error message when we try to load it.  But if it fails
+to load, we try to load the one immediately below it and so on, until we
+reach the minimum API version we support.
+
+These errors are definitely annoying and confusing, but I don't know how
+to work around them.  Luckily Luis is working on the firmware class[1]
+and part of his work will make these messages go away.
+
+Hope this helps.  And please let me know if iwlwifi-7265D-27.ucode works
+for you.
+
+[1] https://lkml.org/lkml/2017/3/29/1004
+
+
+--
+Cheers,
+Luca.
