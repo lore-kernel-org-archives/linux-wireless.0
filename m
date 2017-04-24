@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:36694 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1036101AbdDZKgj (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:53736 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1165766AbdDXGuj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 06:36:39 -0400
-Date: Wed, 26 Apr 2017 12:36:28 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Johan Hovold <johan@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/8] NFC: fix device allocation and nfcmrvl crashes
-Message-ID: <20170426103628.GN2823@localhost> (sfid-20170426_123657_913824_BDFF2FD3)
-References: <20170330101542.15384-1-johan@kernel.org>
- <20170418100916.GB2823@localhost>
- <20170418232431.GB13724@zurbaran.ger.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170418232431.GB13724@zurbaran.ger.intel.com>
+        Mon, 24 Apr 2017 02:50:39 -0400
+Message-ID: <1493016631.31741.139.camel@coelho.fi> (sfid-20170424_085043_207619_98CC93D9)
+From: Luca Coelho <luca@coelho.fi>
+To: Andi Kleen <andi@firstfloor.org>, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org
+Date: Mon, 24 Apr 2017 09:50:31 +0300
+In-Reply-To: <20170424005400.GK22592@two.firstfloor.org>
+References: <20170424005400.GK22592@two.firstfloor.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: 4.11-rc* iwlwifi instable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 19, 2017 at 01:24:31AM +0200, Samuel Ortiz wrote:
+On Sun, 2017-04-23 at 17:54 -0700, Andi Kleen wrote:
+> Hi,
 
-> On Tue, Apr 18, 2017 at 12:09:16PM +0200, Johan Hovold wrote:
-> > On Thu, Mar 30, 2017 at 12:15:34PM +0200, Johan Hovold wrote:
-> > > This started out with the observation that the nfcmrvl_uart driver
-> > > unconditionally dereferenced the tty class device despite the fact that
-> > > not every tty has an associated struct device (Unix98 ptys). Some
-> > > further changes were needed in the common nfcmrvl code to fully address
-> > > this, some of which also incidentally fixed a few related bugs (e.g.
-> > > resource leaks in error paths).
-> > > 
-> > > While fixing this I stumbled over a regression in NFC core that lead to
-> > > broken registration error paths and misnamed workqueues.
-> > > 
-> > > Note that this has only been tested by configuring the n_hci line
-> > > discipline for different ttys without any actual NFC hardware connected.
-> > 
-> > > Johan Hovold (8):
-> > >   NFC: fix broken device allocation
-> > >   NFC: nfcmrvl_uart: add missing tty-device sanity check
-> > >   NFC: nfcmrvl: do not use device-managed resources
-> > >   NFC: nfcmrvl: use nfc-device for firmware download
-> > >   NFC: nfcmrvl: fix firmware-management initialisation
-> > >   NFC: nfcmrvl_uart: fix device-node leak during probe
-> > >   NFC: nfcmrvl_usb: use interface as phy device
-> > >   NFC: nfcmrvl: allow gpio 0 for reset signalling
-> > 
-> > Any chance of getting these into 4.12, Samuel?
+Hi Andi,
 
-> I have yours and Mark Greer patchset pending. I'll push them to nfc-next
-> and see if I can send another pull request to Dave by the end of this
-> week.
 
-Any progress on this now that we got another week?
+> Since I updated my laptop to 4.11-rc* the wireless is fairly instable
+> (I think it was already less stable with 4.10 than with 4.8, but no
+> clear data) 
+> 
+> For example it locked up (no more wireless) with a warn on while connecting
+> and actually needed a reboot to recover (reloading modules was not
+> enough)
+> 
+> Any fixes/workarounds?
 
-Thanks,
-Johan
+It seems that you are using an old firmware version:
+
+> [70585.074356] iwlwifi 0000:03:00.0: Loaded firmware version: 21.302800.0
+
+We have already published version -27 for 4.11 and you're still using
+version -21.  You can get the latest version from here:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-7265D-27.ucode
+
+We have loads of fixes and improvements in this new version.  And
+hopefully it will make your problems go away. ;)
+
+Please try it and let me know how it goes.
+
+--
+Cheers,
+Luca.
