@@ -1,633 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4319 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932424AbdD0HPJ (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:35366 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S976467AbdDXTOQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2017 03:15:09 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <mohammed@codeaurora.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: Fix possible sband related NULL pointer de-reference
-Date: Thu, 27 Apr 2017 12:45:38 +0530
-Message-ID: <1493277338-25726-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170427_091515_687035_4EEB4BB6)
+        Mon, 24 Apr 2017 15:14:16 -0400
+Received: by mail-qk0-f182.google.com with SMTP id f76so46468284qke.2
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 12:14:16 -0700 (PDT)
+Subject: Re: [PATCH v2] brcmfmac: Make skb header writable before use
+To: James Hughes <james.hughes@raspberrypi.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+References: <20170424130322.476-1-james.hughes@raspberrypi.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <e03e2f42-0439-5d49-d1aa-50ce2da4ff50@broadcom.com> (sfid-20170424_211444_187319_166FF55C)
+Date: Mon, 24 Apr 2017 21:14:11 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170424130322.476-1-james.hughes@raspberrypi.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On 24-4-2017 15:03, James Hughes wrote:
+> The driver was making changes to the skb_header without
+> ensuring it was writable (i.e. uncloned).
+> This patch also removes some boiler plate header size
+> checking/adjustment code as that is also handled by the
+> skb_cow_header function used to make header writable.
+> 
+> This patch depends on
+> brcmfmac: Ensure pointer correctly set if skb data location changes
 
-Existing API 'ieee80211_get_sdata_band' returns default 2 GHz band even
-if the channel context configuration is NULL. This crashes for chipsets
-which support 5 Ghz alone when it tries to access members of 'sband'.
-Channel context configuration can be NULL in multivif case and when
-channel switch is in progress (or) when it fails. Fix this by replacing
-the API 'ieee80211_get_sdata_band' with  'ieee80211_get_sband' which
-returns a NULL pointer for sband when the channel configuration is NULL.
+Hi James,
 
-An example scenario is as below:
+I actually thought I was going to tackle this so I spend some time
+working on it today, but I will submit that as a subsequent patch. Below
+some comments but apart from that:
 
-In multivif mode (AP + STA) with drivers like ath10k, when we do a
-channel switch in the AP vif (which has a number of clients connected)
-and a STA vif which is connected to some other AP, when the channel
-switch in AP vif fails, while the STA vifs tries to connect to the
-other AP, there is a window where the channel context is NULL/invalid
-and this results in a crash  while the clients connected to the AP vif
-tries to reconnect and this race is very similar to the one investigated
-by Michal in https://patchwork.kernel.org/patch/3788161/ and this does
-happens with hardware that supports 5Ghz alone after long hours of 
-testing with continuous channel switch on the AP vif
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+> ---
+> Changes in v2
+>   Makes the _cow_ call at the entry point of the skb in to the
+>   stack, means only needs to be done once, and error handling
+>   is easier.
+>   Split a separate minor bug fix off to a separate patch (which
+>   this patch depends on)
+> 
+> 
+> 
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/core.c   | 19 ++++---------------
+>  1 file changed, 4 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 9b7c19a508ac..88f8675a94c2 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -211,22 +211,11 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>  		goto done;
+>  	}
+>  
+> -	/* Make sure there's enough room for any header */
+> -	if (skb_headroom(skb) < drvr->hdrlen) {
+> -		struct sk_buff *skb2;
+> -
+> -		brcmf_dbg(INFO, "%s: insufficient headroom\n",
+> -			  brcmf_ifname(ifp));
+> -		drvr->bus_if->tx_realloc++;
+> -		skb2 = skb_realloc_headroom(skb, drvr->hdrlen);
+> +	/* Make sure there's enough room for any header, and make it writable */
+Please rephrase: /* Make sure there is enough writable headroom */
 
-ieee80211 phy0: channel context reservation cannot be finalized because
-some interfaces aren't switching
-wlan0: failed to finalize CSA, disconnecting
-wlan0-1: deauthenticating from 8c:fd:f0:01:54:9c by local choice
-	(Reason: 3=DEAUTH_LEAVING)
+Just do:
+	ret = skb_cow_head(skb, drvr->hdrlen);
+	if (ret < 0) {
+		brcmf_err("%s: skb_cow_head failed\n",
+			  brcmf_ifname(ifp));
+> +	if (skb_cow_head(skb, drvr->hdrlen)) {
+>  		dev_kfree_skb(skb);
+> -		skb = skb2;
+> -		if (skb == NULL) {
+> -			brcmf_err("%s: skb_realloc_headroom failed\n",
+> -				  brcmf_ifname(ifp));
+> -			ret = -ENOMEM;
+> -			goto done;
+> -		}
+> +		ret = -ENOMEM;
+	... and drop this assignment.
 
-	WARNING: CPU: 1 PID: 19032 at net/mac80211/ieee80211_i.h:1013 sta_info_alloc+0x374/0x3fc [mac80211]
-	[<bf77272c>] (sta_info_alloc [mac80211])
-	[<bf78776c>] (ieee80211_add_station [mac80211]))
-	[<bf73cc50>] (nl80211_new_station [cfg80211])
-
-	Unable to handle kernel NULL pointer dereference at virtual
-	address 00000014
-	pgd = d5f4c000
-	Internal error: Oops: 17 [#1] PREEMPT SMP ARM
-	PC is at sta_info_alloc+0x380/0x3fc [mac80211]
-	LR is at sta_info_alloc+0x37c/0x3fc [mac80211]
-	[<bf772738>] (sta_info_alloc [mac80211])
-	[<bf78776c>] (ieee80211_add_station [mac80211])
-	[<bf73cc50>] (nl80211_new_station [cfg80211]))
-
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- net/mac80211/cfg.c         | 30 +++++++++++++++++-------------
- net/mac80211/ibss.c        |  6 +++++-
- net/mac80211/ieee80211_i.h | 36 +++++++++++++++++++++---------------
- net/mac80211/mesh.c        | 29 ++++++++++++++++++++---------
- net/mac80211/mesh_plink.c  | 37 ++++++++++++++++++++++++++-----------
- net/mac80211/mlme.c        | 13 +++++++++++--
- net/mac80211/rate.c        |  4 +++-
- net/mac80211/sta_info.c    | 13 +++++++++----
- net/mac80211/tdls.c        | 29 +++++++++++++++++++----------
- net/mac80211/tx.c          |  5 ++++-
- net/mac80211/util.c        |  6 +++---
- 11 files changed, 138 insertions(+), 70 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ac879bb..212bee0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -617,10 +617,11 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- 		int shift = ieee80211_vif_get_shift(&sta->sdata->vif);
- 		u16 brate;
- 
--		sband = sta->local->hw.wiphy->bands[
--				ieee80211_get_sdata_band(sta->sdata)];
--		brate = sband->bitrates[rate->idx].bitrate;
--		rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
-+		sband = ieee80211_get_sband(sta->sdata);
-+		if (sband) {
-+			brate = sband->bitrates[rate->idx].bitrate;
-+			rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
-+		}
- 	}
- 	if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
- 		rinfo->bw = RATE_INFO_BW_40;
-@@ -1214,10 +1215,11 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 	int ret = 0;
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
- 	u32 mask, set;
- 
--	sband = local->hw.wiphy->bands[band];
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return -EINVAL;
- 
- 	mask = params->sta_flags_mask;
- 	set = params->sta_flags_set;
-@@ -1350,7 +1352,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		ieee80211_parse_bitrates(&sdata->vif.bss_conf.chandef,
- 					 sband, params->supported_rates,
- 					 params->supported_rates_len,
--					 &sta->sta.supp_rates[band]);
-+					 &sta->sta.supp_rates[sband->band]);
- 	}
- 
- 	if (params->ht_capa)
-@@ -1366,8 +1368,8 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		/* returned value is only needed for rc update, but the
- 		 * rc isn't initialized here yet, so ignore it
- 		 */
--		__ieee80211_vht_handle_opmode(sdata, sta,
--					      params->opmode_notif, band);
-+		__ieee80211_vht_handle_opmode(sdata, sta, params->opmode_notif,
-+					      sband->band);
- 	}
- 
- 	if (params->support_p2p_ps >= 0)
-@@ -2005,13 +2007,15 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 				struct bss_parameters *params)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	enum nl80211_band band;
-+	struct ieee80211_supported_band *sband;
- 	u32 changed = 0;
- 
- 	if (!sdata_dereference(sdata->u.ap.beacon, sdata))
- 		return -ENOENT;
- 
--	band = ieee80211_get_sdata_band(sdata);
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return -EINVAL;
- 
- 	if (params->use_cts_prot >= 0) {
- 		sdata->vif.bss_conf.use_cts_prot = params->use_cts_prot;
-@@ -2024,7 +2028,7 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 	}
- 
- 	if (!sdata->vif.bss_conf.use_short_slot &&
--	    band == NL80211_BAND_5GHZ) {
-+	    sband->band == NL80211_BAND_5GHZ) {
- 		sdata->vif.bss_conf.use_short_slot = true;
- 		changed |= BSS_CHANGED_ERP_SLOT;
- 	}
-@@ -2037,7 +2041,7 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 
- 	if (params->basic_rates) {
- 		ieee80211_parse_bitrates(&sdata->vif.bss_conf.chandef,
--					 wiphy->bands[band],
-+					 wiphy->bands[sband->band],
- 					 params->basic_rates,
- 					 params->basic_rates_len,
- 					 &sdata->vif.bss_conf.basic_rates);
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 98999d3..4276bfd 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -992,7 +992,7 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
- 	enum nl80211_band band = rx_status->band;
- 	enum nl80211_bss_scan_width scan_width;
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
-+	struct ieee80211_supported_band *sband;
- 	bool rates_updated = false;
- 	u32 supp_rates = 0;
- 
-@@ -1002,6 +1002,10 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
- 	if (!ether_addr_equal(mgmt->bssid, sdata->u.ibss.bssid))
- 		return;
- 
-+	sband = local->hw.wiphy->bands[band];
-+	if (WARN_ON(!sband))
-+		return;
-+
- 	rcu_read_lock();
- 	sta = sta_info_get(sdata, mgmt->sa);
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 159a1a7..7c1cbad 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -999,21 +999,6 @@ static inline void sdata_unlock(struct ieee80211_sub_if_data *sdata)
- 	lockdep_assert_held(&sdata->wdev.mtx);
- }
- 
--static inline enum nl80211_band
--ieee80211_get_sdata_band(struct ieee80211_sub_if_data *sdata)
--{
--	enum nl80211_band band = NL80211_BAND_2GHZ;
--	struct ieee80211_chanctx_conf *chanctx_conf;
--
--	rcu_read_lock();
--	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--	if (!WARN_ON(!chanctx_conf))
--		band = chanctx_conf->def.chan->band;
--	rcu_read_unlock();
--
--	return band;
--}
--
- static inline int
- ieee80211_chandef_get_shift(struct cfg80211_chan_def *chandef)
- {
-@@ -1418,6 +1403,27 @@ struct ieee80211_local {
- 	return container_of(wdev, struct ieee80211_sub_if_data, wdev);
- }
- 
-+static inline struct ieee80211_supported_band *
-+ieee80211_get_sband(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *chanctx_conf;
-+	enum nl80211_band band;
-+
-+	rcu_read_lock();
-+	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+
-+	if (WARN_ON(!chanctx_conf)) {
-+		rcu_read_unlock();
-+		return NULL;
-+	}
-+
-+	band = chanctx_conf->def.chan->band;
-+	rcu_read_unlock();
-+
-+	return local->hw.wiphy->bands[band];
-+}
-+
- /* this struct represents 802.11n's RA/TID combination */
- struct ieee80211_ra_tid {
- 	u8 ra[ETH_ALEN];
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index c28b0af..62892fd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -63,6 +63,7 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u32 basic_rates = 0;
- 	struct cfg80211_chan_def sta_chan_def;
-+	struct ieee80211_supported_band *sband;
- 
- 	/*
- 	 * As support for each feature is added, check for matching
-@@ -83,7 +84,11 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
- 	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
- 		return false;
- 
--	ieee80211_sta_get_rates(sdata, ie, ieee80211_get_sdata_band(sdata),
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return false;
-+
-+	ieee80211_sta_get_rates(sdata, ie, sband->band,
- 				&basic_rates);
- 
- 	if (sdata->vif.bss_conf.basic_rates != basic_rates)
-@@ -399,12 +404,13 @@ static int mesh_add_ds_params_ie(struct ieee80211_sub_if_data *sdata,
- int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 		       struct sk_buff *skb)
- {
--	struct ieee80211_local *local = sdata->local;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_supported_band *sband;
- 	u8 *pos;
- 
--	sband = local->hw.wiphy->bands[band];
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return -EINVAL;
-+
- 	if (!sband->ht_cap.ht_supported ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-@@ -462,12 +468,13 @@ int mesh_add_ht_oper_ie(struct ieee80211_sub_if_data *sdata,
- int mesh_add_vht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 			struct sk_buff *skb)
- {
--	struct ieee80211_local *local = sdata->local;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_supported_band *sband;
- 	u8 *pos;
- 
--	sband = local->hw.wiphy->bands[band];
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return -EINVAL;
-+
- 	if (!sband->vht_cap.vht_supported ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-@@ -916,12 +923,16 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct cfg80211_csa_settings params;
- 	struct ieee80211_csa_ie csa_ie;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
-+	struct ieee80211_supported_band *sband;
- 	int err;
- 	u32 sta_flags;
- 
- 	sdata_assert_lock(sdata);
- 
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return false;
-+
- 	sta_flags = IEEE80211_STA_DISABLE_VHT;
- 	switch (sdata->vif.bss_conf.chandef.width) {
- 	case NL80211_CHAN_WIDTH_20_NOHT:
-@@ -935,7 +946,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 
- 	memset(&params, 0, sizeof(params));
- 	memset(&csa_ie, 0, sizeof(csa_ie));
--	err = ieee80211_parse_ch_switch_ie(sdata, elems, band,
-+	err = ieee80211_parse_ch_switch_ie(sdata, elems, sband->band,
- 					   sta_flags, sdata->vif.addr,
- 					   &csa_ie);
- 	if (err < 0)
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index fcba70e5..2d3c469 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -93,19 +93,23 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
- static u32 mesh_set_short_slot_time(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
--	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
-+	struct ieee80211_supported_band *sband;
- 	struct sta_info *sta;
- 	u32 erp_rates = 0, changed = 0;
- 	int i;
- 	bool short_slot = false;
- 
--	if (band == NL80211_BAND_5GHZ) {
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return changed;
-+
-+	if (sband->band == NL80211_BAND_5GHZ) {
- 		/* (IEEE 802.11-2012 19.4.5) */
- 		short_slot = true;
- 		goto out;
--	} else if (band != NL80211_BAND_2GHZ)
-+	} else if (sband->band != NL80211_BAND_2GHZ) {
- 		goto out;
-+	}
- 
- 	for (i = 0; i < sband->n_bitrates; i++)
- 		if (sband->bitrates[i].flags & IEEE80211_RATE_ERP_G)
-@@ -121,7 +125,7 @@ static u32 mesh_set_short_slot_time(struct ieee80211_sub_if_data *sdata)
- 			continue;
- 
- 		short_slot = false;
--		if (erp_rates & sta->sta.supp_rates[band])
-+		if (erp_rates & sta->sta.supp_rates[sband->band])
- 			short_slot = true;
- 		 else
- 			break;
-@@ -247,7 +251,15 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	mgmt->u.action.u.self_prot.action_code = action;
- 
- 	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
--		enum nl80211_band band = ieee80211_get_sdata_band(sdata);
-+		struct ieee80211_supported_band *sband;
-+		enum nl80211_band band;
-+
-+		sband = ieee80211_get_sband(sdata);
-+		if (!sband) {
-+			err = -EINVAL;
-+			goto free;
-+		}
-+		band = sband->band;
- 
- 		/* capability info */
- 		pos = skb_put(skb, 2);
-@@ -393,13 +405,16 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 			       struct ieee802_11_elems *elems, bool insert)
- {
- 	struct ieee80211_local *local = sdata->local;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_supported_band *sband;
- 	u32 rates, basic_rates = 0, changed = 0;
- 	enum ieee80211_sta_rx_bandwidth bw = sta->sta.bandwidth;
- 
--	sband = local->hw.wiphy->bands[band];
--	rates = ieee80211_sta_get_rates(sdata, elems, band, &basic_rates);
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return;
-+
-+	rates = ieee80211_sta_get_rates(sdata, elems, sband->band,
-+					&basic_rates);
- 
- 	spin_lock_bh(&sta->mesh->plink_lock);
- 	sta->rx_stats.last_rx = jiffies;
-@@ -410,9 +425,9 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 		goto out;
- 	sta->mesh->processed_beacon = true;
- 
--	if (sta->sta.supp_rates[band] != rates)
-+	if (sta->sta.supp_rates[sband->band] != rates)
- 		changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
--	sta->sta.supp_rates[band] = rates;
-+	sta->sta.supp_rates[sband->band] = rates;
- 
- 	if (ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 					      elems->ht_cap_elem, sta))
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6e90301..f22d82d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1855,11 +1855,16 @@ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
- 					   u16 capab, bool erp_valid, u8 erp)
- {
- 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
-+	struct ieee80211_supported_band *sband;
- 	u32 changed = 0;
- 	bool use_protection;
- 	bool use_short_preamble;
- 	bool use_short_slot;
- 
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return changed;
-+
- 	if (erp_valid) {
- 		use_protection = (erp & WLAN_ERP_USE_PROTECTION) != 0;
- 		use_short_preamble = (erp & WLAN_ERP_BARKER_PREAMBLE) == 0;
-@@ -1869,7 +1874,7 @@ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
--	if (ieee80211_get_sdata_band(sdata) == NL80211_BAND_5GHZ)
-+	if (sband->band == NL80211_BAND_5GHZ)
- 		use_short_slot = true;
- 
- 	if (use_protection != bss_conf->use_cts_prot) {
-@@ -3001,7 +3006,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 		goto out;
- 	}
- 
--	sband = local->hw.wiphy->bands[ieee80211_get_sdata_band(sdata)];
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband) {
-+		ret = false;
-+		goto out;
-+	}
- 
- 	/* Set up internal HT/VHT capabilities */
- 	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 206698b..dbceb42 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -875,7 +875,9 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
- 	struct ieee80211_sta_rates *old;
- 	struct ieee80211_supported_band *sband;
- 
--	sband = hw->wiphy->bands[ieee80211_get_sdata_band(sta->sdata)];
-+	sband = ieee80211_get_sband(sta->sdata);
-+	if (!sband)
-+		return -EINVAL;
- 	rate_control_apply_mask_ratetbl(sta, sband, rates);
- 	/*
- 	 * mac80211 guarantees that this function will not be called
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 4774e66..91cccf0 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -395,10 +395,15 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	sta->sta.smps_mode = IEEE80211_SMPS_OFF;
- 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
- 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
--		struct ieee80211_supported_band *sband =
--			hw->wiphy->bands[ieee80211_get_sdata_band(sdata)];
--		u8 smps = (sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >>
--				IEEE80211_HT_CAP_SM_PS_SHIFT;
-+		struct ieee80211_supported_band *sband;
-+		u8 smps;
-+
-+		sband = ieee80211_get_sband(sdata);
-+		if (!sband)
-+			goto free_txq;
-+
-+		smps = (sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >>
-+			IEEE80211_HT_CAP_SM_PS_SHIFT;
- 		/*
- 		 * Assume that hostapd advertises our caps in the beacon and
- 		 * this is the known_smps_mode for a station that just assciated
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index afca7d1..f20dcf1 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -47,8 +47,7 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 			   NL80211_FEATURE_TDLS_CHANNEL_SWITCH;
- 	bool wider_band = ieee80211_hw_check(&local->hw, TDLS_WIDER_BW) &&
- 			  !ifmgd->tdls_wider_bw_prohibited;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
--	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
-+	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
- 	bool vht = sband && sband->vht_cap.vht_supported;
- 	u8 *pos = (void *)skb_put(skb, 10);
- 
-@@ -180,11 +179,14 @@ static void ieee80211_tdls_add_bss_coex_ie(struct sk_buff *skb)
- static u16 ieee80211_get_tdls_sta_capab(struct ieee80211_sub_if_data *sdata,
- 					u16 status_code)
- {
-+	struct ieee80211_supported_band *sband;
-+
- 	/* The capability will be 0 when sending a failure code */
- 	if (status_code != 0)
- 		return 0;
- 
--	if (ieee80211_get_sdata_band(sdata) == NL80211_BAND_2GHZ) {
-+	sband = ieee80211_get_sband(sdata);
-+	if (sband && sband->band == NL80211_BAND_2GHZ) {
- 		return WLAN_CAPABILITY_SHORT_SLOT_TIME |
- 		       WLAN_CAPABILITY_SHORT_PREAMBLE;
- 	}
-@@ -358,17 +360,20 @@ static void ieee80211_tdls_add_wmm_param_ie(struct ieee80211_sub_if_data *sdata,
- 				   u8 action_code, bool initiator,
- 				   const u8 *extra_ies, size_t extra_ies_len)
- {
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
--	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_sta_ht_cap ht_cap;
- 	struct ieee80211_sta_vht_cap vht_cap;
- 	struct sta_info *sta = NULL;
- 	size_t offset = 0, noffset;
- 	u8 *pos;
- 
--	ieee80211_add_srates_ie(sdata, skb, false, band);
--	ieee80211_add_ext_srates_ie(sdata, skb, false, band);
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return;
-+
-+	ieee80211_add_srates_ie(sdata, skb, false, sband->band);
-+	ieee80211_add_ext_srates_ie(sdata, skb, false, sband->band);
- 	ieee80211_tdls_add_supp_channels(sdata, skb);
- 
- 	/* add any custom IEs that go before Extended Capabilities */
-@@ -439,7 +444,6 @@ static void ieee80211_tdls_add_wmm_param_ie(struct ieee80211_sub_if_data *sdata,
- 	 * the same on all bands. The specification limits the setup to a
- 	 * single HT-cap, so use the current band for now.
- 	 */
--	sband = local->hw.wiphy->bands[band];
- 	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
- 
- 	if ((action_code == WLAN_TDLS_SETUP_REQUEST ||
-@@ -545,9 +549,13 @@ static void ieee80211_tdls_add_wmm_param_ie(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	size_t offset = 0, noffset;
- 	struct sta_info *sta, *ap_sta;
--	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
-+	struct ieee80211_supported_band *sband;
- 	u8 *pos;
- 
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return;
-+
- 	mutex_lock(&local->sta_mtx);
- 
- 	sta = sta_info_get(sdata, peer);
-@@ -612,7 +620,8 @@ static void ieee80211_tdls_add_wmm_param_ie(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tdls_add_link_ie(sdata, skb, peer, initiator);
- 
- 	/* only include VHT-operation if not on the 2.4GHz band */
--	if (band != NL80211_BAND_2GHZ && sta->sta.vht_cap.vht_supported) {
-+	if (sband->band != NL80211_BAND_2GHZ &&
-+	    sta->sta.vht_cap.vht_supported) {
- 		/*
- 		 * if both peers support WIDER_BW, we can expand the chandef to
- 		 * a wider compatible one, up to 80MHz
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ba8d7db..48dbdb1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4305,7 +4305,10 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		return bcn;
- 
- 	shift = ieee80211_vif_get_shift(vif);
--	sband = hw->wiphy->bands[ieee80211_get_sdata_band(vif_to_sdata(vif))];
-+	sband = ieee80211_get_sband(vif_to_sdata(vif));
-+	if (!sband)
-+		return bcn;
-+
- 	ieee80211_tx_monitor(hw_to_local(hw), copy, sband, 1, shift, false);
- 
- 	return bcn;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ac59fbd..3e79856 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1590,14 +1590,14 @@ u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
- 	size_t num_rates;
- 	u32 supp_rates, rate_flags;
- 	int i, j, shift;
-+
- 	sband = sdata->local->hw.wiphy->bands[band];
-+	if (WARN_ON(!sband))
-+		return 1;
- 
- 	rate_flags = ieee80211_chandef_rate_flags(&sdata->vif.bss_conf.chandef);
- 	shift = ieee80211_vif_get_shift(&sdata->vif);
- 
--	if (WARN_ON(!sband))
--		return 1;
--
- 	num_rates = sband->n_bitrates;
- 	supp_rates = 0;
- 	for (i = 0; i < elems->supp_rates_len +
--- 
-1.9.1
+> +		goto done;
+>  	}
+>  
+>  	/* validate length for ether packet */
+> 
