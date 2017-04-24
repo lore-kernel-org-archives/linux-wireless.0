@@ -1,182 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35246 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752737AbdDLLGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 07:06:25 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: aviya.erenfeld@intel.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/6] cfg80211: refactor nl80211 monitor option parsing
-Date: Wed, 12 Apr 2017 13:06:20 +0200
-Message-Id: <20170412110621.8981-5-johannes@sipsolutions.net> (sfid-20170412_130635_168453_DDEE6B37)
-In-Reply-To: <20170412110621.8981-1-johannes@sipsolutions.net>
-References: <20170412110621.8981-1-johannes@sipsolutions.net>
+Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:40358 "EHLO
+        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1171728AbdDXNpj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Apr 2017 09:45:39 -0400
+Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
+        by mx08-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3ODiAHm001244
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 14:45:36 +0100
+Received: from mail-wm0-f71.google.com (mail-wm0-f71.google.com [74.125.82.71])
+        by mx08-00252a01.pphosted.com with ESMTP id 29yunf93nq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 14:45:36 +0100
+Received: by mail-wm0-f71.google.com with SMTP id 65so1946652wmi.2
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 06:45:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <f2c96267-8fec-f878-760d-90e93323d807@broadcom.com>
+References: <20170420154704.32144-1-james.hughes@raspberrypi.org> <f2c96267-8fec-f878-760d-90e93323d807@broadcom.com>
+From: James Hughes <james.hughes@raspberrypi.org>
+Date: Mon, 24 Apr 2017 14:45:34 +0100
+Message-ID: <CAE_XsMKL_+ZsrgTv8yTbMuHMpKxbUYfKZFYJBzsSfRqXkoXs=w@mail.gmail.com> (sfid-20170424_154601_412847_1845CC05)
+Subject: Re: [PATCH] brcm80211: brcmfmac: Ensure header writes are on writable skb
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 20 April 2017 at 20:22, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 4/20/2017 5:47 PM, James Hughes wrote:
+>>
+>> Driver was writing to skb header area without ensuring it was
+>> writable i.e. uncloned.
+>>
+>> Used skb_cow_header to ensure that header buffer is large enough
+>> and is uncloned.
+>>
+>> Detected when, in combination with the smsc85xx driver, both drivers
+>> attempted to write different headers to the same header buffer.
+>
+>
+> I guess this patch is limited to one file to address the comment from Eric
+> Dumazet. I prefer to talk through the initial patch you sent. Just a
+> procedural remark or two here. 1) Please drop 'brcm80211:' from the Subject
+> as the 'brcmfmac' prefix is sufficient, and 2) despite the change of the
+> Subject you should consider this version 2 of the initial patch so the
+> Subject should read '[PATCH V2] brcmfmac: ....'.
+>
+>> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+>> ---
+>
+> Related to remark 2) above you should provide a changelog here listing what
+> is changed compared to the initial patch.
+>
+> Regards,
+> Arend
+>
+> ---
+>>
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c | 15
+>> +++++++++++++--
+>>   1 file changed, 13 insertions(+), 2 deletions(-)
+>
+>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+>> index 038a960..b9d7d08 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+>> @@ -249,14 +249,19 @@ brcmf_proto_bcdc_set_dcmd(struct brcmf_pub *drvr,
+>> int ifidx, uint cmd,
+>>         return ret;
+>>   }
+>>   -static void
+>> +static int
+>>   brcmf_proto_bcdc_hdrpush(struct brcmf_pub *drvr, int ifidx, u8 offset,
+>>                          struct sk_buff *pktbuf)
+>>   {
+>>         struct brcmf_proto_bcdc_header *h;
+>> +       int err;
+>>         brcmf_dbg(BCDC, "Enter\n");
+>>   +     err = skb_cow_head(pktbuf, BCDC_HEADER_LEN);
+>> +       if (err)
+>> +               return err;
+>> +
+>>         /* Push BDC header used to convey priority for buses that don't */
+>>         skb_push(pktbuf, BCDC_HEADER_LEN);
+>>   @@ -271,6 +276,8 @@ brcmf_proto_bcdc_hdrpush(struct brcmf_pub *drvr, int
+>> ifidx, u8 offset,
+>>         h->data_offset = offset;
+>>         BCDC_SET_IF_IDX(h, ifidx);
+>>         trace_brcmf_bcdchdr(pktbuf->data);
+>> +
+>> +       return 0;
+>>   }
+>>     static int
+>> @@ -330,7 +337,11 @@ static int
+>>   brcmf_proto_bcdc_txdata(struct brcmf_pub *drvr, int ifidx, u8 offset,
+>>                         struct sk_buff *pktbuf)
+>>   {
+>> -       brcmf_proto_bcdc_hdrpush(drvr, ifidx, offset, pktbuf);
+>> +       int err = brcmf_proto_bcdc_hdrpush(drvr, ifidx, offset, pktbuf);
+>> +
+>> +       if (err)
+>> +               return err;
+>> +
+>>         return brcmf_bus_txdata(drvr->bus_if, pktbuf);
+>>   }
+>>
 
-Refactor the parsing of monitor flags and the MU-MIMO options.
-This will allow adding more things cleanly in the future and
-also allows setting the latter already when creating a monitor
-interface.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 126 +++++++++++++++++++++++++++----------------------
- 1 file changed, 70 insertions(+), 56 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index dd871586cb94..9516840b6e5f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2708,6 +2708,69 @@ static int parse_monitor_flags(struct nlattr *nla, u32 *mntrflags)
- 	return 0;
- }
- 
-+static int nl80211_parse_mon_options(struct cfg80211_registered_device *rdev,
-+				     enum nl80211_iftype type,
-+				     struct genl_info *info,
-+				     struct vif_params *params)
-+{
-+	bool change = false;
-+	int err;
-+
-+	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
-+		if (type != NL80211_IFTYPE_MONITOR)
-+			return -EINVAL;
-+
-+		err = parse_monitor_flags(info->attrs[NL80211_ATTR_MNTR_FLAGS],
-+					  &params->flags);
-+		if (err)
-+			return err;
-+
-+		change = true;
-+	}
-+
-+	if (params->flags & MONITOR_FLAG_ACTIVE &&
-+	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
-+		return -EOPNOTSUPP;
-+
-+	if (info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]) {
-+		const u8 *mumimo_groups;
-+		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
-+
-+		if (type != NL80211_IFTYPE_MONITOR)
-+			return -EINVAL;
-+
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
-+			return -EOPNOTSUPP;
-+
-+		mumimo_groups =
-+			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]);
-+
-+		/* bits 0 and 63 are reserved and must be zero */
-+		if ((mumimo_groups[0] & BIT(7)) ||
-+		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(0)))
-+			return -EINVAL;
-+
-+		params->vht_mumimo_groups = mumimo_groups;
-+		change = true;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]) {
-+		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
-+
-+		if (type != NL80211_IFTYPE_MONITOR)
-+			return -EINVAL;
-+
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
-+			return -EOPNOTSUPP;
-+
-+		params->vht_mumimo_follow_addr =
-+			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]);
-+		change = true;
-+	}
-+
-+	return change ? 1 : 0;
-+}
-+
- static int nl80211_valid_4addr(struct cfg80211_registered_device *rdev,
- 			       struct net_device *netdev, u8 use_4addr,
- 			       enum nl80211_iftype iftype)
-@@ -2783,50 +2846,11 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 		params.use_4addr = -1;
- 	}
- 
--	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
--		if (ntype != NL80211_IFTYPE_MONITOR)
--			return -EINVAL;
--		err = parse_monitor_flags(info->attrs[NL80211_ATTR_MNTR_FLAGS],
--					  &params.flags);
--		if (err)
--			return err;
--
--		change = true;
--	}
--
--	if (params.flags & MONITOR_FLAG_ACTIVE &&
--	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
--		return -EOPNOTSUPP;
--
--	if (info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]) {
--		const u8 *mumimo_groups;
--		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
--
--		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
--			return -EOPNOTSUPP;
--
--		mumimo_groups =
--			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]);
--
--		/* bits 0 and 63 are reserved and must be zero */
--		if ((mumimo_groups[0] & BIT(7)) ||
--		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(0)))
--			return -EINVAL;
--
--		params.vht_mumimo_groups = mumimo_groups;
--		change = true;
--	}
--
--	if (info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]) {
--		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
--
--		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
--			return -EOPNOTSUPP;
--
--		params.vht_mumimo_follow_addr =
--			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]);
-+	err = nl80211_parse_mon_options(rdev, ntype, info, &params);
-+	if (err < 0)
-+		return err;
-+	if (err > 0)
- 		change = true;
--	}
- 
- 	if (change)
- 		err = cfg80211_change_iface(rdev, dev, ntype, &params);
-@@ -2882,19 +2906,9 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
--	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
--		if (type != NL80211_IFTYPE_MONITOR)
--			return -EINVAL;
--
--		err = parse_monitor_flags(info->attrs[NL80211_ATTR_MNTR_FLAGS],
--					  &params.flags);
--		if (err)
--			return err;
--	}
--
--	if (params.flags & MONITOR_FLAG_ACTIVE &&
--	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
--		return -EOPNOTSUPP;
-+	err = nl80211_parse_mon_options(rdev, type, info, &params);
-+	if (err < 0)
-+		return err;
- 
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!msg)
--- 
-2.11.0
+This patch has been superseded, please ignore.
