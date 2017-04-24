@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33903 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752401AbdDFScI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35782 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1168977AbdDXL0M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 14:32:08 -0400
-Received: by mail-oi0-f68.google.com with SMTP id c23so4150829oig.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 11:32:08 -0700 (PDT)
-Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
-To: Hans de Goede <hdegoede@redhat.com>,
-        Bastien Nocera <hadess@hadess.net>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-References: <20170329174751.13184-1-hdegoede@redhat.com>
- <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
- <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
- <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com>
- <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
- <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net>
- <560981e0-e1b0-7a06-80e4-14d677c7d64a@redhat.com>
- <15871468-0086-2d66-328b-0699ef6f4b31@lwfinger.net>
- <5d15c6e8-7c15-4226-c4be-d8db6ded29ef@redhat.com>
- <1491469492.10783.7.camel@hadess.net>
- <26ba192c-c942-06e2-941f-c5f6ab05d146@redhat.com>
-Cc: Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5880f060-f682-a2ce-3528-faa389f1738a@lwfinger.net> (sfid-20170406_203213_047735_AE80C3D7)
-Date: Thu, 6 Apr 2017 13:32:06 -0500
+        Mon, 24 Apr 2017 07:26:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH 00/14] rtlwifi: btcoex: Second set of changes for rtl8821ae 2ant
+References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+        <87zifb65eh.fsf@codeaurora.org>
+        <5df931fe-cbb8-a0f7-ec0f-a62180ca760d@lwfinger.net>
+        <87lgqu45d0.fsf@kamboji.qca.qualcomm.com>
+        <d4c9dbc7-306a-df9b-cede-e0be462790e4@lwfinger.net>
+Date: Mon, 24 Apr 2017 14:26:05 +0300
+In-Reply-To: <d4c9dbc7-306a-df9b-cede-e0be462790e4@lwfinger.net> (Larry
+        Finger's message of "Fri, 21 Apr 2017 09:40:32 -0500")
+Message-ID: <87h91e2gj6.fsf@kamboji.qca.qualcomm.com> (sfid-20170424_132624_823009_7EE43EAB)
 MIME-Version: 1.0
-In-Reply-To: <26ba192c-c942-06e2-941f-c5f6ab05d146@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/06/2017 04:49 AM, Hans de Goede wrote:
-> Hi,
->
-> On 06-04-17 11:04, Bastien Nocera wrote:
->> On Thu, 2017-04-06 at 08:55 +0200, Hans de Goede wrote:
->>>
->> <snip>
->>> Good thank you. So what is the plan with the github version ?
->>>
->>> Note that my submission contains a few small fixes on top of
->>> the github version, for which I intended to submit a pull-req
->>> but I've not gotten around to that yet, I've done so now:
->>>
->>> https://github.com/hadess/rtl8723bs/pull/125
->>>
->>> But do we want to keep maintaining the github version (for a while
->>> at least) I wonder, as that does mean double work?
->>
->> My plan is to remove everything and point to the upstream tree as soon
->> as the support has landed in Linus' tree.
->>
->> While there is some use in keeping it around for older kernels, we keep
->> getting asked to support even older kernels than reasonable, or have
->> users complaining about non-working machines once they use the driver,
->> which simply uncovers kernel bugs that were fixed upstream.
->>
->> I don't think it's a good use of our time to carry on supporting this
->> out-of-tree. I'll however make sure to try and document the migration
->> in a way that's helpful to users.
->
-> Ok, that works for me.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-I agree. I have enough to do.
+> On 04/21/2017 01:55 AM, Kalle Valo wrote:
+>> But what should I do with this one:
+>>
+>> rtlwifi: rtl8821ae: setup 8812ae RFE according to device type
+>> https://patchwork.kernel.org/patch/9683395/
+>
+> Please apply that one. It should not conflict due to dropping the others.
 
-Larry
+Ok, I'll take that one.
+
+-- 
+Kalle Valo
