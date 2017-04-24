@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:38325 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751441AbdD0Ezu (ORCPT
+Received: from mx07-00252a01.pphosted.com ([62.209.51.214]:62235 "EHLO
+        mx07-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1168620AbdDXKw3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2017 00:55:50 -0400
-Received: by mail-wm0-f45.google.com with SMTP id r190so7031837wme.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 21:55:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE_XsM+XRcnO+tQEPnntNYVObnpJwimXP1_41aqJPwnxHWxonQ@mail.gmail.com>
-References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
- <20170426085337.181AA61493@smtp.codeaurora.org> <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com>
- <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com> <CAE_XsM+XRcnO+tQEPnntNYVObnpJwimXP1_41aqJPwnxHWxonQ@mail.gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Wed, 26 Apr 2017 21:55:48 -0700
-Message-ID: <CALLGbRJ=xWGBvWzj=SjfeHPV_c43JEaDbUNmP7=0g2=py0U=vQ@mail.gmail.com> (sfid-20170427_065559_604687_5DB3DD9D)
-Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
-To: James Hughes <james.hughes@raspberrypi.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Mon, 24 Apr 2017 06:52:29 -0400
+Received: from pps.filterd (m0102628.ppops.net [127.0.0.1])
+        by mx07-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3OAnBAw011790
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 11:52:27 +0100
+Received: from mail-wm0-f71.google.com (mail-wm0-f71.google.com [74.125.82.71])
+        by mx07-00252a01.pphosted.com with ESMTP id 29yvjys19s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 11:52:27 +0100
+Received: by mail-wm0-f71.google.com with SMTP id d79so4496112wma.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 03:52:27 -0700 (PDT)
+From: James Hughes <james.hughes@raspberrypi.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+Cc: James Hughes <james.hughes@raspberrypi.org>
+Subject: [PATCH] brcmfmac: Ensure pointer correctly set if skb data location changes
+Date: Mon, 24 Apr 2017 11:52:19 +0100
+Message-Id: <20170424105219.18797-1-james.hughes@raspberrypi.org> (sfid-20170424_125238_993102_BA45BDB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 12:54 PM, James Hughes
-<james.hughes@raspberrypi.org> wrote:
-> On 26 April 2017 at 19:03, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->>
->>
->> On 26-4-2017 17:44, Steve deRosier wrote:
->>> On Wed, Apr 26, 2017 at 1:53 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>>>> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
->>>>> callback was actually cloned. So instead of checking for sufficient
->>>>> headroom it should also be writable. Hence use skb_cow_head() to
->>>>> check and expand the headroom appropriately.
->>>>>
->>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>>
->>>> Steve, would you have time to run a quick test with this?
->>>>
->>>> Patch set to Deferred.
->>>>
->>>
->>> Happy to give it a quick spin on both of my platforms.
->>>
+The incoming skb header may be resized if header space is
+insufficient, which might change the data adddress in the skb.
+Ensure that a cached pointer to that data is correctly set by
+moving assignment to after any possible changes.
 
-@ Arend and James, thanks for the info. I understand it, but
-unfortunately I can't seem to replicate the problems on my platforms
-with the limited time I have available to test it. It also may have to
-do with my platforms having special custom bridging related code, or
-just me having setup too simple of a test.
+Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-That said...
-
-@Kalle: I have tested on both my 6004 and 6003 platforms. I didn't
-notice any incorrect behavior in my testing. But I don't have a test
-setup that would have shown the original problem as reported on the
-brcm driver so I can't say that the change actually _fixes_ anything.
-Only that in my testing it doesn't seem to break anything.
-
-Tested-by: Steve deRosier <derosier@gmail.com>
-
-- Steve
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 5eaac13e2317..934fe00e28a0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -198,7 +198,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 	int ret;
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_pub *drvr = ifp->drvr;
+-	struct ethhdr *eh = (struct ethhdr *)(skb->data);
++	struct ethhdr *eh;
+ 
+ 	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
+ 
+@@ -229,6 +229,8 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 		}
+ 	}
+ 
++	eh = (struct ethhdr *)(skb->data);
++
+ 	/* validate length for ether packet */
+ 	if (skb->len < sizeof(*eh)) {
+ 		ret = -EINVAL;
+-- 
+2.11.0
