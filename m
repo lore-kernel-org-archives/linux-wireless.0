@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:33406 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755498AbdDLRnR (ORCPT
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:36607 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1173927AbdDXS7F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 13:43:17 -0400
-Received: by mail-pg0-f49.google.com with SMTP id x125so18146696pgb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 10:43:17 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+        Mon, 24 Apr 2017 14:59:05 -0400
+Received: by mail-wr0-f173.google.com with SMTP id l50so23068299wrc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 11:59:05 -0700 (PDT)
+Subject: Re: [PATCH v2] brcmfmac: Make skb header writable before use
+To: Eric Dumazet <eric.dumazet@gmail.com>,
+        James Hughes <james.hughes@raspberrypi.org>
+References: <20170424130322.476-1-james.hughes@raspberrypi.org>
+ <1493057382.6453.39.camel@edumazet-glaptop3.roam.corp.google.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] MAINTAINERS: drop akarwar from mwifiex
-Date: Wed, 12 Apr 2017 10:42:55 -0700
-Message-Id: <20170412174255.15021-1-briannorris@chromium.org> (sfid-20170412_194533_597645_75FC3D97)
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <254f7f48-e592-e30a-06db-605a37750e42@broadcom.com> (sfid-20170424_205928_927513_F1F171E9)
+Date: Mon, 24 Apr 2017 20:59:02 +0200
+MIME-Version: 1.0
+In-Reply-To: <1493057382.6453.39.camel@edumazet-glaptop3.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-His email is bouncing, and I expect he's not doing this work any more.
 
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>
-Cc: Ganapathi Bhat <gbhat@marvell.com>
-Cc: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-Or alternatively, we can update his email address. I just don't want to keep
-seeing bounced emails :)
 
- MAINTAINERS | 1 -
- 1 file changed, 1 deletion(-)
+On 24-4-2017 20:09, Eric Dumazet wrote:
+> On Mon, 2017-04-24 at 14:03 +0100, James Hughes wrote:
+>> The driver was making changes to the skb_header without
+>> ensuring it was writable (i.e. uncloned).
+>> This patch also removes some boiler plate header size
+>> checking/adjustment code as that is also handled by the
+>> skb_cow_header function used to make header writable.
+>>
+>> This patch depends on
+>> brcmfmac: Ensure pointer correctly set if skb data location changes
+>>
+>> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+>> ---
+>> Changes in v2
+>>   Makes the _cow_ call at the entry point of the skb in to the
+>>   stack, means only needs to be done once, and error handling
+>>   is easier.
+>>   Split a separate minor bug fix off to a separate patch (which
+>>   this patch depends on)
+> 
+> Best way to handle dependencies is to send a patch series.
+> 
+> 1/2 brcmfmac: Ensure pointer correctly set if skb data location changes
+> 2/2 brcmfmac: Make skb header writable before use
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 078c38217daa..5e316efbfe31 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7844,7 +7844,6 @@ S:	Maintained
- F:	drivers/net/ethernet/marvell/mvneta.*
- 
- MARVELL MWIFIEX WIRELESS DRIVER
--M:	Amitkumar Karwar <akarwar@marvell.com>
- M:	Nishant Sarmukadam <nishants@marvell.com>
- M:	Ganapathi Bhat <gbhat@marvell.com>
- M:	Xinming Hu <huxm@marvell.com>
--- 
-2.12.2.715.g7642488e1d-goog
+There is actually no real dependency. Both are valid fixes of course but
+either one applies to wireless-drivers-next/master on its own.
+
+Regards,
+Arend
