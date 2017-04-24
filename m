@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37770 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752345AbdDLO3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 10:29:09 -0400
-Message-ID: <1492007347.2855.12.camel@sipsolutions.net> (sfid-20170412_162916_061671_02976605)
-Subject: Re: [RFC 3/3] mac80211: support bpf monitor filter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 12 Apr 2017 16:29:07 +0200
-In-Reply-To: <20170412110726.9689-3-johannes@sipsolutions.net> (sfid-20170412_130907_870638_0C9870E2)
-References: <20170412110726.9689-1-johannes@sipsolutions.net>
-         <20170412110726.9689-3-johannes@sipsolutions.net>
-         (sfid-20170412_130907_870638_0C9870E2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f48.google.com ([209.85.214.48]:38115 "EHLO
+        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1046499AbdDXLMs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Apr 2017 07:12:48 -0400
+Received: by mail-it0-f48.google.com with SMTP id e132so51794925ite.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 04:12:47 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: Ensure pointer correctly set if skb data
+ location changes
+To: James Hughes <james.hughes@raspberrypi.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+References: <20170424105219.18797-1-james.hughes@raspberrypi.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <bb374f51-f0c7-d315-6a82-11400e71625a@broadcom.com> (sfid-20170424_131537_822758_B074E442)
+Date: Mon, 24 Apr 2017 13:10:50 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170424105219.18797-1-james.hughes@raspberrypi.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-04-12 at 13:07 +0200, Johannes Berg wrote:
+On 4/24/2017 12:52 PM, James Hughes wrote:
+> The incoming skb header may be resized if header space is
+> insufficient, which might change the data adddress in the skb.
+> Ensure that a cached pointer to that data is correctly set by
+> moving assignment to after any possible changes.
+
+Thanks, James
+
+Minor nit below...
+
+You may add my acknowledgement:
+
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
 > 
->  struct ieee80211_if_mntr {
->  	u32 flags;
-> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+
 [...]
-+	bool deliver;
 
-That's ... broken for multi-queue RX. I haven't really found a good
-other way to do it. The best way will likely be to copy the SKB the
-first time it's needed, build the radiotap header, and then keep a
-reference to it to be able to clone it later if it's needed again.
+> @@ -229,6 +229,8 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>   		}
+>   	}
+>   
+> +	eh = (struct ethhdr *)(skb->data);
+> +
 
-johannes
+Please move after the length validation below.
+
+Regards,
+Arend
+
+>   	/* validate length for ether packet */
+>   	if (skb->len < sizeof(*eh)) {
+>   		ret = -EINVAL;
+> 
