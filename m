@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:59017 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751276AbdDZREq (ORCPT
+Received: from mail.genius.jabatus.fr ([109.234.163.61]:38224 "EHLO
+        mail.genius.jabatus.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1165534AbdDXHMo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 13:04:46 -0400
-Date: Wed, 26 Apr 2017 10:04:43 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>, g@animalcreek.com
-Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com
-Subject: Re: [PATCH] NFC: trf7970a: Correct register settings for 27MHz clock
-Message-ID: <20170426170443.GB11522@animalcreek.com> (sfid-20170426_190604_687954_D4497D21)
-References: <1493214513-12245-1-git-send-email-geoff@kuvee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1493214513-12245-1-git-send-email-geoff@kuvee.com>
+        Mon, 24 Apr 2017 03:12:44 -0400
+From: Michael Mera <dev@michaelmera.com>
+To: ath10k@lists.infradead.org
+Cc: Michael Mera <dev@michaelmera.com>, linux-wireless@vger.kernel.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH RESEND] ath10k: fix out of bounds access to local buffer
+Date: Mon, 24 Apr 2017 16:11:57 +0900
+Message-Id: <20170424071157.6979-1-dev@michaelmera.com> (sfid-20170424_091314_793370_3D8AE6A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 09:48:33AM -0400, Geoff Lansberry wrote:
-> In prior commits the selected clock frequency does not propagate
-> correctly to what is written the the TRF7970A_MODULATOR_SYS_CLK_CTRL
-> register.
-> Also fixes a bug that causes the device tree property check to always
-> pass.
-> 
-> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
-> ---
->  drivers/nfc/trf7970a.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-> index 2d1c8ca..c278b0e 100644
-> --- a/drivers/nfc/trf7970a.c
-> +++ b/drivers/nfc/trf7970a.c
-> @@ -2071,7 +2071,7 @@ static int trf7970a_probe(struct spi_device *spi)
->  	}
->  
->  	of_property_read_u32(np, "clock-frequency", &clk_freq);
-> -	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
-> +	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) &&
+During write to debugfs file simulate_fw_crash, fixed-size local buffer
+'buf' is accessed and modified at index 'count-1', where 'count' is the
+size of the write (so potentially out of bounds).
+This patch fixes this problem.
 
-There is already a patch submitted to fix this issue so no need to fix
-it again.  For the record, it should have been in a separate patch
-since it fixes a different issue than what is fixed below.
+Signed-off-by: Michael Mera <dev@michaelmera.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
->  		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
->  		dev_err(trf->dev,
->  			"clock-frequency (%u Hz) unsupported\n",
-> @@ -2079,6 +2079,13 @@ static int trf7970a_probe(struct spi_device *spi)
->  		return -EINVAL;
->  	}
->  
-> +	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
-> +		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
-> +		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
-> +	} else {
-> +		trf->modulator_sys_clk_ctrl = 0;
-> +	}
-> +
->  	if (of_property_read_bool(np, "en2-rf-quirk"))
->  		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
-
-This part looks okay to me but I like Walter's suggestion too.
-
-Mark
---
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index fb0ade3adb07..7f3c17e55693 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -628,17 +628,21 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+ 					      size_t count, loff_t *ppos)
+ {
+ 	struct ath10k *ar = file->private_data;
+-	char buf[32];
++	char buf[32] = {0};
++	ssize_t rc;
+ 	int ret;
+ 
+-	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++	/* filter partial writes and invalid commands */
++	if (*ppos != 0 || count >= sizeof(buf) || count == 0)
++		return -EINVAL;
+ 
+-	/* make sure that buf is null terminated */
+-	buf[sizeof(buf) - 1] = 0;
++	rc = simple_write_to_buffer(buf, sizeof(buf)-1, ppos, user_buf, count);
++	if (rc < 0)
++		return rc;
+ 
+ 	/* drop the possible '\n' from the end */
+-	if (buf[count - 1] == '\n')
+-		buf[count - 1] = 0;
++	if (buf[*ppos - 1] == '\n')
++		buf[*ppos - 1] = '\0';
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+-- 
+2.9.3
