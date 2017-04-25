@@ -1,66 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:33146 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756649AbdDFTY7 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54286 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1949326AbdDYUYi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 15:24:59 -0400
-Received: by mail-io0-f170.google.com with SMTP id t68so2902173iof.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 12:24:54 -0700 (PDT)
-Date: Thu, 6 Apr 2017 12:24:52 -0700
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
-        Michael Davidson <md@google.com>,
-        Greg Hackmann <ghackmann@google.com>
-Subject: Re: [PATCH] mac80211: Fix clang warning about constant operand in
- logical operation
-Message-ID: <20170406192452.GE145051@google.com> (sfid-20170406_212643_992628_054D4B8C)
-References: <20170406185633.91065-1-mka@chromium.org>
- <1491505878.11399.4.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1491505878.11399.4.camel@sipsolutions.net>
+        Tue, 25 Apr 2017 16:24:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 25 Apr 2017 23:22:29 +0300
+Message-Id: <20170425202243.7844-12-luca@coelho.fi> (sfid-20170425_222524_092883_F1AFF359)
+In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
+References: <20170425202243.7844-1-luca@coelho.fi>
+Subject: [PATCH 11/25] iwlwifi: mvm: map cab_queue to different txq_id
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Sara Sharon <sara.sharon@intel.com>
 
-thanks for your comments
+cab_queue can now get bigger than u8, since in TVQM we will support
+512 queues..
+Support it by maintaining internal mapping between the actual number
+and mac80211 queue (IWL_MVM_DQA_GCAST_QUEUE).
+For pre-a000 the internal queue will be the same as the mac80211
+queue.
 
-El Thu, Apr 06, 2017 at 09:11:18PM +0200 Johannes Berg ha dit:
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 5 +++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 2 ++
+ 4 files changed, 11 insertions(+), 2 deletions(-)
 
-> On Thu, 2017-04-06 at 11:56 -0700, Matthias Kaehlcke wrote:
-> > Clang raises a warning about the expression 'strlen(CONFIG_XXX)'
-> > being
-> > used in a logical operation. Clangs' builtin strlen function resolves
-> > the
-> > expression to a constant at compile time, which causes clang to
-> > generate
-> > a 'constant-logical-operand' warning.
-> > 
-> > Split the if statement in two to avoid using the const expression in
-> > a logical operation.
-> > 
-> I don't really see all much point in doing this for the warning's
-> sake... hopefully it doesn't actually generate worse code, but I think
-> the code ends up looking worse and people will forever wonder what the
-> goto is really doing there.
-
-I agree that the code looks worse :( I hoped to find a fix using a
-preprocessor condition but wasn't successful.
-
-Some projects (like Chrome OS) build their kernel with all warnings
-being treated as errors. Besides changing the 'offending' code the
-alternatives are to disable the warning completely or to tell clang
-not to use the builtin(s). IMO changing the code is the preferable
-solution, especially since this is so far the only occurrence of the
-warning that I have encountered.
-
-I used goto instead of nested ifs since other functions in this file
-use the same pattern. If nested ifs are preferred I can change that.
-
-Cheers
-
-Matthias
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 9e69b9d2012c..2476af904f5e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -467,6 +467,11 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 			queue = IWL_MVM_DQA_GCAST_QUEUE;
+ 		}
+ 
++		/*
++		 * For TVQM this will be overwritten later with the FW assigned
++		 * queue value (when queue is enabled).
++		 */
++		mvmvif->cab_queue = queue;
+ 		vif->cab_queue = queue;
+ 	} else {
+ 		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 1bb4249fc6f4..1dbe37f8b08c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -380,6 +380,8 @@ struct iwl_mvm_vif {
+ 	bool associated;
+ 	u8 ap_assoc_sta_count;
+ 
++	u16 cab_queue;
++
+ 	bool uploaded;
+ 	bool ap_ibss_active;
+ 	bool pm_enabled;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index b5b7214a811f..2d5d1fc10013 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2128,7 +2128,7 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 						    msta->sta_id,
+ 						    IWL_MAX_TID_COUNT,
+ 						    timeout);
+-		vif->cab_queue = queue;
++		mvmvif->cab_queue = queue;
+ 	} else {
+ 		iwl_mvm_enable_txq(mvm, vif->cab_queue, vif->cab_queue, 0,
+ 				   &cfg, timeout);
+@@ -2151,7 +2151,7 @@ int iwl_mvm_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	if (!iwl_mvm_is_dqa_supported(mvm))
+ 		return 0;
+ 
+-	iwl_mvm_disable_txq(mvm, vif->cab_queue, vif->cab_queue,
++	iwl_mvm_disable_txq(mvm, mvmvif->cab_queue, vif->cab_queue,
+ 			    IWL_MAX_TID_COUNT, 0);
+ 
+ 	ret = iwl_mvm_rm_sta_common(mvm, mvmvif->mcast_sta.sta_id);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 8f737f6cdd80..06bd7cc562ff 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -630,6 +630,8 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 			if (queue < 0)
+ 				return -1;
+ 
++			if (queue == info.control.vif->cab_queue)
++				queue = mvmvif->cab_queue;
+ 		} else if (info.control.vif->type == NL80211_IFTYPE_STATION &&
+ 			   is_multicast_ether_addr(hdr->addr1)) {
+ 			u8 ap_sta_id = ACCESS_ONCE(mvmvif->ap_sta_id);
+-- 
+2.11.0
