@@ -1,107 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iron02.fraunhofer.de ([153.96.1.56]:5465 "EHLO
-        iron02.fraunhofer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1039116AbdDUMuz (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54270 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1948886AbdDYUYY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 08:50:55 -0400
-Subject: Re: [v2,1/3] ath9k: Support channels in licensed bands
-To: Simon Wunderlich <sw@simonwunderlich.de>,
-        ath10k@lists.infradead.org
-Cc: Ben Greear <greearb@candelatech.com>,
-        Steve deRosier <derosier@gmail.com>,
-        Julian Calaby <julian.calaby@gmail.com>,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170323133048.30062-2-sw@simonwunderlich.de>
- <CALLGbRK2d1wZpfLnXu_UDWxVPA9LvejFyEFpzMub56uLH0+DTw@mail.gmail.com>
- <d4acedac-e28c-4c1c-d112-40557d52f3a2@candelatech.com>
- <1811221.G4Vz0DPyQ8@prime>
-From: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
-Message-ID: <12133a0e-b030-5b21-8de1-3bf7334d47df@fit.fraunhofer.de> (sfid-20170421_145058_974363_2F121124)
-Date: Fri, 21 Apr 2017 14:40:51 +0200
-MIME-Version: 1.0
-In-Reply-To: <1811221.G4Vz0DPyQ8@prime>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Tue, 25 Apr 2017 16:24:24 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 25 Apr 2017 23:22:31 +0300
+Message-Id: <20170425202243.7844-14-luca@coelho.fi> (sfid-20170425_222428_737686_6857CBC5)
+In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
+References: <20170425202243.7844-1-luca@coelho.fi>
+Subject: [PATCH 13/25] iwlwifi: mvm: remove color definition
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Sara Sharon <sara.sharon@intel.com>
 
-as one of the parties who triggered this patch to be included into the 
-main line kernel, we do support Simon's or Ben's point of view.
+We use the full station field as sta_id, and never
+use the color.
+FW are about to clean the color out, so those defines
+are incorrect now (and were redundant before).
 
-Safeguards against accidental misuse are in place. Various patches are 
-(have been) already in the open, so if someone wants to be evil, it 
-can't be prevented.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-Also, these patches do not make up new channels out of the blue, they 
-merely enable channels which are allowed in certain countries under 
-specific regulations. To me it seems to be the task of the distribution 
-manager (or manufacturer) to ensure that only hardware/kernel features 
-are made available that are legal in the given jurisdiction.
-
-The default behavior is to disable those extra channels. If you are 
-building, i.e. First Responder solutions, you need to ensure that those 
-guys use the systems incl. the frequency spectrum accordingly.
-
-To be pragmatic and to avoid out-of-tree code maintenance, my vote would 
-be for integration into mainline.
-
-Best regards,
-
-Mathias
-
-
-
-
-Hence, for
-
-On 21-Apr-17 13:29, Simon Wunderlich wrote:
-> Hi,
-> 
-> On Tuesday, April 18, 2017 10:09:59 AM CEST Ben Greear wrote:
->> [...]
->>>      In my personal view, we have quite a few obstacles which I consider
->>>      "enough", but would be interesting to hear others opinions ...
->>>
->>> I'll throw in my 2-cents. This patch is treading on very dangerous ground.
->>> I can't speak to other regulatory environments, but at least the FCC is
->>> cracking down on even the possibility that anyone can operate a WiFi
->>> device outside the regulatory bounds.
->> These patches make it slightly easier to use the licensed bands, but no one
->> can accidentally use them due to the regdb and other constaints in these
->> patches.
->>
->> So, I don't think these patches offer any fundamental new vulnerability
->> that should concern the FCC.
->>
->> After all, someone who really wants to do evil can find and apply the
->> patches without undue effort, and it could easily be that those applying
->> the patches would then make it even easier to abuse the new channels due to
->> laziness or poor coding choices.
-> 
-> I'm with Ben on this one. I also have followed the FCC actions in the past few
-> years, and I've also been involved into that [1,2,3]. There are mailing lists
-> on the topic if you want to get involved. I agree that the topic is important,
-> but I would prefer to not have this patch serving as battleground. :)
-> 
-> The patches proposed here, as Ben says, at least put proper warnings and
-> obstacles which users have to knowingly overcome (or read). It's probably
-> safer than keeping the driver as is and having people apply random patches
-> from the internet which they don't understand or hack the code themselves.
-> Frankly, it's not that hard to enable those channels.
-> 
-> As we have seen by the number of questions and people trying to bring this
-> patch in (Ben and Julian), there is quite some interest for supporting those
-> bands. I've also got a few requests from companies to have it supported
-> (Fraunhofer is one of those).
-> 
-> Cheers,
->        Simon
-> 
-> 
-> [1] https://www.reddit.com/r/wireless/comments/3irr5b/
-> openwrt_vs_fcc_forced_firmware_lockdown/
-> [2] http://hackaday.com/2016/02/26/fcc-locks-down-router-firmware/
-> [3] https://libreplanet.org/wiki/Save_WiFi
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+index e79df1c53d68..a20ac4d9e63e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+@@ -214,20 +214,6 @@ enum iwl_sta_sleep_flag {
+ 	STA_SLEEP_STATE_MOREDATA	= BIT(2),
+ };
+ 
+-/* STA ID and color bits definitions */
+-#define STA_ID_SEED		(0x0f)
+-#define STA_ID_POS		(0)
+-#define STA_ID_MSK		(STA_ID_SEED << STA_ID_POS)
+-
+-#define STA_COLOR_SEED		(0x7)
+-#define STA_COLOR_POS		(4)
+-#define STA_COLOR_MSK		(STA_COLOR_SEED << STA_COLOR_POS)
+-
+-#define STA_ID_N_COLOR_GET_COLOR(id_n_color) \
+-	(((id_n_color) & STA_COLOR_MSK) >> STA_COLOR_POS)
+-#define STA_ID_N_COLOR_GET_ID(id_n_color)    \
+-	(((id_n_color) & STA_ID_MSK) >> STA_ID_POS)
+-
+ #define STA_KEY_MAX_NUM (16)
+ #define STA_KEY_IDX_INVALID (0xff)
+ #define STA_KEY_MAX_DATA_KEY_NUM (4)
+-- 
+2.11.0
