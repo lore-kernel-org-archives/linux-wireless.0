@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:33068 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1174452AbdDXUZu (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:50387 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1953168AbdDYWn7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 16:25:50 -0400
-Received: by mail-oi0-f54.google.com with SMTP id y11so117012548oie.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 13:25:45 -0700 (PDT)
-Received: from mail-oi0-f43.google.com (mail-oi0-f43.google.com. [209.85.218.43])
-        by smtp.gmail.com with ESMTPSA id h10sm8509203otb.39.2017.04.24.13.25.42
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 24 Apr 2017 13:25:42 -0700 (PDT)
-Received: by mail-oi0-f43.google.com with SMTP id j201so149219286oih.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 13:25:42 -0700 (PDT)
-MIME-Version: 1.0
-From: Adam Casson <adam.casson@inscopemedical.com>
-Date: Mon, 24 Apr 2017 16:25:11 -0400
-Message-ID: <CAPdsbMvE=_-oQ9wWLPQkUuF_Q3JeHCKo-0NrPt0hRRPo8khH9Q@mail.gmail.com> (sfid-20170424_222619_941094_0D79E42A)
-Subject: WPA authorization with RTL8723DS
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Tue, 25 Apr 2017 18:43:59 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH v5 2/9] NFC: trf7970a: Don't de-assert EN2 unless it was asserted
+Date: Tue, 25 Apr 2017 15:43:49 -0700
+Message-Id: <20170425224356.11498-3-mgreer@animalcreek.com> (sfid-20170426_004427_182244_8478D251)
+In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
+References: <20170425224356.11498-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to build a product around the Next Thing Co CHIP Pro
-(nextthing.co/pages/chippro) and have found that the RTL8723DS wifi/BT
-chip is fairly unstable, particularly when trying to implement WPA
-authorization. A previous version of this SoM uses the RTL8723BS which
-is similar in structure and driver, but this new 8723DS is different
-enough to warrant a separate code branch from both Realtek and the
-manufacturer of the SoM. However, Realtek has not publically released
-a driver for the new 8723DS chip. We have received no support from the
-SoM manufacturer, so we're looking for some external help so that we
-can maybe salvage the considerable work we've put into developing
-around this SoM.
+When the trf7970a part has the bug related to 'en2-rf-quirk',
+the GPIO connected to the EN2 pin will not be asserted by the
+driver when powering up so it shouldn't be de-asserted when
+powering down.
 
-Some additional details about how the device was being used are below.
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ drivers/nfc/trf7970a.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Use hopstapd (configuration for open and WPA included) to configure
-the Chip Pro as an access point. Launch hostapd (command line also
-provided in logs).
-
-Gadget buildroot git commit e550a93f2b08c771f0dd75919bb042ad86faa763
-
-WPA version 2 (as specified in the provided hostapd config).
-
-Client types tested:
-
-- rtl8188eu usb dongle on Ubuntu 16.04 workstation
-- 2013 Mac Book Pro running 10.12 Sierra
-
-Same results with both (WPA auth failed). Both clients have been
-tested successfully with a wide range of WPA2 access points.
-
-Thanks for any help you can provide!
-Adam
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 2d1c8ca6e679..1a87525a88cd 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1940,8 +1940,10 @@ static int trf7970a_power_down(struct trf7970a *trf)
+ 	}
+ 
+ 	gpio_set_value(trf->en_gpio, 0);
+-	if (gpio_is_valid(trf->en2_gpio))
+-		gpio_set_value(trf->en2_gpio, 0);
++
++	if (!(trf->quirks & TRF7970A_QUIRK_EN2_MUST_STAY_LOW))
++		if (gpio_is_valid(trf->en2_gpio))
++			gpio_set_value(trf->en2_gpio, 0);
+ 
+ 	ret = regulator_disable(trf->regulator);
+ 	if (ret)
+-- 
+2.12.0
