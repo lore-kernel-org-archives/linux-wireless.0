@@ -1,224 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33265 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755089AbdDMGsg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54110 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1954147AbdDYUXD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 02:48:36 -0400
-Received: by mail-pg0-f67.google.com with SMTP id 79so9365482pgf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 23:48:36 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v4 4/4] mwifiex: pcie: extract wifi part from combo firmware during function level reset
-Date: Thu, 13 Apr 2017 06:48:22 +0000
-Message-Id: <1492066102-31251-4-git-send-email-huxinming820@gmail.com> (sfid-20170413_084843_232648_359AF786)
-In-Reply-To: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
-References: <1492066102-31251-1-git-send-email-huxinming820@gmail.com>
+        Tue, 25 Apr 2017 16:23:03 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 25 Apr 2017 23:22:19 +0300
+Message-Id: <20170425202243.7844-2-luca@coelho.fi> (sfid-20170425_222322_215275_C5BA0636)
+In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
+References: <20170425202243.7844-1-luca@coelho.fi>
+Subject: [PATCH 01/25] iwlwifi: mvm: support new rate flags
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-A seprate wifi-only firmware was download during pcie function level reset.
-It is in fact the tail part of wifi/bt combo firmware. Per Brian's and
-Dmitry's suggestion, this patch extract the wifi part from combo firmware.
+Rates were changed to adapt to HE. Change is backward compatible.
 
-After that, we can discard the redudant image in linux-firmware repo.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-v2: extract wifi part from combo firmware(Dimtry and Brain)
-    add more description(Kalle)
-v3: same as v2
-v4: add sequence comments, code enhance(Brain)
----
- drivers/net/wireless/marvell/mwifiex/fw.h   | 18 ++++++
- drivers/net/wireless/marvell/mwifiex/pcie.c | 93 ++++++++++++++++++++++++++---
- drivers/net/wireless/marvell/mwifiex/pcie.h |  3 +-
- 3 files changed, 106 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h | 28 +++++++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 11 ++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  4 ++--
+ 4 files changed, 31 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 0b68374..6cf9ab9 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -43,6 +43,24 @@ struct tx_packet_hdr {
- 	struct rfc_1042_hdr rfc1042_hdr;
- } __packed;
- 
-+struct mwifiex_fw_header {
-+	__le32 dnld_cmd;
-+	__le32 base_addr;
-+	__le32 data_length;
-+	__le32 crc;
-+} __packed;
-+
-+struct mwifiex_fw_data {
-+	struct mwifiex_fw_header header;
-+	__le32 seq_num;
-+	u8 data[1];
-+} __packed;
-+
-+#define MWIFIEX_FW_DNLD_CMD_1 0x1
-+#define MWIFIEX_FW_DNLD_CMD_5 0x5
-+#define MWIFIEX_FW_DNLD_CMD_6 0x6
-+#define MWIFIEX_FW_DNLD_CMD_7 0x7
-+
- #define B_SUPPORTED_RATES               5
- #define G_SUPPORTED_RATES               9
- #define BG_SUPPORTED_RATES              13
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index a07cb0a..7b24bb4 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1956,6 +1956,73 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
- 	return ret;
- }
- 
-+/* Combo firmware image is a combination of
-+ * (1) combo crc heaer, start with CMD5
-+ * (2) bluetooth image, start with CMD7, end with CMD6, data wrapped in CMD1.
-+ * (3) wifi image.
-+ *
-+ * This function bypass the header and bluetooth part, return
-+ * the offset of tail wifi-only part.
-+ */
-+
-+static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
-+				   const void *firmware, u32 firmware_len) {
-+	const struct mwifiex_fw_data *fwdata;
-+	u32 offset = 0, data_len, dnld_cmd;
-+	int ret = 0;
-+	bool cmd7_before = false;
-+
-+	while (1) {
-+		if (offset >= firmware_len) {
-+			mwifiex_dbg(adapter, ERROR,
-+				    "extract wifi-only fw failure!");
-+			ret = -1;
-+			goto done;
-+		}
-+
-+		fwdata = firmware + offset;
-+		dnld_cmd = le32_to_cpu(fwdata->header.dnld_cmd);
-+		data_len = le32_to_cpu(fwdata->header.data_length);
-+
-+		switch (dnld_cmd) {
-+		case MWIFIEX_FW_DNLD_CMD_1:
-+			if (!cmd7_before) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "no cmd7 before cmd1!");
-+				ret = -1;
-+				goto done;
-+			}
-+			offset += data_len + sizeof(fwdata->header);
-+			break;
-+		case MWIFIEX_FW_DNLD_CMD_5:
-+			offset += data_len + sizeof(fwdata->header);
-+			break;
-+		case MWIFIEX_FW_DNLD_CMD_6:
-+			offset += data_len + sizeof(fwdata->header);
-+			if (offset >= firmware_len) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "extract wifi-only fw failure!");
-+				ret = -1;
-+			} else {
-+				ret = offset;
-+			}
-+			goto done;
-+		case MWIFIEX_FW_DNLD_CMD_7:
-+			cmd7_before = true;
-+			offset += sizeof(fwdata->header);
-+			break;
-+		default:
-+			mwifiex_dbg(adapter, ERROR, "unknown dnld_cmd %d\n",
-+				    dnld_cmd);
-+			ret = -1;
-+			goto done;
-+		}
-+	}
-+
-+done:
-+	return ret;
-+}
-+
- /*
-  * This function downloads the firmware to the card.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
+index ad9cc03e16c4..1b7d265ffb0a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
   *
-@@ -1971,7 +2038,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 	u32 firmware_len = fw->fw_len;
- 	u32 offset = 0;
- 	struct sk_buff *skb;
--	u32 txlen, tx_blocks = 0, tries, len;
-+	u32 txlen, tx_blocks = 0, tries, len, val;
- 	u32 block_retry_cnt = 0;
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
-@@ -1998,6 +2065,24 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 		goto done;
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,6 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -227,6 +229,9 @@ enum {
+  */
+ #define RATE_LEGACY_RATE_MSK 0xff
+ 
++/* Bit 10 - OFDM HE */
++#define RATE_MCS_OFDM_HE_POS		10
++#define RATE_MCS_OFDM_HE_MSK		BIT(RATE_MCS_OFDM_HE_POS)
+ 
+ /*
+  * Bit 11-12: (0) 20MHz, (1) 40MHz, (2) 80MHz, (3) 160MHz
+@@ -255,18 +260,29 @@ enum {
+ #define RATE_MCS_ANT_MSK		RATE_MCS_ANT_ABC_MSK
+ #define RATE_MCS_ANT_NUM 3
+ 
+-/* Bit 17-18: (0) SS, (1) SS*2 */
++/* Bit 17: (0) SS, (1) SS*2 */
+ #define RATE_MCS_STBC_POS		17
+-#define RATE_MCS_HT_STBC_MSK		(3 << RATE_MCS_STBC_POS)
+-#define RATE_MCS_VHT_STBC_MSK		(1 << RATE_MCS_STBC_POS)
++#define RATE_MCS_STBC_MSK		BIT(RATE_MCS_STBC_POS)
++
++/* Bit 18: OFDM-HE dual carrier mode */
++#define RATE_HE_DUAL_CARRIER_MODE	18
++#define RATE_HE_DUAL_CARRIER_MODE_MSK	BIT(RATE_HE_DUAL_CARRIER_MODE)
+ 
+ /* Bit 19: (0) Beamforming is off, (1) Beamforming is on */
+ #define RATE_MCS_BF_POS			19
+ #define RATE_MCS_BF_MSK			(1 << RATE_MCS_BF_POS)
+ 
+-/* Bit 20: (0) ZLF is off, (1) ZLF is on */
+-#define RATE_MCS_ZLF_POS		20
+-#define RATE_MCS_ZLF_MSK		(1 << RATE_MCS_ZLF_POS)
++/*
++ * Bit 20-21: HE guard interval and LTF type.
++ * (0) 1xLTF+1.6us, (1) 2xLTF+0.8us,
++ * (2) 2xLTF+1.6us, (3) 4xLTF+3.2us
++ */
++#define RATE_MCS_HE_GI_LTF_POS		20
++#define RATE_MCS_HE_GI_LTF_MSK		(3 << RATE_MCS_HE_GI_LTF_POS)
++
++/* Bit 22-23: HE type. (0) SU, (1) SU_EXT, (2) MU, (3) trigger based */
++#define RATE_MCS_HE_TYPE_POS		22
++#define RATE_MCS_HE_TYPE_MSK		(3 << RATE_MCS_HE_TYPE_POS)
+ 
+ /* Bit 24-25: (0) 20MHz (no dup), (1) 2x20MHz, (2) 4x20MHz, 3 8x20MHz */
+ #define RATE_MCS_DUP_POS		24
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index ce907c58ebf6..7788eefcd2bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -826,7 +826,7 @@ static u32 ucode_rate_from_rs_rate(struct iwl_mvm *mvm,
+ 	if (is_siso(rate) && rate->stbc) {
+ 		/* To enable STBC we need to set both a flag and ANT_AB */
+ 		ucode_rate |= RATE_MCS_ANT_AB_MSK;
+-		ucode_rate |= RATE_MCS_VHT_STBC_MSK;
++		ucode_rate |= RATE_MCS_STBC_MSK;
  	}
  
-+	ret = mwifiex_read_reg(adapter, PCIE_SCRATCH_13_REG, &val);
-+	if (ret) {
-+		mwifiex_dbg(adapter, FATAL, "Failed to read scratch register 13\n");
-+		goto done;
-+	}
-+
-+	/* PCIE FLR case: extract wifi part from combo firmware*/
-+	if (val == MWIFIEX_PCIE_FLR_HAPPENS) {
-+		ret = mwifiex_extract_wifi_fw(adapter, firmware, firmware_len);
-+		if (ret < 0) {
-+			mwifiex_dbg(adapter, ERROR, "Failed to extract wifi fw\n");
-+			goto done;
-+		}
-+		offset = ret;
-+		mwifiex_dbg(adapter, MSG,
-+			    "info: dnld wifi firmware from %d bytes\n", offset);
-+	}
-+
- 	/* Perform firmware data transfer */
- 	do {
- 		u32 ireg_intr = 0;
-@@ -3060,12 +3145,6 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
- 	struct pci_dev *pdev = card->dev;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+ 	ucode_rate |= rate->bw;
+@@ -873,7 +873,7 @@ static int rs_rate_from_ucode_rate(const u32 ucode_rate,
+ 		rate->sgi = true;
+ 	if (ucode_rate & RATE_MCS_LDPC_MSK)
+ 		rate->ldpc = true;
+-	if (ucode_rate & RATE_MCS_VHT_STBC_MSK)
++	if (ucode_rate & RATE_MCS_STBC_MSK)
+ 		rate->stbc = true;
+ 	if (ucode_rate & RATE_MCS_BF_MSK)
+ 		rate->bfer = true;
+@@ -3641,13 +3641,12 @@ int rs_pretty_print_rate(char *buf, const u32 rate)
+ 		bw = "BAD BW";
+ 	}
  
--	/* Bluetooth is not on pcie interface. Download Wifi only firmware
--	 * during pcie FLR, so that bluetooth part of firmware which is
--	 * already running doesn't get affected.
--	 */
--	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
--
- 	/* tx_buf_size might be changed to 3584 by firmware during
- 	 * data transfer, we should reset it to default size.
- 	 */
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 7e2450c..f7ce9b6 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -35,7 +35,6 @@
- #define PCIE8897_B0_FW_NAME "mrvl/pcie8897_uapsta.bin"
- #define PCIEUART8997_FW_NAME_V4 "mrvl/pcieuart8997_combo_v4.bin"
- #define PCIEUSB8997_FW_NAME_V4 "mrvl/pcieusb8997_combo_v4.bin"
--#define PCIE8997_DEFAULT_WIFIFW_NAME "mrvl/pcie8997_wlan_v4.bin"
+-	return sprintf(buf, "%s | ANT: %s BW: %s MCS: %d NSS: %d %s%s%s%s%s\n",
++	return sprintf(buf, "%s | ANT: %s BW: %s MCS: %d NSS: %d %s%s%s%s\n",
+ 		       type, rs_pretty_ant(ant), bw, mcs, nss,
+ 		       (rate & RATE_MCS_SGI_MSK) ? "SGI " : "NGI ",
+-		       (rate & RATE_MCS_HT_STBC_MSK) ? "STBC " : "",
++		       (rate & RATE_MCS_STBC_MSK) ? "STBC " : "",
+ 		       (rate & RATE_MCS_LDPC_MSK) ? "LDPC " : "",
+-		       (rate & RATE_MCS_BF_MSK) ? "BF " : "",
+-		       (rate & RATE_MCS_ZLF_MSK) ? "ZLF " : "");
++		       (rate & RATE_MCS_BF_MSK) ? "BF " : "");
+ }
  
- #define PCIE_VENDOR_ID_MARVELL              (0x11ab)
- #define PCIE_VENDOR_ID_V2_MARVELL           (0x1b4b)
-@@ -120,6 +119,8 @@
- #define MWIFIEX_SLEEP_COOKIE_SIZE			4
- #define MWIFIEX_MAX_DELAY_COUNT				100
- 
-+#define MWIFIEX_PCIE_FLR_HAPPENS 0xFEDCBABA
-+
- struct mwifiex_pcie_card_reg {
- 	u16 cmd_addr_lo;
- 	u16 cmd_addr_hi;
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index d4c0ca7ccb34..d7c8e7de960b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -443,13 +443,13 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	if (rate_n_flags & RATE_MCS_LDPC_MSK)
+ 		rx_status->flag |= RX_FLAG_LDPC;
+ 	if (rate_n_flags & RATE_MCS_HT_MSK) {
+-		u8 stbc = (rate_n_flags & RATE_MCS_HT_STBC_MSK) >>
++		u8 stbc = (rate_n_flags & RATE_MCS_STBC_MSK) >>
+ 				RATE_MCS_STBC_POS;
+ 		rx_status->flag |= RX_FLAG_HT;
+ 		rx_status->rate_idx = rate_n_flags & RATE_HT_MCS_INDEX_MSK;
+ 		rx_status->flag |= stbc << RX_FLAG_STBC_SHIFT;
+ 	} else if (rate_n_flags & RATE_MCS_VHT_MSK) {
+-		u8 stbc = (rate_n_flags & RATE_MCS_VHT_STBC_MSK) >>
++		u8 stbc = (rate_n_flags & RATE_MCS_STBC_MSK) >>
+ 				RATE_MCS_STBC_POS;
+ 		rx_status->vht_nss =
+ 			((rate_n_flags & RATE_VHT_MCS_NSS_MSK) >>
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 24c4fbe139a3..362b240da65c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -974,13 +974,13 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	if (rate_n_flags & RATE_MCS_LDPC_MSK)
+ 		rx_status->flag |= RX_FLAG_LDPC;
+ 	if (rate_n_flags & RATE_MCS_HT_MSK) {
+-		u8 stbc = (rate_n_flags & RATE_MCS_HT_STBC_MSK) >>
++		u8 stbc = (rate_n_flags & RATE_MCS_STBC_MSK) >>
+ 				RATE_MCS_STBC_POS;
+ 		rx_status->flag |= RX_FLAG_HT;
+ 		rx_status->rate_idx = rate_n_flags & RATE_HT_MCS_INDEX_MSK;
+ 		rx_status->flag |= stbc << RX_FLAG_STBC_SHIFT;
+ 	} else if (rate_n_flags & RATE_MCS_VHT_MSK) {
+-		u8 stbc = (rate_n_flags & RATE_MCS_VHT_STBC_MSK) >>
++		u8 stbc = (rate_n_flags & RATE_MCS_STBC_MSK) >>
+ 				RATE_MCS_STBC_POS;
+ 		rx_status->vht_nss =
+ 			((rate_n_flags & RATE_VHT_MCS_NSS_MSK) >>
 -- 
-1.9.1
+2.11.0
