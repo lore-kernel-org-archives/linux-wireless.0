@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:33090 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753248AbdDHSgm (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:35003 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1176738AbdDYSko (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Apr 2017 14:36:42 -0400
-Received: by mail-pf0-f176.google.com with SMTP id s16so17163579pfs.0
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Apr 2017 11:36:42 -0700 (PDT)
-Subject: Re: [PATCH 1/5] netlink: extended ACK reporting
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20170408174900.12820-1-johannes@sipsolutions.net>
- <20170408174900.12820-2-johannes@sipsolutions.net>
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-From: David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <14c58480-cd03-4d61-fffa-fab6e437a7ea@cumulusnetworks.com> (sfid-20170408_203746_782324_2B2DC8C1)
-Date: Sat, 8 Apr 2017 14:36:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170408174900.12820-2-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+        Tue, 25 Apr 2017 14:40:44 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH v4 2/9] NFC: trf7970a: Don't de-assert EN2 unless it was asserted
+Date: Tue, 25 Apr 2017 11:40:29 -0700
+Message-Id: <20170425184036.1212-3-mgreer@animalcreek.com> (sfid-20170425_204054_602614_414D62E2)
+In-Reply-To: <20170425184036.1212-1-mgreer@animalcreek.com>
+References: <20170425184036.1212-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/8/17 1:48 PM, Johannes Berg wrote:
-> diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-> index da14ab61f363..47562e940e9c 100644
-> --- a/include/linux/netlink.h
-> +++ b/include/linux/netlink.h
-> @@ -62,11 +62,41 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
->  	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
->  }
->  
-> +/**
-> + * struct netlink_ext_ack - netlink extended ACK report struct
-> + * @_msg: message string to report - don't access directly, use
-> + *	%NL_SET_ERR_MSG
-> + * @bad_attr: attribute with error
-> + * @missing_attr: number of missing attr (or 0)
-> + * @cookie: cookie data to return to userspace (for success)
-> + * @cookie_len: actual cookie data length
-> + */
-> +struct netlink_ext_ack {
-> +	const char *_msg;
-> +	const struct nlattr *bad_attr;
-> +	u16 missing_attr;
-> +	u8 cookie[NETLINK_MAX_COOKIE_LEN];
-> +	u8 cookie_len;
-> +};
-> +
+When the trf7970a part has the bug related to 'en2-rf-quirk',
+the GPIO connected to the EN2 pin will not be asserted by the
+driver when powering up so it shouldn't be de-asserted when
+powering down.
 
-I think v3 is in your future ...
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+Note: I would rather use a single 'if' statement with '&&' but I
+did it this way to match what is in the trf7970a_power_up() routine.
+Either way, it is overwritten by a patch later in this series.
 
-/home/dsa/kernel-4.git/include/linux/netlink.h:78:12: error:
-‘NETLINK_MAX_COOKIE_LEN’ undeclared here (not in a function)
-  u8 cookie[NETLINK_MAX_COOKIE_LEN];
-            ^
+ drivers/nfc/trf7970a.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-it's defined in patch 3; needed in patch 1
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 2d1c8ca6e679..1a87525a88cd 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1940,8 +1940,10 @@ static int trf7970a_power_down(struct trf7970a *trf)
+ 	}
+ 
+ 	gpio_set_value(trf->en_gpio, 0);
+-	if (gpio_is_valid(trf->en2_gpio))
+-		gpio_set_value(trf->en2_gpio, 0);
++
++	if (!(trf->quirks & TRF7970A_QUIRK_EN2_MUST_STAY_LOW))
++		if (gpio_is_valid(trf->en2_gpio))
++			gpio_set_value(trf->en2_gpio, 0);
+ 
+ 	ret = regulator_disable(trf->regulator);
+ 	if (ret)
+-- 
+2.12.0
