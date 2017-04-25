@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41884 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753238AbdDEMnf (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33657 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1431404AbdDYSkt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 08:43:35 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/5] brcmfmac: wrap brcmf_fws_init into bcdc layer
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1490697808-5538-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1490697808-5538-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170405124333.651DC60DCF@smtp.codeaurora.org> (sfid-20170405_144739_399189_CE18C475)
-Date: Wed,  5 Apr 2017 12:43:33 +0000 (UTC)
+        Tue, 25 Apr 2017 14:40:49 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH v4 4/9] NFC: trf7970a: Only check 'en2-rf-quirk' if EN2 is specified
+Date: Tue, 25 Apr 2017 11:40:31 -0700
+Message-Id: <20170425184036.1212-5-mgreer@animalcreek.com> (sfid-20170425_204116_040305_19E6F75E)
+In-Reply-To: <20170425184036.1212-1-mgreer@animalcreek.com>
+References: <20170425184036.1212-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> From: Franky Lin <franky.lin@broadcom.com>
-> 
-> Create a new protocol layer interface brcmf_proto_init_cb for protocol
-> layer to finish initialzation after core module components(fweh and
-> etc.) are initialized.
-> 
-> Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-> Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+The quirk indicated by the 'en2-rf-quirk' device tree property
+is only relevant when there is a GPIO connected to the EN2 pin
+of the trf7970a. This means we should only check for 'en2-rf-quirk'
+when EN2 is specified in the 'ti,enable-gpios' property of the
+device tree.
 
-5 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ drivers/nfc/trf7970a.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-62c50a34883c brcmfmac: wrap brcmf_fws_init into bcdc layer
-8f9dd1a97438 brcmfmac: move brcmf_fws_deinit to bcdc layer
-0cc0236cf713 brcmfmac: add support to move wiphy instance into network namespace
-49fe9b59f0e9 brcmfmac: restore bus state when enter_D3 fails
-78b9ccb81377 brcmfmac: no need for d11inf instance in brcmf_pno_start_sched_scan()
-
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 5d5a8b0e57d4..4655680b0e7b 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2070,6 +2070,9 @@ static int trf7970a_probe(struct spi_device *spi)
+ 			dev_err(trf->dev, "Can't request EN2 GPIO: %d\n", ret);
+ 			return ret;
+ 		}
++
++		if (of_property_read_bool(np, "en2-rf-quirk"))
++			trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+ 	}
+ 
+ 	of_property_read_u32(np, "clock-frequency", &clk_freq);
+@@ -2081,9 +2084,6 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (of_property_read_bool(np, "en2-rf-quirk"))
+-		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+-
+ 	ret = devm_request_threaded_irq(trf->dev, spi->irq, NULL,
+ 			trf7970a_irq, IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+ 			"trf7970a", trf);
 -- 
-https://patchwork.kernel.org/patch/9648789/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
