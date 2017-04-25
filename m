@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:34008 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936287AbdDZWEt (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33015 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1953164AbdDYWn6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 18:04:49 -0400
-Received: by mail-pf0-f182.google.com with SMTP id c198so6989494pfc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 15:04:49 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-soc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Nicolas Dechesne <nicolas.dechesne@linaro.org>
-Subject: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
-Date: Wed, 26 Apr 2017 15:04:43 -0700
-Message-Id: <20170426220444.10539-1-bjorn.andersson@linaro.org> (sfid-20170427_000624_047560_805C9599)
+        Tue, 25 Apr 2017 18:43:58 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH v5 3/9] NFC: trf7970a: Fix inaccurate comment in trf7970a_probe()
+Date: Tue, 25 Apr 2017 15:43:50 -0700
+Message-Id: <20170425224356.11498-4-mgreer@animalcreek.com> (sfid-20170426_004410_430793_E3378C3A)
+In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
+References: <20170425224356.11498-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the tx skbs are collected they should be passed to
-ieee80211_tx_status() rather than ieee80211_free_txskb(), as the prior
-will take care of monitoring and LED triggers while the latter will
-consider the skb dropped.
+As of commit ce69b95ca4e4 ("NFC: Make EN2 pin optional in the
+TRF7970A driver"), only the GPIO for the 'EN' enable pin needs
+to be specified in the device tree so update the comments that
+says both 'EN' and 'EN2' must be specified.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c | 2 +-
+ drivers/nfc/trf7970a.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 87dfdaf9044c..938b7bd733cf 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -371,7 +371,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 			info = IEEE80211_SKB_CB(ctl->skb);
- 			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
- 				/* Keep frame until TX status comes */
--				ieee80211_free_txskb(wcn->hw, ctl->skb);
-+				ieee80211_tx_status(wcn->hw, ctl->skb);
- 			}
- 			spin_lock(&ctl->skb_lock);
- 			if (wcn->queues_stopped) {
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 1a87525a88cd..5d5a8b0e57d4 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2046,7 +2046,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ 	if (of_property_read_bool(np, "irq-status-read-quirk"))
+ 		trf->quirks |= TRF7970A_QUIRK_IRQ_STATUS_READ;
+ 
+-	/* There are two enable pins - both must be present */
++	/* There are two enable pins - only EN must be present in the DT */
+ 	trf->en_gpio = of_get_named_gpio(np, "ti,enable-gpios", 0);
+ 	if (!gpio_is_valid(trf->en_gpio)) {
+ 		dev_err(trf->dev, "No EN GPIO property\n");
 -- 
 2.12.0
