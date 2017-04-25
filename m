@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61111 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753845AbdDEIsc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54278 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1948886AbdDYUY3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 04:48:32 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marcin Rokicki <marcin.rokicki@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k: Clean header files from bad block comments
-Date: Wed, 5 Apr 2017 08:48:26 +0000
-Message-ID: <87zifvi6jp.fsf@kamboji.qca.qualcomm.com> (sfid-20170405_105213_033938_06395B6F)
-References: <1487601530-22932-1-git-send-email-marcin.rokicki@tieto.com>
-        <744f9259075b4d0784712a5cd272024e@euamsexm01a.eu.qualcomm.com>
-In-Reply-To: <744f9259075b4d0784712a5cd272024e@euamsexm01a.eu.qualcomm.com>
-        (Kalle Valo's message of "Wed, 5 Apr 2017 09:45:39 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Tue, 25 Apr 2017 16:24:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 25 Apr 2017 23:22:34 +0300
+Message-Id: <20170425202243.7844-17-luca@coelho.fi> (sfid-20170425_222433_399304_C1B21CA9)
+In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
+References: <20170425202243.7844-1-luca@coelho.fi>
+Subject: [PATCH 16/25] iwlwifi: don't leak memory on allocation failure
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Marcin Rokicki <marcin.rokicki@tieto.com> wrote:
->> Fix output from checkpatch.pl like:
->>  Block comments use a trailing */ on a separate line
->>=20
->> Signed-off-by: Marcin Rokicki <marcin.rokicki@tieto.com>
->
-> Patch applied to ath-next branch of ath.git, thanks.
->
-> 37ff1b0df37a ath10k: clean header files from bad block comments
+If we fail to allocate the small chunk of memory for the
+pieces of the firmware file, we leak the whole firmware
+image instead...
 
-I also enabled the checkpatch warning in ath10k-check so that we can
-catch any new warnings:
+Since the allocation failure is really unlikely, just bail
+out at that point instead.
 
-https://github.com/qca/qca-swiss-army-knife/commit/e23fbd3c9647c20e29e819b8=
-a6d934e1b56067b9
+Remove the error message at the label since we now (and
+actually have been) use it for various reasons.
 
---=20
-Kalle Valo=
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 212fb8d5c064..98a03a4615d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1282,7 +1282,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 
+ 	pieces = kzalloc(sizeof(*pieces), GFP_KERNEL);
+ 	if (!pieces)
+-		return;
++		goto out_free_fw;
+ 
+ 	if (!ucode_raw)
+ 		goto try_again;
+@@ -1512,17 +1512,18 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	goto free;
+ 
+  out_free_fw:
+-	IWL_ERR(drv, "failed to allocate pci memory\n");
+ 	iwl_dealloc_ucode(drv);
+ 	release_firmware(ucode_raw);
+  out_unbind:
+ 	complete(&drv->request_firmware_complete);
+ 	device_release_driver(drv->trans->dev);
+  free:
+-	for (i = 0; i < ARRAY_SIZE(pieces->img); i++)
+-		kfree(pieces->img[i].sec);
+-	kfree(pieces->dbg_mem_tlv);
+-	kfree(pieces);
++	if (pieces) {
++		for (i = 0; i < ARRAY_SIZE(pieces->img); i++)
++			kfree(pieces->img[i].sec);
++		kfree(pieces->dbg_mem_tlv);
++		kfree(pieces);
++	}
+ }
+ 
+ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
+-- 
+2.11.0
