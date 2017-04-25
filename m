@@ -1,175 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43160 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1956204AbdDZGnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 02:43:42 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:54340 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1954317AbdDYUaM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Apr 2017 16:30:12 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: simplify netlink socket owner interface deletion
-Date: Wed, 26 Apr 2017 08:43:35 +0200
-Message-Id: <20170426064335.13005-1-johannes@sipsolutions.net> (sfid-20170426_084349_625783_DD19358D)
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 25 Apr 2017 23:22:40 +0300
+Message-Id: <20170425202243.7844-23-luca@coelho.fi> (sfid-20170425_223021_623070_648A0843)
+In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
+References: <20170425202243.7844-1-luca@coelho.fi>
+Subject: [PATCH 22/25] iwlwifi: rename wait_for_tx_queues_empty
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-There's no need to allocate a portid structure and then, for
-each of those, walk the interfaces - we can just add a flag
-to each interface and walk those directly. Due to padding in
-the struct, we can even do it without any memory cost, and
-it even simplifies the code.
+Rename current wait_tx_queue_empty to wait_tx_queues_empty since
+it waits for multiple queues (up to 32).
+Next patch will add a wait for single TX queue which is needed for
+gen2 to be scalable for 512.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h |  5 +++--
- net/wireless/core.c    | 26 ++++----------------------
- net/wireless/core.h    |  8 --------
- net/wireless/nl80211.c | 22 +++++-----------------
- 4 files changed, 12 insertions(+), 49 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/lib.c      |  2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h    |  8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 14 +++++++-------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  2 +-
+ 6 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2a200b964b7a..999ec24afbe7 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4037,12 +4037,13 @@ struct wireless_dev {
- 
- 	u32 ap_unexpected_nlportid;
- 
-+	u32 owner_nlportid;
-+	bool nl_owner_dead;
-+
- 	bool cac_started;
- 	unsigned long cac_start_time;
- 	unsigned int cac_time_ms;
- 
--	u32 owner_nlportid;
--
- #ifdef CONFIG_CFG80211_WEXT
- 	/* wext data */
- 	struct {
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index b0d6761f0cdd..4ea28de3a636 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -305,30 +305,14 @@ static void cfg80211_event_work(struct work_struct *work)
- 
- void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev)
- {
--	struct cfg80211_iface_destroy *item;
-+	struct wireless_dev *wdev, *tmp;
- 
- 	ASSERT_RTNL();
- 
--	spin_lock_irq(&rdev->destroy_list_lock);
--	while ((item = list_first_entry_or_null(&rdev->destroy_list,
--						struct cfg80211_iface_destroy,
--						list))) {
--		struct wireless_dev *wdev, *tmp;
--		u32 nlportid = item->nlportid;
--
--		list_del(&item->list);
--		kfree(item);
--		spin_unlock_irq(&rdev->destroy_list_lock);
--
--		list_for_each_entry_safe(wdev, tmp,
--					 &rdev->wiphy.wdev_list, list) {
--			if (nlportid == wdev->owner_nlportid)
--				rdev_del_virtual_intf(rdev, wdev);
--		}
--
--		spin_lock_irq(&rdev->destroy_list_lock);
-+	list_for_each_entry_safe(wdev, tmp, &rdev->wiphy.wdev_list, list) {
-+		if (wdev->nl_owner_dead)
-+			rdev_del_virtual_intf(rdev, wdev);
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+index 6c2d6da7eec6..74e52f7c5aa1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+@@ -180,7 +180,7 @@ void iwlagn_dev_txfifo_flush(struct iwl_priv *priv)
+ 		goto done;
  	}
--	spin_unlock_irq(&rdev->destroy_list_lock);
+ 	IWL_DEBUG_INFO(priv, "wait transmit/flush all frames\n");
+-	iwl_trans_wait_tx_queue_empty(priv->trans, 0xffffffff);
++	iwl_trans_wait_tx_queues_empty(priv->trans, 0xffffffff);
+ done:
+ 	ieee80211_wake_queues(priv->hw);
+ 	mutex_unlock(&priv->mutex);
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
+index 2a04d0cd71ae..5fd307da562e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
+@@ -1143,7 +1143,7 @@ static void iwlagn_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	}
+ 
+ 	IWL_DEBUG_TX_QUEUES(priv, "wait transmit/flush all frames\n");
+-	iwl_trans_wait_tx_queue_empty(priv->trans, scd_queues);
++	iwl_trans_wait_tx_queues_empty(priv->trans, scd_queues);
+ done:
+ 	mutex_unlock(&priv->mutex);
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 181636861cb6..0ebfdbb22992 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -691,7 +691,7 @@ struct iwl_trans_ops {
+ 	void (*txq_set_shared_mode)(struct iwl_trans *trans, u32 txq_id,
+ 				    bool shared);
+ 
+-	int (*wait_tx_queue_empty)(struct iwl_trans *trans, u32 txq_bm);
++	int (*wait_tx_queues_empty)(struct iwl_trans *trans, u32 txq_bm);
+ 	void (*freeze_txq_timer)(struct iwl_trans *trans, unsigned long txqs,
+ 				 bool freeze);
+ 	void (*block_txq_ptrs)(struct iwl_trans *trans, bool block);
+@@ -1195,15 +1195,15 @@ static inline void iwl_trans_block_txq_ptrs(struct iwl_trans *trans,
+ 		trans->ops->block_txq_ptrs(trans, block);
  }
  
- static void cfg80211_destroy_iface_wk(struct work_struct *work)
-@@ -484,8 +468,6 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 	rdev->wiphy.dev.platform_data = rdev;
- 	device_enable_async_suspend(&rdev->wiphy.dev);
- 
--	INIT_LIST_HEAD(&rdev->destroy_list);
--	spin_lock_init(&rdev->destroy_list_lock);
- 	INIT_WORK(&rdev->destroy_work, cfg80211_destroy_iface_wk);
- 	INIT_WORK(&rdev->sched_scan_stop_wk, cfg80211_sched_scan_stop_wk);
- 	INIT_WORK(&rdev->propagate_radar_detect_wk,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 5d27eca57d3b..f9b748e3425a 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -91,10 +91,7 @@ struct cfg80211_registered_device {
- 
- 	struct cfg80211_coalesce *coalesce;
- 
--	spinlock_t destroy_list_lock;
--	struct list_head destroy_list;
- 	struct work_struct destroy_work;
--
- 	struct work_struct sched_scan_stop_wk;
- 
- 	struct cfg80211_chan_def radar_chandef;
-@@ -264,11 +261,6 @@ struct cfg80211_beacon_registration {
- 	u32 nlportid;
- };
- 
--struct cfg80211_iface_destroy {
--	struct list_head list;
--	u32 nlportid;
--};
--
- struct cfg80211_cqm_config {
- 	u32 rssi_hyst;
- 	s32 last_rssi_event_value;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 50c35affccad..45f5f418e562 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14883,7 +14883,6 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 	rcu_read_lock();
- 
- 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
--		bool schedule_destroy_work = false;
- 		struct cfg80211_sched_scan_request *sched_scan_req =
- 			rcu_dereference(rdev->sched_scan_req);
- 
-@@ -14899,10 +14898,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 		list_for_each_entry_rcu(wdev, &rdev->wiphy.wdev_list, list) {
- 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
- 
--			if (wdev->owner_nlportid == notify->portid)
--				schedule_destroy_work = true;
--			else if (wdev->conn_owner_nlportid == notify->portid)
-+			if (wdev->owner_nlportid == notify->portid) {
-+				wdev->nl_owner_dead = true;
-+				schedule_work(&rdev->destroy_work);
-+			} else if (wdev->conn_owner_nlportid == notify->portid) {
- 				schedule_work(&wdev->disconnect_wk);
-+			}
- 		}
- 
- 		spin_lock_bh(&rdev->beacon_registrations_lock);
-@@ -14915,19 +14916,6 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 			}
- 		}
- 		spin_unlock_bh(&rdev->beacon_registrations_lock);
--
--		if (schedule_destroy_work) {
--			struct cfg80211_iface_destroy *destroy;
--
--			destroy = kzalloc(sizeof(*destroy), GFP_ATOMIC);
--			if (destroy) {
--				destroy->nlportid = notify->portid;
--				spin_lock(&rdev->destroy_list_lock);
--				list_add(&destroy->list, &rdev->destroy_list);
--				spin_unlock(&rdev->destroy_list_lock);
--				schedule_work(&rdev->destroy_work);
--			}
--		}
+-static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans,
+-						u32 txqs)
++static inline int iwl_trans_wait_tx_queues_empty(struct iwl_trans *trans,
++						 u32 txqs)
+ {
+ 	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
+ 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
+ 		return -EIO;
  	}
  
- 	rcu_read_unlock();
+-	return trans->ops->wait_tx_queue_empty(trans, txqs);
++	return trans->ops->wait_tx_queues_empty(trans, txqs);
+ }
+ 
+ static inline void iwl_trans_write8(struct iwl_trans *trans, u32 ofs, u8 val)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index c121982d781e..d91b28c3ea5e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1478,7 +1478,7 @@ static void iwl_mvm_prepare_mac_removal(struct iwl_mvm *mvm,
+ 		 * already marked as draining, so to complete the draining, we
+ 		 * just need to wait until the transport is empty.
+ 		 */
+-		iwl_trans_wait_tx_queue_empty(mvm->trans, tfd_msk);
++		iwl_trans_wait_tx_queues_empty(mvm->trans, tfd_msk);
+ 	}
+ 
+ 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE) {
+@@ -4000,7 +4000,7 @@ static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
+ 		/* this can take a while, and we may need/want other operations
+ 		 * to succeed while doing this, so do it without the mutex held
+ 		 */
+-		iwl_trans_wait_tx_queue_empty(mvm->trans, msk);
++		iwl_trans_wait_tx_queues_empty(mvm->trans, msk);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index d06ba5cb7297..f5c786ddc526 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -658,7 +658,7 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
+ 
+ 	/* Stop MAC queues and wait for this queue to empty */
+ 	iwl_mvm_stop_mac_queues(mvm, mq);
+-	ret = iwl_trans_wait_tx_queue_empty(mvm->trans, BIT(queue));
++	ret = iwl_trans_wait_tx_queues_empty(mvm->trans, BIT(queue));
+ 	if (ret) {
+ 		IWL_ERR(mvm, "Error draining queue %d before reconfig\n",
+ 			queue);
+@@ -1614,8 +1614,8 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 		ret = iwl_mvm_flush_tx_path(mvm, mvm_sta->tfd_queue_msk, 0);
+ 		if (ret)
+ 			return ret;
+-		ret = iwl_trans_wait_tx_queue_empty(mvm->trans,
+-						    mvm_sta->tfd_queue_msk);
++		ret = iwl_trans_wait_tx_queues_empty(mvm->trans,
++						     mvm_sta->tfd_queue_msk);
+ 		if (ret)
+ 			return ret;
+ 		ret = iwl_mvm_drain_sta(mvm, mvm_sta, false);
+@@ -2659,8 +2659,8 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			 * If reconfiguring an existing queue, it first must be
+ 			 * drained
+ 			 */
+-			ret = iwl_trans_wait_tx_queue_empty(mvm->trans,
+-							    BIT(queue));
++			ret = iwl_trans_wait_tx_queues_empty(mvm->trans,
++							     BIT(queue));
+ 			if (ret) {
+ 				IWL_ERR(mvm,
+ 					"Error draining queue before reconfig\n");
+@@ -2846,8 +2846,8 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		iwl_mvm_drain_sta(mvm, mvmsta, true);
+ 		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), 0))
+ 			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
+-		iwl_trans_wait_tx_queue_empty(mvm->trans,
+-					      mvmsta->tfd_queue_msk);
++		iwl_trans_wait_tx_queues_empty(mvm->trans,
++					       mvmsta->tfd_queue_msk);
+ 		iwl_mvm_drain_sta(mvm, mvmsta, false);
+ 
+ 		iwl_mvm_sta_tx_agg(mvm, sta, tid, txq_id, false);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index c551ba8809db..70acf850a9f1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2833,7 +2833,7 @@ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
+ 	.ref = iwl_trans_pcie_ref,					\
+ 	.unref = iwl_trans_pcie_unref,					\
+ 	.dump_data = iwl_trans_pcie_dump_data,				\
+-	.wait_tx_queue_empty = iwl_trans_pcie_wait_txq_empty,		\
++	.wait_tx_queues_empty = iwl_trans_pcie_wait_txq_empty,		\
+ 	.d3_suspend = iwl_trans_pcie_d3_suspend,			\
+ 	.d3_resume = iwl_trans_pcie_d3_resume
+ 
 -- 
 2.11.0
