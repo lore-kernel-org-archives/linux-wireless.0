@@ -1,47 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51370 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751803AbdDMP0L (ORCPT
+Received: from mail-wr0-f170.google.com ([209.85.128.170]:33168 "EHLO
+        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1430898AbdDYNy4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 11:26:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 13 Apr 2017 18:24:56 +0300
-Message-Id: <20170413152507.9648-16-luca@coelho.fi> (sfid-20170413_172624_883962_636CD2B2)
-In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
-References: <20170413152507.9648-1-luca@coelho.fi>
-Subject: [PATCH 15/26] iwlwifi: mvm: remove unnecessary debugging from UMAC scan
+        Tue, 25 Apr 2017 09:54:56 -0400
+Received: by mail-wr0-f170.google.com with SMTP id w50so86024925wrc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Apr 2017 06:54:55 -0700 (PDT)
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Adam Casson <adam.casson@inscopemedical.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: WPA authorization with RTL8723DS
+Message-ID: <3edb18bd-636c-4da1-ad17-fb817320b3e6@gmail.com> (sfid-20170425_155508_676696_84044C05)
+Date: Tue, 25 Apr 2017 15:54:52 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Larry Finger wrote:
 
-There are several occasions where a scan of the same type is requested
-concurrently, so logging every time this happens is just noisy and
-unnecessary.  Remove the logging for these cases.
+> I was not aware that a 8723D chip had been released. If there is a PCI version 
+> (8723DE), then there is probably not a Linux driver for it.
+It's an "802.11bgn SDIO WLAN with Bluetooth 4.2 Single-Chip Controller"
+http://www.realtek.com/products/productsView.aspx?Langid=1&PNid=21&PFid=59&Level=5&Conn=4&ProdID=378
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index ce6a2b3b021e..9668f945b4e6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1037,11 +1037,8 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 	if (WARN_ON(num_channels > mvm->fw->ucode_capa.n_scan_channels))
- 		return -ENOBUFS;
- 
--	if (type == mvm->scan_type) {
--		IWL_DEBUG_SCAN(mvm,
--			       "Ignoring UMAC scan config of the same type\n");
-+	if (type == mvm->scan_type)
- 		return 0;
--	}
- 
- 	if (iwl_mvm_has_new_tx_api(mvm))
- 		cmd_size = sizeof(struct iwl_scan_config);
--- 
-2.11.0
+Realtek's crappy driver: https://github.com/NextThingCo/RTL8723DS
