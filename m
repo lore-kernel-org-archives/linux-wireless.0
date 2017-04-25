@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17603 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764039AbdDSOI4 (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:49533 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1431350AbdDYSkq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 10:08:56 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,3/3] ath9k: add noise floor override option
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170323133048.30062-4-sw@simonwunderlich.de>
-References: <20170323133048.30062-4-sw@simonwunderlich.de>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: <ath10k@lists.infradead.org>, <ath9k-devel@qca.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Message-ID: <789c82fc5c3b446b8b24c87ec9e45ed5@euamsexm01a.eu.qualcomm.com> (sfid-20170419_160859_849854_309A1066)
-Date: Wed, 19 Apr 2017 16:08:47 +0200
+        Tue, 25 Apr 2017 14:40:46 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH v4 7/9] NFC: trf7970a: Enable pins are active high not active low
+Date: Tue, 25 Apr 2017 11:40:34 -0700
+Message-Id: <20170425184036.1212-8-mgreer@animalcreek.com> (sfid-20170425_204109_337293_8F9F17CE)
+In-Reply-To: <20170425184036.1212-1-mgreer@animalcreek.com>
+References: <20170425184036.1212-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon Wunderlich <sw@simonwunderlich.de> wrote:
-> Introduce a debugfs option to manually override the noise floor,
-> ignoring the automatically tuned noise floor of the driver/hw.
-> 
-> In my tests with a AR9580 based module and a tx99 5 MHz interferer,
-> I could tune the noisefloor to -95 dBm or above to allow communication
-> again. The automatic noise floor calibration sometimes could adapt to
-> the situation as well, but not reliably and permanently.
-> 
-> I would consider this "feature" experimental and interesting for people
-> debugging the noise floor calibration or other effects of the hardware.
-> 
-> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-> Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+The example DTS code for the trf7970a sets the GPIOs for the EN
+and EN2 pins to active low when they are really active high so
+correct the error.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ Documentation/devicetree/bindings/net/nfc/trf7970a.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-b90189759a7f ath9k: add noise floor override option
-
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index 57cb52c94783..a24a93a4b010 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -36,8 +36,8 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 		spi-max-frequency = <2000000>;
+ 		interrupt-parent = <&gpio2>;
+ 		interrupts = <14 0>;
+-		ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>,
+-				  <&gpio2 5 GPIO_ACTIVE_LOW>;
++		ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_HIGH>,
++				  <&gpio2 5 GPIO_ACTIVE_HIGH>;
+ 		vin-supply = <&ldo3_reg>;
+ 		vdd-io-supply = <&ldo2_reg>;
+ 		autosuspend-delay = <30000>;
 -- 
-https://patchwork.kernel.org/patch/9641107/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
