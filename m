@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35562 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932205AbdDDQu0 (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:41323 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1953173AbdDYWoA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 12:50:26 -0400
-Received: by mail-oi0-f66.google.com with SMTP id d2so18372919oig.2
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:25 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 03/13] rtlwifi: btcoex: 23b 2ant: detect ap num and set GNT_BT properly
-Date: Tue,  4 Apr 2017 11:49:56 -0500
-Message-Id: <20170404165006.14329-4-Larry.Finger@lwfinger.net> (sfid-20170404_185035_593523_EFA9C67B)
-In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
-References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+        Tue, 25 Apr 2017 18:44:00 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH v5 7/9] NFC: trf7970a: Enable pins are active high not active low
+Date: Tue, 25 Apr 2017 15:43:54 -0700
+Message-Id: <20170425224356.11498-8-mgreer@animalcreek.com> (sfid-20170426_004428_883237_4B68AE36)
+In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
+References: <20170425224356.11498-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+The example DTS code for the trf7970a sets the GPIOs for the EN
+and EN2 pins to active low when they are really active high so
+correct the error.
 
-If ap num < 10, let wifi and bt transmit simultaneously, otherwise set
-wifi into standy when bt is transmitting
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
 ---
- .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ Documentation/devicetree/bindings/net/nfc/trf7970a.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index d4bac17..ae02be8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -2831,6 +2831,7 @@ void ex_btc8723b2ant_media_status_notify(struct btc_coexist *btcoexist,
- 	u8 h2c_parameter[3] = {0};
- 	u32 wifi_bw;
- 	u8 wifi_central_chnl;
-+	u8 ap_num = 0;
- 
- 	if (BTC_MEDIA_CONNECT == type)
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-@@ -2848,10 +2849,16 @@ void ex_btc8723b2ant_media_status_notify(struct btc_coexist *btcoexist,
- 		h2c_parameter[1] = wifi_central_chnl;
- 		btcoexist->btc_get(btcoexist,
- 			BTC_GET_U4_WIFI_BW, &wifi_bw);
--		if (BTC_WIFI_BW_HT40 == wifi_bw)
-+		if (wifi_bw == BTC_WIFI_BW_HT40) {
- 			h2c_parameter[2] = 0x30;
--		else
--			h2c_parameter[2] = 0x20;
-+		} else {
-+			btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM,
-+					   &ap_num);
-+			if (ap_num < 10)
-+				h2c_parameter[2] = 0x30;
-+			else
-+				h2c_parameter[2] = 0x20;
-+		}
- 	}
- 
- 	coex_dm->wifi_chnl_info[0] = h2c_parameter[0];
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index 57cb52c94783..a24a93a4b010 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -36,8 +36,8 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 		spi-max-frequency = <2000000>;
+ 		interrupt-parent = <&gpio2>;
+ 		interrupts = <14 0>;
+-		ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>,
+-				  <&gpio2 5 GPIO_ACTIVE_LOW>;
++		ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_HIGH>,
++				  <&gpio2 5 GPIO_ACTIVE_HIGH>;
+ 		vin-supply = <&ldo3_reg>;
+ 		vdd-io-supply = <&ldo2_reg>;
+ 		autosuspend-delay = <30000>;
 -- 
-2.10.2
+2.12.0
