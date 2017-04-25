@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:35650 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754206AbdDLPPe (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54148 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1954154AbdDYUXH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 11:15:34 -0400
-Received: by mail-wr0-f196.google.com with SMTP id l44so4672973wrc.2
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2017 08:15:34 -0700 (PDT)
-Date: Wed, 12 Apr 2017 17:15:31 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: David Ahern <dsa@cumulusnetworks.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH net-next v5 5/5] netlink: pass extended ACK struct where
- available
-Message-ID: <20170412151531.GL1952@nanopsycho> (sfid-20170412_171540_990711_30AE6EC1)
-References: <20170412123408.22012-1-johannes@sipsolutions.net>
- <20170412123408.22012-6-johannes@sipsolutions.net>
- <20170412140043.GH1952@nanopsycho>
- <1fdfb890-162a-a22c-53e0-101b9ef3bfa2@cumulusnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1fdfb890-162a-a22c-53e0-101b9ef3bfa2@cumulusnetworks.com>
+        Tue, 25 Apr 2017 16:23:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sharon Dvir <sharon.dvir@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 25 Apr 2017 23:22:23 +0300
+Message-Id: <20170425202243.7844-6-luca@coelho.fi> (sfid-20170425_222324_517064_06323309)
+In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
+References: <20170425202243.7844-1-luca@coelho.fi>
+Subject: [PATCH 05/25] iwlwifi: mvm: handle possible BIOS bug
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Apr 12, 2017 at 04:55:07PM CEST, dsa@cumulusnetworks.com wrote:
->On 4/12/17 8:00 AM, Jiri Pirko wrote:
->> Aside from the tinyfication of desc lines
->
->channel your inner Elsa and just let it go
+From: Sharon Dvir <sharon.dvir@intel.com>
 
-Not sure why. I still believe it is a mistake so I like to point it out.
-Don't see anything wrong about it :)
+In iwl_mvm_sar_get_ewrd_table() In case of a BIOS bug, n_profiles
+might be 0 thus we need to return an error value.  Found by Klocwork.
+
+Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index b5c7dffafdc1..e6c9528eeeda 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1201,6 +1201,12 @@ static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
+ 	enabled = !!(wifi_pkg->package.elements[1].integer.value);
+ 	n_profiles = wifi_pkg->package.elements[2].integer.value;
+ 
++	/* in case of BIOS bug */
++	if (n_profiles <= 0) {
++		ret = -EINVAL;
++		goto out_free;
++	}
++
+ 	for (i = 0; i < n_profiles; i++) {
+ 		/* the tables start at element 3 */
+ 		static int pos = 3;
+-- 
+2.11.0
