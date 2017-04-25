@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:46866 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752513AbdDLP32 (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:38184 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1176226AbdDYH4k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2017 11:29:28 -0400
-Date: Wed, 12 Apr 2017 11:29:26 -0400 (EDT)
-Message-Id: <20170412.112926.53823287831778729.davem@davemloft.net> (sfid-20170412_172936_227354_B3D47525)
-To: jiri@resnulli.us
-Cc: dsa@cumulusnetworks.com, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, jhs@mojatatu.com, jbenc@redhat.com,
-        johannes.berg@intel.com
-Subject: Re: [PATCH net-next v5 5/5] netlink: pass extended ACK struct
- where available
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170412151531.GL1952@nanopsycho>
-References: <20170412140043.GH1952@nanopsycho>
-        <1fdfb890-162a-a22c-53e0-101b9ef3bfa2@cumulusnetworks.com>
-        <20170412151531.GL1952@nanopsycho>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Tue, 25 Apr 2017 03:56:40 -0400
+Received: by mail-wm0-f52.google.com with SMTP id r190so88310525wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Apr 2017 00:56:40 -0700 (PDT)
+Subject: Re: [PATCH v2] brcmfmac: Ensure pointer correctly set if skb data
+ location changes
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20170424114050.24948-1-james.hughes@raspberrypi.org>
+Cc: James Hughes <james.hughes@raspberrypi.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <17dd69e6-1438-3474-aa0a-6c44e68855a5@broadcom.com> (sfid-20170425_095719_529771_8486232D)
+Date: Tue, 25 Apr 2017 09:56:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170424114050.24948-1-james.hughes@raspberrypi.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Pirko <jiri@resnulli.us>
-Date: Wed, 12 Apr 2017 17:15:31 +0200
+On 24-4-2017 13:40, James Hughes wrote:
+> The incoming skb header may be resized if header space is
+> insufficient, which might change the data adddress in the skb.
+> Ensure that a cached pointer to that data is correctly set by
+> moving assignment to after any possible changes.
 
-> Wed, Apr 12, 2017 at 04:55:07PM CEST, dsa@cumulusnetworks.com wrote:
->>On 4/12/17 8:00 AM, Jiri Pirko wrote:
->>> Aside from the tinyfication of desc lines
->>
->>channel your inner Elsa and just let it go
+Hi Kalle,
+
+This one should go on 4.12 queue as well.
+
+Thanks,
+Arend
+
+> Signed-off-by: James Hughes <james.hughes@raspberrypi.org>
 > 
-> Not sure why. I still believe it is a mistake so I like to point it out.
-> Don't see anything wrong about it :)
-
-I'll just reformat the commit messages when I apply this series if it bothers
-you so much Jiri.
-
-I too think that there are more important issues to discuss with this patch
-set.
-
-Thanks.
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
