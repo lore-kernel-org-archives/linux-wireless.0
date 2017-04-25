@@ -1,93 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:43992 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751403AbdDCJED (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33887 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1953169AbdDYWoA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2017 05:04:03 -0400
-Date: Mon, 3 Apr 2017 19:03:59 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Wolfram Sang <wsa@the-dreams.de>, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@linuxdriverproject.org, Tycho Andersen <tycho@tycho.ws>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFC] remove custom Michael MIC implementation
-Message-ID: <20170403090359.GK3755@eros> (sfid-20170403_110443_199887_6C46BAD5)
-References: <1490935659-7196-1-git-send-email-me@tobin.cc>
- <20170331075851.GB1435@katana>
- <20170331102113.GA2930@eros>
- <87fuhq6par.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87fuhq6par.fsf@purkki.adurom.net>
+        Tue, 25 Apr 2017 18:44:00 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH v5 6/9] NFC: trf7970a: Remove support for 'vin-voltage-override' DT property
+Date: Tue, 25 Apr 2017 15:43:53 -0700
+Message-Id: <20170425224356.11498-7-mgreer@animalcreek.com> (sfid-20170426_004426_643399_93AE0125)
+In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
+References: <20170425224356.11498-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 03, 2017 at 08:19:40AM +0300, Kalle Valo wrote:
-> + linux-wireless
-> 
-> "Tobin C. Harding" <me@tobin.cc> writes:
-> 
-> > On Fri, Mar 31, 2017 at 09:58:51AM +0200, Wolfram Sang wrote:
-> >> 
-> >> > The code is untested, I have hardware in the mail.
-> >> 
-> >> Cool!
-> >
-> > The card I have is a Spectec FCC ID: S2Y-WLAN-11B-G which I believe is
-> > a SDW-823 and should use the ks7010 driver. I am going to attempt to
-> > get it running on a Raspberry Pi B+. I ordered the wrong size break
-> > out board originally so waiting on the new one now.
-> >
-> >> 
-> >> > If any one is interested and has any comments I would really like to
-> >> > hear them. I am open to all suggestions (even down to trivial coding
-> >> > style issues).
-> >> 
-> >> I'll just repeat that the key move to get this driver out of staging is
-> >> to get away from the WEXT interface to CFG80211. Otherwise no chance
-> >> that wireless maintainers will even look at it. This is a huge change
-> >> but once it is done, features like Michael MIC come with it for free
-> >> (from what I recall, I am not a wireless expert myself).
-> >
-> > That would explain why I could not find more than the Orinoco driver
-> > using the Michael MIC module directly.
-> 
-> I think cfg80211 and mac80211 got mixed up. mac80211 (the full IEEE
-> 802.11 stack for "softmac" devices) provides Michael MIC implementation,
-> but cfg80211 (for "hardmac" devices) does not.
+The 'vin-voltage-override' DT property is used by the trf7970a
+driver to override the voltage presented to the driver by the
+regulator subsystem.  This is unnecessary as properly specifying
+the regulator chain via DT properties will accomplish the same
+thing.  Therefore, remove support for 'vin-voltage-override'.
 
-Cool, thanks for clarifying. Hilariously I was just sitting down
-trying to figure out what was up after a day spent trying to merge
-ideas from ath6kl (fullmac) and ks7010. I finally spent some time
-reading the cw1200 driver (softmac) for further inspiration.
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ Documentation/devicetree/bindings/net/nfc/trf7970a.txt |  2 --
+ drivers/nfc/trf7970a.c                                 | 11 +----------
+ 2 files changed, 1 insertion(+), 12 deletions(-)
 
-> >> Without the CFG80211 conversion, replacing the Michael custom
-> >> implementation with the in-kernel one makes the driver a tad better and
-> >> is good exercise. However, it will sadly not help to get the driver out
-> >> of staging.
-> >
-> > I'll drop it then. Could you please tell me, is there any thing else
-> > more I need to do to let LKML know that this RFC is dropped? Or is
-> > this reply enough. I don't want to use any ones time unnecessarily.
-> >
-> >> 
-> >> But if you want a clean WEXT driver first, this is a step in the right
-> >> direction.
-> >
-> > Let's go for a CFG80211 driver and get out of staging :) So next step
-> > is I guess study the ath6kl driver, learn how CFG80211 is done and
-> > implement that interface in ks7010? Oh, and test that it works.
-> 
-> Please keep linux-wireless list in loop so that people on that list can
-> help.
-
-How newbie friendly is the linux-wireless list please? I am having
-trouble separating the data path code from the control path. I think I
-will spend a few more days on it though before asking any questions.
-
-Except one: do you know off the top of your head of a canonical
-implementation of a softmac wi-fi driver.
-
-thanks,
-Tobin.
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index c627bbb3009e..57cb52c94783 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -13,7 +13,6 @@ Optional SoC Specific Properties:
+ - pinctrl-names: Contains only one value - "default".
+ - pintctrl-0: Specifies the pin control groups used for this controller.
+ - autosuspend-delay: Specify autosuspend delay in milliseconds.
+-- vin-voltage-override: Specify voltage of VIN pin in microvolts.
+ - irq-status-read-quirk: Specify that the trf7970a being used has the
+   "IRQ Status Read" erratum.
+ - en2-rf-quirk: Specify that the trf7970a being used has the "EN2 RF"
+@@ -40,7 +39,6 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 		ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>,
+ 				  <&gpio2 5 GPIO_ACTIVE_LOW>;
+ 		vin-supply = <&ldo3_reg>;
+-		vin-voltage-override = <5000000>;
+ 		vdd-io-supply = <&ldo2_reg>;
+ 		autosuspend-delay = <30000>;
+ 		irq-status-read-quirk;
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index b9a90843ea35..5827ad111942 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2005,12 +2005,6 @@ static int trf7970a_get_autosuspend_delay(struct device_node *np)
+ 	return autosuspend_delay;
+ }
+ 
+-static int trf7970a_get_vin_voltage_override(struct device_node *np,
+-		u32 *vin_uvolts)
+-{
+-	return of_property_read_u32(np, "vin-voltage-override", vin_uvolts);
+-}
+-
+ static int trf7970a_probe(struct spi_device *spi)
+ {
+ 	struct device_node *np = spi->dev.of_node;
+@@ -2108,10 +2102,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		goto err_destroy_lock;
+ 	}
+ 
+-	ret = trf7970a_get_vin_voltage_override(np, &uvolts);
+-	if (ret)
+-		uvolts = regulator_get_voltage(trf->regulator);
+-
++	uvolts = regulator_get_voltage(trf->regulator);
+ 	if (uvolts > 4000000)
+ 		trf->chip_status_ctrl = TRF7970A_CHIP_STATUS_VRS5_3;
+ 
+-- 
+2.12.0
