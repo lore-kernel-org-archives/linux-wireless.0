@@ -1,78 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60552 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751993AbdDNQTj (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:33296 "EHLO
+        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S979499AbdDYAZm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 12:19:39 -0400
-Subject: Re: How to debug DMAR errors?
-To: Alexander Duyck <alexander.duyck@gmail.com>
-References: <a21d8845-ae8d-fae0-b1b4-7bf6751b04b5@candelatech.com>
- <CAKgT0UcEKTsc6-tSHXMHFybnE4NQASKWHziq2SV+spOCLJGH-g@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <fdbc5502-e388-b614-4f09-fa7de9a4f40e@candelatech.com> (sfid-20170414_181951_032359_5B6C9587)
-Date: Fri, 14 Apr 2017 09:19:36 -0700
+        Mon, 24 Apr 2017 20:25:42 -0400
+Received: by mail-oi0-f49.google.com with SMTP id y11so122445496oie.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 17:25:42 -0700 (PDT)
+Subject: Re: WPA authorization with RTL8723DS
+To: Adam Casson <adam.casson@inscopemedical.com>,
+        linux-wireless@vger.kernel.org
+References: <CAPdsbMvE=_-oQ9wWLPQkUuF_Q3JeHCKo-0NrPt0hRRPo8khH9Q@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <b5eeb1fc-aea0-1489-ffa4-40b4e1dc1873@lwfinger.net> (sfid-20170425_022547_310922_E382F3D0)
+Date: Mon, 24 Apr 2017 19:25:39 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAKgT0UcEKTsc6-tSHXMHFybnE4NQASKWHziq2SV+spOCLJGH-g@mail.gmail.com>
+In-Reply-To: <CAPdsbMvE=_-oQ9wWLPQkUuF_Q3JeHCKo-0NrPt0hRRPo8khH9Q@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 04/14/2017 08:45 AM, Alexander Duyck wrote:
-> On Thu, Apr 13, 2017 at 11:12 AM, Ben Greear <greearb@candelatech.com> wrote:
->> Hello,
->>
->> I have been seeing a regular occurrence of DMAR errors, looking something
->> like this when testing my ath10k driver/firmware under some specific loads
->> (maximum receive of 512 byte frames in AP mode):
->>
->> DMAR: DRHD: handling fault status reg 3
->> DMAR: [DMA Read] Request device [05:00.0] fault addr fd99f000 [fault reason
->> 06] PTE Read access is not set
->> ath10k_pci 0000:05:00.0: firmware crashed! (uuid
->> 594b1393-ae35-42b5-9dec-74ff0c6791ff)
->>
->> So, I am wondering if there is any way I can get more information about what
->> this fd99f000 address
->> is?
->>
->> Once this problem hits, the entire OS locks hard (not even sysrq-boot will
->> do anything),
->> so I guess I would need the DMAR logic to print out more info on that
->> address somehow.
->>
->> Thanks,
->> Ben
+On 04/24/2017 03:25 PM, Adam Casson wrote:
+> I'm trying to build a product around the Next Thing Co CHIP Pro
+> (nextthing.co/pages/chippro) and have found that the RTL8723DS wifi/BT
+> chip is fairly unstable, particularly when trying to implement WPA
+> authorization. A previous version of this SoM uses the RTL8723BS which
+> is similar in structure and driver, but this new 8723DS is different
+> enough to warrant a separate code branch from both Realtek and the
+> manufacturer of the SoM. However, Realtek has not publically released
+> a driver for the new 8723DS chip. We have received no support from the
+> SoM manufacturer, so we're looking for some external help so that we
+> can maybe salvage the considerable work we've put into developing
+> around this SoM.
 >
-> There isn't much more info to give you. The problem is that the device
-> at 5:00.0 attempted to read at fd99f000 even though it didn't have
-> permissions. In response this should trigger a PCI Master Abort
-> message to that function. It looks like the firmware for the device
-> doesn't handle that and so that is likely why things got hung.
+> Some additional details about how the device was being used are below.
 >
-> Really you would need to interrogate the ath10k_pci to see if there
-> is/was a mapping somewhere for that address and what it was supposed
-> to be used for.
-
-I'm working on a hook in DMAR logic to call into ath10k_pci when the
-error is seen, so the ath10k can dump debug info, including recent DMA
-addresses.
-
-My code is an awful hack so far, but if someone could add a clean way to register
-DMAR error callbacks, I think that would be very welcome.  It might could tie into
-automated dma map/unmap debugging logic, and at the least, someone could write custom debugging callbacks
-for the driver(s) in question.
-
-Thanks,
-Ben
-
+> Use hopstapd (configuration for open and WPA included) to configure
+> the Chip Pro as an access point. Launch hostapd (command line also
+> provided in logs).
 >
-> - Alex
+> Gadget buildroot git commit e550a93f2b08c771f0dd75919bb042ad86faa763
 >
+> WPA version 2 (as specified in the provided hostapd config).
+>
+> Client types tested:
+>
+> - rtl8188eu usb dongle on Ubuntu 16.04 workstation
+> - 2013 Mac Book Pro running 10.12 Sierra
+>
+> Same results with both (WPA auth failed). Both clients have been
+> tested successfully with a wide range of WPA2 access points.
+>
+> Thanks for any help you can provide!
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+I was not aware that a 8723D chip had been released. If there is a PCI version 
+(8723DE), then there is probably not a Linux driver for it.
+
+Certainly, the 8723D driver would differ from the one for 8723B.
+
+I have written to my contacts at Realtek to see if I can learn what drivers are 
+available. I will let you know what I hear.
+
+Larry
