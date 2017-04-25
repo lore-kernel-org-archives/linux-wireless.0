@@ -1,80 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:33044 "EHLO mail.us.es"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933518AbdDGTVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:21:44 -0400
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-        by mail.us.es (Postfix) with ESMTP id 9E144170D2C
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:21:40 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 8F782DA86F
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:21:40 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id B517BDA862
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2017 21:21:37 +0200 (CEST)
-Date: Fri, 7 Apr 2017 21:21:34 +0200
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC 0/3] netlink: extended error reporting
-Message-ID: <20170407192134.GA23205@salvia> (sfid-20170407_212202_894740_B9AFAA50)
-References: <20170407182620.6438-1-johannes@sipsolutions.net>
- <20170407.115315.23470877439489670.davem@davemloft.net>
- <1491591552.5800.1.camel@sipsolutions.net>
- <20170407190601.GA22991@salvia>
- <1491592185.5800.7.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491592185.5800.7.camel@sipsolutions.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:54318 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1954311AbdDYU35 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Apr 2017 16:29:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 25 Apr 2017 23:22:42 +0300
+Message-Id: <20170425202243.7844-25-luca@coelho.fi> (sfid-20170425_223010_834260_72646A19)
+In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
+References: <20170425202243.7844-1-luca@coelho.fi>
+Subject: [PATCH 24/25] iwlwifi: pcie: apply no-reclaim logic only to group 0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 09:09:45PM +0200, Johannes Berg wrote:
-> On Fri, 2017-04-07 at 21:06 +0200, Pablo Neira Ayuso wrote:
-> > On Fri, Apr 07, 2017 at 08:59:12PM +0200, Johannes Berg wrote:
-> > [...]
-> > > Heh. I think I really want to solve - at least partially -
-> > > nla_parse()
-> > > to see that it can be done this way. It'd be nice to even transform
-> > > all
-> > > the callers (I generated half of these patches with spatch anyway)
-> > > to
-> > > have at least that.
-> > 
-> > We can just have a modified version of nla_parse that deals with
-> > this.
-> 
-> Yes, but we need to figure out a good way to have the offset.
-> 
-> We also need to see if we want to *force* having the offset. In some
-> sense that'd be useful, in another it might be very complicated to fill
-> it in at all times, if for example errors come from lower layers like
-> drivers.
+From: Johannes Berg <johannes.berg@intel.com>
 
-For my usecases in netfilter, the attributes and an specific error
-code should be enough to figure out what is wrong. Will not need
-strings.
+When applying no-reclaim logic to commands other than the group
+zero for legacy commands, commands such as 0x1c (TX_CMD in group
+0) can't be used in any other group. Fix that by applying this
+logic only for group 0 - it's not and should never be needed for
+any other groups.
 
-BTW, we may not have an offset, eg. EINVAL because of missing
-attribute. Given we have different requirements, I would leave it to
-each subsystem to decide what netlink error attributes are specified.
+Reported-by: Sharon Dvir <sharon.dvir@intel.com>
+Reported-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> (It's ultimately always going to be optional since we'll continue
-> returning errors without *any* extended error information - likely
-> indefinitely - but if we have a wrong attribute, should we always have
-> an offset? Would be nice, but could be difficult in practice)
-> 
-> > We can probably use struct nla_policy to place the extended error
-> > code or the string (as we discussed I don't need string errors, but
-> > I'm fine if other people find it useful).
-> 
-> I don't think for the error strings really would be useful for
-> nla_parse() or a policy - we can return something generic like
-> "malformed attribute" there as a string, and hopefully point to the
-> attribute/offset from there generically. I just really want to see how
-> to actually do that.
-
-I think the most flexible way is to pass the container error structure
-to nla_parse() so it sets this for you. This would also save tons of
-"malformed attribute" strings.
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index f98f2d2b8a1b..1da2de205cdf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1147,7 +1147,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 		 * Ucode should set SEQ_RX_FRAME bit if ucode-originated,
+ 		 *   but apparently a few don't get set; catch them here. */
+ 		reclaim = !(pkt->hdr.sequence & SEQ_RX_FRAME);
+-		if (reclaim) {
++		if (reclaim && !pkt->hdr.group_id) {
+ 			int i;
+ 
+ 			for (i = 0; i < trans_pcie->n_no_reclaim_cmds; i++) {
+-- 
+2.11.0
