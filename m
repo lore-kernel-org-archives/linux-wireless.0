@@ -1,95 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:36520 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752855AbdDNU0r (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:38169 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S945349AbdDYWnV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 16:26:47 -0400
+        Tue, 25 Apr 2017 18:43:21 -0400
+Date: Tue, 25 Apr 2017 15:43:19 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
+Subject: Re: [PATCH v4 0/9] NFC: trf7970a: Fixups & convert to desc-based GPIO
+Message-ID: <20170425224319.GA11366@animalcreek.com> (sfid-20170426_004408_534452_6F021436)
+References: <20170425184036.1212-1-mgreer@animalcreek.com>
 MIME-Version: 1.0
-From: rupert THURNER <rupert.thurner@gmail.com>
-Date: Fri, 14 Apr 2017 22:26:25 +0200
-Message-ID: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com> (sfid-20170414_222651_631223_43566417)
-Subject: 4.10.9 nok with realtek wlan, atom
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170425184036.1212-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
->>
->> [+cc rtl8192ce folks in case they've seen this]
->>
->> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
->>>
->>> hi,
->>>
->>> not technical expert enough, i just wanted to give a short user
->>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
->>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
->>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
->>> hotspot is possible then drops, or connecting to wlan fails
->>> alltogether.
->>
->>
->> Thanks very much for your report, and sorry for the inconvenience.
->>
->> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
->>
->> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
->> need to figure out why and make sure we fix the v4.9 stable series.
->>
->> I can't tell yet whether this is PCI-related or not.  If it is,
->> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
->> appeared in v4.9.6, and there is a known issue with that.  The issue
->> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
->> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
->> the first thing to do would be to test v4.9.9.
->>
->> If it's not fixed in v4.9.9, can you share the complete dmesg log
->> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
->> known working version) and v4.9.6 (first known broken version)?  On
->> v4.9.6, collect the dmesg output after the failure occurs.
->>
->>> 24: PCI 300.0: 0282 WLAN controller
->>>   [Created at pci.366]
->>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
->>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
->>>   Revision: 0x01
->>>   Driver: "rtl8192ce"
->>>   Driver Modules: "rtl8192ce"
->>>   Device File: wlp3s0
->>>   Features: WLAN
->
->
-> It would be helpful if someone were to bisect this issue. The only issue
-> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce:
-> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
-> backported to 4.9.
->
-> The above issue is one that could not be reproduced on my hardware, thus it
-> took Jurij Smakov to find the fix. Without his bisection of the problem, who
-> knows how long it would have taken to find my edit mistake.
+On Tue, Apr 25, 2017 at 11:40:27AM -0700, Mark Greer wrote:
+> These trf7970a driver patches do the following things:
+>  - add Mark Greer as the maintainer of the trf7970a driver
+>  - some minor fixups
+>  - remove support for 'vin-voltage-override' DT property
+>  - change the DTS example to indicate that EN and EN2 are active high GPIOs
+>  - convert the driver to use the descriptor-based GPIO interface
+>  - apply Lindent coding style fixes
+> 
+> Based on nfc-next/master 4ea206395d3a ("nfc: fix get_unaligned_...() misuses")
+> 
+> v3->v4:
+>  - Rebased on nfc-next/master because patches in that branch conflict
+>    with the v3 version of this patch series.
+>  - Removed "NFC: trf7970a: Don't manage EN2 when not specified in DT"
+>    because a similar patch has already been accepted.
+>  - Added "NFC: trf7970a: Clean up coding style issues" because the reason
+>    I removed it in v3 no longer exists.
+>  - Reordered the patches to make more sense (I think)
+> 
+> v2->v3:
+>  - Removed "[PATCH v2 5/7] NFC: trf7970a: Clean up coding style issues"
+>    because it will make merging patches from Geoff Lansberry and others
+>    hard to apply.  I will resubmit once those patches have been merged
+>    or rejected.
+>  - Added a patch to remove 'vin-voltage-override' DT property support as
+>    proper DT regulator set up makes it unnecessary.
+> 
+> v1->v2:
+>  - Commit description fixups only; no functional changes.
+> 
+> Mark Greer (9):
+>   MAINTAINERS: NFC: trf7970a: Add Mark Greer as maintainer
+>   NFC: trf7970a: Don't de-assert EN2 unless it was asserted
+>   NFC: trf7970a: Fix inaccurate comment in trf7970a_probe()
+>   NFC: trf7970a: Only check 'en2-rf-quirk' if EN2 is specified
+>   NFC: trf7970a: Remove useless comment
+>   NFC: trf7970a: Remove support for 'vin-voltage-override' DT property
+>   NFC: trf7970a: Enable pins are active high not active low
+>   NFC: trf7970a: Convert to descriptor based GPIO interface
+>   NFC: trf7970a: Clean up coding style issues
+> 
+>  .../devicetree/bindings/net/nfc/trf7970a.txt       |   6 +-
+>  MAINTAINERS                                        |   8 +
+>  drivers/nfc/Kconfig                                |   2 +-
+>  drivers/nfc/trf7970a.c                             | 363 ++++++++++-----------
+>  4 files changed, 185 insertions(+), 194 deletions(-)
 
-larry, using the newest kernel 4.10.8 the network connection dropps
-again irregular.
+And...please ignore this one too as I missed a whitespace issue.  :(
+v5 on its way in just a minute.
 
-# dmesg
-[    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
-version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
-2017
-[   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
-[   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
-[   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[   11.978945] rtlwifi: rtlwifi: wireless switch is on
-
-# lspci -vv
-Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter
-Kernel driver in use: rtl8192ce
-
-best,
-rupert
+Mark
+--
