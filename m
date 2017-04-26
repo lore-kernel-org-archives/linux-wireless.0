@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:60938 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754821AbdDRJwU (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54598 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2993867AbdDZILk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 05:52:20 -0400
-Date: Tue, 18 Apr 2017 11:52:07 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Subject: [PATCH] rt2800: fix mt7620 E2 channel registers
-Message-ID: <20170418095202.GA7086@makrotopia.org> (sfid-20170418_115251_316619_D2539C23)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Wed, 26 Apr 2017 04:11:40 -0400
+Message-ID: <1493194297.14233.0.camel@coelho.fi> (sfid-20170426_101300_682586_2ECDCF3A)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend@broadcom.com>
+Date: Wed, 26 Apr 2017 11:11:37 +0300
+In-Reply-To: <1493194138.2464.10.camel@sipsolutions.net>
+References: <20170426075854.13546-1-luca@coelho.fi>
+         <1493194138.2464.10.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 0/9] cfg80211/mac80211 patches from our internal tree
+ 2017-04-26
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomislav Požega <pozega.tomislav@gmail.com>
+On Wed, 2017-04-26 at 10:08 +0200, Johannes Berg wrote:
+> > Avraham Stern (3):
+> >   mac80211: Add support for BSS max idle period element
+> >   cfg80211: unify cfg80211_roamed() and cfg80211_roamed_bss()
+> >   cfg80211/nl80211: add authorized flag to roaming event
+> 
+> I'm going to let these get a bit more time on the list.
+> 
+> Arend, it'd be nice if you could take a look as well.
 
-update RF register 47 and 54 values according to vendor driver
+Yes, especially for the changes I made in the other drivers.  They look
+kind of ugly, IMHO.
 
-Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 86cffee6876a..8585cdc3de53 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -8145,9 +8145,11 @@ static void rt2800_init_rfcsr_6352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write_chanreg(rt2x00dev, 44, 0xB3);
- 	rt2800_rfcsr_write_chanreg(rt2x00dev, 45, 0xD5);
- 	rt2800_rfcsr_write_chanreg(rt2x00dev, 46, 0x27);
--	rt2800_rfcsr_write_chanreg(rt2x00dev, 47, 0x69);
-+	rt2800_rfcsr_write_bank(rt2x00dev, 4, 47, 0x67);
-+	rt2800_rfcsr_write_bank(rt2x00dev, 6, 47, 0x69);
- 	rt2800_rfcsr_write_chanreg(rt2x00dev, 48, 0xFF);
--	rt2800_rfcsr_write_chanreg(rt2x00dev, 54, 0x20);
-+	rt2800_rfcsr_write_bank(rt2x00dev, 4, 54, 0x27);
-+	rt2800_rfcsr_write_bank(rt2x00dev, 6, 54, 0x20);
- 	rt2800_rfcsr_write_chanreg(rt2x00dev, 55, 0x66);
- 	rt2800_rfcsr_write_chanreg(rt2x00dev, 56, 0xFF);
- 	rt2800_rfcsr_write_chanreg(rt2x00dev, 57, 0x1C);
--- 
-2.12.2
+--
+Luca.
