@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:59139 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S979462AbdDYA0E (ORCPT
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:34494 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1954495AbdDZIqr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 20:26:04 -0400
-Date: Mon, 24 Apr 2017 17:19:17 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-nfc@lists.01.org, devicetree@vger.kernel.org,
-        Mark Greer <mgreer@animalcreek.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 0/7] NFC: trf7970a: Fixups & convert to desc-based GPIO
-Message-ID: <20170425001917.GA14396@animalcreek.com> (sfid-20170425_022608_813130_8E24B8CC)
-References: <20170120191745.29255-1-mgreer@animalcreek.com>
+        Wed, 26 Apr 2017 04:46:47 -0400
+Received: by mail-wr0-f182.google.com with SMTP id l9so19284371wre.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 01:46:46 -0700 (PDT)
+Subject: Re: [PATCH V3 1/9] nl80211: allow multiple active scheduled scan
+ requests
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1492776308-15120-2-git-send-email-arend.vanspriel@broadcom.com>
+ <1493149747.15192.0.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <3ce6aed5-7d00-3446-a39b-b5da4b788358@broadcom.com> (sfid-20170426_104653_570323_BD41AD7F)
+Date: Wed, 26 Apr 2017 10:46:43 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170120191745.29255-1-mgreer@animalcreek.com>
+In-Reply-To: <1493149747.15192.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[-CC: Lauro Ramos Venancio <lauro.venancio@openbossa.org> and
- Aloisio Almeida Jr <aloisio.almeida@openbossa.org>]
-[+CC: linux-wireless]
+On 4/25/2017 9:49 PM, Johannes Berg wrote:
+> 
+>>   		if (schedule_destroy_work) {
+>> -			struct cfg80211_iface_destroy *destroy;
+>> +			struct cfg80211_nlport_release *destroy;
+>>   
+>>   			destroy = kzalloc(sizeof(*destroy),
+>> GFP_ATOMIC);
+> 
+> I was never really happy with this allocation and really want to get
+> rid of it ...
 
-On Fri, Jan 20, 2017 at 12:17:38PM -0700, Mark Greer wrote:
-> These trf7970a driver patches do the following things:
->  - a couple minor fixups
->  - allow EN2 to not be managed by the driver (e.g., when its tied low by
->    hardware
->  - convert the driver to use the descriptor-based GPIO interface
->  - remove support for 'vin-voltage-override' DT property
->  - change the DTS example to indicate that EN and EN2 are active high GPIOs
->  - add Mark Greer as the maintainer of the trf7970a driver
-> 
-> Based on k.o. 44b4b46 (Merge tag 'armsoc-fixes' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/arm/arm-soc)
-> 
-> v2->v3:
->  - Removed "[PATCH v2 5/7] NFC: trf7970a: Clean up coding style issues"
->    because it will make merging patches from Geoff Lansberry and others
->    hard to apply.  I will resubmit once those patches have been merged
->    or rejected.
->  - Added a patch to remove 'vin-voltage-override' DT property support as
->    proper DT regulator set up makes it unnecessary.
-> 
-> v1->v2:
->  - Commit description fixups only; no functional changes.
-> 
-> Mark Greer (7):
->   NFC: trf7970a: Don't de-assert EN2 unless it was asserted
->   NFC: trf7970a: Don't manage EN2 when not specified in DT
->   NFC: trf7970a: Convert to descriptor based GPIO interface
->   NFC: trf7970a: Remove useless comment
->   NFC: trf7970a: Remove support for 'vin-voltage-override' DT property
->   NFC: trf7970a: Enable pins are active high not active low
->   MAINTAINERS: NFC: trf7970a: Add Mark Greer as maintainer
-> 
->  .../devicetree/bindings/net/nfc/trf7970a.txt       |  6 +-
->  MAINTAINERS                                        |  7 ++
->  drivers/nfc/Kconfig                                |  2 +-
->  drivers/nfc/trf7970a.c                             | 75 +++++++++-------------
->  4 files changed, 40 insertions(+), 50 deletions(-)
+Agree. I don't like the allocation overhead either for deferred 
+processing in another context.
 
+>> +		if (schedule_sched_stop_work) {
+>> +			struct cfg80211_nlport_release *destroy;
+>> +
+>> +			destroy = kzalloc(sizeof(*destroy),
+>> GFP_ATOMIC);
+>> +			if (destroy) {
+>> +				destroy->nlportid = notify->portid;
+>> +				spin_lock(&rdev-
+>>> sched_stop_list_lock);
+>> +				list_add(&destroy->list, &rdev-
+>>> sched_stop_list);
+>> +				spin_unlock(&rdev-
+>>> sched_stop_list_lock);
+>> +				schedule_work(&rdev-
+>>> sched_scan_stop_wk);
+>> +			}
+>> +		}
+> 
+> Can't we set some kind of flag in the struct
+> cfg80211_sched_scan_request and iterate through them later again,
+> checking which need to be destroyed?
 
-I've already mentioned this to Samuel privately but for everyone's sake,
-I will respin this series because some patches that cause conflicts have
-been accepted.  I will also add some patches that I have made in the
-interim.  I apologize for the churn.
+Sure. In the worker we are already iterating so I guess we could. The 
+number of internal fields in struct cfg80211_sched_scan_request with one 
+of them being the list_head. Thinking about hiding those from the 
+drivers. Is it worth it?
 
-Mark
---
+Regards,
+Arend
