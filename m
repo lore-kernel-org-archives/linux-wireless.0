@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.161.174]:36229 "EHLO
-        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933364AbdDXHqp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59212 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1957239AbdDZIxh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2017 03:46:45 -0400
-Received: by mail-yw0-f174.google.com with SMTP id l18so14364576ywh.3
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2017 00:46:44 -0700 (PDT)
+        Wed, 26 Apr 2017 04:53:37 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87inludzh6.fsf@michaelmera.com>
-References: <20170424053902.1644-1-dev@michaelmera.com> <CAN6Sofawy9BmFaVgNw=gt=9VwLqNFdCQ2fa3DApvJTVCJpjoqg@mail.gmail.com>
- <87inludzh6.fsf@michaelmera.com>
-From: Marcin Rokicki <marcin.rokicki@gmail.com>
-Date: Mon, 24 Apr 2017 09:46:43 +0200
-Message-ID: <CAN6SofY1Job1qpTwzmMAqE-+eK5vk01bNU5-WK8k28yL9YuS9w@mail.gmail.com> (sfid-20170424_094732_196754_767F62F8)
-Subject: Re: [PATCH] ath10k: fix out of bounds access to local buffer
-To: Michael Mera <dev@michaelmera.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Steve deRosier <derosier@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170426085337.181AA61493@smtp.codeaurora.org> (sfid-20170426_105510_511260_35215C9D)
+Date: Wed, 26 Apr 2017 08:53:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-04-24 9:41 GMT+02:00 Michael Mera <dev@michaelmera.com>:
-> Marcin Rokicki <marcin.rokicki@gmail.com> writes:
->> Please send again to ath10k@lists.infradead.org with cc
->> linux-wireless@vger.kernel.org
->>
->
-> Sorry for the mistake. Resent as requested.
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
+> callback was actually cloned. So instead of checking for sufficient
+> headroom it should also be writable. Hence use skb_cow_head() to
+> check and expand the headroom appropriately.
+> 
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-No problem.
->
-> Just for the record, I followed instructions at:
->   https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches?s[]=submit#who_to_address
->
-> So, maybe this needs to be updated to reflect the ath10k case.
+Steve, would you have time to run a quick test with this?
 
-Check this page:
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/sources
->
-> Thanks,
-> Michael Mera
+Patch set to Deferred.
+
+-- 
+https://patchwork.kernel.org/patch/9697757/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
