@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45474 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752397AbdDNV2H (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2017 17:28:07 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] brcmfmac: only build fwsignal module for CONFIG_BRCMFMAC_PROTO_BCDC
-Date: Fri, 14 Apr 2017 22:27:37 +0100
-Message-Id: <1492205257-18578-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170414_232810_674958_E3EADA3F)
+Received: from mga09.intel.com ([134.134.136.24]:56238 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754440AbdDZWJL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 18:09:11 -0400
+Date: Thu, 27 Apr 2017 00:09:00 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 0/9] NFC: trf7970a: Fixups & convert to desc-based GPIO
+Message-ID: <20170426220900.GA3717@zurbaran.ger.intel.com> (sfid-20170427_000915_917529_6D445226)
+References: <20170425224356.11498-1-mgreer@animalcreek.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170425224356.11498-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fwsignal module is only referenced by the bcdc module and part of the
-bcdc protocol. So only build it when CONFIG_BRCMFMAC_PROTO_BCDC is selected.
+Hi Mark,
 
-Fixes: acf8ac41dd73 ("brcmfmac: remove reference to fwsignal data from struct brcmf_pub")
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-Hi Kalle,
+On Tue, Apr 25, 2017 at 03:43:47PM -0700, Mark Greer wrote:
+> These trf7970a driver patches do the following things:
+>  - add Mark Greer as the maintainer of the trf7970a driver
+>  - some minor fixups
+>  - remove support for 'vin-voltage-override' DT property
+>  - change the DTS example to indicate that EN and EN2 are active high GPIOs
+>  - convert the driver to use the descriptor-based GPIO interface
+>  - apply Lindent coding style fixes
+> 
+> Based on nfc-next/master 4ea206395d3a ("nfc: fix get_unaligned_...() misuses")
+> 
+> v4->v5:
+>  - Fixed whitespace issue in "NFC: trf7970a: Clean up coding style issues"
+> 
+> v3->v4:
+>  - Rebased on nfc-next/master because patches in that branch conflict
+>    with the v3 version of this patch series.
+>  - Removed "NFC: trf7970a: Don't manage EN2 when not specified in DT"
+>    because a similar patch has already been accepted.
+>  - Added "NFC: trf7970a: Clean up coding style issues" because the reason
+>    I removed it in v3 no longer exists.
+>  - Reordered the patches to make more sense (I think)
+> 
+> v2->v3:
+>  - Removed "[PATCH v2 5/7] NFC: trf7970a: Clean up coding style issues"
+>    because it will make merging patches from Geoff Lansberry and others
+>    hard to apply.  I will resubmit once those patches have been merged
+>    or rejected.
+>  - Added a patch to remove 'vin-voltage-override' DT property support as
+>    proper DT regulator set up makes it unnecessary.
+> 
+> v1->v2:
+>  - Commit description fixups only; no functional changes.
+> 
+> Mark Greer (9):
+>   MAINTAINERS: NFC: trf7970a: Add Mark Greer as maintainer
+>   NFC: trf7970a: Don't de-assert EN2 unless it was asserted
+>   NFC: trf7970a: Fix inaccurate comment in trf7970a_probe()
+>   NFC: trf7970a: Only check 'en2-rf-quirk' if EN2 is specified
+>   NFC: trf7970a: Remove useless comment
+>   NFC: trf7970a: Remove support for 'vin-voltage-override' DT property
+>   NFC: trf7970a: Enable pins are active high not active low
+>   NFC: trf7970a: Convert to descriptor based GPIO interface
+>   NFC: trf7970a: Clean up coding style issues
+All patches applied to nfc-next, thanks.
 
-This should do it. At least verified it with .config provided in the
-report(s).
-
-Happy easter ;-)
-
-Regards,
-Arend
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-index 0383ba5..1f5a9b9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-@@ -25,7 +25,6 @@ brcmfmac-objs += \
- 		chip.o \
- 		fwil.o \
- 		fweh.o \
--		fwsignal.o \
- 		p2p.o \
- 		proto.o \
- 		common.o \
-@@ -36,7 +35,8 @@ brcmfmac-objs += \
- 		vendor.o \
- 		pno.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
--		bcdc.o
-+		bcdc.o \
-+		fwsignal.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
- 		commonring.o \
- 		flowring.o \
--- 
-1.9.1
+Cheers,
+Samuel.
