@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57476 "EHLO mx1.redhat.com"
+Received: from mga04.intel.com ([192.55.52.120]:29540 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754847AbdDFJty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 05:49:54 -0400
-Subject: Re: [PATCH] staging: Add rtl8723bs sdio wifi driver
-To: Bastien Nocera <hadess@hadess.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-References: <20170329174751.13184-1-hdegoede@redhat.com>
- <4d1d3c02-eff6-0410-cee0-9360ec645e13@lwfinger.net>
- <d5fc988b-2962-9c44-7eac-96dba606f56a@redhat.com>
- <a848408c-edd9-075b-1bd5-8e77ca4f42f9@broadcom.com>
- <049673a4-647b-a270-bb9c-15bb2ab49fc4@redhat.com>
- <c9a1b5a2-d0a9-bb92-2d70-c54cc7bf1f8d@lwfinger.net>
- <560981e0-e1b0-7a06-80e4-14d677c7d64a@redhat.com>
- <15871468-0086-2d66-328b-0699ef6f4b31@lwfinger.net>
- <5d15c6e8-7c15-4226-c4be-d8db6ded29ef@redhat.com>
- <1491469492.10783.7.camel@hadess.net>
-Cc: Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <26ba192c-c942-06e2-941f-c5f6ab05d146@redhat.com> (sfid-20170406_115000_261940_FE2EF28D)
-Date: Thu, 6 Apr 2017 11:49:51 +0200
+        id S1031877AbdDZWnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 18:43:24 -0400
+Date: Thu, 27 Apr 2017 00:42:38 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Johan Hovold <johan@kernel.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/8] NFC: fix device allocation and nfcmrvl crashes
+Message-ID: <20170426224238.GB3717@zurbaran.ger.intel.com> (sfid-20170427_004405_486685_7B212918)
+References: <20170330101542.15384-1-johan@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1491469492.10783.7.camel@hadess.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170330101542.15384-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Johan,
 
-On 06-04-17 11:04, Bastien Nocera wrote:
-> On Thu, 2017-04-06 at 08:55 +0200, Hans de Goede wrote:
->>
-> <snip>
->> Good thank you. So what is the plan with the github version ?
->>
->> Note that my submission contains a few small fixes on top of
->> the github version, for which I intended to submit a pull-req
->> but I've not gotten around to that yet, I've done so now:
->>
->> https://github.com/hadess/rtl8723bs/pull/125
->>
->> But do we want to keep maintaining the github version (for a while
->> at least) I wonder, as that does mean double work?
->
-> My plan is to remove everything and point to the upstream tree as soon
-> as the support has landed in Linus' tree.
->
-> While there is some use in keeping it around for older kernels, we keep
-> getting asked to support even older kernels than reasonable, or have
-> users complaining about non-working machines once they use the driver,
-> which simply uncovers kernel bugs that were fixed upstream.
->
-> I don't think it's a good use of our time to carry on supporting this
-> out-of-tree. I'll however make sure to try and document the migration
-> in a way that's helpful to users.
+On Thu, Mar 30, 2017 at 12:15:34PM +0200, Johan Hovold wrote:
+> This started out with the observation that the nfcmrvl_uart driver
+> unconditionally dereferenced the tty class device despite the fact that
+> not every tty has an associated struct device (Unix98 ptys). Some
+> further changes were needed in the common nfcmrvl code to fully address
+> this, some of which also incidentally fixed a few related bugs (e.g.
+> resource leaks in error paths).
+> 
+> While fixing this I stumbled over a regression in NFC core that lead to
+> broken registration error paths and misnamed workqueues.
+> 
+> Note that this has only been tested by configuring the n_hci line
+> discipline for different ttys without any actual NFC hardware connected.
+> 
+> Johan
+> 
+> 
+> Changes in v2
+>  - fix typo in commit message (1/8)
+>  - release reset gpio in error paths (3/8)
+>  - fix description of patch impact (3/8)
+>  - allow gpio 0 to be used for reset signalling (8/8, new)
+> 
+> 
+> Johan Hovold (8):
+>   NFC: fix broken device allocation
+>   NFC: nfcmrvl_uart: add missing tty-device sanity check
+>   NFC: nfcmrvl: do not use device-managed resources
+>   NFC: nfcmrvl: use nfc-device for firmware download
+>   NFC: nfcmrvl: fix firmware-management initialisation
+>   NFC: nfcmrvl_uart: fix device-node leak during probe
+>   NFC: nfcmrvl_usb: use interface as phy device
+>   NFC: nfcmrvl: allow gpio 0 for reset signalling
+Applied, thanks.
 
-Ok, that works for me.
-
-Regards,
-
-Hans
+Cheers,
+Samuel.
