@@ -1,174 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34207 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932381AbdDQALT (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54510 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1956648AbdDZH7I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:19 -0400
-Received: by mail-oi0-f68.google.com with SMTP id t14so15968863oif.1
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:19 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 03/27] rtlwifi: btcoex: 23b 1ant: TDMA duration for ACL busy
-Date: Sun, 16 Apr 2017 19:10:47 -0500
-Message-Id: <20170417001111.29384-4-Larry.Finger@lwfinger.net> (sfid-20170417_021127_582885_3410FD6F)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+        Wed, 26 Apr 2017 03:59:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 26 Apr 2017 10:58:47 +0300
+Message-Id: <20170426075854.13546-3-luca@coelho.fi> (sfid-20170426_095926_065314_9D0A038B)
+In-Reply-To: <20170426075854.13546-1-luca@coelho.fi>
+References: <20170426075854.13546-1-luca@coelho.fi>
+Subject: [PATCH 2/9] mac80211: Add support for BSS max idle period element
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-BT ACL is a special case, so we create a routine to deal this case.
+Parse the BSS max idle period element and set the BSS configuration
+accordingly so the driver can use this information to configure the
+max idle period and to use protected management frames for keep alive
+when required.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+The BSS max idle period element is defined in IEEE802.11-2016,
+section 9.4.2.79
+
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 54 +++++++++++++---------
- 1 file changed, 31 insertions(+), 23 deletions(-)
+ include/linux/ieee80211.h  | 28 +++++++++++++++++++++++++++-
+ include/net/mac80211.h     | 14 +++++++++++++-
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mlme.c        | 14 +++++++++++++-
+ net/mac80211/util.c        |  9 +++++++++
+ 5 files changed, 63 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index cece31ec33d5..15c16e524356 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1095,6 +1095,11 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 		/* acquire the BT TRx retry count from BT_Info byte2 */
- 		retry_count = coex_sta->bt_retry_cnt;
- 		bt_info_ext = coex_sta->bt_info_ext;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 23e095fa6701..c916ba4a22d4 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -7,7 +7,7 @@
+  * Copyright (c) 2005, Devicescape Software, Inc.
+  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
+  * Copyright (c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright (c) 2016 Intel Deutschland GmbH
++ * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -2316,6 +2316,32 @@ struct ieee80211_timeout_interval_ie {
+ 	__le32 value;
+ } __packed;
+ 
++/**
++ * enum ieee80211_idle_options - BSS idle options
++ * @WLAN_IDLE_OPTIONS_PROTECTED_KEEP_ALIVE: the station should send an RSN
++ *	protected frame to the AP to reset the idle timer at the AP for
++ *	the station.
++ */
++enum ieee80211_idle_options {
++	WLAN_IDLE_OPTIONS_PROTECTED_KEEP_ALIVE = BIT(0),
++};
 +
-+		if ((coex_sta->low_priority_tx) > 1050 ||
-+		    (coex_sta->low_priority_rx) > 1250)
-+			retry_count++;
++/**
++ * struct ieee80211_bss_max_idle_period_ie
++ *
++ * This structure refers to "BSS Max idle period element"
++ *
++ * @max_idle_period: indicates the time period during which a station can
++ *	refrain from transmitting frames to its associated AP without being
++ *	disassociated. In units of 1000 TUs.
++ * @idle_options: indicates the options associated with the BSS idle capability
++ *	as specified in &enum ieee80211_idle_options.
++ */
++struct ieee80211_bss_max_idle_period_ie {
++	__le16 max_idle_period;
++	u8 idle_options;
++} __packed;
 +
- 		result = 0;
- 		wait_count++;
- 		/* no retry in the last 2-second duration */
-@@ -1106,6 +1111,9 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 				dn = 0;
+ /* BACK action code */
+ enum ieee80211_back_actioncode {
+ 	WLAN_ACTION_ADDBA_REQ = 0,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b1ac872dc88a..66e602d501e5 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5,7 +5,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright (C) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -299,6 +299,8 @@ struct ieee80211_vif_chanctx_switch {
+  *	context had been assigned.
+  * @BSS_CHANGED_OCB: OCB join status changed
+  * @BSS_CHANGED_MU_GROUPS: VHT MU-MIMO group id or user position changed
++ * @BSS_CHANGED_KEEP_ALIVE: keep alive options (idle period or protected
++ *	keep alive) changed.
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -325,6 +327,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_BANDWIDTH		= 1<<21,
+ 	BSS_CHANGED_OCB                 = 1<<22,
+ 	BSS_CHANGED_MU_GROUPS		= 1<<23,
++	BSS_CHANGED_KEEP_ALIVE		= 1<<24,
  
- 			if (up >= n) {
-+				/* if retry count during continuous n*2 seconds
-+				 * is 0, enlarge WiFi duration
-+				 */
- 				wait_count = 0;
- 				n = 3;
- 				up = 0;
-@@ -1115,6 +1123,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 					 "[BTCoex], Increase wifi duration!!\n");
- 			}
- 		} else if (retry_count <= 3) {
-+			/* <=3 retry in the last 2-second duration */
- 			up--;
- 			dn++;
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+@@ -533,6 +536,13 @@ struct ieee80211_mu_group_data {
+  * @allow_p2p_go_ps: indication for AP or P2P GO interface, whether it's allowed
+  *	to use P2P PS mechanism or not. AP/P2P GO is not allowed to use P2P PS
+  *	if it has associated clients without P2P PS support.
++ * @max_idle_period: the time period during which the station can refrain from
++ *	transmitting frames to its associated AP without being disassociated.
++ *	In units of 1000 TUs. Zero value indicates that the AP did not include
++ *	a (valid) BSS Max Idle Period Element.
++ * @protected_keep_alive: if set, indicates that the station should send an RSN
++ *	protected frame to the AP to reset the idle timer at the AP for the
++ *	station.
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -573,6 +583,8 @@ struct ieee80211_bss_conf {
+ 	enum nl80211_tx_power_setting txpower_type;
+ 	struct ieee80211_p2p_noa_attr p2p_noa_attr;
+ 	bool allow_p2p_go_ps;
++	u16 max_idle_period;
++	bool protected_keep_alive;
+ };
  
-@@ -1122,12 +1131,20 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 				up = 0;
+ /**
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index cf6d5abb65a3..476570175a12 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1477,6 +1477,7 @@ struct ieee802_11_elems {
+ 	const u8 *opmode_notif;
+ 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
+ 	const struct ieee80211_mesh_chansw_params_ie *mesh_chansw_params_ie;
++	const struct ieee80211_bss_max_idle_period_ie *max_idle_period_ie;
  
- 			if (dn == 2) {
-+				/* if continuous 2 retry count(every 2 seconds)
-+				 * >0 and < 3, reduce WiFi duration
-+				 */
- 				if (wait_count <= 2)
-+					/* avoid loop between the two levels */
- 					m++;
- 				else
- 					m = 1;
+ 	/* length of them, respectively */
+ 	u8 ext_capab_len;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 24d69bcf71ad..93ecbd84d4fc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -6,7 +6,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright (C) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -3088,6 +3088,18 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	changed |= BSS_CHANGED_QOS;
  
- 				if (m >= 20)
-+					/* maximum of m = 20 ' will recheck if
-+					 * need to adjust wifi duration in
-+					 * maximum time interval 120 seconds
-+					 */
- 					m = 20;
- 
- 				n = 3 * m;
-@@ -1139,12 +1156,20 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 					 "[BTCoex], Decrease wifi duration for retryCounter<3!!\n");
- 			}
- 		} else {
-+			/* retry count > 3, once retry count > 3, to reduce
-+			 * WiFi duration
-+			 */
- 			if (wait_count == 1)
-+				/* to avoid loop between the two levels */
- 				m++;
++	if (elems.max_idle_period_ie) {
++		bss_conf->max_idle_period =
++			le16_to_cpu(elems.max_idle_period_ie->max_idle_period);
++		bss_conf->protected_keep_alive =
++			!!(elems.max_idle_period_ie->idle_options &
++			   WLAN_IDLE_OPTIONS_PROTECTED_KEEP_ALIVE);
++		changed |= BSS_CHANGED_KEEP_ALIVE;
++	} else {
++		bss_conf->max_idle_period = 0;
++		bss_conf->protected_keep_alive = false;
++	}
++
+ 	/* set AID and assoc capability,
+ 	 * ieee80211_set_associated() will tell the driver */
+ 	bss_conf->aid = aid;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 7a37ce78bb38..1b8e54444c36 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -828,6 +828,7 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 		case WLAN_EID_EXT_CAPABILITY:
+ 		case WLAN_EID_CHAN_SWITCH_TIMING:
+ 		case WLAN_EID_LINK_ID:
++		case WLAN_EID_BSS_MAX_IDLE_PERIOD:
+ 		/*
+ 		 * not listing WLAN_EID_CHANNEL_SWITCH_WRAPPER -- it seems possible
+ 		 * that if the content gets bigger it might be needed more than once
+@@ -1089,6 +1090,10 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
  			else
- 				m = 1;
- 
- 			if (m >= 20)
-+				/* maximum of m = 20 ' will recheck if need to
-+				 * adjust wifi duration in maximum time interval
-+				 * 120 seconds
-+				 */
- 				m = 20;
- 
- 			n = 3 * m;
-@@ -1157,13 +1182,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				elem_parse_failed = true;
+ 			break;
++		case WLAN_EID_BSS_MAX_IDLE_PERIOD:
++			if (elen >= sizeof(*elems->max_idle_period_ie))
++				elems->max_idle_period_ie = (void *)pos;
++			break;
+ 		default:
+ 			break;
  		}
+@@ -1983,6 +1988,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			if (sdata->u.mgd.have_beacon)
+ 				changed |= BSS_CHANGED_BEACON_INFO;
  
- 		if (result == -1) {
--			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
--			    ((coex_dm->cur_ps_tdma == 1) ||
--			     (coex_dm->cur_ps_tdma == 2))) {
--				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--							true, 9);
--				coex_dm->ps_tdma_du_adj_type = 9;
--			} else if (coex_dm->cur_ps_tdma == 1) {
-+			if (coex_dm->cur_ps_tdma == 1) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 2);
- 				coex_dm->ps_tdma_du_adj_type = 2;
-@@ -1177,13 +1196,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 				coex_dm->ps_tdma_du_adj_type = 11;
- 			}
- 		} else if (result == 1) {
--			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
--			    ((coex_dm->cur_ps_tdma == 1) ||
--			     (coex_dm->cur_ps_tdma == 2))) {
--				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--							true, 9);
--				coex_dm->ps_tdma_du_adj_type = 9;
--			} else if (coex_dm->cur_ps_tdma == 11) {
-+			if (coex_dm->cur_ps_tdma == 11) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 9);
- 				coex_dm->ps_tdma_du_adj_type = 9;
-@@ -1196,11 +1209,6 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 							true, 1);
- 				coex_dm->ps_tdma_du_adj_type = 1;
- 			}
--		} else {
--			/* if busy / idle change */
--			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--				 "[BTCoex],********* TDMA(on, %d) ********\n",
--				 coex_dm->cur_ps_tdma);
- 		}
- 
- 		if (coex_dm->cur_ps_tdma != 1 && coex_dm->cur_ps_tdma != 2 &&
-@@ -1368,12 +1376,12 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
- 							     NORMAL_EXEC, 2);
- 			coex_dm->auto_tdma_adjust = false;
--		} else { /* for low BT RSSI */
--			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						true, 11);
-+		} else {
-+			btc8723b1ant_tdma_dur_adj_for_acl(btcoexist,
-+							  wifi_status);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
- 							     NORMAL_EXEC, 1);
--			coex_dm->auto_tdma_adjust = false;
-+			coex_dm->auto_tdma_adjust = true;
- 		}
- 	} else if (bt_link_info->hid_exist &&
- 		bt_link_info->a2dp_exist) { /* HID + A2DP */
++			if (sdata->vif.bss_conf.max_idle_period ||
++			    sdata->vif.bss_conf.protected_keep_alive)
++				changed |= BSS_CHANGED_KEEP_ALIVE;
++
+ 			sdata_lock(sdata);
+ 			ieee80211_bss_info_change_notify(sdata, changed);
+ 			sdata_unlock(sdata);
 -- 
-2.12.0
+2.11.0
