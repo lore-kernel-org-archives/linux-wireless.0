@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:34407 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752971AbdDFQsR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54562 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1956646AbdDZH7P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 12:48:17 -0400
-Received: by mail-pg0-f43.google.com with SMTP id 21so41610672pgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 09:48:17 -0700 (PDT)
-Date: Thu, 6 Apr 2017 09:48:08 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>, linux-kernel@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: MAC randomization should not be persistent
-Message-ID: <20170406164807.GB25323@google.com> (sfid-20170406_184943_545275_E5585207)
-References: <20170405222640.4494-1-briannorris@chromium.org>
- <87inmifak8.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87inmifak8.fsf@kamboji.qca.qualcomm.com>
+        Wed, 26 Apr 2017 03:59:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 26 Apr 2017 10:58:54 +0300
+Message-Id: <20170426075854.13546-10-luca@coelho.fi> (sfid-20170426_095928_573614_104D462E)
+In-Reply-To: <20170426075854.13546-1-luca@coelho.fi>
+References: <20170426075854.13546-1-luca@coelho.fi>
+Subject: [PATCH 9/9] mac80211: make multicast variable a bool in ieee80211_accept_frame()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 07:02:15AM +0300, Kalle Valo wrote:
-> Brian Norris <briannorris@chromium.org> writes:
-> 
-> > nl80211 provides the NL80211_SCAN_FLAG_RANDOM_ADDR for every scan
-> > request that should be randomized; the absence of such a flag means we
-> > should not randomize. However, mwifiex was stashing the latest
-> > randomization request and *always* using it for future scans, even those
-> > that didn't set the flag.
-> >
-> > Let's zero out the randomization info whenever we get a scan request
-> > without NL80211_SCAN_FLAG_RANDOM_ADDR. I'd prefer to remove
-> > priv->random_mac entirely (and plumb the randomization MAC properly
-> > through the call sequence), but the spaghetti is a little difficult to
-> > unravel here for me.
-> >
-> > Fixes: c2a8f0ff9c6c ("mwifiex: support random MAC address for scanning")
-> 
-> So the first release with this was v4.9.
-> 
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > ---
-> > Should this be tagged for -stable?
-> 
-> IMHO yes.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Sounds fine to me. I suppose you'll do this when applying? Or I can
-resend...
+The multicast variable in the ieee80211_accept_frame() function is
+treated as a boolean, but defined as int.  Fix that.
 
-Brian
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0094f3c0af64..fe6a760aa1ee 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3574,7 +3574,7 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
+-	int multicast = is_multicast_ether_addr(hdr->addr1);
++	bool multicast = is_multicast_ether_addr(hdr->addr1);
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_STATION:
+-- 
+2.11.0
