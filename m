@@ -1,56 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36537 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752805AbdDJQXP (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:59017 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751276AbdDZREq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 12:23:15 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so23324623oif.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2017 09:23:15 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 00/14] rtlwifi: btcoex: Fixes for rtl8821ae 1ant code
-Date: Mon, 10 Apr 2017 11:22:56 -0500
-Message-Id: <20170410162310.7515-1-Larry.Finger@lwfinger.net> (sfid-20170410_182324_217917_96B805DE)
+        Wed, 26 Apr 2017 13:04:46 -0400
+Date: Wed, 26 Apr 2017 10:04:43 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>, g@animalcreek.com
+Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
+        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com
+Subject: Re: [PATCH] NFC: trf7970a: Correct register settings for 27MHz clock
+Message-ID: <20170426170443.GB11522@animalcreek.com> (sfid-20170426_190604_687954_D4497D21)
+References: <1493214513-12245-1-git-send-email-geoff@kuvee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1493214513-12245-1-git-send-email-geoff@kuvee.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches update the BT coexistence routines for the RTL8821AE 1ant
-routines.
+On Wed, Apr 26, 2017 at 09:48:33AM -0400, Geoff Lansberry wrote:
+> In prior commits the selected clock frequency does not propagate
+> correctly to what is written the the TRF7970A_MODULATOR_SYS_CLK_CTRL
+> register.
+> Also fixes a bug that causes the device tree property check to always
+> pass.
+> 
+> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+> ---
+>  drivers/nfc/trf7970a.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 2d1c8ca..c278b0e 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
+> @@ -2071,7 +2071,7 @@ static int trf7970a_probe(struct spi_device *spi)
+>  	}
+>  
+>  	of_property_read_u32(np, "clock-frequency", &clk_freq);
+> -	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+> +	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) &&
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+There is already a patch submitted to fix this issue so no need to fix
+it again.  For the record, it should have been in a separate patch
+since it fixes a different issue than what is fixed below.
 
+>  		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
+>  		dev_err(trf->dev,
+>  			"clock-frequency (%u Hz) unsupported\n",
+> @@ -2079,6 +2079,13 @@ static int trf7970a_probe(struct spi_device *spi)
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
+> +		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
+> +		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
+> +	} else {
+> +		trf->modulator_sys_clk_ctrl = 0;
+> +	}
+> +
+>  	if (of_property_read_bool(np, "en2-rf-quirk"))
+>  		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
 
-Yan-Hsuan Chuang (14):
-  rtlwifi: btcoex: 21a 1ant: fw settings for softap mode
-  rtlwifi: btcoex: 21a 1ant: add function to check wifi status
-  rtlwifi: btcoex: 21a 1ant: coex table setting for new fw
-  rtlwifi: btcoex: 21a 1ant: mask profile bit for connect-ilde
-  rtlwifi: btcoex: 21a 1ant: remove setting for 2 antennas
-  rtlwifi: btcoex: 21a 1ant: set antenna control path for PTA
-  rtlwifi: btcoex: 21a 1ant: add multi port action for miracast and P2P
-  rtlwifi: btcoex: 21a 1ant: action when associating/authenticating
-  rtlwifi: btcoex: 21a 1ant: If wifi only, do not initiate coex
-    mechanism
-  rtlwifi: btcoex: 21a 1ant: move bt_disabled to global struct
-  rtlwifi: btcoex: 21a 1ant: consider more cases when bt inquiry
-  rtlwifi: btcoex: 21a 1ant: monitor bt profiling when scan
-  rtlwifi: btcoex: 21a 1ant: do not switch antenna when wifi is under 5G
-    channel
-  rtlwifi: btcoex: 21a 1ant: avoid LPS/IPS mismatch for pnp notify
+This part looks okay to me but I like Walter's suggestion too.
 
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 408 ++++++++++++++++++---
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +
- 2 files changed, 351 insertions(+), 59 deletions(-)
-
--- 
-2.12.0
+Mark
+--
