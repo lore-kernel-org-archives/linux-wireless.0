@@ -1,37 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37827 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752211AbdDFFMo (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:37164 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752732AbdDZI1g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 01:12:44 -0400
-Date: Thu, 6 Apr 2017 08:12:20 +0300
+        Wed, 26 Apr 2017 04:27:36 -0400
+Date: Wed, 26 Apr 2017 11:27:18 +0300
 From: Dan Carpenter <dan.carpenter@oracle.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Gabor Juhos <juhosg@openwrt.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] ath9k: off by one in ath9k_hw_nvram_read_array()
-Message-ID: <20170406051220.GA23650@mwanda> (sfid-20170406_071307_767292_77EA2EC6)
+To: Jason Litzinger <jlitzingerdev@gmail.com>
+Cc: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org
+Subject: Re: [PATCH RFC] staging: wilc1000: Refactor handling of HT caps
+ fields
+Message-ID: <20170426082718.2tq3rxpb7rixd6vt@mwanda> (sfid-20170426_103037_665914_018F16D3)
+References: <20170426044625.20529-1-jlitzingerdev@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170426044625.20529-1-jlitzingerdev@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The > should be >= or we read one space beyond the end of the array.
+This seems nice, yes.
 
-Fixes: ab5c4f71d8c7 ("ath9k: allow to load EEPROM content via firmware API")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index fb80ec86e53d..6ccf24814514 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -112,7 +112,7 @@ void ath9k_hw_usb_gen_fill_eeprom(struct ath_hw *ah, u16 *eep_data,
- static bool ath9k_hw_nvram_read_array(u16 *blob, size_t blob_size,
- 				      off_t offset, u16 *data)
- {
--	if (offset > blob_size)
-+	if (offset >= blob_size)
- 		return false;
- 
- 	*data =  blob[offset];
+regards,
+dan carpenter
