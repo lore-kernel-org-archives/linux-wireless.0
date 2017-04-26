@@ -1,126 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33424 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754878AbdDOUcN (ORCPT
+Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:44927 "EHLO
+        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754076AbdDZTyT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Apr 2017 16:32:13 -0400
-Received: by mail-oi0-f65.google.com with SMTP id t63so22231508oih.0
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:13 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/14] rtlwifi: btcoex: 21a 2ant: monitor extra wifi rssi to examine network status
-Date: Sat, 15 Apr 2017 15:31:54 -0500
-Message-Id: <20170415203200.22979-9-Larry.Finger@lwfinger.net> (sfid-20170415_223235_553540_A4FA7C47)
-In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+        Wed, 26 Apr 2017 15:54:19 -0400
+Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
+        by mx08-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3QJo8LA002883
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 20:54:17 +0100
+Received: from mail-wr0-f199.google.com (mail-wr0-f199.google.com [209.85.128.199])
+        by mx08-00252a01.pphosted.com with ESMTP id 2a2ebe0epd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 20:54:17 +0100
+Received: by mail-wr0-f199.google.com with SMTP id j27so1132640wre.3
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 12:54:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com>
+References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
+ <20170426085337.181AA61493@smtp.codeaurora.org> <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com>
+ <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com>
+From: James Hughes <james.hughes@raspberrypi.org>
+Date: Wed, 26 Apr 2017 20:54:15 +0100
+Message-ID: <CAE_XsM+XRcnO+tQEPnntNYVObnpJwimXP1_41aqJPwnxHWxonQ@mail.gmail.com> (sfid-20170426_215424_720510_AB408AF1)
+Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On 26 April 2017 at 19:03, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+>
+>
+> On 26-4-2017 17:44, Steve deRosier wrote:
+>> On Wed, Apr 26, 2017 at 1:53 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>>> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
+>>>> callback was actually cloned. So instead of checking for sufficient
+>>>> headroom it should also be writable. Hence use skb_cow_head() to
+>>>> check and expand the headroom appropriately.
+>>>>
+>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>
+>>> Steve, would you have time to run a quick test with this?
+>>>
+>>> Patch set to Deferred.
+>>>
+>>
+>> Happy to give it a quick spin on both of my platforms.
+>>
+>> @Arend: is there some demonstrable before/after that shows a problem I
+>> can detect at runtime?  I understand your thought about putting a
+>> skb_clone() in there, but what are the expectations?  And is any
+>> problem evident without explicitly modding the code with the clone?
+>
+> Ok. So the root cause is explained in a email to netdev mailing list,
+> but I can not find it. The sender was probably not a member. I will
+> forward that email to you and cc: linux-wireless. Basically, you need to
+> setup a bridge and run hostapd in bridged mode. Incoming multicast
+> traffic will be cloned by bridge and sent all interfaces in the bridge.
+> If more than one driver puts additional payload in the headroom they are
+> basically mucking about in the same buffer space so packets probably
+> never end up in the devices. In case of ath6kl the patch is in area
+> where driver/device determines IP checksum if it is supported (if I am
+> not mistaken). So not sure how easy it is to replicate without patching
+> it for testing.
+>
+> Regards,
+> Arend
 
-Here we monitor one more wifi rssi to check the status of the network
-and set the coex table instead of the legacy way.
+That was me. The full mechanism can be seen on the Raspberry Pi github
+issue tracker  here
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 51 +++++++++-------------
- 1 file changed, 21 insertions(+), 30 deletions(-)
+https://github.com/raspberrypi/firmware/issues/673
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 4471bd66a2e5..b93a4f7ce17a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -2939,11 +2939,18 @@ static void btc8821a2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- 
- static void btc8821a2ant_action_pan_edr(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, bt_rssi_state;
-+	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 
- 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
--	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
-+	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
-+				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
-+	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
-+				2, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 0);
-+
-+	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
-+
-+	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 
- 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
-@@ -2952,30 +2959,25 @@ static void btc8821a2ant_action_pan_edr(struct btc_coexist *btcoexist)
- 	else
- 		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
- 
--	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
--
--	if (BTC_WIFI_BW_LEGACY == wifi_bw) {
--		/* for HID at 11b/g mode */
--		btc8821a2ant_coex_table(btcoexist, NORMAL_EXEC, 0x55ff55ff,
--					0x5aff5aff, 0xffff, 0x3);
-+	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
-+		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 10);
-+		btc8821a2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
-+					      0x0, 0x0);
- 	} else {
- 		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 13);
- 		btc8821a2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
- 					      0x4);
- 	}
- 
--	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		/* fw mechanism */
--		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC,
--					     true, 1);
--		} else {
--			btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC,
--					     true, 5);
--		}
-+	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
-+	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH))
-+		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 26);
-+	else
-+		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 26);
- 
--		/* sw mechanism */
-+	/* sw mechanism */
-+	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-+	if (wifi_bw == BTC_WIFI_BW_HT40) {
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, true, false,
-@@ -2989,17 +2991,6 @@ static void btc8821a2ant_action_pan_edr(struct btc_coexist *btcoexist)
- 						   false, 0x18);
- 		}
- 	} else {
--		/* fw mechanism */
--		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC,
--					     true, 1);
--		} else {
--			btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC,
--					     true, 5);
--		}
--
--		/* sw mechanism */
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, false, false,
--- 
-2.12.0
+In brief, when bridging between two devices, if both devices fail to
+'unclone' then
+header corruption could occur if both the devices made header changes
+since they are
+both looking at the same data.
+
+The Pi has a smsc9x ethernet device and the Brcm Wireless chip - both
+had the fault, so we
+were getting corrupted headers, and eventual failure of ethernet.
+
+The same fault appears in a large subset of drivers in my brief examinations.
+
+James
