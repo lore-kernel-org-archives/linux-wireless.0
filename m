@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21715 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1040189AbdDUULQ (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34008 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936287AbdDZWEt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2017 16:11:16 -0400
-Date: Fri, 21 Apr 2017 23:11:05 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: tom.leiming@gmail.com,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] ath9k-htc:respect usb buffer cacheline alignment in reg
- in path
-Message-ID: <20170421201105.odl7rcm7ltpq2ow3@mwanda> (sfid-20170421_221120_098447_12298DCB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 26 Apr 2017 18:04:49 -0400
+Received: by mail-pf0-f182.google.com with SMTP id c198so6989494pfc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 15:04:49 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-soc@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, wcn36xx@lists.infradead.org,
+        Nicolas Dechesne <nicolas.dechesne@linaro.org>
+Subject: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
+Date: Wed, 26 Apr 2017 15:04:43 -0700
+Message-Id: <20170426220444.10539-1-bjorn.andersson@linaro.org> (sfid-20170427_000624_047560_805C9599)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Ming Lei,
+As the tx skbs are collected they should be passed to
+ieee80211_tx_status() rather than ieee80211_free_txskb(), as the prior
+will take care of monitoring and LED triggers while the latter will
+consider the skb dropped.
 
-The patch e6c6d33cb7d1: "ath9k-htc:respect usb buffer cacheline
-alignment in reg in path" from Apr 13, 2010, leads to the following
-static checker warning:
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	drivers/net/wireless/ath/ath9k/hif_usb.c:745 ath9k_hif_usb_reg_in_cb()
-	warn: 'skb' was already freed.
-
-drivers/net/wireless/ath/ath9k/hif_usb.c
-   712          if (likely(urb->actual_length != 0)) {
-   713                  skb_put(skb, urb->actual_length);
-   714  
-   715                  /* Process the command first */
-   716                  ath9k_htc_rx_msg(hif_dev->htc_handle, skb,
-   717                                   skb->len, USB_REG_IN_PIPE);
-   718  
-   719  
-   720                  nskb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_ATOMIC);
-   721                  if (!nskb) {
-   722                          dev_err(&hif_dev->udev->dev,
-   723                                  "ath9k_htc: REG_IN memory allocation failure\n");
-   724                          urb->context = NULL;
-   725                          return;
-   726                  }
-   727  
-   728                  usb_fill_int_urb(urb, hif_dev->udev,
-   729                                   usb_rcvintpipe(hif_dev->udev,
-   730                                                   USB_REG_IN_PIPE),
-   731                                   nskb->data, MAX_REG_IN_BUF_SIZE,
-   732                                   ath9k_hif_usb_reg_in_cb, nskb, 1);
-   733          }
-   734  
-   735  resubmit:
-   736          usb_anchor_urb(urb, &hif_dev->reg_in_submitted);
-   737          ret = usb_submit_urb(urb, GFP_ATOMIC);
-   738          if (ret) {
-   739                  usb_unanchor_urb(urb);
-   740                  goto free;
-   741          }
-   742  
-   743          return;
-   744  free:
-   745          kfree_skb(skb);
-   746          urb->context = NULL;
-   747  }
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 87dfdaf9044c..938b7bd733cf 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -371,7 +371,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+ 			info = IEEE80211_SKB_CB(ctl->skb);
+ 			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
+ 				/* Keep frame until TX status comes */
+-				ieee80211_free_txskb(wcn->hw, ctl->skb);
++				ieee80211_tx_status(wcn->hw, ctl->skb);
+ 			}
+ 			spin_lock(&ctl->skb_lock);
+ 			if (wcn->queues_stopped) {
+-- 
+2.12.0
