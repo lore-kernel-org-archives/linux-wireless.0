@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51238 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751803AbdDMPZS (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:36785 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932704AbdDZSFR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 11:25:18 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 13 Apr 2017 18:24:42 +0300
-Message-Id: <20170413152507.9648-2-luca@coelho.fi> (sfid-20170413_172530_167370_D93C801A)
-In-Reply-To: <20170413152507.9648-1-luca@coelho.fi>
-References: <20170413152507.9648-1-luca@coelho.fi>
-Subject: [PATCH 01/26] iwlwifi: mvm: read new secure boot registers
+        Wed, 26 Apr 2017 14:05:17 -0400
+Received: by mail-wm0-f44.google.com with SMTP id u65so58023805wmu.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 11:05:16 -0700 (PDT)
+Subject: Fwd: Question on drivers using skb_unclone
+References: <CAE_XsMJ=TAqgL767Agp0SjQCdSZ57pdh5KMkJ7Y-4V0XoSSa9Q@mail.gmail.com>
+To: Steve deRosier <derosier@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d76d6468-e5c3-4bd8-d746-b9c1fdd6e29e@broadcom.com> (sfid-20170426_200534_173604_C6F35FB8)
+Date: Wed, 26 Apr 2017 20:05:14 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAE_XsMJ=TAqgL767Agp0SjQCdSZ57pdh5KMkJ7Y-4V0XoSSa9Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi Steve,
 
-Addresses were changed for a000 devices.
+Here the email which hopefully provides enough context.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 13 ++++++++++---
- 2 files changed, 12 insertions(+), 3 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index bb7e0d642981..e1aa1f7836fc 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -400,6 +400,8 @@ enum aux_misc_master1_en {
- #define PREG_AUX_BUS_WPROT_0		0xA04CC0
- #define SB_CPU_1_STATUS			0xA01E30
- #define SB_CPU_2_STATUS			0xA01E34
-+#define UMAG_SB_CPU_1_STATUS		0xA038C0
-+#define UMAG_SB_CPU_2_STATUS		0xA038C4
- 
- /* FW chicken bits */
- #define LMPM_CHICK			0xA01FF8
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index e481bb050c6e..6adbd4bcb40a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -639,11 +639,18 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	ret = iwl_wait_notification(&mvm->notif_wait, &alive_wait,
- 				    MVM_UCODE_ALIVE_TIMEOUT);
- 	if (ret) {
--		if (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
-+		struct iwl_trans *trans = mvm->trans;
-+
-+		if (trans->cfg->gen2)
-+			IWL_ERR(mvm,
-+				"SecBoot CPU1 Status: 0x%x, CPU2 Status: 0x%x\n",
-+				iwl_read_prph(trans, UMAG_SB_CPU_1_STATUS),
-+				iwl_read_prph(trans, UMAG_SB_CPU_2_STATUS));
-+		else if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
- 			IWL_ERR(mvm,
- 				"SecBoot CPU1 Status: 0x%x, CPU2 Status: 0x%x\n",
--				iwl_read_prph(mvm->trans, SB_CPU_1_STATUS),
--				iwl_read_prph(mvm->trans, SB_CPU_2_STATUS));
-+				iwl_read_prph(trans, SB_CPU_1_STATUS),
-+				iwl_read_prph(trans, SB_CPU_2_STATUS));
- 		mvm->cur_ucode = old_type;
- 		return ret;
- 	}
--- 
-2.11.0
+-------- Forwarded Message --------
+Subject: 	Question on drivers using skb_unclone
+Date: 	Fri, 14 Apr 2017 10:03:01 +0100
+From: 	James Hughes <james.hughes@raspberrypi.org>
+To: 	netdev@vger.kernel.org
+CC: 	UNGLinuxDriver@microchip.com, brcm80211-dev-list.pdl@broadcom.com
+
+
+
+Netdevs,
+
+We have recently got to the bottom of an issue which we have been
+encountering on a Raspberry Pi being used as an access point, and we
+need a bit of advice on the correct way of fixing the issue.
+
+The set up is a Raspberry Pi 3 running hostapd on its inbuilt wireless
+adaptor (Brcm43438 ), bridged to the built in ethernet adaptor
+(smsc9514). Using the standard drivers for these devices as of 4.9
+(looking at 4.11, no changes noted that would affect the issue).
+
+We were encountering an error in the Brcm Wireless driver that after
+investigation was a skb_buff being corrupted by an action in the smsc
+Ethernet driver. Further digging shows that the bridge was cloning an
+incoming skb from the Ethernet, then sending it out to both the Ethernet
+and wlan ports. This mean that both the Ethernet driver and the wireless
+driver were looking at the same physical data, and one or both were
+altering that data in different way (varied headers) , which mean that
+headers were corrupted. This was only happening on broadcast packets.
+
+We can fix the issue by, in the drivers, by using skb_unclone in
+appropriate places in the driver.
+
+So now to the questions. Is adding the unclone to the drivers the
+correct way of dealing with this issue? Examining other drivers shows
+that unclone is not particularly common, presumably in many cases, where
+the driver does not alter the skb, it doesn't matter. However, in any
+case where a driver may add header information to the skb (as is the
+case with the Brcm wireless driver), when the incoming skb has been
+cloned, the results must surely be undetermined unless an unclone is
+performed.
+
+Or, is the bridging code making a mistake by cloning the skb and passing
+it to multiple recipients.
+
+
+Thanks
+
+James Hughes
+Raspberry Pi
