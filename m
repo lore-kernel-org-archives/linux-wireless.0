@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36536 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1953498AbdDYShM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 14:37:12 -0400
-Message-ID: <1493145418.2609.5.camel@sipsolutions.net> (sfid-20170425_203845_501712_7DB506B4)
-Subject: Re: [RFC] cfg80211: add control port state to struct
- cfg80211_connect_resp_params
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:38738 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932603AbdDZSDg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 14:03:36 -0400
+Received: by mail-wm0-f42.google.com with SMTP id r190so12455775wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 11:03:35 -0700 (PDT)
+Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
+To: Steve deRosier <derosier@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
+ <20170426085337.181AA61493@smtp.codeaurora.org>
+ <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 25 Apr 2017 20:36:58 +0200
-In-Reply-To: <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com> (sfid-20170425_203436_553220_83783E98)
-References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1493131210.2609.2.camel@sipsolutions.net>
-         <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
-         (sfid-20170425_203436_553220_83783E98)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com> (sfid-20170426_200533_638614_A89EA983)
+Date: Wed, 26 Apr 2017 20:03:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-04-25 at 20:34 +0200, Arend Van Spriel wrote:
 
-> > > +	    (cr->port_state != CONTROL_PORT_STATE_UNAUTHORIZED
-> > > &&
-> > > +	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)) ||
-> > >  	    (cr->req_ie &&
-> > > 
-> > 
-> > This doesn't really make sense - why does unspecified equal
-> > authorized?
+
+On 26-4-2017 17:44, Steve deRosier wrote:
+> On Wed, Apr 26, 2017 at 1:53 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
+>>> callback was actually cloned. So instead of checking for sufficient
+>>> headroom it should also be writable. Hence use skb_cow_head() to
+>>> check and expand the headroom appropriately.
+>>>
+>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>
+>> Steve, would you have time to run a quick test with this?
+>>
+>> Patch set to Deferred.
+>>
 > 
-> I was considering default behavior here for drivers that do not
-> provide this information, ie. drivers not supporting 4-way handshake
-> offload. So wpa_supplicant just looks for the PORT_AUTHORIZED
-> attribute and deals with it without need for checking 4-way handshake
-> offload is supported.
+> Happy to give it a quick spin on both of my platforms.
+> 
+> @Arend: is there some demonstrable before/after that shows a problem I
+> can detect at runtime?  I understand your thought about putting a
+> skb_clone() in there, but what are the expectations?  And is any
+> problem evident without explicitly modding the code with the clone?
 
-There are two such cases - the driver is old and doesn't provide it,
-but of course once you see the attribute you know that's not the case.
-And the case that the driver doesn't support 4-way-HS.
+Ok. So the root cause is explained in a email to netdev mailing list,
+but I can not find it. The sender was probably not a member. I will
+forward that email to you and cc: linux-wireless. Basically, you need to
+setup a bridge and run hostapd in bridged mode. Incoming multicast
+traffic will be cloned by bridge and sent all interfaces in the bridge.
+If more than one driver puts additional payload in the headroom they are
+basically mucking about in the same buffer space so packets probably
+never end up in the devices. In case of ath6kl the patch is in area
+where driver/device determines IP checksum if it is supported (if I am
+not mistaken). So not sure how easy it is to replicate without patching
+it for testing.
 
-Can you really distinguish these though if you *don't* see the
-attribute?
-
-But anyway, if it's like mac80211 not providing the data at all, then
-it would say authorized, which seems wrong since that's clearly not the
-case for mac80211?
-
-Or maybe I'm just confused.
-
-johannes
+Regards,
+Arend
