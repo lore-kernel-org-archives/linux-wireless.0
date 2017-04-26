@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:32936 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936730AbdDZPoE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 11:44:04 -0400
-Received: by mail-wr0-f176.google.com with SMTP id w50so2524366wrc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 08:44:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170426085337.181AA61493@smtp.codeaurora.org>
-References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com> <20170426085337.181AA61493@smtp.codeaurora.org>
-From: Steve deRosier <derosier@gmail.com>
-Date: Wed, 26 Apr 2017 08:44:01 -0700
-Message-ID: <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com> (sfid-20170426_174520_975772_982121CD)
-Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:53799 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1437749AbdDZPLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 11:11:38 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 5/5] mac80211: add txpower to the new tx_status_ext
+Date: Wed, 26 Apr 2017 17:11:39 +0200
+Message-Id: <20170426151139.87304-5-nbd@nbd.name> (sfid-20170426_172636_422533_DC6A1F8B)
+In-Reply-To: <20170426151139.87304-1-nbd@nbd.name>
+References: <20170426151139.87304-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 1:53 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
->> callback was actually cloned. So instead of checking for sufficient
->> headroom it should also be writable. Hence use skb_cow_head() to
->> check and expand the headroom appropriately.
->>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->
-> Steve, would you have time to run a quick test with this?
->
-> Patch set to Deferred.
->
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 
-Happy to give it a quick spin on both of my platforms.
+To use the per rate information about which txpower level was
+used for a successful or unsuccessful transmission, this new
+tx power per multi-rate retry rate annotation in the tx status
+path is needed.
 
-@Arend: is there some demonstrable before/after that shows a problem I
-can detect at runtime?  I understand your thought about putting a
-skb_clone() in there, but what are the expectations?  And is any
-problem evident without explicitly modding the code with the clone?
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ include/net/mac80211.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-- Steve
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d29702601333..bd28c81bc515 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -959,11 +959,13 @@ struct ieee80211_tx_info {
+  * @sta: Station that the packet was transmitted for
+  * @info: Basic tx status information
+  * @skb: Packet skb (can be NULL if not provided by the driver)
++ * @txpower: Txpower per rate status information
+  */
+ struct ieee80211_tx_status {
+ 	struct ieee80211_sta *sta;
+ 	struct ieee80211_tx_info *info;
+ 	struct sk_buff *skb;
++	s8 txpower[IEEE80211_TX_MAX_RATES];
+ };
+ 
+ /**
+-- 
+2.11.0
