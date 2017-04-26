@@ -1,44 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52690 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753681AbdDRWRn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:17:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:06 +0300
-Message-Id: <20170418221729.28372-3-luca@coelho.fi> (sfid-20170419_001754_380822_90DC6B7A)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 02/25] iwlwifi: mvm: fix accessing fw_id_to_mac_id
+Received: from mx02-sz.bfs.de ([194.94.69.103]:4652 "EHLO mx02-sz.bfs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S3001314AbdDZOeu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 10:34:50 -0400
+Message-ID: <5900AFFE.8060702@bfs.de> (sfid-20170426_163509_644565_26E6611A)
+Date: Wed, 26 Apr 2017 16:34:38 +0200
+From: walter harms <wharms@bfs.de>
+Reply-To: wharms@bfs.de
+MIME-Version: 1.0
+To: Geoff Lansberry <geoff@kuvee.com>
+CC: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
+        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com
+Subject: Re: [PATCH] NFC: trf7970a: Correct register settings for 27MHz clock
+References: <1493214513-12245-1-git-send-email-geoff@kuvee.com>
+In-Reply-To: <1493214513-12245-1-git-send-email-geoff@kuvee.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
 
-Access should be by rcu_dereference. Issue was found by sparse.
 
-Fixes: 65e254821cee ("iwlwifi: mvm: use firmware station PM notification for AP_LINK_PS")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Am 26.04.2017 15:48, schrieb Geoff Lansberry:
+> In prior commits the selected clock frequency does not propagate
+> correctly to what is written the the TRF7970A_MODULATOR_SYS_CLK_CTRL
+> register.
+> Also fixes a bug that causes the device tree property check to always
+> pass.
+> 
+> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+> ---
+>  drivers/nfc/trf7970a.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 2d1c8ca..c278b0e 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
+> @@ -2071,7 +2071,7 @@ static int trf7970a_probe(struct spi_device *spi)
+>  	}
+>  
+>  	of_property_read_u32(np, "clock-frequency", &clk_freq);
+> -	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+> +	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) &&
+>  		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
+>  		dev_err(trf->dev,
+>  			"clock-frequency (%u Hz) unsupported\n",
+> @@ -2079,6 +2079,13 @@ static int trf7970a_probe(struct spi_device *spi)
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
+> +		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
+> +		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
+> +	} else {
+> +		trf->modulator_sys_clk_ctrl = 0;
+> +	}
+> +
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 5f9d5339fc3d..26cf3dfcc108 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2424,7 +2424,7 @@ void iwl_mvm_sta_pm_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		return;
- 
- 	rcu_read_lock();
--	sta = mvm->fw_id_to_mac_id[notif->sta_id];
-+	sta = rcu_dereference(mvm->fw_id_to_mac_id[notif->sta_id]);
- 	if (WARN_ON(IS_ERR_OR_NULL(sta))) {
- 		rcu_read_unlock();
- 		return;
--- 
-2.11.0
+
+I am a fan of defensive programming and would move do:
+trf->modulator_sys_clk_ctrl = 0;
+if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
+		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
+		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
+	}
+
+perhaps using a switch/case here is appropriate IMHO a border case for 2 case
+but would make the init code more clear.
+
+just my 2 cents,
+
+re,
+ wh
+
+>  	if (of_property_read_bool(np, "en2-rf-quirk"))
+>  		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+>  
