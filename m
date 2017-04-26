@@ -1,76 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933029AbdDEL6e (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54532 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1956652AbdDZH7K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 07:58:34 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 08/11] wil6210: fix memory access violation in wil_memcpy_from/toio_32
-Date: Wed,  5 Apr 2017 14:58:11 +0300
-Message-Id: <1491393494-11816-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_140158_716170_0CF6AF1A)
-In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 26 Apr 2017 03:59:10 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 26 Apr 2017 10:58:52 +0300
+Message-Id: <20170426075854.13546-8-luca@coelho.fi> (sfid-20170426_095926_748665_E039C209)
+In-Reply-To: <20170426075854.13546-1-luca@coelho.fi>
+References: <20170426075854.13546-1-luca@coelho.fi>
+Subject: [PATCH 7/9] ieee80211: fix kernel-doc parsing errors
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In case count is not multiple of 4, there is a read access in
-wil_memcpy_toio_32() from outside src buffer boundary.
-In wil_memcpy_fromio_32(), in case count is not multiple of 4, there is
-a write access to outside dst io memory boundary.
+Some of the enum definitions are unnamed but there's still
+an attempt at documenting them - that doesn't work. Name
+them to make that work.
 
-Fix these issues with proper handling of the last 1 to 4 copied bytes.
-
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ include/linux/ieee80211.h | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 9aa81ce..439d27c 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -130,9 +130,15 @@ void wil_memcpy_fromio_32(void *dst, const volatile void __iomem *src,
- 	u32 *d = dst;
- 	const volatile u32 __iomem *s = src;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 13f23036dc05..69033353d0d1 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2177,37 +2177,37 @@ enum ieee80211_tdls_actioncode {
+ #define WLAN_BSS_COEX_INFORMATION_REQUEST	BIT(0)
  
--	/* size_t is unsigned, if (count%4 != 0) it will wrap */
--	for (count += 4; count > 4; count -= 4)
-+	for (; count >= 4; count -= 4)
- 		*d++ = __raw_readl(s++);
-+
-+	if (unlikely(count)) {
-+		/* count can be 1..3 */
-+		u32 tmp = __raw_readl(s);
-+
-+		memcpy(d, &tmp, count);
-+	}
- }
+ /**
+- * enum - mesh synchronization method identifier
++ * enum ieee80211_mesh_sync_method - mesh synchronization method identifier
+  *
+  * @IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET: the default synchronization method
+  * @IEEE80211_SYNC_METHOD_VENDOR: a vendor specific synchronization method
+  *	that will be specified in a vendor specific information element
+  */
+-enum {
++enum ieee80211_mesh_sync_method {
+ 	IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET = 1,
+ 	IEEE80211_SYNC_METHOD_VENDOR = 255,
+ };
  
- void wil_memcpy_fromio_halp_vote(struct wil6210_priv *wil, void *dst,
-@@ -149,8 +155,16 @@ void wil_memcpy_toio_32(volatile void __iomem *dst, const void *src,
- 	volatile u32 __iomem *d = dst;
- 	const u32 *s = src;
+ /**
+- * enum - mesh path selection protocol identifier
++ * enum ieee80211_mesh_path_protocol - mesh path selection protocol identifier
+  *
+  * @IEEE80211_PATH_PROTOCOL_HWMP: the default path selection protocol
+  * @IEEE80211_PATH_PROTOCOL_VENDOR: a vendor specific protocol that will
+  *	be specified in a vendor specific information element
+  */
+-enum {
++enum ieee80211_mesh_path_protocol {
+ 	IEEE80211_PATH_PROTOCOL_HWMP = 1,
+ 	IEEE80211_PATH_PROTOCOL_VENDOR = 255,
+ };
  
--	for (count += 4; count > 4; count -= 4)
-+	for (; count >= 4; count -= 4)
- 		__raw_writel(*s++, d++);
-+
-+	if (unlikely(count)) {
-+		/* count can be 1..3 */
-+		u32 tmp = 0;
-+
-+		memcpy(&tmp, s, count);
-+		__raw_writel(tmp, d);
-+	}
- }
- 
- void wil_memcpy_toio_halp_vote(struct wil6210_priv *wil,
+ /**
+- * enum - mesh path selection metric identifier
++ * enum ieee80211_mesh_path_metric - mesh path selection metric identifier
+  *
+  * @IEEE80211_PATH_METRIC_AIRTIME: the default path selection metric
+  * @IEEE80211_PATH_METRIC_VENDOR: a vendor specific metric that will be
+  *	specified in a vendor specific information element
+  */
+-enum {
++enum ieee80211_mesh_path_metric {
+ 	IEEE80211_PATH_METRIC_AIRTIME = 1,
+ 	IEEE80211_PATH_METRIC_VENDOR = 255,
+ };
 -- 
-1.9.1
+2.11.0
