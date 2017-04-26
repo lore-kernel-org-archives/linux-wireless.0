@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46166 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756002AbdDRJE2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 05:04:28 -0400
-Message-ID: <1492506263.2472.5.camel@sipsolutions.net> (sfid-20170418_110622_078177_E35926E6)
-Subject: Re: [PATCH] nl80211: Fix enum type of variable in
- nl80211_put_sta_rate()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthias Kaehlcke <mka@chromium.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Grant Grundler <grundler@chromium.org>,
-        Greg Hackmann <ghackmann@google.com>,
-        Michael Davidson <md@google.com>
-Date: Tue, 18 Apr 2017 11:04:23 +0200
-In-Reply-To: <20170417225952.106468-1-mka@chromium.org> (sfid-20170418_010001_948995_47957692)
-References: <20170417225952.106468-1-mka@chromium.org>
-         (sfid-20170418_010001_948995_47957692)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4686 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2999010AbdDZLI1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 07:08:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michael Mera <dev@michaelmera.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RESEND] ath10k: fix out of bounds access to local buffer
+Date: Wed, 26 Apr 2017 11:08:22 +0000
+Message-ID: <87r30fxw7u.fsf@kamboji.qca.qualcomm.com> (sfid-20170426_130831_364239_8A7F9B1E)
+References: <20170424071157.6979-1-dev@michaelmera.com>
+        <0a7aa133740b4488a19bd95115831988@euamsexm01a.eu.qualcomm.com>
+        <87a873wjak.fsf@michaelmera.com>
+In-Reply-To: <87a873wjak.fsf@michaelmera.com> (Michael Mera's message of "Wed,
+        26 Apr 2017 19:32:51 +0900")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-04-17 at 15:59 -0700, Matthias Kaehlcke wrote:
-> rate_flg is of type 'enum nl80211_attrs', however it is assigned with
-> 'enum nl80211_rate_info' values. Change the type of rate_flg
-> accordingly.
+Michael Mera <dev@michaelmera.com> writes:
 
-Applied this, and the other two patches you had (IBSS enum and array-
-bounds)
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>> I fixed a checkpatch warning in the pending branch:
+>>
+>> drivers/net/wireless/ath/ath10k/debug.c:636: spaces preferred around
+>> that '-' (ctx:VxV)
+>
+> Hum... but then you will have a line longer than 80 characters (81), so
+> another warning.
 
-johannes
+I have extended the line length in my check script to 90 chars just
+because of cases like this:
+
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checki=
+ng_code
+
+> I prefered this version since I feel that splitting this line would hurt
+> readability and on the other hand the expression is clearly delimited
+> by the spaces around the ',' so I don't think spaces around the operator
+> add any value (except for compliance with the coding style that is).
+
+I actually guessed why you did that. But I want to keep the output of my
+test script clean, makes review a lot easier. Making exceptions to the
+script is more work for me.
+
+Anyway, I already did the change in my pending branch and will apply the
+patch in few days. Thanks for the fix.
+
+--=20
+Kalle Valo=
