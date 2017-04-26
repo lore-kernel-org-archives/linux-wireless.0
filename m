@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56908 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S968706AbdD1VCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2017 17:02:42 -0400
-Message-ID: <1493413355.2431.19.camel@sipsolutions.net> (sfid-20170428_230403_683687_67ED3C05)
-Subject: Re: [PATCH 5/9] cfg80211/nl80211: add authorized flag to roaming
- event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        Jouni Malinen <j@w1.fi>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Apr 2017 23:02:35 +0200
-In-Reply-To: <30808bad-1f15-20bd-9bfe-0c10ab8555cd@broadcom.com> (sfid-20170426_120601_633858_AC9F0B99)
-References: <20170426075854.13546-1-luca@coelho.fi>
-         <20170426075854.13546-6-luca@coelho.fi>
-         <30808bad-1f15-20bd-9bfe-0c10ab8555cd@broadcom.com>
-         (sfid-20170426_120601_633858_AC9F0B99)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:39892 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753850AbdDZGKV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 02:10:21 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Andi Kleen <andi@firstfloor.org>, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: 4.11-rc* iwlwifi instable
+References: <20170424005400.GK22592@two.firstfloor.org>
+        <1493016631.31741.139.camel@coelho.fi>
+        <20170424124017.GL22592@two.firstfloor.org>
+        <1493059948.31741.161.camel@coelho.fi>
+Date: Wed, 26 Apr 2017 09:10:16 +0300
+In-Reply-To: <1493059948.31741.161.camel@coelho.fi> (Luca Coelho's message of
+        "Mon, 24 Apr 2017 21:52:28 +0300")
+Message-ID: <87zif3aed3.fsf@purkki.adurom.net> (sfid-20170426_081025_523186_192A3586)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-04-26 at 12:05 +0200, Arend van Spriel wrote:
-> 
-> > the mobility domain does not require new 802.1X authentication, but
-> > roaming to another mobility domain does.
-> 
-> Not sure about the terminology here. Is "mobility domain" the same
-> as  "ESS" which stands for extended service set as definced in
-> 802.11  standard. If so, I would prefer use of that term here.
+Luca Coelho <luca@coelho.fi> writes:
 
-No. "Mobility domain" was defined in 802.11r, it's unrelated to ESS.
+>> > https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-7265D-27.ucode
+>> > 
+>> > We have loads of fixes and improvements in this new version.  And
+>> > hopefully it will make your problems go away. ;)
+>> > 
+>> > Please try it and let me know how it goes.
+>> 
+>> This is -27, but the driver looks for -28
+>> 
+>> [12382.760671] iwlwifi 0000:03:00.0: Direct firmware load for
+>> iwlwifi-7265D-28.ucode failed with error -2
+>> 
+>> Where is version -28?
+>
+> TL;DR: this error message is harmless and the driver tries to load -27
+> if -28 is not available.
+>
+> Long story: We upstream driver patches from our internal tree constantly
+> and, at that point, we don't know which FW version will pass all the
+> quality gates to be released officially.  The driver in 4.11 supports up
+> to version -28.  We haven't release -28 yet, though (and maybe won't),
+> so you get this error message when we try to load it.  But if it fails
+> to load, we try to load the one immediately below it and so on, until we
+> reach the minimum API version we support.
+>
+> These errors are definitely annoying and confusing, but I don't know how
+> to work around them.  Luckily Luis is working on the firmware class[1]
+> and part of his work will make these messages go away.
 
-> > + * @authorized: true if the 802.1X authentication was done by the
-> > driver or is
-> > + *	not needed (e.g., when Fast Transition protocol was
-> > used), false
-> > + *	otherwise. Ignored for networks that don't use 802.1X
-> > authentication.
-> 
-> It is not ignored in this patch so it is expected user-space
-> behavior you are describing, which is not really needed here in
-> cfg80211 driver api.
+FWIW, we got frustrated with the same problem in ath10k and switched to
+request_firmware_direct() to get rid of the warning:
 
-Still kinda makes sense though to give that hint to the driver authors,
-don't you think? Though it should be pretty clear ...
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9f5bcfe93315d75da4cc46bd30b536966559359a
 
-> >    *	well to remain backwards compatible.
-> >    * @NL80211_CMD_ROAM: request that the card roam (currently not
-> > implemented),
-> 
-> Do we want to keep this comment about the request scenario. Is it
-> likely implemented soon/ever?
-
-Heh, good question. Probably not, but it's kinda an unrelated cleanup,
-no?
-
-> >    *	sent as an event when the card/driver roamed by itself.
-> > + *	When used as an event, and the driver roamed in a
-> > network that requires
-> > + *	802.1X authentication,
-> > %NL80211_ATTR_CONNECTION_AUTHORIZED should be set
-> > + *	if the 802.1X authentication was done by the driver or
-> > if roaming was
-> > + *	done using Fast Transition protocol (in which case
-> > 802.1X authentication
-> > + *	is not needed). If %NL80211_ATTR_CONNECTION_AUTHORIZED
-> > is not set,
-> > + *	user space is responsible for the 802.1X authentication.
-> 
-> Would you consider using NL80211_ATTR_PORT_AUTHORIZED instead
-> referring to the 802.1X port entities.
-
-I guess that makes sense, yeah.
-
-johannes
+-- 
+Kalle Valo
