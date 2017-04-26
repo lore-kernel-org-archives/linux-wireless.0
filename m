@@ -1,96 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40662 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753094AbdDRLvF (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35125 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1949172AbdDZFYW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 07:51:05 -0400
-Date: Tue, 18 Apr 2017 13:50:55 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Aditya Shankar <aditya.shankar@microchip.com>
-Cc: arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, ganesh.krishna@microchip.com
-Subject: Re: [PATCH v3] staging: wilc1000: New cfg packet format in
- handle_set_wfi_drv_handler
-Message-ID: <20170418115055.GA17911@kroah.com> (sfid-20170418_135111_278912_A9751134)
-References: <1491928903-2866-1-git-send-email-aditya.shankar@microchip.com>
+        Wed, 26 Apr 2017 01:24:22 -0400
+Received: by mail-pg0-f67.google.com with SMTP id 68so1071727pgj.2
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Apr 2017 22:24:22 -0700 (PDT)
+Date: Tue, 25 Apr 2017 23:24:14 -0600
+From: Jason Litzinger <jlitzingerdev@gmail.com>
+To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        dan.carpenter@oracle.com
+Subject: Re: [PATCH RFC] staging: wilc1000: Refactor handling of HT caps
+ fields
+Message-ID: <20170426052351.GA7735@arch-tinker.localdomain> (sfid-20170426_072426_718252_C83E3A26)
+References: <20170426044625.20529-1-jlitzingerdev@gmail.com>
+ <20170426045416.GA20613@arch-tinker.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491928903-2866-1-git-send-email-aditya.shankar@microchip.com>
+In-Reply-To: <20170426045416.GA20613@arch-tinker.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 11, 2017 at 10:11:43PM +0530, Aditya Shankar wrote:
-> Change the config packet format used in handle_set_wfi_drv_handler()
-> to align the host driver with the new format used in the wilc firmware.
-> 
-> The change updates the format in which the host driver provides the
-> firmware with the drv_handler index and also uses two new
-> fields viz. "mode" and 'name" in the config packet along with this index
-> to directly provide details about the interface and its mode to the
-> firmware instead of having multiple if-else statements in the host driver
-> to decide which interface to configure.
-> 
-> Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
-> Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-> ---
-> Change in v2: Fix build warning
-> Change in v3: Address review comments from v2
-> ---
->  drivers/staging/wilc1000/host_interface.c         | 48 ++++++++++++++++++-----
->  drivers/staging/wilc1000/host_interface.h         |  9 ++++-
->  drivers/staging/wilc1000/linux_wlan.c             | 37 +++++------------
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
->  drivers/staging/wilc1000/wilc_wlan_if.h           |  2 +-
->  6 files changed, 59 insertions(+), 40 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index c3a8af0..7352488 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -334,14 +334,39 @@ static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
->  {
->  	int ret = 0;
->  	struct wid wid;
-> +	u8 *currbyte, *buffer;
-> +	struct host_if_drv *hif_drv = NULL;
-> +
-> +	if (!vif->hif_drv)
-> +		return;
-> +
-> +	if (!hif_drv_handler)
-> +		return;
-> +
-> +	hif_drv	= vif->hif_drv;
-> +	buffer = kzalloc(DRV_HANDLER_SIZE, GFP_ATOMIC);
-> +
-> +	if (!buffer)
-> +		return;
+On Tue, Apr 25, 2017 at 10:54:16PM -0600, Jason Litzinger wrote:
+> > +			strStaParams.ht_capa = *params->ht_capa;
+> Doh, that's completely wrong.  I had a few iterations of this and sent
+No, it wasn't.  The PATCH RFC I sent initally is correct.  Apologies, had a
+C brain gap and worried about deep copying that array embedded in the
+struct.
 
-Test on the line right after allocation.
-
-And there is no way to return an error from this function?  That seems
-bad.
-
-And why do you need GFP_ATOMIC?
-
-And finally, where do you free this buffer?
-
-> @@ -3449,8 +3477,10 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
->  
->  	id = ((buffer[length - 4]) | (buffer[length - 3] << 8) | (buffer[length - 2] << 16) | (buffer[length - 1] << 24));
->  	vif = wilc_get_vif_from_idx(wilc, id);
-> +
->  	if (!vif)
->  		return;
-> +
->  	hif_drv = vif->hif_drv;
->  
->  	if (!hif_drv || hif_drv == terminated_handle)	{
-
-Unneeded whitespace changes.  Don't do that in a patch that does other
-things.
-
-thanks,
-
-greg k-h
+-Jason
