@@ -1,33 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.impitoyable.jabatus.fr ([109.234.163.30]:46633 "EHLO
-        mail.impitoyable.jabatus.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1166562AbdD2Kjj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Apr 2017 06:39:39 -0400
-From: Michael Mera <dev@michaelmera.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RESEND] ath10k: fix out of bounds access to local buffer
-In-Reply-To: <87r30fxw7u.fsf@kamboji.qca.qualcomm.com>
-References: <20170424071157.6979-1-dev@michaelmera.com> <0a7aa133740b4488a19bd95115831988@euamsexm01a.eu.qualcomm.com> <87a873wjak.fsf@michaelmera.com> <87r30fxw7u.fsf@kamboji.qca.qualcomm.com>
-Date: Sat, 29 Apr 2017 19:39:13 +0900
-Message-ID: <877f235wha.fsf@michaelmera.com> (sfid-20170429_123953_492717_B7D3AE14)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:43192 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1953677AbdDZGuo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 02:50:44 -0400
+Message-ID: <1493189440.2464.0.camel@sipsolutions.net> (sfid-20170426_085121_017210_356B76E8)
+Subject: Re: [PATCH V3 1/9] nl80211: allow multiple active scheduled scan
+ requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 26 Apr 2017 08:50:40 +0200
+In-Reply-To: <1493149747.15192.0.camel@sipsolutions.net> (sfid-20170425_214921_195781_DA50B80E)
+References: <1492776308-15120-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1492776308-15120-2-git-send-email-arend.vanspriel@broadcom.com>
+         <1493149747.15192.0.camel@sipsolutions.net>
+         (sfid-20170425_214921_195781_DA50B80E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> I actually guessed why you did that. But I want to keep the output of my
-> test script clean, makes review a lot easier. Making exceptions to the
-> script is more work for me.
+On Tue, 2017-04-25 at 21:49 +0200, Johannes Berg wrote:
+> >  		if (schedule_destroy_work) {
+> > -			struct cfg80211_iface_destroy *destroy;
+> > +			struct cfg80211_nlport_release *destroy;
+> >  
+> >  			destroy = kzalloc(sizeof(*destroy),
+> > GFP_ATOMIC);
+> 
+> I was never really happy with this allocation and really want to get
+> rid of it ...
 
-Yes, sorry. I found the ath10k specific instructions only after
-submitting the patch.
+Done :)
 
-> Anyway, I already did the change in my pending branch and will apply the
-> patch in few days. Thanks for the fix.
+> > +		if (schedule_sched_stop_work) {
+> > +			struct cfg80211_nlport_release *destroy;
+> > +
+> > +			destroy = kzalloc(sizeof(*destroy),
+> > GFP_ATOMIC);
+> > +			if (destroy) {
+> > +				destroy->nlportid = notify-
+> > >portid;
+> > +				spin_lock(&rdev-
+> > > sched_stop_list_lock);
+> > 
+> > +				list_add(&destroy->list, &rdev-
+> > > sched_stop_list);
+> > 
+> > +				spin_unlock(&rdev-
+> > > sched_stop_list_lock);
+> > 
+> > +				schedule_work(&rdev-
+> > > sched_scan_stop_wk);
+> > 
+> > +			}
+> > +		}
+> 
+> Can't we set some kind of flag in the struct
+> cfg80211_sched_scan_request and iterate through them later again,
+> checking which need to be destroyed?
 
-Thank you,
-Michael Mera
+Easy enough - I'll also do that.
+
+johannes
