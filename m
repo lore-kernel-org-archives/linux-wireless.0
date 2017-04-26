@@ -1,87 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:32858 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756631AbdDPTEi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 15:04:38 -0400
-Received: by mail-oi0-f66.google.com with SMTP id t63so24743260oih.0
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 12:04:38 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/10] rtlwifi: btcoex: 21a 2ant: settings before wifi firmware is ready
-Date: Sun, 16 Apr 2017 14:04:22 -0500
-Message-Id: <20170416190428.23857-5-Larry.Finger@lwfinger.net> (sfid-20170416_210444_411618_A6867247)
-In-Reply-To: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
-References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:43620 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1950603AbdDZHUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Apr 2017 03:20:52 -0400
+Message-ID: <1493191249.2464.6.camel@sipsolutions.net> (sfid-20170426_092328_257339_64513BC6)
+Subject: Re: [RFC] cfg80211: add control port state to struct
+ cfg80211_connect_resp_params
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 26 Apr 2017 09:20:49 +0200
+In-Reply-To: <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com> (sfid-20170425_205607_063877_7FF3500F)
+References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1493131210.2609.2.camel@sipsolutions.net>
+         <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
+         <1493145418.2609.5.camel@sipsolutions.net>
+         <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com>
+         (sfid-20170425_205607_063877_7FF3500F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Tue, 2017-04-25 at 20:56 +0200, Arend Van Spriel wrote:
+> 
+> You might, but not about this ;-) The other approach I had in mind is
+> to only pass the flag for drivers with 4-way-hs support. In that case
+> wpa_supp also has to check that to determine whether the flag should
+> be taken into account. Assuming the driver supporting 4-way-hs can
+> provide the port state info. Otherwise, a new ext_feature flag would
+> be needed.
 
-Before firmware is ready, set GNT_BT to high to let bt transmit.
+I think it's reasonable to assume 4-way-HS offload drivers can support
+it.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 37 ++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 162d40ddf06d..9aa140a46d46 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3609,6 +3609,43 @@ void ex_btc8821a2ant_init_hwconfig(struct btc_coexist *btcoexist)
- 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
- }
- 
-+void ex_btc8821a2ant_pre_load_firmware(struct btc_coexist *btcoexist)
-+{
-+	struct btc_board_info *board_info = &btcoexist->board_info;
-+	u8 u8tmp = 0x4; /* Set BIT2 by default since it's 2ant case */
-+
-+	/**
-+	 * S0 or S1 setting and Local register setting(By the setting fw can get
-+	 * ant number, S0/S1, ... info)
-+	 *
-+	 * Local setting bit define
-+	 *	BIT0: "0" for no antenna inverse; "1" for antenna inverse
-+	 *	BIT1: "0" for internal switch; "1" for external switch
-+	 *	BIT2: "0" for one antenna; "1" for two antenna
-+	 * NOTE: here default all internal switch and 1-antenna ==> BIT1=0 and
-+	 * BIT2=0
-+	 */
-+	if (btcoexist->chip_interface == BTC_INTF_USB) {
-+		/* fixed at S0 for USB interface */
-+		u8tmp |= 0x1; /* antenna inverse */
-+		btcoexist->btc_write_local_reg_1byte(btcoexist, 0xfe08, u8tmp);
-+	} else {
-+		/* for PCIE and SDIO interface, we check efuse 0xc3[6] */
-+		if (board_info->single_ant_path == 0) {
-+		} else if (board_info->single_ant_path == 1) {
-+			/* set to S0 */
-+			u8tmp |= 0x1; /* antenna inverse */
-+		}
-+
-+		if (btcoexist->chip_interface == BTC_INTF_PCI)
-+			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x384,
-+							     u8tmp);
-+		else if (btcoexist->chip_interface == BTC_INTF_SDIO)
-+			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x60,
-+							     u8tmp);
-+	}
-+}
-+
- void ex_btc8821a2ant_init_coex_dm(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--- 
-2.12.0
+johannes
