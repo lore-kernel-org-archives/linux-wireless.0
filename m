@@ -1,120 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34421 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932232AbdDDQu2 (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:36267 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2993560AbdDZKGL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 12:50:28 -0400
-Received: by mail-oi0-f68.google.com with SMTP id s11so9550260oie.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:27 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 05/13] rtlwifi: btcoex: 23b 2ant: fix PTA unstable problem when hw init
-Date: Tue,  4 Apr 2017 11:49:58 -0500
-Message-Id: <20170404165006.14329-6-Larry.Finger@lwfinger.net> (sfid-20170404_185037_806679_6B16D40A)
-In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
-References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+        Wed, 26 Apr 2017 06:06:11 -0400
+Received: by mail-pf0-f169.google.com with SMTP id 194so40021728pfv.3
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 03:06:00 -0700 (PDT)
+Subject: Re: [PATCH 5/9] cfg80211/nl80211: add authorized flag to roaming
+ event
+To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+References: <20170426075854.13546-1-luca@coelho.fi>
+ <20170426075854.13546-6-luca@coelho.fi>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <30808bad-1f15-20bd-9bfe-0c10ab8555cd@broadcom.com> (sfid-20170426_120638_806529_01BDF32D)
+Date: Wed, 26 Apr 2017 12:05:52 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170426075854.13546-6-luca@coelho.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Almost overlooked this one. Thanks for the hint, Johannes.
 
-In the hardware initialisation stage, the PTA circuits may be unstable,
-so we reset it after 6 secs to fix the problem.
+On 4/26/2017 9:58 AM, Luca Coelho wrote:
+> From: Avraham Stern <avraham.stern@intel.com>
+> 
+> Drivers that initiate roaming while being connected to a network that
+> uses 802.1X authentication need to inform user space if 802.1X
+> authentication is further required after roaming.
+> For example, when using the Fast transition protocol, roaming within
+> the mobility domain does not require new 802.1X authentication, but
+> roaming to another mobility domain does.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 41 ++++++++--------------
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  2 ++
- 2 files changed, 16 insertions(+), 27 deletions(-)
+Not sure about the terminology here. Is "mobility domain" the same as 
+"ESS" which stands for extended service set as definced in 802.11 
+standard. If so, I would prefer use of that term here.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 1f3c2bc..8d8425d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -3282,12 +3282,14 @@ void ex_btc8723b2ant_init_hwconfig(struct btc_coexist *btcoexist)
- 	/* Antenna config */
- 	btc8723b2ant_set_ant_path(btcoexist, BTC_ANT_WIFI_AT_MAIN,
- 				  true, false);
-+	coex_sta->dis_ver_info_cnt = 0;
-+
- 	/* PTA parameter */
- 	btc8723b2ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
- 
- 	/* Enable counter statistics */
- 	/* 0x76e[3] = 1, WLAN_ACT controlled by PTA */
--	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
-+	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
- 	btcoexist->btc_write_1byte(btcoexist, 0x778, 0x3);
- 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
- }
-@@ -3827,36 +3829,21 @@ void ex_btc8723b2ant_halt_notify(struct btc_coexist *btcoexist)
- void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--	struct btc_board_info *board_info = &btcoexist->board_info;
--	struct btc_stack_info *stack_info = &btcoexist->stack_info;
--	static u8 dis_ver_info_cnt;
--	u32 fw_ver = 0, bt_patch_ver = 0;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], ==========================Periodical===========================\n");
- 
--	if (dis_ver_info_cnt <= 5) {
--		dis_ver_info_cnt += 1;
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], ****************************************************************\n");
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], Ant PG Num/ Ant Mech/ Ant Pos = %d/ %d/ %d\n",
--			      board_info->pg_ant_num,
--			      board_info->btdm_ant_num,
--			      board_info->btdm_ant_pos);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], BT stack/ hci ext ver = %s / %d\n",
--			      stack_info->profile_notified ? "Yes" : "No",
--			      stack_info->hci_version);
--		btcoexist->btc_get(btcoexist, BTC_GET_U4_BT_PATCH_VER,
--				   &bt_patch_ver);
--		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], CoexVer/ fw_ver/ PatchVer = %d_%x/ 0x%x/ 0x%x(%d)\n",
--			      glcoex_ver_date_8723b_2ant, glcoex_ver_8723b_2ant,
--			      fw_ver, bt_patch_ver, bt_patch_ver);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], ****************************************************************\n");
-+	if (coex_sta->dis_ver_info_cnt <= 5) {
-+		coex_sta->dis_ver_info_cnt += 1;
-+		if (coex_sta->dis_ver_info_cnt == 3) {
-+			/* Antenna config to set 0x765 = 0x0 (GNT_BT control by
-+			 * PTA) after initial
-+			 */
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], Set GNT_BT control by PTA\n");
-+			btc8723b2ant_set_ant_path(
-+				btcoexist, BTC_ANT_WIFI_AT_MAIN, false, false);
-+		}
- 	}
- 
- #if (BT_AUTO_REPORT_ONLY_8723B_2ANT == 0)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-index 9f41206..57eac22 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-@@ -167,6 +167,8 @@ struct coex_sta_8723b_2ant {
- 	u32 crc_err_11n_agg;
- 	bool force_lps_on;
- 
-+	u8 dis_ver_info_cnt;
-+
- 	u8 a2dp_bit_pool;
- };
- 
--- 
-2.10.2
+> In addition, some drivers may not support 802.1X authentication
+> (so it has to be done in user space), while other drivers do.
+> 
+> Add a flag to the roaming notification to indicate if user space is
+> required to do 802.1X authentication after the roaming or not.
+> This flag will only be used for networks that use 802.1X
+> authentication. For networks that do not use 802.1X authentication it
+> is assumed that no further action is required from user space after
+> the roaming notification.
+ >
+> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
+>   include/net/cfg80211.h       |  4 ++++
+>   include/uapi/linux/nl80211.h | 14 ++++++++++++++
+>   net/wireless/nl80211.c       |  4 +++-
+>   net/wireless/sme.c           |  1 +
+>   4 files changed, 22 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 115f6fc5a34d..f9f4fde2dc09 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -5384,6 +5384,9 @@ cfg80211_connect_timeout(struct net_device *dev, const u8 *bssid,
+>    * @req_ie_len: association request IEs length
+>    * @resp_ie: association response IEs (may be %NULL)
+>    * @resp_ie_len: assoc response IEs length
+> + * @authorized: true if the 802.1X authentication was done by the driver or is
+> + *	not needed (e.g., when Fast Transition protocol was used), false
+> + *	otherwise. Ignored for networks that don't use 802.1X authentication.
+
+It is not ignored in this patch so it is expected user-space behavior 
+you are describing, which is not really needed here in cfg80211 driver api.
+
+>    */
+>   struct cfg80211_roam_info {
+>   	struct ieee80211_channel *channel;
+> @@ -5393,6 +5396,7 @@ struct cfg80211_roam_info {
+>   	size_t req_ie_len;
+>   	const u8 *resp_ie;
+>   	size_t resp_ie_len;
+> +	bool authorized;
+>   };
+>   
+>   /**
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 6095a6c4c412..7bdbce7c4147 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -546,6 +546,12 @@
+>    *	well to remain backwards compatible.
+>    * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
+
+Do we want to keep this comment about the request scenario. Is it likely 
+implemented soon/ever?
+
+>    *	sent as an event when the card/driver roamed by itself.
+> + *	When used as an event, and the driver roamed in a network that requires
+> + *	802.1X authentication, %NL80211_ATTR_CONNECTION_AUTHORIZED should be set
+> + *	if the 802.1X authentication was done by the driver or if roaming was
+> + *	done using Fast Transition protocol (in which case 802.1X authentication
+> + *	is not needed). If %NL80211_ATTR_CONNECTION_AUTHORIZED is not set,
+> + *	user space is responsible for the 802.1X authentication.
+
+Would you consider using NL80211_ATTR_PORT_AUTHORIZED instead referring 
+to the 802.1X port entities.
+
+Regards,
+Arend
+
+>    * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
+>    *	userspace that a connection was dropped by the AP or due to other
+>    *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
+> @@ -2081,6 +2087,12 @@ enum nl80211_commands {
+>    * @NL80211_ATTR_PMK: PMK for the PMKSA identified by %NL80211_ATTR_PMKID.
+>    *	This is used with @NL80211_CMD_SET_PMKSA.
+>    *
+> + * @NL80211_ATTR_CONNECTION_AUTHORIZED: A flag attribute used with
+> + *	%NL80211_CMD_ROAM to indicate that 802.1X authentication was done by the
+> + *	driver or is not needed (because roaming used the Fast Transition
+> + *	protocol). Only valid for roaming in networks that require 802.1X
+> + *	authentication.
+> + *
