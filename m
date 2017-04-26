@@ -1,135 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50708 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:54526 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752692AbdDKMju (ORCPT
+        with ESMTP id S1956650AbdDZH7K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 08:39:50 -0400
+        Wed, 26 Apr 2017 03:59:10 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 11 Apr 2017 15:37:38 +0300
-Message-Id: <20170411123742.12214-22-luca@coelho.fi> (sfid-20170411_145544_413665_7687A240)
-In-Reply-To: <20170411123742.12214-1-luca@coelho.fi>
-References: <20170411123742.12214-1-luca@coelho.fi>
-Subject: [PATCH 21/25] iwlwifi: remove unnecessary dev_cmd_headroom parameter
+Cc: johannes@sipsolutions.net,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 26 Apr 2017 10:58:51 +0300
+Message-Id: <20170426075854.13546-7-luca@coelho.fi> (sfid-20170426_095919_141130_0A75BA14)
+In-Reply-To: <20170426075854.13546-1-luca@coelho.fi>
+References: <20170426075854.13546-1-luca@coelho.fi>
+Subject: [PATCH 6/9] mac80211: don't parse encrypted management frames in ieee80211_frame_acked
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We don't need this parameter anymore, since we always pass 0 anyway.
-Remove it from the structure and from all the relevant functions.
+ieee80211_frame_acked is called when a frame is acked by
+the peer. In case this is a management frame, we check
+if this an SMPS frame, in which case we can update our
+antenna configuration.
 
+When we parse the management frame we look at the category
+in case it is an action frame. That byte sits after the IV
+in case the frame was encrypted. This means that if the
+frame was encrypted, we basically look at the IV instead
+of looking at the category. It is then theorically
+possible that we think that an SMPS action frame was acked
+where really we had another frame that was encrypted.
+
+Since the only management frame whose ack needs to be
+tracked is the SMPS action frame, and that frame is not
+a robust management frame, it will never be encrypted.
+The easiest way to fix this problem is then to not look
+at frames that were encrypted.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c  |  7 ++-----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 17 +++++------------
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  2 +-
- 3 files changed, 8 insertions(+), 18 deletions(-)
+ net/mac80211/status.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index d42cab291025..0bde26bab15d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -70,8 +70,7 @@
- struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 				  struct device *dev,
- 				  const struct iwl_cfg *cfg,
--				  const struct iwl_trans_ops *ops,
--				  size_t dev_cmd_headroom)
-+				  const struct iwl_trans_ops *ops)
- {
- 	struct iwl_trans *trans;
- #ifdef CONFIG_LOCKDEP
-@@ -90,15 +89,13 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 	trans->dev = dev;
- 	trans->cfg = cfg;
- 	trans->ops = ops;
--	trans->dev_cmd_headroom = dev_cmd_headroom;
- 	trans->num_rx_queues = 1;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 83b8b11f24ea..fac191d6dcb7 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -200,6 +200,7 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 	}
  
- 	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
- 		 "iwl_cmd_pool:%s", dev_name(trans->dev));
- 	trans->dev_cmd_pool =
- 		kmem_cache_create(trans->dev_cmd_pool_name,
--				  sizeof(struct iwl_device_cmd)
--				  + trans->dev_cmd_headroom,
-+				  sizeof(struct iwl_device_cmd),
- 				  sizeof(void *),
- 				  SLAB_HWCACHE_ALIGN,
- 				  NULL);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index b52804dd884f..1b4b62ede2c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -772,9 +772,6 @@ enum iwl_plat_pm_mode {
-  *	the transport must set this before calling iwl_drv_start()
-  * @dev_cmd_pool: pool for Tx cmd allocation - for internal use only.
-  *	The user should use iwl_trans_{alloc,free}_tx_cmd.
-- * @dev_cmd_headroom: room needed for the transport's private use before the
-- *	device_cmd for Tx - for internal use only
-- *	The user should use iwl_trans_{alloc,free}_tx_cmd.
-  * @rx_mpdu_cmd: MPDU RX command ID, must be assigned by opmode before
-  *	starting the firmware, used for tracing
-  * @rx_mpdu_cmd_hdr_size: used for tracing, amount of data before the
-@@ -825,7 +822,6 @@ struct iwl_trans {
- 
- 	/* The following fields are internal only */
- 	struct kmem_cache *dev_cmd_pool;
--	size_t dev_cmd_headroom;
- 	char dev_cmd_pool_name[50];
- 
- 	struct dentry *dbgfs_dir;
-@@ -998,13 +994,13 @@ iwl_trans_dump_data(struct iwl_trans *trans,
- static inline struct iwl_device_cmd *
- iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
- {
--	u8 *dev_cmd_ptr = kmem_cache_alloc(trans->dev_cmd_pool, GFP_ATOMIC);
-+	struct iwl_device_cmd *dev_cmd_ptr =
-+		kmem_cache_alloc(trans->dev_cmd_pool, GFP_ATOMIC);
- 
- 	if (unlikely(dev_cmd_ptr == NULL))
- 		return NULL;
- 
--	return (struct iwl_device_cmd *)
--			(dev_cmd_ptr + trans->dev_cmd_headroom);
-+	return dev_cmd_ptr;
- }
- 
- int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
-@@ -1012,9 +1008,7 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
- static inline void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
- 					 struct iwl_device_cmd *dev_cmd)
- {
--	u8 *dev_cmd_ptr = (u8 *)dev_cmd - trans->dev_cmd_headroom;
--
--	kmem_cache_free(trans->dev_cmd_pool, dev_cmd_ptr);
-+	kmem_cache_free(trans->dev_cmd_pool, dev_cmd);
- }
- 
- static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
-@@ -1237,8 +1231,7 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
- struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 				  struct device *dev,
- 				  const struct iwl_cfg *cfg,
--				  const struct iwl_trans_ops *ops,
--				  size_t dev_cmd_headroom);
-+				  const struct iwl_trans_ops *ops);
- void iwl_trans_free(struct iwl_trans *trans);
- 
- /*****************************************************
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 15bf5100d096..b362779b66f4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2948,7 +2948,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		return ERR_PTR(ret);
- 
- 	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
--				&pdev->dev, cfg, &trans_ops_pcie, 0);
-+				&pdev->dev, cfg, &trans_ops_pcie);
- 	if (!trans)
- 		return ERR_PTR(-ENOMEM);
- 
+ 	if (ieee80211_is_action(mgmt->frame_control) &&
++	    !ieee80211_has_protected(mgmt->frame_control) &&
+ 	    mgmt->u.action.category == WLAN_CATEGORY_HT &&
+ 	    mgmt->u.action.u.ht_smps.action == WLAN_HT_ACTION_SMPS &&
+ 	    ieee80211_sdata_running(sdata)) {
 -- 
 2.11.0
