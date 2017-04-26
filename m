@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34553 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755407AbdDMSH1 (ORCPT
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:36694 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1036101AbdDZKgj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 14:07:27 -0400
-Received: by mail-oi0-f65.google.com with SMTP id t14so4185351oif.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2017 11:07:27 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 12/19] rtlwifi: btcoex: 21a 2ant: ignore wifi if it is at 5G band
-Date: Thu, 13 Apr 2017 13:07:03 -0500
-Message-Id: <20170413180710.19953-13-Larry.Finger@lwfinger.net> (sfid-20170413_200804_020226_01D148D6)
-In-Reply-To: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
-References: <20170413180710.19953-1-Larry.Finger@lwfinger.net>
+        Wed, 26 Apr 2017 06:36:39 -0400
+Date: Wed, 26 Apr 2017 12:36:28 +0200
+From: Johan Hovold <johan@kernel.org>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Johan Hovold <johan@kernel.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/8] NFC: fix device allocation and nfcmrvl crashes
+Message-ID: <20170426103628.GN2823@localhost> (sfid-20170426_123657_913824_BDFF2FD3)
+References: <20170330101542.15384-1-johan@kernel.org>
+ <20170418100916.GB2823@localhost>
+ <20170418232431.GB13724@zurbaran.ger.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170418232431.GB13724@zurbaran.ger.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Wed, Apr 19, 2017 at 01:24:31AM +0200, Samuel Ortiz wrote:
 
-When wifi is at 5G band, it does not intefere with 2.4G bt signal,
-hence we can just ignore it and transmit normally as nothing happened.
+> On Tue, Apr 18, 2017 at 12:09:16PM +0200, Johan Hovold wrote:
+> > On Thu, Mar 30, 2017 at 12:15:34PM +0200, Johan Hovold wrote:
+> > > This started out with the observation that the nfcmrvl_uart driver
+> > > unconditionally dereferenced the tty class device despite the fact that
+> > > not every tty has an associated struct device (Unix98 ptys). Some
+> > > further changes were needed in the common nfcmrvl code to fully address
+> > > this, some of which also incidentally fixed a few related bugs (e.g.
+> > > resource leaks in error paths).
+> > > 
+> > > While fixing this I stumbled over a regression in NFC core that lead to
+> > > broken registration error paths and misnamed workqueues.
+> > > 
+> > > Note that this has only been tested by configuring the n_hci line
+> > > discipline for different ttys without any actual NFC hardware connected.
+> > 
+> > > Johan Hovold (8):
+> > >   NFC: fix broken device allocation
+> > >   NFC: nfcmrvl_uart: add missing tty-device sanity check
+> > >   NFC: nfcmrvl: do not use device-managed resources
+> > >   NFC: nfcmrvl: use nfc-device for firmware download
+> > >   NFC: nfcmrvl: fix firmware-management initialisation
+> > >   NFC: nfcmrvl_uart: fix device-node leak during probe
+> > >   NFC: nfcmrvl_usb: use interface as phy device
+> > >   NFC: nfcmrvl: allow gpio 0 for reset signalling
+> > 
+> > Any chance of getting these into 4.12, Samuel?
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 1 +
- 1 file changed, 1 insertion(+)
+> I have yours and Mark Greer patchset pending. I'll push them to nfc-next
+> and see if I can send another pull request to Dave by the end of this
+> week.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 4030b6429c1d..bb609f078a01 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -1364,6 +1364,7 @@ static void btc8821a2ant_coex_all_off(struct btc_coexist *btcoexist)
- static void btc8821a2ant_coex_under_5g(struct btc_coexist *btcoexist)
- {
- 	btc8821a2ant_coex_all_off(btcoexist);
-+	btc8821a2ant_ignore_wlan_act(btcoexist, NORMAL_EXEC, true);
- }
- 
- static void btc8821a2ant_init_coex_dm(struct btc_coexist *btcoexist)
--- 
-2.12.0
+Any progress on this now that we got another week?
+
+Thanks,
+Johan
