@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f180.google.com ([209.85.213.180]:33493 "EHLO
-        mail-yb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030310AbdDSRMn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40708 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937217AbdDZJEW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2017 13:12:43 -0400
-Received: by mail-yb0-f180.google.com with SMTP id 81so9315548ybp.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Apr 2017 10:12:43 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v2] MAINTAINERS: update Amitkumar's email address
-Date: Wed, 19 Apr 2017 10:12:35 -0700
-Message-Id: <20170419171235.72772-1-briannorris@chromium.org> (sfid-20170419_191318_007688_39A988AF)
+        Wed, 26 Apr 2017 05:04:22 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/1] rndis_wlan: add return value validation
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1492994428-16090-1-git-send-email-bianpan201603@163.com>
+References: <1492994428-16090-1-git-send-email-bianpan201603@163.com>
+To: Pan Bian <bianpan201603@163.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+Message-Id: <20170426090416.862BE6032C@smtp.codeaurora.org> (sfid-20170426_112859_277769_9DD16CE3)
+Date: Wed, 26 Apr 2017 09:04:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-His email is bouncing, and he'd like to use this new one.
+Pan Bian <bianpan201603@163.com> wrote:
+> From: Pan Bian <bianpan2016@163.com>
+> 
+> Function create_singlethread_workqueue() will return a NULL pointer if
+> there is no enough memory, and its return value should be validated
+> before using. However, in function rndis_wlan_bind(), its return value
+> is not checked. This may cause NULL dereference bugs. This patch fixes
+> it.
+> 
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
 
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>
-Cc: Ganapathi Bhat <gbhat@marvell.com>
-Cc: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v2: update, don't remove
+Patch applied to wireless-drivers-next.git, thanks.
 
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+9dc7efd3978a rndis_wlan: add return value validation
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 078c38217daa..b87604eb4c85 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7844,7 +7844,7 @@ S:	Maintained
- F:	drivers/net/ethernet/marvell/mvneta.*
- 
- MARVELL MWIFIEX WIRELESS DRIVER
--M:	Amitkumar Karwar <akarwar@marvell.com>
-+M:	Amitkumar Karwar <amitkarwar@gmail.com>
- M:	Nishant Sarmukadam <nishants@marvell.com>
- M:	Ganapathi Bhat <gbhat@marvell.com>
- M:	Xinming Hu <huxm@marvell.com>
 -- 
-2.12.2.816.g2cccc81164-goog
+https://patchwork.kernel.org/patch/9695387/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
