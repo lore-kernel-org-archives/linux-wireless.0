@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:45657 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1953163AbdDYWn6 (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:36779 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162744AbdD0OmM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 18:43:58 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        devicetree@vger.kernel.org, Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH v5 0/9] NFC: trf7970a: Fixups & convert to desc-based GPIO
-Date: Tue, 25 Apr 2017 15:43:47 -0700
-Message-Id: <20170425224356.11498-1-mgreer@animalcreek.com> (sfid-20170426_004409_647620_E3C28A15)
+        Thu, 27 Apr 2017 10:42:12 -0400
+Received: by mail-qk0-f176.google.com with SMTP id u75so29008250qka.3
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2017 07:42:11 -0700 (PDT)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org, sameo@linux.intel.com
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
+        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com,
+        wharms@bfs.de, Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH v3] NFC: trf7970a: Correct register settings for 27MHz clock
+Date: Thu, 27 Apr 2017 10:41:59 -0400
+Message-Id: <1493304119-16605-1-git-send-email-geoff@kuvee.com> (sfid-20170427_164330_595588_8B15ACFE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These trf7970a driver patches do the following things:
- - add Mark Greer as the maintainer of the trf7970a driver
- - some minor fixups
- - remove support for 'vin-voltage-override' DT property
- - change the DTS example to indicate that EN and EN2 are active high GPIOs
- - convert the driver to use the descriptor-based GPIO interface
- - apply Lindent coding style fixes
+In prior commits the selected clock frequency does not propagate
+correctly to what is written the the TRF7970A_MODULATOR_SYS_CLK_CTRL
+register.
 
-Based on nfc-next/master 4ea206395d3a ("nfc: fix get_unaligned_...() misuses")
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+---
+ drivers/nfc/trf7970a.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-v4->v5:
- - Fixed whitespace issue in "NFC: trf7970a: Clean up coding style issues"
-
-v3->v4:
- - Rebased on nfc-next/master because patches in that branch conflict
-   with the v3 version of this patch series.
- - Removed "NFC: trf7970a: Don't manage EN2 when not specified in DT"
-   because a similar patch has already been accepted.
- - Added "NFC: trf7970a: Clean up coding style issues" because the reason
-   I removed it in v3 no longer exists.
- - Reordered the patches to make more sense (I think)
-
-v2->v3:
- - Removed "[PATCH v2 5/7] NFC: trf7970a: Clean up coding style issues"
-   because it will make merging patches from Geoff Lansberry and others
-   hard to apply.  I will resubmit once those patches have been merged
-   or rejected.
- - Added a patch to remove 'vin-voltage-override' DT property support as
-   proper DT regulator set up makes it unnecessary.
-
-v1->v2:
- - Commit description fixups only; no functional changes.
-
-Mark Greer (9):
-  MAINTAINERS: NFC: trf7970a: Add Mark Greer as maintainer
-  NFC: trf7970a: Don't de-assert EN2 unless it was asserted
-  NFC: trf7970a: Fix inaccurate comment in trf7970a_probe()
-  NFC: trf7970a: Only check 'en2-rf-quirk' if EN2 is specified
-  NFC: trf7970a: Remove useless comment
-  NFC: trf7970a: Remove support for 'vin-voltage-override' DT property
-  NFC: trf7970a: Enable pins are active high not active low
-  NFC: trf7970a: Convert to descriptor based GPIO interface
-  NFC: trf7970a: Clean up coding style issues
-
- .../devicetree/bindings/net/nfc/trf7970a.txt       |   6 +-
- MAINTAINERS                                        |   8 +
- drivers/nfc/Kconfig                                |   2 +-
- drivers/nfc/trf7970a.c                             | 363 ++++++++++-----------
- 4 files changed, 185 insertions(+), 194 deletions(-)
-
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 6ed5d7e..f7fee7d 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2067,6 +2067,13 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return -EINVAL;
+ 	}
+ 
++	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
++		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
++		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
++	} else {
++		trf->modulator_sys_clk_ctrl = 0;
++	}
++
+ 	ret = devm_request_threaded_irq(trf->dev, spi->irq, NULL,
+ 					trf7970a_irq,
+ 					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
 -- 
-2.12.0
+2.7.4
