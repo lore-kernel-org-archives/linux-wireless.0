@@ -1,78 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54532 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1956652AbdDZH7K (ORCPT
+Received: from relay8-d.mail.gandi.net ([217.70.183.201]:47912 "EHLO
+        relay8-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932106AbdD0OFu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2017 03:59:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Johannes Berg <johannes.berg@intel.com>
-Date: Wed, 26 Apr 2017 10:58:52 +0300
-Message-Id: <20170426075854.13546-8-luca@coelho.fi> (sfid-20170426_095926_748665_E039C209)
-In-Reply-To: <20170426075854.13546-1-luca@coelho.fi>
-References: <20170426075854.13546-1-luca@coelho.fi>
-Subject: [PATCH 7/9] ieee80211: fix kernel-doc parsing errors
+        Thu, 27 Apr 2017 10:05:50 -0400
+Message-ID: <1493301943.2281.14.camel@hadess.net> (sfid-20170427_160725_537441_04DD29F4)
+Subject: Re: [PATCH] staging: rtl8723bs: Revert ignoring_unreachable_code
+ kfree
+From: Bastien Nocera <hadess@hadess.net>
+To: Ian W MORRISON <ianwmorrison@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        jes.sorensen@gmail.com, Hans de Goede <hdegoede@redhat.com>,
+        gregkh@linuxfoundation.org
+Date: Thu, 27 Apr 2017 16:05:43 +0200
+In-Reply-To: <CAFXWsS98BbApyuYzFNhhXKzSRv=oE4GfoTFO1wBbjyKBidW92A@mail.gmail.com>
+References: <CAFXWsS9fNn=YF--408O=weoNHfAv+g+CXJ8Df8=BC4m4Lt1aSg@mail.gmail.com>
+         <CAFXWsS9rNZ1QWt_CNK-gOfb1Mqwch25XxB43d6B_8SX76vBW4Q@mail.gmail.com>
+         <1493300827.2281.13.camel@hadess.net>
+         <CAFXWsS98BbApyuYzFNhhXKzSRv=oE4GfoTFO1wBbjyKBidW92A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2017-04-28 at 00:00 +1000, Ian W MORRISON wrote:
+> With the current code from linux-next an 'insmod r8723bs.ko'
+> immediately results in segmentation fault.
 
-Some of the enum definitions are unnamed but there's still
-an attempt at documenting them - that doesn't work. Name
-them to make that work.
+What's the error trace you get?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 13f23036dc05..69033353d0d1 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2177,37 +2177,37 @@ enum ieee80211_tdls_actioncode {
- #define WLAN_BSS_COEX_INFORMATION_REQUEST	BIT(0)
- 
- /**
-- * enum - mesh synchronization method identifier
-+ * enum ieee80211_mesh_sync_method - mesh synchronization method identifier
-  *
-  * @IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET: the default synchronization method
-  * @IEEE80211_SYNC_METHOD_VENDOR: a vendor specific synchronization method
-  *	that will be specified in a vendor specific information element
-  */
--enum {
-+enum ieee80211_mesh_sync_method {
- 	IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET = 1,
- 	IEEE80211_SYNC_METHOD_VENDOR = 255,
- };
- 
- /**
-- * enum - mesh path selection protocol identifier
-+ * enum ieee80211_mesh_path_protocol - mesh path selection protocol identifier
-  *
-  * @IEEE80211_PATH_PROTOCOL_HWMP: the default path selection protocol
-  * @IEEE80211_PATH_PROTOCOL_VENDOR: a vendor specific protocol that will
-  *	be specified in a vendor specific information element
-  */
--enum {
-+enum ieee80211_mesh_path_protocol {
- 	IEEE80211_PATH_PROTOCOL_HWMP = 1,
- 	IEEE80211_PATH_PROTOCOL_VENDOR = 255,
- };
- 
- /**
-- * enum - mesh path selection metric identifier
-+ * enum ieee80211_mesh_path_metric - mesh path selection metric identifier
-  *
-  * @IEEE80211_PATH_METRIC_AIRTIME: the default path selection metric
-  * @IEEE80211_PATH_METRIC_VENDOR: a vendor specific metric that will be
-  *	specified in a vendor specific information element
-  */
--enum {
-+enum ieee80211_mesh_path_metric {
- 	IEEE80211_PATH_METRIC_AIRTIME = 1,
- 	IEEE80211_PATH_METRIC_VENDOR = 255,
- };
--- 
-2.11.0
+>  If I apply my 'patch' the insmod works and wifi is perfect. I didn't
+> try removing the kfree() call altogether as I didn't feel I had
+> enough understanding of possible implications to do so.
+> 
+> On 27 April 2017 at 23:47, Bastien Nocera <hadess@hadess.net> wrote:
+> > On Thu, 2017-04-27 at 23:44 +1000, Ian W MORRISON wrote:
+> > > I tried building the RTL8723BS SDIO wifi driver which has just
+> > been
+> > > incorporated in staging for linux-next as an external module and
+> > > found that it fails with 'Segmentation Fault'. I've tracked this
+> > down
+> > > to commit 6557ddfec348c13d7798ea9e44f11b6459f2f652 (staging:
+> > > rtl8723bs: Fix various errors in os_dep/ioctl_cfg80211.c) which
+> > > includes the fix
+> > > 'drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:3547
+> > > rtw_wdev_alloc() info: ignoring unreachable code'. The moving of
+> > line
+> > > 'kfree((u8 *)wdev);' causes the segmentation error so I've
+> > included
+> > > the following patch to revert it.
+> > 
+> > What error? Both versions look equally incorrect, eg. either it's
+> > leaking data in which case the kfree() is necessary and should be
+> > in a
+> > callable location, or it's not, and the call should be removed.
+> > 
+> 
+> 
