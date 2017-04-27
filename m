@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2776 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752882AbdDEHvd (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:51102 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162533AbdD0OAq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 03:51:33 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marcin Rokicki <marcin.rokicki@gmail.com>
-CC: Joe Perches <joe@perches.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Modify macros to fix style issues
-Date: Wed, 5 Apr 2017 07:51:28 +0000
-Message-ID: <874ly3jnr4.fsf@kamboji.qca.qualcomm.com> (sfid-20170405_095137_559240_ED3A207A)
-References: <1487751327-2917-1-git-send-email-marcin.rokicki@tieto.com>
-        <1487763244.14159.6.camel@perches.com>
-        <CAM8WyvFtUpWmw+hp6e+d6KY9yp9Ux=2827vqE3JUMwYii9wmFw@mail.gmail.com>
-        <CAN6SofaeUUBwJSromwC_WmLC8GpCQMu__rKwNZM5PiKGocJo4g@mail.gmail.com>
-        <CAN6SofZJjMmdkwqtD-amUTHzFJyQAYEKJUgOeHPKJEX7w0fD=g@mail.gmail.com>
-        <1487780395.14159.10.camel@perches.com>
-In-Reply-To: <1487780395.14159.10.camel@perches.com> (Joe Perches's message of
-        "Wed, 22 Feb 2017 08:19:55 -0800")
-Content-Type: text/plain; charset="iso-8859-1"
+        Thu, 27 Apr 2017 10:00:46 -0400
+Date: Thu, 27 Apr 2017 16:00:28 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ian W MORRISON <ianwmorrison@gmail.com>
+Cc: linux-wireless@vger.kernel.org, hadess@hadess.net,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        jes.sorensen@gmail.com, Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] staging: rtl8723bs: Revert ignoring_unreachable_code
+ kfree
+Message-ID: <20170427140028.GA1832@kroah.com> (sfid-20170427_160059_812704_2D52CA77)
+References: <CAFXWsS9fNn=YF--408O=weoNHfAv+g+CXJ8Df8=BC4m4Lt1aSg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFXWsS9fNn=YF--408O=weoNHfAv+g+CXJ8Df8=BC4m4Lt1aSg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+On Thu, Apr 27, 2017 at 11:42:38PM +1000, Ian W MORRISON wrote:
+> Hi,
 
-> (fyi Marcin, the reason this isn't getting on the list
->  is because your 3 tries have all included text and html)
+<snip>
 
-Marcin, please fix your mailer. I can't trust your patches if I can't
-see your replies on the mailing list (and patchwork).
+html email is rejected by vger, also please always cc: the driverdev
+mailing list for staging patches.  And finally, I need all patches in a
+format that I can apply them in (i.e. not as attachments.)
 
---=20
-Kalle Valo=
+Can you fix that up and resend?
+
+thanks,
+
+greg k-h
