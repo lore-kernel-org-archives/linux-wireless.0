@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49969 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752946AbdDEIG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 04:06:28 -0400
-Date: Wed, 5 Apr 2017 10:06:18 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v3 1/5] NFC: pn544: Get rid of platform data
-Message-ID: <20170405080618.GA2136@zurbaran.ger.intel.com> (sfid-20170405_100708_567369_1B7DED6F)
-References: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170328093639.53481-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:36436 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967709AbdD0V2v (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Apr 2017 17:28:51 -0400
+Received: by mail-qk0-f173.google.com with SMTP id u75so38780712qka.3
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2017 14:28:51 -0700 (PDT)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org, sameo@linux.intel.com
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
+        mgreer@animalcreek.com, justin@kuvee.com, colin.king@canonical.com,
+        wharms@bfs.de, Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH v4] NFC: trf7970a: Correct register settings for 27MHz clock
+Date: Thu, 27 Apr 2017 17:28:46 -0400
+Message-Id: <1493328526-28395-1-git-send-email-geoff@kuvee.com> (sfid-20170427_233041_194224_2630557C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andy,
+In prior commits the selected clock frequency does not propagate
+correctly to what is written to the TRF7970A_MODULATOR_SYS_CLK_CTRL
+register.
 
-On Tue, Mar 28, 2017 at 12:36:35PM +0300, Andy Shevchenko wrote:
-> Legacy platform data must go away. We are on the safe side here since
-> there are no users of it in the kernel.
-> 
-> If anyone by any odd reason needs it the GPIO lookup tables and
-> built-in device properties at your service.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  v3: no change
-> 
->  drivers/nfc/pn544/i2c.c             | 43 ++++++-------------------------------
->  include/linux/platform_data/pn544.h | 43 -------------------------------------
->  2 files changed, 6 insertions(+), 80 deletions(-)
->  delete mode 100644 include/linux/platform_data/pn544.h
-All 5 patches applied to nfc-next.
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+---
+ drivers/nfc/trf7970a.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Cheers,
-Samuel.
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 6ed5d7e..f7fee7d 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2067,6 +2067,13 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return -EINVAL;
+ 	}
+ 
++	if (clk_freq == TRF7970A_27MHZ_CLOCK_FREQUENCY) {
++		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
++		dev_dbg(trf->dev, "trf7970a configured for 27MHz crystal\n");
++	} else {
++		trf->modulator_sys_clk_ctrl = 0;
++	}
++
+ 	ret = devm_request_threaded_irq(trf->dev, spi->irq, NULL,
+ 					trf7970a_irq,
+ 					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+-- 
+2.7.4
