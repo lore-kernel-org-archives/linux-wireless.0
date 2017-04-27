@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52728 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1757574AbdDRWRs (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33085 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S966021AbdD0U3H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Apr 2017 18:17:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Apr 2017 01:17:11 +0300
-Message-Id: <20170418221729.28372-8-luca@coelho.fi> (sfid-20170419_001756_010143_E8140E0B)
-In-Reply-To: <20170418221729.28372-1-luca@coelho.fi>
-References: <20170418221729.28372-1-luca@coelho.fi>
-Subject: [PATCH 07/25] iwlwifi: mvm: do not turn on RX_FLAG_AMSDU_MORE
+        Thu, 27 Apr 2017 16:29:07 -0400
+Date: Thu, 27 Apr 2017 13:29:05 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: colin.king@canonical.com
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Linux NFC <linux-nfc@lists.01.org>
+Subject: Re: [PATCH] NFC: trf7970a: fix check of clock frequencies, use &&
+ instead of ||
+Message-ID: <20170427202905.GA8348@animalcreek.com> (sfid-20170427_222917_139889_01F56ABB)
+Reply-To: 20170424133603.3697-1-colin.king@canonical.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+> From: Colin Ian King <colin.king@canonical.com>
 
-This flag is used for mac80211 reordering. As we do reordering
-ourselves, turning it on is misleading and pointless.
+Hi Colin.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 ---
- 1 file changed, 3 deletions(-)
+[I completely missed this patch and don't have it to directly respond to
+ anymore so I probably missed some addresses from the CC list.]
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 29c9c56ed3fa..44072c3c4b5f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -917,9 +917,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			u8 *qc = ieee80211_get_qos_ctl(hdr);
- 
- 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
--			if (!(desc->amsdu_info &
--			      IWL_RX_MPDU_AMSDU_LAST_SUBFRAME))
--				rx_status->flag |= RX_FLAG_AMSDU_MORE;
- 		}
- 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID)
- 			iwl_mvm_agg_rx_received(mvm, baid);
--- 
-2.11.0
+> The "or" condition (clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+> (clk_freq != TRF7970A_13MHZ_CLOCK_FREQUE) will always be true because
+> clk_freq cannot be equal to two different values at the same time. Use
+> the  && operator instead of || to fix this.
+> 
+> Detected by CoverityScan, CID#1430468 ("Constant expression result")
+> 
+> Fixes: 837eb4d21ecde7 ("NFC: trf7970a: add device tree option for 27MHz clock")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/nfc/trf7970a.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 2d1c8ca6e679..00eb6cd2b22f 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
+> @@ -2071,8 +2071,8 @@ static int trf7970a_probe(struct spi_device *spi)
+>  	}
+>  
+>  	of_property_read_u32(np, "clock-frequency", &clk_freq);
+> -	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+> -		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
+> +	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) &&
+> +		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
+>  		dev_err(trf->dev,
+>  			"clock-frequency (%u Hz) unsupported\n",
+>  			clk_freq);
+
+Thanks for catching and fixing this.  Please rebase on the latest
+nfc-next/master branch and line up the two conditional lines of the
+'if' statement to match other similar instances in the latest version
+of the driver.
+
+Thanks,
+
+Mark
+--
