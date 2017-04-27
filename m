@@ -1,70 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36364 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753886AbdDOUcO (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:38325 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751441AbdD0Ezu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Apr 2017 16:32:14 -0400
-Received: by mail-oi0-f67.google.com with SMTP id b187so22210979oif.3
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Apr 2017 13:32:14 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 09/14] rtlwifi: btcoex: 21a 2ant: notify fw the number of APs
-Date: Sat, 15 Apr 2017 15:31:55 -0500
-Message-Id: <20170415203200.22979-10-Larry.Finger@lwfinger.net> (sfid-20170415_223223_477812_94A9617B)
-In-Reply-To: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
-References: <20170415203200.22979-1-Larry.Finger@lwfinger.net>
+        Thu, 27 Apr 2017 00:55:50 -0400
+Received: by mail-wm0-f45.google.com with SMTP id r190so7031837wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2017 21:55:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE_XsM+XRcnO+tQEPnntNYVObnpJwimXP1_41aqJPwnxHWxonQ@mail.gmail.com>
+References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
+ <20170426085337.181AA61493@smtp.codeaurora.org> <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com>
+ <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com> <CAE_XsM+XRcnO+tQEPnntNYVObnpJwimXP1_41aqJPwnxHWxonQ@mail.gmail.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Wed, 26 Apr 2017 21:55:48 -0700
+Message-ID: <CALLGbRJ=xWGBvWzj=SjfeHPV_c43JEaDbUNmP7=0g2=py0U=vQ@mail.gmail.com> (sfid-20170427_065559_604687_5DB3DD9D)
+Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
+To: James Hughes <james.hughes@raspberrypi.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Wed, Apr 26, 2017 at 12:54 PM, James Hughes
+<james.hughes@raspberrypi.org> wrote:
+> On 26 April 2017 at 19:03, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>>
+>>
+>> On 26-4-2017 17:44, Steve deRosier wrote:
+>>> On Wed, Apr 26, 2017 at 1:53 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>>>> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
+>>>>> callback was actually cloned. So instead of checking for sufficient
+>>>>> headroom it should also be writable. Hence use skb_cow_head() to
+>>>>> check and expand the headroom appropriately.
+>>>>>
+>>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>>
+>>>> Steve, would you have time to run a quick test with this?
+>>>>
+>>>> Patch set to Deferred.
+>>>>
+>>>
+>>> Happy to give it a quick spin on both of my platforms.
+>>>
 
-Use h2c to tell the firmware if the number of AP is more than 10 or
-not.
+@ Arend and James, thanks for the info. I understand it, but
+unfortunately I can't seem to replicate the problems on my platforms
+with the limited time I have available to test it. It also may have to
+do with my platforms having special custom bridging related code, or
+just me having setup too simple of a test.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c   | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+That said...
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index b93a4f7ce17a..9e152117730c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3982,6 +3982,7 @@ void ex_btc8821a2ant_media_status_notify(struct btc_coexist *btcoexist,
- 	u8 h2c_parameter[3] = {0};
- 	u32 wifi_bw;
- 	u8 wifi_central_chnl;
-+	u8 ap_num = 0;
- 
- 	if (BTC_MEDIA_CONNECT == type) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-@@ -3999,10 +4000,15 @@ void ex_btc8821a2ant_media_status_notify(struct btc_coexist *btcoexist,
- 		h2c_parameter[0] = 0x1;
- 		h2c_parameter[1] = wifi_central_chnl;
- 		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
--		if (BTC_WIFI_BW_HT40 == wifi_bw)
-+		if (wifi_bw == BTC_WIFI_BW_HT40) {
- 			h2c_parameter[2] = 0x30;
--		else
-+		} else {
- 			h2c_parameter[2] = 0x20;
-+			if (ap_num < 10)
-+				h2c_parameter[2] = 0x30;
-+			else
-+				h2c_parameter[2] = 0x20;
-+		}
- 	}
- 
- 	coex_dm->wifi_chnl_info[0] = h2c_parameter[0];
--- 
-2.12.0
+@Kalle: I have tested on both my 6004 and 6003 platforms. I didn't
+notice any incorrect behavior in my testing. But I don't have a test
+setup that would have shown the original problem as reported on the
+brcm driver so I can't say that the change actually _fixes_ anything.
+Only that in my testing it doesn't seem to break anything.
+
+Tested-by: Steve deRosier <derosier@gmail.com>
+
+- Steve
