@@ -1,57 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5508 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932927AbdDEL6W (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34985 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1422830AbdD1R3x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 07:58:22 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 01/11] wil6210: fix sequence for scan-abort during reset
-Date: Wed,  5 Apr 2017 14:58:04 +0300
-Message-Id: <1491393494-11816-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170405_140202_121116_7E7A5A41)
-In-Reply-To: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1491393494-11816-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 28 Apr 2017 13:29:53 -0400
+Received: by mail-pf0-f181.google.com with SMTP id v14so51554646pfd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2017 10:29:53 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] mwifiex: pcie: add card_reset() support
+Date: Fri, 28 Apr 2017 10:28:47 -0700
+Message-Id: <20170428172847.34888-1-briannorris@chromium.org> (sfid-20170428_193048_612269_EA9DEE53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Similar to the SDIO driver, we should implement this so that we will
+automatically reset the device whenever there's a command timeout or
+similar.
 
-Communication with FW must be done before wil->status
-is initialized in order to properly handle cases where
-communication with FW halts during reset sequence.
-
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I still haven't found the reset sequence to work 100% reliably, but it's
+definitely better than nothing.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index c33cc4a..7e72096 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -948,15 +948,15 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	/* Disable device led before reset*/
- 	wmi_led_cfg(wil, false);
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index ac62bce50e96..aaec4fdd7777 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2822,6 +2822,13 @@ static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
+ 	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
+ }
  
-+	mutex_lock(&wil->p2p_wdev_mutex);
-+	wil_abort_scan(wil, false);
-+	mutex_unlock(&wil->p2p_wdev_mutex);
++static void mwifiex_pcie_card_reset_work(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
 +
- 	/* prevent NAPI from being scheduled and prevent wmi commands */
- 	mutex_lock(&wil->wmi_mutex);
- 	bitmap_zero(wil->status, wil_status_last);
- 	mutex_unlock(&wil->wmi_mutex);
++	pci_reset_function(card->dev);
++}
++
+ static void mwifiex_pcie_work(struct work_struct *work)
+ {
+ 	struct pcie_service_card *card =
+@@ -2830,6 +2837,9 @@ static void mwifiex_pcie_work(struct work_struct *work)
+ 	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
+ 			       &card->work_flags))
+ 		mwifiex_pcie_device_dump_work(card->adapter);
++	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
++			       &card->work_flags))
++		mwifiex_pcie_card_reset_work(card->adapter);
+ }
  
--	mutex_lock(&wil->p2p_wdev_mutex);
--	wil_abort_scan(wil, false);
--	mutex_unlock(&wil->p2p_wdev_mutex);
--
- 	wil_mask_irq(wil);
+ /* This function dumps FW information */
+@@ -2845,6 +2855,18 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
+ 	schedule_work(&card->work);
+ }
  
- 	wmi_event_flush(wil);
++static void mwifiex_pcie_card_reset(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++
++	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
++		return;
++
++	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
++
++	schedule_work(&card->work);
++}
++
+ static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+@@ -3274,6 +3296,7 @@ static struct mwifiex_if_ops pcie_ops = {
+ 	.cleanup_mpa_buf =		NULL,
+ 	.init_fw_port =			mwifiex_pcie_init_fw_port,
+ 	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
++	.card_reset =			mwifiex_pcie_card_reset,
+ 	.reg_dump =			mwifiex_pcie_reg_dump,
+ 	.device_dump =			mwifiex_pcie_device_dump,
+ 	.down_dev =			mwifiex_pcie_down_dev,
 -- 
-1.9.1
+2.13.0.rc0.306.g87b477812d-goog
