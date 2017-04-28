@@ -1,502 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:32997 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932401AbdDQALY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2017 20:11:24 -0400
-Received: by mail-oi0-f67.google.com with SMTP id a189so587312oib.0
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2017 17:11:24 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/27] rtlwifi: btcoex: 23b 1ant: Switch antenna to wifi or BT.
-Date: Sun, 16 Apr 2017 19:10:52 -0500
-Message-Id: <20170417001111.29384-9-Larry.Finger@lwfinger.net> (sfid-20170417_021218_267467_1879E0D3)
-In-Reply-To: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
-References: <20170417001111.29384-1-Larry.Finger@lwfinger.net>
+Received: from mga09.intel.com ([134.134.136.24]:57607 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1164786AbdD1H3c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Apr 2017 03:29:32 -0400
+Date: Fri, 28 Apr 2017 09:29:04 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Shikha SINGH <shikha.singh@st.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
+        Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>,
+        Manoj KUMAR <manoj.kumar@st.com>,
+        Sylvain FIDELIS <sylvain.fidelis@st.com>,
+        Raphael COLLADO <Raphael.COLLADO@st.com>
+Subject: Re: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
+Message-ID: <20170428072904.GC3717@zurbaran.ger.intel.com> (sfid-20170428_092938_605669_390D9D8D)
+References: <1469161579-4339-1-git-send-email-shikha.singh@st.com>
+ <ad22efa9cb8c443eaa0828e25c0b207a@SFHDAG2NODE3.st.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ad22efa9cb8c443eaa0828e25c0b207a@SFHDAG2NODE3.st.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hi Shikha,
 
-Since wifi and BT share the same physical antenna, we should switch antenna
-to fit every situation.
+That one is next on my review list.
+Could you please rebase it on top of nfc-next though ?
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 323 ++++++++++++---------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +
- 2 files changed, 196 insertions(+), 130 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 35836272df70..0a6c67452e8d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -722,14 +722,18 @@ static void halbtc8723b1ant_sw_mechanism(struct btc_coexist *btcoexist,
- }
- 
- static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
--					 u8 ant_pos_type, bool init_hw_cfg,
--					 bool wifi_off)
-+					 u8 ant_pos_type, bool force_exec,
-+					 bool init_hw_cfg, bool wifi_off)
- {
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	struct btc_board_info *board_info = &btcoexist->board_info;
--	u32 fw_ver = 0, u32tmp = 0;
-+	u32 fw_ver = 0, u32tmp = 0, cnt_bt_cal_chk = 0;
- 	bool pg_ext_switch = false;
- 	bool use_ext_switch = false;
--	u8 h2c_parameter[2] = {0};
-+	bool is_in_mp_mode = false;
-+	u8 h2c_parameter[2] = {0}, u8tmp = 0;
-+
-+	coex_dm->cur_ant_pos_type = ant_pos_type;
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_EXT_SWITCH, &pg_ext_switch);
- 	/* [31:16] = fw ver, [15:0] = fw sub ver */
-@@ -739,24 +743,103 @@ static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
- 		use_ext_switch = true;
- 
- 	if (init_hw_cfg) {
--		/*BT select s0/s1 is controlled by WiFi */
--		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x1);
-+		/* WiFi TRx Mask on */
-+		btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff,
-+					  0x780);
-+		/* remove due to interrupt is disabled that polling c2h will
-+		 * fail and delay 100ms.
-+		 */
- 
--		/*Force GNT_BT to Normal */
--		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x0);
--	} else if (wifi_off) {
--		/*Force GNT_BT to High */
--		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x3);
--		/*BT select s0/s1 is controlled by BT */
-+		if (fw_ver >= 0x180000) {
-+			/* Use H2C to set GNT_BT to HIGH */
-+			h2c_parameter[0] = 1;
-+			btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
-+						h2c_parameter);
-+		} else {
-+			/* set grant_bt to high */
-+			btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
-+		}
-+		/* set wlan_act control by PTA */
-+		btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
-+
-+		/* BT select s0/s1 is controlled by BT */
- 		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x0);
-+		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x39, 0x8, 0x1);
-+		btcoexist->btc_write_1byte(btcoexist, 0x974, 0xff);
-+		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x944, 0x3, 0x3);
-+		btcoexist->btc_write_1byte(btcoexist, 0x930, 0x77);
-+	} else if (wifi_off) {
-+		if (fw_ver >= 0x180000) {
-+			/* Use H2C to set GNT_BT to HIGH */
-+			h2c_parameter[0] = 1;
-+			btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
-+						h2c_parameter);
-+		} else {
-+			/* set grant_bt to high */
-+			btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
-+		}
-+		/* set wlan_act to always low */
-+		btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
-+
-+		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_IS_IN_MP_MODE,
-+				   &is_in_mp_mode);
-+		if (!is_in_mp_mode)
-+			/* BT select s0/s1 is controlled by BT */
-+			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67,
-+							   0x20, 0x0);
-+		else
-+			/* BT select s0/s1 is controlled by WiFi */
-+			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67,
-+							   0x20, 0x1);
- 
--		/* 0x4c[24:23] = 00, Set Antenna control by BT_RFE_CTRL
--		 * BT Vendor 0xac = 0xf002
-+		/* 0x4c[24:23]=00, Set Antenna control by BT_RFE_CTRL
-+		 * BT Vendor 0xac=0xf002
- 		 */
- 		u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x4c);
- 		u32tmp &= ~BIT23;
- 		u32tmp &= ~BIT24;
- 		btcoexist->btc_write_4byte(btcoexist, 0x4c, u32tmp);
-+	} else {
-+		/* Use H2C to set GNT_BT to LOW */
-+		if (fw_ver >= 0x180000) {
-+			if (btcoexist->btc_read_1byte(btcoexist, 0x765) != 0) {
-+				h2c_parameter[0] = 0;
-+				btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
-+							h2c_parameter);
-+			}
-+		} else {
-+			/* BT calibration check */
-+			while (cnt_bt_cal_chk <= 20) {
-+				u8tmp = btcoexist->btc_read_1byte(btcoexist,
-+								  0x49d);
-+				cnt_bt_cal_chk++;
-+				if (u8tmp & BIT(0)) {
-+					RT_TRACE(rtlpriv, COMP_BT_COEXIST,
-+						 DBG_LOUD,
-+						 "[BTCoex], ########### BT is calibrating (wait cnt=%d) ###########\n",
-+						 cnt_bt_cal_chk);
-+					mdelay(50);
-+				} else {
-+					RT_TRACE(rtlpriv, COMP_BT_COEXIST,
-+						 DBG_LOUD,
-+						 "[BTCoex], ********** BT is NOT calibrating (wait cnt=%d)**********\n",
-+						 cnt_bt_cal_chk);
-+					break;
-+				}
-+			}
-+
-+			/* set grant_bt to PTA */
-+			btcoexist->btc_write_1byte(btcoexist, 0x765, 0x0);
-+		}
-+
-+		if (btcoexist->btc_read_1byte(btcoexist, 0x76e) != 0xc) {
-+			/* set wlan_act control by PTA */
-+			btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
-+		}
-+
-+		btcoexist->btc_write_1byte_bitmask(
-+			btcoexist, 0x67, 0x20,
-+			0x1); /* BT select s0/s1 is controlled by WiFi */
- 	}
- 
- 	if (use_ext_switch) {
-@@ -769,155 +852,130 @@ static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
- 			u32tmp |= BIT24;
- 			btcoexist->btc_write_4byte(btcoexist, 0x4c, u32tmp);
- 
-+			/* fixed internal switch S1->WiFi, S0->BT */
-+			btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
-+
- 			if (board_info->btdm_ant_pos ==
- 			    BTC_ANTENNA_AT_MAIN_PORT) {
--				/* Main Ant to BT for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x1);
--
- 				/* tell firmware "no antenna inverse" */
- 				h2c_parameter[0] = 0;
--				h2c_parameter[1] = 1;  /*ext switch type*/
-+				/* ext switch type */
-+				h2c_parameter[1] = 1;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			} else {
--				/* Aux Ant to  BT for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x0);
--
- 				/* tell firmware "antenna inverse" */
- 				h2c_parameter[0] = 1;
--				h2c_parameter[1] = 1; /* ext switch type */
-+				/* ext switch type */
-+				h2c_parameter[1] = 1;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			}
- 		}
- 
--		/* fixed internal switch first
--		 * fixed internal switch S1->WiFi, S0->BT
--		 */
--		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
--			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
--		else	/* fixed internal switch S0->WiFi, S1->BT */
--			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
--
--		/* ext switch setting */
--		switch (ant_pos_type) {
--		case BTC_ANT_PATH_WIFI:
--			if (board_info->btdm_ant_pos ==
--			    BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x1);
--			else
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x2);
--			break;
--		case BTC_ANT_PATH_BT:
--			if (board_info->btdm_ant_pos ==
--			    BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x2);
--			else
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x1);
--			break;
--		default:
--		case BTC_ANT_PATH_PTA:
--			if (board_info->btdm_ant_pos ==
--			    BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x1);
--			else
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x2);
--			break;
-+		if (force_exec ||
-+		    (coex_dm->cur_ant_pos_type != coex_dm->pre_ant_pos_type)) {
-+			/* ext switch setting */
-+			switch (ant_pos_type) {
-+			case BTC_ANT_PATH_WIFI:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x1);
-+				else
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x2);
-+				break;
-+			case BTC_ANT_PATH_BT:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x2);
-+				else
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x1);
-+				break;
-+			default:
-+			case BTC_ANT_PATH_PTA:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x1);
-+				else
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x2);
-+				break;
-+			}
- 		}
--
- 	} else {
- 		if (init_hw_cfg) {
--			/* 0x4c[23] = 1, 0x4c[24] = 0 Antenna control by 0x64 */
-+			/* 0x4c[23] = 1, 0x4c[24] = 0,
-+			 * Antenna control by 0x64
-+			 */
- 			u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x4c);
- 			u32tmp |= BIT23;
- 			u32tmp &= ~BIT24;
- 			btcoexist->btc_write_4byte(btcoexist, 0x4c, u32tmp);
- 
-+			/* Fix Ext switch Main->S1, Aux->S0 */
-+			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x64, 0x1,
-+							   0x0);
-+
- 			if (board_info->btdm_ant_pos ==
- 			    BTC_ANTENNA_AT_MAIN_PORT) {
--				/* Main Ant to WiFi for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x0);
--
- 				/* tell firmware "no antenna inverse" */
- 				h2c_parameter[0] = 0;
--				h2c_parameter[1] = 0; /* internal switch type */
-+				/* internal switch type */
-+				h2c_parameter[1] = 0;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			} else {
--				/* Aux Ant to BT for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x1);
--
- 				/* tell firmware "antenna inverse" */
- 				h2c_parameter[0] = 1;
--				h2c_parameter[1] = 0; /* internal switch type */
-+				/* internal switch type */
-+				h2c_parameter[1] = 0;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			}
- 		}
- 
--		/* fixed external switch first
--		 * Main->WiFi, Aux->BT
--		 */
--		if (board_info->btdm_ant_pos ==
--			BTC_ANTENNA_AT_MAIN_PORT)
--			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x92c,
--							   0x3, 0x1);
--		else	/* Main->BT, Aux->WiFi */
--			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x92c,
--							   0x3, 0x2);
--
--		/* internal switch setting */
--		switch (ant_pos_type) {
--		case BTC_ANT_PATH_WIFI:
--			if (board_info->btdm_ant_pos ==
--				BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x0);
--			else
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x280);
--			break;
--		case BTC_ANT_PATH_BT:
--			if (board_info->btdm_ant_pos ==
--				BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x280);
--			else
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x0);
--			break;
--		default:
--		case BTC_ANT_PATH_PTA:
--			if (board_info->btdm_ant_pos ==
--				BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x200);
--			else
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x80);
--			break;
-+		if (force_exec ||
-+		    (coex_dm->cur_ant_pos_type != coex_dm->pre_ant_pos_type)) {
-+			/* internal switch setting */
-+			switch (ant_pos_type) {
-+			case BTC_ANT_PATH_WIFI:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x0);
-+				else
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x280);
-+				break;
-+			case BTC_ANT_PATH_BT:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x280);
-+				else
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x0);
-+				break;
-+			default:
-+			case BTC_ANT_PATH_PTA:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x200);
-+				else
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x80);
-+				break;
-+			}
- 		}
- 	}
-+
-+	coex_dm->pre_ant_pos_type = coex_dm->cur_ant_pos_type;
- }
- 
- static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
-@@ -1117,6 +1175,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 						       0x0, 0x0, 0x0);
- 			halbtc8723b1ant_set_ant_path(btcoexist,
- 						     BTC_ANT_PATH_PTA,
-+						     FORCE_EXEC,
- 						     false, false);
- 			break;
- 		case 0:
-@@ -1126,6 +1185,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 						       0x0, 0x0, 0x0);
- 			halbtc8723b1ant_set_ant_path(btcoexist,
- 						     BTC_ANT_PATH_BT,
-+						     FORCE_EXEC,
- 						     false, false);
- 			break;
- 		case 9:
-@@ -1134,6 +1194,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 						       0x0, 0x0, 0x0);
- 			halbtc8723b1ant_set_ant_path(btcoexist,
- 						     BTC_ANT_PATH_WIFI,
-+						     FORCE_EXEC,
- 						     false, false);
- 			break;
- 		}
-@@ -1978,7 +2039,8 @@ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
- 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
- 
- 	/* Antenna config */
--	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA, true, false);
-+	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA, FORCE_EXEC,
-+				     true, false);
- 	/* PTA parameter */
- 	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
- }
-@@ -2297,7 +2359,7 @@ void ex_halbtc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
- 		coex_sta->under_ips = true;
- 
- 		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT,
--					     false, true);
-+					     FORCE_EXEC, false, true);
- 		/* set PTA control */
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 0);
- 		halbtc8723b1ant_coex_table_with_type(btcoexist,
-@@ -2701,7 +2763,8 @@ void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
- 
- 	btcoexist->stop_coex_dm = true;
- 
--	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT, false, true);
-+	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT, FORCE_EXEC,
-+				     false, true);
- 
- 	halbtc8723b1ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
- 
-@@ -2722,8 +2785,8 @@ void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Pnp notify to SLEEP\n");
- 		btcoexist->stop_coex_dm = true;
--		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT, false,
--					     true);
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT,
-+					     FORCE_EXEC, false, true);
- 		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
- 						 0x0, 0x0);
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 0);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 047bcda5563d..1d1885974777 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -84,6 +84,9 @@ enum _BT_8723B_1ANT_COEX_ALGO {
- };
- 
- struct coex_dm_8723b_1ant {
-+	/* hw setting */
-+	u8 pre_ant_pos_type;
-+	u8 cur_ant_pos_type;
- 	/* fw mechanism */
- 	bool cur_ignore_wlan_act;
- 	bool pre_ignore_wlan_act;
--- 
-2.12.0
+On Fri, Apr 28, 2017 at 04:31:16AM +0000, Shikha SINGH wrote:
+> Hello Samuel,
+>        Could you please consider the below patch series for integration in Linux-NFC mainline?
+> A long time ago we released this patch series but did not get any review comments or update.
+> 
+> This release is important for our customers who always prefer to pick the release from mainline.
+>  
+> Thanks for your comments.
+> 
+> Thanks & Regards,
+> Shikha
+> 
+> >>-----Original Message-----
+> >>From: Shikha SINGH
+> >>Sent: Friday, July 22, 2016 9:56 AM
+> >>To: sameo@linux.intel.com; linux-nfc@lists.01.org
+> >>Cc: Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>; Manoj
+> >KUMAR
+> >><manoj.kumar@st.com>; Sylvain FIDELIS <sylvain.fidelis@st.com>; Patrick
+> >>SOHN <patrick.sohn@st.com>; Shikha SINGH <shikha.singh@st.com>;
+> >Raphael
+> >>COLLADO <Raphael.COLLADO@st.com>
+> >>Subject: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
+> >>
+> >>*** STMicrolectronics NFC v1.0 ***
+> >>This patch series introduces the following features:
+> >>
+> >>(a) A generic Digital NFC UART framework.
+> >>The framework itself is an LDISC registered with the tty core. Any NFC
+> >>transciever implementing the digital specs and connected on an UART (or
+> >>on an emulated tty, such as /dev/ttyUSBx, /dev/ttyACMx) interface with
+> >>the host, will require this support.
+> >>
+> >>(b) An ST NFC Transciever core framework. This implements the required
+> >>digital ops and exposes an interface for the underlying phy drivers
+> >>(UART/ SPI). The services of the phy drivers are required when the core
+> >>wants to transmit/receive frames.
+> >>Also it provides helper functions for the phy drivers, for example phy
+> >>drivers registers with the core when it detects a Transciever connected
+> >>on the corresponding interface.
+> >>The framework currently supports NFC Type 2, Type 4A, Type 4B, Type 5
+> >>tag read/write.
+> >>
+> >>(c) An ST NFC UART LDisc driver that registers with the Digital NFC
+> >>UART framework, and with the ST NFC Transciever core framework as the
+> >>UART Phy driver.
+> >>
+> >>(d) An ST NFC SPI driver that register with ST NFC Transceiver core
+> >>framework as SPI phy driver.
+> >>
+> >>(e) This patch series also removes all the references of old ST NFC
+> >>transceiver driver "st95hf".
+> >>
+> >>Shikha Singh (6):
+> >>  NFC: add generic UART support
+> >>  NFC: nfcst: Add ST NFC Transceiver core framework
+> >>  NFC: nfctst: Add UART LDisc Driver
+> >>  NFC: nfctst: Add ST NFC SPI Driver
+> >>  DT: bindings: net: nfc: stnfc binding doc
+> >>  DRIVERS: NFC: Remove st95hf
+> >>
+> >> .../devicetree/bindings/net/nfc/st95hf.txt         |   50 -
+> >> .../devicetree/bindings/net/nfc/stnfc.txt          |   50 +
+> >> drivers/nfc/Kconfig                                |    2 +-
+> >> drivers/nfc/Makefile                               |    2 +-
+> >> drivers/nfc/nfcst/Kconfig                          |   48 +
+> >> drivers/nfc/nfcst/Makefile                         |   12 +
+> >> drivers/nfc/nfcst/core.c                           | 1122 +++++++++++++++++
+> >> drivers/nfc/nfcst/spi.c                            |  492 ++++++++
+> >> drivers/nfc/nfcst/stnfcdev.h                       |   70 ++
+> >> drivers/nfc/nfcst/uart.c                           |  164 +++
+> >> drivers/nfc/st95hf/Kconfig                         |   10 -
+> >> drivers/nfc/st95hf/Makefile                        |    6 -
+> >> drivers/nfc/st95hf/core.c                          | 1273 --------------------
+> >> drivers/nfc/st95hf/spi.c                           |  167 ---
+> >> drivers/nfc/st95hf/spi.h                           |   64 -
+> >> include/net/nfc/digital_uart.h                     |  105 ++
+> >> include/uapi/linux/tty.h                           |    1 +
+> >> net/nfc/Kconfig                                    |   12 +
+> >> net/nfc/Makefile                                   |    3 +
+> >> net/nfc/digital_uart.c                             |  523 ++++++++
+> >> 20 files changed, 2604 insertions(+), 1572 deletions(-)  delete mode
+> >>100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
+> >> create mode 100644 Documentation/devicetree/bindings/net/nfc/stnfc.txt
+> >> create mode 100644 drivers/nfc/nfcst/Kconfig  create mode 100644
+> >>drivers/nfc/nfcst/Makefile  create mode 100644 drivers/nfc/nfcst/core.c
+> >>create mode 100644 drivers/nfc/nfcst/spi.c  create mode 100644
+> >>drivers/nfc/nfcst/stnfcdev.h  create mode 100644
+> >>drivers/nfc/nfcst/uart.c delete mode 100644 drivers/nfc/st95hf/Kconfig
+> >>delete mode 100644 drivers/nfc/st95hf/Makefile  delete mode 100644
+> >>drivers/nfc/st95hf/core.c delete mode 100644 drivers/nfc/st95hf/spi.c
+> >>delete mode 100644 drivers/nfc/st95hf/spi.h  create mode 100644
+> >>include/net/nfc/digital_uart.h create mode 100644
+> >>net/nfc/digital_uart.c
+> >>
+> >>--
+> >>1.9.1
+> 
