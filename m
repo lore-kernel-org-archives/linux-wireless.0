@@ -1,144 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47290 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49712 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752873AbdDKG5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 02:57:08 -0400
+        id S1750761AbdD1JTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Apr 2017 05:19:08 -0400
+Message-ID: <1493371140.2431.6.camel@sipsolutions.net> (sfid-20170428_111924_839852_24BECDFB)
+Subject: Re: [PATCH] mac80211: Fix possible sband related NULL pointer
+ de-reference
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: pablo@netfilter.org, Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Benc <jbenc@redhat.com>,
-        David Ahern <dsa@cumulusnetworks.com>, jiri@resnulli.us,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH net-next v4 3/5] netlink: allow sending extended ACK with cookie on success
-Date: Tue, 11 Apr 2017 08:56:58 +0200
-Message-Id: <20170411065700.2623-4-johannes@sipsolutions.net> (sfid-20170411_085746_520611_A26D4129)
-In-Reply-To: <20170411065700.2623-1-johannes@sipsolutions.net>
-References: <20170411065700.2623-1-johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+Cc: mohammed@codeaurora.org, Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 28 Apr 2017 11:19:00 +0200
+In-Reply-To: <1493277338-25726-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1493277338-25726-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2017-04-27 at 12:45 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> 
+> Existing API 'ieee80211_get_sdata_band' returns default 2 GHz band
+> even
+> if the channel context configuration is NULL. This crashes for
+> chipsets
+> which support 5 Ghz alone when it tries to access members of 'sband'.
+> Channel context configuration can be NULL in multivif case and when
+> channel switch is in progress (or) when it fails. Fix this by
+> replacing
+> the API 'ieee80211_get_sdata_band' with  'ieee80211_get_sband' which
+> returns a NULL pointer for sband when the channel configuration is
+> NULL.
 
-Now that we have extended error reporting and a new message format
-for netlink ACK messages, also extend this to be able to return
-arbitrary cookie data on success.
+Makes sense.
 
-This will allow, for example, nl80211 to not send an extra message
-for cookies identifying newly created objects, but return those
-directly in the ACK message.
+Applied, but could you point to the one that actually crashed?
 
-The cookie data size is currently limited to 20 bytes (since Jamal
-talked about using SHA1 for identifiers.)
 
-Thanks to Jamal Hadi Salim for bringing up this idea during the
-discussions.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/netlink.h      |  7 +++++++
- include/uapi/linux/netlink.h |  4 ++++
- net/netlink/af_netlink.c     | 33 ++++++++++++++++++++++-----------
- 3 files changed, 33 insertions(+), 11 deletions(-)
-
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-index 60e7137f840d..8d2a8924705c 100644
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -62,15 +62,22 @@ netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
- 	return __netlink_kernel_create(net, unit, THIS_MODULE, cfg);
- }
- 
-+/* this can be increased when necessary - don't expose to userland */
-+#define NETLINK_MAX_COOKIE_LEN	20
-+
- /**
-  * struct netlink_ext_ack - netlink extended ACK report struct
-  * @_msg: message string to report - don't access directly, use
-  *	%NL_SET_ERR_MSG
-  * @bad_attr: attribute with error
-+ * @cookie: cookie data to return to userspace (for success)
-+ * @cookie_len: actual cookie data length
-  */
- struct netlink_ext_ack {
- 	const char *_msg;
- 	const struct nlattr *bad_attr;
-+	u8 cookie[NETLINK_MAX_COOKIE_LEN];
-+	u8 cookie_len;
- };
- 
- /* Always use this macro, this allows later putting the
-diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
-index 96e613db68cb..67fcde069b9c 100644
---- a/include/uapi/linux/netlink.h
-+++ b/include/uapi/linux/netlink.h
-@@ -122,6 +122,9 @@ struct nlmsgerr {
-  * @NLMSGERR_ATTR_MSG: error message string (string)
-  * @NLMSGERR_ATTR_OFFS: offset of the invalid attribute in the original
-  *	 message, counting from the beginning of the header (u32)
-+ * @NLMSGERR_ATTR_COOKIE: arbitrary subsystem specific cookie to
-+ *	be used - in the success case - to identify a created
-+ *	object or operation or similar (binary)
-  * @NUM_NLMSGERR_ATTRS: number of attributes
-  * @NLMSGERR_ATTR_MAX: highest attribute number
-  */
-@@ -129,6 +132,7 @@ enum nlmsgerr_attrs {
- 	NLMSGERR_ATTR_UNUSED,
- 	NLMSGERR_ATTR_MSG,
- 	NLMSGERR_ATTR_OFFS,
-+	NLMSGERR_ATTR_COOKIE,
- 
- 	NUM_NLMSGERR_ATTRS,
- 	NLMSGERR_ATTR_MAX = NUM_NLMSGERR_ATTRS - 1
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index c1564768000e..ee841f00a6ec 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -2311,6 +2311,10 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 		}
- 	} else {
- 		flags |= NLM_F_CAPPED;
-+
-+		if (nlk->flags & NETLINK_F_EXT_ACK &&
-+		    extack && extack->cookie_len)
-+			tlvlen += nla_total_size(extack->cookie_len);
- 	}
- 
- 	if (tlvlen)
-@@ -2337,17 +2341,24 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 	errmsg->error = err;
- 	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh->nlmsg_len : sizeof(*nlh));
- 
--	if (err && nlk->flags & NETLINK_F_EXT_ACK && extack) {
--		if (extack->_msg)
--			WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
--					       extack->_msg));
--		if (extack->bad_attr &&
--		    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
--			     (u8 *)extack->bad_attr >= in_skb->data +
--						       in_skb->len))
--			WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
--					    (u8 *)extack->bad_attr -
--					    in_skb->data));
-+	if (nlk->flags & NETLINK_F_EXT_ACK && extack) {
-+		if (err) {
-+			if (extack->_msg)
-+				WARN_ON(nla_put_string(skb, NLMSGERR_ATTR_MSG,
-+						       extack->_msg));
-+			if (extack->bad_attr &&
-+			    !WARN_ON((u8 *)extack->bad_attr < in_skb->data ||
-+				     (u8 *)extack->bad_attr >= in_skb->data +
-+							       in_skb->len))
-+				WARN_ON(nla_put_u32(skb, NLMSGERR_ATTR_OFFS,
-+						    (u8 *)extack->bad_attr -
-+						    in_skb->data));
-+		} else {
-+			if (extack->cookie_len)
-+				WARN_ON(nla_put(skb, NLMSGERR_ATTR_COOKIE,
-+						extack->cookie_len,
-+						extack->cookie));
-+		}
- 	}
- 
- 	nlmsg_end(skb, rep);
--- 
-2.11.0
+johannes
