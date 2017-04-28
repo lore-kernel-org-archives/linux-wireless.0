@@ -1,32 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60830 "EHLO
+Received: from shards.monkeyblade.net ([184.105.139.130]:57736 "EHLO
         shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754328AbdDDRb7 (ORCPT
+        with ESMTP id S1754235AbdD1SrN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 13:31:59 -0400
-Date: Tue, 04 Apr 2017 10:31:44 -0700 (PDT)
-Message-Id: <20170404.103144.1438343234401389523.davem@davemloft.net> (sfid-20170404_193249_849909_F4E6465E)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2017-04-03
+        Fri, 28 Apr 2017 14:47:13 -0400
+Date: Fri, 28 Apr 2017 14:47:08 -0400 (EDT)
+Message-Id: <20170428.144708.265950341264933754.davem@davemloft.net> (sfid-20170428_204921_129934_946DF0F2)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2017-04-28
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <87a87xohpp.fsf@kamboji.qca.qualcomm.com>
-References: <87a87xohpp.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <20170428175658.1961-1-johannes@sipsolutions.net>
+References: <20170428175658.1961-1-johannes@sipsolutions.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 03 Apr 2017 14:26:10 +0300
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 28 Apr 2017 19:56:57 +0200
 
-> here few really small fixes. I'm hoping this to be the last pull request
-> for 4.11.
+> Since I had many API changes pending I decided to go ahead and
+> take the opportunity to get them before the merge window, which
+> is a natural tree synchronization point :)
+
+Awesome :)
+
+> I meant to sent this earlier today but forgot due to some debug
+> (unrelated to this code, in our internal tree), sorry about that.
 > 
-> Please let me if there are any problems.
+> Please pull and let me know if there's any problem.
 
-Pulled, thanks.
-
-But I will warn you, you say fixes, but your Subject line and
-GIT tag says "-next" so I pulled it into net-next.
+Pulled, thanks Johannes.
