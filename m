@@ -1,140 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30152 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752770AbdDKKOM (ORCPT
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:35947 "EHLO
+        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1164862AbdD1Hqn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 06:14:12 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-        <tamizhchelvam@codeaurora.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv4 2/2] mac80211: Add support to enable or disable btcoex and set btcoex priority value
-Date: Tue, 11 Apr 2017 15:45:30 +0530
-Message-ID: <1491905730-16392-3-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170411_121448_780874_FCBF8571)
-In-Reply-To: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
+        Fri, 28 Apr 2017 03:46:43 -0400
+From: Shikha SINGH <shikha.singh@st.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
+        Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>,
+        Manoj KUMAR <manoj.kumar@st.com>,
+        Sylvain FIDELIS <sylvain.fidelis@st.com>,
+        Raphael COLLADO <Raphael.COLLADO@st.com>
+Subject: Re: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
+Date: Fri, 28 Apr 2017 07:45:36 +0000
+Message-ID: <1493365535720.2325@st.com> (sfid-20170428_094651_963751_EE258C32)
+References: <1469161579-4339-1-git-send-email-shikha.singh@st.com>
+ <ad22efa9cb8c443eaa0828e25c0b207a@SFHDAG2NODE3.st.com>,<20170428072904.GC3717@zurbaran.ger.intel.com>
+In-Reply-To: <20170428072904.GC3717@zurbaran.ger.intel.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Hi Samuel,
+      OK. I will rebase on top of nfc-next and make a new release.
 
-This patch introduces a new driver call back drv_set_btcoex.
-This API will pass user space value to driver to
-enable or disabe btcoex and set or modify the btcoex priority value.
+Thanks & Regards,
+Shikha    
+________________________________________
+From: Samuel Ortiz <sameo@linux.intel.com>
+Sent: Friday, April 28, 2017 12:59 PM
+To: Shikha SINGH
+Cc: linux-wireless@vger.kernel.org; linux-nfc@lists.01.org; Raunaque Mujeeb QUAISER; Manoj KUMAR; Sylvain FIDELIS; Raphael COLLADO
+Subject: Re: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- include/net/mac80211.h    |    5 +++++
- net/mac80211/cfg.c        |    9 +++++++++
- net/mac80211/driver-ops.h |   15 +++++++++++++++
- net/mac80211/trace.h      |   20 ++++++++++++++++++++
- 4 files changed, 49 insertions(+)
+Hi Shikha,
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b1ac872..865eb7f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3453,6 +3453,9 @@ enum ieee80211_reconfig_type {
-  * @del_nan_func: Remove a NAN function. The driver must call
-  *	ieee80211_nan_func_terminated() with
-  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
-+ * @set_btcoex: Called when BTCOEX is enabled/disabled, use
-+ *     this callback to enable or disable btcoex and use this callback to
-+ *     set btcoex_priority. BTCOEX should be enabled to set this priority.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3734,6 +3737,8 @@ struct ieee80211_ops {
- 	void (*del_nan_func)(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    u8 instance_id);
-+	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled,
-+			  u32 btcoex_priority);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8bc3d366..512e5f7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3617,6 +3617,14 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled,
-+				u32 btcoex_priority)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	return drv_set_btcoex(local, enabled, btcoex_priority);
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3709,4 +3717,5 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
- 	.add_nan_func = ieee80211_add_nan_func,
- 	.del_nan_func = ieee80211_del_nan_func,
- 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
-+	.set_btcoex = ieee80211_set_btcoex,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 09f77e4..c420da5 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1248,4 +1248,19 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
-+static inline int drv_set_btcoex(struct ieee80211_local *local,
-+				 bool enabled, u32 btcoex_priority)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_drv_set_btcoex(local, enabled, btcoex_priority);
-+	if (local->ops->set_btcoex)
-+		ret = local->ops->set_btcoex(&local->hw, enabled,
-+					     btcoex_priority);
-+
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 0d645bc..3a4621e 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -742,6 +742,26 @@
- 	TP_ARGS(local, value)
- );
- 
-+TRACE_EVENT(drv_set_btcoex,
-+	TP_PROTO(struct ieee80211_local *local, bool enabled,
-+		 u32 btcoex_priority),
-+	TP_ARGS(local, enabled, btcoex_priority),
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(bool, enabled)
-+		__field(u32, btcoex_priority)
-+	),
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->enabled = enabled;
-+		__entry->btcoex_priority = btcoex_priority;
-+	),
-+	TP_printk(
-+		LOCAL_PR_FMT " enabled:%d btcoex_priority :%u",
-+		LOCAL_PR_ARG, __entry->enabled, __entry->btcoex_priority
-+	)
-+);
-+
- TRACE_EVENT(drv_set_coverage_class,
- 	TP_PROTO(struct ieee80211_local *local, s16 value),
- 
--- 
-1.7.9.5
+That one is next on my review list.
+Could you please rebase it on top of nfc-next though ?
+
+Cheers,
+Samuel.
+
+On Fri, Apr 28, 2017 at 04:31:16AM +0000, Shikha SINGH wrote:
+> Hello Samuel,
+>        Could you please consider the below patch series for integration in Linux-NFC mainline?
+> A long time ago we released this patch series but did not get any review comments or update.
+>
+> This release is important for our customers who always prefer to pick the release from mainline.
+>
+> Thanks for your comments.
+>
+> Thanks & Regards,
+> Shikha
+>
+> >>-----Original Message-----
+> >>From: Shikha SINGH
+> >>Sent: Friday, July 22, 2016 9:56 AM
+> >>To: sameo@linux.intel.com; linux-nfc@lists.01.org
+> >>Cc: Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>; Manoj
+> >KUMAR
+> >><manoj.kumar@st.com>; Sylvain FIDELIS <sylvain.fidelis@st.com>; Patrick
+> >>SOHN <patrick.sohn@st.com>; Shikha SINGH <shikha.singh@st.com>;
+> >Raphael
+> >>COLLADO <Raphael.COLLADO@st.com>
+> >>Subject: [[linux-nfc] PATCH v1.0 0/6] Support for ST NFC Transceiver
+> >>
+> >>*** STMicrolectronics NFC v1.0 ***
+> >>This patch series introduces the following features:
+> >>
+> >>(a) A generic Digital NFC UART framework.
+> >>The framework itself is an LDISC registered with the tty core. Any NFC
+> >>transciever implementing the digital specs and connected on an UART (or
+> >>on an emulated tty, such as /dev/ttyUSBx, /dev/ttyACMx) interface with
+> >>the host, will require this support.
+> >>
+> >>(b) An ST NFC Transciever core framework. This implements the required
+> >>digital ops and exposes an interface for the underlying phy drivers
+> >>(UART/ SPI). The services of the phy drivers are required when the core
+> >>wants to transmit/receive frames.
+> >>Also it provides helper functions for the phy drivers, for example phy
+> >>drivers registers with the core when it detects a Transciever connected
+> >>on the corresponding interface.
+> >>The framework currently supports NFC Type 2, Type 4A, Type 4B, Type 5
+> >>tag read/write.
+> >>
+> >>(c) An ST NFC UART LDisc driver that registers with the Digital NFC
+> >>UART framework, and with the ST NFC Transciever core framework as the
+> >>UART Phy driver.
+> >>
+> >>(d) An ST NFC SPI driver that register with ST NFC Transceiver core
+> >>framework as SPI phy driver.
+> >>
+> >>(e) This patch series also removes all the references of old ST NFC
+> >>transceiver driver "st95hf".
+> >>
+> >>Shikha Singh (6):
+> >>  NFC: add generic UART support
+> >>  NFC: nfcst: Add ST NFC Transceiver core framework
+> >>  NFC: nfctst: Add UART LDisc Driver
+> >>  NFC: nfctst: Add ST NFC SPI Driver
+> >>  DT: bindings: net: nfc: stnfc binding doc
+> >>  DRIVERS: NFC: Remove st95hf
+> >>
+> >> .../devicetree/bindings/net/nfc/st95hf.txt         |   50 -
+> >> .../devicetree/bindings/net/nfc/stnfc.txt          |   50 +
+> >> drivers/nfc/Kconfig                                |    2 +-
+> >> drivers/nfc/Makefile                               |    2 +-
+> >> drivers/nfc/nfcst/Kconfig                          |   48 +
+> >> drivers/nfc/nfcst/Makefile                         |   12 +
+> >> drivers/nfc/nfcst/core.c                           | 1122 +++++++++++++++++
+> >> drivers/nfc/nfcst/spi.c                            |  492 ++++++++
+> >> drivers/nfc/nfcst/stnfcdev.h                       |   70 ++
+> >> drivers/nfc/nfcst/uart.c                           |  164 +++
+> >> drivers/nfc/st95hf/Kconfig                         |   10 -
+> >> drivers/nfc/st95hf/Makefile                        |    6 -
+> >> drivers/nfc/st95hf/core.c                          | 1273 --------------------
+> >> drivers/nfc/st95hf/spi.c                           |  167 ---
+> >> drivers/nfc/st95hf/spi.h                           |   64 -
+> >> include/net/nfc/digital_uart.h                     |  105 ++
+> >> include/uapi/linux/tty.h                           |    1 +
+> >> net/nfc/Kconfig                                    |   12 +
+> >> net/nfc/Makefile                                   |    3 +
+> >> net/nfc/digital_uart.c                             |  523 ++++++++
+> >> 20 files changed, 2604 insertions(+), 1572 deletions(-)  delete mode
+> >>100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
+> >> create mode 100644 Documentation/devicetree/bindings/net/nfc/stnfc.txt
+> >> create mode 100644 drivers/nfc/nfcst/Kconfig  create mode 100644
+> >>drivers/nfc/nfcst/Makefile  create mode 100644 drivers/nfc/nfcst/core.c
+> >>create mode 100644 drivers/nfc/nfcst/spi.c  create mode 100644
+> >>drivers/nfc/nfcst/stnfcdev.h  create mode 100644
+> >>drivers/nfc/nfcst/uart.c delete mode 100644 drivers/nfc/st95hf/Kconfig
+> >>delete mode 100644 drivers/nfc/st95hf/Makefile  delete mode 100644
+> >>drivers/nfc/st95hf/core.c delete mode 100644 drivers/nfc/st95hf/spi.c
+> >>delete mode 100644 drivers/nfc/st95hf/spi.h  create mode 100644
+> >>include/net/nfc/digital_uart.h create mode 100644
+> >>net/nfc/digital_uart.c
+> >>
+> >>--
+> >>1.9.1
+>
