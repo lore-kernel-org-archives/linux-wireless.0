@@ -1,290 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16887 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752612AbdDKKOB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Apr 2017 06:14:01 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-        <tamizhchelvam@codeaurora.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv4 1/2] cfg80211: Add support to enable or disable btcoex and set btcoex_priority
-Date: Tue, 11 Apr 2017 15:45:29 +0530
-Message-ID: <1491905730-16392-2-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170411_121442_525157_6B908A19)
-In-Reply-To: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:49300 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S968984AbdD1Igr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Apr 2017 04:36:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] mac80211: add support for HE RX rate reporting
+Date: Fri, 28 Apr 2017 10:36:39 +0200
+Message-Id: <20170428083639.3596-1-johannes@sipsolutions.net> (sfid-20170428_103709_414478_EB158A3B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch introduces NL80211_CMD_SET_BTCOEX command and
-NL80211_ATTR_BTCOEX_OP attribute to enable or disable btcoex.
-And this change enables user to set btcoex priority by using
-NL80211_ATTR_BTCOEX_PRIORITY attribute for the driver which
-has the btcoex priority capability. Driver should expose such
-capability and make use of this priority to decide whom to share the radio
-(either bluetooth or WLAN). When the high priority wlan frames are queued
-driver or firmware will signal to block BT activity.
-Capable drivers should advertise this support by setting
-NL80211_EXT_FEATURE_BTCOEX_PRIORITY nl80211 extended feature.
+Add support for encoding and reporting HE RX rates. So far this
+only passes through to cfg80211 and doesn't do anything extra
+like radiotap reporting.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+type=feature
+
+Change-Id: Iab9e575bf47b4945597d703fb4fd8fde7dc0057d
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h       |    6 +++++
- include/uapi/linux/nl80211.h |   50 ++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.c       |   45 +++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |   13 +++++++++++
- net/wireless/trace.h         |   17 ++++++++++++++
- 5 files changed, 131 insertions(+)
+ include/net/mac80211.h  |  7 ++++++-
+ net/mac80211/rx.c       | 11 +++++++++--
+ net/mac80211/sta_info.c | 10 +++++++++-
+ net/mac80211/sta_info.h | 18 ++++++++++++++++--
+ 4 files changed, 40 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 273b1dc..c280c7d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2856,6 +2856,10 @@ struct cfg80211_nan_func {
-  *	All other parameters must be ignored.
-  *
-  * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
-+ * @set_btcoex: Use this callback to call driver API when user wants to
-+ *	enable/disable btcoex and use this callback to set wlan high priority
-+ *	over bluetooth. When BTCOEX enabled, the high priority wlan frames
-+ *	will have more priority than BT.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3144,6 +3148,8 @@ struct cfg80211_ops {
- 	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
- 					    struct net_device *dev,
- 					    const bool enabled);
-+	int     (*set_btcoex)(struct wiphy *wiphy, bool enabled,
-+			      u32 btcoex_priority);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f1b58b580080..94fc278c75e7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1142,6 +1142,7 @@ enum mac80211_rx_encoding {
+ 	RX_ENC_LEGACY = 0,
+ 	RX_ENC_HT,
+ 	RX_ENC_VHT,
++	RX_ENC_HE,
  };
  
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6095a6c..404b74e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -944,6 +944,8 @@
-  *	BSS selection. This command can be issued only while connected and it
-  *	does not result in a change for the current association. Currently,
-  *	only the %NL80211_ATTR_IE data is used and updated with this command.
-+ * @NL80211_CMD_SET_BTCOEX: Enable/Disable btcoex using %NL80211_ATTR_BTCOEX_OP
-+ *	and set/modify btcoex priority using %NL80211_ATTR_BTCOEX_PRIORITY.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -1144,6 +1146,8 @@ enum nl80211_commands {
+ /**
+@@ -1176,6 +1177,9 @@ enum mac80211_rx_encoding {
+  * @encoding: &enum mac80211_rx_encoding
+  * @bw: &enum rate_info_bw
+  * @enc_flags: uses bits from &enum mac80211_rx_encoding_flags
++ * @he_ru: HE RU, from &enum nl80211_he_ru_alloc
++ * @he_gi: HE GI, from &enum nl80211_he_gi
++ * @he_dcm: HE DCM value
+  * @rx_flags: internal RX flags for mac80211
+  * @ampdu_reference: A-MPDU reference number, must be a different value for
+  *	each A-MPDU but the same for each subframe within one A-MPDU
+@@ -1189,7 +1193,8 @@ struct ieee80211_rx_status {
+ 	u32 flag;
+ 	u16 freq;
+ 	u8 enc_flags;
+-	u8 encoding:2, bw:3;
++	u8 encoding:2, bw:3, he_ru:3;
++	u8 he_gi:2, he_dcm:1;
+ 	u8 rate_idx;
+ 	u8 nss;
+ 	u8 rx_flags;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 35f4c7d7a500..8541b0cac580 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3341,8 +3341,7 @@ static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
+ 		status = IEEE80211_SKB_RXCB((rx->skb));
  
- 	NL80211_CMD_UPDATE_CONNECT_PARAMS,
+ 		sband = rx->local->hw.wiphy->bands[status->band];
+-		if (!(status->encoding == RX_ENC_HT) &&
+-		    !(status->encoding == RX_ENC_VHT))
++		if (status->encoding == RX_ENC_LEGACY)
+ 			rate = &sband->bitrates[status->rate_idx];
  
-+	NL80211_CMD_SET_BTCOEX,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2081,6 +2085,16 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PMK: PMK for the PMKSA identified by %NL80211_ATTR_PMKID.
-  *	This is used with @NL80211_CMD_SET_PMKSA.
-  *
-+ * @NL80211_ATTR_BTCOEX_OP: u8 attribute for driver supporting
-+ *	the btcoex feature. When used with %NL80211_CMD_SET_BTCOEX it contains
-+ *	either 0 for disable or 1 for enable btcoex.
-+ *
-+ * @NL80211_ATTR_BTCOEX_PRIORITY: This is for the driver which support
-+ *	btcoex priority feature. It used with %NL80211_CMD_SET_BTCOEX.
-+ *	This will have u32 BITMAP value which represents
-+ *	frame(bk, be, vi, vo, mgmt, beacon) type and that will have more
-+ *	priority than a BT traffic.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2500,6 +2514,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PMK,
- 
-+	NL80211_ATTR_BTCOEX_OP,
-+	NL80211_ATTR_BTCOEX_PRIORITY,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4838,6 +4855,8 @@ enum nl80211_feature_flags {
-  *	RSSI threshold values to monitor rather than exactly one threshold.
-  * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS shared key
-  *	authentication with %NL80211_CMD_CONNECT.
-+ * @NL80211_EXT_FEATURE_BTCOEX_PRIORITY: Driver supports btcoex priority
-+ *	feature with %NL80211_ATTR_BTCOEX_PRIORITY.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -4858,6 +4877,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
- 	NL80211_EXT_FEATURE_CQM_RSSI_LIST,
- 	NL80211_EXT_FEATURE_FILS_SK_OFFLOAD,
-+	NL80211_EXT_FEATURE_BTCOEX_PRIORITY,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-@@ -5339,4 +5359,34 @@ enum nl80211_nan_match_attributes {
- 	NL80211_NAN_MATCH_ATTR_MAX = NUM_NL80211_NAN_MATCH_ATTR - 1
- };
- 
-+/**
-+ * enum nl80211_btcoex_priority - btcoex priority supported frame types and
-+ *	its bitmap values.
-+ * @NL80211_BTCOEX_SUPPORTS_BE_PREF - wlan Best effort frame takes more
-+ *	priority than BT traffic.
-+ * @NL80211_BTCOEX_SUPPORTS_BK_PREF - wlan Background frame takes more
-+ *	priority than BT traffic.
-+ * @NL80211_BTCOEX_SUPPORTS_VI_PREF - wlan Video frame takes more priority
-+ *	than BT traffic.
-+ * @NL80211_BTCOEX_SUPPORTS_VO_PREF - wlan Voice frame takes more priority
-+ *	than BT traffic.
-+ * @NL80211_BTCOEX_SUPPORTS_BEACON_PREF - wlan BEACON frame takes more
-+ *	priority than  BT traffic.
-+ * @NL80211_BTCOEX_SUPPORTS_MGMT_PREF - wlan Management frame takes more
-+ *	priority than BT traffic.
-+ * @NL80211_BTCOEX_SUPPORTS_MAX_PREF - MAX supported value for btcoex
-+ *	priority feature.
-+ */
-+
-+enum nl80211_btcoex_priority {
-+	NL80211_BTCOEX_SUPPORTS_BE_PREF		= 1 << 0,
-+	NL80211_BTCOEX_SUPPORTS_BK_PREF		= 1 << 1,
-+	NL80211_BTCOEX_SUPPORTS_VI_PREF		= 1 << 2,
-+	NL80211_BTCOEX_SUPPORTS_VO_PREF		= 1 << 3,
-+	NL80211_BTCOEX_SUPPORTS_BEACON_PREF	= 1 << 4,
-+	NL80211_BTCOEX_SUPPORTS_MGMT_PREF	= 1 << 5,
-+	NL80211_BTCOEX_SUPPORTS_MAX_PREF	= (1 << 6) - 1,
-+};
-+
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9910aae..55b9ac7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -419,6 +419,8 @@ enum nl80211_multicast_groups {
- 					.len = FILS_ERP_MAX_RRK_LEN },
- 	[NL80211_ATTR_FILS_CACHE_ID] = { .len = 2 },
- 	[NL80211_ATTR_PMK] = { .type = NLA_BINARY, .len = PMK_MAX_LEN },
-+	[NL80211_ATTR_BTCOEX_OP] = { .type = NLA_U8 },
-+	[NL80211_ATTR_BTCOEX_PRIORITY] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -12184,6 +12186,41 @@ static int nl80211_set_multicast_to_unicast(struct sk_buff *skb,
- 	return rdev_set_multicast_to_unicast(rdev, dev, enabled);
+ 		ieee80211_rx_cooked_monitor(rx, rate);
+@@ -4314,6 +4313,14 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
+ 				      status->rate_idx, status->nss))
+ 				goto drop;
+ 			break;
++		case RX_ENC_HE:
++			if (WARN_ONCE(status->rate_idx > 9 ||
++				      !status->nss ||
++				      status->nss > 8,
++				      "Rate marked as an HE rate but data is invalid: MCS: %d, NSS: %d\n",
++				      status->rate_idx, status->nss))
++				goto drop;
++			break;
+ 		default:
+ 			WARN_ON_ONCE(1);
+ 			/* fall through */
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 464566c662c5..84138e76ac78 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1954,7 +1954,7 @@ sta_get_last_rx_stats(struct sta_info *sta)
+ 	return stats;
  }
  
-+static int nl80211_set_btcoex(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wiphy *wiphy = &rdev->wiphy;
-+	u8 val = 0;
-+	u32 btcoex_priority = 0;
-+
-+	if (!rdev->ops->set_btcoex)
-+		return -ENOTSUPP;
-+
-+	if (!(info->attrs[NL80211_ATTR_BTCOEX_OP]))
-+		goto set_btcoex;
-+
-+	if (info->attrs[NL80211_ATTR_BTCOEX_OP])
-+		val = nla_get_u8(info->attrs[NL80211_ATTR_BTCOEX_OP]);
-+
-+	if (val > 1)
-+		return -EINVAL;
-+
-+	if (info->attrs[NL80211_ATTR_BTCOEX_PRIORITY]) {
-+		if (!wiphy_ext_feature_isset(wiphy,
-+					NL80211_EXT_FEATURE_BTCOEX_PRIORITY))
-+			return -EOPNOTSUPP;
-+
-+		btcoex_priority =
-+		nla_get_u32(info->attrs[NL80211_ATTR_BTCOEX_PRIORITY]);
-+
-+		if (btcoex_priority > NL80211_BTCOEX_SUPPORTS_MAX_PREF)
-+			return -E2BIG;
-+	}
-+
-+set_btcoex:
-+	return rdev_set_btcoex(rdev, val, btcoex_priority);
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13059,6 +13096,14 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_BTCOEX,
-+		.doit = nl80211_set_btcoex,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WIPHY |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
+-static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
++static void sta_stats_decode_rate(struct ieee80211_local *local, u32 rate,
+ 				  struct rate_info *rinfo)
+ {
+ 	rinfo->bw = STA_STATS_GET(BW, rate);
+@@ -1992,6 +1992,14 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
+ 		rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
+ 		break;
+ 		}
++	case STA_STATS_RATE_TYPE_HE:
++		rinfo->flags = RATE_INFO_FLAGS_HE_MCS;
++		rinfo->mcs = STA_STATS_GET(HE_MCS, rate);
++		rinfo->nss = STA_STATS_GET(HE_NSS, rate);
++		rinfo->he_gi = STA_STATS_GET(HE_GI, rate);
++		rinfo->he_ru_alloc = STA_STATS_GET(HE_RU, rate);
++		rinfo->he_dcm = STA_STATS_GET(HE_DCM, rate);
++		break;
+ 	}
+ }
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 5609cacb20d5..12832842fe78 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -387,7 +387,7 @@ struct ieee80211_sta_rx_stats {
+ 	int last_signal;
+ 	u8 chains;
+ 	s8 chain_signal_last[IEEE80211_MAX_CHAINS];
+-	u16 last_rate;
++	u32 last_rate;
+ 	struct u64_stats_sync syncp;
+ 	u64 bytes;
+ 	u64 msdu[IEEE80211_NUM_TIDS + 1];
+@@ -733,6 +733,7 @@ enum sta_stats_type {
+ 	STA_STATS_RATE_TYPE_LEGACY,
+ 	STA_STATS_RATE_TYPE_HT,
+ 	STA_STATS_RATE_TYPE_VHT,
++	STA_STATS_RATE_TYPE_HE,
  };
  
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index f2baf59..d0dec56 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1165,4 +1165,17 @@ static inline int rdev_set_qos_map(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-+
-+static inline int
-+rdev_set_btcoex(struct cfg80211_registered_device *rdev, bool enabled,
-+		u32 btcoex_priority)
-+{
-+	int ret = -ENOTSUPP;
-+
-+	trace_rdev_set_btcoex(&rdev->wiphy, enabled, btcoex_priority);
-+	ret = rdev->ops->set_btcoex(&rdev->wiphy, enabled, btcoex_priority);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index fd55786..1947011 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3069,6 +3069,23 @@
- 		  WIPHY_PR_ARG, __entry->n_rules)
- );
+ #define STA_STATS_FIELD_HT_MCS		GENMASK( 7,  0)
+@@ -740,9 +741,14 @@ enum sta_stats_type {
+ #define STA_STATS_FIELD_LEGACY_BAND	GENMASK( 7,  4)
+ #define STA_STATS_FIELD_VHT_MCS		GENMASK( 3,  0)
+ #define STA_STATS_FIELD_VHT_NSS		GENMASK( 7,  4)
++#define STA_STATS_FIELD_HE_MCS		GENMASK( 3,  0)
++#define STA_STATS_FIELD_HE_NSS		GENMASK( 7,  4)
+ #define STA_STATS_FIELD_BW		GENMASK(11,  8)
+ #define STA_STATS_FIELD_SGI		GENMASK(12, 12)
+ #define STA_STATS_FIELD_TYPE		GENMASK(15, 13)
++#define STA_STATS_FIELD_HE_RU		GENMASK(18, 16)
++#define STA_STATS_FIELD_HE_GI		GENMASK(20, 19)
++#define STA_STATS_FIELD_HE_DCM		GENMASK(21, 21)
  
-+TRACE_EVENT(rdev_set_btcoex,
-+	TP_PROTO(struct wiphy *wiphy, bool enabled, u32 btcoex_priority),
-+	TP_ARGS(wiphy, enabled, btcoex_priority),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		__field(bool, enabled)
-+		__field(u32, btcoex_priority)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		__entry->enabled = enabled;
-+		__entry->btcoex_priority = btcoex_priority;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", enabled=%d btcoex_priority :%u",
-+		  WIPHY_PR_ARG, __entry->enabled, __entry->btcoex_priority)
-+);
-+
- DEFINE_EVENT(wiphy_wdev_evt, rdev_abort_scan,
- 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
- 	TP_ARGS(wiphy, wdev)
+ #define STA_STATS_FIELD(_n, _v)		FIELD_PREP(STA_STATS_FIELD_ ## _n, _v)
+ #define STA_STATS_GET(_n, _v)		FIELD_GET(STA_STATS_FIELD_ ## _n, _v)
+@@ -751,7 +757,7 @@ enum sta_stats_type {
+ 
+ static inline u32 sta_stats_encode_rate(struct ieee80211_rx_status *s)
+ {
+-	u16 r;
++	u32 r;
+ 
+ 	r = STA_STATS_FIELD(BW, s->bw);
+ 
+@@ -773,6 +779,14 @@ static inline u32 sta_stats_encode_rate(struct ieee80211_rx_status *s)
+ 		r |= STA_STATS_FIELD(LEGACY_BAND, s->band);
+ 		r |= STA_STATS_FIELD(LEGACY_IDX, s->rate_idx);
+ 		break;
++	case RX_ENC_HE:
++		r |= STA_STATS_FIELD(TYPE, STA_STATS_RATE_TYPE_HE);
++		r |= STA_STATS_FIELD(HE_NSS, s->nss);
++		r |= STA_STATS_FIELD(HE_MCS, s->rate_idx);
++		r |= STA_STATS_FIELD(HE_GI, s->he_gi);
++		r |= STA_STATS_FIELD(HE_RU, s->he_ru);
++		r |= STA_STATS_FIELD(HE_DCM, s->he_dcm);
++		break;
+ 	default:
+ 		WARN_ON(1);
+ 		return STA_STATS_RATE_INVALID;
 -- 
-1.7.9.5
+2.11.0
