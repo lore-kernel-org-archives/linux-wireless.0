@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40516 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753339AbdDEMip (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:33137 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034141AbdD1UXk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 08:38:45 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 28 Apr 2017 16:23:40 -0400
+Date: Fri, 28 Apr 2017 15:23:38 -0500
+From: Rob Herring <robh@kernel.org>
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 6/9] NFC: trf7970a: Remove support for
+ 'vin-voltage-override' DT property
+Message-ID: <20170428202338.iosgu2o4yxg3foig@rob-hp-laptop> (sfid-20170428_222345_155262_DAA08AF9)
+References: <20170425224356.11498-1-mgreer@animalcreek.com>
+ <20170425224356.11498-7-mgreer@animalcreek.com>
 MIME-Version: 1.0
-Subject: Re: [v2] mwifiex: Support USB interrupt endpoint for command
- response/event
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1490619464-14844-1-git-send-email-gbhat@marvell.com>
-References: <1490619464-14844-1-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20170405123845.476AB60DAD@smtp.codeaurora.org> (sfid-20170405_144107_531837_48525540)
-Date: Wed,  5 Apr 2017 12:38:45 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170425224356.11498-7-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
-> USB firmware added support for sending command response/event through
-> interrupt endpoint, to enhance RX throughput. Added corresponding changes
-> required to support this feature. This change takes care of backward
-> compatibility with older firmware.
+On Tue, Apr 25, 2017 at 03:43:53PM -0700, Mark Greer wrote:
+> The 'vin-voltage-override' DT property is used by the trf7970a
+> driver to override the voltage presented to the driver by the
+> regulator subsystem.  This is unnecessary as properly specifying
+> the regulator chain via DT properties will accomplish the same
+> thing.  Therefore, remove support for 'vin-voltage-override'.
 > 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+> ---
+>  Documentation/devicetree/bindings/net/nfc/trf7970a.txt |  2 --
+>  drivers/nfc/trf7970a.c                                 | 11 +----------
+>  2 files changed, 1 insertion(+), 12 deletions(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-182f56966054 mwifiex: Support USB interrupt endpoint for command response/event
-
--- 
-https://patchwork.kernel.org/patch/9646607/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Acked-by: Rob Herring <robh@kernel.org>
