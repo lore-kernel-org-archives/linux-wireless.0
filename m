@@ -1,29 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:46182 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032220AbdDTRzJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2017 13:55:09 -0400
-Date: Thu, 20 Apr 2017 13:55:07 -0400 (EDT)
-Message-Id: <20170420.135507.909887688974463452.davem@davemloft.net> (sfid-20170420_195516_044133_B1D34004)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2017-04-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170418092030.7299-1-johannes@sipsolutions.net>
-References: <20170418092030.7299-1-johannes@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52424 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2993287AbdD1Mxp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Apr 2017 08:53:45 -0400
+Message-ID: <1493384023.2431.17.camel@sipsolutions.net> (sfid-20170428_145618_779612_F3E4BE1B)
+Subject: Re: [RFC] cfg80211: add control port state to struct
+ cfg80211_connect_resp_params
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 28 Apr 2017 14:53:43 +0200
+In-Reply-To: <49ec312c-6a2f-1bfe-820e-c14f1fa4baba@broadcom.com> (sfid-20170428_144642_384785_4A958630)
+References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1493131210.2609.2.camel@sipsolutions.net>
+         <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
+         <1493145418.2609.5.camel@sipsolutions.net>
+         <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com>
+         <1493191249.2464.6.camel@sipsolutions.net>
+         <c0b5817a-c4fa-8f7c-2632-cf22aa09d71b@broadcom.com>
+         <1493380923.2431.13.camel@sipsolutions.net>
+         <49ec312c-6a2f-1bfe-820e-c14f1fa4baba@broadcom.com>
+         (sfid-20170428_144642_384785_4A958630)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 18 Apr 2017 11:20:29 +0200
+On Fri, 2017-04-28 at 14:46 +0200, Arend Van Spriel wrote:
 
-> I hadn't realized that I actually had this many patches pending,
-> but most of them really are cleanups and little fixes. Despite a
-> bunch of driver changes, there don't seem to be any conflicts.
+> I already have the 4-way-hs stuff rebased with modified ATTR_PMK
+> description and additional length check in nl80211 for it. Jouni
+> commented on that already in 4-way-hs patch.
+
+Cool.
+
+> > Do you want to pick that up? I probably can't do it soon - I'm
+> > likely busy with other things the next week or two, then travel
+> > again, ...
 > 
-> Please pull and let me know if there's any problem.
+> That is my plan.
 
-Pulled, thanks Johannes.
+Awesome, thanks!
+
+johannes
