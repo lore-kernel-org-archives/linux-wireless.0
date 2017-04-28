@@ -1,126 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52906 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752967AbdDEHIA (ORCPT
+Received: from mail-qt0-f177.google.com ([209.85.216.177]:35190 "EHLO
+        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030460AbdD1Mqm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 03:08:00 -0400
-Subject: [PATCH 7/7] ath10k: remove unused sdio wrappers
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 5 Apr 2017 10:07:49 +0300
-Message-ID: <149137606916.4898.873080560482504845.stgit@potku.adurom.net> (sfid-20170405_090804_690261_39189D18)
-In-Reply-To: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
-References: <149137591893.4898.2318291094351440261.stgit@potku.adurom.net>
+        Fri, 28 Apr 2017 08:46:42 -0400
+Received: by mail-qt0-f177.google.com with SMTP id y33so48881557qta.2
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2017 05:46:42 -0700 (PDT)
+Subject: Re: [RFC] cfg80211: add control port state to struct
+ cfg80211_connect_resp_params
+To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
+References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1493131210.2609.2.camel@sipsolutions.net>
+ <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
+ <1493145418.2609.5.camel@sipsolutions.net>
+ <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com>
+ <1493191249.2464.6.camel@sipsolutions.net>
+ <c0b5817a-c4fa-8f7c-2632-cf22aa09d71b@broadcom.com>
+ <1493380923.2431.13.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <49ec312c-6a2f-1bfe-820e-c14f1fa4baba@broadcom.com> (sfid-20170428_144706_940260_951BE5E6)
+Date: Fri, 28 Apr 2017 14:46:37 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1493380923.2431.13.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/sdio.c |   44 --------------------------------
- drivers/net/wireless/ath/ath10k/sdio.h |   35 -------------------------
- 2 files changed, 79 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 8ea1629c7bae..a5ed4282b3b3 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -219,50 +219,6 @@ static int ath10k_sdio_config(struct ath10k *ar)
- 	return ret;
- }
- 
--static int ath10k_sdio_io(struct ath10k *ar, u32 request, u32 addr,
--			  u8 *buf, u32 len)
--{
--	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
--	struct sdio_func *func = ar_sdio->func;
--	int ret;
--
--	sdio_claim_host(func);
--
--	if (request & HIF_WRITE) {
--		if (request & HIF_FIXED_ADDRESS)
--			ret = sdio_writesb(func, addr, buf, len);
--		else
--			ret = sdio_memcpy_toio(func, addr, buf, len);
--	} else {
--		if (request & HIF_FIXED_ADDRESS)
--			ret = sdio_readsb(func, buf, addr, len);
--		else
--			ret = sdio_memcpy_fromio(func, buf, addr, len);
--	}
--
--	sdio_release_host(func);
--
--	ath10k_dbg(ar, ATH10K_DBG_SDIO, "sdio %s addr 0x%x%s buf 0x%p len %d\n",
--		   request & HIF_WRITE ? "wr" : "rd", addr,
--		   request & HIF_FIXED_ADDRESS ? " (fixed)" : "", buf, len);
--	ath10k_dbg_dump(ar, ATH10K_DBG_SDIO_DUMP, NULL,
--			request & HIF_WRITE ? "sdio wr " : "sdio rd ",
--			buf, len);
--
--	return ret;
--}
--
--static int ath10k_sdio_read_write_sync(struct ath10k *ar, u32 addr, u8 *buf,
--				       u32 len, u32 request)
--{
--	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
--
--	if (request & HIF_BLOCK_BASIS)
--		len = round_down(len, ar_sdio->mbox_info.block_size);
--
--	return ath10k_sdio_io(ar, request, addr, buf, len);
--}
--
- static int ath10k_sdio_write32(struct ath10k *ar, u32 addr, u32 val)
- {
- 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
-index 1bce56447e53..62d2699123ec 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.h
-+++ b/drivers/net/wireless/ath/ath10k/sdio.h
-@@ -136,41 +136,6 @@ struct ath10k_sdio_rx_data {
- 	int status;
- };
- 
--/* direction of transfer (read/write) */
--#define HIF_READ                    0x00000001
--#define HIF_WRITE                   0x00000002
--
--/*     dmode - An interface may support different kinds of commands based on
-- *             the tradeoff between the amount of data it can carry and the
-- *             setup time. Byte and Block modes are supported (HIF_BYTE_BASIS/
-- *             HIF_BLOCK_BASIS). In case of latter, the data is rounded off
-- *             to the nearest block size by padding. The size of the block is
-- *             configurable at compile time using the HIF_BLOCK_SIZE and is
-- *             negotiated with the target during initialization after the
-- *             ATH10K interrupts are enabled.
-- */
--#define HIF_BYTE_BASIS              0x00000040
--#define HIF_BLOCK_BASIS             0x00000080
--
--/*     amode - This indicates if the address has to be incremented on ATH10K
-- *             after every read/write operation (HIF?FIXED_ADDRESS/
-- *             HIF_INCREMENTAL_ADDRESS).
-- */
--#define HIF_FIXED_ADDRESS           0x00000100
--#define HIF_INCREMENTAL_ADDRESS     0x00000200
--
--#define HIF_WR_SYNC_BYTE_FIX					\
--	(HIF_WRITE | HIF_BYTE_BASIS | HIF_FIXED_ADDRESS)
--
--#define HIF_WR_SYNC_BYTE_INC					\
--	(HIF_WRITE | HIF_BYTE_BASIS | HIF_INCREMENTAL_ADDRESS)
--
--#define HIF_RD_SYNC_BYTE_INC						\
--	(HIF_READ | HIF_BYTE_BASIS | HIF_INCREMENTAL_ADDRESS)
--
--#define HIF_RD_SYNC_BLOCK_FIX						\
--	(HIF_READ | HIF_BLOCK_BASIS | HIF_FIXED_ADDRESS)
--
- struct ath10k_sdio_irq_proc_regs {
- 	u8 host_int_status;
- 	u8 cpu_int_status;
+
+On 28-4-2017 14:02, Johannes Berg wrote:
+> 
+>> I tested the 4-way-hs (both Personal and 802.1X) with boolean
+>> parameter similar to what is proposed in the patch for roaming
+>> "cfg80211/nl80211: add authorized flag to roaming event" and it works
+>> fine. So I can extend it for use in connect result. Just had one
+>> issue regarding the type, ie. flag vs. u8 because of how things are
+>> done in wpa_supplicant supporting QCA roam+auth vendor-specific
+>> event.
+> 
+> Ok.
+> 
+> We have lots of related but somewhat conflicting things in flight right
+> now, and we need somebody to go collect them all into a consistent
+> patchset, preferably even with the 4-way-HS offload [1] thrown in. That
+> needs rebasing anyway because it introduces the _PMK attribute that
+> Jouni already added for FILS now.
+
+I already have the 4-way-hs stuff rebased with modified ATTR_PMK
+description and additional length check in nl80211 for it. Jouni
+commented on that already in 4-way-hs patch.
+
+> Do you want to pick that up? I probably can't do it soon - I'm likely
+> busy with other things the next week or two, then travel again, ...
+
+That is my plan.
+
+Regards,
+Arend
