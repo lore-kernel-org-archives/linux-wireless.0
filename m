@@ -1,98 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35967 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932308AbdDDQug (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2017 12:50:36 -0400
-Received: by mail-oi0-f66.google.com with SMTP id b187so25705183oif.3
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Apr 2017 09:50:36 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 13/13] rtlwifi: btcoex: 23b 2ant: set coex table when wifi is linking
-Date: Tue,  4 Apr 2017 11:50:06 -0500
-Message-Id: <20170404165006.14329-14-Larry.Finger@lwfinger.net> (sfid-20170404_185039_461402_8196E8DC)
-In-Reply-To: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
-References: <20170404165006.14329-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51930 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2993056AbdD1MCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Apr 2017 08:02:06 -0400
+Message-ID: <1493380923.2431.13.camel@sipsolutions.net> (sfid-20170428_140435_442993_8E5000B6)
+Subject: Re: [RFC] cfg80211: add control port state to struct
+ cfg80211_connect_resp_params
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 28 Apr 2017 14:02:03 +0200
+In-Reply-To: <c0b5817a-c4fa-8f7c-2632-cf22aa09d71b@broadcom.com> (sfid-20170426_204655_775269_D5AEED53)
+References: <1492808507-31224-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1493131210.2609.2.camel@sipsolutions.net>
+         <b4dc7a6d-7865-1fb5-849a-0ead03a080c3@broadcom.com>
+         <1493145418.2609.5.camel@sipsolutions.net>
+         <af48efa4-3774-8d8b-ff45-760e558aa681@broadcom.com>
+         <1493191249.2464.6.camel@sipsolutions.net>
+         <c0b5817a-c4fa-8f7c-2632-cf22aa09d71b@broadcom.com>
+         (sfid-20170426_204655_775269_D5AEED53)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-When wifi is under linking process, those packets are important. Mark
-them as high priority to protect the linking process
+> I tested the 4-way-hs (both Personal and 802.1X) with boolean
+> parameter similar to what is proposed in the patch for roaming
+> "cfg80211/nl80211: add authorized flag to roaming event" and it works
+> fine. So I can extend it for use in connect result. Just had one
+> issue regarding the type, ie. flag vs. u8 because of how things are
+> done in wpa_supplicant supporting QCA roam+auth vendor-specific
+> event.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 33 ++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+Ok.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 4fec175..29b2855 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1592,6 +1592,27 @@ static void btc8723b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
- 	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
- }
- 
-+static void btc8723b2ant_action_wifi_link_process(struct btc_coexist
-+						     *btcoexist)
-+{
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	u32 u32tmp;
-+	u8 u8tmpa, u8tmpb;
-+
-+	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 15);
-+	btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 22);
-+
-+	btc8723b2ant_sw_mechanism(btcoexist, false, false, false, false);
-+
-+	u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x948);
-+	u8tmpa = btcoexist->btc_read_1byte(btcoexist, 0x765);
-+	u8tmpb = btcoexist->btc_read_1byte(btcoexist, 0x76e);
-+
-+	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+		 "[BTCoex], 0x948 = 0x%x, 0x765 = 0x%x, 0x76e = 0x%x\n",
-+		 u32tmp, u8tmpa, u8tmpb);
-+}
-+
- static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -3409,6 +3430,7 @@ static void btc8723b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 	u32 wifi_link_status = 0;
- 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
- 	bool miracast_plus_bt = false;
-+	bool scan = false, link = false, roam = false;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], RunCoexistMechanism()===>\n");
-@@ -3440,6 +3462,17 @@ static void btc8723b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 		}
- 	}
- 
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_LINK, &link);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_ROAM, &roam);
-+
-+	if (scan || link || roam) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], WiFi is under Link Process !!\n");
-+		btc8723b2ant_action_wifi_link_process(btcoexist);
-+		return;
-+	}
-+
- 	/* for P2P */
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
- 			   &wifi_link_status);
--- 
-2.10.2
+We have lots of related but somewhat conflicting things in flight right
+now, and we need somebody to go collect them all into a consistent
+patchset, preferably even with the 4-way-HS offload [1] thrown in. That
+needs rebasing anyway because it introduces the _PMK attribute that
+Jouni already added for FILS now.
+
+Do you want to pick that up? I probably can't do it soon - I'm likely
+busy with other things the next week or two, then travel again, ...
+
+johannes
+
+[1] https://patchwork.kernel.org/patch/9584201/
