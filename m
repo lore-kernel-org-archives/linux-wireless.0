@@ -1,104 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35891 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752766AbdDJVWU (ORCPT
+Received: from [195.159.176.226] ([195.159.176.226]:36407 "EHLO
+        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1165550AbdD2QJK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2017 17:22:20 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Myungho Jung <mhjungk@gmail.com>
-Cc: netdev@vger.kernel.org, David Miller <davem@redhat.com>,
-        linux-wireless@vger.kernel.org, edumazet@google.com
-Subject: Re: [PATCH] p54: add null pointer check before releasing socket buffer
-Date: Mon, 10 Apr 2017 23:22:10 +0200
-Message-ID: <1896493.H38pOMoCHn@debian64> (sfid-20170410_232248_378504_FBB4222D)
-In-Reply-To: <20170410205414.GB12557@fqdn.specialj.com>
-References: <1491801800-4371-1-git-send-email-mhjungk@gmail.com> <3716717.OUypxXNBrR@debian64> <20170410205414.GB12557@fqdn.specialj.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Sat, 29 Apr 2017 12:09:10 -0400
+Received: from list by blaine.gmane.org with local (Exim 4.84_2)
+        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
+        id 1d4Uve-0005MF-7S
+        for linux-wireless@vger.kernel.org; Sat, 29 Apr 2017 18:09:02 +0200
+To: linux-wireless@vger.kernel.org
+From: Julien Cubizolles <j.cubizolles@free.fr>
+Subject: mwifiex won't connect to WPA2 anymore
+Date: Sat, 29 Apr 2017 18:09:01 +0200
+Message-ID: <87wpa3kxgi.fsf@free.fr> (sfid-20170429_181028_452277_9E0CD11C)
+Mime-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, April 10, 2017 1:54:14 PM CEST Myungho Jung wrote:
-> On Mon, Apr 10, 2017 at 02:12:54PM +0200, Christian Lamparter wrote:
-> > On Sunday, April 9, 2017 10:23:20 PM CEST Myungho Jung wrote:
-> > > Kernel panic is caused by trying to dereference null pointer. Check if
-> > > the pointer is null before freeing space.
-> >  [...]
-> > As for adding if (!skb) checks. I think kfree, kfree_skb, dev_kfree_skb 
-> > (aka consume_skb) all check for null pointers already. So the logical
-> > thing to do would be to make dev_kfree_skb_irq (which would also fix
-> > dev_kfree_skb_any) consistent with kfree, kfree_skb, dev_kfree_skb and
-> > add the check there.
-> > > ---
-> > >  drivers/net/wireless/intersil/p54/txrx.c | 8 ++++++--
-> > >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/intersil/p54/txrx.c b/drivers/net/wireless/intersil/p54/txrx.c
-> > > index 1af7da0..8956061 100644
-> > > --- a/drivers/net/wireless/intersil/p54/txrx.c
-> > > +++ b/drivers/net/wireless/intersil/p54/txrx.c
-> > > @@ -503,7 +503,9 @@ static void p54_rx_eeprom_readback(struct p54_common *priv,
-> > >  
-> > >  	priv->eeprom = NULL;
-> > >  	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
-> > > -	dev_kfree_skb_any(tmp);
-> > > +	if (unlikely(!tmp))
-> > > +		dev_kfree_skb_any(tmp);
-> > > +
-> > >  	complete(&priv->eeprom_comp);
-> > >  }
-> > >  
-> > > @@ -597,7 +599,9 @@ static void p54_rx_stats(struct p54_common *priv, struct sk_buff *skb)
-> > >  	}
-> > >  
-> > >  	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
-> > > -	dev_kfree_skb_any(tmp);
-> > > +	if (unlikely(!tmp))
-> > > +		dev_kfree_skb_any(tmp);
-> > > +
-> > >  	complete(&priv->stat_comp);
-> > >  }
-> > >  
-> > > 
-> > 
-> > 
-> [...] I'm not sure it actually caused kernel panic but guessed from
-> a bug report [https://bugzilla.kernel.org/show_bug.cgi?id=195289].
-Thank you for bringing this to my attention. Reading the bugreport, it
-does sound like there's a bigger issue with the USB Ports. I'll see if
-this can be fixed. But it does sound like a hardware issue at this 
-point.
+I can't connect anymore to my home wifi since upgrading my machine from
+Ubuntu 16.10 to Ubuntu 17.04.
 
-> And correct fix will be like this:
-> 	if (likely(tmp))
-> 		dev_kfree_skb_any(tmp);
-> 
-> But, like you said, I think null pointer should be checked in
-> dev_kfree_skb_irq although already checking before calling it in many
-> other places. I'll try another patch. Thank you for your advice.
+The problem exists with kernel 4.10.0-20-generic from Ubuntu, and
+remains with kernel 4.11.0-rc6 that I built from
+linux-wireless. However, I can connect to a wifi network without
+authentication. In the following logs, beguiled is the SSID of the
+WPA-protected I can't connect to and FreeWifi the unprotected one for
+which the connection succeeds.
 
-Well, the patch could be as simple as this:
----
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 7869ae3837ca..44f7d5a1c67c 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -2450,6 +2450,9 @@ void __dev_kfree_skb_irq(struct sk_buff *skb, enum skb_free_reason reason)
- {
- 	unsigned long flags;
- 
-+	if (!skb)
-+		return;
-+
- 	if (likely(atomic_read(&skb->users) == 1)) {
- 		smp_rmb();
- 		atomic_set(&skb->users, 0);
----
+I also copied the firmware files from
+git://git.marvell.com/mwifiex-firmware.git, without success.
 
-The question is: would David or Eric support the change. Any comments,
-what's the prefered solution? Just patch __dev_kfree_skb_irq to make
-it consistent with *kfree*, or patch the driver? I'm fine either way,
-but I would prefere patching __dev_kfree_skb_irq.
+Here are the relevant lines from syslog. Network manager complains about
+a "WRONG_KEY" but obviously I have triple checked the key, simplified
+it, and checked that I can succcessfully connect to the same network
+from my Android phone.
 
-Regards,
-Christian
+Let me know if you need anything else to investigate.
+
+Julien.
+
+--8<---------------cut here---------------start------------->8---
+Apr 29 17:51:26 touco kernel: [ 1947.432039] usb 3-3: info: trying to associate to 'beguiled' bssid f4:ca:e5:ef:be:18
+Apr 29 17:51:26 touco wpa_supplicant[1222]: wlx6045bdf646b4: Associated with f4:ca:e5:ef:be:18
+Apr 29 17:51:26 touco wpa_supplicant[1222]: WMM AC: Missing IEs
+Apr 29 17:51:26 touco NetworkManager[986]: <info>  [1493481086.5692] device (wlx6045bdf646b4): supplicant interface state: disconnected -> associating
+Apr 29 17:51:26 touco NetworkManager[986]: <info>  [1493481086.5694] device (wlx6045bdf646b4): supplicant interface state: associating -> 4-way handshake
+
+Apr 29 17:51:30 touco systemd[1]: Reloading OpenBSD Secure Shell server.
+Apr 29 17:51:30 touco systemd[1]: Stopping LSB: Start NTP daemon...
+Apr 29 17:51:30 touco systemd[1]: Reloaded OpenBSD Secure Shell server.
+
+Apr 29 17:51:30 touco systemd[1]: Reloading.
+
+Apr 29 17:51:30 touco kernel: [ 1951.459673] usb 3-3: info: successfully disconnected from f4:ca:e5:ef:be:18: reason code 2
+Apr 29 17:51:30 touco kernel: [ 1951.459862] usb 3-3: CMD_RESP: cmd 0x10f error, result=0x2
+Apr 29 17:51:30 touco wpa_supplicant[1222]: wlx6045bdf646b4: CTRL-EVENT-DISCONNECTED bssid=f4:ca:e5:ef:be:18 reason=2
+Apr 29 17:51:30 touco wpa_supplicant[1222]: wlx6045bdf646b4: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+Apr 29 17:51:30 touco wpa_supplicant[1222]: wlx6045bdf646b4: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="beguiled" auth_failures=1 duration=10 reason=WRONG_KEY
+Apr 29 17:51:30 touco NetworkManager[986]: <warn>  [1493481090.5439] sup-iface[0x5622b1f28570,wlx6045bdf646b4]: connection disconnected (reason 2)
+Apr 29 17:51:30 touco wpa_supplicant[1222]: wlx6045bdf646b4: CTRL-EVENT-REGDOM-CHANGE init=CORE type=WORLD
+Apr 29 17:51:30 touco NetworkManager[986]: <info>  [1493481090.5511] device (wlx6045bdf646b4): supplicant interface state: 4-way handshake -> disconnected
+Apr 29 17:51:30 touco NetworkManager[986]: <info>  [1493481090.5523] device (wlx6045bdf646b4): Activation: (wifi) disconnected during association, asking for new key
+Apr 29 17:51:30 touco NetworkManager[986]: <info>  [1493481090.5524] device (wlx6045bdf646b4): state change: config -> need-auth (reason 'supplicant-disconnect') [50 60 8]
+Apr 29 17:51:30 touco NetworkManager[986]: <info>  [1493481090.6487] device (wlx6045bdf646b4): supplicant interface state: disconnected -> scanning
+
+Apr 29 17:51:33 touco NetworkManager[986]: <info>  [1493481093.3528] device (wlx6045bdf646b4): supplicant interface state: scanning -> inactive
+
+Apr 29 17:51:40 touco nm-dispatcher: req:2 'down' [wlx6045bdf646b4]: start running ordered scripts...
+
+Apr 29 17:51:40 touco systemd[1]: Started LSB: Start NTP daemon.
+
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5363] keyfile: update /etc/NetworkManager/system-connections/beguiled (4ecc0776-046d-4f05-a324-19f5a8fe6853,"beguiled")
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5443] device (wlx6045bdf646b4): state change: need-auth -> prepare (reason 'none') [60 40 0]
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5454] device (wlx6045bdf646b4): state change: prepare -> config (reason 'none') [40 50 0]
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5457] device (wlx6045bdf646b4): Activation: (wifi) connection 'beguiled' has security, and secrets exist.  No new secrets needed.
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5457] Config: added 'ssid' value 'beguiled'
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5458] Config: added 'scan_ssid' value '1'
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5458] Config: added 'key_mgmt' value 'WPA-PSK'
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5458] Config: added 'psk' value '<omitted>'
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.5576] sup-iface[0x5622b1f28570,wlx6045bdf646b4]: config: set interface ap_scan to 1
+Apr 29 17:51:52 touco NetworkManager[986]: <info>  [1493481112.6146] device (wlx6045bdf646b4): supplicant interface state: inactive -> scanning
+Apr 29 17:51:55 touco wpa_supplicant[1222]: wlx6045bdf646b4: Trying to associate with f4:ca:e5:ef:be:18 (SSID='beguiled' freq=2462 MHz)
+Apr 29 17:51:55 touco kernel: [ 1976.214864] usb 3-3: info: trying to associate to 'beguiled' bssid f4:ca:e5:ef:be:18
+Apr 29 17:51:55 touco wpa_supplicant[1222]: wlx6045bdf646b4: Associated with f4:ca:e5:ef:be:18
+Apr 29 17:51:55 touco wpa_supplicant[1222]: WMM AC: Missing IEs
+Apr 29 17:51:55 touco kernel: [ 1976.228198] usb 3-3: info: associated to bssid f4:ca:e5:ef:be:18 successfully
+Apr 29 17:51:55 touco NetworkManager[986]: <info>  [1493481115.3376] device (wlx6045bdf646b4): supplicant interface state: scanning -> associating
+Apr 29 17:51:55 touco NetworkManager[986]: <info>  [1493481115.3556] device (wlx6045bdf646b4): supplicant interface state: associating -> 4-way handshake
+Apr 29 17:51:59 touco wpa_supplicant[1222]: wlx6045bdf646b4: CTRL-EVENT-DISCONNECTED bssid=f4:ca:e5:ef:be:18 reason=2
+Apr 29 17:51:59 touco kernel: [ 1980.230780] usb 3-3: info: successfully disconnected from f4:ca:e5:ef:be:18: reason code 2
+Apr 29 17:51:59 touco kernel: [ 1980.231075] usb 3-3: CMD_RESP: cmd 0x10f error, result=0x2
+Apr 29 17:51:59 touco wpa_supplicant[1222]: wlx6045bdf646b4: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+Apr 29 17:51:59 touco wpa_supplicant[1222]: wlx6045bdf646b4: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="beguiled" auth_failures=1 duration=10 reason=WRONG_KEY
+Apr 29 17:51:59 touco NetworkManager[986]: <warn>  [1493481119.3198] sup-iface[0x5622b1f28570,wlx6045bdf646b4]: connection disconnected (reason 2)
+Apr 29 17:51:59 touco wpa_supplicant[1222]: wlx6045bdf646b4: CTRL-EVENT-REGDOM-CHANGE init=CORE type=WORLD
+Apr 29 17:51:59 touco NetworkManager[986]: <info>  [1493481119.3268] device (wlx6045bdf646b4): supplicant interface state: 4-way handshake -> disconnected
+Apr 29 17:51:59 touco NetworkManager[986]: <info>  [1493481119.3289] device (wlx6045bdf646b4): Activation: (wifi) disconnected during association, asking for new key
+Apr 29 17:51:59 touco NetworkManager[986]: <info>  [1493481119.3292] device (wlx6045bdf646b4): state change: config -> need-auth (reason 'supplicant-disconnect') [50 60 8]
+Apr 29 17:51:59 touco NetworkManager[986]: <info>  [1493481119.4229] device (wlx6045bdf646b4): supplicant interface state: disconnected -> inactive
+Apr 29 17:52:01 touco NetworkManager[986]: <warn>  [1493481121.2329] device (wlx6045bdf646b4): User canceled the secrets request.
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.2330] device (wlx6045bdf646b4): state change: need-auth -> failed (reason 'no-secrets') [60 120 7]
+Apr 29 17:52:01 touco NetworkManager[986]: <warn>  [1493481121.2335] device (wlx6045bdf646b4): Activation: failed for connection 'beguiled'
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.2341] device (wlx6045bdf646b4): state change: failed -> disconnected (reason 'none') [120 30 0]
+Apr 29 17:52:01 touco kernel: [ 1982.148580] IPv6: ADDRCONF(NETDEV_UP): wlx6045bdf646b4: link is not ready
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.2368] device (wlx6045bdf646b4): set-hw-addr: set MAC address to 76:26:8D:50:C1:25 (scanning)
+Apr 29 17:52:01 touco kernel: [ 1982.151031] IPv6: ADDRCONF(NETDEV_UP): wlx6045bdf646b4: link is not ready
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.2405] policy: auto-activating connection 'FreeWifi'
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.2415] device (wlx6045bdf646b4): Activation: starting connection 'FreeWifi' (0d348d83-b3b0-4ea0-894d-7b3a9e295392)
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.2417] device (wlx6045bdf646b4): state change: disconnected -> prepare (reason 'none') [30 40 0]
+Apr 29 17:52:01 touco wpa_supplicant[1222]: wlx6045bdf646b4: Failed to initiate sched scan
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.2981] device (wlx6045bdf646b4): set-hw-addr: set-cloned MAC address to 60:45:BD:F6:46:B4 (permanent)
+Apr 29 17:52:01 touco kernel: [ 1982.212280] IPv6: ADDRCONF(NETDEV_UP): wlx6045bdf646b4: link is not ready
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3081] device (wlx6045bdf646b4): state change: prepare -> config (reason 'none') [40 50 0]
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3089] device (wlx6045bdf646b4): Activation: (wifi) connection 'FreeWifi' requires no security.  No secrets needed.
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3094] Config: added 'ssid' value 'FreeWifi'
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3098] Config: added 'scan_ssid' value '1'
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3098] Config: added 'key_mgmt' value 'NONE'
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3527] sup-iface[0x5622b1f28570,wlx6045bdf646b4]: config: set interface ap_scan to 1
+Apr 29 17:52:01 touco wpa_supplicant[1222]: wlx6045bdf646b4: Trying to associate with f4:ca:e5:ef:be:19 (SSID='FreeWifi' freq=2462 MHz)
+Apr 29 17:52:01 touco kernel: [ 1982.278390] usb 3-3: info: trying to associate to 'FreeWifi' bssid f4:ca:e5:ef:be:19
+Apr 29 17:52:01 touco kernel: [ 1982.291327] usb 3-3: info: associated to bssid f4:ca:e5:ef:be:19 successfully
+Apr 29 17:52:01 touco kernel: [ 1982.291453] IPv6: ADDRCONF(NETDEV_CHANGE): wlx6045bdf646b4: link becomes ready
+Apr 29 17:52:01 touco wpa_supplicant[1222]: wlx6045bdf646b4: Associated with f4:ca:e5:ef:be:19
+Apr 29 17:52:01 touco wpa_supplicant[1222]: wlx6045bdf646b4: CTRL-EVENT-CONNECTED - Connection to f4:ca:e5:ef:be:19 completed [id=0 id_str=]
+Apr 29 17:52:01 touco wpa_supplicant[1222]: WMM AC: Missing IEs
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3817] device (wlx6045bdf646b4): supplicant interface state: inactive -> associating
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3853] device (wlx6045bdf646b4): supplicant interface state: associating -> completed
+Apr 29 17:52:01 touco NetworkManager[986]: <info>  [1493481121.3858] device (wlx6045bdf646b4): Activation: (wifi) Stage 2 of 5 (Device Configure) successful.  Connected to wireless network 'FreeWifi'.
+--8<---------------cut here---------------end--------------->8---
