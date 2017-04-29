@@ -1,63 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38336 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753950AbdDEGmJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2017 02:42:09 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>
-CC: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        "Rajat Jain" <rajatja@google.com>, Cathy Luo <cluo@marvell.com>
-Subject: Re: [PATCH 2/3] mwifiex: using general print function during device
- intialization
-Date: Wed, 5 Apr 2017 06:41:58 +0000
-Message-ID: <6911d836176a4cefbe3cb4452755ded3@SC-EXCH02.marvell.com> (sfid-20170405_084306_336965_FADF01EA)
-References: <1490865547-10208-1-git-send-email-huxinming820@gmail.com>
- <1490865547-10208-2-git-send-email-huxinming820@gmail.com>
- <CAE_wzQ890=BCQviifEkcgfFO7XA+SNeFCUgn_Bx9_4n9uB1nsg@mail.gmail.com>
- <20170403184208.GB116262@google.com>
-In-Reply-To: <20170403184208.GB116262@google.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from mout.gmx.net ([212.227.15.15]:60043 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1162241AbdD2GXt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 29 Apr 2017 02:23:49 -0400
+To: ath9k-devel@qca.qualcomm.com,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org
+From: Oleksij Rempel <linux@rempel-privat.de>
+Subject: Search for devices with Xtensa cores
+Message-ID: <1fdab9d5-d8c6-88dc-38ac-2948e5fa74ec@rempel-privat.de> (sfid-20170429_082357_591548_93DFBE0F)
+Date: Sat, 29 Apr 2017 08:23:09 +0200
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="5tWAEL9kXGPSbGEjDrUQKCIva33G2Ndwj"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJyaWFuIE5vcnJpcyBbbWFp
-bHRvOmJyaWFubm9ycmlzQGNocm9taXVtLm9yZ10NCj4gU2VudDogMjAxN8TqNNTCNMjVIDI6NDIN
-Cj4gVG86IERtaXRyeSBUb3Jva2hvdg0KPiBDYzogWGlubWluZyBIdTsgTGludXggV2lyZWxlc3M7
-IEthbGxlIFZhbG87IFJhamF0IEphaW47IEFtaXRrdW1hciBLYXJ3YXI7IENhdGh5DQo+IEx1bzsg
-WGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIDIvM10gbXdpZmlleDogdXNp
-bmcgZ2VuZXJhbCBwcmludCBmdW5jdGlvbiBkdXJpbmcNCj4gZGV2aWNlIGludGlhbGl6YXRpb24N
-Cj4gDQo+IEV4dGVybmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IE9uIEZyaSwgTWFy
-IDMxLCAyMDE3IGF0IDAzOjQ2OjU4UE0gLTA3MDAsIERtaXRyeSBUb3Jva2hvdiB3cm90ZToNCj4g
-PiBPbiBUaHUsIE1hciAzMCwgMjAxNyBhdCAyOjE5IEFNLCBYaW5taW5nIEh1IDxodXhpbm1pbmc4
-MjBAZ21haWwuY29tPg0KPiB3cm90ZToNCj4gPiA+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFy
-dmVsbC5jb20+DQo+ID4gPg0KPiA+ID4gYWRhcHRlci0+ZGV2IGlzIGluaXRpYWxpemVkIGFmdGVy
-IG13aWZpZXhfcmVnaXN0ZXIgZG9uZSwgYmVmb3JlIHRoYXQNCj4gPiA+IHByaW50IG1lc3NhZ2Ug
-YnkgZ2VuZXJhbCBwcl8qIGZ1bmN0aW9uDQo+ID4NCj4gPiBObywgd2Ugc2hvdWxkIG1vdmUgYXdh
-eSBmcm9tIG5ha2VkIHByXyooKSBhcyBtdWNoIGFzIHBvc3NpYmxlLiBQbGVhc2UNCj4gPiBjaGFu
-Z2UgIG13aWZpZXhfcmVnaXN0ZXIoKSB0byBhY2NlcHQgImRldiIgcGFyYW1ldGVyIGFuZCBhc3Np
-Z24NCj4gPiBhZGFwdGVyLT5kZXYgZWFybHkgZW5vdWdoIHNvIHRoYXQgdGhlIHN0YW5kYXJkIG13
-aWZpZXhfZXJyKCkgY2FsbHMgYXJlDQo+ID4gdXNhYmxlLg0KPiANCg0KVGhhbmtzIGZvciB0aGUg
-cmV2aWV3Lg0KDQo+IEFncmVlZC4gWW91IG1lYW4gbGlrZSBJIGRpZCBoZXJlPyA6KQ0KPiANCj4g
-YmExYzdlNDVlYzIyIG13aWZpZXg6IHNldCBhZGFwdGVyLT5kZXYgYmVmb3JlIHN0YXJ0aW5nIHRv
-IHVzZSBtd2lmaWV4X2RiZygpDQo+IA0KPiBUaGF0J3MgaW4gdjQuMTEtcmM0LCBwYXJ0bHkgYXMg
-YSBidWdmaXggdG8gdGhpczoNCj4gDQo+IDJlMDJiNTgxNDIxNyAoIm13aWZpZXg6IEFsbG93IG13
-aWZpZXggZWFybHkgYWNjZXNzIHRvIGRldmljZSBzdHJ1Y3R1cmUiKQ0KPiANCj4gPiBBbHNvIGNv
-bnNpZGVyIGNoYW5naW5nIF9td2lmaWV4X2RiZygpIHRvIGhhbmRsZSBjYXNlcyB3aGVuDQo+ID4g
-YWRhcHRlci0+ZGV2IGlzIE5VTEwgYW5kIGZhbGwgYmFjayB0byBwcl88bGV2ZWw+Lg0KPiANCj4g
-VGhhdCdkIGJlIG5pY2UuIEl0IHdvdWxkIGhhdmUgbWl0aWdhdGVkIHRoZSBwcm9ibGVtcyBvZiBj
-b21taXQNCj4gMmUwMmI1ODE0MjE3IHRvby4NCj4gDQoNClllcywgdGhpcyBjb21taXQgYmExYzdl
-NCBzaG91bGQgYmUgYmV0dGVyIGFuZCB3b3JrIGZvciBtb3N0IGNhc2VzLCB3aWxsIGVuaGFuY2Ug
-X19td2lmaWV4X2RiZyBmb3IgYWRhcHRlci0+ZGV2IE5VTEwgY2FzZSBpbiBWMi4NCg0KVGhhbmtz
-LA0KU2ltb24NCg0KPiBCcmlhbg0KPiANCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUg
-PGh1eG1AbWFydmVsbC5jb20+DQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2Fy
-IDxha2Fyd2FyQG1hcnZlbGwuY29tPg0KPiA+ID4gLS0tDQo+ID4gPiAgZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYyB8IDc4DQo+ID4gPiArKysrKysrKysrKystLS0t
-LS0tLS0tLS0tLS0tLQ0KPiA+ID4gZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4
-L3NkaW8uYyB8ICAzICstDQo+ID4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAzNCBpbnNlcnRpb25zKCsp
-LCA0NyBkZWxldGlvbnMoLSkNCj4gDQo+IFsuLi5dDQo=
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--5tWAEL9kXGPSbGEjDrUQKCIva33G2Ndwj
+Content-Type: multipart/mixed; boundary="dhnEQpu4lBBe4A3BA0tEVHE0Sfvb8KXJ5";
+ protected-headers="v1"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@qca.qualcomm.com,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ ath10k@lists.infradead.org
+Message-ID: <1fdab9d5-d8c6-88dc-38ac-2948e5fa74ec@rempel-privat.de>
+Subject: Search for devices with Xtensa cores
+
+--dhnEQpu4lBBe4A3BA0tEVHE0Sfvb8KXJ5
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hallo all,
+
+short version:
+I'm looking for devices which use Xtensa and GCC/binutils patches used
+to provide support for this devices.
+
+long version:
+this year started with inclusion of open-ath9k-htc-firmware to debian
+*main* repository. As first we started to getting advantage of regular
+compile tests. See results here:
+https://tests.reproducible-builds.org/debian/rb-pkg/unstable/i386/open-at=
+h9k-htc-firmware.html
+
+Most of the problems which we currently get, are related to gcc xtensa
+compiler.
+In details: device specific patch set is used to provide our own
+gcc/binutils version because Xtensa don't really have defined CPU cores.
+As result, upstream compiler developers will never notice if some thing
+will brake this patch set.
+
+My hope is to provide upstream gcc support for commonly used by linux
+community Xtensa cores.
+
+So far i know about:
+- Atheros ar9271 is identical with ar7010, LX2.1.0
+- Atheros AR6002 Xtensa LX??
+- Atheros AR6003 Xtensa LX??
+- Atheros AR6103 Xtensa LX??
+- Espressif ESP8266 Xtensa LX106
+
+--=20
+Regards,
+Oleksij
+
+
+--dhnEQpu4lBBe4A3BA0tEVHE0Sfvb8KXJ5--
+
+--5tWAEL9kXGPSbGEjDrUQKCIva33G2Ndwj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlkEMU0ACgkQHwImuRkmbWmpCwD/aSpoi1Fzlo+KZjsuANn9TOEQ
+dqCQJt2ova4mk2xzZrIA+QHzK8ubka9FGerQ9dz0j+BkeSAK2VdaaBYAt3lcB7d7
+=dYLa
+-----END PGP SIGNATURE-----
+
+--5tWAEL9kXGPSbGEjDrUQKCIva33G2Ndwj--
