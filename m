@@ -1,131 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55262 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752864AbdDMNhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2017 09:37:38 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211: keep a separate list of monitor interfaces that are up
-Date: Thu, 13 Apr 2017 15:37:33 +0200
-Message-Id: <20170413133733.9761-1-johannes@sipsolutions.net> (sfid-20170413_153743_073382_FFA08D5D)
+Received: from rtits2.realtek.com ([211.75.126.72]:49392 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163585AbdD2DmS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Apr 2017 23:42:18 -0400
+From: =?big5?B?svir26vF?= <yhchuang@realtek.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Szuyitasi <szuyitasi@realtek.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: RE: [PATCH 06/10] rtlwifi: btcoex: 21a 2ant: run mechanism if status changes or auto adjust is set
+Date: Sat, 29 Apr 2017 03:42:06 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F8401535564@RTITMBSV07.realtek.com.tw> (sfid-20170429_054341_389818_0F64FB7E)
+References: <20170416190428.23857-1-Larry.Finger@lwfinger.net>
+ <20170416190428.23857-7-Larry.Finger@lwfinger.net>
+ <87bmrrbb8q.fsf@purkki.adurom.net>
+ <F7CD281DE3E379468C6D07993EA72F8401533A7C@RTITMBSV07.realtek.com.tw>,<d02588ed-bf39-86a5-19ae-bbd3faafb3e7@lwfinger.net>
+In-Reply-To: <d02588ed-bf39-86a5-19ae-bbd3faafb3e7@lwfinger.net>
+Content-Type: text/plain; charset="big5"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-In addition to keeping monitor interfaces on the regular list of
-interfaces, keep those that are up and not in cooked mode on a
-separate list. This saves having to iterate all interfaces when
-delivering to monitor interfaces.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/iface.c       | 19 +++++++++++++++++--
- net/mac80211/main.c        |  1 +
- net/mac80211/rx.c          | 11 +----------
- 4 files changed, 22 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0e718437d080..cf6d5abb65a3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -839,6 +839,8 @@ struct txq_info {
- struct ieee80211_if_mntr {
- 	u32 flags;
- 	u8 mu_follow_addr[ETH_ALEN] __aligned(2);
-+
-+	struct list_head list;
- };
- 
- /**
-@@ -1259,6 +1261,7 @@ struct ieee80211_local {
- 
- 	/* see iface.c */
- 	struct list_head interfaces;
-+	struct list_head mon_list; /* only that are IFF_UP && !cooked */
- 	struct mutex iflist_mtx;
- 
- 	/*
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 5bb0c5012819..3bd5b81f5d81 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -676,7 +676,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 
- 	set_bit(SDATA_STATE_RUNNING, &sdata->state);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_WDS:
- 		/* Create STA entry for the WDS peer */
- 		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
- 				     GFP_KERNEL);
-@@ -697,8 +698,17 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 
- 		rate_control_rate_init(sta);
- 		netif_carrier_on(dev);
--	} else if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE) {
-+		break;
-+	case NL80211_IFTYPE_P2P_DEVICE:
- 		rcu_assign_pointer(local->p2p_sdata, sdata);
-+		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
-+			break;
-+		list_add_tail_rcu(&sdata->u.mntr.list, &local->mon_list);
-+		break;
-+	default:
-+		break;
- 	}
- 
- 	/*
-@@ -817,6 +827,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_IFTYPE_AP:
- 		cancel_work_sync(&sdata->u.ap.request_smps_work);
- 		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
-+			break;
-+		list_del_rcu(&sdata->u.mntr.list);
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 56fb47953b72..ae408a96c407 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -603,6 +603,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 		ARRAY_SIZE(local->ext_capa);
- 
- 	INIT_LIST_HEAD(&local->interfaces);
-+	INIT_LIST_HEAD(&local->mon_list);
- 
- 	__hw_addr_init(&local->mc_list);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e35c42ebb7a5..638dc63a51bf 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -593,16 +593,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 	skb->pkt_type = PACKET_OTHERHOST;
- 	skb->protocol = htons(ETH_P_802_2);
- 
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
--			continue;
--
--		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
--			continue;
--
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
-+	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
- 		if (prev_dev) {
- 			skb2 = skb_clone(skb, GFP_ATOMIC);
- 			if (skb2) {
--- 
-2.11.0
+RGVhciBMYXJyeSwKClRob3VnaCBteSBjb2xsZWFndWUgc2FpZCB0aGF0IHRoZXkgdXN1YWxseSB1
+c2UgQVVUT19SRVBPUlQgPSAxIHRvIHJ1biB0aGUgYnRjb2V4LgpCdXQgSSB0aGluayB5b3VyIHBh
+dGNoIGlzIGJldHRlciBiZWNhdXNlIGlmIHdlIGp1c3QgcmVtb3ZlIHRoZSBsZXNzIHVzZWQgcGFy
+dCB3ZSBuZWVkIHRvIGFkZCB0aGVtIGJhY2sgaW4gdGhlIGZ1dHVyZSBhZ2Fpbi4gU28ganVzdCB1
+c2UgeW91ciBwYXRjaCBidXQgc2V0IHRoZSBBVVRPX1JFUE9SVCBkZWZhdWx0IHRydWUuCgpSZWdh
+cmRzLApUb255Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KsXE6IExh
+cnJ5IEZpbmdlciBbbGFycnkuZmluZ2VyQGdtYWlsLmNvbV0gpU6q7SBMYXJyeSBGaW5nZXIgW0xh
+cnJ5LkZpbmdlckBsd2Zpbmdlci5uZXRdCrFIpfOk6bTBOiAyMDE3pn40pOsyOaTpIKRXpMggMDI6
+NTIKptw6ILL4q9urxTsgU3p1eWl0YXNpCrDGpbs6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
+Lm9yZzsgUGtzaGloOyBCaXJtaW5nIENoaXU7IFNoYW9mdTsgU3RldmVuIFRpbmcKpUSmrjogUmU6
+IFtQQVRDSCAwNi8xMF0gcnRsd2lmaTogYnRjb2V4OiAyMWEgMmFudDogcnVuIG1lY2hhbmlzbSBp
+ZiBzdGF0dXMgY2hhbmdlcyBvciBhdXRvIGFkanVzdCBpcyBzZXQKCk9uIDA0LzIwLzIwMTcgMDg6
+MzAgQU0sILL4q9urxSB3cm90ZToKPiBEZWFyIFNZLAo+Cj4gTGludXgga2VybmVsIHVwc3RyZWFt
+IKRXrbG576nzs2+62CBpZmRlZiCquqTopqGsT6Sju3umUKq6Cj4gr+CnX6XOqOSlTKq6pOimoajT
+pU60wKlPPwo+IKnOrE+nUaXOxdy8xqjTsbGo7qFDCj4KPiCldKV+pnCqR2RlZmF1bHSsT7Zdrf7D
+5KFBrFmkQLj0pXWsT2ZvciBzcGVjaWFsIGNhc2WqurjcCj4gpWmlSKX9p+Ko5KSkpEDD5K6zsbyh
+Qwo+IKX9pFd1cHN0cmVhbSCkp6vhpkGo03JlZmluZQo+Cj4KPiBCZXN0IFJlZ2FyZHMsCj4gVG9u
+eQo+Cj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KPiBGcm9tOiBLYWxsZSBWYWxvIFttYWls
+dG86a3ZhbG9AY29kZWF1cm9yYS5vcmddCj4gU2VudDogVGh1cnNkYXksIEFwcmlsIDIwLCAyMDE3
+IDY6NTQgUE0KPiBUbzogTGFycnkgRmluZ2VyCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
+bmVsLm9yZzsgsvir26vFOyBQa3NoaWg7IEJpcm1pbmcgQ2hpdTsgU2hhb2Z1OyBTdGV2ZW4gVGlu
+Zwo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDYvMTBdIHJ0bHdpZmk6IGJ0Y29leDogMjFhIDJhbnQ6
+IHJ1biBtZWNoYW5pc20gaWYgc3RhdHVzIGNoYW5nZXMgb3IgYXV0byBhZGp1c3QgaXMgc2V0Cj4K
+PiBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+IHdyaXRlczoKPgo+PiBG
+cm9tOiBZYW4tSHN1YW4gQ2h1YW5nIDx5aGNodWFuZ0ByZWFsdGVrLmNvbT4KPj4KPj4gVGhlIGRy
+aXZlciB3aWxsIHBlcmlvZGljYWxseSBhc2sgdGhlIGNvZXgsIGFuZCB0aGUgY29leCBvbmx5IHJ1
+bnMgdGhlCj4+IG1lY2hhbmlzbSB3aGVuIHRoZSBzdGF0dXMgd2FzIGNoYW5nZWQgb3IgdGhlIGF1
+dG8gYWRqdXN0IGlzIHNldC4KPj4KPj4gU2lnbmVkLW9mZi1ieTogWWFuLUhzdWFuIENodWFuZyA8
+eWhjaHVhbmdAcmVhbHRlay5jb20+Cj4+IFNpZ25lZC1vZmYtYnk6IExhcnJ5IEZpbmdlciA8TGFy
+cnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD4KPj4gQ2M6IFBrc2hpaCA8cGtzaGloQHJlYWx0ZWsuY29t
+Pgo+PiBDYzogQmlybWluZyBDaGl1IDxiaXJtaW5nQHJlYWx0ZWsuY29tPgo+PiBDYzogU2hhb2Z1
+IDxzaGFvZnVAcmVhbHRlay5jb20+Cj4+IENjOiBTdGV2ZW4gVGluZyA8c3RldmVudGluZ0ByZWFs
+dGVrLmNvbT4KPgo+IFsuLi5dCj4KPj4gQEAgLTQyMDAsNyArNDIwMCwxNCBAQCB2b2lkIGV4X2J0
+Yzg4MjFhMmFudF9wZXJpb2RpY2FsKHN0cnVjdCBidGNfY29leGlzdCAqYnRjb2V4aXN0KQo+PiAg
+ICAgICAgICAgICAgICAgICAgICAgIltCVENvZXhdLCAqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqXG4iKTsKPj4gICAgICB9Cj4+
+Cj4+ICsjaWZkZWYgQlRfQVVUT19SRVBPUlRfT05MWV84ODIxQV8yQU5UCj4+ICAgICAgYnRjODgy
+MWEyYW50X3F1ZXJ5X2J0X2luZm8oYnRjb2V4aXN0KTsKPj4gKyNlbHNlCj4+ICAgICAgYnRjODgy
+MWEyYW50X21vbml0b3JfYnRfY3RyKGJ0Y29leGlzdCk7Cj4+ICAgICAgYnRjODgyMWEyYW50X21v
+bml0b3Jfd2lmaV9jdHIoYnRjb2V4aXN0KTsKPj4gKwo+PiArICAgIGlmIChidGM4ODIxYTJhbnRf
+aXNfd2lmaV9zdGF0dXNfY2hhbmdlZChidGNvZXhpc3QpIHx8Cj4+ICsgICAgICAgIGNvZXhfZG0t
+PmF1dG9fdGRtYV9hZGp1c3QpCj4+ICsgICAgICAgICAgICBidGM4ODIxYTJhbnRfcnVuX2NvZXhp
+c3RfbWVjaGFuaXNtKGJ0Y29leGlzdCk7Cj4+ICsjZW5kaWYKPgo+IFRoaXMgaWZkZWYgbG9va3Mg
+ZmlzaHkuIFdoeSBpcyBpdCBuZWVkZWQ/Cj4KPiBJbiBnZW5lcmFsIEkgd291bGQgZXhwZWN0IHRv
+IHNlZSBpZmRlZnMgb25seSBmb3IgS2NvbmZpZyBvcHRpb25zIG9yIGRlZmluZXMgd2hpY2ggdmFs
+dWUgY29tZXMgZnJvbSBjb3JlIGtlcm5lbC4KPgo+IC0tCj4gS2FsbGUgVmFsbwoKVG9ueSwKCkFu
+eSByZXNvbHV0aW9uIG9mIHRoaXMgaXNzdWU/IEkgd291bGQgcmVhbGx5IGxpa2UgdG8gYmUgYWJs
+ZSB0byBzdWJtaXQgdGhlIDUwCnBhdGNoZXMgSSBoYXZlIGluIG15IHF1ZXVlLgoKT25lIHRob3Vn
+aHQgSSBoYXZlIGlzIHRvIGFkZCBib29sZWFuIHZhcmlhYmxlcyBhdXRvX3JlcG9ydF8xYW50IGFu
+ZAphdXRvX3JlcG9ydF8yYW50IHRvIHN0cnVjdCBidGNfY29leGlzdC4gVGhlbiB0aGUgdGVzdGlu
+ZyBvZgpCVF9BVVRPX1JFUE9SVF9PTkxZXzg4MjFBXzFBTlQsIGV0Yy4gY2FuIGJlIGRvbmUgd2l0
+aCBhbiBpZiBzdGF0ZW1lbnQsIG5vdCB3aXRoCnRoZSAjaWYgdGhhdCBpcyBjdXJyZW50bHkgcHJl
+c2VudC4KCkF0dGFjaGVkIGlzIGEgcGF0Y2ggdG8gZml4IGhhbGJ0Yzg4MjFhMWFudC4KCkxhcnJ5
+CgoKCgoKLS0tLS0tUGxlYXNlIGNvbnNpZGVyIHRoZSBlbnZpcm9ubWVudCBiZWZvcmUgcHJpbnRp
+bmcgdGhpcyBlLW1haWwuCg==
