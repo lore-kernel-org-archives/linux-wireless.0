@@ -1,75 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54278 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1948886AbdDYUY3 (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:36136 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755089AbdD3Hv2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Apr 2017 16:24:29 -0400
-From: Luca Coelho <luca@coelho.fi>
+        Sun, 30 Apr 2017 03:51:28 -0400
+Received: by mail-io0-f170.google.com with SMTP id p80so91058889iop.3
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Apr 2017 00:51:28 -0700 (PDT)
+MIME-Version: 1.0
+From: Menion <menion@gmail.com>
+Date: Sun, 30 Apr 2017 09:51:06 +0200
+Message-ID: <CAJVZm6cEir9BGnhU7xyUmQvGUYxaRyKtQtNY8d_nfzwnnyusEQ@mail.gmail.com> (sfid-20170430_095133_269872_27874F2A)
+Subject: mwl8k driver issue: frequent disconnect with Android phone
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 25 Apr 2017 23:22:34 +0300
-Message-Id: <20170425202243.7844-17-luca@coelho.fi> (sfid-20170425_222433_399304_C1B21CA9)
-In-Reply-To: <20170425202243.7844-1-luca@coelho.fi>
-References: <20170425202243.7844-1-luca@coelho.fi>
-Subject: [PATCH 16/25] iwlwifi: don't leak memory on allocation failure
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi all
+I would like to recall to attention an issue that various user are
+observing running mwl8k driver together with android clients
+Relevant information can be found here:
 
-If we fail to allocate the small chunk of memory for the
-pieces of the firmware file, we leak the whole firmware
-image instead...
+https://dev.openwrt.org/ticket/21284
+http://www.spinics.net/lists/linux-wireless/msg151171.html
 
-Since the allocation failure is really unlikely, just bail
-out at that point instead.
-
-Remove the error message at the label since we now (and
-actually have been) use it for various reasons.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 212fb8d5c064..98a03a4615d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1282,7 +1282,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 
- 	pieces = kzalloc(sizeof(*pieces), GFP_KERNEL);
- 	if (!pieces)
--		return;
-+		goto out_free_fw;
- 
- 	if (!ucode_raw)
- 		goto try_again;
-@@ -1512,17 +1512,18 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	goto free;
- 
-  out_free_fw:
--	IWL_ERR(drv, "failed to allocate pci memory\n");
- 	iwl_dealloc_ucode(drv);
- 	release_firmware(ucode_raw);
-  out_unbind:
- 	complete(&drv->request_firmware_complete);
- 	device_release_driver(drv->trans->dev);
-  free:
--	for (i = 0; i < ARRAY_SIZE(pieces->img); i++)
--		kfree(pieces->img[i].sec);
--	kfree(pieces->dbg_mem_tlv);
--	kfree(pieces);
-+	if (pieces) {
-+		for (i = 0; i < ARRAY_SIZE(pieces->img); i++)
-+			kfree(pieces->img[i].sec);
-+		kfree(pieces->dbg_mem_tlv);
-+		kfree(pieces);
-+	}
- }
- 
- struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
--- 
-2.11.0
+Unfortunately I don't have other information to add, logs on my sistem
+which is a kirkwood router running kernel 4.4.x with Lede are
+identical to the ones already provided.
+I can add that the problem seems to get worst depending on the
+bandwidth usage (higher is worst).
+And I can confirm that apparently only android clients are affected,
+in the sense that here I have also iPhones and some IP WebCam that
+work rock stable with the same router.
+Also both 5Ghz and 2.5Ghz radio are affected
+Userland seems to have no influence, I have tried wpad and hostapd,
+both show the problem
+Let me know how can I help
+Bye
