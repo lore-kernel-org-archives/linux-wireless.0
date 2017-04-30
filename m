@@ -1,93 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:35340 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754294AbdDFWmk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Apr 2017 18:42:40 -0400
-Received: by mail-pg0-f44.google.com with SMTP id 81so48190143pgh.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Apr 2017 15:42:40 -0700 (PDT)
-Date: Thu, 6 Apr 2017 15:42:38 -0700
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Grant Grundler <grundler@chromium.org>,
-        Michael Davidson <md@google.com>,
-        Greg Hackmann <ghackmann@google.com>
-Subject: Re: [PATCH] mac80211: Fix clang warning about constant operand in
- logical operation
-Message-ID: <20170406224238.GA78690@google.com> (sfid-20170407_004330_121825_AC2EDEF9)
-References: <20170406185633.91065-1-mka@chromium.org>
- <1491505878.11399.4.camel@sipsolutions.net>
- <20170406192452.GE145051@google.com>
- <1491513145.11399.8.camel@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:49878 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1948984AbdD3Tjw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 30 Apr 2017 15:39:52 -0400
+Subject: Re: brcmfmac: don't warn user if requested nvram fails
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <09063fc2-af77-ced6-ed90-ab20e2884969@redhat.com>
+ <577dc508-07ff-c74f-5c90-b6baf4e7694a@broadcom.com>
+ <e6ef170b-2ec7-e364-5097-6e0daf5b8f0d@redhat.com>
+ <ae29eb44-76cb-783f-6e76-81ed15c8e0dd@broadcom.com>
+ <6cee092a-f8b7-f658-cd71-829f66559882@redhat.com>
+ <20170427003616.GD28800@wotan.suse.de>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <3ca61682-7267-c87b-2c3e-e4c185134cba@redhat.com> (sfid-20170430_213958_258784_A7364156)
+Date: Sun, 30 Apr 2017 21:39:43 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1491513145.11399.8.camel@sipsolutions.net>
+In-Reply-To: <20170427003616.GD28800@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Thu, Apr 06, 2017 at 11:12:25PM +0200 Johannes Berg ha dit:
+Hi,
 
-> On Thu, 2017-04-06 at 12:24 -0700, Matthias Kaehlcke wrote:
+On 27-04-17 02:36, Luis R. Rodriguez wrote:
+> On Tue, Apr 11, 2017 at 10:53:57AM +0200, Hans de Goede wrote:
+
+<snip>
+
+>>>> Right, sorry. For the pcie device I'm looking at the
+>>>> name is brcmfmac4356-pcie.txt and I would like to propose
+>>>> to first check for "brcmfmac4356-<pci-subsys-vid>-<pci-subsys-pid>.txt"
+>>>>
+>>>>> So who is going to provide these nvram files. We can not
+>>>>> maintain that as there are too many variants and they are under control
+>>>>> of the OEM/ODM.
+>>>>
+>>>> Users / people like me who are interested in using certain
+>>>> devices with Linux. The idea is to at least make it possible to
+>>>> have these devices just work. E.g. I would like a user to be
+>>>> able to insert a USB-stick with a live Fedora 27 and then
+>>>> have everything just work on the GPD win.
+>>>>
+>>>> To make this happen I will submit the nvram file from the
+>>>> Windows install on the GPDwin to linux-firmware as
+>>>> "brcmfmac4356-<pci-subsys-vid>-<pci-subsys-pid>.txt"
+>>>> and yes I've checked that there are sensible values in
+>>>> the subsys ids.
+>>>
+>>> I suppose the "nvram file from the Windows install" than has a
+>>> redistributable license?
+>>
+>> IANAL but I fail to see how the contents of this file is
+>> anything but functional and as such not copyright-able.
 > 
-> > I agree that the code looks worse :( I hoped to find a fix using a
-> > preprocessor condition but wasn't successful.
-> 
-> It's actually easy - just remove the 'default ""' from Kconfig, and
-> then the symbol won't be defined at all if it doesn't get a proper
-> value. Then you can ifdef the whole thing.
+> We take licensing serious on linux-firmware, a IANAL is no excuse for
+> being sloppy.
 
-Thanks, it would also require to move the initialization of
-ieee80211_default_rc_algo into an ifdef. If you can live with such a
-solution I'm happy to change it.
+I don't mean to be sloppy. As I already stated I plan to make it
+clear in the commit msg that there is no license info for the nvram
+file and that in my non expert opinion that is not a problem.
 
-> > Some projects (like Chrome OS) build their kernel with all warnings
-> > being treated as errors. Besides changing the 'offending' code the
-> > alternatives are to disable the warning completely or to tell clang
-> > not to use the builtin(s). IMO changing the code is the preferable
-> > solution, especially since this is so far the only occurrence of the
-> > warning that I have encountered.
-> > 
-> > I used goto instead of nested ifs since other functions in this file
-> > use the same pattern. If nested ifs are preferred I can change that.
-> 
-> I don't really buy either argument. The warning is simply bogus - I'm
-> very surprised you don't hit it with more similar macros or cases, like
-> for example CONFIG_ENABLED(). Try
-> 
-> 	git grep 'IS_ENABLED(' | grep '&&'
-> 
-> and you'll find lots of places that seem like they should trigger this
-> warning.
+If people disagree then we will likely need to ask an actual lawyer
+for advice and see from there,
 
-Indeed the warning is not triggered by these constructs. It seems
-clang only emits the warning when the constant operand is not boolean.
+Regards,
 
-> You're advocating to make the code worse - not very significantly in
-> this case, but still - just to quiet a compiler warning.
-
-For Chrome OS we need to quiet the warning in one way or another,
-otherwise our builds will fail due to warnings being treated as
-errors. I'm reluctant to disable the warning completely since it can
-be useful to detect certain errors, e.g. the use of a logical operator
-when bitwise was intended.
-
-And yes, in this case I would favor the slight deterioration of a
-small section of code over losing a potentially useful check on the
-entire kernel code.
-
-I agree that this is a bit of a corner case, the code is definitely
-not buggy by itself, ideally clang would detect that the constant is
-a result of its own optimization and skip the warning.
-
-Obviously we can always apply a patch locally, but ideally we try to
-upstream changes that seem of general use so that others and our
-future selves can benefit from it.
-
-I have no intention to insist on this, we can live with a local patch
-if you don't think it is useful.
-
-Cheers
-
-Matthias
+Hans
