@@ -1,423 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:32906 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751138AbdEEMIi (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:35400 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbdEASpy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 08:08:38 -0400
-Received: by mail-pf0-f193.google.com with SMTP id b23so555985pfc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 05:08:38 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v2 4/6] mwifiex: usb: add timer to flush aggregation packets
-Date: Fri,  5 May 2017 12:08:18 +0000
-Message-Id: <1493986100-24509-4-git-send-email-huxinming820@gmail.com> (sfid-20170505_140842_828673_38B17C55)
-In-Reply-To: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
-References: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
+        Mon, 1 May 2017 14:45:54 -0400
+Received: by mail-pf0-f173.google.com with SMTP id v14so77891218pfd.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 May 2017 11:45:54 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 1/2] mwifiex: initiate card-specific work atomically
+Date: Mon,  1 May 2017 11:45:48 -0700
+Message-Id: <20170501184549.52896-1-briannorris@chromium.org> (sfid-20170501_204625_931517_13475008)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+The non-atomic test + set is a little awkward here, and it technically
+means we might double-schedule work unnecessarily. AFAICT, this is not
+really a problem, since the extra "work" will be a no-op (the flag(s)
+will be cleared by then), but it's still an anti-pattern.
 
-Aggregation will wait for next packet until limit aggr size/number reach.
-Packet might be drop and also packet dequeue will be stop in some cases.
-This patch add timer to flush packets in aggregation list to avoid long
-time waiting.
+Rewrite this to use the atomic test_and_set_bit() helper instead.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
-v2: same as v1
+new in v2
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 258 ++++++++++++++++++++---------
- drivers/net/wireless/marvell/mwifiex/usb.h |  14 ++
- 2 files changed, 193 insertions(+), 79 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 13 +++++++++----
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 16 +++++-----------
+ 2 files changed, 14 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index e13f758d..f230017 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -662,76 +662,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 	.soft_unbind = 1,
- };
- 
--static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
--{
--	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
--	struct usb_tx_data_port *port;
--	int i, j;
--
--	card->tx_cmd.adapter = adapter;
--	card->tx_cmd.ep = card->tx_cmd_ep;
--
--	card->tx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!card->tx_cmd.urb)
--		return -ENOMEM;
--
--	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
--		port = &card->port[i];
--		if (!port->tx_data_ep)
--			continue;
--		port->tx_data_ix = 0;
--		skb_queue_head_init(&port->tx_aggr.aggr_list);
--		if (port->tx_data_ep == MWIFIEX_USB_EP_DATA)
--			port->block_status = false;
--		else
--			port->block_status = true;
--		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
--			port->tx_data_list[j].adapter = adapter;
--			port->tx_data_list[j].ep = port->tx_data_ep;
--			port->tx_data_list[j].urb =
--					usb_alloc_urb(0, GFP_KERNEL);
--			if (!port->tx_data_list[j].urb)
--				return -ENOMEM;
--		}
--	}
--
--	return 0;
--}
--
--static int mwifiex_usb_rx_init(struct mwifiex_adapter *adapter)
--{
--	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
--	int i;
--
--	card->rx_cmd.adapter = adapter;
--	card->rx_cmd.ep = card->rx_cmd_ep;
--
--	card->rx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!card->rx_cmd.urb)
--		return -ENOMEM;
--
--	card->rx_cmd.skb = dev_alloc_skb(MWIFIEX_RX_CMD_BUF_SIZE);
--	if (!card->rx_cmd.skb)
--		return -ENOMEM;
--
--	if (mwifiex_usb_submit_rx_urb(&card->rx_cmd, MWIFIEX_RX_CMD_BUF_SIZE))
--		return -1;
--
--	for (i = 0; i < MWIFIEX_RX_DATA_URB; i++) {
--		card->rx_data_list[i].adapter = adapter;
--		card->rx_data_list[i].ep = card->rx_data_ep;
--
--		card->rx_data_list[i].urb = usb_alloc_urb(0, GFP_KERNEL);
--		if (!card->rx_data_list[i].urb)
--			return -1;
--		if (mwifiex_usb_submit_rx_urb(&card->rx_data_list[i],
--					      MWIFIEX_RX_DATA_BUF_SIZE))
--			return -1;
--	}
--
--	return 0;
--}
--
- static int mwifiex_write_data_sync(struct mwifiex_adapter *adapter, u8 *pbuf,
- 				   u32 *len, u8 ep, u32 timeout)
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index ac62bce50e96..8e7d6f41a952 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2837,12 +2837,17 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
  {
-@@ -918,6 +848,15 @@ static int mwifiex_usb_prepare_tx_aggr_skb(struct mwifiex_adapter *adapter,
- 	struct mwifiex_txinfo *tx_info = NULL;
- 	bool is_txinfo_set = false;
+ 	struct pcie_service_card *card = adapter->card;
  
-+	/* Packets in aggr_list will be send in either skb_aggr or
-+	 * write complete, delete the tx_aggr timer
-+	 */
-+	if (port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+		del_timer(&port->tx_aggr.timer_cnxt.hold_timer);
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
-+	}
-+
- 	skb_aggr = mwifiex_alloc_dma_align_buf(port->tx_aggr.aggr_len,
- 					       GFP_ATOMIC);
- 	if (!skb_aggr) {
-@@ -999,6 +938,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 	u8 f_send_cur_buf = 0;
- 	u8 f_precopy_cur_buf = 0;
- 	u8 f_postcopy_cur_buf = 0;
-+	u32 timeout;
- 	int ret;
+-	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
+-		return;
++	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
++			      &card->work_flags))
++		schedule_work(&card->work);
++}
  
- 	/* padding to ensure each packet alginment */
-@@ -1069,8 +1009,35 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
- 		port->tx_aggr.aggr_len += (skb->len + pad);
- 		port->tx_aggr.aggr_num++;
-+		if (f_send_aggr_buf)
-+			goto send_aggr_buf;
-+
-+		/* packet will not been send immediately,
-+		 * set a timer to make sure it will be sent under
-+		 * strict time limit. Dynamically fit the timeout
-+		 * value, according to packets number in aggr_list
-+		 */
-+		if (!port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+			port->tx_aggr.timer_cnxt.hold_tmo_msecs =
-+					MWIFIEX_USB_TX_AGGR_TMO_MIN;
-+			timeout =
-+				port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+			mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+				  jiffies + msecs_to_jiffies(timeout));
-+			port->tx_aggr.timer_cnxt.is_hold_timer_set = true;
-+		} else {
-+			if (port->tx_aggr.timer_cnxt.hold_tmo_msecs <
-+			    MWIFIEX_USB_TX_AGGR_TMO_MAX) {
-+				/* Dyanmic fit timeout */
-+				timeout =
-+				++port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+				mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+					  jiffies + msecs_to_jiffies(timeout));
-+			}
-+		}
- 	}
+-	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
++static void mwifiex_pcie_card_reset(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
  
-+send_aggr_buf:
- 	if (f_send_aggr_buf) {
- 		ret = mwifiex_usb_prepare_tx_aggr_skb(adapter, port, &skb_send);
- 		if (!ret) {
-@@ -1114,11 +1081,60 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
- 		port->tx_aggr.aggr_len += (skb->len + pad);
- 		port->tx_aggr.aggr_num++;
-+		/* New aggregation begin, start timer */
-+		if (!port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+			port->tx_aggr.timer_cnxt.hold_tmo_msecs =
-+					MWIFIEX_USB_TX_AGGR_TMO_MIN;
-+			timeout = port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+			mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+				  jiffies + msecs_to_jiffies(timeout));
-+			port->tx_aggr.timer_cnxt.is_hold_timer_set = true;
-+		}
- 	}
- 
- 	return -EINPROGRESS;
+-	schedule_work(&card->work);
++	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
++		schedule_work(&card->work);
  }
  
-+static void mwifiex_usb_tx_aggr_tmo(unsigned long context)
-+{
-+	struct urb_context *urb_cnxt = NULL;
-+	struct sk_buff *skb_send = NULL;
-+	struct tx_aggr_tmr_cnxt *timer_context =
-+		(struct tx_aggr_tmr_cnxt *)context;
-+	struct mwifiex_adapter *adapter = timer_context->adapter;
-+	struct usb_tx_data_port *port = timer_context->port;
-+	unsigned long flags;
-+	int err = 0;
-+
-+	spin_lock_irqsave(&port->tx_aggr_lock, flags);
-+	err = mwifiex_usb_prepare_tx_aggr_skb(adapter, port, &skb_send);
-+	if (err) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "prepare tx aggr skb failed, err=%d\n", err);
-+		return;
-+	}
-+
-+	if (atomic_read(&port->tx_data_urb_pending) >=
-+	    MWIFIEX_TX_DATA_URB) {
-+		port->block_status = true;
-+		adapter->data_sent =
-+			mwifiex_usb_data_sent(adapter);
-+		err = -1;
-+		goto done;
-+	}
-+
-+	if (port->tx_data_ix >= MWIFIEX_TX_DATA_URB)
-+		port->tx_data_ix = 0;
-+
-+	urb_cnxt = &port->tx_data_list[port->tx_data_ix++];
-+	err = mwifiex_usb_construct_send_urb(adapter, port, port->tx_data_ep,
-+					     urb_cnxt, skb_send);
-+done:
-+	if (err == -1)
-+		mwifiex_write_data_complete(adapter, skb_send, 0, -1);
-+	spin_unlock_irqrestore(&port->tx_aggr_lock, flags);
-+}
-+
- /* This function write a command/data packet to card. */
- static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 				    struct sk_buff *skb,
-@@ -1127,7 +1143,8 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	struct usb_card_rec *card = adapter->card;
- 	struct urb_context *context = NULL;
- 	struct usb_tx_data_port *port = NULL;
--	int idx;
-+	unsigned long flags;
-+	int idx, ret;
- 
- 	if (adapter->is_suspended) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -1167,9 +1184,13 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 			return -1;
- 		}
- 
--		if (adapter->bus_aggr.enable)
--			return mwifiex_usb_aggr_tx_data(adapter, ep, skb,
-+		if (adapter->bus_aggr.enable) {
-+			spin_lock_irqsave(&port->tx_aggr_lock, flags);
-+			ret =  mwifiex_usb_aggr_tx_data(adapter, ep, skb,
- 							tx_param, port);
-+			spin_unlock_irqrestore(&port->tx_aggr_lock, flags);
-+			return ret;
-+		}
- 
- 		context = &port->tx_data_list[port->tx_data_ix++];
- 	}
-@@ -1177,6 +1198,84 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	return mwifiex_usb_construct_send_urb(adapter, port, ep, context, skb);
- }
- 
-+static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+	struct usb_tx_data_port *port;
-+	int i, j;
-+
-+	card->tx_cmd.adapter = adapter;
-+	card->tx_cmd.ep = card->tx_cmd_ep;
-+
-+	card->tx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!card->tx_cmd.urb)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
-+		port = &card->port[i];
-+		if (!port->tx_data_ep)
-+			continue;
-+		port->tx_data_ix = 0;
-+		skb_queue_head_init(&port->tx_aggr.aggr_list);
-+		if (port->tx_data_ep == MWIFIEX_USB_EP_DATA)
-+			port->block_status = false;
-+		else
-+			port->block_status = true;
-+		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
-+			port->tx_data_list[j].adapter = adapter;
-+			port->tx_data_list[j].ep = port->tx_data_ep;
-+			port->tx_data_list[j].urb =
-+					usb_alloc_urb(0, GFP_KERNEL);
-+			if (!port->tx_data_list[j].urb)
-+				return -ENOMEM;
-+		}
-+
-+		port->tx_aggr.timer_cnxt.adapter = adapter;
-+		port->tx_aggr.timer_cnxt.port = port;
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
-+		setup_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+			    mwifiex_usb_tx_aggr_tmo,
-+			    (unsigned long)&port->tx_aggr.timer_cnxt);
-+	}
-+
-+	return 0;
-+}
-+
-+static int mwifiex_usb_rx_init(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+	int i;
-+
-+	card->rx_cmd.adapter = adapter;
-+	card->rx_cmd.ep = card->rx_cmd_ep;
-+
-+	card->rx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!card->rx_cmd.urb)
-+		return -ENOMEM;
-+
-+	card->rx_cmd.skb = dev_alloc_skb(MWIFIEX_RX_CMD_BUF_SIZE);
-+	if (!card->rx_cmd.skb)
-+		return -ENOMEM;
-+
-+	if (mwifiex_usb_submit_rx_urb(&card->rx_cmd, MWIFIEX_RX_CMD_BUF_SIZE))
-+		return -1;
-+
-+	for (i = 0; i < MWIFIEX_RX_DATA_URB; i++) {
-+		card->rx_data_list[i].adapter = adapter;
-+		card->rx_data_list[i].ep = card->rx_data_ep;
-+
-+		card->rx_data_list[i].urb = usb_alloc_urb(0, GFP_KERNEL);
-+		if (!card->rx_data_list[i].urb)
-+			return -1;
-+		if (mwifiex_usb_submit_rx_urb(&card->rx_data_list[i],
-+					      MWIFIEX_RX_DATA_BUF_SIZE))
-+			return -1;
-+	}
-+
-+	return 0;
-+}
-+
- /* This function register usb device and initialize parameter. */
- static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 0af1c6733c92..d38d31bb9b79 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -2533,12 +2533,8 @@ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
  {
-@@ -1224,14 +1323,16 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
- 	struct sk_buff *skb_tmp;
- 	int idx;
+ 	struct sdio_mmc_card *card = adapter->card;
  
--	if (adapter->bus_aggr.enable) {
--		for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
--			port = &card->port[idx];
-+	for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
-+		port = &card->port[idx];
-+		if (adapter->bus_aggr.enable)
- 			while ((skb_tmp =
- 				skb_dequeue(&port->tx_aggr.aggr_list)))
- 				mwifiex_write_data_complete(adapter, skb_tmp,
- 							    0, -1);
--		}
-+		del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
- 	}
+-	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
+-		return;
+-
+-	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
+-
+-	schedule_work(&card->work);
++	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
++		schedule_work(&card->work);
  }
  
-@@ -1239,8 +1340,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ /* This function dumps FW information */
+@@ -2546,11 +2542,9 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
  {
- 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+ 	struct sdio_mmc_card *card = adapter->card;
  
--	if (adapter->bus_aggr.enable)
--		mwifiex_usb_cleanup_tx_aggr(adapter);
-+	mwifiex_usb_cleanup_tx_aggr(adapter);
- 
- 	card->adapter = NULL;
+-	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
+-		return;
+-
+-	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
+-	schedule_work(&card->work);
++	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
++			      &card->work_flags))
++		schedule_work(&card->work);
  }
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
-index b89b840..37abd22 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.h
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.h
-@@ -64,10 +64,22 @@ struct urb_context {
- 	u8 ep;
- };
  
-+#define MWIFIEX_USB_TX_AGGR_TMO_MIN	1
-+#define MWIFIEX_USB_TX_AGGR_TMO_MAX	4
-+
-+struct tx_aggr_tmr_cnxt {
-+	struct mwifiex_adapter *adapter;
-+	struct usb_tx_data_port *port;
-+	struct timer_list hold_timer;
-+	bool is_hold_timer_set;
-+	u32 hold_tmo_msecs;
-+};
-+
- struct usb_tx_aggr {
- 	struct sk_buff_head aggr_list;
- 	int aggr_len;
- 	int aggr_num;
-+	struct tx_aggr_tmr_cnxt timer_cnxt;
- };
- 
- struct usb_tx_data_port {
-@@ -79,6 +91,8 @@ struct usb_tx_data_port {
- 	/* usb tx aggregation*/
- 	struct usb_tx_aggr tx_aggr;
- 	struct sk_buff *skb_aggr[MWIFIEX_TX_DATA_URB];
-+	/* lock for protect tx aggregation data path*/
-+	spinlock_t tx_aggr_lock;
- };
- 
- struct usb_card_rec {
+ /* Function to dump SDIO function registers and SDIO scratch registers in case
 -- 
-1.9.1
+2.13.0.rc0.306.g87b477812d-goog
