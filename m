@@ -1,166 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:36145 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750805AbdEEQRW (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33399 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750819AbdEATip (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 12:17:22 -0400
-Received: by mail-io0-f195.google.com with SMTP id x86so2437286ioe.3
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:21 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 01/10] rtlwifi: btcoex: 21a 2ant: set tdma with rssi states
-Date: Fri,  5 May 2017 11:17:03 -0500
-Message-Id: <20170505161712.8685-2-Larry.Finger@lwfinger.net> (sfid-20170505_181914_419744_9B2B4A91)
-In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
-References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+        Mon, 1 May 2017 15:38:45 -0400
+Date: Mon, 1 May 2017 12:38:41 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] mwifiex: pcie: add card_reset() support
+Message-ID: <20170501193841.GB34444@dtor-ws> (sfid-20170501_213957_338988_2BC99860)
+References: <20170501193700.89264-1-briannorris@chromium.org>
+ <20170501193700.89264-2-briannorris@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170501193700.89264-2-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Mon, May 01, 2017 at 12:37:00PM -0700, Brian Norris wrote:
+> Similar to the SDIO driver, we should implement this so that we will
+> automatically reset the device whenever there's a command timeout or
+> similar.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-if bt rssi is high, adjust the duration of wifi to a longer period to
-let the wifi transmit under this bt profiling.
+Reviewed-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 91 +++++++---------------
- 1 file changed, 28 insertions(+), 63 deletions(-)
+> ---
+> v3: keep all the new reset code in patch 2, not patch 1
+> 
+> v2: use atomic test/set, based on Dmitry's suggestion
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 5f56e8e6d612..78688ff6ecd0 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -2822,6 +2822,13 @@ static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
+>  	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
+>  }
+>  
+> +static void mwifiex_pcie_card_reset_work(struct mwifiex_adapter *adapter)
+> +{
+> +	struct pcie_service_card *card = adapter->card;
+> +
+> +	pci_reset_function(card->dev);
+> +}
+> +
+>  static void mwifiex_pcie_work(struct work_struct *work)
+>  {
+>  	struct pcie_service_card *card =
+> @@ -2830,6 +2837,9 @@ static void mwifiex_pcie_work(struct work_struct *work)
+>  	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
+>  			       &card->work_flags))
+>  		mwifiex_pcie_device_dump_work(card->adapter);
+> +	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
+> +			       &card->work_flags))
+> +		mwifiex_pcie_card_reset_work(card->adapter);
+>  }
+>  
+>  /* This function dumps FW information */
+> @@ -2842,6 +2852,14 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
+>  		schedule_work(&card->work);
+>  }
+>  
+> +static void mwifiex_pcie_card_reset(struct mwifiex_adapter *adapter)
+> +{
+> +	struct pcie_service_card *card = adapter->card;
+> +
+> +	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
+> +		schedule_work(&card->work);
+> +}
+> +
+>  static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
+>  {
+>  	struct pcie_service_card *card = adapter->card;
+> @@ -3271,6 +3289,7 @@ static struct mwifiex_if_ops pcie_ops = {
+>  	.cleanup_mpa_buf =		NULL,
+>  	.init_fw_port =			mwifiex_pcie_init_fw_port,
+>  	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
+> +	.card_reset =			mwifiex_pcie_card_reset,
+>  	.reg_dump =			mwifiex_pcie_reg_dump,
+>  	.device_dump =			mwifiex_pcie_device_dump,
+>  	.down_dev =			mwifiex_pcie_down_dev,
+> -- 
+> 2.13.0.rc0.306.g87b477812d-goog
+> 
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 841b4a83ab70..a0f2eb53a011 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3220,12 +3220,16 @@ static void btc8821a2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- /* HID+A2DP+PAN(EDR) */
- static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, bt_rssi_state, bt_info_ext;
-+	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
- 	u32 wifi_bw;
- 
--	bt_info_ext = coex_sta->bt_info_ext;
- 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
--	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
-+	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
-+				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
-+	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
-+				2, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 0);
-+
-+	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
- 
- 	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, false, 0x8);
- 	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
-@@ -3235,44 +3239,32 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 	else
- 		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
- 
-+	if (BTC_RSSI_HIGH(wifi_rssi_state1) && BTC_RSSI_HIGH(bt_rssi_state)) {
-+		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
-+		btc8821a2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
-+					      0x0, 0x0);
-+	} else {
-+		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 14);
-+		btc8821a2ant_power_save_state(btcoexist, BTC_PS_LPS_ON, 0x50,
-+					      0x4);
-+	}
-+
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 
--	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
--		/* for HID at 11b/g mode */
--		btc8821a2ant_coex_table(btcoexist, NORMAL_EXEC, 0x55ff55ff,
--					0x5a5a5a5a, 0xffff, 0x3);
-+	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
-+	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
-+		if (wifi_bw == BTC_WIFI_BW_HT40)
-+			btc8821a2ant_tdma_duration_adjust(btcoexist, true,
-+							  true, 3);
-+		else
-+			btc8821a2ant_tdma_duration_adjust(btcoexist, true,
-+							  false, 3);
- 	} else {
--		/* for HID quality & wifi performance balance at 11n mode */
--		btc8821a2ant_coex_table(btcoexist, NORMAL_EXEC, 0x55ff55ff,
--					0x5a5a5a5a, 0xffff, 0x3);
-+		btc8821a2ant_tdma_duration_adjust(btcoexist, true, true, 3);
- 	}
- 
--	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		/* fw mechanism */
--		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			if (bt_info_ext&BIT0) {
--				/* a2dp basic rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--							true, true, 3);
--			} else {
--				/* a2dp edr rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--							true, true, 3);
--			}
--		} else {
--			if (bt_info_ext&BIT0) {
--				/* a2dp basic rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--							true, true, 3);
--			} else {
--				/* a2dp edr rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--							true, true, 3);
--			}
--		}
--
--		/* sw mechanism */
-+	/* sw mechanism */
-+	if (wifi_bw == BTC_WIFI_BW_HT40) {
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, true, true,
-@@ -3286,33 +3278,6 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 						   false, 0x18);
- 		}
- 	} else {
--		/* fw mechanism */
--		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			if (bt_info_ext&BIT0) {
--				/* a2dp basic rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--							true, false, 3);
--			} else {
--				/* a2dp edr rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--							true, false, 3);
--			}
--		} else {
--			if (bt_info_ext&BIT0) {
--				/* a2dp basic rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  3);
--			} else {
--				/* a2dp edr rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  3);
--			}
--		}
--
--		/* sw mechanism */
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, false, true,
 -- 
-2.12.2
+Dmitry
