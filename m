@@ -1,89 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45763 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967082AbdEWI6U (ORCPT
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:41049 "EHLO
+        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750715AbdEBGEV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 04:58:20 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] cfg80211: make cfg80211_sched_scan_results() work from atomic context
-Date: Tue, 23 May 2017 09:58:07 +0100
-Message-Id: <1495529887-14542-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170523_105911_494941_3D88E5E5)
+        Tue, 2 May 2017 02:04:21 -0400
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <linux-wireless@vger.kernel.org>,
+        <linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+        <sylvain.fidelis@st.com>, <raphael.collado@st.com>,
+        <shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
+Subject: [[linux-nfc][PATCH v1] 0/6] Support of ST NFC Transceiver
+Date: Tue, 2 May 2017 02:03:37 -0400
+Message-ID: <1493705023-8710-1-git-send-email-shikha.singh@st.com> (sfid-20170502_080429_380975_4C899930)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers should be able to call cfg80211_sched_scan_results() from atomic
-context. However, with the introduction of multiple scheduled scan feature
-this requirement was not taken into account resulting in regression shown
-below.
+*** V1.0 ***
+This patch series is generated on top of latest
+code available on nfc-next.
 
-[  119.021594] BUG: scheduling while atomic: irq/47-iwlwifi/517/0x00000200
-[  119.021604] Modules linked in: xt_tcpudp ip6t_rpfilter ipt_REJECT nf_reject_ipv4 ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_raw ip6table_security ip6table_mangle iptable_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_security iptable_mangle ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter ip_tables x_tables rfcomm bnep binfmt_misc arc4 iTCO_wdt iTCO_vendor_support uvcvideo videobuf2_vmalloc videobuf2_memops videobuf2_v4l2 videobuf2_core videodev intel_rapl cdc_mbim iwlmvm x86_pkg_temp_thermal intel_powerclamp mac80211 media cdc_wdm btusb coretemp cdc_ncm kvm_intel usbnet mii cdc_acm iwlwifi kvm btintel joydev pcspkr serio_raw cfg80211 snd_hda_codec_hdmi
-[  119.021701]  bluetooth lpc_ich snd_hda_codec_realtek snd_hda_codec_generic shpchp sg ecdh_generic snd_hda_intel thinkpad_acpi snd_hda_codec snd_hwdep snd_hda_core snd_pcm snd_timer nvram snd soundcore evdev tpm_tis tpm_tis_core tpm algif_skcipher af_alg crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel rtsx_pci_sdmmc mmc_core aesni_intel aes_x86_64 crypto_simd cryptd glue_helper psmouse i2c_i801 sd_mod ehci_pci ehci_hcd e1000e rtsx_pci mfd_core ptp xhci_pci pps_core xhci_hcd
-[  119.021759] CPU: 1 PID: 517 Comm: irq/47-iwlwifi Not tainted 4.12.0-rc2-t440s-20170522+ #1
-[  119.021763] Hardware name: LENOVO 20AQS03H00/20AQS03H00, BIOS GJET91WW (2.41 ) 09/21/2016
-[  119.021766] Call Trace:
-[  119.021778]  ? dump_stack+0x5c/0x84
-[  119.021784]  ? __schedule_bug+0x4c/0x70
-[  119.021792]  ? __schedule+0x496/0x5c0
-[  119.021798]  ? schedule+0x2d/0x80
-[  119.021804]  ? schedule_preempt_disabled+0x5/0x10
-[  119.021810]  ? __mutex_lock.isra.0+0x18e/0x4c0
-[  119.021817]  ? __wake_up+0x2f/0x50
-[  119.021833]  ? cfg80211_sched_scan_results+0x19/0x60 [cfg80211]
-[  119.021844]  ? cfg80211_sched_scan_results+0x19/0x60 [cfg80211]
-[  119.021859]  ? iwl_mvm_rx_lmac_scan_iter_complete_notif+0x17/0x30 [iwlmvm]
-[  119.021869]  ? iwl_pcie_rx_handle+0x2a9/0x7e0 [iwlwifi]
-[  119.021878]  ? iwl_pcie_irq_handler+0x17c/0x730 [iwlwifi]
-[  119.021884]  ? irq_forced_thread_fn+0x60/0x60
-[  119.021887]  ? irq_thread_fn+0x16/0x40
-[  119.021892]  ? irq_thread+0x109/0x180
-[  119.021896]  ? wake_threads_waitq+0x30/0x30
-[  119.021901]  ? kthread+0xf2/0x130
-[  119.021905]  ? irq_thread_dtor+0x90/0x90
-[  119.021910]  ? kthread_create_on_node+0x40/0x40
-[  119.021915]  ? ret_from_fork+0x26/0x40
+This patch series introduces the following features:
 
-Fixes: b34939b98369 ("cfg80211: add request id to cfg80211_sched_scan_*() api")
-Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- net/wireless/scan.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+(a) A generic Digital NFC UART framework.
+The framework itself is an LDISC registered
+with the tty core. Any NFC transciever implementing
+the digital specs and connected on an UART
+(or on an emulated tty, such as /dev/ttyUSBx, /dev/ttyACMx)
+interface with the host, will require this support.
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 14d5f0c..9f0901f 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -322,9 +322,9 @@ static void cfg80211_del_sched_scan_req(struct cfg80211_registered_device *rdev,
- {
- 	struct cfg80211_sched_scan_request *pos;
- 
--	ASSERT_RTNL();
-+	WARN_ON_ONCE(!rcu_read_lock_held() && !lockdep_rtnl_is_held());
- 
--	list_for_each_entry(pos, &rdev->sched_scan_req_list, list) {
-+	list_for_each_entry_rcu(pos, &rdev->sched_scan_req_list, list) {
- 		if (pos->reqid == reqid)
- 			return pos;
- 	}
-@@ -398,13 +398,13 @@ void cfg80211_sched_scan_results(struct wiphy *wiphy, u64 reqid)
- 	trace_cfg80211_sched_scan_results(wiphy, reqid);
- 	/* ignore if we're not scanning */
- 
--	rtnl_lock();
-+	rcu_read_lock();
- 	request = cfg80211_find_sched_scan_req(rdev, reqid);
- 	if (request) {
- 		request->report_results = true;
- 		queue_work(cfg80211_wq, &rdev->sched_scan_res_wk);
- 	}
--	rtnl_unlock();
-+	rcu_read_unlock();
- }
- EXPORT_SYMBOL(cfg80211_sched_scan_results);
- 
+(b) An ST NFC Transciever core framework. This implements the
+required digital ops and exposes an interface for the
+underlying phy drivers (UART/ SPI). The services of the phy drivers
+are required when the core wants to transmit/receive frames.
+Also it provides helper functions for the phy drivers, for
+example phy drivers registers with the core when it detects
+a Transciever connected on the corresponding interface.
+The framework currently supports NFC Type 2, Type 4A, Type 4B,
+Type 5 tag read/write.
+
+(c) An ST NFC UART LDisc driver that registers with the
+Digital NFC UART framework, and with the ST NFC Transciever
+core framework as the UART Phy driver.
+
+(d) An ST NFC SPI driver that register with ST NFC Transceiver
+core framework as SPI phy driver.
+
+(e) Binding doc was renamed from st95hf.txt to stnfc.txt.
+
+(f) This patch series also removes all the references of old ST
+NFC transceiver driver "st95hf".
+
+Shikha Singh (6):
+  NFC: add generic UART support
+  NFC: nfcst: Add ST NFC Transceiver core framework
+  NFC: nfcst: Add UART LDisc Driver
+  NFC: nfcst: Add ST NFC SPI Driver
+  DT: bindings: net: nfc: stnfc binding doc
+  DRIVERS: NFC: Remove st95hf name reference
+
+ .../devicetree/bindings/net/nfc/st95hf.txt         |   50 -
+ .../devicetree/bindings/net/nfc/stnfc.txt          |   50 +
+ drivers/nfc/Kconfig                                |    2 +-
+ drivers/nfc/Makefile                               |    2 +-
+ drivers/nfc/nfcst/Kconfig                          |   49 +
+ drivers/nfc/nfcst/Makefile                         |   12 +
+ drivers/nfc/nfcst/core.c                           | 1122 +++++++++++++++++
+ drivers/nfc/nfcst/spi.c                            |  493 ++++++++
+ drivers/nfc/nfcst/stnfcdev.h                       |   70 ++
+ drivers/nfc/nfcst/uart.c                           |  164 +++
+ drivers/nfc/st95hf/Kconfig                         |   10 -
+ drivers/nfc/st95hf/Makefile                        |    6 -
+ drivers/nfc/st95hf/core.c                          | 1273 --------------------
+ drivers/nfc/st95hf/spi.c                           |  167 ---
+ drivers/nfc/st95hf/spi.h                           |   64 -
+ include/net/nfc/digital_uart.h                     |  105 ++
+ include/uapi/linux/tty.h                           |    1 +
+ net/nfc/Kconfig                                    |   12 +
+ net/nfc/Makefile                                   |    3 +
+ net/nfc/digital_uart.c                             |  523 ++++++++
+ 20 files changed, 2606 insertions(+), 1572 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/stnfc.txt
+ create mode 100644 drivers/nfc/nfcst/Kconfig
+ create mode 100644 drivers/nfc/nfcst/Makefile
+ create mode 100644 drivers/nfc/nfcst/core.c
+ create mode 100644 drivers/nfc/nfcst/spi.c
+ create mode 100644 drivers/nfc/nfcst/stnfcdev.h
+ create mode 100644 drivers/nfc/nfcst/uart.c
+ delete mode 100644 drivers/nfc/st95hf/Kconfig
+ delete mode 100644 drivers/nfc/st95hf/Makefile
+ delete mode 100644 drivers/nfc/st95hf/core.c
+ delete mode 100644 drivers/nfc/st95hf/spi.c
+ delete mode 100644 drivers/nfc/st95hf/spi.h
+ create mode 100644 include/net/nfc/digital_uart.h
+ create mode 100644 net/nfc/digital_uart.c
+
 -- 
-1.9.1
+1.8.2.1
