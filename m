@@ -1,78 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:56775 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030409AbdEWSHo (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45141 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751176AbdEBMmy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 14:07:44 -0400
-From: Enric Balletbo i Serra <enric.balletbo@collabora.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>
-Subject: [PATCH] brcmfmac: Fix kernel oops on resume when request firmware fails.
-Date: Tue, 23 May 2017 20:07:33 +0200
-Message-Id: <20170523180733.26276-1-enric.balletbo@collabora.com> (sfid-20170523_200959_377243_7FEC9BA8)
+        Tue, 2 May 2017 08:42:54 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 8/9] brcmfmac: switch to using cfg80211_connect_done()
+Date: Tue,  2 May 2017 13:42:28 +0100
+Message-Id: <1493728949-10797-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170502_144302_925222_6F56A866)
+In-Reply-To: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When request firmware fails, brcmf_ops_sdio_remove is being called and
-brcmf_bus freed. In such circumstancies if you do a suspend/resume cycle
-the kernel hangs on resume due a NULL pointer dereference in resume
-function.
+The driver used cfg80211_connect_result() which is basically a wrapper
+around cfg80211_connect_done() passing a subset of the information that
+can be passed. For upcoming functionality this is not sufficient so
+switching to use cfg80211_connect_done().
 
-Steps to reproduce the problem:
- - modprobe brcmfmac without the firmware
-     brcmfmac mmc1:0001:1: Direct firmware load for brcm/brcmfmac4354-sdio.bin
-     failed with error -2
- - do a suspend/resume cycle (echo mem > /sys/power/state)
-
-Protect against the NULL pointer derefence by checking if dev_get_drvdata
-returned a valid pointer.
-
-Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-I'm not sure about if this is the correct way to fix this but at least it
-prevents the kernel to hang. From one side I'm not sure why suspend/resume
-functions are called in such case and why the device is not removed from
-the bus, from the other side I saw, that others drivers only unregisters
-from sdio when the driver is removed so I supose this is the normal behavior.
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-Cheers,
- Enric
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9b970dc..aa0e7c2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1274,14 +1274,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
- static int brcmf_ops_sdio_resume(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
--	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct sdio_func *func = container_of(dev, struct sdio_func, dev);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index cc5b8ba..9d345c7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5537,26 +5537,28 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
+ 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg);
++	struct cfg80211_connect_resp_params conn_params;
  
- 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
- 	if (func->num != SDIO_FUNC_2)
- 		return 0;
+ 	brcmf_dbg(TRACE, "Enter\n");
  
--	brcmf_sdiod_freezer_off(sdiodev);
-+	if (!bus_if)
-+		return 0;
-+
-+	brcmf_sdiod_freezer_off(bus_if->bus_priv.sdio);
- 	return 0;
- }
- 
-@@ -1319,4 +1321,3 @@ void brcmf_sdio_exit(void)
- 
- 	sdio_unregister_driver(&brcmf_sdmmc_driver);
- }
--
+ 	if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTING,
+ 			       &ifp->vif->sme_state)) {
++		memset(&conn_params, 0, sizeof(conn_params));
+ 		if (completed) {
+ 			brcmf_get_assoc_ies(cfg, ifp);
+ 			brcmf_update_bss_info(cfg, ifp);
+ 			set_bit(BRCMF_VIF_STATUS_CONNECTED,
+ 				&ifp->vif->sme_state);
++			conn_params.status = WLAN_STATUS_SUCCESS;
++		} else {
++			conn_params.status = WLAN_STATUS_AUTH_TIMEOUT;
+ 		}
+-		cfg80211_connect_result(ndev,
+-					(u8 *)profile->bssid,
+-					conn_info->req_ie,
+-					conn_info->req_ie_len,
+-					conn_info->resp_ie,
+-					conn_info->resp_ie_len,
+-					completed ? WLAN_STATUS_SUCCESS :
+-						    WLAN_STATUS_AUTH_TIMEOUT,
+-					GFP_KERNEL);
++		conn_params.bssid = profile->bssid;
++		conn_params.req_ie = conn_info->req_ie;
++		conn_params.req_ie_len = conn_info->req_ie_len;
++		conn_params.resp_ie = conn_info->resp_ie;
++		conn_params.resp_ie_len = conn_info->resp_ie_len;
++		cfg80211_connect_done(ndev, &conn_params, GFP_KERNEL);
+ 		brcmf_dbg(CONN, "Report connect result - connection %s\n",
+ 			  completed ? "succeeded" : "failed");
+ 	}
 -- 
-2.9.3
+1.9.1
