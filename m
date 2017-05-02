@@ -1,56 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36359 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750892AbdESGzW (ORCPT
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:41054 "EHLO
+        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751015AbdEBGE3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 02:55:22 -0400
+        Tue, 2 May 2017 02:04:29 -0400
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <linux-wireless@vger.kernel.org>,
+        <linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+        <sylvain.fidelis@st.com>, <raphael.collado@st.com>,
+        <shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
+Subject: [[linux-nfc][PATCH v1] 5/6] DT: bindings: net: nfc: stnfc binding doc
+Date: Tue, 2 May 2017 02:03:42 -0400
+Message-ID: <1493705023-8710-6-git-send-email-shikha.singh@st.com> (sfid-20170502_080449_200878_B2CEF1F9)
+In-Reply-To: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
+References: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKR_QVJGxWF8+ZGGn08XiOgpYVGSjwQwqJoP10fY_bjfRg-uzw@mail.gmail.com>
-References: <20170517144702.1381136-1-arnd@arndb.de> <87r2zl8lvi.fsf@codeaurora.org>
- <CAKR_QVJGxWF8+ZGGn08XiOgpYVGSjwQwqJoP10fY_bjfRg-uzw@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 19 May 2017 08:55:21 +0200
-Message-ID: <CAK8P3a3Y7rCvmJo062-5G07HGiT6x2MtvVV=dQAVBK0AiX0U_A@mail.gmail.com> (sfid-20170519_085528_522320_B870BEE4)
-Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for
- register accessors
-To: Tom Psyborg <pozega.tomislav@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jes Sorensen <jes.sorensen@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 19, 2017 at 8:44 AM, Tom Psyborg <pozega.tomislav@gmail.com> wrote:
-> warning: 'rt2800_bbp_read' used but never defined
->  static u8 rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
->            ^
-> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800lib.h:262:13:
-> warning: 'rt2800_bbp_write' used but never defined
->  static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
->              ^
->   CC [M]
-> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800pci.o
-> In file included from
-> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800pci.c:43:0:
-> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800lib.h:259:11:
-> warning: 'rt2800_bbp_read' declared 'static' but never defined
-> [-Wunused-function]
->  static u8 rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
->            ^
+This patch adds ST NFC binding doc that guides
+how to make SPI slave node entry of ST NFC transceiver
+in DT file of any platform.
 
-On which base version did you apply my patches? There may be a conflict
-against patches that are in your tree but not yet in linux-next, as I don't see
-the warning and also see no reference to rt2800_bbp_read in rt2800lib.h
+Signed-off-by: Shikha Singh <shikha.singh@st.com>
+---
+ .../devicetree/bindings/net/nfc/stnfc.txt          | 50 ++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/stnfc.txt
 
-      Arnd
+diff --git a/Documentation/devicetree/bindings/net/nfc/stnfc.txt b/Documentation/devicetree/bindings/net/nfc/stnfc.txt
+new file mode 100644
+index 0000000..b050b3e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/nfc/stnfc.txt
+@@ -0,0 +1,50 @@
++* STMicroelectronics : NFC Transceiver
++
++ST NFC Transceiver can be attached with SPI bus.
++ST NFC node should be defined in DT as SPI slave device of SPI
++master with which  transceiver is physically connected.
++The properties defined below are required to be the part of DT
++to include ST NFC transceiver over SPI into the platform.
++
++Required properties:
++===================
++- reg: Address of SPI slave "ST NFC transceiver" on SPI master bus.
++
++- compatible: should be "st,stnfc" for ST NFC transceiver
++
++- spi-max-frequency: Max. operating SPI frequency for ST NFC
++	transceiver.
++
++- enable-gpio: GPIO line to enable ST NFC transceiver.
++
++- interrupt-parent : Standard way to specify the controller to which
++	transceiver's interrupt is routed.
++
++- interrupts : Standard way to define ST NFC transceiver's out
++	interrupt.
++
++Optional property:
++=================
++- nfcstvin : This is an optional property. It contains a
++	phandle to ST NFC transceiver's regulator supply node in DT.
++
++Example:
++=======
++spi@9840000 {
++	reg = <0x9840000 0x110>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++	cs-gpios = <&pio0 4>;
++	status = "okay";
++
++	stnfc@0{
++		reg = <0>;
++		compatible = "st,stnfc";
++		status = "okay";
++		spi-max-frequency = <1000000>;
++		enable-gpio = <&pio4 0>;
++		interrupt-parent = <&pio0>;
++		interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
++	};
++
++};
+-- 
+1.8.2.1
