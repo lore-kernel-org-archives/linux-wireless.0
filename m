@@ -1,118 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33091 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932268AbdETPtS (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45108 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750934AbdEBMmx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 May 2017 11:49:18 -0400
-Received: by mail-oi0-f67.google.com with SMTP id h4so16702500oib.0
-        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 06/10] rtlwifi: btcoex: 23b 1ant: coex table fine tune
-Date: Sat, 20 May 2017 10:49:03 -0500
-Message-Id: <20170520154907.15590-7-Larry.Finger@lwfinger.net> (sfid-20170520_174928_747866_B1CF9AD9)
-In-Reply-To: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
-References: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
+        Tue, 2 May 2017 08:42:53 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Eliad Peller <eliad@wizery.com>,
+        Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+        Eliad Peller <eliadx.peller@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/9] cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
+Date: Tue,  2 May 2017 13:42:21 +0100
+Message-Id: <1493728949-10797-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170502_144311_512299_C6D69498)
+In-Reply-To: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Eliad Peller <eliad@wizery.com>
 
-Set register settings for coex table fine tune.
+Let drivers advertise support for station-mode 4-way handshake
+offloading with a new NL80211_EXT_FEATURE_4WAY_HANDSHAKE_OFFLOAD_STA
+flag.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Extend use of NL80211_ATTR_PMK attribute indicating it might be passed
+as part of NL80211_CMD_CONNECT command, and contain the PSK (which is
+the PMK, hence the name.)
+
+The driver/device is assumed to handle the 4-way handshake by
+itself in this case (including key derivations, etc.), instead
+of relying on the supplicant.
+
+This patch is somewhat based on this one (by Vladimir Kondratiev):
+https://patchwork.kernel.org/patch/1309561/.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[arend.vanspriel@broadcom.com rebase dealing with existing ATTR_PMK]
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 56 +++++++++++++++++++---
- 1 file changed, 50 insertions(+), 6 deletions(-)
+ include/linux/ieee80211.h    |  1 +
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h | 10 ++++++++--
+ net/wireless/nl80211.c       |  9 +++++++++
+ 4 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 80d577cd6549..9c4feb89144d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -587,24 +587,68 @@ static void halbtc8723b1ant_coex_table_with_type(struct btc_coexist *btcoexist,
- 		break;
- 	case 3:
- 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
--					   0xaaaaaaaa, 0xffffff, 0x3);
-+					   0x5a5a5a5a, 0xffffff, 0x3);
- 		break;
- 	case 4:
--		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
--					   0x5aaa5aaa, 0xffffff, 0x3);
-+		if ((coex_sta->cck_ever_lock) && (coex_sta->scan_ap_num <= 5))
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x55555555, 0xaaaa5a5a,
-+						   0xffffff, 0x3);
-+		else
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x55555555, 0x5a5a5a5a,
-+						   0xffffff, 0x3);
- 		break;
- 	case 5:
--		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
--					   0xaaaa5a5a, 0xffffff, 0x3);
-+		if ((coex_sta->cck_ever_lock) && (coex_sta->scan_ap_num <= 5))
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x5a5a5a5a, 0x5aaa5a5a,
-+						   0xffffff, 0x3);
-+		else
-+			halbtc8723b1ant_coex_table(btcoexist, force_exec,
-+						   0x5a5a5a5a, 0x5aaa5a5a,
-+						   0xffffff, 0x3);
- 		break;
- 	case 6:
- 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
--					   0xaaaa5a5a, 0xffffff, 0x3);
-+					   0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
- 	case 7:
- 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0xaaaaaaaa,
- 					   0xaaaaaaaa, 0xffffff, 0x3);
- 		break;
-+	case 8:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 9:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 10:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 11:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 12:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 13:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					   0xaaaaaaaa, 0xffffff, 0x3);
-+		break;
-+	case 14:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x5fff5fff,
-+					   0x5ada5ada, 0xffffff, 0x3);
-+		break;
-+	case 15:
-+		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55dd55dd,
-+					   0xaaaaaaaa, 0xffffff, 0x3);
-+		break;
- 	default:
- 		break;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 6903335..e97ca3a 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2401,6 +2401,7 @@ enum ieee80211_sa_query_action {
+ #define WLAN_MAX_KEY_LEN		32
+ 
+ #define WLAN_PMKID_LEN			16
++#define WLAN_PMK_LEN			32
+ 
+ #define WLAN_OUI_WFA			0x506f9a
+ #define WLAN_OUI_TYPE_WFA_P2P		9
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6e90f1a..3a2989d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -649,6 +649,7 @@ struct survey_info {
+  * @wep_keys: static WEP keys, if not NULL points to an array of
+  *	CFG80211_MAX_WEP_KEYS WEP keys
+  * @wep_tx_key: key index (0..3) of the default TX static WEP key
++ * @psk: PSK (for devices supporting 4-way-handshake offload)
+  */
+ struct cfg80211_crypto_settings {
+ 	u32 wpa_versions;
+@@ -662,6 +663,7 @@ struct cfg80211_crypto_settings {
+ 	bool control_port_no_encrypt;
+ 	struct key_params *wep_keys;
+ 	int wep_tx_key;
++	const u8 *psk;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b8c44b9..b9e6d14 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2080,8 +2080,10 @@ enum nl80211_commands {
+  *	identifying the scope of PMKSAs. This is used with
+  *	@NL80211_CMD_SET_PMKSA and @NL80211_CMD_DEL_PMKSA.
+  *
+- * @NL80211_ATTR_PMK: PMK for the PMKSA identified by %NL80211_ATTR_PMKID.
+- *	This is used with @NL80211_CMD_SET_PMKSA.
++ * @NL80211_ATTR_PMK: attribute for passing PMK key material. Used with
++ *	%NL80211_CMD_SET_PMKSA for the PMKSA identified by %NL80211_ATTR_PMKID.
++ *	For %NL80211_CMD_CONNECT it is used to provide PSK for offloading 4-way
++ *	handshake for WPA/WPA2-PSK networks.
+  *
+  * @NL80211_ATTR_SCHED_SCAN_MULTI: flag attribute which user-space shall use to
+  *	indicate that it supports multiple active scheduled scan requests.
+@@ -4852,6 +4854,9 @@ enum nl80211_feature_flags {
+  *	RSSI threshold values to monitor rather than exactly one threshold.
+  * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS shared key
+  *	authentication with %NL80211_CMD_CONNECT.
++ * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK: Device supports doing 4-way
++ *	handshake with PSK in station mode (PSK is passed as part of the connect
++ *	and associate commands).
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4872,6 +4877,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
+ 	NL80211_EXT_FEATURE_CQM_RSSI_LIST,
+ 	NL80211_EXT_FEATURE_FILS_SK_OFFLOAD,
++	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 570fc95..d93e3e4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8156,6 +8156,15 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 		memcpy(settings->akm_suites, data, len);
  	}
+ 
++	if (info->attrs[NL80211_ATTR_PMK]) {
++		if (nla_len(info->attrs[NL80211_ATTR_PMK]) != WLAN_PMK_LEN)
++			return -EINVAL;
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK))
++			return -EINVAL;
++		settings->psk = nla_data(info->attrs[NL80211_ATTR_PMK]);
++	}
++
+ 	return 0;
+ }
+ 
 -- 
-2.12.0
+1.9.1
