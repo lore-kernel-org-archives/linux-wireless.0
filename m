@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:53260 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753402AbdEVNAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 09:00:38 -0400
-Subject: [PATCH 2/2] NFC: digital: Delete an error message for a failed memory
- allocation in digital_in_send()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Thierry Escande <thierry.escande@collabora.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
-Message-ID: <94b99b09-8f6f-3532-0738-b2edba96dd26@users.sourceforge.net> (sfid-20170522_150123_939627_D70184BB)
-Date: Mon, 22 May 2017 15:00:17 +0200
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47099 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751026AbdEBHKD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 May 2017 03:10:03 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: pull-request mwifiex-firmware 2017-05-02
+Date: Tue, 2 May 2017 07:09:53 +0000
+Message-ID: <cb95cb7a8066454587eca34a619e1ece@SC-EXCH02.marvell.com> (sfid-20170502_091013_430983_FDD76488)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 22 May 2017 14:24:24 +0200
+The following changes since commit c2ff512b4939b2140ed62cc3f60b1a93110764bc:
 
-Omit an extra message for a memory allocation failure in this function.
+  linux-firmware: update Marvell SD8897-B0 firmware image (2017-04-21 13:04:39 +0530)
 
-This issue was detected by using the Coccinelle software.
+are available in the git repository at:
 
-Link: http://events.linuxfoundation.org/sites/events/files/slides/LCJ16-Refactor_Strings-WSang_0.pdf
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- net/nfc/digital_core.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+  git://git.marvell.com/mwifiex-firmware.git
 
-diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
-index 3baf91f3ef80..8e02a3e1b319 100644
---- a/net/nfc/digital_core.c
-+++ b/net/nfc/digital_core.c
-@@ -710,7 +710,5 @@ static int digital_in_send(struct nfc_dev *nfc_dev, struct nfc_target *target,
--	if (!data_exch) {
--		pr_err("Failed to allocate data_exch struct\n");
-+	if (!data_exch)
- 		return -ENOMEM;
--	}
- 
- 	data_exch->cb = cb;
- 	data_exch->cb_context = cb_context;
--- 
-2.13.0
+for you to fetch changes up to 47afd9950fbcadeb7cefc093b21d6123bdc76f79:
+
+  linux-firmware: add Marvell USB8997 firmware image (2017-05-02 12:28:34 +0530)
+
+----------------------------------------------------------------
+Ganapathi Bhat (1):
+      linux-firmware: add Marvell USB8997 firmware image
+
+ WHENCE                       |   3 +++
+ mrvl/usbusb8997_combo_v4.bin | Bin 0 -> 602100 bytes
+ 2 files changed, 3 insertions(+)
+ create mode 100644 mrvl/usbusb8997_combo_v4.bin
