@@ -1,66 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:35504 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751070AbdEaMPu (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45109 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750936AbdEBMmx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 08:15:50 -0400
-Received: by mail-wm0-f41.google.com with SMTP id b84so116697768wmh.0
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 05:15:50 -0700 (PDT)
-Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
- b43legacy_op_bss_info_changed
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Jia-Ju Bai <baijiaju1990@163.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com>
- <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
+        Tue, 2 May 2017 08:42:53 -0400
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <471e5030-0a9a-e9bb-855c-90dcd506f466@broadcom.com> (sfid-20170531_141630_161771_C6B139FC)
-Date: Wed, 31 May 2017 14:15:47 +0200
-MIME-Version: 1.0
-In-Reply-To: <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 3/9] nl80211: add authorized flag to CONNECT event
+Date: Tue,  2 May 2017 13:42:23 +0100
+Message-Id: <1493728949-10797-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170502_144256_931550_8702BCBB)
+In-Reply-To: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31-05-17 12:26, Kalle Valo wrote:
-> Jia-Ju Bai <baijiaju1990@163.com> writes:
-> 
->> The driver may sleep under a spin lock, and the function call path is:
->> b43legacy_op_bss_info_changed (acquire the lock by spin_lock_irqsave)
->>   b43legacy_synchronize_irq
->>     synchronize_irq --> may sleep
->>
->> To fix it, the lock is released before b43legacy_synchronize_irq, and the 
->> lock is acquired again after this function.
->>
->> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
->> ---
->>  drivers/net/wireless/broadcom/b43legacy/main.c |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
->> index f1e3dad..31ead21 100644
->> --- a/drivers/net/wireless/broadcom/b43legacy/main.c
->> +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
->> @@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
->>  	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
->>  
->>  	if (changed & BSS_CHANGED_BSSID) {
->> +		spin_unlock_irqrestore(&wl->irq_lock, flags);
->>  		b43legacy_synchronize_irq(dev);
->> +		spin_lock_irqsave(&wl->irq_lock, flags);
-> 
-> To me this looks like a fragile workaround and not a real fix. You can
-> easily add new race conditions with releasing the lock like this.
+When the driver supports offloading of the PTK/GTK handshakes
+completion of that during connect changes the layer 2 control
+port state to authorized. This patch allows the driver to pass
+that state in cfg80211_connect_done() resulting in adding the
+new flag NL80211_ATTR_PORT_AUTHORIZED in the NL80211_CMD_CONNECT
+notification. For 802.1X the driver is expected to issue the
+NL80211_CMD_CONNECT notification twice. First without the new
+attribute to inform user-space that 802.1X authentication can
+start and a second one with the new attribute to indicate the
+completion of the handshakes.
 
-Hi Jia-Ju,
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ include/net/cfg80211.h       | 3 +++
+ include/uapi/linux/nl80211.h | 4 ++++
+ net/wireless/nl80211.c       | 2 ++
+ net/wireless/sme.c           | 1 +
+ 4 files changed, 10 insertions(+)
 
-Agree with Kalle as I was about to say the same thing. You really need
-to determine what is protected by the irq_lock. Here you are using the
-lock because you are about to change wl->bssid a bit further down. Did
-not check the entire function but it seems the lock perimeter is too wide.
-
-Regards,
-Arend
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6bb3d36..062286f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5274,6 +5274,8 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
+  *	not known. This value is used only if @status < 0 to indicate that the
+  *	failure is due to a timeout and not due to explicit rejection by the AP.
+  *	This value is ignored in other cases (@status >= 0).
++ * @authorized: Indicates whether the connection is ready to transport
++ *	data packets.
+  */
+ struct cfg80211_connect_resp_params {
+ 	int status;
+@@ -5291,6 +5293,7 @@ struct cfg80211_connect_resp_params {
+ 	size_t pmk_len;
+ 	const u8 *pmkid;
+ 	enum nl80211_timeout_reason timeout_reason;
++	bool authorized;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 0f6fef5..980eaba 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2107,6 +2107,9 @@ enum nl80211_commands {
+  *	in %NL80211_CMD_CONNECT to indicate that for 802.1X authentication it
+  *	wants to use the supported offload.
+  * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
++ * @NL80211_ATTR_PORT_AUTHORIZED: flag attribute used in %NL80211_CMD_CONNECT
++ *	notification indicating that PTK/GTK handshakes for 802.1X have been
++ *	completed successfully.
+  *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+@@ -2532,6 +2535,7 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_WANT_1X_OFFLOAD,
+ 	NL80211_ATTR_PMKR0_NAME,
++	NL80211_ATTR_PORT_AUTHORIZED,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 55128c2..97d3582 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -13730,6 +13730,8 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
+ 	     (nla_put_flag(msg, NL80211_ATTR_TIMED_OUT) ||
+ 	      nla_put_u32(msg, NL80211_ATTR_TIMEOUT_REASON,
+ 			  cr->timeout_reason))) ||
++	    (cr->authorized &&
++	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)) ||
+ 	    (cr->req_ie &&
+ 	     nla_put(msg, NL80211_ATTR_REQ_IE, cr->req_ie_len, cr->req_ie)) ||
+ 	    (cr->resp_ie &&
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 532a000..a46eda8 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -861,6 +861,7 @@ void cfg80211_connect_done(struct net_device *dev,
+ 	ev->cr.bss = params->bss;
+ 	ev->cr.status = params->status;
+ 	ev->cr.timeout_reason = params->timeout_reason;
++	ev->cr.authorized = params->authorized;
+ 
+ 	spin_lock_irqsave(&wdev->event_lock, flags);
+ 	list_add_tail(&ev->list, &wdev->event_list);
+-- 
+1.9.1
