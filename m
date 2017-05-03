@@ -1,81 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway22.websitewelcome.com ([192.185.47.65]:11255 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752049AbdEINAY (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:32939 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751937AbdECLtI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 09:00:24 -0400
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id BE34418778
-        for <linux-wireless@vger.kernel.org>; Tue,  9 May 2017 07:36:47 -0500 (CDT)
-Date: Tue, 09 May 2017 07:36:46 -0500
-Message-ID: <20170509073646.Horde.5fDkrgZNCS1pwNCHAUdEsoQ@gator4166.hostgator.com> (sfid-20170509_150027_395520_EC2C6E4C)
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: ath: ath9k: remove unnecessary code
-References: <20170509034814.GA18034@embeddedgus>
- <87efvy1d07.fsf@kamboji.qca.qualcomm.com>
- <20170509070158.Horde.dYleVB-aK1cNNyQpdVsVMNp@gator4166.hostgator.com>
- <87shkez0da.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87shkez0da.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-MIME-Version: 1.0
+        Wed, 3 May 2017 07:49:08 -0400
+Received: by mail-pg0-f68.google.com with SMTP id s62so16366026pgc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 04:49:07 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 6/6] mwifiex: check next packet length for usb tx aggregation
+Date: Wed,  3 May 2017 11:48:43 +0000
+Message-Id: <1493812123-12053-6-git-send-email-huxinming820@gmail.com> (sfid-20170503_134913_515175_AFB70DC5)
+In-Reply-To: <1493812123-12053-1-git-send-email-huxinming820@gmail.com>
+References: <1493812123-12053-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Xinming Hu <huxm@marvell.com>
 
-Quoting Kalle Valo <kvalo@qca.qualcomm.com>:
+The next packet length will be used by interface driver, to check if the
+next packet still could be aggregated.
 
-> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
->
->> Hi Kalle,
->>
->> Quoting Kalle Valo <kvalo@qca.qualcomm.com>:
->>
->>> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
->>>
->>>> The name of an array used by itself will always return the  
->>>> array's address.
->>>> So this test will always evaluate as true.
->>>>
->>>> Addresses-Coverity-ID: 1364903
->>>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
->>>> ---
->>>>  drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
->>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c
->>>> b/drivers/net/wireless/ath/ath9k/eeprom.c
->>>> index fb80ec8..5c3bc28 100644
->>>> --- a/drivers/net/wireless/ath/ath9k/eeprom.c
->>>> +++ b/drivers/net/wireless/ath/ath9k/eeprom.c
->>>> @@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32
->>>> off, u16 *data)
->>>>
->>>>  	if (ah->eeprom_blob)
->>>>  		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
->>>> -	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
->>>> +	else if (pdata && !pdata->use_eeprom)
->>>>  		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
->>>>  	else
->>>>  		ret = common->bus_ops->eeprom_read(common, off, data);
->>>
->>> The patch may very well be valid (didn't check yet) but the commit log
->>> is gibberish for me.
->>>
->>
->> Let me correct that and I'll send the patch again.
->
-> Thanks.
->
-> Also no need to have that long "net: wireless: ath:" prefix, "ath9k: "
-> or "ath10k: " is enough.
->
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 8 ++++----
+ drivers/net/wireless/marvell/mwifiex/txrx.c     | 4 ++--
+ drivers/net/wireless/marvell/mwifiex/wmm.c      | 8 ++++----
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-I get it.
-
-Thanks!
---
-Gustavo A. R. Silva
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+index cbf3bc2..8041f2d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+@@ -254,15 +254,15 @@
+ 		return 0;
+ 	}
+ 
+-	if (adapter->iface_type == MWIFIEX_USB) {
+-		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
+-						   skb_aggr, NULL);
+-	} else {
+ 		if (skb_src)
+ 			tx_param.next_pkt_len =
+ 					skb_src->len + sizeof(struct txpd);
+ 		else
+ 			tx_param.next_pkt_len = 0;
++	if (adapter->iface_type == MWIFIEX_USB) {
++		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
++						   skb_aggr, &tx_param);
++	} else {
+ 
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+ 						   skb_aggr, &tx_param);
+diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
+index 15e92af..d848933 100644
+--- a/drivers/net/wireless/marvell/mwifiex/txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
+@@ -117,7 +117,7 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 		if (adapter->iface_type == MWIFIEX_USB) {
+ 			ret = adapter->if_ops.host_to_card(adapter,
+ 							   priv->usb_port,
+-							   skb, NULL);
++							   skb, tx_param);
+ 		} else {
+ 			ret = adapter->if_ops.host_to_card(adapter,
+ 							   MWIFIEX_TYPE_DATA,
+@@ -185,7 +185,7 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   priv->usb_port,
+-						   skb, NULL);
++						   skb, tx_param);
+ 	} else {
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   MWIFIEX_TYPE_DATA,
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
+index e4ff3b9..75cdd55 100644
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -1363,13 +1363,13 @@ void mwifiex_rotate_priolists(struct mwifiex_private *priv,
+ 
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
+ 
++	tx_param.next_pkt_len =
++		((skb_next) ? skb_next->len +
++		 sizeof(struct txpd) : 0);
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
+-						   skb, NULL);
++						   skb, &tx_param);
+ 	} else {
+-		tx_param.next_pkt_len =
+-			((skb_next) ? skb_next->len +
+-			 sizeof(struct txpd) : 0);
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+ 						   skb, &tx_param);
+ 	}
+-- 
+1.9.1
