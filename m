@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37182 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751116AbdEEJjX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 05:39:23 -0400
-Message-ID: <1493977157.2500.2.camel@sipsolutions.net> (sfid-20170505_113955_125252_FEE52B16)
-Subject: Re: [PATCH] mac80211: Create ieee80211_if_process_skb from
- ieee80211_iface_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Fri, 05 May 2017 11:39:17 +0200
-In-Reply-To: <1493976873.31950.15.camel@perches.com>
-References: <401d68b9015dc036589c99a26ef4664000cc821e.1493919003.git.joe@perches.com>
-         <1493975178.2500.0.camel@sipsolutions.net>
-         <1493976873.31950.15.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:34382 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753817AbdECOWn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 May 2017 10:22:43 -0400
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Sebastian Reichel <sre@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Subject: [PATCHv2 3/4] Bluetooth: hci_ll: Add compatible values for more WL chips
+Date: Wed,  3 May 2017 16:22:25 +0200
+Message-Id: <20170503142226.32380-4-sebastian.reichel@collabora.co.uk> (sfid-20170503_162406_826214_82C377AD)
+In-Reply-To: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
+References: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-05-05 at 02:34 -0700, Joe Perches wrote:
-> On Fri, 2017-05-05 at 11:06 +0200, Johannes Berg wrote:
-> > > o Use explicit casts to proper types instead of casts to (void *)
-> > >   and have the compiler do the implicit cast
-> > 
-> > I see no advantage in this, why? All it does is make the code
-> > longer,
-> > and if anything changes, you have to change it in multiple places
-> > now.
-> 
-> It makes use of the casted to types consistent within net/mac80211
-> 
-> Here are the current uses.  I changed iface .c to match the others.
+Add compatible values for WiLink chips from 128x and 180x series.
+Also the DT binding already contained compatible values for the 127x
+series, but the driver did not. This brings the list on par with
+the list from wlcore (the wifi driver).
 
-Well, OK. I'd rather change the others I guess, don't really see the
-point.
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+---
+ Documentation/devicetree/bindings/net/ti,wilink-st.txt | 6 ++++++
+ drivers/bluetooth/hci_ll.c                             | 8 ++++++++
+ 2 files changed, 14 insertions(+)
 
-> $ grep -P --include=*.[ch] "\((\w++\s*){1,2}\s*\*\).*skb->cb" net/mac80211
-> net/mac80211/iface.c:			ra_tid = (void *)&skb->cb;
-> net/mac80211/iface.c:			ra_tid = (void *)&skb->cb;
-> net/mac80211/iface.c:			rx_agg = (void *)&skb->cb;
-> net/mac80211/iface.c:			rx_agg = (void *)&skb->cb;
-> net/mac80211/agg-tx.c:	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-> net/mac80211/agg-tx.c:	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-> net/mac80211/agg-rx.c:	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
-
-It's really just these three that are related to the iface.c ones
-anyway.
-
-> net/mac80211/mlme.c:	struct ieee80211_rx_status *rx_status = (void *) skb->cb;
-> net/mac80211/mlme.c:	rx_status = (struct ieee80211_rx_status *) skb->cb;
-> 
-
-These should be using IEEE80211_SKB_RXCB(skb) :)
-
-johannes
+diff --git a/Documentation/devicetree/bindings/net/ti,wilink-st.txt b/Documentation/devicetree/bindings/net/ti,wilink-st.txt
+index cbad73a84ac4..b1a421e2fde3 100644
+--- a/Documentation/devicetree/bindings/net/ti,wilink-st.txt
++++ b/Documentation/devicetree/bindings/net/ti,wilink-st.txt
+@@ -14,6 +14,12 @@ Required properties:
+  - compatible: should be one of the following:
+     "ti,wl1271-st"
+     "ti,wl1273-st"
++    "ti,wl1281-st"
++    "ti,wl1283-st"
++    "ti,wl1285-st"
++    "ti,wl1801-st"
++    "ti,wl1805-st"
++    "ti,wl1807-st"
+     "ti,wl1831-st"
+     "ti,wl1835-st"
+     "ti,wl1837-st"
+diff --git a/drivers/bluetooth/hci_ll.c b/drivers/bluetooth/hci_ll.c
+index adc444f309a3..d2f32a994daa 100644
+--- a/drivers/bluetooth/hci_ll.c
++++ b/drivers/bluetooth/hci_ll.c
+@@ -740,6 +740,14 @@ static void hci_ti_remove(struct serdev_device *serdev)
+ }
+ 
+ static const struct of_device_id hci_ti_of_match[] = {
++	{ .compatible = "ti,wl1271-st" },
++	{ .compatible = "ti,wl1273-st" },
++	{ .compatible = "ti,wl1281-st" },
++	{ .compatible = "ti,wl1283-st" },
++	{ .compatible = "ti,wl1285-st" },
++	{ .compatible = "ti,wl1801-st" },
++	{ .compatible = "ti,wl1805-st" },
++	{ .compatible = "ti,wl1807-st" },
+ 	{ .compatible = "ti,wl1831-st" },
+ 	{ .compatible = "ti,wl1835-st" },
+ 	{ .compatible = "ti,wl1837-st" },
+-- 
+2.11.0
