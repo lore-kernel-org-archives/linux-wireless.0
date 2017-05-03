@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:35890 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933279AbdELQmf (ORCPT
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:34388 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752844AbdECOWv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 12:42:35 -0400
-Received: by mail-pg0-f49.google.com with SMTP id x64so13284200pgd.3
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:34 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 11/11] mwifiex: pcie: stop setting/clearing 'surprise_removed'
-Date: Fri, 12 May 2017 09:42:08 -0700
-Message-Id: <20170512164208.38725-11-briannorris@chromium.org> (sfid-20170512_184320_928251_B845FEA5)
-In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
-References: <20170512164208.38725-1-briannorris@chromium.org>
+        Wed, 3 May 2017 10:22:51 -0400
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Sebastian Reichel <sre@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Subject: [PATCHv2 4/4] ARM: dts: omap4-droid4: Add bluetooth
+Date: Wed,  3 May 2017 16:22:26 +0200
+Message-Id: <20170503142226.32380-5-sebastian.reichel@collabora.co.uk> (sfid-20170503_162331_437225_F9D36EFB)
+In-Reply-To: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
+References: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are already handled by mwifiex_shutdown_sw() and
-mwifiex_reinit_sw(). Ideally, we'll kill the flag entirely eventually,
-as I suspect it breeds race conditions.
+Droid 4 has WL 1285C connected to the OMAP's UART4 port, which is
+used for Bluetooth and most likely can also be used for controlling
+the FM radio and GPS receivers.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 2 --
- 1 file changed, 2 deletions(-)
+ arch/arm/boot/dts/omap4-droid4-xt894.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index d7e563a622f7..da042d15f8f0 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -370,7 +370,6 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
- 		 * PCIe and HW.
- 		 */
- 		mwifiex_shutdown_sw(adapter);
--		adapter->surprise_removed = true;
- 		clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
- 		clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
- 	} else {
-@@ -378,7 +377,6 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
- 		 * after performing FLR respectively. Reconfigure the software
- 		 * and firmware including firmware redownload
- 		 */
--		adapter->surprise_removed = false;
- 		ret = mwifiex_reinit_sw(adapter);
- 		if (ret) {
- 			dev_err(&pdev->dev, "reinit failed: %d\n", ret);
+diff --git a/arch/arm/boot/dts/omap4-droid4-xt894.dts b/arch/arm/boot/dts/omap4-droid4-xt894.dts
+index c09b51d6ccf7..bd7f1cc55371 100644
+--- a/arch/arm/boot/dts/omap4-droid4-xt894.dts
++++ b/arch/arm/boot/dts/omap4-droid4-xt894.dts
+@@ -453,6 +453,15 @@
+ 		OMAP4_IOPAD(0x1c8, PIN_INPUT_PULLUP | MUX_MODE7)
+ 		>;
+ 	};
++
++	uart4_pins: pinmux_uart4_pins {
++		pinctrl-single,pins = <
++		OMAP4_IOPAD(0x15c, PIN_INPUT | MUX_MODE0)		/* uart4_rx */
++		OMAP4_IOPAD(0x15e, PIN_OUTPUT | MUX_MODE0)		/* uart4_tx */
++		OMAP4_IOPAD(0x110, PIN_INPUT_PULLUP | MUX_MODE5)	/* uart4_cts */
++		OMAP4_IOPAD(0x112, PIN_OUTPUT_PULLUP | MUX_MODE5)	/* uart4_rts */
++		>;
++	};
+ };
+ 
+ &omap4_pmx_wkup {
+@@ -469,6 +478,17 @@
+ 			       &omap4_pmx_core 0x17c>;
+ };
+ 
++&uart4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart4_pins>;
++
++	bluetooth {
++		compatible = "ti,wl1285-st";
++		enable-gpios = <&gpio6 14 GPIO_ACTIVE_HIGH>; /* gpio 174 */
++		max-speed = <3686400>;
++	};
++};
++
+ &usbhsehci {
+ 	phys = <&hsusb1_phy>;
+ };
 -- 
-2.13.0.rc2.291.g57267f2277-goog
+2.11.0
