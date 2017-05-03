@@ -1,142 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50544 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1759498AbdEWHKs (ORCPT
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:34595 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752385AbdECQIi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 03:10:48 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: Re: [PATCH v3 5/6] mwifiex: do not aggregate tcp ack in usb tx
- aggregation queue
-Date: Tue, 23 May 2017 07:10:43 +0000
-Message-ID: <645cfaedcfe44b4c92dde40f98c28a68@SC-EXCH02.marvell.com> (sfid-20170523_091059_452715_27A3D234)
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
- <1495184805-6631-5-git-send-email-huxinming820@gmail.com>
- <20170519164232.GB125761@google.com>
-In-Reply-To: <20170519164232.GB125761@google.com>
-Content-Type: text/plain; charset="gb2312"
+        Wed, 3 May 2017 12:08:38 -0400
+Date: Wed, 3 May 2017 18:08:27 +0200
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Tony Lindgren <tony@atomide.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv2 0/4] Motorola Droid 4: Add WL1285C support
+Message-ID: <20170503160827.v5owcbiclea4f7kx@earth> (sfid-20170503_180959_060599_6793BBEC)
+References: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
+ <CAL_JsqKktwFmxXijB0FVVoWGkswXm3twzD7She7zGR=rVQ4hWA@mail.gmail.com>
+ <F455FC62-BA1C-4A59-B526-DDB90362CFE8@holtmann.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="cnulccaoinydom4x"
+In-Reply-To: <F455FC62-BA1C-4A59-B526-DDB90362CFE8@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
-Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo1
-1MIyMMjVIDA6NDMNCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxs
-ZSBWYWxvOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsgWmhpeXVhbg0KPiBZ
-YW5nOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7IEdhbmFwYXRoaSBCaGF0DQo+IFN1YmplY3Q6IFtF
-WFRdIFJlOiBbUEFUQ0ggdjMgNS82XSBtd2lmaWV4OiBkbyBub3QgYWdncmVnYXRlIHRjcCBhY2sg
-aW4gdXNiIHR4DQo+IGFnZ3JlZ2F0aW9uIHF1ZXVlDQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiAN
-Cj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQ0KPiBPbiBGcmksIE1heSAxOSwgMjAxNyBhdCAwOTowNjo0NEFNICsw
-MDAwLCBYaW5taW5nIEh1IHdyb3RlOg0KPiA+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVs
-bC5jb20+DQo+ID4NCj4gPiBUY3AgYWNrIHNob3VsZCBiZSBzZW5kIGFzIHNvb24gdG8gYXZvaWQg
-dGhyb3VwdXQgZHJvcCBkdXJpbmcgcmVjZWl2ZQ0KPiA+IHRjcCB0cmFmZmljLg0KPiA+DQo+ID4g
-U2lnbmVkLW9mZi1ieTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQt
-b2ZmLWJ5OiBDYXRoeSBMdW8gPGNsdW9AbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTog
-R2FuYXBhdGhpIEJoYXQgPGdiaGF0QG1hcnZlbGwuY29tPg0KPiA+IC0tLQ0KPiA+IHYyOiBzYW1l
-IGFzIHYxDQo+ID4gdjM6IGF2b2lkIHRvIHVzZSBtYWdpYyB0Y3AgZmxhZyAoS2FsbGUpDQo+ID4g
-LS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC8xMW5fYWdnci5j
-IHwgIDQgKysrKw0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvZGVj
-bC5oICAgICB8ICAxICsNCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4
-L21haW4uYyAgICAgfCAyNg0KPiArKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gIGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmggICAgIHwgIDEgKw0KPiA+ICBk
-cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvdXNiLmMgICAgICB8ICA2ICsrKyst
-LQ0KPiA+ICA1IGZpbGVzIGNoYW5nZWQsIDM2IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0p
-DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lm
-aWV4LzExbl9hZ2dyLmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmll
-eC8xMW5fYWdnci5jDQo+ID4gaW5kZXggZThmZmIyNi4uY2JmM2JjMiAxMDA2NDQNCj4gPiAtLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvMTFuX2FnZ3IuYw0KPiA+ICsr
-KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC8xMW5fYWdnci5jDQo+ID4g
-QEAgLTE5NCw2ICsxOTQsMTAgQEANCj4gPg0KPiA+ICAJaWYgKHR4X2luZm9fc3JjLT5mbGFncyAm
-IE1XSUZJRVhfQlVGX0ZMQUdfVERMU19QS1QpDQo+ID4gIAkJdHhfaW5mb19hZ2dyLT5mbGFncyB8
-PSBNV0lGSUVYX0JVRl9GTEFHX1RETFNfUEtUOw0KPiA+ICsNCj4gPiArCWlmICh0eF9pbmZvX3Ny
-Yy0+ZmxhZ3MgJiBNV0lGSUVYX0JVRl9GTEFHX1RDUF9BQ0spDQo+ID4gKwkJdHhfaW5mb19hZ2dy
-LT5mbGFncyB8PSBNV0lGSUVYX0JVRl9GTEFHX1RDUF9BQ0s7DQo+ID4gKw0KPiA+ICAJdHhfaW5m
-b19hZ2dyLT5mbGFncyB8PSBNV0lGSUVYX0JVRl9GTEFHX0FHR1JfUEtUOw0KPiA+ICAJc2tiX2Fn
-Z3ItPnByaW9yaXR5ID0gc2tiX3NyYy0+cHJpb3JpdHk7DQo+ID4gIAlza2JfYWdnci0+dHN0YW1w
-ID0gc2tiX3NyYy0+dHN0YW1wOw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tYXJ2ZWxsL213aWZpZXgvZGVjbC5oDQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2
-ZWxsL213aWZpZXgvZGVjbC5oDQo+ID4gaW5kZXggMTg4ZTRjMy4uMDQ4NzQyMCAxMDA2NDQNCj4g
-PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvZGVjbC5oDQo+ID4g
-KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2RlY2wuaA0KPiA+IEBA
-IC04OSw2ICs4OSw3IEBADQo+ID4gICNkZWZpbmUgTVdJRklFWF9CVUZfRkxBR19FQVBPTF9UWF9T
-VEFUVVMgICBCSVQoMykNCj4gPiAgI2RlZmluZSBNV0lGSUVYX0JVRl9GTEFHX0FDVElPTl9UWF9T
-VEFUVVMgIEJJVCg0KQ0KPiA+ICAjZGVmaW5lIE1XSUZJRVhfQlVGX0ZMQUdfQUdHUl9QS1QgICAg
-ICAgICAgQklUKDUpDQo+ID4gKyNkZWZpbmUgTVdJRklFWF9CVUZfRkxBR19UQ1BfQUNLICAgICAg
-ICAgICBCSVQoNikNCj4gPg0KPiA+ICAjZGVmaW5lIE1XSUZJRVhfQlJJREdFRF9QS1RTX1RIUl9I
-SUdIICAgICAgMTAyNA0KPiA+ICAjZGVmaW5lIE1XSUZJRVhfQlJJREdFRF9QS1RTX1RIUl9MT1cg
-ICAgICAgIDEyOA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
-L213aWZpZXgvbWFpbi5jDQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZp
-ZXgvbWFpbi5jDQo+ID4gaW5kZXggMmM0MjE5MS4uYjdkODM1YyAxMDA2NDQNCj4gPiAtLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uYw0KPiA+IEBAIC04NTEsNiAr
-ODUxLDMwIEBAIHN0cnVjdCBza19idWZmICoNCj4gPiAgCXJldHVybiBza2I7DQo+ID4gIH0NCj4g
-Pg0KPiA+ICtzdGF0aWMgYm9vbCBpc19waWdneWJhY2tfdGNwX2FjayhzdHJ1Y3Qgc2tfYnVmZiAq
-c2tiKSB7DQo+ID4gKwlzdHJ1Y3QgZXRoaGRyICpldGhoID0gTlVMTDsNCj4gPiArCXN0cnVjdCBp
-cGhkciAgKmlwaCA9IE5VTEw7DQo+ID4gKwlzdHJ1Y3QgdGNwaGRyICp0Y3BoID0gTlVMTDsNCj4g
-PiArDQo+ID4gKwlldGhoID0gKHN0cnVjdCBldGhoZHIgKilza2ItPmRhdGE7DQo+ID4gKwlpZiAo
-bnRvaHMoZXRoaC0+aF9wcm90bykgIT0gRVRIX1BfSVApDQo+ID4gKwkJcmV0dXJuIGZhbHNlOw0K
-PiANCj4gV2hhdCBhYm91dCBJUHY2Pw0KPiANCj4gQWxzbywgd2hhdCBhYm91dCBhbGwgdGhlIHBy
-b3RvY29scyB0aGF0IHlvdSdyZSAqbm90KiBoYWNraW5nIHRoaXMgZm9yPw0KPiBJcyB0aGUgbGF0
-ZW5jeSBpbmR1Y2VkIGJ5IGFnZ3JlZ2F0aW9uIHJlYWxseSB0aGF0IHBvb3I/DQo+IA0KPiBJJ20g
-bm90IHJlYWxseSBhIG5ldHdvcmtpbmcgZXhwZXJ0IGhlcmUsIGJ1dCB0aGlzIHdob2xlIHBhdGNo
-IHNtZWxscyBiYWQgdG8gbWUuDQo+IA0KDQoNCldlIGRpZG4ndCBvYnNlcnZlIHRocm91Z2hwdXQg
-ZHJvcCBkdWUgdG8gYWNrIGJsb2NrIHlldC4uDQpJdCB3YXMgY29uc2lkZXJlZCB0byBiZSBhbiBv
-cHRpb25hbCBlbmhhbmNlLg0KTGV0J3MgZHJvcCBpdCBpbiB0aGlzIHBhdGNoIHNlcmlhbHMuDQoN
-ClJlZ2FyZHMsDQpTaW1vbg0KPiA+ICsNCj4gPiArCWlwaCA9IChzdHJ1Y3QgaXBoZHIgKikoKHU4
-ICopZXRoaCArIHNpemVvZihzdHJ1Y3QgZXRoaGRyKSk7DQo+ID4gKwlpZiAoaXBoLT5wcm90b2Nv
-bCAhPSBJUFBST1RPX1RDUCkNCj4gPiArCQlyZXR1cm4gZmFsc2U7DQo+ID4gKw0KPiA+ICsJdGNw
-aCA9IChzdHJ1Y3QgdGNwaGRyICopKCh1OCAqKWlwaCArIGlwaC0+aWhsICogNCk7DQo+ID4gKwkv
-KiBQaWdneWJhY2sgYWNrIHdpdGhvdXQgcGF5bG9hZCovDQo+ID4gKwlpZiAodGNwX2ZsYWdfd29y
-ZCh0Y3BoKSA9PSBUQ1BfRkxBR19BQ0sgJiYNCj4gPiArCSAgICBudG9ocyhpcGgtPnRvdF9sZW4p
-IDw9IChpcGgtPmlobCArIHRjcGgtPmRvZmYpICogNCkgew0KPiA+ICsJCXJldHVybiB0cnVlOw0K
-PiA+ICsJfQ0KPiA+ICsNCj4gPiArCXJldHVybiBmYWxzZTsNCj4gPiArfQ0KPiA+ICsNCj4gPiAg
-LyoNCj4gPiAgICogQ0ZHODAyLjExIG5ldHdvcmsgZGV2aWNlIGhhbmRsZXIgZm9yIGRhdGEgdHJh
-bnNtaXNzaW9uLg0KPiA+ICAgKi8NCj4gPiBAQCAtOTA0LDYgKzkyOCw4IEBAIHN0cnVjdCBza19i
-dWZmICoNCj4gPiAgCXR4X2luZm8tPmJzc19udW0gPSBwcml2LT5ic3NfbnVtOw0KPiA+ICAJdHhf
-aW5mby0+YnNzX3R5cGUgPSBwcml2LT5ic3NfdHlwZTsNCj4gPiAgCXR4X2luZm8tPnBrdF9sZW4g
-PSBza2ItPmxlbjsNCj4gPiArCWlmIChpc19waWdneWJhY2tfdGNwX2Fjayhza2IpKQ0KPiA+ICsJ
-CXR4X2luZm8tPmZsYWdzIHw9IE1XSUZJRVhfQlVGX0ZMQUdfVENQX0FDSzsNCj4gPg0KPiA+ICAJ
-bXVsdGljYXN0ID0gaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIoc2tiLT5kYXRhKTsNCj4gPg0KPiA+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5o
-DQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oDQo+ID4g
-aW5kZXggMWY3ZTZjMy4uYjAwMTBhOSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWFydmVsbC9td2lmaWV4L21haW4uaA0KPiA+IEBAIC00OSw2ICs0OSw3IEBADQo+ID4gICNp
-bmNsdWRlIDxsaW51eC9wbV9ydW50aW1lLmg+DQo+ID4gICNpbmNsdWRlIDxsaW51eC9zbGFiLmg+
-DQo+ID4gICNpbmNsdWRlIDxsaW51eC9vZl9pcnEuaD4NCj4gPiArI2luY2x1ZGUgPGxpbnV4L3Rj
-cC5oPg0KPiANCj4gSSBkaXNsaWtlIHBvbGx1dGluZyB0aGUgKGRyaXZlci1nbG9iYWwpIG1haW4u
-aCB3aXRoICNpbmNsdWRlJ3MgdGhhdCBvbmx5IGFyZSB1c2VkDQo+IGluIG9uZSBmaWxlLiBFc3Bl
-Y2lhbGx5IHdoZW4geW91IHRhbGsgYWJvdXQgc2VlbWluZ2x5IGxheWVyLXZpb2xhdGluZyBUQ1Ag
-aGFja3MuDQo+IENhbiB5b3UgbW92ZSB0aGlzIHRvIG1haW4uYyBpbnN0ZWFkPw0KPiANCj4gQnJp
-YW4NCj4gDQo+ID4NCj4gPiAgI2luY2x1ZGUgImRlY2wuaCINCj4gPiAgI2luY2x1ZGUgImlvY3Rs
-LmgiDQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmll
-eC91c2IuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3VzYi5j
-DQo+ID4gaW5kZXggZjIzMDAxNy4uZTljM2Q0MyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvdXNiLmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvdXNiLmMNCj4gPiBAQCAtOTM0LDYgKzkzNCw3IEBAIHN0
-YXRpYyBpbnQgbXdpZmlleF91c2JfYWdncl90eF9kYXRhKHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0
-ZXIgKmFkYXB0ZXIsIHU4IGVwLA0KPiA+ICAJc3RydWN0IHVyYl9jb250ZXh0ICpjb250ZXh0ID0g
-TlVMTDsNCj4gPiAgCXN0cnVjdCB0eHBkICpsb2NhbF90eF9wZCA9DQo+ID4gIAkJKHN0cnVjdCB0
-eHBkICopKCh1OCAqKXNrYi0+ZGF0YSArIGFkYXB0ZXItPmludGZfaGRyX2xlbik7DQo+ID4gKwlz
-dHJ1Y3QgbXdpZmlleF90eGluZm8gKnR4X2luZm8gPSBNV0lGSUVYX1NLQl9UWENCKHNrYik7DQo+
-ID4gIAl1OCBmX3NlbmRfYWdncl9idWYgPSAwOw0KPiA+ICAJdTggZl9zZW5kX2N1cl9idWYgPSAw
-Ow0KPiA+ICAJdTggZl9wcmVjb3B5X2N1cl9idWYgPSAwOw0KPiA+IEBAIC05ODksOCArOTkwLDkg
-QEAgc3RhdGljIGludCBtd2lmaWV4X3VzYl9hZ2dyX3R4X2RhdGEoc3RydWN0DQo+IG13aWZpZXhf
-YWRhcHRlciAqYWRhcHRlciwgdTggZXAsDQo+ID4gIAkJfQ0KPiA+ICAJfQ0KPiA+DQo+ID4gLQlp
-ZiAobG9jYWxfdHhfcGQtPmZsYWdzICYgTVdJRklFWF9UeFBEX1BPV0VSX01HTVRfTlVMTF9QQUNL
-RVQpIHsNCj4gPiAtCQkvKiBTZW5kIE5VTEwgcGFja2V0IGltbWVkaWF0ZWx5Ki8NCj4gPiArCWlm
-IChsb2NhbF90eF9wZC0+ZmxhZ3MgJiBNV0lGSUVYX1R4UERfUE9XRVJfTUdNVF9OVUxMX1BBQ0tF
-VCB8fA0KPiA+ICsJICAgIHR4X2luZm8tPmZsYWdzICYgTVdJRklFWF9CVUZfRkxBR19UQ1BfQUNL
-KSB7DQo+ID4gKwkJLyogU2VuZCBOVUxMIGRhdGEvVENQIEFDSyBwYWNrZXQgaW1tZWRpYXRlbHkq
-Lw0KPiA+ICAJCWlmIChmX3ByZWNvcHlfY3VyX2J1Zikgew0KPiA+ICAJCQlpZiAoc2tiX3F1ZXVl
-X2VtcHR5KCZwb3J0LT50eF9hZ2dyLmFnZ3JfbGlzdCkpIHsNCj4gPiAgCQkJCWZfcHJlY29weV9j
-dXJfYnVmID0gMDsNCj4gPiAtLQ0KPiA+IDEuOS4xDQo+ID4NCg==
+
+--cnulccaoinydom4x
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+On Wed, May 03, 2017 at 05:02:13PM +0200, Marcel Holtmann wrote:
+> >> Motorola Droid 4 uses a WL1285C, as visible on iFixit [0]. This
+> >> fixes the DT file to use correct compatible for the wifi node
+> >> and adds the bluetooth node.
+> >>=20
+> >> [0] https://www.ifixit.com/Teardown/Motorola+Droid+4+Teardown/7759#s31=
+961
+> >>=20
+> >> Changes to PATCHv1:
+> >> - use proper compatible value for bluetooth / shared transport
+> >> - add patches fixing wlcore compatible for Droid 4
+> >>=20
+> >> -- Sebastian
+> >>=20
+> >> Sebastian Reichel (4):
+> >>  wlcore: add wl1285 compatible
+> >>  ARM: dts: omap4-droid4: Use wl1285 for wifi compatible
+> >>  Bluetooth: hci_ll: Add compatible values for more WL chips
+> >>  ARM: dts: omap4-droid4: Add bluetooth
+> >=20
+> > For the series,
+> >=20
+> > Reviewed-by: Rob Herring <robh@kernel.org>
+>=20
+> so now the question is if we merge this through a single
+> maintainer or have each maintainer take the pieces? I would almost
+> suggest that Dave Miller takes this directly into net-next to make
+> this smoother.
+
+I think the only complex thing is, that patch 2 should only be
+applied after patch 1. So maybe patch 1 could be applied via
+wireless/net-next for 4.12 and the other ones go through the
+individual subsystems for 4.13?
+
+-- Sebastian
+
+--cnulccaoinydom4x
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlkKAHcACgkQ2O7X88g7
++poM4g/9E0vRHcDu9Gvx9gDoVt/DR04C3p4AVYu0uwJbTB2nyeC409F82aVkI1as
+jpQhNORoGmZzgBhZOrFmBJb0NzKZLTegBRopX47K7zcH9A9P0QshIQTsnFk+VYVv
+BmgBYk72jNbRhFFBy/wR2wPzebEbSDV6ixjDYk9ABz6Nsm5SznFyJJOkTUsEflRc
+6Bld3UJXRNngAcaua5v0Fs9+jwvCBffphBQV/w97lP0FNhQCTO2kPzKSWrQRlG+m
+eDy/rBJErZmng2HyFU3/ESvq+2HawITTb2QxixvqeM8Yv6F/UxP0ItJEUgmfsRgm
+s3QHbCsR9tbf/5SLK0I9wBxFcmFyxxHRvH81+y/y79C7EbPYePqpNOjtcKjfCjIn
+ssc9eDgZH2+HIj4iRYSeqMPmzupES1XXOdFCudd/pXSqG5dopwRCkU3AoUcjsrBQ
+RgB3OUcr6nP2BZbAvpC+BWK7OGlXxAf/PQptPn9F8sSQvqdghO0x9Mm8DrN847QI
+qJJ26fYblzxAwO+qSw4K3TkO7am3AMshD9jovYq2QPWGXPTdtHW4SyaqMf1D5Tgc
+cx9CYGq7ZMx9LC5GUnzVgAcvKPoy96pULz+YcdXlKlQVvnF9Dc3txf3tCxgQqxex
+56bYB4LXH3CjNFyM2LWmFagvCZDGDqCoDjZiMsyGFJBDh5Ct484=
+=3XQQ
+-----END PGP SIGNATURE-----
+
+--cnulccaoinydom4x--
