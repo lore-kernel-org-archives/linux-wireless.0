@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53474 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755927AbdELNv6 (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35534 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751233AbdECXvF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 09:51:58 -0400
-Received: from potku.adurom.net (a88-114-241-177.elisa-laajakaista.fi [88.114.241.177])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A14D360A08
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 13:51:56 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: nl80211 vendor commands on upstream drivers
-Date: Fri, 12 May 2017 16:51:52 +0300
-Message-ID: <87wp9mp4hz.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_155201_855594_38A6052A)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 3 May 2017 19:51:05 -0400
+Received: by mail-io0-f195.google.com with SMTP id v34so5942375iov.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 16:51:04 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 0/4] rtlwifi: btcoex: Remove all references to BT_AUTO_REPORT_ONLY* parameters
+Date: Wed,  3 May 2017 18:50:53 -0500
+Message-Id: <20170503235057.23211-1-Larry.Finger@lwfinger.net> (sfid-20170504_015116_210975_A14FBD30)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The btcoex code uses #if constructs to compile conditional code. There
+is no way to modify this behavior without editting the source. This
+logic is converted into regular if statements that interrogate a
+boolean variable in a structure known to all routines. The new form
+does not provide any mechanism for dynamic changes, but it now is in a
+form whereby module parameters could be added to select the behavior
+at module load time. In these patches, a number of routines removed
+because they were not referenced must be restored.
 
-last fall at Wireless Summit at Santa Fe we talked about having nl80211
-vendor commands in upstream drivers[1]. The discussion starter was this
-wil6210 patch:
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-wil6210: low level RF sector API
-https://patchwork.kernel.org/patch/9403071/
+Larry Finger (4):
+  rtlwifi: btcoex: Remove 21a 1ant configuration parameter
+  rtlwifi: btcoex: Remove 23b 1ant configuration parameter
+  rtlwifi: btcoex: Remove 23b 2ant configuration parameter
+  rtlwifi: btcoex: Remove 92e 2ant configuration parameter
 
-The conclusion from the discussion was that in some (rare) cases having
-vendor commands in upstream is acceptable, for example like here when
-interfacing low level hw features which most likely is not not
-compatible with other designs.
-
-But this does not mean that the gates are open for all possible hacks
-via vendor commands, we still want to have generic nl80211 interface for
-all normal functionality. Just to give some examples of something which
-is NOT acceptable:
-
-* yet another scanning interface (exception maybe being spectral scan?)
-* power save settings
-* btcoex settings
-
-Comments? Am I forgetting something from the discussion?
-
-[1] https://docs.google.com/document/u/1/d/e/2PACX-1vQXbVQ-3zQt3Bcr3OWfwzbw_C49tTvf0ed8Hmf7b20E6tXc3a40tWZmPku49iGDE-OhgxNmO_lkkHEn/pub
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  72 ++++++++----
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   1 -
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 123 +++++++++++++++++----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  84 +++++++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   1 -
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  18 +--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   5 +
+ 9 files changed, 229 insertions(+), 79 deletions(-)
 
 -- 
-Kalle Valo
+2.12.2
