@@ -1,141 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34618 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751726AbdEPNUD (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:35009 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751126AbdECIFz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 09:20:03 -0400
-Received: by mail-oi0-f67.google.com with SMTP id w10so3308971oif.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:02 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
+        Wed, 3 May 2017 04:05:55 -0400
+Received: by mail-oi0-f51.google.com with SMTP id l18so24398295oig.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 01:05:55 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
+To: Xie Qirong <cheerx1994@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 01/10] rtlwifi: btcoex: 21a 1ant: treat ARP as special packet
-Date: Tue, 16 May 2017 08:19:48 -0500
-Message-Id: <20170516131957.9513-2-Larry.Finger@lwfinger.net> (sfid-20170516_152008_775625_0EC96F34)
-In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
-References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Piotr Haber <phaber@broadcom.com>
+References: <20170503073555.3922-1-cheerx1994@gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <2f49e699-b9f7-b55f-0afc-7ac03631de28@broadcom.com> (sfid-20170503_100711_465190_8166ADF4)
+Date: Wed, 3 May 2017 10:05:52 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170503073555.3922-1-cheerx1994@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On 5/3/2017 9:35 AM, Xie Qirong wrote:
+> Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
+> ---
+> 
+>   setup_timer.cocci suggested the following improvement:
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
+>   setup_timer function for function on line 384.
 
-We need to pay attention to ARP packets to correctly establish
-connection, and reset the ARP counter when disconnected.
+Move the text above before your sign-off so it will end up in the git 
+commit message.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 49 ++++++++++++++++++++--
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  1 +
- 2 files changed, 47 insertions(+), 3 deletions(-)
+When done you may also add my acknowledgement, ie.:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 84cc0bcc5f80..a5ac07cf0dca 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -2592,7 +2592,7 @@ void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
- void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--	bool	wifi_connected = false, bt_hs_on = false;
-+	bool wifi_connected = false, bt_hs_on = false;
- 	u32 wifi_link_status = 0;
- 	u32 num_of_wifi_link = 0;
- 	bool bt_ctrl_agg_buf_size = false;
-@@ -2610,6 +2610,18 @@ void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
- 		return;
- 	}
- 
-+	if (type == BTC_ASSOCIATE_START) {
-+		coex_sta->wifi_is_high_pri_task = true;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], CONNECT START notify\n");
-+		coex_dm->arp_cnt = 0;
-+	} else {
-+		coex_sta->wifi_is_high_pri_task = false;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], CONNECT FINISH notify\n");
-+		coex_dm->arp_cnt = 0;
-+	}
-+
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
- 			   &wifi_link_status);
- 	num_of_wifi_link = wifi_link_status >> 16;
-@@ -2675,6 +2687,7 @@ void ex_btc8821a1ant_media_status_notify(struct btc_coexist *btcoexist,
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], MEDIA disconnect notify\n");
-+		coex_dm->arp_cnt = 0;
- 	}
- 
- 	/* only 2.4G we need to inform bt the chnl mask */
-@@ -2728,6 +2741,24 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
- 		return;
- 	}
- 
-+	if (type == BTC_PACKET_DHCP || type == BTC_PACKET_EAPOL ||
-+	    type == BTC_PACKET_ARP) {
-+		coex_sta->wifi_is_high_pri_task = true;
-+
-+		if (type == BTC_PACKET_ARP) {
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], specific Packet ARP notify\n");
-+		} else {
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], specific Packet DHCP or EAPOL notify\n");
-+		}
-+	} else {
-+		coex_sta->wifi_is_high_pri_task = false;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], specific Packet [Type = %d] notify\n",
-+			 type);
-+	}
-+
- 	coex_sta->special_pkt_period_cnt = 0;
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
-@@ -2750,8 +2781,20 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
- 		return;
- 	}
- 
--	if (BTC_PACKET_DHCP == type ||
--	    BTC_PACKET_EAPOL == type) {
-+	if (type == BTC_PACKET_DHCP || type == BTC_PACKET_EAPOL ||
-+	    type == BTC_PACKET_ARP) {
-+		if (type == BTC_PACKET_ARP) {
-+			coex_dm->arp_cnt++;
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], ARP Packet Count = %d\n",
-+				 coex_dm->arp_cnt);
-+			if (coex_dm->arp_cnt >= 10)
-+				/* if APR PKT > 10 after connect, do not go to
-+				 * btc8821a1ant_act_wifi_conn_sp_pkt
-+				 */
-+				return;
-+		}
-+
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], special Packet(%d) notify\n", type);
- 		btc8821a1ant_act_wifi_conn_sp_pkt(btcoexist);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-index d6dacf32a4c4..1eba3b0d32ae 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-@@ -133,6 +133,7 @@ struct coex_dm_8821a_1ant {
- 	u8	cur_retry_limit_type;
- 	u8	pre_ampdu_time_type;
- 	u8	cur_ampdu_time_type;
-+	u32	arp_cnt;
- 
- 	u8	error_condition;
- };
--- 
-2.12.0
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+
+Regards,
+Arend
