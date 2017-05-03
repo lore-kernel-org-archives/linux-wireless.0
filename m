@@ -1,41 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:55994 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750765AbdEPL4H (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:37536 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752743AbdECKEu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 07:56:07 -0400
-Date: Tue, 16 May 2017 13:55:46 +0200
-From: Bastian Bittorf <bb@npl.de>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        benjamin@sipsolutions.net
-Subject: Re: [PATCH 0/7] extend mac80211 mesh DFS and CSA functionality
-Message-ID: <20170516115546.GZ18518@medion.lan> (sfid-20170516_135617_020783_134A240E)
-References: <20170516092316.15636-1-sw@simonwunderlich.de>
- <20170516094403.GX18518@medion.lan>
- <4020776.cO0ANP896r@prime>
+        Wed, 3 May 2017 06:04:50 -0400
+Received: by mail-wm0-f50.google.com with SMTP id m123so51311988wma.0
+        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 03:04:50 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: when to use wdev_lock()
+Message-ID: <49584b67-0bdf-0acf-fb98-a7bea5978fbc@broadcom.com> (sfid-20170503_120454_870930_D2EBC70E)
+Date: Wed, 3 May 2017 12:04:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4020776.cO0ANP896r@prime>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Simon Wunderlich <sw@simonwunderlich.de> [16.05.2017 12:24]:
->  * station A detects a Radar, and informs userspace
->  * userspace of station A will initiate a CSA, kernel will execute it (action 
-> frame, beacons)
->  * station B picks up the CSA, and executes it as well
->  * station B also marks the channel as unavailable
->  * both station A and station B will send an event to userspace once the 
-> channel switch is complete
+Hi Johannes,
 
-ah, I remember the slides from last battlemesh.
+I bumped into use of wdev_lock() again with 802.1X 4-way-hs offload 
+stuff. So for .set_pmk() and .del_pmk() it takes wdev_lock(). Is there a 
+rule of thumb when this lock is needed. What is it protecting in general 
+and in the case of pmk configuration.
 
-The "problems" in userspace are: we must maintain a global list
-(so each node) which channel is the next best and we must time
-the final channel switch. IMHO the specs are saying, that we must
-switch within 30 secs after detecting the first radar-pattern.
-Also we must mark/show the new channel somehow for new/crashed/upcoming nodes.
-quite hard...
-
-bye, bastian
+Regards,
+Arend
