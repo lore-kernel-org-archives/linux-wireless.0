@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35746 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750803AbdELPSz (ORCPT
+Received: from mail-wr0-f175.google.com ([209.85.128.175]:36724 "EHLO
+        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751031AbdECIKT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 11:18:55 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 3 May 2017 04:10:19 -0400
+Received: by mail-wr0-f175.google.com with SMTP id l50so99727735wrc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 01:10:19 -0700 (PDT)
+Subject: Re: [PATCH 0/9] nl80211: add support for PTK/GTK handshake offload
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1493790549.2602.5.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <134ac4a3-63d0-c5f1-2d05-9bcbd573c8b5@broadcom.com> (sfid-20170503_101048_600761_A97269B3)
+Date: Wed, 3 May 2017 10:10:16 +0200
 MIME-Version: 1.0
-Subject: Re: [v6] qtnfmac: introduce new FullMAC driver for Quantenna chipsets
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
-References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
-To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Message-Id: <20170512151854.6F16A60953@smtp.codeaurora.org> (sfid-20170512_171900_178500_DCE677CA)
-Date: Fri, 12 May 2017 15:18:54 +0000 (UTC)
+In-Reply-To: <1493790549.2602.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:
-> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On 5/3/2017 7:49 AM, Johannes Berg wrote:
+> On Tue, 2017-05-02 at 13:42 +0100, Arend van Spriel wrote:
+>> Another change is the
+>> addition of the flag ATTR_WANT_1X_OFFLOAD that user-space has to pass
+>> in CONNECT request. Some drivers may need to be aware before the PMK
+>> is programmed through SET_PMK request.
 > 
-> This patch adds support for new FullMAC WiFi driver for Quantenna
-> QSR10G chipsets.
+> That naming seems a bit questionable - WANT_1X_4WAY_HS or so might be
+> better? We don't (want to) offload the 1X handshake after all, so that
+> name is a bit confusing IMHO.
+
+Sure. Will do.
+
+>> This series also comes with driver implementation in brcmfmac
+>> although it does not use the authorized flag in the ROAM event (yet).
+>>
+>> The series applies to the master branch of the mac80211-next
+>> repository.
 > 
-> QSR10G (aka Pearl) is Quantenna's 8x8, 160M, 11ac offering.
-> QSR10G supports 2 simultaneous WMACs - one 5G and one 2G.
-> 5G WMAC supports 160M, 8x8 configuration. FW supports
-> up to 8 concurrent virtual interfaces on each WMAC.
+> Cool.
 > 
-> Patch introduces 2 new drivers:
-> - qtnfmac.ko for interfacing with kernel wireless core
-> - qtnfmac_pearl_pcie.ko for interfacing with hardware over PCIe interface
+>> One remaining open issue is regarding DEL_PMK. The wpa_supplicant
+>> patches posted on hostap list do not use it and the .del_pmk() is
+>> also not used within cfg80211. Should it be called in
+>> __cfg80211_disconnected() just to be sure?
 > 
-> Signed-off-by: Dmitrii Lebed <dlebed@quantenna.com>
-> Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
-> Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
-> Signed-off-by: Bindu Therthala <btherthala@quantenna.com>
-> Signed-off-by: Huizhao Wang <hwang@quantenna.com>
-> Signed-off-by: Kamlesh Rath <krath@quantenna.com>
-> Signed-off-by: Avinash Patil <avinashp@quantenna.com>
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> I don't really think so - once you disconnect surely the PMK for the
+> connection is no longer valid. IMHO it's reasonable to require ensuring
+> that from drivers, where necessary (mostly, I assume firmware would
+> throw away the data anyway)
 
-I applied this now to the pending branch so that the kbuild bot can do it's
-magic:
+I was asking because we do it for the keys:
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/log/?h=pending
+	/*
+	 * Delete all the keys ... pairwise keys can't really
+	 * exist any more anyway, but default keys might.
+	 */
+	if (rdev->ops->del_key)
+		for (i = 0; i < 6; i++)
+			rdev_del_key(rdev, dev, i, false, NULL);
 
-If all goes smooth I'm planning to apply this to wireless-drivers-next master
-branch within the next week or two. So if there's something still to comment
-about this driver better speak up now. And unless it's something really
-critical any changes can be done as followup patches. I don't want to delay
-this any longer.
+But I guess the comment explains it as PMK is a pairwise (master) key.
 
--- 
-https://patchwork.kernel.org/patch/9723191/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
