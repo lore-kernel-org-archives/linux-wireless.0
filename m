@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45466 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752780AbdEOIlJ (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:35221 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751272AbdECKmY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 04:41:09 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlegacy: warn when enabling power save
-References: <1494835148-12945-1-git-send-email-sgruszka@redhat.com>
-Date: Mon, 15 May 2017 11:41:05 +0300
-In-Reply-To: <1494835148-12945-1-git-send-email-sgruszka@redhat.com>
-        (Stanislaw Gruszka's message of "Mon, 15 May 2017 09:59:08 +0200")
-Message-ID: <87ziee5x7i.fsf@purkki.adurom.net> (sfid-20170515_104141_864861_9ACDAC83)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 3 May 2017 06:42:24 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake offload
+Date: Wed,  3 May 2017 11:42:05 +0100
+Message-Id: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170503_124322_170839_ECCC4F69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+This patch series add support for offloading the PTK/GTK handshakes for
+WPA/WPA2-Personal and 802.1X in nl80211. The nl80211 patches have been
+posted as RFC. Compared to that RFC this series also adds a new flag
+ATTR_PORT_AUTHORIZED used in both CONNECT and ROAM notifications to
+indicate the driver has completed the offloads successfully and the
+encryption keys for the connection are applied. Another change is the
+addition of the flag ATTR_WANT_1X_4WAY_HS that user-space has to pass
+in CONNECT request. Some drivers may need to be aware before the PMK
+is programmed through SET_PMK request.
 
-> iwlegacy firmware can crash when power save is configured. PS was
-> allowed in "dbdac2b iwlegacy: properly enable power saving" with belive
-> that user who enable PS is aware of that and can relate firmware crahes
-> with PS. However some distributions seems to enable PS without user
-> intervention, so warn about that.
->
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/intel/iwlegacy/common.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-> index 140b6ea..6aaa0e7 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/common.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/common.c
-> @@ -5147,6 +5147,8 @@ void il_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->  
->  	if (changed & (IEEE80211_CONF_CHANGE_PS | IEEE80211_CONF_CHANGE_IDLE)) {
->  		il->power_data.ps_disabled = !(conf->flags & IEEE80211_CONF_PS);
-> +		WARN_ONCE(!il->power_data.ps_disabled,
-> +			  "Enabling power save might cause firmware crashes\n");
+This series also comes with driver implementation in brcmfmac although
+it does not use the authorized flag in the ROAM event (yet).
 
-This prints the whole stack trace, right? Isn't that excessive and
-fooling the users to think that they found a bug, which would mean more
-bug reports sent to us? So maybe a simple printk is better here?
+The series applies to the master branch of the mac80211-next repository.
+
+V2:
+ - changed patch 2/9 addressing comments from Johannes.
+
+Arend van Spriel (6):
+  nl80211: add authorized flag to CONNECT event
+  nl80211: remove desciption about request from NL80211_CMD_ROAM
+  brcmfmac: support 4-way handshake offloading for WPA/WPA2-PSK
+  brcmfmac: support 4-way handshake offloading for 802.1X
+  brcmfmac: switch to using cfg80211_connect_done()
+  brcmfmac: provide port authorized state in CONNECT event
+
+Avraham Stern (2):
+  cfg80211: support 4-way handshake offloading for 802.1X
+  nl80211: add authorized flag to ROAM event
+
+Eliad Peller (1):
+  cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 159 +++++++++++++++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  15 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    |  30 ++++
+ .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |   1 +
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  16 +++
+ include/linux/ieee80211.h                          |   4 +
+ include/net/cfg80211.h                             |  41 ++++++
+ include/uapi/linux/nl80211.h                       |  50 ++++++-
+ net/wireless/core.c                                |   5 +
+ net/wireless/nl80211.c                             | 120 +++++++++++++++-
+ net/wireless/rdev-ops.h                            |  25 ++++
+ net/wireless/sme.c                                 |   2 +
+ net/wireless/trace.h                               |  60 ++++++++
+ 15 files changed, 510 insertions(+), 23 deletions(-)
 
 -- 
-Kalle Valo
+1.9.1
