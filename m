@@ -1,64 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0040.outbound.protection.outlook.com ([104.47.41.40]:44278
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750732AbdE0TZT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 May 2017 15:25:19 -0400
-From: Norik Dzhandzhapanyan <norikd@ethertronics.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Ben Greear <greearb@candelatech.com>
-Subject: Re: [PATCH] Per chain RSSI reporting
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
- <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
- <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
-Message-ID: <8e314337-a1f0-5ed4-aa90-3f1a0e2d09fc@ethertronics.com> (sfid-20170527_212530_805583_49F69D5C)
-Date: Sat, 27 May 2017 12:25:10 -0700
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:35220 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751540AbdECKmY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 May 2017 06:42:24 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 3/9] nl80211: add authorized flag to CONNECT event
+Date: Wed,  3 May 2017 11:42:08 +0100
+Message-Id: <1493808134-4074-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170503_124321_070967_A89D6C8D)
+In-Reply-To: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We see this inconsistent/incorrect reporting in our RF chamber.
+When the driver supports offloading of the PTK/GTK handshakes
+completion of that during connect changes the layer 2 control
+port state to authorized. This patch allows the driver to pass
+that state in cfg80211_connect_done() resulting in adding the
+new flag NL80211_ATTR_PORT_AUTHORIZED in the NL80211_CMD_CONNECT
+notification. For 802.1X the driver is expected to issue the
+NL80211_CMD_CONNECT notification twice. First without the new
+attribute to inform user-space that 802.1X authentication can
+start and a second one with the new attribute to indicate the
+completion of the handshakes.
 
-Norik
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ include/net/cfg80211.h       | 3 +++
+ include/uapi/linux/nl80211.h | 4 ++++
+ net/wireless/nl80211.c       | 2 ++
+ net/wireless/sme.c           | 1 +
+ 4 files changed, 10 insertions(+)
 
-On 05/27/2017 09:39 AM, Adrian Chadd wrote:
-> On 27 May 2017 at 09:07, Ben Greear <greearb@candelatech.com> wrote:
->> At low encoding rates, especially if it switches to a single-chain encod=
-ing,
->> maybe the on-air signal really is stronger?
->>
->> Have you verified in some other manner than the signals reported by ath1=
-0k
->> are
->> wrong?
-> Hiya,
->
-> So yeah, multipath, higher TX rates =3D=3D weaker TX signal, TPC, etc are
-> all interesting to know about at the receiver. it's hard to separate
-> that out from the noise sometimes, but in some controlled deployments
-> its really obvious.
->
->
->
-> -adrian
->
->
-
-
-The contents of this transmission are Ethertronics Inc. Confidential and ma=
-y contain proprietary or legally privileged information which may not be di=
-sclosed, copied or distributed without the express written consent of Ether=
-tronics Inc. The information is intended to be for the use of the individua=
-l or entity named on this transmission. If you are not the intended recipie=
-nt, be aware that any disclosure, copying, distribution or use of the conte=
-nts of this information is prohibited. If you have received this transmissi=
-on in error, please notify us by telephone immediately so that we can arran=
-ge for the retrieval of the original documents at no cost to you. Alternati=
-vely, notify the sender by replying to this transmission and delete the mes=
-sage without disclosing it. Thank you
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 29118cb..9e2719c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5276,6 +5276,8 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
+  *	not known. This value is used only if @status < 0 to indicate that the
+  *	failure is due to a timeout and not due to explicit rejection by the AP.
+  *	This value is ignored in other cases (@status >= 0).
++ * @authorized: Indicates whether the connection is ready to transport
++ *	data packets.
+  */
+ struct cfg80211_connect_resp_params {
+ 	int status;
+@@ -5293,6 +5295,7 @@ struct cfg80211_connect_resp_params {
+ 	size_t pmk_len;
+ 	const u8 *pmkid;
+ 	enum nl80211_timeout_reason timeout_reason;
++	bool authorized;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 00eb686..92bed43 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2107,6 +2107,9 @@ enum nl80211_commands {
+  *	in %NL80211_CMD_CONNECT to indicate that for 802.1X authentication it
+  *	wants to use the supported offload of the 4-way handshake.
+  * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
++ * @NL80211_ATTR_PORT_AUTHORIZED: flag attribute used in %NL80211_CMD_CONNECT
++ *	notification indicating that PTK/GTK handshakes for 802.1X have been
++ *	completed successfully.
+  *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+@@ -2532,6 +2535,7 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_WANT_1X_4WAY_HS,
+ 	NL80211_ATTR_PMKR0_NAME,
++	NL80211_ATTR_PORT_AUTHORIZED,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 3810e7e..42e7811 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -13730,6 +13730,8 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
+ 	     (nla_put_flag(msg, NL80211_ATTR_TIMED_OUT) ||
+ 	      nla_put_u32(msg, NL80211_ATTR_TIMEOUT_REASON,
+ 			  cr->timeout_reason))) ||
++	    (cr->authorized &&
++	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)) ||
+ 	    (cr->req_ie &&
+ 	     nla_put(msg, NL80211_ATTR_REQ_IE, cr->req_ie_len, cr->req_ie)) ||
+ 	    (cr->resp_ie &&
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 532a000..a46eda8 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -861,6 +861,7 @@ void cfg80211_connect_done(struct net_device *dev,
+ 	ev->cr.bss = params->bss;
+ 	ev->cr.status = params->status;
+ 	ev->cr.timeout_reason = params->timeout_reason;
++	ev->cr.authorized = params->authorized;
+ 
+ 	spin_lock_irqsave(&wdev->event_lock, flags);
+ 	list_add_tail(&ev->list, &wdev->event_list);
+-- 
+1.9.1
