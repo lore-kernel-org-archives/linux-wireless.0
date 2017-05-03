@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37206 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751485AbdEVG1m (ORCPT
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:35303 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752073AbdECI3t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 02:27:42 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Daniel Drake <drake@endlessm.com>
-CC: qca_merez <qca_merez@qca.qualcomm.com>,
-        wil6210 <wil6210@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Chris Chiu <chiu@endlessm.com>
-Subject: Re: Where is wil6210.fw / wil6210.brd?
-Date: Mon, 22 May 2017 06:27:35 +0000
-Message-ID: <87fufxv22b.fsf@kamboji.qca.qualcomm.com> (sfid-20170522_082746_661035_247BAFF6)
-References: <CAD8Lp45k01+rN8RXdvPthEDeJj7p-a-Lk5A1AQWXJBGezxQpaA@mail.gmail.com>
-        <878tny7sdx.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <878tny7sdx.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Tue, 21 Mar 2017 13:59:06 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
+        Wed, 3 May 2017 04:29:49 -0400
+Received: by mail-qk0-f180.google.com with SMTP id q1so8675751qkd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 01:29:49 -0700 (PDT)
+Subject: Re: [PATCH 0/9] nl80211: add support for PTK/GTK handshake offload
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1493790549.2602.5.camel@sipsolutions.net>
+ <134ac4a3-63d0-c5f1-2d05-9bcbd573c8b5@broadcom.com>
+ <1493799303.2602.6.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <190a84de-7e0a-4012-f1e1-c0dbdbc8c1df@broadcom.com> (sfid-20170503_102953_824790_49625A22)
+Date: Wed, 3 May 2017 10:29:46 +0200
 MIME-Version: 1.0
+In-Reply-To: <1493799303.2602.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-
-> Daniel Drake <drake@endlessm.com> writes:
->
->> We are working with a new consumer laptop model that includes a
->> wil6210 wireless adapter.
+On 5/3/2017 10:15 AM, Johannes Berg wrote:
+> On Wed, 2017-05-03 at 10:10 +0200, Arend van Spriel wrote:
 >>
->> It is not usable on current Linux distros because the firmware is not
->> present. It's not in linux-firmware and we can't even find any
->> download links when searching the web.
+>> I was asking because we do it for the keys:
+> 
+> correction: the *temporal* keys :)
+> 
+>> 	/*
+>> 	 * Delete all the keys ... pairwise keys can't really
+>> 	 * exist any more anyway, but default keys might.
+>> 	 */
+>> 	if (rdev->ops->del_key)
+>> 		for (i = 0; i < 6; i++)
+>> 			rdev_del_key(rdev, dev, i, false, NULL);
 >>
->> Could you please send a copy of the required firmware to linux-firmware?
->> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.=
-git
->
-> I asked internally about the status of the firmware release and we are
-> working on it. Naturally I can't give any promises when it will be
-> available, but hopefully soon.
+>> But I guess the comment explains it as PMK is a pairwise (master)
+>> key.
+> 
+> Well, not really related, but I basically think we can demand better
+> from drivers implementing the new functionality.
 
-Maya now submitted the firmware to linux-firmware:
+Yeah, I do it in brcmfmac. I will mention that demand in CMD_SET_PMK 
+and/or .set_pmk() description.
 
-http://lkml.kernel.org/r/1495370937-5369-1-git-send-email-qca_merez@qca.qua=
-lcomm.com
-
---=20
-Kalle Valo=
+Regards,
+Arend
