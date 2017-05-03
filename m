@@ -1,55 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38488 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754241AbdERMRL (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:35244 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752348AbdECKm0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 08:17:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>
-Subject: Re: [PATCH] rt2x00: remove unneccesary code
-References: <CAKR_QVJBSKw2uCY4RbHZPvbGkMcvnBh+j6F+9t93mG3BakjX3Q@mail.gmail.com>
-        <20170518112720.GE2239@makrotopia.org>
-Date: Thu, 18 May 2017 15:17:02 +0300
-In-Reply-To: <20170518112720.GE2239@makrotopia.org> (Daniel Golle's message of
-        "Thu, 18 May 2017 13:27:20 +0200")
-Message-ID: <874lwixsu9.fsf@kamboji.qca.qualcomm.com> (sfid-20170518_141720_841864_AC2A9102)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Wed, 3 May 2017 06:42:26 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 9/9] brcmfmac: provide port authorized state in CONNECT event
+Date: Wed,  3 May 2017 11:42:14 +0100
+Message-Id: <1493808134-4074-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170503_124324_912817_BB652230)
+In-Reply-To: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(fixing top posting)
+Fill struct cfg80211_connection_params::authorized field according
+the supplicant state received from the device.
 
-Daniel Golle <daniel@makrotopia.org> writes:
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 27 +++++++++++++---------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
 
-> On Thu, May 18, 2017 at 12:42:14PM +0200, Tom Psyborg wrote:
->> Use chanreg and dccal helpers to reduce the size of ePA code.
->>=20
->> Signed-off-by: Tomislav Po=C5=BEega <pozega.tomislav@gmail.com>
->
-> thank you for that contribution.
-> Code for ePA has not yet been submitted upstream, I wanted to give it
-> some more testing, so it's still a local patch in OpenWrt/LEDE.
-> I'll merge your patch into our local patch-queue and submit it together
-> with the ePA code once it got some more testing.
->
-> Patchworkers: consider this to be a request to defer this submission.
-
-This patch was sent in HTML format so it didn't get to mailing list and
-hence neither to patchwork.
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes#format_issues
-
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 9d345c7..0e45993 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5327,10 +5327,12 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
+ 	u32 event = e->event_code;
+ 	u32 status = e->status;
+ 
+-	if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_PSK &&
+-	    event == BRCMF_E_PSK_SUP &&
+-	    status == BRCMF_E_STATUS_FWSUP_COMPLETED)
++	if (event == BRCMF_E_PSK_SUP &&
++	    status == BRCMF_E_STATUS_FWSUP_COMPLETED) {
+ 		set_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
++		if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_1X)
++			return true;
++	}
+ 	if (event == BRCMF_E_SET_SSID && status == BRCMF_E_STATUS_SUCCESS) {
+ 		brcmf_dbg(CONN, "Processing set ssid\n");
+ 		memcpy(vif->profile.bssid, e->addr, ETH_ALEN);
+@@ -5341,11 +5343,9 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
+ 	}
+ 
+ 	if (test_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state) &&
+-	    test_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state)) {
+-		clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
+-		clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state);
++	    test_and_clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state))
+ 		return true;
+-	}
++
+ 	return false;
+ }
+ 
+@@ -5542,22 +5542,27 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTING,
+-			       &ifp->vif->sme_state)) {
++			       &ifp->vif->sme_state) ||
++	    e->event_code == BRCMF_E_PSK_SUP) {
+ 		memset(&conn_params, 0, sizeof(conn_params));
+-		if (completed) {
++		if (e->event_code != BRCMF_E_PSK_SUP && completed) {
+ 			brcmf_get_assoc_ies(cfg, ifp);
+ 			brcmf_update_bss_info(cfg, ifp);
+ 			set_bit(BRCMF_VIF_STATUS_CONNECTED,
+ 				&ifp->vif->sme_state);
++		}
++		if (completed)
+ 			conn_params.status = WLAN_STATUS_SUCCESS;
+-		} else {
++		else
+ 			conn_params.status = WLAN_STATUS_AUTH_TIMEOUT;
+-		}
+ 		conn_params.bssid = profile->bssid;
+ 		conn_params.req_ie = conn_info->req_ie;
+ 		conn_params.req_ie_len = conn_info->req_ie_len;
+ 		conn_params.resp_ie = conn_info->resp_ie;
+ 		conn_params.resp_ie_len = conn_info->resp_ie_len;
++		conn_params.authorized =
++			test_and_clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS,
++					   &ifp->vif->sme_state);
+ 		cfg80211_connect_done(ndev, &conn_params, GFP_KERNEL);
+ 		brcmf_dbg(CONN, "Report connect result - connection %s\n",
+ 			  completed ? "succeeded" : "failed");
+-- 
+1.9.1
