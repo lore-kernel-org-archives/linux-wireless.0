@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53642 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932292AbdERNi2 (ORCPT
+Received: from [195.159.176.226] ([195.159.176.226]:45370 "EHLO
+        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1754030AbdECUdx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 09:38:28 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: p2p client using same data path as station
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1493202888-20784-1-git-send-email-huxinming820@gmail.com>
-References: <1493202888-20784-1-git-send-email-huxinming820@gmail.com>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Message-Id: <20170518133828.3E16560E7A@smtp.codeaurora.org> (sfid-20170518_153940_097727_AF78EB1C)
-Date: Thu, 18 May 2017 13:38:28 +0000 (UTC)
+        Wed, 3 May 2017 16:33:53 -0400
+Received: from list by blaine.gmane.org with local (Exim 4.84_2)
+        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
+        id 1d60y0-0002Px-N2
+        for linux-wireless@vger.kernel.org; Wed, 03 May 2017 22:33:44 +0200
+To: linux-wireless@vger.kernel.org
+From: Julien Cubizolles <j.cubizolles@free.fr>
+Subject: Re: mwifiex won't connect to WPA2 anymore
+Date: Wed, 03 May 2017 22:33:44 +0200
+Message-ID: <87tw51y91z.fsf@free.fr> (sfid-20170503_223357_040334_10E977E2)
+References: <87wpa3kxgi.fsf@free.fr>
+Mime-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxinming820@gmail.com> wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> P2p client act as a station, data will be queued by DA instead
-> of RA. This patch pass the sanity check, so that p2p client share
-> the same data path with infrastruction station mode.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+Julien Cubizolles <j.cubizolles@free.fr> writes:
 
-Patch applied to wireless-drivers-next.git, thanks.
+> I can't connect anymore to my home wifi since upgrading my machine from
+> Ubuntu 16.10 to Ubuntu 17.04.
 
-83625a40165a mwifiex: p2p client using same data path as station
+It turns out that the problem lies with NetworkManager, I managed to get
+the wifi working with wpa_supplicant.
 
--- 
-https://patchwork.kernel.org/patch/9701051/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Julien.
