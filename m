@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35233 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934604AbdEOUOP (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:58390 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751216AbdECPCR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 16:14:15 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 1/1] dt-binding: net: wireless: fix node name in the BCM43xx example
-Date: Mon, 15 May 2017 22:13:56 +0200
-Message-Id: <20170515201356.26384-2-martin.blumenstingl@googlemail.com> (sfid-20170515_221432_876614_8F1263A8)
-In-Reply-To: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
-References: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
+        Wed, 3 May 2017 11:02:17 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCHv2 0/4] Motorola Droid 4: Add WL1285C support
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <CAL_JsqKktwFmxXijB0FVVoWGkswXm3twzD7She7zGR=rVQ4hWA@mail.gmail.com>
+Date: Wed, 3 May 2017 17:02:13 +0200
+Cc: Sebastian Reichel <sebastian.reichel@collabora.co.uk>,
+        Sebastian Reichel <sre@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-Id: <F455FC62-BA1C-4A59-B526-DDB90362CFE8@holtmann.org> (sfid-20170503_170231_134316_CE54656F)
+References: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
+ <CAL_JsqKktwFmxXijB0FVVoWGkswXm3twzD7She7zGR=rVQ4hWA@mail.gmail.com>
+To: Rob Herring <robh+dt@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The example in the BCM43xx documentation uses "brcmf" as node name.
-However, wireless devices should be named "wifi" instead. Fix this to
-make sure that .dts authors can simply use the documentation as
-reference (or simply copy the node from the documentation and then
-adjust only the board specific bits).
+Hi Rob,
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> Motorola Droid 4 uses a WL1285C, as visible on iFixit [0]. This
+>> fixes the DT file to use correct compatible for the wifi node
+>> and adds the bluetooth node.
+>> 
+>> [0] https://www.ifixit.com/Teardown/Motorola+Droid+4+Teardown/7759#s31961
+>> 
+>> Changes to PATCHv1:
+>> - use proper compatible value for bluetooth / shared transport
+>> - add patches fixing wlcore compatible for Droid 4
+>> 
+>> -- Sebastian
+>> 
+>> Sebastian Reichel (4):
+>>  wlcore: add wl1285 compatible
+>>  ARM: dts: omap4-droid4: Use wl1285 for wifi compatible
+>>  Bluetooth: hci_ll: Add compatible values for more WL chips
+>>  ARM: dts: omap4-droid4: Add bluetooth
+> 
+> For the series,
+> 
+> Reviewed-by: Rob Herring <robh@kernel.org>
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-index 5dbf169cd81c..590f622188de 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-@@ -31,7 +31,7 @@ mmc3: mmc@01c12000 {
- 	non-removable;
- 	status = "okay";
- 
--	brcmf: bcrmf@1 {
-+	brcmf: wifi@1 {
- 		reg = <1>;
- 		compatible = "brcm,bcm4329-fmac";
- 		interrupt-parent = <&pio>;
--- 
-2.13.0
+so now the question is if we merge this through a single maintainer or have each maintainer take the pieces? I would almost suggest that Dave Miller takes this directly into net-next to make this smoother.
+
+Regards
+
+Marcel
