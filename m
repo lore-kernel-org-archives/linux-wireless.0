@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:35631 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750909AbdEIEgl (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:35304 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751511AbdECHgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 00:36:41 -0400
-Received: by mail-pf0-f180.google.com with SMTP id v14so43128462pfd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 08 May 2017 21:36:41 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Eyal Ilsar <c_eilsar@qti.qualcomm.com>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: [PATCH] wcn36xx: Close SMD channel on device removal
-Date: Mon,  8 May 2017 21:36:37 -0700
-Message-Id: <20170509043637.28179-1-bjorn.andersson@linaro.org> (sfid-20170509_063721_450711_A0AE8953)
+        Wed, 3 May 2017 03:36:24 -0400
+From: Xie Qirong <cheerx1994@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Piotr Haber <phaber@broadcom.com>,
+        Xie Qirong <cheerx1994@gmail.com>
+Subject: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
+Date: Wed,  3 May 2017 15:35:55 +0800
+Message-Id: <20170503073555.3922-1-cheerx1994@gmail.com> (sfid-20170503_093835_380450_35868507)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SMD channel is not the primary WCNSS channel and must explicitly be
-closed as the device is removed, or the channel will already by open on
-a subsequent probe call in e.g. the case of reloading the kernel module.
-
-This issue was introduced because I simplified the underlying SMD
-implementation while the SMD adaptions of the driver sat on the mailing
-list, but missed to update these patches. The patch does however only
-apply back to the transition to rpmsg, hence the limited Fixes.
-
-Fixes: 5052de8deff5 ("soc: qcom: smd: Transition client drivers from smd to rpmsg")
-Reported-by: Eyal Ilsar <c_eilsar@qti.qualcomm.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index d5e993dc9b23..517a315e259b 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1271,6 +1271,8 @@ static int wcn36xx_remove(struct platform_device *pdev)
- 	qcom_smem_state_put(wcn->tx_enable_state);
- 	qcom_smem_state_put(wcn->tx_rings_empty_state);
- 
-+	rpmsg_destroy_ept(wcn->smd_channel);
-+
- 	iounmap(wcn->dxe_base);
- 	iounmap(wcn->ccu_base);
- 
+ setup_timer.cocci suggested the following improvement:
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
+ setup_timer function for function on line 384.
+
+ Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
+ CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
+ CONFIG_BRCMDBG=y
+
+ Kernel version: next-20170502 (localversion-next is next-20170502)
+
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
+index 14a70d4..3559fb5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
+@@ -380,9 +380,7 @@ int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg)
+ 	/* Set up timer for BT  */
+ 	btci->timer_on = false;
+ 	btci->timeout = BRCMF_BTCOEX_OPPR_WIN_TIME;
+-	init_timer(&btci->timer);
+-	btci->timer.data = (ulong)btci;
+-	btci->timer.function = brcmf_btcoex_timerfunc;
++	setup_timer(&btci->timer, brcmf_btcoex_timerfunc, (ulong)btci);
+ 	btci->cfg = cfg;
+ 	btci->saved_regs_part1 = false;
+ 	btci->saved_regs_part2 = false;
 -- 
-2.12.0
+2.9.3
