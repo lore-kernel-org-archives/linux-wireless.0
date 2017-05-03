@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49378 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966462AbdEXHCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 03:02:00 -0400
-Message-ID: <1495609318.2665.3.camel@sipsolutions.net> (sfid-20170524_090213_797520_B0862CCB)
-Subject: Re: [PATCH v2 0/2] extend mac80211 mesh DFS and CSA functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 24 May 2017 09:01:58 +0200
-In-Reply-To: <20170523150043.22093-1-sw@simonwunderlich.de>
-References: <20170523150043.22093-1-sw@simonwunderlich.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:34380 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753719AbdECOWk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 May 2017 10:22:40 -0400
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Sebastian Reichel <sre@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Subject: [PATCHv2 2/4] ARM: dts: omap4-droid4: Use wl1285 for wifi compatible
+Date: Wed,  3 May 2017 16:22:24 +0200
+Message-Id: <20170503142226.32380-3-sebastian.reichel@collabora.co.uk> (sfid-20170503_162254_982050_A4A3FFA1)
+In-Reply-To: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
+References: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-05-23 at 17:00 +0200, Simon Wunderlich wrote:
-> This patchset includes the remaining two patches for the CSA
-> handling, with Johannes change suggestions integrated.
+The Motorola Droid 4 uses a WL 1285C, so let's use correct
+compatible value instead of relying on WL 1283 being very
+similar.
 
-Applied, thanks for respinning.
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+---
+ arch/arm/boot/dts/omap4-droid4-xt894.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I made a small change and removed the return from
-ieee80211_ie_build_wide_bw_cs() since it wasn't used, and I would like
-to use the safer skb way of doing this more.
-
-(But it doesn't work yet because IBSS uses this to fill a non-SKB
-buffer, and changing that is a bit complex)
-
-johannes
+diff --git a/arch/arm/boot/dts/omap4-droid4-xt894.dts b/arch/arm/boot/dts/omap4-droid4-xt894.dts
+index 89eb607f4a9e..c09b51d6ccf7 100644
+--- a/arch/arm/boot/dts/omap4-droid4-xt894.dts
++++ b/arch/arm/boot/dts/omap4-droid4-xt894.dts
+@@ -301,7 +301,7 @@
+ 	#address-cells = <1>;
+ 	#size-cells = <0>;
+ 	wlcore: wlcore@2 {
+-		compatible = "ti,wl1283";
++		compatible = "ti,wl1285";
+ 		reg = <2>;
+ 		interrupt-parent = <&gpio4>;
+ 		interrupts = <4 IRQ_TYPE_LEVEL_HIGH>; /* gpio100 */
+-- 
+2.11.0
