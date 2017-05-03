@@ -1,79 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10137 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751330AbdESJSI (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:35242 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751901AbdECKmZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 05:18:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "nbd@nbd.name" <nbd@nbd.name>
-CC: Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k : Fix channel survey dump
-Date: Fri, 19 May 2017 09:17:56 +0000
-Message-ID: <87wp9durwe.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_111817_721137_073FA305)
-References: <1493217698-22451-1-git-send-email-c_vnaral@qti.qualcomm.com>
-        <40f2b7a2-7276-6de6-afc6-407348c92e70@nbd.name>
-In-Reply-To: <40f2b7a2-7276-6de6-afc6-407348c92e70@nbd.name> (Felix Fietkau's
-        message of "Wed, 26 Apr 2017 17:29:16 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 3 May 2017 06:42:25 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 8/9] brcmfmac: switch to using cfg80211_connect_done()
+Date: Wed,  3 May 2017 11:42:13 +0100
+Message-Id: <1493808134-4074-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170503_124324_175611_0F562751)
+In-Reply-To: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+The driver used cfg80211_connect_result() which is basically a wrapper
+around cfg80211_connect_done() passing a subset of the information that
+can be passed. For upcoming functionality this is not sufficient so
+switching to use cfg80211_connect_done().
 
-> On 2017-04-26 16:41, Venkateswara Rao Naralasetty wrote:
->> Channel active/busy time are showing incorrect
->> (less than previous or sometimes zero) for
->> successive survey dump command.
->>=20
->> example:
->> Survey data from wlan0
->>         frequency:                      5180 MHz [in use]
->>         channel active time:            54995 ms
->>         channel busy time:              432 ms
->>         channel receive time:           0 ms
->>         channel transmit time:          59 ms
->> Survey data from wlan0
->>         frequency:                      5180 MHz [in use]
->>         channel active time:            32592 ms
->>         channel busy time:              254 ms
->>         channel receive time:           0 ms
->>         channel transmit time:          0 ms
->>=20
->> This patch fix this issue by assigning 'wmi_bss_survey_req_type'
->> as 'WMI_BSS_SURVEY_REQ_TYPE_READ'.
->>=20
->> Firmware ver 10.4-3.4-00082
->> Hardware QCA4019
->>=20
->> Signed-off-by: Venkateswara Rao Naralasetty <c_vnaral@qti.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireles=
-s/ath/ath10k/mac.c
->> index 9977829..87a9b55 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -6621,7 +6621,7 @@ static void ath10k_reconfig_complete(struct ieee80=
-211_hw *hw,
->>  				  struct ieee80211_channel *channel)
->>  {
->>  	int ret;
->> -	enum wmi_bss_survey_req_type type =3D WMI_BSS_SURVEY_REQ_TYPE_READ_CLE=
-AR;
->> +	enum wmi_bss_survey_req_type type =3D WMI_BSS_SURVEY_REQ_TYPE_READ;
->
-> Does the firmware read the registers directly, or does it accumulate
-> the results in a way that can't overflow? If you don't clear the
-> counters on reset, the overflow will be problematic for the
-> current-channel stats. I think a better approach would be to use
-> READ_CLEAR for in-use channels and store the sum inside the driver.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-Venkateswara, any comments?
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index cc5b8ba..9d345c7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5537,26 +5537,28 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
+ 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg);
++	struct cfg80211_connect_resp_params conn_params;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTING,
+ 			       &ifp->vif->sme_state)) {
++		memset(&conn_params, 0, sizeof(conn_params));
+ 		if (completed) {
+ 			brcmf_get_assoc_ies(cfg, ifp);
+ 			brcmf_update_bss_info(cfg, ifp);
+ 			set_bit(BRCMF_VIF_STATUS_CONNECTED,
+ 				&ifp->vif->sme_state);
++			conn_params.status = WLAN_STATUS_SUCCESS;
++		} else {
++			conn_params.status = WLAN_STATUS_AUTH_TIMEOUT;
+ 		}
+-		cfg80211_connect_result(ndev,
+-					(u8 *)profile->bssid,
+-					conn_info->req_ie,
+-					conn_info->req_ie_len,
+-					conn_info->resp_ie,
+-					conn_info->resp_ie_len,
+-					completed ? WLAN_STATUS_SUCCESS :
+-						    WLAN_STATUS_AUTH_TIMEOUT,
+-					GFP_KERNEL);
++		conn_params.bssid = profile->bssid;
++		conn_params.req_ie = conn_info->req_ie;
++		conn_params.req_ie_len = conn_info->req_ie_len;
++		conn_params.resp_ie = conn_info->resp_ie;
++		conn_params.resp_ie_len = conn_info->resp_ie_len;
++		cfg80211_connect_done(ndev, &conn_params, GFP_KERNEL);
+ 		brcmf_dbg(CONN, "Report connect result - connection %s\n",
+ 			  completed ? "succeeded" : "failed");
+ 	}
+-- 
+1.9.1
