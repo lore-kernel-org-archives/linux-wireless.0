@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:36257 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752203AbdEMQlk (ORCPT
+Received: from mail-it0-f52.google.com ([209.85.214.52]:34511 "EHLO
+        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751333AbdEDRdd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 May 2017 12:41:40 -0400
-Received: by mail-wr0-f194.google.com with SMTP id v42so10222163wrc.3
-        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 09:41:40 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/5] staging: rtl8192e: _rtl92e_dm_check_edca_turbo remove peername message.
-Date: Sat, 13 May 2017 17:41:21 +0100
-Message-Id: <20170513164121.14373-5-tvboxspy@gmail.com> (sfid-20170513_184151_217119_47C03D45)
-In-Reply-To: <20170513164121.14373-1-tvboxspy@gmail.com>
-References: <20170513164121.14373-1-tvboxspy@gmail.com>
+        Thu, 4 May 2017 13:33:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170504.112257.1601480484804301664.davem@davemloft.net>
+References: <20170504064230.22058-1-johannes@sipsolutions.net>
+ <20170504.111333.814726752020791317.davem@davemloft.net> <1493911002.18881.0.camel@sipsolutions.net>
+ <20170504.112257.1601480484804301664.davem@davemloft.net>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 4 May 2017 10:33:32 -0700
+Message-ID: <CA+55aFzFAjbAzF4Vda6wzSHt+RL4WW3jXfKuXPcFyi8njXJrnQ@mail.gmail.com> (sfid-20170504_193337_527379_9E67CD12)
+Subject: Re: [PATCH] cfg80211: make RATE_INFO_BW_20 the default
+To: David Miller <davem@davemloft.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This kinda reports this as if it was an error message.
+On Thu, May 4, 2017 at 8:22 AM, David Miller <davem@davemloft.net> wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+>>
+>> I figured I'd give Linus to a chance to try or even apply it, but I
+>> have no objection to you applying it either. I don't have anything else
+>>   yet right now, and sending a pull request for just a single patch
+>> would be quite pointless.
+>
+> Ok, let's give Linus a chance to test the patch.
 
-Now that bssid is reported at associate remove this piece of code
-serves no purpose as there is no code for peers so remove it.
+I'm having trouble recreating the warning. I have no idea why. It only
+happened during ten minutes yesterday, and nothing in my wireless
+setup has changed.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/rtl8192e/rtl8192e/rtl_dm.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+I wonder if *normally* my setup ends up connecting with a 40MHz band
+or something, and I just happened to see the default uninitialized
+case once.
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c b/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c
-index 1a43c684f9f3..b8205ebafd72 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c
-@@ -1693,22 +1693,6 @@ static void _rtl92e_dm_check_edca_turbo(struct net_device *dev)
- 	if (priv->rtllib->pHTInfo->IOTAction & HT_IOT_ACT_DISABLE_EDCA_TURBO)
- 		goto dm_CheckEdcaTurbo_EXIT;
- 
--	{
--		u8 *peername[11] = {
--			"unknown", "realtek_90", "realtek_92se", "broadcom",
--			"ralink", "atheros", "cisco", "marvell", "92u_softap",
--			"self_softap"
--		};
--		static int wb_tmp;
--
--		if (wb_tmp == 0) {
--			netdev_info(dev,
--				    "%s():iot peer is %s, bssid: %pM\n",
--				    __func__, peername[pHTInfo->IOTPeer],
--				    priv->rtllib->current_network.bssid);
--			wb_tmp = 1;
--		}
--	}
- 	if (!priv->rtllib->bis_any_nonbepkts) {
- 		curTxOkCnt = priv->stats.txbytesunicast - lastTxOkCnt;
- 		curRxOkCnt = priv->stats.rxbytesunicast - lastRxOkCnt;
--- 
-2.11.0
+I see that Jens reported that the patch works, although I'm wondering
+how repeatable it was for him.  The patch obviously looks simple and
+seems like an obviously GoodThing(tm) regardless.
+
+                   Linus
