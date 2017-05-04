@@ -1,91 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37518 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751224AbdE3MgK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1966 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751136AbdEDNNt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 08:36:10 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Enric Balletbo i Serra <enric.balletbo@collabora.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFT 2/3] brcmfmac: use firmware callback upon failure to load
-Date: Tue, 30 May 2017 13:35:53 +0100
-Message-Id: <1496147754-2303-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170530_143613_339816_6FBABDAF)
-In-Reply-To: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 4 May 2017 09:13:49 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "nicolas.dechesne@linaro.org" <nicolas.dechesne@linaro.org>
+Subject: Re: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
+Date: Thu, 4 May 2017 13:13:43 +0000
+Message-ID: <87fugkrchl.fsf@kamboji.qca.qualcomm.com> (sfid-20170504_151518_358821_FAFEB77C)
+References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
+        <1493281332.2529.1.camel@sipsolutions.net>      <20170428234247.GQ15143@minitux>
+In-Reply-To: <20170428234247.GQ15143@minitux> (Bjorn Andersson's message of
+        "Fri, 28 Apr 2017 16:42:47 -0700")
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When firmware loading failed the code used to unbind the device provided
-by the calling code. However, for the sdio driver two devices are bound
-and both need to be released upon failure. The callback has been extended
-with parameter to pass error code so add that in this commit upon firmware
-loading failure.
-
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 27 +++++++++++-----------
- 1 file changed, 13 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index ae61a24..d231042 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -484,39 +484,38 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- fail:
- 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
- 	release_firmware(fwctx->code);
--	device_release_driver(fwctx->dev);
-+	fwctx->done(fwctx->dev, -ENOENT, NULL, NULL, 0);
- 	kfree(fwctx);
- }
- 
- static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- {
- 	struct brcmf_fw *fwctx = ctx;
--	int ret;
-+	int ret = 0;
- 
- 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
--	if (!fw)
-+	if (!fw) {
-+		ret = -ENOENT;
- 		goto fail;
--
--	/* only requested code so done here */
--	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM)) {
--		fwctx->done(fwctx->dev, 0, fw, NULL, 0);
--		kfree(fwctx);
--		return;
- 	}
-+	/* only requested code so done here */
-+	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM))
-+		goto done;
-+
- 	fwctx->code = fw;
- 	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
- 				      fwctx->dev, GFP_KERNEL, fwctx,
- 				      brcmf_fw_request_nvram_done);
- 
--	if (!ret)
--		return;
--
--	brcmf_fw_request_nvram_done(NULL, fwctx);
-+	/* pass NULL to nvram callback for bcm47xx fallback */
-+	if (ret)
-+		brcmf_fw_request_nvram_done(NULL, fwctx);
- 	return;
- 
- fail:
- 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
--	device_release_driver(fwctx->dev);
-+done:
-+	fwctx->done(fwctx->dev, ret, fw, NULL, 0);
- 	kfree(fwctx);
- }
- 
--- 
-1.9.1
+Qmpvcm4gQW5kZXJzc29uIDxiam9ybi5hbmRlcnNzb25AbGluYXJvLm9yZz4gd3JpdGVzOg0KDQo+
+IE9uIFRodSAyNyBBcHIgMDE6MjIgUERUIDIwMTcsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+DQo+
+PiANCj4+ID4gQEAgLTM3MSw3ICszNzEsNyBAQCBzdGF0aWMgdm9pZCByZWFwX3R4X2R4ZXMoc3Ry
+dWN0IHdjbjM2eHggKndjbiwNCj4+ID4gc3RydWN0IHdjbjM2eHhfZHhlX2NoICpjaCkNCj4+ID4g
+wqAJCQlpbmZvID0gSUVFRTgwMjExX1NLQl9DQihjdGwtPnNrYik7DQo+PiA+IMKgCQkJaWYgKCEo
+aW5mby0+ZmxhZ3MgJg0KPj4gPiBJRUVFODAyMTFfVFhfQ1RMX1JFUV9UWF9TVEFUVVMpKSB7DQo+
+PiA+IMKgCQkJCS8qIEtlZXAgZnJhbWUgdW50aWwgVFggc3RhdHVzIGNvbWVzDQo+PiA+ICovDQo+
+PiA+IC0JCQkJaWVlZTgwMjExX2ZyZWVfdHhza2Iod2NuLT5odywgY3RsLQ0KPj4gPiA+c2tiKTsN
+Cj4+ID4gKwkJCQlpZWVlODAyMTFfdHhfc3RhdHVzKHdjbi0+aHcsIGN0bC0NCj4+ID4gPnNrYik7
+DQo+PiA+IA0KPj4gDQo+PiBJIGRvbid0IHRoaW5rIHRoaXMgaXMgYSBnb29kIGlkZWEuDQo+DQo+
+IFRoYW5rcyBmb3IgbGV0dGluZyBtZSBrbm93IDopDQo+DQo+PiBUaGlzIGNvZGUgaW50ZW50aW9u
+YWxseSBjaGVja2VkIGlmIFRYIHN0YXR1cyB3YXMgcmVxdWVzdGVkLCBhbmQgaWYgbm90DQo+PiB0
+aGVuIGl0IGRvZXNuJ3QgZ28gdG8gdGhlIGVmZm9ydCBvZiBidWlsZGluZyBpdC4NCj4+IA0KPg0K
+PiBXaGF0IEknbSBmaW5kaW5nIHB1enpsaW5nIGlzIHRoZSBmYWN0IHRoYXQgdGhlIG9ubHkgY2Fs
+bGVyIG9mDQo+IGllZWU4MDIxMV9sZWRfdHgoKSBpcyBpZWVlODAyMTFfdHhfc3RhdHVzKCkgYW5k
+IGl0IHNlZW1zIGxpa2UgZHJpdmVycywNCj4gc3VjaCBhcyBhdGgxMGssIGNhbGwgdGhpcyBmb3Ig
+ZWFjaCBwYWNrZXQgaGFuZGxlZCAtIGJ1dCBJJ20gbGlrZWx5DQo+IG1pc3Npbmcgc29tZXRoaW5n
+Lg0KPg0KPj4gQXMgaXQgaXMgd2l0aCB5b3VyIHBhdGNoLCBpdCdsbCBnbyBhbmQgcmVwb3J0IHRo
+ZSBUWCBzdGF0dXMgd2l0aG91dCBhbnkNCj4+IFRYIHN0YXR1cyBpbmZvcm1hdGlvbiAtIHdoaWNo
+IGlzIGhhbmRsZWQgaW4gd2NuMzZ4eF9keGVfdHhfYWNrX2luZCgpDQo+PiBmb3IgdGhvc2UgZnJh
+bWVzIG5lZWRpbmcgaXQuDQo+PiANCj4NCj4gUmlnaHQsIGl0IGRvZXNuJ3Qgc291bmQgZGVzaXJl
+ZC4gSG93ZXZlciwgZHVyaW5nIG5vcm1hbCBvcGVyYXRpb24gSSdtDQo+IG5vdCBzZWVpbmcgSUVF
+RTgwMjExX1RYX0NUTF9SRVFfVFhfU1RBVFVTIGJlaW5nIHNldCBhbmQgYXMgc3VjaA0KPiBpZWVl
+ODAyMTFfbGVkX3R4KCkgaXMgbmV2ZXIgY2FsbGVkLg0KDQpTbyB3aGF0J3MgdGhlIGNvbmNsdXNp
+b24/IEhvdyBkbyB3ZSBnZXQgbGVkcyB3b3JraW5nPw0KDQotLSANCkthbGxlIFZhbG8=
