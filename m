@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27245 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19421 "EHLO
         wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753487AbdEKDzd (ORCPT
+        with ESMTP id S1753392AbdEDM7a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 23:55:33 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Su Kang Yin <paradyse@gmail.com>
-CC: Adrian Chadd <adrian@freebsd.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
- firmware scratch memory.
-Date: Thu, 11 May 2017 03:55:25 +0000
-Message-ID: <87bmr0vyhe.fsf@kamboji.qca.qualcomm.com> (sfid-20170511_055543_244407_333BCF82)
-References: <20170501214327.5621-1-adrian@freebsd.org>
-        <CAHjFwoAr6Tjh=Zpr_JhEp_-g_0XJ+LDUagsfJh=vqseqzBC1Pw@mail.gmail.com>
-In-Reply-To: <CAHjFwoAr6Tjh=Zpr_JhEp_-g_0XJ+LDUagsfJh=vqseqzBC1Pw@mail.gmail.com>       (Su Kang
- Yin's message of "Thu, 11 May 2017 01:21:06 +0800")
-Content-Type: text/plain; charset="iso-8859-1"
+        Thu, 4 May 2017 08:59:30 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [RESEND] ath10k: fix out of bounds access to local buffer
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170424071157.6979-1-dev@michaelmera.com>
+References: <20170424071157.6979-1-dev@michaelmera.com>
+To: Michael Mera <dev@michaelmera.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Michael Mera" <dev@michaelmera.com>
+Message-ID: <afaf2e43f4d341e98650d6deb4b7769c@eusanexr01a.eu.qualcomm.com> (sfid-20170504_150021_103459_590B9DC3)
+Date: Thu, 4 May 2017 05:59:26 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Su Kang Yin <paradyse@gmail.com> writes:
+Michael Mera <dev@michaelmera.com> wrote:
+> During write to debugfs file simulate_fw_crash, fixed-size local buffer
+> 'buf' is accessed and modified at index 'count-1', where 'count' is the
+> size of the write (so potentially out of bounds).
+> This patch fixes this problem.
+> 
+> Signed-off-by: Michael Mera <dev@michaelmera.com>
 
-> Without this patch QCA9888 is not working. Also I have to update
-> board2.bin from Kalle's git repo.
+Patch applied to ath-next branch of ath.git, thanks.
 
-More details would be good to know, as the behaviour seems to vary quite
-a lot. What platform are you using, x86, some ARM board or what? And
-what kernel exactly?
+a16703aaeaed ath10k: fix out of bounds access to local buffer
 
---=20
-Kalle Valo=
+-- 
+https://patchwork.kernel.org/patch/9695703/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
