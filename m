@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59685 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750931AbdEPFbi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 01:31:38 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michael Mera <dev@michaelmera.com>
-CC: Marcin Rokicki <marcin.rokicki@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix out of bounds access to local buffer
-Date: Tue, 16 May 2017 05:31:26 +0000
-Message-ID: <87d1b9v044.fsf@qca.qualcomm.com> (sfid-20170516_073143_092817_BA7F8662)
-References: <20170424053902.1644-1-dev@michaelmera.com>
-        <CAN6Sofawy9BmFaVgNw=gt=9VwLqNFdCQ2fa3DApvJTVCJpjoqg@mail.gmail.com>
-        <87inludzh6.fsf@michaelmera.com>
-In-Reply-To: <87inludzh6.fsf@michaelmera.com> (Michael Mera's message of "Mon,
-        24 Apr 2017 16:41:25 +0900")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:56122 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751363AbdEDPQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 May 2017 11:16:50 -0400
+Message-ID: <1493911002.18881.0.camel@sipsolutions.net> (sfid-20170504_171738_856396_B885836F)
+Subject: Re: [PATCH] cfg80211: make RATE_INFO_BW_20 the default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
+        netdev@vger.kernel.org
+Date: Thu, 04 May 2017 17:16:42 +0200
+In-Reply-To: <20170504.111333.814726752020791317.davem@davemloft.net>
+References: <20170504064230.22058-1-johannes@sipsolutions.net>
+         <20170504.111333.814726752020791317.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Mera <dev@michaelmera.com> writes:
+On Thu, 2017-05-04 at 11:13 -0400, David Miller wrote:
+> 
+> Johannes, would you like me to merge this in via my tree directly?
 
-> Marcin Rokicki <marcin.rokicki@gmail.com> writes:
->> Please send again to ath10k@lists.infradead.org with cc
->> linux-wireless@vger.kernel.org
->>
->
-> Sorry for the mistake. Resent as requested.
->
-> Just for the record, I followed instructions at:
->   https://wireless.wiki.kernel.org/en/developers/documentation/submitting=
-patches?s[]=3Dsubmit#who_to_address
->
-> So, maybe this needs to be updated to reflect the ath10k case.
+I figured I'd give Linus to a chance to try or even apply it, but I
+have no objection to you applying it either. I don't have anything else
+  yet right now, and sending a pull request for just a single patch
+would be quite pointless.
 
-I added a link to the corresponding ath10k page. BTW, it's a wiki so
-everyone are free to improve the instructions on their own.
-
---=20
-Kalle Valo=
+johannes
