@@ -1,82 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38239 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1031593AbdEXWnu (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:33014 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754701AbdEDSrH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 18:43:50 -0400
-Date: Thu, 25 May 2017 08:43:46 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: WPA and WPA2
-Message-ID: <20170524224346.GD2319@eros> (sfid-20170525_004354_631141_07E1FC0B)
-References: <20170524072750.GI8158@eros>
- <20170524073459.GJ8158@eros>
- <1495644240.12939.3.camel@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495644240.12939.3.camel@redhat.com>
+        Thu, 4 May 2017 14:47:07 -0400
+Received: by mail-it0-f67.google.com with SMTP id v135so2730656itv.0
+        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2017 11:47:07 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 1/4] rtlwifi: btcoex: Remove 21a 1ant configuration parameter
+Date: Thu,  4 May 2017 13:46:58 -0500
+Message-Id: <20170504184701.16560-2-Larry.Finger@lwfinger.net> (sfid-20170504_204717_434031_3FBE6BD2)
+In-Reply-To: <20170504184701.16560-1-Larry.Finger@lwfinger.net>
+References: <20170504184701.16560-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 24, 2017 at 11:44:00AM -0500, Dan Williams wrote:
-> On Wed, 2017-05-24 at 17:34 +1000, Tobin C. Harding wrote:
-> > On Wed, May 24, 2017 at 05:27:50PM +1000, Tobin C. Harding wrote:
-> > > Hi,
-> > > 
-> > > I am attempting to rewrite the ks7010 WEXT driver
-> > > (drivers/staging/ks7010)
-> > > to use the CFG80211 API.
-> > > 
-> > > I am reading 802.11 Wireless Networks - Matthew S. Gast for
-> > > reference.
-> > > 
-> > > I have some confusion regarding WEP/WPA/WPA2/RSN, ciphers, keys and
-> > > ie's?
-> > > 
-> > > As I understand, first there was WEP. Next we got a marketing term
-> > > WPA
-> > > which referred to 802.11i (which specified the protocols TKIP and
-> > > CCMP, and also RSN).
-> > > 
-> > > WEP vs WPA
-> > > ----------
-> > > 
-> > > To add to my confusion the ks7010 code seemingly mixes up the use
-> > > of
-> > > WEP keys and WPA keys, to set both the WEP and the WPA keys the
-> > > driver
-> > > uses the same MIB requests? Yet throughout the code WEP keys and
-> > > WPA
-> > > keys are stored in separate structures (and treated differently).
-> > 
-> > Oh, I just got why there is only one MIB request type - there are
-> > only
-> > one set of keys used by the target
-> > 
-> > 	DOT11_WEP_DEFAULT_KEY_VALUE1	= 0x13020101,
-> > 	DOT11_WEP_DEFAULT_KEY_VALUE2	= 0x13020102,
-> > 	DOT11_WEP_DEFAULT_KEY_VALUE3	= 0x13020103,
-> > 	DOT11_WEP_DEFAULT_KEY_VALUE4	= 0x13020104,
-> > 
-> > removing 'WEP' from the defines removes the confusion here :)
-> 
-> I could be entirely wrong, but it looks like the driver really just
-> defines 4 "keys" which can be used for anything.
+In file halbtc8821a1ant.c, there are directives that depend on an
+undocumented configuration parameter BT_AUTO_REPORT_ONLY_8821A_1ANT
+that cannot be set from Kconfig. This parameter is replaced by a
+boolean in the main structure used by all routines. It still cannot
+be changed dynamically, but it is easier to document.
 
-Thank you very much for taking the time to look at the driver, I
-really appreciate it.
+Using a suggestion from Realtek, the auto report is turned on with this
+patch.
 
-> For WEP, they are the 4 WEP key indexes.
-> 
-> For RSN, they are 1 = PMK, 2 = GMK, 3 = GMK2, 4 seems unused.
-> 
-> Because WEXT is pretty convoluted, I woudn't necessarily try to
-> translate what eg ks_wlan_set_encode_ext() is doing directly to
-> cfg80211, but to understand how the firmware interface works and then
-> just write the cfg80211 code to the firmware interface.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - Some earlier patches were missed in v1.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c        | 18 +++++++++---------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h        |  2 --
+ .../wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h  |  5 +++++
+ 3 files changed, 14 insertions(+), 11 deletions(-)
 
-That's a good idea.
-
-thanks,
-Tobin.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 5e9f3b0f7a25..bd5f752f153d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -2116,6 +2116,7 @@ static void btc8821a1ant_init_hw_config(struct btc_coexist *btcoexist,
+ void ex_btc8821a1ant_init_hwconfig(struct btc_coexist *btcoexist, bool wifionly)
+ {
+ 	btc8821a1ant_init_hw_config(btcoexist, true, wifionly);
++	btcoexist->auto_report_1ant = true;
+ }
+ 
+ void ex_btc8821a1ant_init_coex_dm(struct btc_coexist *btcoexist)
+@@ -2406,9 +2407,8 @@ void ex_btc8821a1ant_display_coex_info(struct btc_coexist *btcoexist)
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 		 "\r\n %-35s = %d/ %d", "0x774(low-pri rx/tx)",
+ 		 coex_sta->low_priority_rx, coex_sta->low_priority_tx);
+-#if (BT_AUTO_REPORT_ONLY_8821A_1ANT == 1)
+-	btc8821a1ant_monitor_bt_ctr(btcoexist);
+-#endif
++	if (btcoexist->auto_report_1ant)
++		btc8821a1ant_monitor_bt_ctr(btcoexist);
+ 	btcoexist->btc_disp_dbg_msg(btcoexist, BTC_DBG_DISP_COEX_STATISTICS);
+ }
+ 
+@@ -2964,10 +2964,10 @@ void ex_btc8821a1ant_periodical(struct btc_coexist *btcoexist)
+ 			 "[BTCoex], ****************************************************************\n");
+ 	}
+ 
+-#if (BT_AUTO_REPORT_ONLY_8821A_1ANT == 0)
+-	btc8821a1ant_query_bt_info(btcoexist);
+-	btc8821a1ant_monitor_bt_ctr(btcoexist);
+-#else
+-	coex_sta->special_pkt_period_cnt++;
+-#endif
++	if (!btcoexist->auto_report_1ant) {
++		btc8821a1ant_query_bt_info(btcoexist);
++		btc8821a1ant_monitor_bt_ctr(btcoexist);
++	} else {
++		coex_sta->special_pkt_period_cnt++;
++	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
+index 1bd1ebe3364e..d6dacf32a4c4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
+@@ -27,8 +27,6 @@
+  * The following is for 8821A 1ANT BT Co-exist definition
+  *===========================================
+  */
+-#define	BT_AUTO_REPORT_ONLY_8821A_1ANT				0
+-
+ #define	BT_INFO_8821A_1ANT_B_FTP	BIT7
+ #define	BT_INFO_8821A_1ANT_B_A2DP	BIT6
+ #define	BT_INFO_8821A_1ANT_B_HID	BIT5
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index c8271135aaaa..ab2e31a44253 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -496,6 +496,11 @@ struct btc_coexist {
+ 	enum btc_chip_interface	chip_interface;
+ 	struct btc_bt_link_info bt_link_info;
+ 
++	/* boolean variables to replace BT_AUTO_REPORT_ONLY_XXXXY_ZANT
++	 * configuration parameters
++	 */
++	bool auto_report_1ant;
++	bool auto_report_2ant;
+ 	bool initilized;
+ 	bool stop_coex_dm;
+ 	bool manual_control;
+-- 
+2.12.2
