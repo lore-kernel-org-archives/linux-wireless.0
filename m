@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43902 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751304AbdEIPEZ (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36437 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752152AbdEDSrG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 11:04:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH v5] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
-References: <1489262657-8191-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-        <c80e4171-d433-6f31-f279-94aa5d238dc7@quantenna.com>
-Date: Tue, 09 May 2017 18:04:19 +0300
-In-Reply-To: <c80e4171-d433-6f31-f279-94aa5d238dc7@quantenna.com> (Igor
-        Mitsyanko's message of "Fri, 28 Apr 2017 00:22:40 -0700")
-Message-ID: <878tm69imk.fsf@purkki.adurom.net> (sfid-20170509_170458_574918_36877C51)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 4 May 2017 14:47:06 -0400
+Received: by mail-io0-f196.google.com with SMTP id x86so5673944ioe.3
+        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2017 11:47:06 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 0/4] rtlwifi: btcoex: Remove all references to BT_AUTO_REPORT_ONLY* parameters
+Date: Thu,  4 May 2017 13:46:57 -0500
+Message-Id: <20170504184701.16560-1-Larry.Finger@lwfinger.net> (sfid-20170504_204716_874950_0F46FEE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+The btcoex code uses #if constructs to compile conditional code. There
+is no way to modify this behavior without editting the source. This
+logic is converted into regular if statements that interrogate a
+boolean variable in a structure known to all routines. The new form
+does not provide any mechanism for dynamic changes, but it now is in a
+form whereby module parameters could be added to select the behavior
+at module load time. In these patches, a number of routines removed
+because they were not referenced must be restored.
 
-> On 03/11/2017 12:04 PM, Igor Mitsyanko wrote:
->> This patch adds support for new FullMAC WiFi driver for Quantenna
->> QSR10G chipsets.
->
-> Hi all,
-> this patch is pending for a while now, does it require more work
-> (except for what Christian mentioned)?
+v2 - Some earlier patches were missed in V1.
 
-I just did a diff between v4 and v5 and looking good at least to me. Do
-others have more comments/concerns?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-Now would be a very good time to submit a new driver as we are getting
-close to the rc1 release. This way it gets plenty of testing time in
-linux-next. So sooner you can submit v6 the better.
+Larry Finger (4):
+  rtlwifi: btcoex: Remove 21a 1ant configuration parameter
+  rtlwifi: btcoex: Remove 23b 1ant configuration parameter
+  rtlwifi: btcoex: Remove 23b 2ant configuration parameter
+  rtlwifi: btcoex: Remove 92e 2ant configuration parameter
 
->> QSR10G (aka Pearl) is Quantenna's 8x8, 160M, 11ac offering.
->> QSR10G supports 2 simultaneous WMACs - one 5G and one 2G.
->> 5G WMAC supports 160M, 8x8 configuration. FW supports
->> up to 8 concurrent virtual interfaces on each WMAC.
->>
->> Patch introduces 2 new drivers:
->> - qtnfmac.ko for interfacing with kernel wireless core
->> - qtnfmac_pearl_pcie.ko for interfacing with hardware over PCIe interface
-
-Please mention in the commit log also what modes (AP, managed, monitor
-etc) are supported.
-
-But PLEASE edit your quotes, the insane 8000 line quote makes my use of
-patchwork[1] difficult:
-
-https://patchwork.kernel.org/patch/9619075/
-
-[1] And I do almost all of my maintainer work via patchwork so this
-    habit of not editing quotes is a big hindrance for me. And
-    unfortunately it's getting more popular :(
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  72 ++++++++----
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   1 -
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 123 +++++++++++++++++----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  84 +++++++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   1 -
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  18 +--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   5 +
+ 9 files changed, 229 insertions(+), 79 deletions(-)
 
 -- 
-Kalle Valo
+2.12.2
