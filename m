@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52604 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758956AbdEVQYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 12:24:19 -0400
-Message-ID: <1495470254.26008.3.camel@sipsolutions.net> (sfid-20170522_182453_453041_B8ECDF61)
-Subject: Re: [PATCH] cfg80211: Be able to set bss expire time at config
- stage.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        helmut.schaa@googlemail.com
-Date: Mon, 22 May 2017 18:24:14 +0200
-In-Reply-To: <1495470111.25557.9.camel@redhat.com>
-References: <20170522160946.2057-1-enric.balletbo@collabora.com>
-         <1495470111.25557.9.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:58492 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752138AbdEDEfg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 May 2017 00:35:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: David Miller <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: new warning at net/wireless/util.c:1236
+References: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com>
+Date: Thu, 04 May 2017 07:35:31 +0300
+In-Reply-To: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com>
+        (Linus Torvalds's message of "Wed, 3 May 2017 19:28:29 -0700")
+Message-ID: <87o9v99r3g.fsf@purkki.adurom.net> (sfid-20170504_063653_925055_DF67F0EE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-> Couldn't userspace just look at NL80211_BSS_SEEN_MS_AGO to filter and
-> create its own list?  Given that the kernel provides the information
-> userspace needs to figure out the age of a particular BSS, it doesn't
-> seem like there needs to be a kernel tunable for this.  Userspace can
-> already avoid stale results.
+> So my Dell XPS 13 seems to have grown a new warning as of the
+> networking merge yesterday.
+>
+> Things still work, but when it starts warning, it generates a *lot* of
+> noise (I got 36 of these within about ten minutes).
+>
+> I have no idea what triggered it, because when I rebooted (not because
+> of this issue, but just to reboot into a newer kernel) I don't see it
+> again.
+>
+> This is all pretty regular wireless - it's intel 8260 wireless in a
+> fairly normal laptop.
+>
+> Things still seem to *work* ok, so the only problem here is the overly
+> verbose and useless WARN_ON. It doesn't even print out *which* rate it
+> is warning about, it just does that stupid unconditional WARN_ON()
+> without ever shutting up about it..
+>
+> The WARN_ON() seems to be old, but my logs don't seem to have any
+> mention of this until today, so there's something that has changed
+> that now triggers it.
+>
+> Ideas?
+>
+>                   Linus
+>
+> ---
+>
+> WARNING: CPU: 3 PID: 1138 at net/wireless/util.c:1236
+> cfg80211_calculate_bitrate+0x139/0x170 [cfg80211]
 
-Yeah, I agree. It can also ask for a flush, so that old results are
-gone by the time the next scan returns. We don't have a flush operation
-without requesting a new scan, but I guess that could be added.
+As this is with iwlwifi adding also Luca. There were some rate handling
+changes in iwlwifi, like commit 77e409455f41, but don't know if that
+could cause this.
 
-> Also, different runtime situations might want different result ages,
-> which wouldn't be possible if the kernel had a hardcoded maximum. 
-> Furthermore, different userspace apps might be reading the same scan
-> list, and they might have different ideas about staleness.
-> 
-> Or perhaps I misunderstand the problem, which could well be the case.
-
-No, I think this is perfectly right - userspace should be able to deal
-with this given the tools we gave it, or if not, we should probably
-just give it more tools instead of hardcoding the kernel configuration.
-
-This value really just kinda needed to be an upper bound so that we
-don't start expiring entries while we're still scanning.
-
-johannes
+-- 
+Kalle Valo
