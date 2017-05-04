@@ -1,157 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2-g21.free.fr ([212.27.42.2]:24075 "EHLO smtp2-g21.free.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751551AbdEDV1z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 17:27:55 -0400
-From: Julien Cubizolles <j.cubizolles@free.fr>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: mwifiex won't connect to WPA2 anymore
-References: <87wpa3kxgi.fsf@free.fr> <87tw51y91z.fsf@free.fr>
-        <1493844237.5647.9.camel@redhat.com>
-Date: Thu, 04 May 2017 23:27:53 +0200
-In-Reply-To: <1493844237.5647.9.camel@redhat.com> (Dan Williams's message of
-        "Wed, 03 May 2017 15:43:57 -0500")
-Message-ID: <87a86sfh2e.fsf@free.fr> (sfid-20170504_232812_085824_607841EF)
+Received: from mail-it0-f49.google.com ([209.85.214.49]:38412 "EHLO
+        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751333AbdEDPXi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 May 2017 11:23:38 -0400
+Received: by mail-it0-f49.google.com with SMTP id e65so14120607ita.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2017 08:23:38 -0700 (PDT)
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linuxwifi@intel.com, Johannes Berg <johannes.berg@intel.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: WARNING: CPU: 2 PID: 682 at net/wireless/util.c:1236
+Message-ID: <240bae44-56e4-f342-0d1b-358a573e2eeb@kernel.dk> (sfid-20170504_172441_266184_E17EEF2C)
+Date: Thu, 4 May 2017 09:23:36 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@redhat.com> writes:
+Hi,
 
-> On Wed, 2017-05-03 at 22:33 +0200, Julien Cubizolles wrote:
+Running current -git on my laptop, and I see this spew every once
+in a while. This is new, haven't seen it in 4.11 or previously. Driver
+is iwlwifi:
 
->> It turns out that the problem lies with NetworkManager, I managed to
->> get
->> the wifi working with wpa_supplicant.
->
-> That's odd.  Any idea what that was?  MAC randomization?  
+04:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
 
-I don't know if MAC randomization is supposed to be happen but ifconfig
-always display the same MAC address for the wifi interface. Also the
-same wifi router allows connections without secrets with another ssid,
-and I have no problem connecting in this case.
 
-> NM just uses the supplicant underneath, so there's no particular
-> reason NM wouldn't work but wpa_supplicant itself would.
+[ 3285.862640] IPv6: ADDRCONF(NETDEV_CHANGE): wlp4s0: link becomes ready
+[ 3285.978482] ------------[ cut here ]------------
+[ 3285.978501] WARNING: CPU: 2 PID: 682 at net/wireless/util.c:1236 cfg80211_calculate_bitrate+0x130/0x160 [cfg80211]
+[ 3285.978502] Modules linked in: ctr ccm rfcomm fuse bnep arc4 snd_hda_codec_hdmi iwlmvm snd_hda_codec_conexant snd_hda_codec_generic mac80211 snd_hda_intel snd_hda_codec binfmt_misc snd_hwdep snd_hda_core snd_pcm x86_pkg_temp_thermal nls_iso8859_1 intel_powerclamp nls_cp437 kvm_intel vfat snd_seq_midi fat kvm iwlwifi snd_seq_midi_event btusb snd_rawmidi btintel bluetooth snd_seq uvcvideo irqbypass aesni_intel videobuf2_vmalloc videobuf2_memops snd_seq_device aes_x86_64 videobuf2_v4l2 crypto_simd snd_timer videobuf2_core cryptd glue_helper videodev cfg80211 ecdh_generic snd soundcore hid_generic usbhid hid i915 psmouse e1000e ptp pps_core xhci_pci xhci_hcd intel_gtt
+[ 3285.978536] CPU: 2 PID: 682 Comm: NetworkManager Tainted: G     U          4.11.0+ #59
+[ 3285.978537] Hardware name: LENOVO 20FBCTO1WW/20FBCTO1WW, BIOS N1FET50W (1.24 ) 03/08/2017
+[ 3285.978538] task: ffff880421de2880 task.stack: ffff8804234a8000
+[ 3285.978551] RIP: 0010:cfg80211_calculate_bitrate+0x130/0x160 [cfg80211]
+[ 3285.978552] RSP: 0018:ffff8804234ab638 EFLAGS: 00010293
+[ 3285.978553] RAX: 0000000000000000 RBX: ffff88042df2cf00 RCX: 0000000000000002
+[ 3285.978554] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8804234ab7d6
+[ 3285.978555] RBP: ffff8804234ab638 R08: 0000000000000004 R09: ffff8804252c20d4
+[ 3285.978556] R10: 00000000088002aa R11: ffffffffa02a6000 R12: ffff8804234ab7d6
+[ 3285.978557] R13: ffff8804252c20d0 R14: ffff8804252c2030 R15: ffff880424bf0000
+[ 3285.978559] FS:  00007f4e016a8940(0000) GS:ffff880441500000(0000) knlGS:0000000000000000
+[ 3285.978560] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 3285.978561] CR2: 00000c5e5d540010 CR3: 000000042b626000 CR4: 00000000001406e0
+[ 3285.978561] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 3285.978562] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 3285.978563] Call Trace:
+[ 3285.978577]  nl80211_put_sta_rate+0x4e/0x1f0 [cfg80211]
+[ 3285.978591]  nl80211_send_station.isra.66+0x344/0xcc0 [cfg80211]
+[ 3285.978595]  ? __kmalloc_track_caller+0x31/0x1a0
+[ 3285.978608]  nl80211_get_station+0x1d9/0x250 [cfg80211]
+[ 3285.978620]  genl_family_rcv_msg+0x1bf/0x380
+[ 3285.978622]  genl_rcv_msg+0x4c/0x90
+[ 3285.978623]  ? genl_family_rcv_msg+0x380/0x380
+[ 3285.978629]  netlink_rcv_skb+0x7f/0x110
+[ 3285.978630]  genl_rcv+0x28/0x40
+[ 3285.978633]  netlink_unicast+0x183/0x220
+[ 3285.978635]  netlink_sendmsg+0x293/0x390
+[ 3285.978637]  sock_sendmsg+0x38/0x50
+[ 3285.978638]  ___sys_sendmsg+0x256/0x2b0
+[ 3285.978641]  ? __slab_free+0x1d1/0x2c0
+[ 3285.978643]  ? destroy_inode+0x3b/0x60
+[ 3285.978645]  ? do_wp_page+0x103/0x440
+[ 3285.978646]  ? __handle_mm_fault+0x34e/0xa10
+[ 3285.978648]  ? __fget+0x6e/0x90
+[ 3285.978650]  __sys_sendmsg+0x45/0x80
+[ 3285.978652]  ? __sys_sendmsg+0x45/0x80
+[ 3285.978654]  SyS_sendmsg+0x12/0x20
+[ 3285.978656]  entry_SYSCALL_64_fastpath+0x13/0x94
+[ 3285.978657] RIP: 0033:0x7f4dff521a6d
+[ 3285.978658] RSP: 002b:00007ffc7507aec0 EFLAGS: 00000293 ORIG_RAX: 000000000000002e
+[ 3285.978660] RAX: ffffffffffffffda RBX: 0000000002044b60 RCX: 00007f4dff521a6d
+[ 3285.978661] RDX: 0000000000000000 RSI: 00007ffc7507af50 RDI: 0000000000000010
+[ 3285.978661] RBP: 00007f4dff50bb20 R08: 0000000000000000 R09: 0000000000000000
+[ 3285.978662] R10: 0000000001fd8df0 R11: 0000000000000293 R12: 0000000000001010
+[ 3285.978663] R13: 00007f4dff50bb78 R14: 00000000000026fc R15: 0000000001ffc570
+[ 3285.978664] Code: d0 f7 e1 d1 ea 8d 14 92 01 d2 81 c2 50 c3 00 00 b9 c5 5a 7c 0a 5d c1 ea 05 89 d0 f7 e1 89 d0 c1 e8 07 c3 31 c0 40 80 fe 02 74 b6 <0f> ff 31 c0 eb b0 8d 14 52 01 d2 e9 41 ff ff ff 0f ff 31 c0 5d 
+[ 3285.978693] ---[ end trace ae08dfa326cc120a ]---
 
-I'm using the following /etc/wpa_supplicant.conf file:
-
---8<---------------cut here---------------start------------->8---
-ctrl_interface=/var/run/wpa_supplicant
-ap_scan=1
-network={
-	priority=2
-        ssid="beguiled"
-        psk="*****"
-}
-
---8<---------------cut here---------------end--------------->8---
-
-For the same ssid: NetworkManager uses the following
-/etc/NetworkManager/system-connections/beguiled
-
---8<---------------cut here---------------start------------->8---
-[connection]
-id=beguiled
-uuid=4ecc0776-046d-4f05-a324-19f5a8fe6853
-type=wifi
-permissions=
-secondaries=
-
-[wifi]
-ssid=beguiled
-
-[wifi-security]
-psk=******
-
-[ipv4]
-dns-search=
-method=auto
-
-[ipv6]
-addr-gen-mode=stable-privacy
-dns-search=
-method=auto
---8<---------------cut here---------------end--------------->8---
-
-Here are the logs when NM fails:
---8<---------------cut here---------------start------------->8---
-
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8411] device (wlx6045bdf646b4): set-hw-addr: set MAC address to E2:D4:E4:49:77:59 (scanning)
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8433] manager: NetworkManager state is now DISCONNECTED
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8435] device (wlx6045bdf646b4): Activation: starting connection 'beguiled' (406e52d4-e98b-454b-8d32-ce69fee5e03f)
-May  4 23:06:25 touco kernel: [   58.255775] IPv6: ADDRCONF(NETDEV_UP): wlx6045bdf646b4: link is not ready
-May  4 23:06:25 touco whoopsie[818]: [23:06:25] Cannot reach: https://daisy.ubuntu.com
-May  4 23:06:25 touco nm-dispatcher: req:2 'down' [wlx6045bdf646b4]: new request (2 scripts)
-May  4 23:06:25 touco nm-dispatcher: req:2 'down' [wlx6045bdf646b4]: start running ordered scripts...
-May  4 23:06:25 touco whoopsie[818]: [23:06:25] Cannot reach: https://daisy.ubuntu.com
-May  4 23:06:25 touco NetworkManager[833]: <warn>  [1493931985.8711] sup-iface[0x5634f93244e0,wlx6045bdf646b4]: connection disconnected (reason -3)
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8712] device (wlx6045bdf646b4): supplicant interface state: completed -> disconnected
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8745] device (wlx6045bdf646b4): state change: disconnected -> prepare (reason 'none') [30 40 0]
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8747] manager: NetworkManager state is now CONNECTING
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9016] device (wlx6045bdf646b4): set-hw-addr: set-cloned MAC address to 60:45:BD:F6:46:B4 (permanent)
-May  4 23:06:25 touco kernel: [   58.316182] IPv6: ADDRCONF(NETDEV_UP): wlx6045bdf646b4: link is not ready
-May  4 23:06:25 touco gsd-sharing[2450]: Failed to StopUnit service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit rygel.service not loaded.
-May  4 23:06:25 touco gsd-sharing[2450]: Failed to StopUnit service: GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit vino-server.service not loaded.
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9314] device (wlx6045bdf646b4): state change: prepare -> config (reason 'none') [40 50 0]
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9322] device (wlx6045bdf646b4): Activation: (wifi) access point 'beguiled' has security, but secrets are required.
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9323] device (wlx6045bdf646b4): state change: config -> need-auth (reason 'none') [50 60 0]
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9394] device (wlx6045bdf646b4): state change: need-auth -> prepare (reason 'none') [60 40 0]
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9403] device (wlx6045bdf646b4): state change: prepare -> config (reason 'none') [40 50 0]
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9406] device (wlx6045bdf646b4): Activation: (wifi) connection 'beguiled' has security, and secrets exist.  No new secrets needed.
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9406] Config: added 'ssid' value 'beguiled'
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407] Config: added 'scan_ssid' value '1'
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407] Config: added 'key_mgmt' value 'WPA-PSK'
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407] Config: added 'auth_alg' value 'OPEN'
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407] Config: added 'psk' value '<omitted>'
-May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9833] sup-iface[0x5634f93244e0,wlx6045bdf646b4]: config: set interface ap_scan to 1
-May  4 23:06:26 touco wpa_supplicant[1171]: wlx6045bdf646b4: Trying to associate with f4:ca:e5:ef:be:18 (SSID='beguiled' freq=2462 MHz)
-May  4 23:06:26 touco kernel: [   58.421135] usb 3-3: info: trying to associate to 'beguiled' bssid f4:ca:e5:ef:be:18
-May  4 23:06:26 touco kernel: [   58.434898] usb 3-3: info: associated to bssid f4:ca:e5:ef:be:18 successfully
-May  4 23:06:26 touco kernel: [   58.434913] IPv6: ADDRCONF(NETDEV_CHANGE): wlx6045bdf646b4: link becomes ready
-May  4 23:06:26 touco wpa_supplicant[1171]: wlx6045bdf646b4: Associated with f4:ca:e5:ef:be:18
-May  4 23:06:26 touco wpa_supplicant[1171]: WMM AC: Missing IEs
-May  4 23:06:26 touco NetworkManager[833]: <info>  [1493931986.0221] device (wlx6045bdf646b4): supplicant interface state: disconnected -> associating
-May  4 23:06:26 touco whoopsie[818]: [23:06:26] Cannot reach: https://daisy.ubuntu.com
-May  4 23:06:26 touco NetworkManager[833]: <info>  [1493931986.0265] device (wlx6045bdf646b4): supplicant interface state: associating -> 4-way handshake
-May  4 23:06:26 touco tracker-miner-a[2529]:   (Sparql buffer) Error in task 0 (file:///home/wilk/.local/share/applications/EmacsClient.desktop) of the array-update: UNIQUE constraint failed: nie:DataObject.nie:url (strerror of errno (not necessarily related): Ressource temporairement non disponible)
-May  4 23:06:26 touco tracker-miner-a[2529]: Could not execute sparql: UNIQUE constraint failed: nie:DataObject.nie:url (strerror of errno (not necessarily related): Ressource temporairement non disponible)
-May  4 23:06:27 touco ntpd[1990]: Deleting interface #3 wlx6045bdf646b4, 10.2.0.53#123, interface stats: received=0, sent=5, dropped=0, active_time=29 secs
-May  4 23:06:27 touco ntpd[1990]: Deleting interface #5 wlx6045bdf646b4, fe80::6245:bdff:fef6:46b4%2#123, interface stats: received=0, sent=0, dropped=0, active_time=29 secs
-May  4 23:06:28 touco gnome-shell[2189]: JS WARNING: [resource:///org/gnome/shell/ui/dash.js 760]: reference to undefined property oldApps[oldIndex]
-May  4 23:06:28 touco dbus-daemon[1786]: Activating via systemd: service name='org.gnome.zeitgeist.Engine' unit='zeitgeist.service'
-May  4 23:06:28 touco systemd[1774]: Starting Zeitgeist activity log service...
-May  4 23:06:28 touco dbus-daemon[1786]: Activating via systemd: service name='org.gnome.zeitgeist.SimpleIndexer' unit='zeitgeist-fts.service'
-May  4 23:06:28 touco dbus-daemon[1786]: Successfully activated service 'org.gnome.zeitgeist.Engine'
-May  4 23:06:28 touco systemd[1774]: Started Zeitgeist activity log service.
-May  4 23:06:28 touco systemd[1774]: Starting Zeitgeist full-text search indexer...
-May  4 23:06:28 touco zeitgeist-daemon[2849]: #033[31m[21:06:28.606766 WARNING]#033[0m zeitgeist-daemon.vala:127: Unable to parse version info!
-May  4 23:06:28 touco zeitgeist-daemon[2849]: #033[31m[21:06:28.608482 WARNING]#033[0m zeitgeist-daemon.vala:127: Unable to parse version info!
-May  4 23:06:28 touco zeitgeist-daemon[2849]: #033[31m[21:06:28.631280 WARNING]#033[0m zeitgeist-daemon.vala:127: Unable to parse version info!
-May  4 23:06:28 touco dbus-daemon[1786]: Successfully activated service 'org.gnome.zeitgeist.SimpleIndexer'
-May  4 23:06:28 touco systemd[1774]: Started Zeitgeist full-text search indexer.
-May  4 23:06:28 touco zeitgeist-datah[2857]: zeitgeist-datahub.vala:227: Unable to get name "org.gnome.zeitgeist.datahub" on the bus!
-May  4 23:06:28 touco gnome-shell[2189]: JS WARNING: [resource:///org/gnome/shell/ui/appDisplay.js 1298]: reference to undefined property this.name
-May  4 23:06:29 touco pulseaudio[2585]: [pulseaudio] module.c: After module unload, module 'module-null-sink' was still loaded!
-May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: CTRL-EVENT-DISCONNECTED bssid=f4:ca:e5:ef:be:18 reason=2
-May  4 23:06:30 touco kernel: [   62.437145] usb 3-3: info: successfully disconnected from f4:ca:e5:ef:be:18: reason code 2
-May  4 23:06:30 touco kernel: [   62.437439] usb 3-3: CMD_RESP: cmd 0x10f error, result=0x2
-May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: WPA: 4-Way Handshake failed - pre-shared key may be incorrect
-May  4 23:06:30 touco NetworkManager[833]: <warn>  [1493931990.0257] sup-iface[0x5634f93244e0,wlx6045bdf646b4]: connection disconnected (reason 2)
-May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: CTRL-EVENT-SSID-TEMP-DISABLED id=0 ssid="beguiled" auth_failures=1 duration=10 reason=WRONG_KEY
-May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.0340] device (wlx6045bdf646b4): supplicant interface state: 4-way handshake -> disconnected
-May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: CTRL-EVENT-REGDOM-CHANGE init=CORE type=WORLD
-May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.0373] device (wlx6045bdf646b4): Activation: (wifi) disconnected during association, asking for new key
-May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.0377] device (wlx6045bdf646b4): state change: config -> need-auth (reason 'supplicant-disconnect') [50 60 8]
-May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.1292] device (wlx6045bdf646b4): supplicant interface state: disconnected -> scanning
-May  4 23:06:30 touco org.gnome.Shell.desktop[2189]: Window manager warning: Invalid WM_TRANSIENT_FOR window 0x0 specified for 0x2600007 (Onboard).
-May  4 23:06:31 touco kernel: [   64.182891] ieee80211 phy0: mwifiex_cfg80211_sched_scan_start : Invalid Sched_scan parameters
-May  4 23:06:31 touco wpa_supplicant[1171]: wlx6045bdf646b4: Failed to initiate sched scan
-May  4 23:06:31 touco NetworkManager[833]: <info>  [1493931991.7755] device (wlx6045bdf646b4): supplicant interface state: scanning -> inactive
-May  4 23:06:32 touco NetworkManager[833]: <warn>  [1493931992.4940] device (wlx6045bdf646b4): User canceled the secrets request.
-May  4 23:06:32 touco NetworkManager[833]: <info>  [1493931992.4941] device (wlx6045bdf646b4): state change: need-auth -> failed (reason 'no-secrets') [60 120 7]
-May  4 23:06:32 touco NetworkManager[833]: <info>  [1493931992.4944] manager: NetworkManager state is now DISCONNECTED
-May  4 23:06:32 touco NetworkManager[833]: <warn>  [1493931992.4950] device (wlx6045bdf646b4): Activation: failed for connection 'beguiled'
---8<---------------cut here---------------end--------------->8---
+-- 
+Jens Axboe
