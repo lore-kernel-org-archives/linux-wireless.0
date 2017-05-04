@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45776 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751425AbdEVGLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 02:11:21 -0400
-Message-ID: <1495433473.2653.0.camel@sipsolutions.net> (sfid-20170522_081126_473016_C746D1D1)
-Subject: Re: [PATCH] ath10k : Fix channel survey dump
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Chadd <adrian@freebsd.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "nbd@nbd.name" <nbd@nbd.name>,
-        Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 22 May 2017 08:11:13 +0200
-In-Reply-To: <CAJ-Vmok6UXVpYfK5c_tDnFGN1uLfx+sGp0W2zFppB=TYtax72g@mail.gmail.com> (sfid-20170519_173300_356433_4FB5D671)
-References: <1493217698-22451-1-git-send-email-c_vnaral@qti.qualcomm.com>
-         <40f2b7a2-7276-6de6-afc6-407348c92e70@nbd.name>
-         <87wp9durwe.fsf@kamboji.qca.qualcomm.com>
-         <CAJ-Vmok6UXVpYfK5c_tDnFGN1uLfx+sGp0W2zFppB=TYtax72g@mail.gmail.com>
-         (sfid-20170519_173300_356433_4FB5D671)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([184.105.139.130]:56762 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754056AbdEDP7b (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 May 2017 11:59:31 -0400
+Date: Thu, 04 May 2017 11:59:27 -0400 (EDT)
+Message-Id: <20170504.115927.311620488504377288.davem@davemloft.net> (sfid-20170504_180015_518214_26D24DB4)
+To: axboe@kernel.dk
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linuxwifi@intel.com,
+        johannes.berg@intel.com
+Subject: Re: WARNING: CPU: 2 PID: 682 at net/wireless/util.c:1236
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <b25325a9-ab93-1c57-3b59-2d52a76d279a@kernel.dk>
+References: <20170504.112512.833061289089590605.davem@davemloft.net>
+        <4ad7a627-62c7-be34-2dae-c54bb3ef0a15@kernel.dk>
+        <b25325a9-ab93-1c57-3b59-2d52a76d279a@kernel.dk>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-05-19 at 08:32 -0700, Adrian Chadd wrote:
-> 
-> I just bumped into this at work. I'm thinking of teaching mac80211
-> about optionally summing things so each driver doesn't need another
-> per-channel array.
-> 
+From: Jens Axboe <axboe@kernel.dk>
+Date: Thu, 4 May 2017 09:40:08 -0600
 
-We could possibly even do that in cfg80211, I guess.
+> On 05/04/2017 09:27 AM, Jens Axboe wrote:
+>> On 05/04/2017 09:25 AM, David Miller wrote:
+>>> From: Jens Axboe <axboe@kernel.dk>
+>>> Date: Thu, 4 May 2017 09:23:36 -0600
+>>>
+>>>> Running current -git on my laptop, and I see this spew every once
+>>>> in a while. This is new, haven't seen it in 4.11 or previously. Driver
+>>>> is iwlwifi:
+>>>
+>>> Please try:
+>>>
+>>> http://patchwork.ozlabs.org/patch/758364/
+>> 
+>> Will do, compiling...
+> 
+> Yep works, thanks.
 
-johannes
+Thanks for testing.
