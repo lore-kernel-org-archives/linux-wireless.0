@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:33074 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751997AbdEPKIT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 06:08:19 -0400
-Received: by mail-qt0-f193.google.com with SMTP id a46so19920296qte.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:08:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87bmqzs0m9.fsf@kamboji.qca.qualcomm.com>
-References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
- <1494336614-2107-8-git-send-email-amit.karwar@redpinesignals.com> <87bmqzs0m9.fsf@kamboji.qca.qualcomm.com>
-From: amit karwar <amitkarwar@gmail.com>
-Date: Tue, 16 May 2017 15:38:17 +0530
-Message-ID: <CAEhWJFm+jYLwctwzEU4YwWBj+KhGKkjYzLMO6q=_NRCwFt0qEg@mail.gmail.com> (sfid-20170516_120845_766071_023AF81A)
-Subject: Re: [v2 07/11] rsi: Add usb multi-byte read operation
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50274 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751530AbdEDGmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 May 2017 02:42:04 -0400
+Message-ID: <1493880117.3521.1.camel@sipsolutions.net> (sfid-20170504_084229_890952_65F2B167)
+Subject: Re: new warning at net/wireless/util.c:1236
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+        David Miller <davem@davemloft.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Thu, 04 May 2017 08:41:57 +0200
+In-Reply-To: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com> (sfid-20170504_042831_013058_9FF7CF3D)
+References: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com>
+         (sfid-20170504_042831_013058_9FF7CF3D)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 12, 2017 at 12:05 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>
->> USB multibyte read will be used in the new firmware loading method
->> for RS9113 chipset.
->>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> [...]
->
->> +static int rsi_usb_read_register_multiple(struct rsi_hw *adapter, u32 addr,
->> +                                       u8 *data, u16 count)
->> +{
->> +     struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
->> +     u8 *buf;
->> +     u16 transfer;
->> +     int status;
->> +
->> +     if (!addr)
->> +             return -EINVAL;
->> +
->> +     buf = kzalloc(4096, GFP_KERNEL);
->> +     if (!buf)
->> +             return -ENOMEM;
->> +
->> +     while (count) {
->> +             transfer = min_t(u16, count, 4096);
->
-> A minor thing, no need to resend just because of this. But a define for
-> 4096 would be nice.
->
+Hi,
 
-I have defined a macro for 4096 in v3 series.
+> Things still work, but when it starts warning, it generates a *lot*
+> of noise (I got 36 of these within about ten minutes).
 
-Regards,
-Amitkumar Karwar
+Yeah, that's kinda dumb - I just sent a patch to make that just warn
+once and actually report the configuration.
+
+> I have no idea what triggered it, because when I rebooted (not
+> because of this issue, but just to reboot into a newer kernel) I
+> don't see it again.
+
+That's odd. Perhaps you connected to a different wireless network on
+the next boot? I'm pretty sure I found the cause for this, and will
+send out a patch in a minute, but that wouldn't go away with a
+different kernel.
+
+johannes
