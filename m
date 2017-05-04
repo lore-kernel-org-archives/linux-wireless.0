@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46553 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751009AbdEaMxw (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43899 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751562AbdEDNAv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 08:53:52 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Norik Dzhandzhapanyan <norikd@ethertronics.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] Per chain RSSI reporting
-Date: Wed, 31 May 2017 12:53:47 +0000
-Message-ID: <87poepmbls.fsf@kamboji.qca.qualcomm.com> (sfid-20170531_145355_863320_C9FA1378)
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
-        <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
-In-Reply-To: <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>       (Adrian
- Chadd's message of "Fri, 26 May 2017 18:12:18 -0700")
-Content-Type: text/plain; charset="iso-8859-1"
+        Thu, 4 May 2017 09:00:51 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: ath10k: append the wmi_op_version to testmode get_version cmd
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1493155156-22697-1-git-send-email-ryanhsu@qti.qualcomm.com>
+References: <1493155156-22697-1-git-send-email-ryanhsu@qti.qualcomm.com>
+To: <ryanhsu@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <ryanhsu@qti.qualcomm.com>
+Message-ID: <f2affc9fdafb443b962a418be6d2470b@eusanexr01a.eu.qualcomm.com> (sfid-20170504_150128_809288_6FD04E9A)
+Date: Thu, 4 May 2017 06:00:47 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd <adrian@freebsd.org> writes:
+ryanhsu@qti.qualcomm.com wrote:
+> From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+> 
+> QCA9xxx and QCA61x4/QCA93xx are using different wmi operation, in order
+> for userspace to differentiate it, appends the wmi_op_version information
+> alone with the get_version command.
+> 
+> Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 
-> I have something local that I've been meaning to push up to do this,
-> but with no smoothing. Ideally (!) smoothing is done optionally in
-> mac80211.
->
-> What do you think about just committing the per-chain RSSI stuff to
-> mac80211 so it shows up right now, and then we figure out how to
-> express the smoothing in mac80211 or further up the layers?
+Patch applied to ath-next branch of ath.git, thanks.
 
-I think this is a good approach.
+4dcb78085d56 ath10k: append the wmi_op_version to testmode get_version cmd
 
---=20
-Kalle Valo=
+-- 
+https://patchwork.kernel.org/patch/9699775/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
