@@ -1,45 +1,660 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:39390 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753078AbdEWPAv (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34902 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751138AbdEEMIf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 11:00:51 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH v2 2/2] mac80211: enable VHT for mesh channel processing
-Date: Tue, 23 May 2017 17:00:43 +0200
-Message-Id: <20170523150043.22093-3-sw@simonwunderlich.de> (sfid-20170523_170055_286111_C58A1EFD)
-In-Reply-To: <20170523150043.22093-1-sw@simonwunderlich.de>
-References: <20170523150043.22093-1-sw@simonwunderlich.de>
+        Fri, 5 May 2017 08:08:35 -0400
+Received: by mail-pf0-f196.google.com with SMTP id u26so546944pfd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 05:08:34 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v2 3/6] mwifiex: usb: transmit aggregation packets
+Date: Fri,  5 May 2017 12:08:17 +0000
+Message-Id: <1493986100-24509-3-git-send-email-huxinming820@gmail.com> (sfid-20170505_140840_070110_B277055E)
+In-Reply-To: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
+References: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
----
- net/mac80211/mesh.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+From: Xinming Hu <huxm@marvell.com>
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 872a05606f06..d526fbd81d10 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -989,12 +989,14 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 	if (!sband)
- 		return false;
+Instead of using 4KB packet buffer for data transfer, new chipset have
+more device memory. This patch try to aggregation packets in an 16KB
+buffer. In this way, totally usb transaction cost will be reduced.
+
+Thoughput test on usb 2.0 show both TCP TX and UPD TX promote ~40M,
+from ~240M to ~280M.
+
+This feature is default disabled, and can be enabled by module
+parameter, like:
+insmod mwifiex.ko aggr_ctrl=1
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+v2: same as v1
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h          |  10 +
+ drivers/net/wireless/marvell/mwifiex/main.c        |   4 +
+ drivers/net/wireless/marvell/mwifiex/main.h        |  15 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  18 ++
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  24 ++
+ drivers/net/wireless/marvell/mwifiex/usb.c         | 355 ++++++++++++++++++---
+ drivers/net/wireless/marvell/mwifiex/usb.h         |   9 +
+ 7 files changed, 382 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 6cf9ab9..b4d915b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -405,6 +405,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_TDLS_OPER                         0x0122
+ #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
+ #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
++#define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
  
--	sta_flags = IEEE80211_STA_DISABLE_VHT;
-+	sta_flags = 0;
- 	switch (sdata->vif.bss_conf.chandef.width) {
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		sta_flags |= IEEE80211_STA_DISABLE_HT;
- 	case NL80211_CHAN_WIDTH_20:
- 		sta_flags |= IEEE80211_STA_DISABLE_40MHZ;
-+	case NL80211_CHAN_WIDTH_40:
-+		sta_flags |= IEEE80211_STA_DISABLE_VHT;
+ #define PROTOCOL_NO_SECURITY        0x01
+ #define PROTOCOL_STATIC_WEP         0x02
+@@ -2268,6 +2269,14 @@ struct host_cmd_ds_chan_region_cfg {
+ 	__le16 action;
+ } __packed;
+ 
++struct host_cmd_ds_pkt_aggr_ctrl {
++	__le16 action;
++	__le16 enable;
++	__le16 tx_aggr_max_size;
++	__le16 tx_aggr_max_num;
++	__le16 tx_aggr_align;
++} __packed;
++
+ struct host_cmd_ds_command {
+ 	__le16 command;
+ 	__le16 size;
+@@ -2343,6 +2352,7 @@ struct host_cmd_ds_command {
+ 		struct host_cmd_ds_wakeup_reason hs_wakeup_reason;
+ 		struct host_cmd_ds_gtk_rekey_params rekey;
+ 		struct host_cmd_ds_chan_region_cfg reg_cfg;
++		struct host_cmd_ds_pkt_aggr_ctrl pkt_aggr_ctrl;
+ 	} params;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 976011d..dc79d1a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -44,6 +44,10 @@
+ module_param(mfg_mode, bool, 0);
+ MODULE_PARM_DESC(mfg_mode, "manufacturing mode enable:1, disable:0");
+ 
++bool aggr_ctrl;
++module_param(aggr_ctrl, bool, 0000);
++MODULE_PARM_DESC(aggr_ctrl, "usb tx aggreataon enable:1, disable:0");
++
+ /*
+  * This function registers the device and performs all the necessary
+  * initializations.
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 96d1bbe..a85b89e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -60,6 +60,7 @@
+ 
+ extern const char driver_version[];
+ extern bool mfg_mode;
++extern bool aggr_ctrl;
+ 
+ struct mwifiex_adapter;
+ struct mwifiex_private;
+@@ -798,6 +799,18 @@ struct mwifiex_auto_tdls_peer {
+ 	u8 do_setup;
+ };
+ 
++#define MWIFIEX_TYPE_AGGR_DATA_V2 11
++#define MWIFIEX_BUS_AGGR_MODE_LEN_V2 (2)
++#define MWIFIEX_BUS_AGGR_MAX_LEN 16000
++#define MWIFIEX_BUS_AGGR_MAX_NUM 10
++struct bus_aggr_params {
++	u16 enable;
++	u16 mode;
++	u16 tx_aggr_max_size;
++	u16 tx_aggr_max_num;
++	u16 tx_aggr_align;
++};
++
+ struct mwifiex_if_ops {
+ 	int (*init_if) (struct mwifiex_adapter *);
+ 	void (*cleanup_if) (struct mwifiex_adapter *);
+@@ -1018,6 +1031,8 @@ struct mwifiex_adapter {
+ 	/* Wake-on-WLAN (WoWLAN) */
+ 	int irq_wakeup;
+ 	bool wake_by_wifi;
++	/* Aggregation parameters*/
++	struct bus_aggr_params bus_aggr;
+ };
+ 
+ void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 83916c1..534d94a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -2064,6 +2064,15 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 	case HostCmd_CMD_11AC_CFG:
+ 		ret = mwifiex_cmd_11ac_cfg(priv, cmd_ptr, cmd_action, data_buf);
  		break;
- 	default:
++	case HostCmd_CMD_PACKET_AGGR_CTRL:
++		cmd_ptr->command = cpu_to_le16(cmd_no);
++		cmd_ptr->params.pkt_aggr_ctrl.action = cpu_to_le16(cmd_action);
++		cmd_ptr->params.pkt_aggr_ctrl.enable =
++						cpu_to_le16(*(u16 *)data_buf);
++		cmd_ptr->size =
++			cpu_to_le16(sizeof(struct host_cmd_ds_pkt_aggr_ctrl) +
++				    S_DS_GEN);
++		break;
+ 	case HostCmd_CMD_P2P_MODE_CFG:
+ 		cmd_ptr->command = cpu_to_le16(cmd_no);
+ 		cmd_ptr->params.mode_cfg.action = cpu_to_le16(cmd_action);
+@@ -2241,6 +2250,7 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
+ 	enum state_11d_t state_11d;
+ 	struct mwifiex_ds_11n_tx_cfg tx_cfg;
+ 	u8 sdio_sp_rx_aggr_enable;
++	u16 packet_aggr_enable;
+ 	int data;
+ 
+ 	if (first_sta) {
+@@ -2387,6 +2397,14 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
+ 				    "11D: failed to enable 11D\n");
+ 	}
+ 
++	/* Pacekt aggregation handshake with firmware */
++	if (aggr_ctrl) {
++		packet_aggr_enable = true;
++		mwifiex_send_cmd(priv, HostCmd_CMD_PACKET_AGGR_CTRL,
++				 HostCmd_ACT_GEN_SET, 0,
++				 &packet_aggr_enable, true);
++	}
++
+ 	/* Send cmd to FW to configure 11n specific configuration
+ 	 * (Short GI, Channel BW, Green field support etc.) for transmit
+ 	 */
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index ab75da3..fb6d549 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -1154,6 +1154,27 @@ static int mwifiex_ret_chan_region_cfg(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++int mwifiex_ret_pkt_aggr_ctrl(struct mwifiex_private *priv,
++			      struct host_cmd_ds_command *resp)
++{
++	struct host_cmd_ds_pkt_aggr_ctrl *pkt_aggr_ctrl =
++					&resp->params.pkt_aggr_ctrl;
++	struct mwifiex_adapter *adapter = priv->adapter;
++
++	adapter->bus_aggr.enable = le16_to_cpu(pkt_aggr_ctrl->enable);
++	if (adapter->bus_aggr.enable)
++		adapter->intf_hdr_len = INTF_HEADER_LEN;
++	adapter->bus_aggr.mode = MWIFIEX_BUS_AGGR_MODE_LEN_V2;
++	adapter->bus_aggr.tx_aggr_max_size =
++				le16_to_cpu(pkt_aggr_ctrl->tx_aggr_max_size);
++	adapter->bus_aggr.tx_aggr_max_num =
++				le16_to_cpu(pkt_aggr_ctrl->tx_aggr_max_num);
++	adapter->bus_aggr.tx_aggr_align =
++				le16_to_cpu(pkt_aggr_ctrl->tx_aggr_align);
++
++	return 0;
++}
++
+ /*
+  * This function handles the command responses.
+  *
+@@ -1255,6 +1276,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
  		break;
+ 	case HostCmd_CMD_11AC_CFG:
+ 		break;
++	case HostCmd_CMD_PACKET_AGGR_CTRL:
++		ret = mwifiex_ret_pkt_aggr_ctrl(priv, resp);
++		break;
+ 	case HostCmd_CMD_P2P_MODE_CFG:
+ 		ret = mwifiex_ret_p2p_mode_cfg(priv, resp, data_buf);
+ 		break;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 5a760ec..e13f758d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -680,6 +680,7 @@ static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
+ 		if (!port->tx_data_ep)
+ 			continue;
+ 		port->tx_data_ix = 0;
++		skb_queue_head_init(&port->tx_aggr.aggr_list);
+ 		if (port->tx_data_ep == MWIFIEX_USB_EP_DATA)
+ 			port->block_status = false;
+ 		else
+@@ -846,73 +847,31 @@ static inline u8 mwifiex_usb_data_sent(struct mwifiex_adapter *adapter)
+ 	return true;
+ }
+ 
+-/* This function write a command/data packet to card. */
+-static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+-				    struct sk_buff *skb,
+-				    struct mwifiex_tx_param *tx_param)
++static int mwifiex_usb_construct_send_urb(struct mwifiex_adapter *adapter,
++					  struct usb_tx_data_port *port, u8 ep,
++					  struct urb_context *context,
++					  struct sk_buff *skb_send)
+ {
+ 	struct usb_card_rec *card = adapter->card;
+-	struct urb_context *context = NULL;
+-	struct usb_tx_data_port *port = NULL;
+-	u8 *data = (u8 *)skb->data;
++	int ret = -EINPROGRESS;
+ 	struct urb *tx_urb;
+-	int idx, ret = -EINPROGRESS;
+-
+-	if (adapter->is_suspended) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "%s: not allowed while suspended\n", __func__);
+-		return -1;
+-	}
+-
+-	if (adapter->surprise_removed) {
+-		mwifiex_dbg(adapter, ERROR, "%s: device removed\n", __func__);
+-		return -1;
+-	}
+-
+-	mwifiex_dbg(adapter, INFO, "%s: ep=%d\n", __func__, ep);
+-
+-	if (ep == card->tx_cmd_ep) {
+-		context = &card->tx_cmd;
+-	} else {
+-		for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
+-			if (ep == card->port[idx].tx_data_ep) {
+-				port = &card->port[idx];
+-				if (atomic_read(&port->tx_data_urb_pending)
+-				    >= MWIFIEX_TX_DATA_URB) {
+-					port->block_status = true;
+-					adapter->data_sent =
+-						mwifiex_usb_data_sent(adapter);
+-					return -EBUSY;
+-				}
+-				if (port->tx_data_ix >= MWIFIEX_TX_DATA_URB)
+-					port->tx_data_ix = 0;
+-				context =
+-					&port->tx_data_list[port->tx_data_ix++];
+-				break;
+-			}
+-		}
+-		if (!port) {
+-			mwifiex_dbg(adapter, ERROR, "Wrong usb tx data port\n");
+-			return -1;
+-		}
+-	}
+ 
+ 	context->adapter = adapter;
+ 	context->ep = ep;
+-	context->skb = skb;
++	context->skb = skb_send;
+ 	tx_urb = context->urb;
+ 
+ 	if (ep == card->tx_cmd_ep &&
+ 	    card->tx_cmd_ep_type == USB_ENDPOINT_XFER_INT)
+ 		usb_fill_int_urb(tx_urb, card->udev,
+-				 usb_sndintpipe(card->udev, ep), data,
+-				 skb->len, mwifiex_usb_tx_complete,
++				 usb_sndintpipe(card->udev, ep), skb_send->data,
++				 skb_send->len, mwifiex_usb_tx_complete,
+ 				 (void *)context, card->tx_cmd_interval);
+ 	else
+ 		usb_fill_bulk_urb(tx_urb, card->udev,
+-				  usb_sndbulkpipe(card->udev, ep), data,
+-				  skb->len, mwifiex_usb_tx_complete,
+-				  (void *)context);
++				  usb_sndbulkpipe(card->udev, ep),
++				  skb_send->data, skb_send->len,
++				  mwifiex_usb_tx_complete, (void *)context);
+ 
+ 	tx_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+@@ -949,6 +908,275 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 	return ret;
+ }
+ 
++static int mwifiex_usb_prepare_tx_aggr_skb(struct mwifiex_adapter *adapter,
++					   struct usb_tx_data_port *port,
++					   struct sk_buff **skb_send)
++{
++	struct sk_buff *skb_aggr, *skb_tmp;
++	u8 *payload, pad;
++	u16 align = adapter->bus_aggr.tx_aggr_align;
++	struct mwifiex_txinfo *tx_info = NULL;
++	bool is_txinfo_set = false;
++
++	skb_aggr = mwifiex_alloc_dma_align_buf(port->tx_aggr.aggr_len,
++					       GFP_ATOMIC);
++	if (!skb_aggr) {
++		mwifiex_dbg(adapter, ERROR,
++			    "%s: alloc skb_aggr failed\n", __func__);
++
++		while ((skb_tmp = skb_dequeue(&port->tx_aggr.aggr_list)))
++			mwifiex_write_data_complete(adapter, skb_tmp, 0, -1);
++
++		port->tx_aggr.aggr_num = 0;
++		port->tx_aggr.aggr_len = 0;
++		return -EBUSY;
++	}
++
++	tx_info = MWIFIEX_SKB_TXCB(skb_aggr);
++	memset(tx_info, 0, sizeof(*tx_info));
++
++	while ((skb_tmp = skb_dequeue(&port->tx_aggr.aggr_list))) {
++		/* padding for aligning next packet header*/
++		pad = (align - (skb_tmp->len & (align - 1))) % align;
++		payload = skb_put(skb_aggr, skb_tmp->len + pad);
++		memcpy(payload, skb_tmp->data, skb_tmp->len);
++		if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
++			/* do not padding for last packet*/
++			*(u16 *)payload = cpu_to_le16(skb_tmp->len);
++			*(u16 *)&payload[2] =
++				cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2 | 0x80);
++			skb_trim(skb_aggr, skb_aggr->len - pad);
++		} else {
++			/* add aggregation interface header */
++			*(u16 *)payload = cpu_to_le16(skb_tmp->len + pad);
++			*(u16 *)&payload[2] =
++				cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2);
++		}
++
++		if (!is_txinfo_set) {
++			tx_info->bss_num = MWIFIEX_SKB_TXCB(skb_tmp)->bss_num;
++			tx_info->bss_type = MWIFIEX_SKB_TXCB(skb_tmp)->bss_type;
++			is_txinfo_set = true;
++		}
++
++		port->tx_aggr.aggr_num--;
++		port->tx_aggr.aggr_len -= (skb_tmp->len + pad);
++		mwifiex_write_data_complete(adapter, skb_tmp, 0, 0);
++	}
++
++	tx_info->pkt_len = skb_aggr->len -
++			(sizeof(struct txpd) + adapter->intf_hdr_len);
++	tx_info->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
++
++	port->tx_aggr.aggr_num = 0;
++	port->tx_aggr.aggr_len = 0;
++	*skb_send = skb_aggr;
++
++	return 0;
++}
++
++/* This function prepare data packet to be send under usb tx aggregation
++ * protocol, check current usb aggregation status, link packet to aggrgation
++ * list if possible, work flow as below:
++ * (1) if only 1 packet available, add usb tx aggregation header and send.
++ * (2) if packet is able to aggregated, link it to current aggregation list.
++ * (3) if packet is not able to aggregated, aggregate and send exist packets
++ *     in aggrgation list. Then, link packet in the list if there is more
++ *     packet in transmit queue, otherwise try to transmit single packet.
++ */
++static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
++				    struct sk_buff *skb,
++				    struct mwifiex_tx_param *tx_param,
++				    struct usb_tx_data_port *port)
++{
++	u8 *payload, pad;
++	u16 align = adapter->bus_aggr.tx_aggr_align;
++	struct sk_buff *skb_send = NULL;
++	struct urb_context *context = NULL;
++	struct txpd *local_tx_pd =
++		(struct txpd *)((u8 *)skb->data + adapter->intf_hdr_len);
++	u8 f_send_aggr_buf = 0;
++	u8 f_send_cur_buf = 0;
++	u8 f_precopy_cur_buf = 0;
++	u8 f_postcopy_cur_buf = 0;
++	int ret;
++
++	/* padding to ensure each packet alginment */
++	pad = (align - (skb->len & (align - 1))) % align;
++
++	if (tx_param && tx_param->next_pkt_len) {
++		/* next packet available in tx queue*/
++		if (port->tx_aggr.aggr_len + skb->len + pad >
++		    adapter->bus_aggr.tx_aggr_max_size) {
++			f_send_aggr_buf = 1;
++			f_postcopy_cur_buf = 1;
++		} else {
++			/* current packet could be aggregated*/
++			f_precopy_cur_buf = 1;
++
++			if (port->tx_aggr.aggr_len + skb->len + pad +
++			    tx_param->next_pkt_len >
++			    adapter->bus_aggr.tx_aggr_max_size ||
++			    port->tx_aggr.aggr_num + 2 >
++			    adapter->bus_aggr.tx_aggr_max_num) {
++			    /* next packet could not be aggregated
++			     * send current aggregation buffer
++			     */
++				f_send_aggr_buf = 1;
++			}
++		}
++	} else {
++		/* last packet in tx queue */
++		if (port->tx_aggr.aggr_num > 0) {
++			/* pending packets in aggregation buffer*/
++			if (port->tx_aggr.aggr_len + skb->len + pad >
++			    adapter->bus_aggr.tx_aggr_max_size) {
++				/* current packet not be able to aggregated,
++				 * send aggr buffer first, then send packet.
++				 */
++				f_send_cur_buf = 1;
++			} else {
++				/* last packet, Aggregation and send */
++				f_precopy_cur_buf = 1;
++			}
++
++			f_send_aggr_buf = 1;
++		} else {
++			/* no pending packets in aggregation buffer,
++			 * send current packet immediately
++			 */
++			 f_send_cur_buf = 1;
++		}
++	}
++
++	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET) {
++		/* Send NULL packet immediately*/
++		if (f_precopy_cur_buf) {
++			if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
++				f_precopy_cur_buf = 0;
++				f_send_aggr_buf = 0;
++				f_send_cur_buf = 1;
++			} else {
++				f_send_aggr_buf = 1;
++			}
++		} else if (f_postcopy_cur_buf) {
++			f_send_cur_buf = 1;
++			f_postcopy_cur_buf = 0;
++		}
++	}
++
++	if (f_precopy_cur_buf) {
++		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
++		port->tx_aggr.aggr_len += (skb->len + pad);
++		port->tx_aggr.aggr_num++;
++	}
++
++	if (f_send_aggr_buf) {
++		ret = mwifiex_usb_prepare_tx_aggr_skb(adapter, port, &skb_send);
++		if (!ret) {
++			context = &port->tx_data_list[port->tx_data_ix++];
++			ret = mwifiex_usb_construct_send_urb(adapter, port, ep,
++							     context, skb_send);
++			if (ret == -1)
++				mwifiex_write_data_complete(adapter, skb_send,
++							    0, -1);
++		}
++	}
++
++	if (f_send_cur_buf) {
++		if (f_send_aggr_buf) {
++			if (atomic_read(&port->tx_data_urb_pending) >=
++			    MWIFIEX_TX_DATA_URB) {
++				port->block_status = true;
++				adapter->data_sent =
++					mwifiex_usb_data_sent(adapter);
++				/* no available urb, postcopy packet*/
++				f_postcopy_cur_buf = 1;
++				goto postcopy_cur_buf;
++			}
++
++			if (port->tx_data_ix >= MWIFIEX_TX_DATA_URB)
++				port->tx_data_ix = 0;
++		}
++
++		payload = skb->data;
++		*(u16 *)&payload[2] =
++			cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2 | 0x80);
++		*(u16 *)payload = cpu_to_le16(skb->len);
++		skb_send = skb;
++		context = &port->tx_data_list[port->tx_data_ix++];
++		return mwifiex_usb_construct_send_urb(adapter, port, ep,
++						      context, skb_send);
++	}
++
++postcopy_cur_buf:
++	if (f_postcopy_cur_buf) {
++		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
++		port->tx_aggr.aggr_len += (skb->len + pad);
++		port->tx_aggr.aggr_num++;
++	}
++
++	return -EINPROGRESS;
++}
++
++/* This function write a command/data packet to card. */
++static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
++				    struct sk_buff *skb,
++				    struct mwifiex_tx_param *tx_param)
++{
++	struct usb_card_rec *card = adapter->card;
++	struct urb_context *context = NULL;
++	struct usb_tx_data_port *port = NULL;
++	int idx;
++
++	if (adapter->is_suspended) {
++		mwifiex_dbg(adapter, ERROR,
++			    "%s: not allowed while suspended\n", __func__);
++		return -1;
++	}
++
++	if (adapter->surprise_removed) {
++		mwifiex_dbg(adapter, ERROR, "%s: device removed\n", __func__);
++		return -1;
++	}
++
++	mwifiex_dbg(adapter, INFO, "%s: ep=%d\n", __func__, ep);
++
++	if (ep == card->tx_cmd_ep) {
++		context = &card->tx_cmd;
++	} else {
++		/* get the data port structure for endpoint */
++		for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
++			if (ep == card->port[idx].tx_data_ep) {
++				port = &card->port[idx];
++				if (atomic_read(&port->tx_data_urb_pending)
++				    >= MWIFIEX_TX_DATA_URB) {
++					port->block_status = true;
++					adapter->data_sent =
++						mwifiex_usb_data_sent(adapter);
++					return -EBUSY;
++				}
++				if (port->tx_data_ix >= MWIFIEX_TX_DATA_URB)
++					port->tx_data_ix = 0;
++				break;
++			}
++		}
++
++		if (!port) {
++			mwifiex_dbg(adapter, ERROR, "Wrong usb tx data port\n");
++			return -1;
++		}
++
++		if (adapter->bus_aggr.enable)
++			return mwifiex_usb_aggr_tx_data(adapter, ep, skb,
++							tx_param, port);
++
++		context = &port->tx_data_list[port->tx_data_ix++];
++	}
++
++	return mwifiex_usb_construct_send_urb(adapter, port, ep, context, skb);
++}
++
+ /* This function register usb device and initialize parameter. */
+ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ {
+@@ -989,10 +1217,31 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 	return 0;
+ }
+ 
++static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
++{
++	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
++	struct usb_tx_data_port *port;
++	struct sk_buff *skb_tmp;
++	int idx;
++
++	if (adapter->bus_aggr.enable) {
++		for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
++			port = &card->port[idx];
++			while ((skb_tmp =
++				skb_dequeue(&port->tx_aggr.aggr_list)))
++				mwifiex_write_data_complete(adapter, skb_tmp,
++							    0, -1);
++		}
++	}
++}
++
+ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+ 
++	if (adapter->bus_aggr.enable)
++		mwifiex_usb_cleanup_tx_aggr(adapter);
++
+ 	card->adapter = NULL;
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
+index e36bd63..b89b840 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.h
++++ b/drivers/net/wireless/marvell/mwifiex/usb.h
+@@ -64,12 +64,21 @@ struct urb_context {
+ 	u8 ep;
+ };
+ 
++struct usb_tx_aggr {
++	struct sk_buff_head aggr_list;
++	int aggr_len;
++	int aggr_num;
++};
++
+ struct usb_tx_data_port {
+ 	u8 tx_data_ep;
+ 	u8 block_status;
+ 	atomic_t tx_data_urb_pending;
+ 	int tx_data_ix;
+ 	struct urb_context tx_data_list[MWIFIEX_TX_DATA_URB];
++	/* usb tx aggregation*/
++	struct usb_tx_aggr tx_aggr;
++	struct sk_buff *skb_aggr[MWIFIEX_TX_DATA_URB];
+ };
+ 
+ struct usb_card_rec {
 -- 
-2.11.0
+1.9.1
