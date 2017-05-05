@@ -1,73 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:47104
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750740AbdE0TbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 May 2017 15:31:22 -0400
-Subject: Re: [PATCH] Per chain RSSI reporting
-To: Michael Ney <neym@vorklift.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: Ben Greear <greearb@candelatech.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
- <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
- <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
- <4A8583B3-FFB2-4BDE-8041-9478CAD9EF73@vorklift.com>
-From: Norik Dzhandzhapanyan <norikd@ethertronics.com>
-Message-ID: <27cddbb1-4c05-c014-e489-f005d38653d6@ethertronics.com> (sfid-20170527_213126_470757_84D34AC4)
-Date: Sat, 27 May 2017 12:31:14 -0700
-MIME-Version: 1.0
-In-Reply-To: <4A8583B3-FFB2-4BDE-8041-9478CAD9EF73@vorklift.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35332 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750767AbdEEQRY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 May 2017 12:17:24 -0400
+Received: by mail-io0-f196.google.com with SMTP id v34so2444008iov.2
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:24 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 03/10] rtlwifi: btcoex: 21a 2ant: set wifi standby when halting of entering ips
+Date: Fri,  5 May 2017 11:17:05 -0500
+Message-Id: <20170505161712.8685-4-Larry.Finger@lwfinger.net> (sfid-20170505_181915_524983_33422AE3)
+In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there an enhanced or conflicting patch pending?
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
+If the wifi is going to halt or entering power saving, set it standby
+and allocate resource to bt.
 
-On 05/27/2017 10:56 AM, Michael Ney wrote:
-> The submitted code also doesn't appear to handle RSSI per-peer which woul=
-d be needed for any use when configured as an access point.
->
->> On May 27, 2017, at 12:39 PM, Adrian Chadd <adrian@freebsd.org> wrote:
->>
->> On 27 May 2017 at 09:07, Ben Greear <greearb@candelatech.com> wrote:
->>> At low encoding rates, especially if it switches to a single-chain enco=
-ding,
->>> maybe the on-air signal really is stronger?
->>>
->>> Have you verified in some other manner than the signals reported by ath=
-10k
->>> are
->>> wrong?
->> Hiya,
->>
->> So yeah, multipath, higher TX rates =3D=3D weaker TX signal, TPC, etc ar=
-e
->> all interesting to know about at the receiver. it's hard to separate
->> that out from the noise sometimes, but in some controlled deployments
->> its really obvious.
->>
->>
->>
->> -adrian
->>
->> _______________________________________________
->> ath10k mailing list
->> ath10k@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/ath10k
+Routine btc8821a2ant_wifi_off_hw_cfg() restored.
 
-The contents of this transmission are Ethertronics Inc. Confidential and ma=
-y contain proprietary or legally privileged information which may not be di=
-sclosed, copied or distributed without the express written consent of Ether=
-tronics Inc. The information is intended to be for the use of the individua=
-l or entity named on this transmission. If you are not the intended recipie=
-nt, be aware that any disclosure, copying, distribution or use of the conte=
-nts of this information is prohibited. If you have received this transmissi=
-on in error, please notify us by telephone immediately so that we can arran=
-ge for the retrieval of the original documents at no cost to you. Alternati=
-vely, notify the sender by replying to this transmission and delete the mes=
-sage without disclosing it. Thank you
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 60386c7571e8..162d40ddf06d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3555,6 +3555,26 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 	}
+ }
+ 
++static void btc8821a2ant_wifi_off_hw_cfg(struct btc_coexist *btcoexist)
++{
++	u8 h2c_parameter[2] = {0};
++	u32 fw_ver = 0;
++
++	/* set wlan_act to low */
++	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
++
++	/* WiFi goto standby while GNT_BT 0-->1 */
++	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x780);
++	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
++	if (fw_ver >= 0x180000) {
++		/* Use H2C to set GNT_BT to HIGH */
++		h2c_parameter[0] = 1;
++		btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1, h2c_parameter);
++	} else {
++		btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
++	}
++}
++
+ /**************************************************************
+  * extern function start with ex_btc8821a2ant_
+  **************************************************************/
+@@ -3841,6 +3861,7 @@ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], IPS ENTER notify\n");
+ 		coex_sta->under_ips = true;
++		btc8821a2ant_wifi_off_hw_cfg(btcoexist);
+ 		btc8821a2ant_coex_all_off(btcoexist);
+ 	} else if (BTC_IPS_LEAVE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -4084,6 +4105,7 @@ void ex_btc8821a2ant_halt_notify(struct btc_coexist *btcoexist)
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], Halt notify\n");
+ 
++	btc8821a2ant_wifi_off_hw_cfg(btcoexist);
+ 	btc8821a2ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
+ 	ex_btc8821a2ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
+ }
+-- 
+2.12.2
