@@ -1,108 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37640 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751684AbdESLdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 07:33:40 -0400
-Message-ID: <1495193617.3274.7.camel@sipsolutions.net> (sfid-20170519_133346_979214_640AD6F2)
-Subject: Re: [PATCH 5/7] mac80211: add wide bandwidth channel switch
- announcement to CSA action frames and mesh beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net
-Date: Fri, 19 May 2017 13:33:37 +0200
-In-Reply-To: <20170516092316.15636-6-sw@simonwunderlich.de> (sfid-20170516_112329_694356_1BF36491)
-References: <20170516092316.15636-1-sw@simonwunderlich.de>
-         <20170516092316.15636-6-sw@simonwunderlich.de>
-         (sfid-20170516_112329_694356_1BF36491)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f196.google.com ([209.85.223.196]:34810 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750916AbdEEQRa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 May 2017 12:17:30 -0400
+Received: by mail-io0-f196.google.com with SMTP id 12so2446403iol.1
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:30 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 10/10] rtlwifi: btcoex: 21a 2ant: remove unused antenna detection variables
+Date: Fri,  5 May 2017 11:17:12 -0500
+Message-Id: <20170505161712.8685-11-Larry.Finger@lwfinger.net> (sfid-20170505_181917_706282_C8AA91D6)
+In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've applied patches 1-4 now.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-The subject is a bit long - I was going to change it to
+PSD and LNA are for antenna detection, but we do not use them for 8821A.
+Remove them and the corresponding display messages.
 
-    mac80211: mesh: support sending wide bandwidth CSA
-    
-    To support HT and VHT channel switch announcements, both beacons
-    and action frames must include the corresponding IEs.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 13 -------------
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  4 ----
+ 2 files changed, 17 deletions(-)
 
-but:
-
-> +		   2 + 2 + sizeof(struct
-> ieee80211_wide_bw_chansw_ie) +
-> +		   2 + sizeof(struct ieee80211_sec_chan_offs_ie) +
-
-The "2 + 2" should have a comment - no that I'm even really sure that
-you need the wrapper?
-
-> -		pos = skb_put(skb, 13);
-> -		memset(pos, 0, 13);
-
-Removing that is nice - but why do you do this:
-
-> +		bool have_secondary_chan_offset = false;
-> +		bool have_wide_bandwidth_cs = false;
-> +		int ie_len = 2 + sizeof(struct
-> ieee80211_channel_sw_ie) +
-> +			     2 + sizeof(struct
-> ieee80211_mesh_chansw_params_ie);
-> +
-> +		switch (csa->settings.chandef.width) {
-> +		case NL80211_CHAN_WIDTH_80:
-> +		case NL80211_CHAN_WIDTH_80P80:
-> +		case NL80211_CHAN_WIDTH_160:
-> +			have_wide_bandwidth_cs = true;
-> +			ie_len += 2 + 2 +
-> +				  sizeof(struct
-> ieee80211_wide_bw_chansw_ie);
-> +			break;
-> +		case NL80211_CHAN_WIDTH_40:
-> +			have_secondary_chan_offset = true;
-> +			ie_len += 2 + sizeof(struct
-> ieee80211_sec_chan_offs_ie);
-> +		default:
-> +			break;
-> +		}
-> +		pos = skb_put(skb, ie_len);
-> +		memset(pos, 0, ie_len);
-
-I think having multiple calls to skb_put() would be better.
-
->  		*pos++ = WLAN_EID_CHANNEL_SWITCH;
->  		*pos++ = 3;
->  		*pos++ = 0x0;
-> @@ -760,6 +781,28 @@ ieee80211_mesh_build_beacon(struct
-> ieee80211_if_mesh *ifmsh)
->  		pos += 2;
->  		put_unaligned_le16(ifmsh->pre_value, pos);
->  		pos += 2;
-> +
-> +		if (have_secondary_chan_offset) {
-> +			enum nl80211_channel_type ct;
-
-You can have one here, and re-initialize pos.
-
-> +			*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;
-> /* EID */
-> +			*pos++ = 1;				 
->    /* len */
-> +			ct = cfg80211_get_chandef_type(&csa-
-> >settings.chandef);
-> +			if (ct == NL80211_CHAN_HT40PLUS)
-> +				*pos++ =
-> IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-> +			else
-> +				*pos++ =
-> IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-> +		}
-> +
-> +		if (have_wide_bandwidth_cs) {
-> +			struct cfg80211_chan_def *chandef;
-
-and likewise here.
-
-That'd also be safer in a way.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index e61016f660a8..3b4c892fc233 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3747,14 +3747,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
+ 		    ((BTC_WIFI_TRAFFIC_TX == wifi_traffic_dir) ?
+ 		     "uplink" : "downlink")));
+ 
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "\r\n %-35s = [%s/ %d/ %d] ", "BT [status/ rssi/ retryCnt]",
+-		   ((coex_sta->c2h_bt_inquiry_page) ? ("inquiry/page scan") :
+-		    ((BT_8821A_2ANT_BT_STATUS_IDLE == coex_dm->bt_status)
+-		     ? "idle" : ((BT_8821A_2ANT_BT_STATUS_CON_IDLE ==
+-		     coex_dm->bt_status) ? "connected-idle" : "busy"))),
+-		    coex_sta->bt_rssi, coex_sta->bt_retry_cnt);
+-
+ 	if (stack_info->profile_notified) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 			 "\r\n %-35s = %d / %d / %d / %d", "SCO/HID/PAN/A2DP",
+@@ -3790,11 +3782,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s",
+ 		 "============[Sw mechanism]============");
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "\r\n %-35s = %d/ %d/ %d/ %d ",
+-		 "SM1[ShRf/ LpRA/ LimDig/ btLna]",
+-		 coex_dm->cur_rf_rx_lpf_shrink, coex_dm->cur_low_penalty_ra,
+-		 coex_dm->limited_dig, coex_dm->cur_bt_lna_constrain);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 		 "\r\n %-35s = %d/ %d/ %d(0x%x) ",
+ 		 "SM2[AgcT/ AdcB/ SwDacSwing(lvl)]",
+ 		 coex_dm->cur_agc_table_en, coex_dm->cur_adc_back_off,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index 74edfd75875a..a1603e2d44e3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -79,10 +79,6 @@ struct coex_dm_8821a_2ant {
+ 	/* fw mechanism */
+ 	bool		pre_dec_bt_pwr_lvl;
+ 	bool		cur_dec_bt_pwr_lvl;
+-	bool		pre_bt_lna_constrain;
+-	bool		cur_bt_lna_constrain;
+-	u8		pre_bt_psd_mode;
+-	u8		cur_bt_psd_mode;
+ 	u8		pre_fw_dac_swing_lvl;
+ 	u8		cur_fw_dac_swing_lvl;
+ 	bool		cur_ignore_wlan_act;
+-- 
+2.12.2
