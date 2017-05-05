@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:38592 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764747AbdEZLfr (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:34775 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750796AbdEEQR0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 07:35:47 -0400
-Received: by mail-wm0-f53.google.com with SMTP id e127so18655579wmg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2017 04:35:47 -0700 (PDT)
-Subject: Re: [PATCH 4.12 REGRESSION fix] brcmfmac: Use ALIGNMENT rather then
- hardcoded "4" for bus:txglomalign
-To: Hans de Goede <hdegoede@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20170526110255.21342-1-hdegoede@redhat.com>
- <87d1avrhrg.fsf@kamboji.qca.qualcomm.com>
- <619191d3-8ed3-b2a5-e8db-330d7b610b2d@redhat.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a3926467-4991-dba0-46e9-8397f25ff92d@broadcom.com> (sfid-20170526_133616_163070_CED8D962)
-Date: Fri, 26 May 2017 13:35:36 +0200
-MIME-Version: 1.0
-In-Reply-To: <619191d3-8ed3-b2a5-e8db-330d7b610b2d@redhat.com>
-Content-Type: text/plain; charset=utf-8
+        Fri, 5 May 2017 12:17:26 -0400
+Received: by mail-io0-f194.google.com with SMTP id 12so2446060iol.1
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:25 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 05/10] rtlwifi: btcoex: 21a 2ant: add pnp notidy to avoid LPS/IPS mismatch
+Date: Fri,  5 May 2017 11:17:07 -0500
+Message-Id: <20170505161712.8685-6-Larry.Finger@lwfinger.net> (sfid-20170505_183118_111074_4767102B)
+In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-05-17 13:18, Hans de Goede wrote:
-> Hi,
-> 
-> On 26-05-17 13:15, Kalle Valo wrote:
->> Hans de Goede <hdegoede@redhat.com> writes:
->>
->>> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-> 
-> Ah I see I set the Author to Arend when I added this to my
-> tree a while back, that is fine as he did all the work
-> for this one. I was under the impression Arend would submit
-> this himself, but since I did not see a submission yet
-> I decided to go ahead and submit this.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-I did not get to sending it last week. My work hours for open-source
-have been reduced by 80% so time is limited. I have it queued.
+When driver is going to sleep, it does not leave LPS/IPS, thus the
+BTCoex may have mismatch when driver wakes up. To avoid that, BTCoex
+needs to clear the IPS/LPS state when it receives a pnp notify, then
+it can properly set up the hw when driver wakes up.
 
->>> This fixes the following errors showing up in dmesg:
->>>
->>> [   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
->>> [   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
->>> [   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple
->>> of 8
->>>
->>> Fixes: 6e84ab604bde ("properly align buffers ... with 64 bit DMA")
->>> Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>
->> I'll queue this to 4.12.
-> 
-> Thank you, given that Arend is set as the Author you can add my:
-> 
-> Tested-by: Hans de Goede <hdegoede@redhat.com>
-> 
-> And maybe drop the Suggested-by: Arend van Spriel ?
+Routine ex_btc8821a2ant_pnp_notify() restored.
 
-Seems to me you need my Signed-off-by: as I do not see that in this patch.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c        | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 9aa140a46d46..ca7649dca352 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -4147,6 +4147,24 @@ void ex_btc8821a2ant_halt_notify(struct btc_coexist *btcoexist)
+ 	ex_btc8821a2ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
+ }
+ 
++void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
++{
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
++
++	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD, "[BTCoex], Pnp notify\n");
++
++	if (pnp_state == BTC_WIFI_PNP_SLEEP) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], Pnp notify to SLEEP\n");
++	} else if (pnp_state == BTC_WIFI_PNP_WAKE_UP) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], Pnp notify to WAKE UP\n");
++		ex_btc8821a2ant_init_hwconfig(btcoexist);
++		btc8821a2ant_init_coex_dm(btcoexist);
++		btc8821a2ant_query_bt_info(btcoexist);
++	}
++}
++
+ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-- 
+2.12.2
