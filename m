@@ -1,41 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipout2-voc1esa.syd1.mail-filtering.com.au ([175.107.169.225]:57961
-        "EHLO o-voc1esa.syd1.mail-filtering.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754884AbdERJQs (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:32991 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750753AbdEEQR0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 05:16:48 -0400
-From: Tom Gaudasinski <tomg@records.headdesk.com.au>
-To: linux-wireless@vger.kernel.org
-Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-        kvalo@codeaurora.org,
-        Tom Gaudasinski <tomg@records.headdesk.com.au>
-Subject: [PATCH] rt2x00: Add device ID for Epson WN7512BEP
-Date: Thu, 18 May 2017 19:16:27 +1000
-Message-Id: <1495098987-2691-1-git-send-email-tomg@records.headdesk.com.au> (sfid-20170518_111653_839896_084AEF50)
+        Fri, 5 May 2017 12:17:26 -0400
+Received: by mail-io0-f195.google.com with SMTP id l196so2457741ioe.0
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:26 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 06/10] rtlwifi: btcoex: 21a 2ant: run mechanism if status changes or auto adjust is set
+Date: Fri,  5 May 2017 11:17:08 -0500
+Message-Id: <20170505161712.8685-7-Larry.Finger@lwfinger.net> (sfid-20170505_181916_091364_3D8285B9)
+In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make Epson WN7512BEP work by adding its device-id to rt2800usb. Device
-contains a Ralink RT3071L, registers as vendor Accton/Arcadyan.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Tom Gaudasinski <tomg@records.headdesk.com.au>
+The driver will periodically ask the coex, and the coex only runs the
+mechanism when the status was changed or the auto adjust is set.
 
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 2 ++
- 1 file changed, 2 insertions(+)
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+---
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c  | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-index f11e3f5..771bb76 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-@@ -1156,6 +1156,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x2001, 0x3c17) },
- 	/* Panasonic */
- 	{ USB_DEVICE(0x083a, 0xb511) },
-+	/* Accton/Arcadyan/Epson */
-+	{ USB_DEVICE(0x083a, 0xb512) },
- 	/* Philips */
- 	{ USB_DEVICE(0x0471, 0x20dd) },
- 	/* Ralink */
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index ca7649dca352..56972d36fe84 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3485,14 +3485,14 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 	if (btc8821a2ant_is_common_action(btcoexist)) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], Action 2-Ant common\n");
+-		coex_dm->reset_tdma_adjust = true;
++		coex_dm->auto_tdma_adjust = true;
+ 	} else {
+ 		if (coex_dm->cur_algorithm != coex_dm->pre_algorithm) {
+ 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 				 "[BTCoex], pre_algorithm = %d, cur_algorithm = %d\n",
+ 				    coex_dm->pre_algorithm,
+ 				    coex_dm->cur_algorithm);
+-			coex_dm->reset_tdma_adjust = true;
++			coex_dm->auto_tdma_adjust = false;
+ 		}
+ 		switch (coex_dm->cur_algorithm) {
+ 		case BT_8821A_2ANT_COEX_ALGO_SCO:
+@@ -4200,7 +4200,14 @@ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
+ 			 "[BTCoex], ****************************************************************\n");
+ 	}
+ 
++#ifdef BT_AUTO_REPORT_ONLY_8821A_2ANT
+ 	btc8821a2ant_query_bt_info(btcoexist);
++#else
+ 	btc8821a2ant_monitor_bt_ctr(btcoexist);
+ 	btc8821a2ant_monitor_wifi_ctr(btcoexist);
++
++	if (btc8821a2ant_is_wifi_status_changed(btcoexist) ||
++	    coex_dm->auto_tdma_adjust)
++		btc8821a2ant_run_coexist_mechanism(btcoexist);
++#endif
+ }
 -- 
-2.7.4
+2.12.2
