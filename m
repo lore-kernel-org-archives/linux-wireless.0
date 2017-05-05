@@ -1,82 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35437 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934314AbdEKTBc (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36524 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751138AbdEEMIl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 15:01:32 -0400
-Received: by mail-oi0-f66.google.com with SMTP id m17so5519976oik.2
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:32 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 06/10] rtlwifi: btcoex: 21a 2ant: run mechanism if status changes or auto adjust is set
-Date: Thu, 11 May 2017 14:01:15 -0500
-Message-Id: <20170511190119.23426-7-Larry.Finger@lwfinger.net> (sfid-20170511_210153_998492_00F381E6)
-In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
-References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+        Fri, 5 May 2017 08:08:41 -0400
+Received: by mail-pf0-f196.google.com with SMTP id v14so543278pfd.3
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 05:08:41 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v2 5/6] mwifiex: do not aggregate tcp ack in usb tx aggregation queue
+Date: Fri,  5 May 2017 12:08:19 +0000
+Message-Id: <1493986100-24509-5-git-send-email-huxinming820@gmail.com> (sfid-20170505_140845_449296_9B40AA3C)
+In-Reply-To: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
+References: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Xinming Hu <huxm@marvell.com>
 
-The driver will periodically ask the coex, and the coex only runs the
-mechanism when the status was changed or the auto adjust is set.
+Tcp ack should be send as soon to avoid throuput drop during receive tcp
+traffic.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
-v3 - remove one additional usage of BT_AUTO_REPORT_XXXX
+v2: same as v1
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c         | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c |  4 ++++
+ drivers/net/wireless/marvell/mwifiex/decl.h     |  1 +
+ drivers/net/wireless/marvell/mwifiex/main.c     | 26 +++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/main.h     |  1 +
+ drivers/net/wireless/marvell/mwifiex/usb.c      |  6 ++++--
+ 5 files changed, 36 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index ca7649dca352..0d97e214ee10 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3485,14 +3485,14 @@ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 	if (btc8821a2ant_is_common_action(btcoexist)) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Action 2-Ant common\n");
--		coex_dm->reset_tdma_adjust = true;
-+		coex_dm->auto_tdma_adjust = true;
- 	} else {
- 		if (coex_dm->cur_algorithm != coex_dm->pre_algorithm) {
- 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 				 "[BTCoex], pre_algorithm = %d, cur_algorithm = %d\n",
- 				    coex_dm->pre_algorithm,
- 				    coex_dm->cur_algorithm);
--			coex_dm->reset_tdma_adjust = true;
-+			coex_dm->auto_tdma_adjust = false;
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+index e8ffb26..cbf3bc2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+@@ -194,6 +194,10 @@
+ 
+ 	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
+ 		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
++
++	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TCP_ACK)
++		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
++
+ 	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
+ 	skb_aggr->priority = skb_src->priority;
+ 	skb_aggr->tstamp = skb_src->tstamp;
+diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
+index 188e4c3..0487420 100644
+--- a/drivers/net/wireless/marvell/mwifiex/decl.h
++++ b/drivers/net/wireless/marvell/mwifiex/decl.h
+@@ -89,6 +89,7 @@
+ #define MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS   BIT(3)
+ #define MWIFIEX_BUF_FLAG_ACTION_TX_STATUS  BIT(4)
+ #define MWIFIEX_BUF_FLAG_AGGR_PKT          BIT(5)
++#define MWIFIEX_BUF_FLAG_TCP_ACK           BIT(6)
+ 
+ #define MWIFIEX_BRIDGED_PKTS_THR_HIGH      1024
+ #define MWIFIEX_BRIDGED_PKTS_THR_LOW        128
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index dc79d1a..5c7fbc6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -851,6 +851,30 @@ struct sk_buff *
+ 	return skb;
+ }
+ 
++static bool is_piggyback_tcp_ack(struct sk_buff *skb)
++{
++	struct ethhdr *ethh = NULL;
++	struct iphdr  *iph = NULL;
++	struct tcphdr *tcph = NULL;
++
++	ethh = (struct ethhdr *)skb->data;
++	if (ntohs(ethh->h_proto) != ETH_P_IP)
++		return false;
++
++	iph = (struct iphdr *)((u8 *)ethh + sizeof(struct ethhdr));
++	if (iph->protocol != IPPROTO_TCP)
++		return false;
++
++	tcph = (struct tcphdr *)((u8 *)iph + iph->ihl * 4);
++	/* Piggyback ack without payload*/
++	if (*((u8 *)tcph + 13) == 0x10 &&
++	    ntohs(iph->tot_len) <= (iph->ihl + tcph->doff) * 4) {
++		return true;
++	}
++
++	return false;
++}
++
+ /*
+  * CFG802.11 network device handler for data transmission.
+  */
+@@ -904,6 +928,8 @@ struct sk_buff *
+ 	tx_info->bss_num = priv->bss_num;
+ 	tx_info->bss_type = priv->bss_type;
+ 	tx_info->pkt_len = skb->len;
++	if (is_piggyback_tcp_ack(skb))
++		tx_info->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
+ 
+ 	multicast = is_multicast_ether_addr(skb->data);
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index a85b89e..a947825 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -49,6 +49,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/of_irq.h>
++#include <linux/tcp.h>
+ 
+ #include "decl.h"
+ #include "ioctl.h"
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index f230017..e9c3d43 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -934,6 +934,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
+ 	struct urb_context *context = NULL;
+ 	struct txpd *local_tx_pd =
+ 		(struct txpd *)((u8 *)skb->data + adapter->intf_hdr_len);
++	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+ 	u8 f_send_aggr_buf = 0;
+ 	u8 f_send_cur_buf = 0;
+ 	u8 f_precopy_cur_buf = 0;
+@@ -989,8 +990,9 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
  		}
- 		switch (coex_dm->cur_algorithm) {
- 		case BT_8821A_2ANT_COEX_ALGO_SCO:
-@@ -4200,7 +4200,14 @@ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
- 			 "[BTCoex], ****************************************************************\n");
  	}
  
--	btc8821a2ant_query_bt_info(btcoexist);
--	btc8821a2ant_monitor_bt_ctr(btcoexist);
--	btc8821a2ant_monitor_wifi_ctr(btcoexist);
-+	if (btcoexist->auto_report_2ant) {
-+		btc8821a2ant_query_bt_info(btcoexist);
-+	} else {
-+		btc8821a2ant_monitor_bt_ctr(btcoexist);
-+		btc8821a2ant_monitor_wifi_ctr(btcoexist);
-+
-+		if (btc8821a2ant_is_wifi_status_changed(btcoexist) ||
-+		    coex_dm->auto_tdma_adjust)
-+			btc8821a2ant_run_coexist_mechanism(btcoexist);
-+	}
- }
+-	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET) {
+-		/* Send NULL packet immediately*/
++	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET ||
++	    tx_info->flags & MWIFIEX_BUF_FLAG_TCP_ACK) {
++		/* Send NULL data/TCP ACK packet immediately*/
+ 		if (f_precopy_cur_buf) {
+ 			if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
+ 				f_precopy_cur_buf = 0;
 -- 
-2.12.0
+1.9.1
