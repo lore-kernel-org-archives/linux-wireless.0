@@ -1,78 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:33752 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933216AbdELQm3 (ORCPT
+Received: from smtprelay0069.hostedemail.com ([216.40.44.69]:34312 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750922AbdEEJek (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 12:42:29 -0400
-Received: by mail-pg0-f42.google.com with SMTP id u187so32675722pgb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:28 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 04/11] mwifiex: Add locking to mwifiex_11n_delba
-Date: Fri, 12 May 2017 09:42:01 -0700
-Message-Id: <20170512164208.38725-4-briannorris@chromium.org> (sfid-20170512_184436_738989_5DCC1919)
-In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
-References: <20170512164208.38725-1-briannorris@chromium.org>
+        Fri, 5 May 2017 05:34:40 -0400
+Message-ID: <1493976873.31950.15.camel@perches.com> (sfid-20170505_113507_652358_FD9A5436)
+Subject: Re: [PATCH] mac80211: Create ieee80211_if_process_skb from
+ ieee80211_iface_work
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Fri, 05 May 2017 02:34:33 -0700
+In-Reply-To: <1493975178.2500.0.camel@sipsolutions.net>
+References: <401d68b9015dc036589c99a26ef4664000cc821e.1493919003.git.joe@perches.com>
+         <1493975178.2500.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Douglas Anderson <dianders@chromium.org>
+On Fri, 2017-05-05 at 11:06 +0200, Johannes Berg wrote:
+> > o Use explicit casts to proper types instead of casts to (void *)
+> >   and have the compiler do the implicit cast
+> 
+> I see no advantage in this, why? All it does is make the code longer,
+> and if anything changes, you have to change it in multiple places now.
 
-The mwifiex_11n_delba() function walked the rx_reorder_tbl_ptr without
-holding the lock, which was an obvious violation.
+It makes use of the casted to types consistent within net/mac80211
 
-Grab the lock.
+Here are the current uses.  I changed iface .c to match the others.
 
-NOTE: we hold the lock while calling mwifiex_send_delba().  There's also
-several callers in 11n_rxreorder.c that hold the lock and the comments
-in the struct sound just like very other list/lock pair -- as if the
-lock should definitely be help for all operations like this.
-
-Signed-off-by: Douglas Anderson <dianders@chromium.org>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/11n.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
-index c75b6abf16a0..16c77c27f1b6 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n.c
-@@ -653,11 +653,13 @@ int mwifiex_send_delba(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- void mwifiex_11n_delba(struct mwifiex_private *priv, int tid)
- {
- 	struct mwifiex_rx_reorder_tbl *rx_reor_tbl_ptr;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 	if (list_empty(&priv->rx_reorder_tbl_ptr)) {
- 		dev_dbg(priv->adapter->dev,
- 			"mwifiex_11n_delba: rx_reorder_tbl_ptr empty\n");
--		return;
-+		goto exit;
- 	}
- 
- 	list_for_each_entry(rx_reor_tbl_ptr, &priv->rx_reorder_tbl_ptr, list) {
-@@ -666,9 +668,11 @@ void mwifiex_11n_delba(struct mwifiex_private *priv, int tid)
- 				"Send delba to tid=%d, %pM\n",
- 				tid, rx_reor_tbl_ptr->ta);
- 			mwifiex_send_delba(priv, tid, rx_reor_tbl_ptr->ta, 0);
--			return;
-+			goto exit;
- 		}
- 	}
-+exit:
-+	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- }
- 
- /*
--- 
-2.13.0.rc2.291.g57267f2277-goog
+$ grep -P --include=*.[ch] "\((\w++\s*){1,2}\s*\*\).*skb->cb" net/mac80211
+net/mac80211/iface.c:			ra_tid = (void *)&skb->cb;
+net/mac80211/iface.c:			ra_tid = (void *)&skb->cb;
+net/mac80211/iface.c:			rx_agg = (void *)&skb->cb;
+net/mac80211/iface.c:			rx_agg = (void *)&skb->cb;
+net/mac80211/agg-tx.c:	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
+net/mac80211/agg-tx.c:	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
+net/mac80211/mlme.c:	struct ieee80211_rx_status *rx_status = (void *) skb->cb;
+net/mac80211/mlme.c:	rx_status = (struct ieee80211_rx_status *) skb->cb;
+net/mac80211/agg-rx.c:	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
