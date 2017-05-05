@@ -1,76 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29369 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39620 "EHLO
         wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753180AbdEDNIV (ORCPT
+        with ESMTP id S1752729AbdEEMvV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 09:08:21 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Steve deRosier <derosier@gmail.com>
-CC: James Hughes <james.hughes@raspberrypi.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
-Date: Thu, 4 May 2017 13:08:17 +0000
-Message-ID: <87o9v8rcqn.fsf@kamboji.qca.qualcomm.com> (sfid-20170504_150825_253969_82AB00B4)
-References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
-        <20170426085337.181AA61493@smtp.codeaurora.org>
-        <CALLGbR+dhPUjUJACQohnHd2RbN8BxrDeSz1SsVo2WAKYo5Gsuw@mail.gmail.com>
-        <4d7ced43-4a95-f626-b66e-285c133c48c1@broadcom.com>
-        <CAE_XsM+XRcnO+tQEPnntNYVObnpJwimXP1_41aqJPwnxHWxonQ@mail.gmail.com>
-        <CALLGbRJ=xWGBvWzj=SjfeHPV_c43JEaDbUNmP7=0g2=py0U=vQ@mail.gmail.com>
-In-Reply-To: <CALLGbRJ=xWGBvWzj=SjfeHPV_c43JEaDbUNmP7=0g2=py0U=vQ@mail.gmail.com>       (Steve
- deRosier's message of "Wed, 26 Apr 2017 21:55:48 -0700")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 5 May 2017 08:51:21 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: ath10k: merge extended peer info data with existing peers info
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20161217174634.4531-1-chunkeey@googlemail.com>
+References: <20161217174634.4531-1-chunkeey@googlemail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@codeaurora.org>
+Message-ID: <02c99a9342f546488356517e56bc7a4c@eusanexr01a.eu.qualcomm.com> (sfid-20170505_145128_914980_A20716CE)
+Date: Fri, 5 May 2017 05:51:16 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Steve deRosier <derosier@gmail.com> writes:
+Christian Lamparter <chunkeey@googlemail.com> wrote:
+> The 10.4 firmware adds extended peer information to the
+> firmware's statistics payload. This additional info is
+> stored as a separate data field. During review of
+> "ath10k: add accounting for the extended peer statistics" [0]
+> 
+> Mohammed Shafi Shajakhan commented that the extended peer statistics
+> lists are of little use:"... there is not much use in appending
+> the extended peer stats (which gets periodically updated) to the
+> linked list '&ar->debug.fw_stats.peers_extd)' and should we get
+> rid of the below (and the required cleanup as well)
+> 
+> list_splice_tail_init(&stats.peers_extd,
+>                 &ar->debug.fw_stats.peers_extd);
+> 
+> since rx_duration is getting updated periodically to the per sta
+> information."
+> 
+> This patch replaces the extended peers list with a lookup and
+> puts the retrieved data (rx_duration) into the existing
+> ath10k_fw_stats_peer entry that was created earlier.
+> 
+> [0] <https://lkml.kernel.org/r/992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+> Cc: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 
-> On Wed, Apr 26, 2017 at 12:54 PM, James Hughes
-> <james.hughes@raspberrypi.org> wrote:
->> On 26 April 2017 at 19:03, Arend Van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>>
->>>
->>> On 26-4-2017 17:44, Steve deRosier wrote:
->>>> On Wed, Apr 26, 2017 at 1:53 AM, Kalle Valo <kvalo@codeaurora.org> wro=
-te:
->>>>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>>>>> An issue was found brcmfmac driver in which a skbuff in .start_xmit(=
-)
->>>>>> callback was actually cloned. So instead of checking for sufficient
->>>>>> headroom it should also be writable. Hence use skb_cow_head() to
->>>>>> check and expand the headroom appropriately.
->>>>>>
->>>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>>>
->>>>> Steve, would you have time to run a quick test with this?
->>>>>
->>>>> Patch set to Deferred.
->>>>>
->>>>
->>>> Happy to give it a quick spin on both of my platforms.
->>>>
->
-> @ Arend and James, thanks for the info. I understand it, but
-> unfortunately I can't seem to replicate the problems on my platforms
-> with the limited time I have available to test it. It also may have to
-> do with my platforms having special custom bridging related code, or
-> just me having setup too simple of a test.
->
-> That said...
->
-> @Kalle: I have tested on both my 6004 and 6003 platforms. I didn't
-> notice any incorrect behavior in my testing. But I don't have a test
-> setup that would have shown the original problem as reported on the
-> brcm driver so I can't say that the change actually _fixes_ anything.
-> Only that in my testing it doesn't seem to break anything.
->
-> Tested-by: Steve deRosier <derosier@gmail.com>
+The discussion with this bug was quite hard to follow, so what is the
+conclusion from this? The patch still applies using three way merge but there
+are compilation errors:
 
-Yeah, I was mostly worried about regression. I didn't expect you to
-replicate the bug. Thanks for testing, I'll add this patch to my queue.
+drivers/net/wireless/ath/ath10k/debug.c: In function 'ath10k_debug_fw_stats_process':
+drivers/net/wireless/ath/ath10k/debug.c:388:4: error: implicit declaration of function 'ath10k_fw_extd_stats_peers_free' [-Werror=implicit-function-declaration]
+drivers/net/wireless/ath/ath10k/debug.c:388:55: error: 'struct ath10k_fw_stats' has no member named 'peers_extd'
+drivers/net/wireless/ath/ath10k/debug.c:400:32: error: 'struct ath10k_fw_stats' has no member named 'peers_extd'
+drivers/net/wireless/ath/ath10k/debug.c:401:31: error: 'struct ath10k_fw_stats' has no member named 'peers_extd'
 
---=20
-Kalle Valo=
+I admit that I didn't look this patch very carefully, but I'm not really seeing
+how this patch makes things better? wmi.c gets more complicated and a new
+ifdef is added. We have tried hard to keep all ar->debug access in debug.c,
+this way there's no need to sprinkle ifdefs in the code.
+
+-- 
+https://patchwork.kernel.org/patch/9479079/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
