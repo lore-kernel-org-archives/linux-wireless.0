@@ -1,102 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:41049 "EHLO
-        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750715AbdEBGEV (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:36183 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750859AbdEEQRZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 02:04:21 -0400
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <linux-wireless@vger.kernel.org>,
-        <linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-        <sylvain.fidelis@st.com>, <raphael.collado@st.com>,
-        <shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc][PATCH v1] 0/6] Support of ST NFC Transceiver
-Date: Tue, 2 May 2017 02:03:37 -0400
-Message-ID: <1493705023-8710-1-git-send-email-shikha.singh@st.com> (sfid-20170502_080429_380975_4C899930)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 5 May 2017 12:17:25 -0400
+Received: by mail-io0-f193.google.com with SMTP id x86so2437631ioe.3
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:24 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 04/10] rtlwifi: btcoex: 21a 2ant: settings before wifi firmware is ready
+Date: Fri,  5 May 2017 11:17:06 -0500
+Message-Id: <20170505161712.8685-5-Larry.Finger@lwfinger.net> (sfid-20170505_183118_258425_E3F1A74F)
+In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-*** V1.0 ***
-This patch series is generated on top of latest
-code available on nfc-next.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-This patch series introduces the following features:
+Before firmware is ready, set GNT_BT to high to let bt transmit.
 
-(a) A generic Digital NFC UART framework.
-The framework itself is an LDISC registered
-with the tty core. Any NFC transciever implementing
-the digital specs and connected on an UART
-(or on an emulated tty, such as /dev/ttyUSBx, /dev/ttyACMx)
-interface with the host, will require this support.
+Routine ex_btc8821a2ant_pre_load_firmware() restored.
 
-(b) An ST NFC Transciever core framework. This implements the
-required digital ops and exposes an interface for the
-underlying phy drivers (UART/ SPI). The services of the phy drivers
-are required when the core wants to transmit/receive frames.
-Also it provides helper functions for the phy drivers, for
-example phy drivers registers with the core when it detects
-a Transciever connected on the corresponding interface.
-The framework currently supports NFC Type 2, Type 4A, Type 4B,
-Type 5 tag read/write.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 37 ++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-(c) An ST NFC UART LDisc driver that registers with the
-Digital NFC UART framework, and with the ST NFC Transciever
-core framework as the UART Phy driver.
-
-(d) An ST NFC SPI driver that register with ST NFC Transceiver
-core framework as SPI phy driver.
-
-(e) Binding doc was renamed from st95hf.txt to stnfc.txt.
-
-(f) This patch series also removes all the references of old ST
-NFC transceiver driver "st95hf".
-
-Shikha Singh (6):
-  NFC: add generic UART support
-  NFC: nfcst: Add ST NFC Transceiver core framework
-  NFC: nfcst: Add UART LDisc Driver
-  NFC: nfcst: Add ST NFC SPI Driver
-  DT: bindings: net: nfc: stnfc binding doc
-  DRIVERS: NFC: Remove st95hf name reference
-
- .../devicetree/bindings/net/nfc/st95hf.txt         |   50 -
- .../devicetree/bindings/net/nfc/stnfc.txt          |   50 +
- drivers/nfc/Kconfig                                |    2 +-
- drivers/nfc/Makefile                               |    2 +-
- drivers/nfc/nfcst/Kconfig                          |   49 +
- drivers/nfc/nfcst/Makefile                         |   12 +
- drivers/nfc/nfcst/core.c                           | 1122 +++++++++++++++++
- drivers/nfc/nfcst/spi.c                            |  493 ++++++++
- drivers/nfc/nfcst/stnfcdev.h                       |   70 ++
- drivers/nfc/nfcst/uart.c                           |  164 +++
- drivers/nfc/st95hf/Kconfig                         |   10 -
- drivers/nfc/st95hf/Makefile                        |    6 -
- drivers/nfc/st95hf/core.c                          | 1273 --------------------
- drivers/nfc/st95hf/spi.c                           |  167 ---
- drivers/nfc/st95hf/spi.h                           |   64 -
- include/net/nfc/digital_uart.h                     |  105 ++
- include/uapi/linux/tty.h                           |    1 +
- net/nfc/Kconfig                                    |   12 +
- net/nfc/Makefile                                   |    3 +
- net/nfc/digital_uart.c                             |  523 ++++++++
- 20 files changed, 2606 insertions(+), 1572 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/net/nfc/st95hf.txt
- create mode 100644 Documentation/devicetree/bindings/net/nfc/stnfc.txt
- create mode 100644 drivers/nfc/nfcst/Kconfig
- create mode 100644 drivers/nfc/nfcst/Makefile
- create mode 100644 drivers/nfc/nfcst/core.c
- create mode 100644 drivers/nfc/nfcst/spi.c
- create mode 100644 drivers/nfc/nfcst/stnfcdev.h
- create mode 100644 drivers/nfc/nfcst/uart.c
- delete mode 100644 drivers/nfc/st95hf/Kconfig
- delete mode 100644 drivers/nfc/st95hf/Makefile
- delete mode 100644 drivers/nfc/st95hf/core.c
- delete mode 100644 drivers/nfc/st95hf/spi.c
- delete mode 100644 drivers/nfc/st95hf/spi.h
- create mode 100644 include/net/nfc/digital_uart.h
- create mode 100644 net/nfc/digital_uart.c
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 162d40ddf06d..9aa140a46d46 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3609,6 +3609,43 @@ void ex_btc8821a2ant_init_hwconfig(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
+ }
+ 
++void ex_btc8821a2ant_pre_load_firmware(struct btc_coexist *btcoexist)
++{
++	struct btc_board_info *board_info = &btcoexist->board_info;
++	u8 u8tmp = 0x4; /* Set BIT2 by default since it's 2ant case */
++
++	/**
++	 * S0 or S1 setting and Local register setting(By the setting fw can get
++	 * ant number, S0/S1, ... info)
++	 *
++	 * Local setting bit define
++	 *	BIT0: "0" for no antenna inverse; "1" for antenna inverse
++	 *	BIT1: "0" for internal switch; "1" for external switch
++	 *	BIT2: "0" for one antenna; "1" for two antenna
++	 * NOTE: here default all internal switch and 1-antenna ==> BIT1=0 and
++	 * BIT2=0
++	 */
++	if (btcoexist->chip_interface == BTC_INTF_USB) {
++		/* fixed at S0 for USB interface */
++		u8tmp |= 0x1; /* antenna inverse */
++		btcoexist->btc_write_local_reg_1byte(btcoexist, 0xfe08, u8tmp);
++	} else {
++		/* for PCIE and SDIO interface, we check efuse 0xc3[6] */
++		if (board_info->single_ant_path == 0) {
++		} else if (board_info->single_ant_path == 1) {
++			/* set to S0 */
++			u8tmp |= 0x1; /* antenna inverse */
++		}
++
++		if (btcoexist->chip_interface == BTC_INTF_PCI)
++			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x384,
++							     u8tmp);
++		else if (btcoexist->chip_interface == BTC_INTF_SDIO)
++			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x60,
++							     u8tmp);
++	}
++}
++
+ void ex_btc8821a2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
 -- 
-1.8.2.1
+2.12.2
