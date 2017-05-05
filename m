@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:34492 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752741AbdEDP1f (ORCPT
+Received: from smtprelay0040.hostedemail.com ([216.40.44.40]:38147 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751136AbdEEJsB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 11:27:35 -0400
-Received: by mail-io0-f176.google.com with SMTP id k91so26775714ioi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2017 08:27:35 -0700 (PDT)
-Subject: Re: WARNING: CPU: 2 PID: 682 at net/wireless/util.c:1236
-To: David Miller <davem@davemloft.net>
-References: <240bae44-56e4-f342-0d1b-358a573e2eeb@kernel.dk>
- <20170504.112512.833061289089590605.davem@davemloft.net>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linuxwifi@intel.com,
-        johannes.berg@intel.com
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <4ad7a627-62c7-be34-2dae-c54bb3ef0a15@kernel.dk> (sfid-20170504_172937_727985_DE7114A0)
-Date: Thu, 4 May 2017 09:27:30 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170504.112512.833061289089590605.davem@davemloft.net>
-Content-Type: text/plain; charset=windows-1252
+        Fri, 5 May 2017 05:48:01 -0400
+Message-ID: <1493977676.31950.16.camel@perches.com> (sfid-20170505_114859_394678_1F26B727)
+Subject: Re: [PATCH] mac80211: Create ieee80211_if_process_skb from
+ ieee80211_iface_work
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Fri, 05 May 2017 02:47:56 -0700
+In-Reply-To: <1493977157.2500.2.camel@sipsolutions.net>
+References: <401d68b9015dc036589c99a26ef4664000cc821e.1493919003.git.joe@perches.com>
+         <1493975178.2500.0.camel@sipsolutions.net>
+         <1493976873.31950.15.camel@perches.com>
+         <1493977157.2500.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/04/2017 09:25 AM, David Miller wrote:
-> From: Jens Axboe <axboe@kernel.dk>
-> Date: Thu, 4 May 2017 09:23:36 -0600
+On Fri, 2017-05-05 at 11:39 +0200, Johannes Berg wrote:
+> On Fri, 2017-05-05 at 02:34 -0700, Joe Perches wrote:
+> > On Fri, 2017-05-05 at 11:06 +0200, Johannes Berg wrote:
+> > > > o Use explicit casts to proper types instead of casts to (void *)
+> > > >   and have the compiler do the implicit cast
+> > > 
+> > > I see no advantage in this, why? All it does is make the code
+> > > longer,
+> > > and if anything changes, you have to change it in multiple places
+> > > now.
+> > 
+> > It makes use of the casted to types consistent within net/mac80211
+> > 
+> > Here are the current uses.  I changed iface .c to match the others.
 > 
->> Running current -git on my laptop, and I see this spew every once
->> in a while. This is new, haven't seen it in 4.11 or previously. Driver
->> is iwlwifi:
+> Well, OK. I'd rather change the others I guess, don't really see the
+> point.
 > 
-> Please try:
+> > $ grep -P --include=*.[ch] "\((\w++\s*){1,2}\s*\*\).*skb->cb" net/mac80211
+> > net/mac80211/iface.c:			ra_tid = (void *)&skb->cb;
+> > net/mac80211/iface.c:			ra_tid = (void *)&skb->cb;
+> > net/mac80211/iface.c:			rx_agg = (void *)&skb->cb;
+> > net/mac80211/iface.c:			rx_agg = (void *)&skb->cb;
+> > net/mac80211/agg-tx.c:	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
+> > net/mac80211/agg-tx.c:	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
+> > net/mac80211/agg-rx.c:	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
 > 
-> http://patchwork.ozlabs.org/patch/758364/
+> It's really just these three that are related to the iface.c ones
+> anyway.
+> 
+> > net/mac80211/mlme.c:	struct ieee80211_rx_status *rx_status = (void *) skb->cb;
+> > net/mac80211/mlme.c:	rx_status = (struct ieee80211_rx_status *) skb->cb;
+> > 
+> 
+> These should be using IEEE80211_SKB_RXCB(skb) :)
 
-Will do, compiling...
-
--- 
-Jens Axboe
+patches welcome... :)
