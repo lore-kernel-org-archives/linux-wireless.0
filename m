@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00252a01.pphosted.com ([62.209.51.214]:54531 "EHLO
-        mx07-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1759576AbdEXNDc (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35364 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750895AbdEEQR1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 09:03:32 -0400
-Received: from pps.filterd (m0102628.ppops.net [127.0.0.1])
-        by mx07-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4OCshVr022920
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 14:03:31 +0100
-Received: from mail-wm0-f72.google.com (mail-wm0-f72.google.com [74.125.82.72])
-        by mx07-00252a01.pphosted.com with ESMTP id 2ajb6ya1n2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 14:03:30 +0100
-Received: by mail-wm0-f72.google.com with SMTP id 204so37839560wmy.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 06:03:30 -0700 (PDT)
-MIME-Version: 1.0
-From: James Hughes <james.hughes@raspberrypi.org>
-Date: Wed, 24 May 2017 14:03:29 +0100
-Message-ID: <CAE_XsM+GFPvar3o0Z_NYdNDRgOH_CKw1Y=NE_bxLPTN6tPH8CA@mail.gmail.com> (sfid-20170524_150652_999018_B13DC660)
-Subject: brcmfmac: brcm43430 Invalid mailbox value issue
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 5 May 2017 12:17:27 -0400
+Received: by mail-io0-f196.google.com with SMTP id v34so2444242iov.2
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:27 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 07/10] rtlwifi: btcoex: 21a 2ant: init wlan when leave ips
+Date: Fri,  5 May 2017 11:17:09 -0500
+Message-Id: <20170505161712.8685-8-Larry.Finger@lwfinger.net> (sfid-20170505_181916_615716_99FAC210)
+In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Plain text resend)
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-We are seeing an issue on Raspberry Pi which uses the bcm43430 chip.
-It's been tested up to 4.9 which still shows the issue (it's been
-there for some time, > 1yr). I'm trying to find someone who can test
-on 4.11 as I cannot replicate  (The latest kernel we have that works
-on a Pi)
+If the wifi is leaving ips, re-init the coex mechanisms, and before it is
+going into ips, the bt can just ignore the wifi activities.
 
-It exhibits as a log entry, and subsequent death of wireless connectivity.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-"Unknown mailbox data content: 0x40012"
-
-Look at the driver code, it appears to be checking the return
-value from a mailbox (presumably the one to the chip firmware), which
-has the 0x4 in the top word which shouldn't be there.
-
-The driver simply adds a log entry, but otherwise ignores the situation.
-However, we see wireless failure from this point.
-
-Since I believe this value is being returned from the chip, I cannot
-investigate much further. The public datasheet is of no help. We do appear
-to be using the latest firmware file.
-
-I'm not sure how to proceed on this one. It would be interesting to
-know under what circumstances that value can be returned from the
-mailbox.
-
-More details can be found at the end of this github issue.
-
-https://github.com/raspberrypi/linux/issues/1342
-
-
-James Hughes
-Raspberry Pi
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 56972d36fe84..531598366327 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3899,11 +3899,15 @@ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 			 "[BTCoex], IPS ENTER notify\n");
+ 		coex_sta->under_ips = true;
+ 		btc8821a2ant_wifi_off_hw_cfg(btcoexist);
++		btc8821a2ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
+ 		btc8821a2ant_coex_all_off(btcoexist);
+ 	} else if (BTC_IPS_LEAVE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], IPS LEAVE notify\n");
+ 		coex_sta->under_ips = false;
++		ex_btc8821a2ant_init_hwconfig(btcoexist);
++		btc8821a2ant_init_coex_dm(btcoexist);
++		btc8821a2ant_query_bt_info(btcoexist);
+ 	}
+ }
+ 
+-- 
+2.12.2
