@@ -1,423 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33564 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966040AbdEWHMt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 03:12:49 -0400
-Received: by mail-pf0-f195.google.com with SMTP id f27so25558380pfe.0
-        for <linux-wireless@vger.kernel.org>; Tue, 23 May 2017 00:12:49 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v4 4/5] mwifiex: usb: add timer to flush aggregation packets
-Date: Tue, 23 May 2017 07:12:33 +0000
-Message-Id: <1495523554-30753-4-git-send-email-huxinming820@gmail.com> (sfid-20170523_091255_730407_F5BEFA43)
-In-Reply-To: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
-References: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58776 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752721AbdEEBjJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 May 2017 21:39:09 -0400
+Message-ID: <1493948347.26081.1.camel@redhat.com> (sfid-20170505_033938_678367_84AB402C)
+Subject: Re: mwifiex won't connect to WPA2 anymore
+From: Dan Williams <dcbw@redhat.com>
+To: Julien Cubizolles <j.cubizolles@free.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 04 May 2017 20:39:07 -0500
+In-Reply-To: <87a86sfh2e.fsf@free.fr>
+References: <87wpa3kxgi.fsf@free.fr> <87tw51y91z.fsf@free.fr>
+         <1493844237.5647.9.camel@redhat.com> <87a86sfh2e.fsf@free.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Thu, 2017-05-04 at 23:27 +0200, Julien Cubizolles wrote:
+> Dan Williams <dcbw@redhat.com> writes:
+> 
+> > On Wed, 2017-05-03 at 22:33 +0200, Julien Cubizolles wrote:
+> > > It turns out that the problem lies with NetworkManager, I managed
+> > > to
+> > > get
+> > > the wifi working with wpa_supplicant.
+> > 
+> > That's odd.  Any idea what that was?  MAC randomization?  
+> 
+> I don't know if MAC randomization is supposed to be happen but
+> ifconfig
+> always display the same MAC address for the wifi interface. Also the
+> same wifi router allows connections without secrets with another
+> ssid,
+> and I have no problem connecting in this case.
+> 
+> > NM just uses the supplicant underneath, so there's no particular
+> > reason NM wouldn't work but wpa_supplicant itself would.
+> 
+> I'm using the following /etc/wpa_supplicant.conf file:
+> 
+> --8<---------------cut here---------------start------------->8---
+> ctrl_interface=/var/run/wpa_supplicant
+> ap_scan=1
+> network={
+> 	priority=2
+>         ssid="beguiled"
+>         psk="*****"
 
-Aggregation will wait for next packet until limit aggr size/number reach.
-Packet might be drop and also packet dequeue will be stop in some cases.
-This patch add timer to flush packets in aggregation list to avoid long
-time waiting.
+Just to test, could you add:
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v4: same as v1,v2,v3
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 258 ++++++++++++++++++++---------
- drivers/net/wireless/marvell/mwifiex/usb.h |  14 ++
- 2 files changed, 193 insertions(+), 79 deletions(-)
+auth_alg=OPEN
+key_mgmt=WPA-PSK
+scan_ssid=1
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index e13f758d..f230017 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -662,76 +662,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 	.soft_unbind = 1,
- };
- 
--static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
--{
--	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
--	struct usb_tx_data_port *port;
--	int i, j;
--
--	card->tx_cmd.adapter = adapter;
--	card->tx_cmd.ep = card->tx_cmd_ep;
--
--	card->tx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!card->tx_cmd.urb)
--		return -ENOMEM;
--
--	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
--		port = &card->port[i];
--		if (!port->tx_data_ep)
--			continue;
--		port->tx_data_ix = 0;
--		skb_queue_head_init(&port->tx_aggr.aggr_list);
--		if (port->tx_data_ep == MWIFIEX_USB_EP_DATA)
--			port->block_status = false;
--		else
--			port->block_status = true;
--		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
--			port->tx_data_list[j].adapter = adapter;
--			port->tx_data_list[j].ep = port->tx_data_ep;
--			port->tx_data_list[j].urb =
--					usb_alloc_urb(0, GFP_KERNEL);
--			if (!port->tx_data_list[j].urb)
--				return -ENOMEM;
--		}
--	}
--
--	return 0;
--}
--
--static int mwifiex_usb_rx_init(struct mwifiex_adapter *adapter)
--{
--	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
--	int i;
--
--	card->rx_cmd.adapter = adapter;
--	card->rx_cmd.ep = card->rx_cmd_ep;
--
--	card->rx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!card->rx_cmd.urb)
--		return -ENOMEM;
--
--	card->rx_cmd.skb = dev_alloc_skb(MWIFIEX_RX_CMD_BUF_SIZE);
--	if (!card->rx_cmd.skb)
--		return -ENOMEM;
--
--	if (mwifiex_usb_submit_rx_urb(&card->rx_cmd, MWIFIEX_RX_CMD_BUF_SIZE))
--		return -1;
--
--	for (i = 0; i < MWIFIEX_RX_DATA_URB; i++) {
--		card->rx_data_list[i].adapter = adapter;
--		card->rx_data_list[i].ep = card->rx_data_ep;
--
--		card->rx_data_list[i].urb = usb_alloc_urb(0, GFP_KERNEL);
--		if (!card->rx_data_list[i].urb)
--			return -1;
--		if (mwifiex_usb_submit_rx_urb(&card->rx_data_list[i],
--					      MWIFIEX_RX_DATA_BUF_SIZE))
--			return -1;
--	}
--
--	return 0;
--}
--
- static int mwifiex_write_data_sync(struct mwifiex_adapter *adapter, u8 *pbuf,
- 				   u32 *len, u8 ep, u32 timeout)
- {
-@@ -918,6 +848,15 @@ static int mwifiex_usb_prepare_tx_aggr_skb(struct mwifiex_adapter *adapter,
- 	struct mwifiex_txinfo *tx_info = NULL;
- 	bool is_txinfo_set = false;
- 
-+	/* Packets in aggr_list will be send in either skb_aggr or
-+	 * write complete, delete the tx_aggr timer
-+	 */
-+	if (port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+		del_timer(&port->tx_aggr.timer_cnxt.hold_timer);
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
-+	}
-+
- 	skb_aggr = mwifiex_alloc_dma_align_buf(port->tx_aggr.aggr_len,
- 					       GFP_ATOMIC);
- 	if (!skb_aggr) {
-@@ -999,6 +938,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 	u8 f_send_cur_buf = 0;
- 	u8 f_precopy_cur_buf = 0;
- 	u8 f_postcopy_cur_buf = 0;
-+	u32 timeout;
- 	int ret;
- 
- 	/* padding to ensure each packet alginment */
-@@ -1069,8 +1009,35 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
- 		port->tx_aggr.aggr_len += (skb->len + pad);
- 		port->tx_aggr.aggr_num++;
-+		if (f_send_aggr_buf)
-+			goto send_aggr_buf;
-+
-+		/* packet will not been send immediately,
-+		 * set a timer to make sure it will be sent under
-+		 * strict time limit. Dynamically fit the timeout
-+		 * value, according to packets number in aggr_list
-+		 */
-+		if (!port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+			port->tx_aggr.timer_cnxt.hold_tmo_msecs =
-+					MWIFIEX_USB_TX_AGGR_TMO_MIN;
-+			timeout =
-+				port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+			mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+				  jiffies + msecs_to_jiffies(timeout));
-+			port->tx_aggr.timer_cnxt.is_hold_timer_set = true;
-+		} else {
-+			if (port->tx_aggr.timer_cnxt.hold_tmo_msecs <
-+			    MWIFIEX_USB_TX_AGGR_TMO_MAX) {
-+				/* Dyanmic fit timeout */
-+				timeout =
-+				++port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+				mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+					  jiffies + msecs_to_jiffies(timeout));
-+			}
-+		}
- 	}
- 
-+send_aggr_buf:
- 	if (f_send_aggr_buf) {
- 		ret = mwifiex_usb_prepare_tx_aggr_skb(adapter, port, &skb_send);
- 		if (!ret) {
-@@ -1114,11 +1081,60 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
- 		port->tx_aggr.aggr_len += (skb->len + pad);
- 		port->tx_aggr.aggr_num++;
-+		/* New aggregation begin, start timer */
-+		if (!port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+			port->tx_aggr.timer_cnxt.hold_tmo_msecs =
-+					MWIFIEX_USB_TX_AGGR_TMO_MIN;
-+			timeout = port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+			mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+				  jiffies + msecs_to_jiffies(timeout));
-+			port->tx_aggr.timer_cnxt.is_hold_timer_set = true;
-+		}
- 	}
- 
- 	return -EINPROGRESS;
- }
- 
-+static void mwifiex_usb_tx_aggr_tmo(unsigned long context)
-+{
-+	struct urb_context *urb_cnxt = NULL;
-+	struct sk_buff *skb_send = NULL;
-+	struct tx_aggr_tmr_cnxt *timer_context =
-+		(struct tx_aggr_tmr_cnxt *)context;
-+	struct mwifiex_adapter *adapter = timer_context->adapter;
-+	struct usb_tx_data_port *port = timer_context->port;
-+	unsigned long flags;
-+	int err = 0;
-+
-+	spin_lock_irqsave(&port->tx_aggr_lock, flags);
-+	err = mwifiex_usb_prepare_tx_aggr_skb(adapter, port, &skb_send);
-+	if (err) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "prepare tx aggr skb failed, err=%d\n", err);
-+		return;
-+	}
-+
-+	if (atomic_read(&port->tx_data_urb_pending) >=
-+	    MWIFIEX_TX_DATA_URB) {
-+		port->block_status = true;
-+		adapter->data_sent =
-+			mwifiex_usb_data_sent(adapter);
-+		err = -1;
-+		goto done;
-+	}
-+
-+	if (port->tx_data_ix >= MWIFIEX_TX_DATA_URB)
-+		port->tx_data_ix = 0;
-+
-+	urb_cnxt = &port->tx_data_list[port->tx_data_ix++];
-+	err = mwifiex_usb_construct_send_urb(adapter, port, port->tx_data_ep,
-+					     urb_cnxt, skb_send);
-+done:
-+	if (err == -1)
-+		mwifiex_write_data_complete(adapter, skb_send, 0, -1);
-+	spin_unlock_irqrestore(&port->tx_aggr_lock, flags);
-+}
-+
- /* This function write a command/data packet to card. */
- static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 				    struct sk_buff *skb,
-@@ -1127,7 +1143,8 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	struct usb_card_rec *card = adapter->card;
- 	struct urb_context *context = NULL;
- 	struct usb_tx_data_port *port = NULL;
--	int idx;
-+	unsigned long flags;
-+	int idx, ret;
- 
- 	if (adapter->is_suspended) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -1167,9 +1184,13 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 			return -1;
- 		}
- 
--		if (adapter->bus_aggr.enable)
--			return mwifiex_usb_aggr_tx_data(adapter, ep, skb,
-+		if (adapter->bus_aggr.enable) {
-+			spin_lock_irqsave(&port->tx_aggr_lock, flags);
-+			ret =  mwifiex_usb_aggr_tx_data(adapter, ep, skb,
- 							tx_param, port);
-+			spin_unlock_irqrestore(&port->tx_aggr_lock, flags);
-+			return ret;
-+		}
- 
- 		context = &port->tx_data_list[port->tx_data_ix++];
- 	}
-@@ -1177,6 +1198,84 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	return mwifiex_usb_construct_send_urb(adapter, port, ep, context, skb);
- }
- 
-+static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+	struct usb_tx_data_port *port;
-+	int i, j;
-+
-+	card->tx_cmd.adapter = adapter;
-+	card->tx_cmd.ep = card->tx_cmd_ep;
-+
-+	card->tx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!card->tx_cmd.urb)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
-+		port = &card->port[i];
-+		if (!port->tx_data_ep)
-+			continue;
-+		port->tx_data_ix = 0;
-+		skb_queue_head_init(&port->tx_aggr.aggr_list);
-+		if (port->tx_data_ep == MWIFIEX_USB_EP_DATA)
-+			port->block_status = false;
-+		else
-+			port->block_status = true;
-+		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
-+			port->tx_data_list[j].adapter = adapter;
-+			port->tx_data_list[j].ep = port->tx_data_ep;
-+			port->tx_data_list[j].urb =
-+					usb_alloc_urb(0, GFP_KERNEL);
-+			if (!port->tx_data_list[j].urb)
-+				return -ENOMEM;
-+		}
-+
-+		port->tx_aggr.timer_cnxt.adapter = adapter;
-+		port->tx_aggr.timer_cnxt.port = port;
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
-+		setup_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+			    mwifiex_usb_tx_aggr_tmo,
-+			    (unsigned long)&port->tx_aggr.timer_cnxt);
-+	}
-+
-+	return 0;
-+}
-+
-+static int mwifiex_usb_rx_init(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+	int i;
-+
-+	card->rx_cmd.adapter = adapter;
-+	card->rx_cmd.ep = card->rx_cmd_ep;
-+
-+	card->rx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!card->rx_cmd.urb)
-+		return -ENOMEM;
-+
-+	card->rx_cmd.skb = dev_alloc_skb(MWIFIEX_RX_CMD_BUF_SIZE);
-+	if (!card->rx_cmd.skb)
-+		return -ENOMEM;
-+
-+	if (mwifiex_usb_submit_rx_urb(&card->rx_cmd, MWIFIEX_RX_CMD_BUF_SIZE))
-+		return -1;
-+
-+	for (i = 0; i < MWIFIEX_RX_DATA_URB; i++) {
-+		card->rx_data_list[i].adapter = adapter;
-+		card->rx_data_list[i].ep = card->rx_data_ep;
-+
-+		card->rx_data_list[i].urb = usb_alloc_urb(0, GFP_KERNEL);
-+		if (!card->rx_data_list[i].urb)
-+			return -1;
-+		if (mwifiex_usb_submit_rx_urb(&card->rx_data_list[i],
-+					      MWIFIEX_RX_DATA_BUF_SIZE))
-+			return -1;
-+	}
-+
-+	return 0;
-+}
-+
- /* This function register usb device and initialize parameter. */
- static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- {
-@@ -1224,14 +1323,16 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
- 	struct sk_buff *skb_tmp;
- 	int idx;
- 
--	if (adapter->bus_aggr.enable) {
--		for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
--			port = &card->port[idx];
-+	for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
-+		port = &card->port[idx];
-+		if (adapter->bus_aggr.enable)
- 			while ((skb_tmp =
- 				skb_dequeue(&port->tx_aggr.aggr_list)))
- 				mwifiex_write_data_complete(adapter, skb_tmp,
- 							    0, -1);
--		}
-+		del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
- 	}
- }
- 
-@@ -1239,8 +1340,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- {
- 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
- 
--	if (adapter->bus_aggr.enable)
--		mwifiex_usb_cleanup_tx_aggr(adapter);
-+	mwifiex_usb_cleanup_tx_aggr(adapter);
- 
- 	card->adapter = NULL;
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
-index b89b840..37abd22 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.h
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.h
-@@ -64,10 +64,22 @@ struct urb_context {
- 	u8 ep;
- };
- 
-+#define MWIFIEX_USB_TX_AGGR_TMO_MIN	1
-+#define MWIFIEX_USB_TX_AGGR_TMO_MAX	4
-+
-+struct tx_aggr_tmr_cnxt {
-+	struct mwifiex_adapter *adapter;
-+	struct usb_tx_data_port *port;
-+	struct timer_list hold_timer;
-+	bool is_hold_timer_set;
-+	u32 hold_tmo_msecs;
-+};
-+
- struct usb_tx_aggr {
- 	struct sk_buff_head aggr_list;
- 	int aggr_len;
- 	int aggr_num;
-+	struct tx_aggr_tmr_cnxt timer_cnxt;
- };
- 
- struct usb_tx_data_port {
-@@ -79,6 +91,8 @@ struct usb_tx_data_port {
- 	/* usb tx aggregation*/
- 	struct usb_tx_aggr tx_aggr;
- 	struct sk_buff *skb_aggr[MWIFIEX_TX_DATA_URB];
-+	/* lock for protect tx aggregation data path*/
-+	spinlock_t tx_aggr_lock;
- };
- 
- struct usb_card_rec {
--- 
-1.9.1
+to the block and retry with the supplicant?  I don't know why those
+would make a difference but they might.
+
+The reason code that is returned for the disconnect is unfortunately
+WLAN_REASON_PREV_AUTH_NOT_VALID which doesn't tell us much.
+
+Dan
+
+> }
+> 
+> --8<---------------cut here---------------end--------------->8---
+> 
+> For the same ssid: NetworkManager uses the following
+> /etc/NetworkManager/system-connections/beguiled
+> 
+> --8<---------------cut here---------------start------------->8---
+> [connection]
+> id=beguiled
+> uuid=4ecc0776-046d-4f05-a324-19f5a8fe6853
+> type=wifi
+> permissions=
+> secondaries=
+> 
+> [wifi]
+> ssid=beguiled
+> 
+> [wifi-security]
+> psk=******
+> 
+> [ipv4]
+> dns-search=
+> method=auto
+> 
+> [ipv6]
+> addr-gen-mode=stable-privacy
+> dns-search=
+> method=auto
+> --8<---------------cut here---------------end--------------->8---
+> 
+> Here are the logs when NM fails:
+> --8<---------------cut here---------------start------------->8---
+> 
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8411]
+> device (wlx6045bdf646b4): set-hw-addr: set MAC address to
+> E2:D4:E4:49:77:59 (scanning)
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8433]
+> manager: NetworkManager state is now DISCONNECTED
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8435]
+> device (wlx6045bdf646b4): Activation: starting connection 'beguiled'
+> (406e52d4-e98b-454b-8d32-ce69fee5e03f)
+> May  4 23:06:25 touco kernel: [   58.255775] IPv6:
+> ADDRCONF(NETDEV_UP): wlx6045bdf646b4: link is not ready
+> May  4 23:06:25 touco whoopsie[818]: [23:06:25] Cannot reach: https:/
+> /daisy.ubuntu.com
+> May  4 23:06:25 touco nm-dispatcher: req:2 'down' [wlx6045bdf646b4]:
+> new request (2 scripts)
+> May  4 23:06:25 touco nm-dispatcher: req:2 'down' [wlx6045bdf646b4]:
+> start running ordered scripts...
+> May  4 23:06:25 touco whoopsie[818]: [23:06:25] Cannot reach: https:/
+> /daisy.ubuntu.com
+> May  4 23:06:25 touco NetworkManager[833]: <warn>  [1493931985.8711]
+> sup-iface[0x5634f93244e0,wlx6045bdf646b4]: connection disconnected
+> (reason -3)
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8712]
+> device (wlx6045bdf646b4): supplicant interface state: completed ->
+> disconnected
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8745]
+> device (wlx6045bdf646b4): state change: disconnected -> prepare
+> (reason 'none') [30 40 0]
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.8747]
+> manager: NetworkManager state is now CONNECTING
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9016]
+> device (wlx6045bdf646b4): set-hw-addr: set-cloned MAC address to
+> 60:45:BD:F6:46:B4 (permanent)
+> May  4 23:06:25 touco kernel: [   58.316182] IPv6:
+> ADDRCONF(NETDEV_UP): wlx6045bdf646b4: link is not ready
+> May  4 23:06:25 touco gsd-sharing[2450]: Failed to StopUnit service:
+> GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit rygel.service
+> not loaded.
+> May  4 23:06:25 touco gsd-sharing[2450]: Failed to StopUnit service:
+> GDBus.Error:org.freedesktop.systemd1.NoSuchUnit: Unit vino-
+> server.service not loaded.
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9314]
+> device (wlx6045bdf646b4): state change: prepare -> config (reason
+> 'none') [40 50 0]
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9322]
+> device (wlx6045bdf646b4): Activation: (wifi) access point 'beguiled'
+> has security, but secrets are required.
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9323]
+> device (wlx6045bdf646b4): state change: config -> need-auth (reason
+> 'none') [50 60 0]
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9394]
+> device (wlx6045bdf646b4): state change: need-auth -> prepare (reason
+> 'none') [60 40 0]
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9403]
+> device (wlx6045bdf646b4): state change: prepare -> config (reason
+> 'none') [40 50 0]
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9406]
+> device (wlx6045bdf646b4): Activation: (wifi) connection 'beguiled'
+> has security, and secrets exist.  No new secrets needed.
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9406]
+> Config: added 'ssid' value 'beguiled'
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407]
+> Config: added 'scan_ssid' value '1'
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407]
+> Config: added 'key_mgmt' value 'WPA-PSK'
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407]
+> Config: added 'auth_alg' value 'OPEN'
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9407]
+> Config: added 'psk' value '<omitted>'
+> May  4 23:06:25 touco NetworkManager[833]: <info>  [1493931985.9833]
+> sup-iface[0x5634f93244e0,wlx6045bdf646b4]: config: set interface
+> ap_scan to 1
+> May  4 23:06:26 touco wpa_supplicant[1171]: wlx6045bdf646b4: Trying
+> to associate with f4:ca:e5:ef:be:18 (SSID='beguiled' freq=2462 MHz)
+> May  4 23:06:26 touco kernel: [   58.421135] usb 3-3: info: trying to
+> associate to 'beguiled' bssid f4:ca:e5:ef:be:18
+> May  4 23:06:26 touco kernel: [   58.434898] usb 3-3: info:
+> associated to bssid f4:ca:e5:ef:be:18 successfully
+> May  4 23:06:26 touco kernel: [   58.434913] IPv6:
+> ADDRCONF(NETDEV_CHANGE): wlx6045bdf646b4: link becomes ready
+> May  4 23:06:26 touco wpa_supplicant[1171]: wlx6045bdf646b4:
+> Associated with f4:ca:e5:ef:be:18
+> May  4 23:06:26 touco wpa_supplicant[1171]: WMM AC: Missing IEs
+> May  4 23:06:26 touco NetworkManager[833]: <info>  [1493931986.0221]
+> device (wlx6045bdf646b4): supplicant interface state: disconnected ->
+> associating
+> May  4 23:06:26 touco whoopsie[818]: [23:06:26] Cannot reach: https:/
+> /daisy.ubuntu.com
+> May  4 23:06:26 touco NetworkManager[833]: <info>  [1493931986.0265]
+> device (wlx6045bdf646b4): supplicant interface state: associating ->
+> 4-way handshake
+> May  4 23:06:26 touco tracker-miner-a[2529]:   (Sparql buffer) Error
+> in task 0
+> (file:///home/wilk/.local/share/applications/EmacsClient.desktop) of
+> the array-update: UNIQUE constraint failed: nie:DataObject.nie:url
+> (strerror of errno (not necessarily related): Ressource
+> temporairement non disponible)
+> May  4 23:06:26 touco tracker-miner-a[2529]: Could not execute
+> sparql: UNIQUE constraint failed: nie:DataObject.nie:url (strerror of
+> errno (not necessarily related): Ressource temporairement non
+> disponible)
+> May  4 23:06:27 touco ntpd[1990]: Deleting interface #3
+> wlx6045bdf646b4, 10.2.0.53#123, interface stats: received=0, sent=5,
+> dropped=0, active_time=29 secs
+> May  4 23:06:27 touco ntpd[1990]: Deleting interface #5
+> wlx6045bdf646b4, fe80::6245:bdff:fef6:46b4%2#123, interface stats:
+> received=0, sent=0, dropped=0, active_time=29 secs
+> May  4 23:06:28 touco gnome-shell[2189]: JS WARNING:
+> [resource:///org/gnome/shell/ui/dash.js 760]: reference to undefined
+> property oldApps[oldIndex]
+> May  4 23:06:28 touco dbus-daemon[1786]: Activating via systemd:
+> service name='org.gnome.zeitgeist.Engine' unit='zeitgeist.service'
+> May  4 23:06:28 touco systemd[1774]: Starting Zeitgeist activity log
+> service...
+> May  4 23:06:28 touco dbus-daemon[1786]: Activating via systemd:
+> service name='org.gnome.zeitgeist.SimpleIndexer' unit='zeitgeist-
+> fts.service'
+> May  4 23:06:28 touco dbus-daemon[1786]: Successfully activated
+> service 'org.gnome.zeitgeist.Engine'
+> May  4 23:06:28 touco systemd[1774]: Started Zeitgeist activity log
+> service.
+> May  4 23:06:28 touco systemd[1774]: Starting Zeitgeist full-text
+> search indexer...
+> May  4 23:06:28 touco zeitgeist-daemon[2849]:
+> #033[31m[21:06:28.606766 WARNING]#033[0m zeitgeist-daemon.vala:127:
+> Unable to parse version info!
+> May  4 23:06:28 touco zeitgeist-daemon[2849]:
+> #033[31m[21:06:28.608482 WARNING]#033[0m zeitgeist-daemon.vala:127:
+> Unable to parse version info!
+> May  4 23:06:28 touco zeitgeist-daemon[2849]:
+> #033[31m[21:06:28.631280 WARNING]#033[0m zeitgeist-daemon.vala:127:
+> Unable to parse version info!
+> May  4 23:06:28 touco dbus-daemon[1786]: Successfully activated
+> service 'org.gnome.zeitgeist.SimpleIndexer'
+> May  4 23:06:28 touco systemd[1774]: Started Zeitgeist full-text
+> search indexer.
+> May  4 23:06:28 touco zeitgeist-datah[2857]: zeitgeist-
+> datahub.vala:227: Unable to get name "org.gnome.zeitgeist.datahub" on
+> the bus!
+> May  4 23:06:28 touco gnome-shell[2189]: JS WARNING:
+> [resource:///org/gnome/shell/ui/appDisplay.js 1298]: reference to
+> undefined property this.name
+> May  4 23:06:29 touco pulseaudio[2585]: [pulseaudio] module.c: After
+> module unload, module 'module-null-sink' was still loaded!
+> May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: CTRL-
+> EVENT-DISCONNECTED bssid=f4:ca:e5:ef:be:18 reason=2
+> May  4 23:06:30 touco kernel: [   62.437145] usb 3-3: info:
+> successfully disconnected from f4:ca:e5:ef:be:18: reason code 2
+> May  4 23:06:30 touco kernel: [   62.437439] usb 3-3: CMD_RESP: cmd
+> 0x10f error, result=0x2
+> May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: WPA: 4-
+> Way Handshake failed - pre-shared key may be incorrect
+> May  4 23:06:30 touco NetworkManager[833]: <warn>  [1493931990.0257]
+> sup-iface[0x5634f93244e0,wlx6045bdf646b4]: connection disconnected
+> (reason 2)
+> May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: CTRL-
+> EVENT-SSID-TEMP-DISABLED id=0 ssid="beguiled" auth_failures=1
+> duration=10 reason=WRONG_KEY
+> May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.0340]
+> device (wlx6045bdf646b4): supplicant interface state: 4-way handshake
+> -> disconnected
+> May  4 23:06:30 touco wpa_supplicant[1171]: wlx6045bdf646b4: CTRL-
+> EVENT-REGDOM-CHANGE init=CORE type=WORLD
+> May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.0373]
+> device (wlx6045bdf646b4): Activation: (wifi) disconnected during
+> association, asking for new key
+> May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.0377]
+> device (wlx6045bdf646b4): state change: config -> need-auth (reason
+> 'supplicant-disconnect') [50 60 8]
+> May  4 23:06:30 touco NetworkManager[833]: <info>  [1493931990.1292]
+> device (wlx6045bdf646b4): supplicant interface state: disconnected ->
+> scanning
+> May  4 23:06:30 touco org.gnome.Shell.desktop[2189]: Window manager
+> warning: Invalid WM_TRANSIENT_FOR window 0x0 specified for 0x2600007
+> (Onboard).
+> May  4 23:06:31 touco kernel: [   64.182891] ieee80211 phy0:
+> mwifiex_cfg80211_sched_scan_start : Invalid Sched_scan parameters
+> May  4 23:06:31 touco wpa_supplicant[1171]: wlx6045bdf646b4: Failed
+> to initiate sched scan
+> May  4 23:06:31 touco NetworkManager[833]: <info>  [1493931991.7755]
+> device (wlx6045bdf646b4): supplicant interface state: scanning ->
+> inactive
+> May  4 23:06:32 touco NetworkManager[833]: <warn>  [1493931992.4940]
+> device (wlx6045bdf646b4): User canceled the secrets request.
+> May  4 23:06:32 touco NetworkManager[833]: <info>  [1493931992.4941]
+> device (wlx6045bdf646b4): state change: need-auth -> failed (reason
+> 'no-secrets') [60 120 7]
+> May  4 23:06:32 touco NetworkManager[833]: <info>  [1493931992.4944]
+> manager: NetworkManager state is now DISCONNECTED
+> May  4 23:06:32 touco NetworkManager[833]: <warn>  [1493931992.4950]
+> device (wlx6045bdf646b4): Activation: failed for connection
+> 'beguiled'
+> --8<---------------cut here---------------end--------------->8---
