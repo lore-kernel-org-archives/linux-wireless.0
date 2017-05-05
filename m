@@ -1,55 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49378 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751393AbdEELl7 (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:36163 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750753AbdEEQRX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 07:41:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Cc: Sebastian Reichel <sre@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Tony Lindgren <tony@atomide.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCHv3] wlcore: add wl1285 compatible
-References: <20170505094434.28312-1-sebastian.reichel@collabora.co.uk>
-Date: Fri, 05 May 2017 14:41:52 +0300
-In-Reply-To: <20170505094434.28312-1-sebastian.reichel@collabora.co.uk>
-        (Sebastian Reichel's message of "Fri, 5 May 2017 11:44:34 +0200")
-Message-ID: <87wp9vwmwv.fsf@kamboji.qca.qualcomm.com> (sfid-20170505_134231_884280_95C0A6B1)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 5 May 2017 12:17:23 -0400
+Received: by mail-io0-f195.google.com with SMTP id x86so2437421ioe.3
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 02/10] rtlwifi: btcoex: 21a 2ant: refine btc8821a2ant_action_hid_a2dp
+Date: Fri,  5 May 2017 11:17:04 -0500
+Message-Id: <20170505161712.8685-3-Larry.Finger@lwfinger.net> (sfid-20170505_181914_950374_AFACD205)
+In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Reichel <sebastian.reichel@collabora.co.uk> writes:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> Motorola Droid 4 uses a WL1285C. With differences between the
-> chips not being public let's add explicit binding for wl1285
-> instead of relying on wl1283 being very similar.
->
-> Reviewed-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+For hid a2dp profiling, decrease the bt power because of the distance of
+bt is usually short, and do not adjust the wifi duration to a longer
+period since it may be interrupted by bt easily, set tdma instead.
 
-For the wireless part:
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 108 ++++++++-------------
+ 1 file changed, 42 insertions(+), 66 deletions(-)
 
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
-> Hi Dave,
->
-> I previously send this in two patches, but its hard to apply without
-> requiring multiple kernel releases (the driver must be updated before
-> the DTS change). Since the actual change is not very complex Marcel
-> Holtmann & Tony Lindgren suggested, that I send this directly to you
-> in a single patch for inclusion into 4.12. This also means, that the
-> remaining series can be queued normally for 4.13.
-
-If you want Dave to take this you should CC also netdev, otherwise he
-won't see it in patchwork:
-
-https://patchwork.ozlabs.org/project/netdev/list/?order=date
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index a0f2eb53a011..60386c7571e8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3295,19 +3295,46 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state, bt_info_ext;
+ 	u32 wifi_bw;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
++	u8 ap_num = 0;
+ 
+-	bt_info_ext = coex_sta->bt_info_ext;
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+-	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
++	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
++				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
++	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
++				3, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 37);
+ 
+-	if (BTC_RSSI_HIGH(bt_rssi_state))
+-		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, true);
+-	else
+-		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
++	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
++
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
++	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
++	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
++		if (BTC_RSSI_HIGH(bt_rssi_state))
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else if (BTC_RSSI_MEDIUM(bt_rssi_state))
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++	} else {
++		/* only 802.11N mode we have to dec bt power to 4 degree */
++		if (BTC_RSSI_HIGH(bt_rssi_state)) {
++			btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM,
++					   &ap_num);
++			if (ap_num < 10)
++				btc8821a2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 4);
++			else
++				btc8821a2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 2);
++		} else if (BTC_RSSI_MEDIUM(bt_rssi_state)) {
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		} else {
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++		}
++	}
+ 
+ 	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
+ 		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+@@ -3319,36 +3346,15 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 					      0x4);
+ 	}
+ 
+-	if (BTC_WIFI_BW_HT40 == wifi_bw) {
+-		/* fw mechanism */
+-		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		} else {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		}
++	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
++	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
++	} else {
++		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
++	}
+ 
+-		/* sw mechanism */
++	/* sw mechanism */
++	if (wifi_bw == BTC_WIFI_BW_HT40) {
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, true, true,
+@@ -3362,36 +3368,6 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 						   false, 0x18);
+ 		}
+ 	} else {
+-		/* fw mechanism */
+-		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		} else {
+-			if (bt_info_ext & BIT0) {
+-				/*a2dp basic rate*/
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/*a2dp edr rate*/
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		}
+-
+-		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, false, true,
 -- 
-Kalle Valo
+2.12.2
