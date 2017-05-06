@@ -1,1309 +1,355 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:32838 "EHLO
-        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751013AbdEBGEZ (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:35307 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751027AbdEFGjY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 02:04:25 -0400
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <linux-wireless@vger.kernel.org>,
-        <linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-        <sylvain.fidelis@st.com>, <raphael.collado@st.com>,
-        <shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc][PATCH v1] 2/6] NFC: nfcst: Add ST NFC Transceiver core framework
-Date: Tue, 2 May 2017 02:03:39 -0400
-Message-ID: <1493705023-8710-3-git-send-email-shikha.singh@st.com> (sfid-20170502_080431_052265_A4C72AE7)
-In-Reply-To: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
-References: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
+        Sat, 6 May 2017 02:39:24 -0400
+Received: by mail-oi0-f47.google.com with SMTP id l18so8202398oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 23:39:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Date: Sat, 6 May 2017 08:39:22 +0200
+Message-ID: <CAFED-jmhSQ2AVT36EgBpt+brvaT-HA=MKvpJUMmzwPtF44b00w@mail.gmail.com> (sfid-20170506_083936_759069_6E81775C)
+Subject: iwlwifi 8260 crash (4.11rc6)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch implements the ST NFC Transceiver
-core framework.
-This framework implements the digital specifications.
-ST NFC Phy drivers supporting SPI or UART interface can
-register with this framework when a Transceiver is connected
-with host using the respective interface.
+4.11.0-rc6-next-20170413+
+04:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
+iwlwifi 0000:04:00.0: loaded firmware version 21.302800.0 op_mode iwlmvm
 
-Following the modular design approach, the core framework
-exports helper functions that groups common features
-required by all the phy drivers.
-On the other hand it expects phy specific ops to be
-implemented by the phy drivers.
+Scenario:
+- iwlwifi configured in monitor mode - up
+- suspend my laptop
+- crash
 
-Signed-off-by: Shikha Singh <shikha.singh@st.com>
----
- drivers/nfc/Kconfig          |    1 +
- drivers/nfc/Makefile         |    1 +
- drivers/nfc/nfcst/Kconfig    |   17 +
- drivers/nfc/nfcst/Makefile   |    6 +
- drivers/nfc/nfcst/core.c     | 1122 ++++++++++++++++++++++++++++++++++++++++++
- drivers/nfc/nfcst/stnfcdev.h |   70 +++
- 6 files changed, 1217 insertions(+)
- create mode 100644 drivers/nfc/nfcst/Kconfig
- create mode 100644 drivers/nfc/nfcst/Makefile
- create mode 100644 drivers/nfc/nfcst/core.c
- create mode 100644 drivers/nfc/nfcst/stnfcdev.h
 
-diff --git a/drivers/nfc/Kconfig b/drivers/nfc/Kconfig
-index b065eb6..3ac0aba 100644
---- a/drivers/nfc/Kconfig
-+++ b/drivers/nfc/Kconfig
-@@ -58,4 +58,5 @@ source "drivers/nfc/st-nci/Kconfig"
- source "drivers/nfc/nxp-nci/Kconfig"
- source "drivers/nfc/s3fwrn5/Kconfig"
- source "drivers/nfc/st95hf/Kconfig"
-+source "drivers/nfc/nfcst/Kconfig"
- endmenu
-diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
-index 640b727..9c1b127 100644
---- a/drivers/nfc/Makefile
-+++ b/drivers/nfc/Makefile
-@@ -16,3 +16,4 @@ obj-$(CONFIG_NFC_ST_NCI)	+= st-nci/
- obj-$(CONFIG_NFC_NXP_NCI)	+= nxp-nci/
- obj-$(CONFIG_NFC_S3FWRN5)	+= s3fwrn5/
- obj-$(CONFIG_NFC_ST95HF)	+= st95hf/
-+obj-$(CONFIG_NFC_ST)		+= nfcst/
-diff --git a/drivers/nfc/nfcst/Kconfig b/drivers/nfc/nfcst/Kconfig
-new file mode 100644
-index 0000000..2c71aa2
---- /dev/null
-+++ b/drivers/nfc/nfcst/Kconfig
-@@ -0,0 +1,17 @@
-+config NFC_ST
-+	tristate "ST NFC Transceiver driver"
-+	depends on NFC_DIGITAL
-+	help
-+	  This enables the STMicroelectronics NFC transceiver
-+	  core framework. These transceivers implement the
-+	  digital specifications.
-+	  The core framework registers with the digital core and
-+	  implements the digital ops. On the other side, it
-+	  exposes a framework for the phy drivers. Phy drivers
-+	  implements ops that are required by the core for
-+	  communication between the transceiver and the host.
-+	  Phy driver can be an UART LDisc driver or an SPI slave
-+	  driver.
-+
-+	  Say Y here to compile support for ST NFC transceiver core
-+	  framework into the kernel or say M to compile it as module.
-diff --git a/drivers/nfc/nfcst/Makefile b/drivers/nfc/nfcst/Makefile
-new file mode 100644
-index 0000000..d46acc5
---- /dev/null
-+++ b/drivers/nfc/nfcst/Makefile
-@@ -0,0 +1,6 @@
-+#
-+# Makefile for STMicroelectronics NFC transceiver driver
-+#
-+
-+nfcst-y += core.o
-+obj-$(CONFIG_NFC_ST) += nfcst.o
-diff --git a/drivers/nfc/nfcst/core.c b/drivers/nfc/nfcst/core.c
-new file mode 100644
-index 0000000..5a7e2b0
---- /dev/null
-+++ b/drivers/nfc/nfcst/core.c
-@@ -0,0 +1,1122 @@
-+/*
-+ * --------------------------------------------------------------------
-+ * Core driver framework for ST NFC Transceiver
-+ * --------------------------------------------------------------------
-+ * Copyright (C) 2016 STMicroelectronics Pvt. Ltd. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/err.h>
-+#include <linux/init.h>
-+#include <linux/module.h>
-+#include <linux/netdevice.h>
-+#include <linux/nfc.h>
-+#include <linux/wait.h>
-+#include <net/nfc/digital.h>
-+#include <net/nfc/nfc.h>
-+#include "stnfcdev.h"
-+
-+/* supported protocols */
-+#define DEVICE_SUPPORTED_PROT		(NFC_PROTO_ISO14443_MASK | \
-+					NFC_PROTO_ISO14443_B_MASK | \
-+					NFC_PROTO_ISO15693_MASK | \
-+					NFC_PROTO_MIFARE_MASK)
-+/* driver capabilities */
-+#define DEVICE_CAPABILITIES		NFC_DIGITAL_DRV_CAPS_IN_CRC
-+
-+/* Command Send Interface */
-+/* DEVICE_COMMAND_SEND CMD Ids */
-+#define ECHO_CMD			0x55
-+#define WRITE_REGISTER_CMD		0x9
-+#define PROTOCOL_SELECT_CMD		0x2
-+#define SEND_RECEIVE_CMD		0x4
-+
-+/* Select protocol codes */
-+#define ISO15693_PROTOCOL_CODE		0x1
-+#define ISO14443A_PROTOCOL_CODE		0x2
-+#define ISO14443B_PROTOCOL_CODE		0x3
-+
-+/*
-+ * head room len is 2
-+ * 1 byte for cmd
-+ * 1 byte for size
-+ */
-+#define DEVICE_HEADROOM_LEN		2
-+
-+/*
-+ * tailroom is 1 for ISO14443A
-+ * and 0 for ISO14443B/ISO15693,
-+ * hence the max value 1 should be
-+ * taken.
-+ */
-+#define DEVICE_TAILROOM_LEN		1
-+
-+/* Command Response interface */
-+#define MAX_RESPONSE_BUFFER_SIZE	280
-+#define ECHORESPONSE			0x55
-+#define DEVICE_ERR_MASK			0xF
-+#define DEVICE_TIMEOUT_ERROR		0x87
-+#define DEVICE_NFCA_CRC_ERR_MASK	0x20
-+#define DEVICE_NFCB_CRC_ERR_MASK	0x01
-+#define TYPE2_RESP_ACK_NACK		0x90
-+
-+/* device transmission flag values */
-+#define TRFLAG_NFCA_SHORT_FRAME		0x07
-+#define TRFLAG_NFCA_STD_FRAME		0x08
-+#define TRFLAG_NFCA_STD_FRAME_CRC	0x28
-+
-+/* Misc defs */
-+#define HIGH				1
-+#define LOW				0
-+#define ISO14443A_RATS_REQ		0xE0
-+#define RATS_TB1_PRESENT_MASK		0x20
-+#define RATS_TA1_PRESENT_MASK		0x10
-+#define TB1_FWI_MASK			0xF0
-+#define WTX_REQ_FROM_TAG		0xF2
-+#define VALID_RESP_MASK			0x90
-+#define VALID_RESP_VALUE		0x80
-+
-+#define MAX_CMD_LEN			0x6
-+
-+#define MAX_CMD_PARAMS			4
-+
-+/* flag to differentiate synchronous & asynchronous request */
-+enum req_type {
-+	SYNC,
-+	ASYNC,
-+};
-+
-+struct cmd {
-+	int cmd_len;
-+	unsigned char cmd_id;
-+	unsigned char no_cmd_params;
-+	unsigned char cmd_params[MAX_CMD_PARAMS];
-+	enum req_type req;
-+};
-+
-+struct param_list {
-+	int param_offset;
-+	int new_param_val;
-+};
-+
-+/*
-+ * List of top-level cmds to be used internally by the driver.
-+ * All these commands are build on top of basic commands
-+ * such as SEND_RECEIVE_CMD, PROTOCOL_SELECT_CMD, etc.
-+ * These top level cmds are used internally while implementing various ops of
-+ * digital layer/driver probe or extending the digital framework layer for
-+ * features that are not yet implemented there, for example, WTX cmd handling.
-+ */
-+enum nfcst_cmd_list {
-+	CMD_ECHO,
-+	CMD_NFCA_CONFIG,
-+	CMD_NFCA_DEMOGAIN,
-+	CMD_ISO14443B_DEMOGAIN,
-+	CMD_NFCA_PROTOCOL_SELECT,
-+	CMD_ISO14443B_PROTOCOL_SELECT,
-+	CMD_WTX_RESPONSE,
-+	CMD_FIELD_OFF,
-+	CMD_ISO15693_PROTOCOL_SELECT,
-+};
-+
-+static const struct cmd cmd_array[] = {
-+	[CMD_ECHO] = {
-+		.cmd_len = 0x1,
-+		.cmd_id = ECHO_CMD,
-+		.no_cmd_params = 0,
-+		.req = SYNC,
-+	},
-+	[CMD_NFCA_CONFIG] = {
-+		.cmd_len = 0x6,
-+		.cmd_id = WRITE_REGISTER_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {0x3A, 0x00, 0x5A, 0x04},
-+		.req = SYNC,
-+	},
-+	[CMD_NFCA_DEMOGAIN] = {
-+		.cmd_len = 0x6,
-+		.cmd_id = WRITE_REGISTER_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {0x68, 0x01, 0x01, 0xDF},
-+		.req = SYNC,
-+	},
-+	[CMD_ISO14443B_DEMOGAIN] = {
-+		.cmd_len = 0x6,
-+		.cmd_id = WRITE_REGISTER_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {0x68, 0x01, 0x01, 0x51},
-+		.req = SYNC,
-+	},
-+	[CMD_NFCA_PROTOCOL_SELECT] = {
-+		.cmd_len = 0x6,
-+		.cmd_id = PROTOCOL_SELECT_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {ISO14443A_PROTOCOL_CODE, 0x00, 0x01, 0xA0},
-+		.req = SYNC,
-+	},
-+	[CMD_ISO14443B_PROTOCOL_SELECT] = {
-+		.cmd_len = 0x6,
-+		.cmd_id = PROTOCOL_SELECT_CMD,
-+		.no_cmd_params = 0x4,
-+		.cmd_params = {ISO14443B_PROTOCOL_CODE, 0x01, 0x03, 0xFF},
-+		.req = SYNC,
-+	},
-+	[CMD_WTX_RESPONSE] = {
-+		.cmd_len = 0x5,
-+		.cmd_id = SEND_RECEIVE_CMD,
-+		.no_cmd_params = 0x3,
-+		.cmd_params = {0xF2, 0x00, TRFLAG_NFCA_STD_FRAME_CRC},
-+		.req = ASYNC,
-+	},
-+	[CMD_FIELD_OFF] = {
-+		.cmd_len = 0x4,
-+		.cmd_id = PROTOCOL_SELECT_CMD,
-+		.no_cmd_params = 0x2,
-+		.cmd_params = {0x0, 0x0},
-+		.req = SYNC,
-+	},
-+	[CMD_ISO15693_PROTOCOL_SELECT] = {
-+		.cmd_len = 0x4,
-+		.cmd_id = PROTOCOL_SELECT_CMD,
-+		.no_cmd_params = 0x2,
-+		.cmd_params = {ISO15693_PROTOCOL_CODE, 0x0D},
-+		.req = SYNC,
-+	},
-+};
-+
-+/* nfcst_digital_cmd_complete_arg stores client context */
-+struct nfcst_digital_cmd_complete_arg {
-+	nfc_digital_cmd_complete_t complete_cb;
-+	void *cb_usrarg;
-+	bool rats;
-+};
-+
-+struct nfcst_context {
-+	struct nfc_digital_dev *ddev;
-+	struct nfc_dev *nfcdev;
-+	struct nfcst_digital_cmd_complete_arg complete_cb_arg;
-+	unsigned char sendrcv_trflag;
-+	struct semaphore exchange_lock;
-+	u8 current_protocol;
-+	u8 current_rf_tech;
-+	int fwi;
-+	struct work_struct write_work;
-+	int wtx_mm;
-+	struct device *dev;
-+	void *phy_ctx;
-+	enum nfcst_phy phy;
-+	struct nfcst_if_ops *if_ops;
-+	struct nfcst_pltf_data cfg;
-+	bool req_is_sync;
-+	struct completion done;
-+	bool nfcst_power;
-+	bool trig_config;
-+	struct sk_buff *recv_buff;
-+};
-+
-+static struct sk_buff *nfcst_send_recv_fr(struct nfcst_context *ctx,
-+					  struct sk_buff *send_buf,
-+					  enum req_type req)
-+{
-+	int err;
-+
-+	if (!send_buf || !ctx || !ctx->if_ops->phy_send || !ctx->dev ||
-+	    !ctx->phy_ctx)
-+		return NULL;
-+
-+	reinit_completion(&ctx->done);
-+
-+	ctx->recv_buff = NULL;
-+	ctx->req_is_sync = req;
-+
-+	err = ctx->if_ops->phy_send(ctx->phy_ctx, send_buf);
-+	if (err) {
-+		dev_err(ctx->dev, "phy_send error %d\n", err);
-+		return ERR_PTR(err);
-+	}
-+
-+	if (req == ASYNC)
-+		return NULL;
-+
-+	err = wait_for_completion_timeout(&ctx->done, msecs_to_jiffies(1000));
-+	if (!err) {
-+		dev_err(ctx->dev, "phy timeout error\n");
-+		return ERR_PTR(-ETIMEDOUT);
-+	}
-+
-+	return ctx->recv_buff;
-+}
-+
-+/*
-+ * nfcst_send_recv_cmd() is for sending commands to device
-+ * that are described in the cmd_array[]. It can optionally
-+ * receive the response if the cmd request is of type
-+ * SYNC.
-+ */
-+static int nfcst_send_recv_cmd(struct nfcst_context *context,
-+			       enum nfcst_cmd_list cmd,
-+			       int no_modif,
-+			       struct param_list *list_array)
-+{
-+	int i, ret = 0;
-+	struct sk_buff *skb_send, *skb_recv;
-+
-+	if (cmd_array[cmd].cmd_len > MAX_CMD_LEN)
-+		return -EINVAL;
-+	if (cmd_array[cmd].no_cmd_params < no_modif)
-+		return -EINVAL;
-+	if (no_modif && !list_array)
-+		return -EINVAL;
-+
-+	skb_send = alloc_skb(MAX_CMD_LEN, GFP_KERNEL);
-+	if (!skb_send)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb_send, cmd_array[cmd].cmd_len);
-+	skb_push(skb_send, cmd_array[cmd].cmd_len);
-+
-+	skb_send->data[0] = cmd_array[cmd].cmd_id;
-+	if (cmd_array[cmd].no_cmd_params > 0) {
-+		skb_send->data[1] = cmd_array[cmd].no_cmd_params;
-+		memcpy(&skb_send->data[2], cmd_array[cmd].cmd_params,
-+		       cmd_array[cmd].no_cmd_params);
-+	}
-+
-+	for (i = 0; i < no_modif; i++) {
-+		if (list_array[i].param_offset >= cmd_array[cmd].no_cmd_params)
-+			return -EINVAL;
-+
-+		skb_send->data[2 + list_array[i].param_offset] =
-+						list_array[i].new_param_val;
-+	}
-+
-+	skb_recv = nfcst_send_recv_fr(context, skb_send, cmd_array[cmd].req);
-+	if (IS_ERR(skb_recv)) {
-+		dev_err(context->dev, "send receive of frame fail with %ld\n",
-+			PTR_ERR(skb_recv));
-+		return PTR_ERR(skb_recv);
-+	}
-+
-+	if (cmd_array[cmd].req == SYNC) {
-+		ret = -EIO;
-+		if (!skb_recv)
-+			return ret;
-+
-+		if (cmd_array[cmd].cmd_id == ECHO_CMD) {
-+			if (skb_recv->data[0] != ECHORESPONSE)
-+				dev_err(context->dev, "echo failed, recv 0x%x\n",
-+					skb_recv->data[0]);
-+			else
-+				ret = 0;
-+		} else if (skb_recv->data[0]) {
-+			dev_err(context->dev, "send recv frame, err = 0x%x\n",
-+				skb_recv->data[0]);
-+		} else {
-+			ret = 0;
-+		}
-+
-+		kfree_skb(skb_recv);
-+	}
-+
-+	return ret;
-+}
-+
-+static int secondary_configuration_type4a(struct nfcst_context *context)
-+{
-+	int result = 0;
-+	struct device *dev = &context->nfcdev->dev;
-+
-+	/* 14443A config setting after select protocol */
-+	result = nfcst_send_recv_cmd(context,
-+				     CMD_NFCA_CONFIG,
-+				     0,
-+				     NULL);
-+	if (result) {
-+		dev_err(dev, "type a config cmd, err = 0x%x\n", result);
-+		return result;
-+	}
-+
-+	/* 14443A demo gain setting */
-+	result = nfcst_send_recv_cmd(context,
-+				     CMD_NFCA_DEMOGAIN,
-+				     0,
-+				     NULL);
-+	if (result)
-+		dev_err(dev, "type a demogain cmd, err = 0x%x\n", result);
-+
-+	return result;
-+}
-+
-+static int secondary_configuration_type4b(struct nfcst_context *context)
-+{
-+	int result = 0;
-+	struct device *dev = &context->nfcdev->dev;
-+
-+	result = nfcst_send_recv_cmd(context,
-+				     CMD_ISO14443B_DEMOGAIN,
-+				     0,
-+				     NULL);
-+	if (result)
-+		dev_err(dev, "type b demogain cmd, err = 0x%x\n", result);
-+
-+	return result;
-+}
-+
-+static int nfcst_select_protocol(struct nfcst_context *context, int type)
-+{
-+	int result = 0;
-+	struct device *dev;
-+
-+	dev = &context->nfcdev->dev;
-+
-+	switch (type) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		context->current_rf_tech = NFC_DIGITAL_RF_TECH_106A;
-+		result = nfcst_send_recv_cmd(context,
-+					     CMD_NFCA_PROTOCOL_SELECT,
-+					     0,
-+					     NULL);
-+		if (result) {
-+			dev_err(dev, "protocol sel, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+
-+		/* secondary config. for 14443Type 4A after protocol select */
-+		result = secondary_configuration_type4a(context);
-+		if (result) {
-+			dev_err(dev, "type a secondary config, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+		context->current_rf_tech = NFC_DIGITAL_RF_TECH_106B;
-+		result = nfcst_send_recv_cmd(context,
-+					     CMD_ISO14443B_PROTOCOL_SELECT,
-+					     0,
-+					     NULL);
-+		if (result) {
-+			dev_err(dev, "protocol sel send, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+
-+		/*
-+		 * delay of 5-6 ms is required after select protocol
-+		 * command in case of ISO14443 Type B
-+		 */
-+		usleep_range(50000, 60000);
-+
-+		/* secondary config. for 14443Type 4B after protocol select */
-+		result = secondary_configuration_type4b(context);
-+		if (result) {
-+			dev_err(dev, "type b secondary config, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	case NFC_DIGITAL_RF_TECH_ISO15693:
-+		context->current_rf_tech = NFC_DIGITAL_RF_TECH_ISO15693;
-+		result = nfcst_send_recv_cmd(context,
-+					     CMD_ISO15693_PROTOCOL_SELECT,
-+					     0,
-+					     NULL);
-+		if (result) {
-+			dev_err(dev, "protocol sel send, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int iso14443_config_fdt(struct nfcst_context *context, int wtxm)
-+{
-+	int result = 0;
-+	struct nfc_digital_dev *nfcddev = context->ddev;
-+	unsigned char pp_typeb;
-+	struct param_list new_params[2];
-+
-+	struct device *dev = &context->nfcdev->dev;
-+
-+	pp_typeb = cmd_array[CMD_ISO14443B_PROTOCOL_SELECT].cmd_params[2];
-+
-+	if (nfcddev->curr_protocol == NFC_PROTO_ISO14443 && context->fwi < 4)
-+		context->fwi = 4;
-+
-+	new_params[0].param_offset = 2;
-+	if (nfcddev->curr_protocol == NFC_PROTO_ISO14443)
-+		new_params[0].new_param_val = context->fwi;
-+	else if (nfcddev->curr_protocol == NFC_PROTO_ISO14443_B)
-+		new_params[0].new_param_val = pp_typeb;
-+
-+	new_params[1].param_offset = 3;
-+	new_params[1].new_param_val = wtxm;
-+
-+	switch (nfcddev->curr_protocol) {
-+	case NFC_PROTO_ISO14443:
-+		result = nfcst_send_recv_cmd(context,
-+					     CMD_NFCA_PROTOCOL_SELECT,
-+					     2,
-+					     new_params);
-+		if (result) {
-+			dev_err(dev, "iso14443_config_fdt: nfcst_send_recv_cmd fails, err = %d\n",
-+				result);
-+			return result;
-+		}
-+
-+		/* secondary config. for 14443Type 4A after protocol select */
-+		result = secondary_configuration_type4a(context);
-+		if (result) {
-+			dev_err(dev, "iso14443_config_fdt: secondary_configuration_type4a, err = %d\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	case NFC_PROTO_ISO14443_B:
-+		result = nfcst_send_recv_cmd(context,
-+					     CMD_ISO14443B_PROTOCOL_SELECT,
-+					     2,
-+					     new_params);
-+		if (result) {
-+			dev_err(dev, "WTX type b sel proto,err = %d\n", result);
-+			return result;
-+		}
-+
-+		/* secondary config. for 14443Type 4B after protocol select */
-+		result = secondary_configuration_type4b(context);
-+		if (result) {
-+			dev_err(dev, "WTX type b second. config, err = 0x%x\n",
-+				result);
-+			return result;
-+		}
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int nfcst_handle_config_fdt(struct nfcst_context *context,
-+				   bool new_wtx)
-+{
-+	int result = 0;
-+	unsigned char val_mm = 0;
-+	struct param_list new_params[1];
-+	struct nfc_digital_dev *nfcddev = context->ddev;
-+	struct device *dev = &context->nfcdev->dev;
-+	int wtx_val;
-+
-+	if (new_wtx) {
-+		wtx_val = context->wtx_mm;
-+		result = iso14443_config_fdt(context, wtx_val & 0x3f);
-+		if (result) {
-+			dev_err(dev, "Config. setting error on WTX req, err = %d\n",
-+				result);
-+			return result;
-+		}
-+
-+		/* Send response of wtx with ASYNC as no response expected */
-+		new_params[0].param_offset = 1;
-+		new_params[0].new_param_val = wtx_val;
-+
-+		result = nfcst_send_recv_cmd(context,
-+					     CMD_WTX_RESPONSE,
-+					     1,
-+					     new_params);
-+		if (result)
-+			dev_err(dev, "WTX response send, err = %d\n", result);
-+		return result;
-+	}
-+
-+	/* if no new wtx, cofigure with default values */
-+	if (nfcddev->curr_protocol == NFC_PROTO_ISO14443)
-+		val_mm = cmd_array[CMD_NFCA_PROTOCOL_SELECT].cmd_params[3];
-+	else if (nfcddev->curr_protocol == NFC_PROTO_ISO14443_B)
-+		val_mm = cmd_array[CMD_ISO14443B_PROTOCOL_SELECT].cmd_params[3];
-+	result = iso14443_config_fdt(context, val_mm);
-+	if (result)
-+		dev_err(dev, "Default config. setting error, err = %d\n",
-+			result);
-+
-+	return result;
-+}
-+
-+static void nfcst_handle_wtx(struct work_struct *work)
-+{
-+	int ret;
-+	struct nfcst_context *ctx = container_of(work,
-+						 struct nfcst_context,
-+						 write_work);
-+
-+	struct device *dev = &ctx->nfcdev->dev;
-+
-+	ret = nfcst_handle_config_fdt(ctx, true);
-+	if (ret)
-+		dev_err(dev, "nfcst_handle_wtx:: nfcst_handle_config_fdt, err = %d\n",
-+			ret);
-+
-+	ctx->trig_config = true;
-+}
-+
-+static int nfcst_error_handling(struct nfcst_context *context,
-+				struct sk_buff *skb_resp,
-+				int res_len)
-+{
-+	int result = 0;
-+	unsigned char error_byte;
-+	struct device *dev = &context->nfcdev->dev;
-+
-+	/* First check device specific error */
-+	if (skb_resp->data[0] & DEVICE_ERR_MASK) {
-+		if (skb_resp->data[0] == DEVICE_TIMEOUT_ERROR)
-+			result = -ETIMEDOUT;
-+		else
-+			result = -EIO;
-+		dev_dbg(dev, "Error frame[0]: 0x%x and result %d\n",
-+			skb_resp->data[0], result);
-+		return  result;
-+	}
-+
-+	/* Check for CRC err only if CRC is present in the tag response */
-+	switch (context->current_rf_tech) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		/* In case of Type2 ACK and NACK response, no CRC check*/
-+		if (context->ddev->curr_protocol == NFC_PROTO_MIFARE) {
-+			if (skb_resp->data[0] == TYPE2_RESP_ACK_NACK)
-+				break;
-+		}
-+		if (context->sendrcv_trflag == TRFLAG_NFCA_STD_FRAME_CRC) {
-+			error_byte = skb_resp->data[res_len - 3];
-+			if (error_byte & DEVICE_NFCA_CRC_ERR_MASK) {
-+				/* CRC error occurred */
-+				dev_err(dev, "CRC error, byte received = 0x%x\n",
-+					error_byte);
-+				result = -EIO;
-+			}
-+		}
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+	case NFC_DIGITAL_RF_TECH_ISO15693:
-+		error_byte = skb_resp->data[res_len - 1];
-+		if (error_byte & DEVICE_NFCB_CRC_ERR_MASK) {
-+			/* CRC error occurred */
-+			dev_err(dev, "CRC error, byte received = 0x%x\n",
-+				error_byte);
-+			result = -EIO;
-+		}
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+static void nfcst_response_handler(struct nfcst_context *context,
-+				   struct sk_buff *skb_resp)
-+{
-+	int skb_len;
-+	struct nfcst_digital_cmd_complete_arg *cb_arg;
-+
-+	cb_arg = &context->complete_cb_arg;
-+
-+	/* Remove device specific header */
-+	skb_pull(skb_resp, 2);
-+
-+	skb_len = skb_resp->len;
-+
-+	/* check if it is case of RATS request reply & FWI is present */
-+	if (context->current_rf_tech == NFC_DIGITAL_RF_TECH_106A &&
-+	    cb_arg->rats && (skb_resp->data[1] & RATS_TB1_PRESENT_MASK)) {
-+		if (skb_resp->data[1] & RATS_TA1_PRESENT_MASK)
-+			context->fwi =
-+				(skb_resp->data[3] & TB1_FWI_MASK) >> 4;
-+		else
-+			context->fwi =
-+				(skb_resp->data[2] & TB1_FWI_MASK) >> 4;
-+
-+		context->trig_config = true;
-+	}
-+	cb_arg->rats = false;
-+
-+	/** CRC handling **/
-+	/* For MIFARE Type2, CRC handling will be done by digital framework */
-+	if (context->current_rf_tech == NFC_DIGITAL_RF_TECH_106A &&
-+	    context->ddev->curr_protocol == NFC_PROTO_MIFARE) {
-+		/* Removing Transceiver specific data */
-+		skb_trim(skb_resp, (skb_len - 3));
-+		return;
-+	}
-+	/* Remove CRC bytes only if received frames data has an eod (CRC) */
-+	switch (context->current_rf_tech) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		if (context->sendrcv_trflag == TRFLAG_NFCA_STD_FRAME_CRC)
-+			skb_trim(skb_resp, (skb_len - 5));
-+		else
-+			skb_trim(skb_resp, (skb_len - 3));
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+	case NFC_DIGITAL_RF_TECH_ISO15693:
-+		skb_trim(skb_resp, (skb_len - 3));
-+		break;
-+	}
-+}
-+
-+static int nfcst_wake(void *context)
-+{
-+	int nth_attempt = 1;
-+	int result;
-+	struct nfcst_context *ctx = (struct nfcst_context *)context;
-+
-+	if (ctx->phy == PHY_UART || ctx->phy == PHY_SPI) {
-+		do {
-+			result = nfcst_send_recv_cmd(ctx,
-+						     CMD_ECHO,
-+						     0,
-+						     NULL);
-+			if (!result) {
-+				ctx->nfcst_power = true;
-+
-+				/*
-+				 * TBD: If baud rate is set different than
-+				 * the default, (i.e. nfcst_pltf_data contains
-+				 * a baudrate different than default), then
-+				 * we need to set the baudrate of our device.
-+				 * This is done by sending the 0xA command.
-+				 * The response of the command should be ignored
-+				 * because the response is received on the
-+				 * new baudrate and we have not yet
-+				 * re-configured our tty device on the new
-+				 * baudrate. So the received response of 0xA,
-+				 * which should be 0x55 (only one byte) could be
-+				 * some other value (so ignore it).
-+				 * Once the response of 1 byte is received, we
-+				 * must re-configure our tty device to the new
-+				 * baudrate.
-+				 * This must be done using the UART phy driver.
-+				 * For that we need to introduce a new ops
-+				 * (such as setconfig) and pass the
-+				 * nfcst_pltf_data struct saved in nfcst_context
-+				 * to it. SPI based phy driver could also need
-+				 * to implement this new ops for example to set
-+				 * some parameters specific to spi such as clk
-+				 * frequency (to be stored in nfcst_pltf_data)
-+				 */
-+				return 0;
-+			}
-+		} while (nth_attempt++ < 4);
-+	} else { /* TBD: Support for SPI interface */
-+		return -EINVAL;
-+	}
-+
-+	return -ETIMEDOUT;
-+}
-+
-+/* NFC ops functions definition */
-+static int nfcst_in_configure_hw(struct nfc_digital_dev *ddev, int type,
-+				 int param)
-+{
-+	struct nfcst_context *context = nfc_digital_get_drvdata(ddev);
-+
-+	if (!context->nfcst_power)
-+		return -EIO;
-+
-+	if (type == NFC_DIGITAL_CONFIG_RF_TECH)
-+		return nfcst_select_protocol(context, param);
-+
-+	if (type == NFC_DIGITAL_CONFIG_FRAMING) {
-+		switch (param) {
-+		case NFC_DIGITAL_FRAMING_NFCA_SHORT:
-+			context->sendrcv_trflag = TRFLAG_NFCA_SHORT_FRAME;
-+			break;
-+		case NFC_DIGITAL_FRAMING_NFCA_STANDARD:
-+			context->sendrcv_trflag = TRFLAG_NFCA_STD_FRAME;
-+			break;
-+		case NFC_DIGITAL_FRAMING_NFCA_T4T:
-+		case NFC_DIGITAL_FRAMING_NFCA_T2T:
-+		case NFC_DIGITAL_FRAMING_NFCA_NFC_DEP:
-+		case NFC_DIGITAL_FRAMING_NFCA_STANDARD_WITH_CRC_A:
-+			context->sendrcv_trflag = TRFLAG_NFCA_STD_FRAME_CRC;
-+			break;
-+		case NFC_DIGITAL_FRAMING_NFCB:
-+		case NFC_DIGITAL_FRAMING_ISO15693_INVENTORY:
-+		case NFC_DIGITAL_FRAMING_ISO15693_T5T:
-+			break;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int rf_off(struct nfcst_context *context)
-+{
-+	int rc;
-+	struct device *dev;
-+
-+	dev = &context->nfcdev->dev;
-+
-+	/*
-+	 * TBD: Currently basic pwr mgmt. is implemented !
-+	 * (switching off the field)
-+	 * In a better approach, we can send the idle command
-+	 * after switching off the field. This will save
-+	 * more power.
-+	 * In fact even better is to switch off the device
-+	 * assuming the power to device is coming from a
-+	 * regulator which can be turned off/on.
-+	 */
-+	rc = nfcst_send_recv_cmd(context, CMD_FIELD_OFF, 0, NULL);
-+	if (rc)
-+		dev_err(dev, "protocol sel send field off, err = %d\n", rc);
-+
-+	return rc;
-+}
-+
-+static int nfcst_in_send_cmd(struct nfc_digital_dev *ddev,
-+			     struct sk_buff *skb,
-+			     u16 timeout,
-+			     nfc_digital_cmd_complete_t cb,
-+			     void *arg)
-+{
-+	struct nfcst_context *context = nfc_digital_get_drvdata(ddev);
-+	int rc;
-+	int len_data_to_tag = 0;
-+
-+	if (!context->nfcst_power)
-+		return -EIO;
-+
-+	/*
-+	 * down the semaphore to indicate that last nfcst_in_send_cmd()
-+	 * call is pending, If interrupted, WARN and return !
-+	 */
-+	rc = down_killable(&context->exchange_lock);
-+	if (rc) {
-+		WARN(1, "Semaphore wait is interrupted in nfcst_in_send_cmd\n");
-+		return rc;
-+	}
-+
-+	if (context->trig_config) {
-+		context->trig_config = false;
-+		rc = nfcst_handle_config_fdt(context, false);
-+		if (rc) {
-+			dev_err(&context->nfcdev->dev, "config fdt failed from nfcst_in_send_cmd %d\n",
-+				rc);
-+			return rc;
-+		}
-+	}
-+
-+	switch (context->current_rf_tech) {
-+	case NFC_DIGITAL_RF_TECH_106A:
-+		len_data_to_tag = skb->len + 1;
-+		*skb_put(skb, 1) = context->sendrcv_trflag;
-+		break;
-+	case NFC_DIGITAL_RF_TECH_106B:
-+	case NFC_DIGITAL_RF_TECH_ISO15693:
-+		len_data_to_tag = skb->len;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	skb_push(skb, 2);
-+	skb->data[0] = SEND_RECEIVE_CMD;
-+	skb->data[1] = len_data_to_tag;
-+
-+	context->complete_cb_arg.cb_usrarg = arg;
-+	context->complete_cb_arg.complete_cb = cb;
-+
-+	if ((skb->data[2] == ISO14443A_RATS_REQ) &&
-+	    context->current_rf_tech == NFC_DIGITAL_RF_TECH_106A)
-+		context->complete_cb_arg.rats = true;
-+
-+	rc = PTR_ERR(nfcst_send_recv_fr(context, skb, ASYNC));
-+	if (rc) {
-+		dev_err(&context->nfcdev->dev,
-+			"Error %d trying to perform data_exchange", rc);
-+		up(&context->exchange_lock);
-+	}
-+
-+	return rc;
-+}
-+
-+/* p2p will be supported in a later release ! */
-+static int nfcst_tg_configure_hw(struct nfc_digital_dev *ddev,
-+				 int type,
-+				 int param)
-+{
-+	return 0;
-+}
-+
-+static int nfcst_tg_send_cmd(struct nfc_digital_dev *ddev,
-+			     struct sk_buff *skb,
-+			     u16 timeout,
-+			     nfc_digital_cmd_complete_t cb,
-+			     void *arg)
-+{
-+	return 0;
-+}
-+
-+static int nfcst_tg_listen(struct nfc_digital_dev *ddev,
-+			   u16 timeout,
-+			   nfc_digital_cmd_complete_t cb,
-+			   void *arg)
-+{
-+	return 0;
-+}
-+
-+static int nfcst_tg_get_rf_tech(struct nfc_digital_dev *ddev, u8 *rf_tech)
-+{
-+	return 0;
-+}
-+
-+static int nfcst_switch_rf(struct nfc_digital_dev *ddev, bool on)
-+{
-+	u8 rf_tech;
-+	int rc;
-+
-+	struct nfcst_context *context = nfc_digital_get_drvdata(ddev);
-+
-+	if (!context->nfcst_power) {
-+		if (on) {
-+			rc = nfcst_wake(context);
-+			if (rc)
-+				return rc;
-+		} else {
-+			return 0;
-+		}
-+	}
-+
-+	rf_tech = ddev->curr_rf_tech;
-+
-+	if (on)
-+		/* switch on RF field */
-+		return nfcst_select_protocol(context, rf_tech);
-+
-+	/* switch OFF RF field */
-+	return rf_off(context);
-+}
-+
-+/* TODO nfcst_abort_cmd */
-+static void nfcst_abort_cmd(struct nfc_digital_dev *ddev)
-+{
-+}
-+
-+static struct nfc_digital_ops nfcst_nfc_digital_ops = {
-+	.in_configure_hw = nfcst_in_configure_hw,
-+	.in_send_cmd = nfcst_in_send_cmd,
-+
-+	.tg_listen = nfcst_tg_listen,
-+	.tg_configure_hw = nfcst_tg_configure_hw,
-+	.tg_send_cmd = nfcst_tg_send_cmd,
-+	.tg_get_rf_tech = nfcst_tg_get_rf_tech,
-+
-+	.switch_rf = nfcst_switch_rf,
-+	.abort_cmd = nfcst_abort_cmd,
-+};
-+
-+/*
-+ * phy drivers can register with the framework,
-+ * this will return the new (attached) nfcst_context object
-+ */
-+void *nfcst_register_phy(enum nfcst_phy phy,
-+			 void *phy_ctx,
-+			 struct nfcst_if_ops *ops,
-+			 struct device *dev,
-+			 struct nfcst_pltf_data *pdata)
-+{
-+	int ret;
-+	struct nfcst_context *ctx;
-+
-+	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
-+	if (!ctx)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ctx->phy_ctx = phy_ctx;
-+	ctx->if_ops = ops;
-+	ctx->dev = dev;
-+	ctx->phy = phy;
-+
-+	memcpy(&ctx->cfg, pdata, sizeof(*pdata));
-+
-+	ctx->fwi = cmd_array[CMD_NFCA_PROTOCOL_SELECT].cmd_params[2];
-+
-+	init_completion(&ctx->done);
-+
-+	/* create NFC dev object and register with NFC Subsystem */
-+	ctx->ddev = nfc_digital_allocate_device(&nfcst_nfc_digital_ops,
-+						DEVICE_SUPPORTED_PROT,
-+						DEVICE_CAPABILITIES,
-+						DEVICE_HEADROOM_LEN,
-+						DEVICE_TAILROOM_LEN);
-+	if (!ctx->ddev) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	ctx->nfcdev = ctx->ddev->nfc_dev;
-+	nfc_digital_set_parent_dev(ctx->ddev, dev);
-+
-+	ret = nfc_digital_register_device(ctx->ddev);
-+	if (ret) {
-+		dev_err(&ctx->nfcdev->dev, "st nfc device registration failed\n");
-+		goto err_free_digital_device;
-+	}
-+
-+	nfc_digital_set_drvdata(ctx->ddev, ctx);
-+
-+	sema_init(&ctx->exchange_lock, 1);
-+	INIT_WORK(&ctx->write_work, nfcst_handle_wtx);
-+
-+	return (void *)ctx;
-+
-+err_free_digital_device:
-+	nfc_digital_free_device(ctx->ddev);
-+
-+error:
-+	kfree(ctx);
-+	return ERR_PTR(ret);
-+}
-+EXPORT_SYMBOL_GPL(nfcst_register_phy);
-+
-+void nfcst_unregister_phy(void *context)
-+{
-+	struct nfcst_context *ctx = (struct nfcst_context *)context;
-+
-+	up(&ctx->exchange_lock);
-+	nfc_digital_unregister_device(ctx->ddev);
-+	nfc_digital_free_device(ctx->ddev);
-+	kfree(ctx);
-+}
-+EXPORT_SYMBOL_GPL(nfcst_unregister_phy);
-+
-+int nfcst_recv_frame(void *context, struct sk_buff *skb_res)
-+{
-+	int result;
-+	struct nfcst_digital_cmd_complete_arg *cb_arg;
-+
-+	struct nfcst_context *ctx = (struct nfcst_context *)context;
-+
-+	/* first check the sync request */
-+	if (ctx->req_is_sync == SYNC) {
-+		ctx->recv_buff = skb_res;
-+		complete(&ctx->done);
-+		return 0;
-+	}
-+
-+	/* now check for async request */
-+	cb_arg = &ctx->complete_cb_arg;
-+
-+	/* check error skb */
-+	if (IS_ERR(skb_res)) {
-+		result = PTR_ERR(skb_res);
-+		skb_res = NULL;
-+		goto end;
-+	}
-+
-+	/* check for excahange semaphore state */
-+	if (!down_trylock(&ctx->exchange_lock)) {
-+		WARN(1, "nfcst response in unknown context\n");
-+		result = -EINVAL;
-+		goto end;
-+	}
-+
-+	result = nfcst_error_handling(ctx, skb_res, skb_res->len);
-+	if (result)
-+		goto end;
-+
-+	if (skb_res->len > 2 && skb_res->data[2] == WTX_REQ_FROM_TAG) {
-+		ctx->wtx_mm = skb_res->data[3];
-+		kfree_skb(skb_res);
-+		schedule_work(&ctx->write_work);
-+		return 0;
-+	}
-+
-+	nfcst_response_handler(ctx, skb_res);
-+
-+	/* call digital layer callback */
-+	cb_arg->complete_cb(ctx->ddev, cb_arg->cb_usrarg, skb_res);
-+
-+	/* up the semaphore before returning */
-+	up(&ctx->exchange_lock);
-+
-+	return 0;
-+
-+end:
-+	kfree_skb(skb_res);
-+	cb_arg->rats = false;
-+	skb_res = ERR_PTR(result);
-+	/* callback with error */
-+	cb_arg->complete_cb(ctx->ddev, cb_arg->cb_usrarg, skb_res);
-+	/* up the semaphore before returning */
-+	up(&ctx->exchange_lock);
-+
-+	/*
-+	 * frame is received with success, though frame itself can
-+	 * contain error or new error generated. In later case we
-+	 * already inform the digital layer about the error, but
-+	 * the underlying phy layer must be reported as no error
-+	 */
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(nfcst_recv_frame);
-+
-+int nfcst_recv_fr_len(void *context, const u8 *hdr, int count)
-+{
-+	/* if echo response, nothing to read after */
-+	if (hdr[0] == ECHORESPONSE)
-+		return 1;
-+
-+	if (hdr[0] & 0x60)
-+		return (((hdr[0] & 0x60) >> 5) << 8) | hdr[1];
-+	else
-+		return hdr[1];
-+}
-+EXPORT_SYMBOL_GPL(nfcst_recv_fr_len);
-+
-+int nfcst_recv_hdr_len(void *context, const u8 *data, int count)
-+{
-+	if (data[0] == ECHORESPONSE)
-+		return 0;
-+
-+	/* check if invalid frame is received */
-+	if (data[0] && ((data[0] & VALID_RESP_MASK) != VALID_RESP_VALUE))
-+		return -EIO;
-+
-+	return DEVICE_HEADROOM_LEN;
-+}
-+EXPORT_SYMBOL_GPL(nfcst_recv_hdr_len);
-+
-+int nfcst_recv_max_fr_sz(void *context)
-+{
-+	return MAX_RESPONSE_BUFFER_SIZE;
-+}
-+EXPORT_SYMBOL_GPL(nfcst_recv_max_fr_sz);
-+
-+struct nfcst_pltf_data *nfcst_pltf_data(void *context)
-+{
-+	struct nfcst_context *ctx = (struct nfcst_context *)context;
-+
-+	return &ctx->cfg;
-+}
-+EXPORT_SYMBOL_GPL(nfcst_pltf_data);
-+
-+MODULE_AUTHOR("Shikha Singh <shikha.singh@st.com>");
-+MODULE_AUTHOR("Sudeep Biswas <sudeep.biswas@st.com>");
-+MODULE_DESCRIPTION("ST NFC Transceiver device driver core");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/nfc/nfcst/stnfcdev.h b/drivers/nfc/nfcst/stnfcdev.h
-new file mode 100644
-index 0000000..245069d
---- /dev/null
-+++ b/drivers/nfc/nfcst/stnfcdev.h
-@@ -0,0 +1,70 @@
-+/*
-+ * --------------------------------------------------------------------
-+ * API defination provided by ST NFC Transceiver core framework
-+ * --------------------------------------------------------------------
-+ * Copyright (C) 2015 STMicroelectronics Pvt. Ltd. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#ifndef _STNFCDEV_H_
-+#define _STNFCDEV_H_
-+
-+#include <linux/regulator/consumer.h>
-+
-+/* phy type */
-+enum nfcst_phy {
-+	PHY_SPI = 0,
-+	PHY_UART,
-+};
-+
-+/* nfcst platform data */
-+struct nfcst_pltf_data {
-+	/* UART specific */
-+	unsigned int baudrate;
-+
-+	/* SPI specific */
-+	unsigned int enable_gpio;
-+
-+	/*
-+	 * Generic stuff that can be required for any interface
-+	 * such as regulator (device can receive power from a
-+	 * regulator which needs to be enabled in the device
-+	 * wake-up. Also it can help power mgmt., for example
-+	 * switching off the regulator when the device is
-+	 * disabled (off) and then switching it on when the
-+	 * device is again enabled (on))
-+	 */
-+	struct regulator *nfcst_supply;
-+};
-+
-+/* interface ops */
-+struct nfcst_if_ops {
-+	int (*phy_send)(void *phy_ctx, struct sk_buff *skb);
-+};
-+
-+/* helper functions, can be called by interface layer */
-+void *nfcst_register_phy(enum nfcst_phy phy,
-+			 void *phy_ctx,
-+			   struct nfcst_if_ops *ops,
-+			   struct device *dev,
-+			   struct nfcst_pltf_data *pdata);
-+
-+void nfcst_unregister_phy(void *context);
-+int nfcst_recv_frame(void *context, struct sk_buff *skb_res);
-+int nfcst_recv_fr_len(void *context, const u8 *data, int count);
-+int nfcst_recv_hdr_len(void *context, const u8 *data, int count);
-+int nfcst_recv_max_fr_sz(void *context);
-+struct nfcst_pltf_data *nfcst_pltf_data(void *context);
-+
-+#endif
+[42278.033232] usb 1-4: USB disconnect, device number 6
+[42278.033245] usb 1-4.1: USB disconnect, device number 8
+[42278.148731] usb 2-4: USB disconnect, device number 2
+[42278.180802] thinkpad_acpi: undocked from hotplug port replicator
+[42278.304743] usb 1-4.2: USB disconnect, device number 9
+[42278.393040] e1000e: enp0s31f6 NIC Link is Down
+[42278.400223] usb 1-4.4: USB disconnect, device number 7
+[42278.669256] thinkpad_acpi: EC reports that Thermal Table has changed
+[42287.376996] iwlwifi 0000:04:00.0: Microcode SW error detected.
+Restarting 0x2000000.
+[42287.377006] iwlwifi 0000:04:00.0: CSR values:
+[42287.377012] iwlwifi 0000:04:00.0: (2nd byte of CSR_INT_COALESCING
+is CSR_INT_PERIODIC_REG)
+[42287.377099] iwlwifi 0000:04:00.0:        CSR_HW_IF_CONFIG_REG: 0X00489008
+[42287.377241] iwlwifi 0000:04:00.0:          CSR_INT_COALESCING: 0X00000040
+[42287.377341] iwlwifi 0000:04:00.0:                     CSR_INT: 0X80000000
+[42287.377396] iwlwifi 0000:04:00.0:                CSR_INT_MASK: 0X00000000
+[42287.377508] iwlwifi 0000:04:00.0:           CSR_FH_INT_STATUS: 0X00010000
+[42287.377564] iwlwifi 0000:04:00.0:                 CSR_GPIO_IN: 0X00000019
+[42287.377620] iwlwifi 0000:04:00.0:                   CSR_RESET: 0X00000000
+[42287.377674] iwlwifi 0000:04:00.0:                CSR_GP_CNTRL: 0X08040005
+[42287.377730] iwlwifi 0000:04:00.0:                  CSR_HW_REV: 0X00000201
+[42287.377785] iwlwifi 0000:04:00.0:              CSR_EEPROM_REG: 0Xd55555d5
+[42287.377841] iwlwifi 0000:04:00.0:               CSR_EEPROM_GP: 0Xd55555d5
+[42287.377897] iwlwifi 0000:04:00.0:              CSR_OTP_GP_REG: 0Xd55555d5
+[42287.377952] iwlwifi 0000:04:00.0:                 CSR_GIO_REG: 0X001f0042
+[42287.378008] iwlwifi 0000:04:00.0:            CSR_GP_UCODE_REG: 0X00000000
+[42287.378063] iwlwifi 0000:04:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[42287.378119] iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[42287.378175] iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[42287.378290] iwlwifi 0000:04:00.0:                 CSR_LED_REG: 0X00000060
+[42287.378408] iwlwifi 0000:04:00.0:        CSR_DRAM_INT_TBL_REG: 0X88429af9
+[42287.378462] iwlwifi 0000:04:00.0:        CSR_GIO_CHICKEN_BITS: 0X07800200
+[42287.378514] iwlwifi 0000:04:00.0:             CSR_ANA_PLL_CFG: 0Xd55555d5
+[42287.378567] iwlwifi 0000:04:00.0:      CSR_MONITOR_STATUS_REG: 0Xc03803c0
+[42287.378620] iwlwifi 0000:04:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[42287.378673] iwlwifi 0000:04:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0010
+[42287.378676] iwlwifi 0000:04:00.0: FH register values:
+[42287.378789] iwlwifi 0000:04:00.0:
+FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X425cfc00
+[42287.378848] iwlwifi 0000:04:00.0:
+FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0429ad90
+[42287.378862] iwlwifi 0000:04:00.0:
+FH_RSCSR_CHNL0_WPTR: 0X00000020
+[42287.378876] iwlwifi 0000:04:00.0:
+FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80801054
+[42287.378890] iwlwifi 0000:04:00.0:
+FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[42287.378904] iwlwifi 0000:04:00.0:
+FH_MEM_RSSR_RX_STATUS_REG: 0X07830000
+[42287.378918] iwlwifi 0000:04:00.0:
+FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[42287.378932] iwlwifi 0000:04:00.0:
+FH_TSSR_TX_STATUS_REG: 0X07ff0000
+[42287.378946] iwlwifi 0000:04:00.0:
+FH_TSSR_TX_ERROR_REG: 0X00000000
+[42287.379104] iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+[42287.379107] iwlwifi 0000:04:00.0: Status: 0x00000000, count: 6
+[42287.379109] iwlwifi 0000:04:00.0: Loaded firmware version: 21.302800.0
+[42287.379112] iwlwifi 0000:04:00.0: 0x00002B00 | ADVANCED_SYSASSERT
+[42287.379114] iwlwifi 0000:04:00.0: 0x000002F0 | trm_hw_status0
+[42287.379116] iwlwifi 0000:04:00.0: 0x00000000 | trm_hw_status1
+[42287.379118] iwlwifi 0000:04:00.0: 0x00000BD8 | branchlink2
+[42287.379120] iwlwifi 0000:04:00.0: 0x00026AC4 | interruptlink1
+[42287.379122] iwlwifi 0000:04:00.0: 0x00000000 | interruptlink2
+[42287.379124] iwlwifi 0000:04:00.0: 0x00000002 | data1
+[42287.379127] iwlwifi 0000:04:00.0: 0xDEADBEEF | data2
+[42287.379129] iwlwifi 0000:04:00.0: 0xDEADBEEF | data3
+[42287.379131] iwlwifi 0000:04:00.0: 0x003BE8E4 | beacon time
+[42287.379133] iwlwifi 0000:04:00.0: 0xE3AF117E | tsf low
+[42287.379135] iwlwifi 0000:04:00.0: 0x00000003 | tsf hi
+[42287.379137] iwlwifi 0000:04:00.0: 0x00000000 | time gp1
+[42287.379139] iwlwifi 0000:04:00.0: 0xE3AF1183 | time gp2
+[42287.379141] iwlwifi 0000:04:00.0: 0x00000000 | uCode revision type
+[42287.379143] iwlwifi 0000:04:00.0: 0x00000015 | uCode version major
+[42287.379145] iwlwifi 0000:04:00.0: 0x00049ED0 | uCode version minor
+[42287.379147] iwlwifi 0000:04:00.0: 0x00000201 | hw version
+[42287.379149] iwlwifi 0000:04:00.0: 0x00489008 | board version
+[42287.379151] iwlwifi 0000:04:00.0: 0x09260119 | hcmd
+[42287.379153] iwlwifi 0000:04:00.0: 0x00022080 | isr0
+[42287.379155] iwlwifi 0000:04:00.0: 0x00000000 | isr1
+[42287.379157] iwlwifi 0000:04:00.0: 0x08301802 | isr2
+[42287.379160] iwlwifi 0000:04:00.0: 0x00400080 | isr3
+[42287.379161] iwlwifi 0000:04:00.0: 0x00000000 | isr4
+[42287.379164] iwlwifi 0000:04:00.0: 0x04000118 | last cmd Id
+[42287.379166] iwlwifi 0000:04:00.0: 0x00000000 | wait_event
+[42287.379168] iwlwifi 0000:04:00.0: 0x000064EE | l2p_control
+[42287.379170] iwlwifi 0000:04:00.0: 0x00000020 | l2p_duration
+[42287.379172] iwlwifi 0000:04:00.0: 0x00000000 | l2p_mhvalid
+[42287.379174] iwlwifi 0000:04:00.0: 0x00000000 | l2p_addr_match
+[42287.379176] iwlwifi 0000:04:00.0: 0x0000008F | lmpm_pmg_sel
+[42287.379178] iwlwifi 0000:04:00.0: 0x09031905 | timestamp
+[42287.379180] iwlwifi 0000:04:00.0: 0x00002030 | flow_handler
+[42287.379364] iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+[42287.379366] iwlwifi 0000:04:00.0: Status: 0x00000000, count: 7
+[42287.379369] iwlwifi 0000:04:00.0: 0x00000070 | ADVANCED_SYSASSERT
+[42287.379371] iwlwifi 0000:04:00.0: 0x00000000 | umac branchlink1
+[42287.379373] iwlwifi 0000:04:00.0: 0xC008113A | umac branchlink2
+[42287.379375] iwlwifi 0000:04:00.0: 0xC0081000 | umac interruptlink1
+[42287.379377] iwlwifi 0000:04:00.0: 0xC0081000 | umac interruptlink2
+[42287.379379] iwlwifi 0000:04:00.0: 0x00000800 | umac data1
+[42287.379381] iwlwifi 0000:04:00.0: 0xC0081000 | umac data2
+[42287.379383] iwlwifi 0000:04:00.0: 0xDEADBEEF | umac data3
+[42287.379385] iwlwifi 0000:04:00.0: 0x00000015 | umac major
+[42287.379387] iwlwifi 0000:04:00.0: 0x00049ED0 | umac minor
+[42287.379389] iwlwifi 0000:04:00.0: 0xC0886298 | frame pointer
+[42287.379391] iwlwifi 0000:04:00.0: 0xC0886298 | stack pointer
+[42287.379393] iwlwifi 0000:04:00.0: 0x09260119 | last host cmd
+[42287.379395] iwlwifi 0000:04:00.0: 0x00000000 | isr status reg
+[42287.379399] ieee80211 phy0: Hardware restart was requested
+[42287.379489] iwlwifi 0000:04:00.0: FW error in SYNC CMD REMOVE_STA
+[42287.379495] CPU: 0 PID: 3611 Comm: NetworkManager Not tainted
+4.11.0-rc6-next-20170413+ #1
+[42287.379497] Hardware name: LENOVO 20FH0033PB/20FH0033PB, BIOS
+N1KET21W (1.08 ) 04/20/2016
+[42287.379498] Call Trace:
+[42287.379506]  dump_stack+0x63/0x82
+[42287.379519]  iwl_trans_pcie_send_hcmd+0x43b/0x550 [iwlwifi]
+[42287.379523]  ? wake_atomic_t_function+0x60/0x60
+[42287.379534]  iwl_trans_send_cmd+0x57/0xa0 [iwlwifi]
+[42287.379547]  iwl_mvm_send_cmd+0x32/0x90 [iwlmvm]
+[42287.379557]  iwl_mvm_send_cmd_pdu+0x58/0x80 [iwlmvm]
+[42287.379568]  iwl_mvm_rm_sta_common+0x56/0xc0 [iwlmvm]
+[42287.379577]  ? iwl_mvm_rm_sta_common+0x56/0xc0 [iwlmvm]
+[42287.379587]  iwl_mvm_rm_snif_sta+0x1d/0x40 [iwlmvm]
+[42287.379595]  __iwl_mvm_unassign_vif_chanctx+0x68/0x100 [iwlmvm]
+[42287.379603]  iwl_mvm_unassign_vif_chanctx+0x3a/0x50 [iwlmvm]
+[42287.379633]  ieee80211_assign_vif_chanctx+0x8d/0x440 [mac80211]
+[42287.379656]  __ieee80211_vif_release_channel+0x54/0x140 [mac80211]
+[42287.379676]  ieee80211_vif_release_channel+0x3e/0x60 [mac80211]
+[42287.379697]  ieee80211_del_virtual_monitor.part.19+0x64/0xc0 [mac80211]
+[42287.379717]  ieee80211_do_stop+0x7f8/0x810 [mac80211]
+[42287.379722]  ? _raw_spin_unlock_bh+0x1e/0x20
+[42287.379725]  ? dev_deactivate_many+0x20b/0x250
+[42287.379743]  ieee80211_stop+0x1a/0x20 [mac80211]
+[42287.379758]  __dev_close_many+0x99/0x100
+[42287.379761]  __dev_close+0x45/0x70
+[42287.379764]  __dev_change_flags+0x9d/0x160
+[42287.379766]  dev_change_flags+0x29/0x70
+[42287.379768]  do_setlink+0x361/0xd60
+[42287.379771]  ? __accumulate_sum+0x31/0x90
+[42287.379774]  ? __update_load_avg_se.isra.36+0x85/0x160
+[42287.379777]  ? update_load_avg+0x18b/0x590
+[42287.379781]  ? ___slab_alloc+0x220/0x4e0
+[42287.379784]  ? nla_parse+0x32/0x100
+[42287.379787]  rtnl_newlink+0x735/0x8a0
+[42287.379793]  ? security_capget+0x40/0x70
+[42287.379798]  ? ns_capable_common+0x68/0x80
+[42287.379800]  ? ns_capable+0x13/0x20
+[42287.379803]  rtnetlink_rcv_msg+0xe6/0x220
+[42287.379806]  ? __kmalloc_node_track_caller+0x1ee/0x2b0
+[42287.379809]  ? __alloc_skb+0x87/0x1d0
+[42287.379812]  ? rtnl_newlink+0x8a0/0x8a0
+[42287.379816]  netlink_rcv_skb+0xa4/0xc0
+[42287.379817]  rtnetlink_rcv+0x28/0x30
+[42287.379821]  netlink_unicast+0x18c/0x240
+[42287.379824]  netlink_sendmsg+0x2fb/0x3a0
+[42287.379829]  sock_sendmsg+0x38/0x50
+[42287.379832]  ___sys_sendmsg+0x2b6/0x2d0
+[42287.379834]  ? reuse_swap_page+0x35/0x110
+[42287.379838]  ? do_wp_page+0x109/0x5d0
+[42287.379841]  __sys_sendmsg+0x54/0x90
+[42287.379843]  ? __sys_sendmsg+0x54/0x90
+[42287.379845]  SyS_sendmsg+0x12/0x20
+[42287.379848]  entry_SYSCALL_64_fastpath+0x1e/0xa9
+[42287.379851] RIP: 0033:0x7ff24a3ed420
+[42287.379852] RSP: 002b:00007ffe40b11f70 EFLAGS: 00000293 ORIG_RAX:
+000000000000002e
+[42287.379855] RAX: ffffffffffffffda RBX: 00007ff24a3d6b00 RCX: 00007ff24a3ed420
+[42287.379856] RDX: 0000000000000000 RSI: 00007ffe40b12020 RDI: 000000000000000c
+[42287.379857] RBP: 00007ff24a3d6b00 R08: 0000000000000000 R09: 0000000000000000
+[42287.379859] R10: 000055b4f013fa50 R11: 0000000000000293 R12: 0000000000000020
+[42287.379860] R13: 0000000000000010 R14: 000055b4f0056b20 R15: 0000000000000001
+[42287.379885] iwlwifi 0000:04:00.0: Failed to remove station. Id=2
+[42287.379889] iwlwifi 0000:04:00.0: Failed sending remove station
+[42287.379915] BUG: unable to handle kernel paging request at ffffffffc08abfa6
+[42287.379971] IP: report_bug+0x94/0x120
+[42287.379994] PGD 360e0c067
+[42287.379995] P4D 360e0c067
+[42287.380013] PUD 360e0e067
+[42287.380030] PMD 427ad0067
+[42287.380047] PTE 800000042bf7a161
+
+[42287.380096] Oops: 0003 [#1] SMP
+[42287.380116] Modules linked in: hid_generic usbhid hid
+nfnetlink_queue nfnetlink_log nfnetlink ctr ccm binfmt_misc rfcomm
+openvswitch nf_conntrack_ipv6 nf_nat_ipv6 nf_conntrack_ipv4
+nf_defrag_ipv4 nf_nat_ipv4 nf_defrag_ipv6 nf_nat nf_conntrack
+libcrc32c cmac bnep nls_iso8859_1 arc4 intel_rapl x86_pkg_temp_thermal
+snd_hda_codec_hdmi intel_powerclamp coretemp snd_soc_skl iwlmvm
+snd_hda_codec_realtek snd_soc_skl_ipc snd_hda_codec_generic
+snd_soc_sst_ipc mac80211 snd_soc_sst_dsp snd_hda_ext_core
+snd_soc_sst_match kvm snd_soc_core irqbypass snd_compress snd_seq_midi
+ac97_bus snd_seq_midi_event snd_pcm_dmaengine uvcvideo snd_rawmidi
+snd_hda_intel videobuf2_vmalloc videobuf2_memops videobuf2_v4l2
+snd_hda_codec videobuf2_core snd_hda_core iwlwifi snd_hwdep joydev
+videodev snd_seq input_leds snd_pcm serio_raw
+[42287.380524]  btusb btrtl media thinkpad_acpi cfg80211 nvram
+snd_seq_device rtsx_pci_ms snd_timer btbcm memstick btintel bluetooth
+mei_me shpchp mei intel_pch_thermal snd soundcore tpm_crb mac_hid
+parport_pc ppdev lp parport ip_tables x_tables autofs4 algif_skcipher
+af_alg dm_crypt rtsx_pci_sdmmc crct10dif_pclmul crc32_pclmul
+ghash_clmulni_intel pcbc i915 aesni_intel aes_x86_64 crypto_simd
+glue_helper e1000e cryptd i2c_algo_bit psmouse ptp drm_kms_helper
+rtsx_pci ahci syscopyarea pps_core sysfillrect libahci sysimgblt
+fb_sys_fops drm wmi video
+[42287.380834] CPU: 0 PID: 3611 Comm: NetworkManager Not tainted
+4.11.0-rc6-next-20170413+ #1
+[42287.380895] Hardware name: LENOVO 20FH0033PB/20FH0033PB, BIOS
+N1KET21W (1.08 ) 04/20/2016
+[42287.380946] task: ffff8e80bec08f00 task.stack: ffffad79419f8000
+[42287.380986] RIP: 0010:report_bug+0x94/0x120
+[42287.381013] RSP: 0018:ffffad79419fb390 EFLAGS: 00010202
+[42287.381050] RAX: 0000000000000907 RBX: ffffad79419fb4d8 RCX: ffffffffc08abf9c
+[42287.381109] RDX: 0000000000000001 RSI: ffffffffc08ae140 RDI: 0000000000000001
+[42287.381178] RBP: ffffad79419fb3b0 R08: 0000000000000000 R09: 00000000000002fc
+[42287.381246] R10: ffffad79419fb590 R11: 0000000000000926 R12: ffffffffc0877dd0
+[42287.381320] R13: ffffffffc08a43d0 R14: 00000000000000c9 R15: 0000000000000004
+[42287.381390] FS:  00007ff24c5b5e00(0000) GS:ffff8e8141400000(0000)
+knlGS:0000000000000000
+[42287.381470] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[42287.381527] CR2: ffffffffc08abfa6 CR3: 00000003f482d000 CR4: 00000000003406f0
+[42287.381598] Call Trace:
+[42287.381631]  do_trap+0x156/0x170
+[42287.381668]  do_error_trap+0x89/0x110
+[42287.381723]  ? iwl_mvm_binding_remove_vif+0x70/0x80 [iwlmvm]
+[42287.381779]  ? __dev_printk+0x3c/0x80
+[42287.381815]  ? dev_err+0x64/0x80
+[42287.381849]  ? __dev_printk+0x3c/0x80
+[42287.381888]  ? dev_warn+0x64/0x80
+[42287.381925]  do_invalid_op+0x20/0x30
+[42287.381950]  invalid_op+0x1e/0x30
+[42287.381980] RIP: 0010:iwl_mvm_binding_remove_vif+0x70/0x80 [iwlmvm]
+[42287.382016] RSP: 0018:ffffad79419fb588 EFLAGS: 00010246
+[42287.382047] RAX: ffff8e8085e64c40 RBX: ffff8e8085e64c40 RCX: 0000000000000000
+[42287.382087] RDX: 0000000000000000 RSI: ffff8e8085e64af0 RDI: ffff8e8126d4d588
+[42287.382127] RBP: ffffad79419fb5b0 R08: 0000000000000001 R09: 0000000000000926
+[42287.382168] R10: ffffad79419fb590 R11: 0000000000000926 R12: ffff8e8085e64af0
+[42287.382208] R13: ffff8e8126d4d588 R14: 0000000000000000 R15: ffff8e80bed3fc00
+[42287.382256]  ? __iwl_mvm_unassign_vif_chanctx+0x7f/0x100 [iwlmvm]
+[42287.382297]  iwl_mvm_unassign_vif_chanctx+0x3a/0x50 [iwlmvm]
+[42287.382354]  ieee80211_assign_vif_chanctx+0x8d/0x440 [mac80211]
+[42287.382407]  __ieee80211_vif_release_channel+0x54/0x140 [mac80211]
+[42287.382461]  ieee80211_vif_release_channel+0x3e/0x60 [mac80211]
+[42287.382514]  ieee80211_del_virtual_monitor.part.19+0x64/0xc0 [mac80211]
+[42287.382571]  ieee80211_do_stop+0x7f8/0x810 [mac80211]
+[42287.382604]  ? _raw_spin_unlock_bh+0x1e/0x20
+[42287.382631]  ? dev_deactivate_many+0x20b/0x250
+[42287.382673]  ieee80211_stop+0x1a/0x20 [mac80211]
+[42287.382702]  __dev_close_many+0x99/0x100
+[42287.382728]  __dev_close+0x45/0x70
+[42287.382751]  __dev_change_flags+0x9d/0x160
+[42287.382776]  dev_change_flags+0x29/0x70
+[42287.382800]  do_setlink+0x361/0xd60
+[42287.382824]  ? __accumulate_sum+0x31/0x90
+[42287.382850]  ? __update_load_avg_se.isra.36+0x85/0x160
+[42287.382884]  ? update_load_avg+0x18b/0x590
+[42287.382911]  ? ___slab_alloc+0x220/0x4e0
+[42287.382936]  ? nla_parse+0x32/0x100
+[42287.382958]  rtnl_newlink+0x735/0x8a0
+[42287.384599]  ? security_capget+0x40/0x70
+[42287.386207]  ? ns_capable_common+0x68/0x80
+[42287.387754]  ? ns_capable+0x13/0x20
+[42287.389179]  rtnetlink_rcv_msg+0xe6/0x220
+[42287.390453]  ? __kmalloc_node_track_caller+0x1ee/0x2b0
+[42287.391766]  ? __alloc_skb+0x87/0x1d0
+[42287.393073]  ? rtnl_newlink+0x8a0/0x8a0
+[42287.394275]  netlink_rcv_skb+0xa4/0xc0
+[42287.395376]  rtnetlink_rcv+0x28/0x30
+[42287.396448]  netlink_unicast+0x18c/0x240
+[42287.397477]  netlink_sendmsg+0x2fb/0x3a0
+[42287.398442]  sock_sendmsg+0x38/0x50
+[42287.399258]  ___sys_sendmsg+0x2b6/0x2d0
+[42287.400035]  ? reuse_swap_page+0x35/0x110
+[42287.400768]  ? do_wp_page+0x109/0x5d0
+[42287.401458]  __sys_sendmsg+0x54/0x90
+[42287.402134]  ? __sys_sendmsg+0x54/0x90
+[42287.402799]  SyS_sendmsg+0x12/0x20
+[42287.403455]  entry_SYSCALL_64_fastpath+0x1e/0xa9
+[42287.404113] RIP: 0033:0x7ff24a3ed420
+[42287.404811] RSP: 002b:00007ffe40b11f70 EFLAGS: 00000293 ORIG_RAX:
+000000000000002e
+[42287.405477] RAX: ffffffffffffffda RBX: 00007ff24a3d6b00 RCX: 00007ff24a3ed420
+[42287.406140] RDX: 0000000000000000 RSI: 00007ffe40b12020 RDI: 000000000000000c
+[42287.406806] RBP: 00007ff24a3d6b00 R08: 0000000000000000 R09: 0000000000000000
+[42287.407475] R10: 000055b4f013fa50 R11: 0000000000000293 R12: 0000000000000020
+[42287.408139] R13: 0000000000000010 R14: 000055b4f0056b20 R15: 0000000000000001
+[42287.408797] Code: 61 0f b7 41 0a 4c 63 69 04 44 0f b7 71 08 89 c7
+49 01 cd 83 e7 01 a8 02 74 15 66 85 ff 74 10 a8 04 ba 01 00 00 00 75
+2a 83 c8 04 <66> 89 41 0a 66 85 ff 74 58 0f b6 49 0b 4c 89 e2 41 0f b7
+f6 45
+[42287.409511] RIP: report_bug+0x94/0x120 RSP: ffffad79419fb390
+[42287.410207] CR2: ffffffffc08abfa6
+[42287.416767] ---[ end trace 4974db56fed7b45f ]---
+[42292.469465] PM: Syncing filesystems ... done.
+[42292.491194] PM: Preparing system for sleep (mem)
+[42292.493742] Freezing user space processes ... (elapsed 0.004 seconds) done.
+[42292.498657] OOM killer disabled.
+[42292.498662] Freezing remaining freezable tasks ...
+[42312.507071] Freezing of tasks failed after 20.008 seconds (0 tasks
+refusing to freeze, wq_busy=1):
+[42312.507078] Showing busy workqueues and worker pools:
+[42312.507087] workqueue events_freezable: flags=0x4
+[42312.507092]   pwq 6: cpus=3 node=0 flags=0x0 nice=0 active=1/0
+[42312.507112]     in-flight: 27144:ieee80211_restart_work [mac80211]
+[42312.507200] workqueue mm_percpu_wq: flags=0xc
+[42312.507205]   pwq 6: cpus=3 node=0 flags=0x0 nice=0 active=0/0
+[42312.507219]     delayed: vmstat_update
+[42312.507237]   pwq 4: cpus=2 node=0 flags=0x0 nice=0 active=0/0
+[42312.507250]     delayed: vmstat_update
+[42312.507263]   pwq 2: cpus=1 node=0 flags=0x0 nice=0 active=0/0
+[42312.507275]     delayed: vmstat_update
+[42312.507287]   pwq 0: cpus=0 node=0 flags=0x0 nice=0 active=0/0
+[42312.507300]     delayed: vmstat_update
+[42312.507317] workqueue writeback: flags=0x4e
+[42312.507321]   pwq 8: cpus=0-3 flags=0x4 nice=0 active=0/0
+[42312.507334]     delayed: wb_workfn
+[42312.507377] pool 6: cpus=3 node=0 flags=0x0 nice=0 hung=10s
+workers=3 idle: 27326 27018
+[42312.507799] Restarting kernel threads ... done.
+[42312.508562] OOM killer enabled.
+[42312.508569] Restarting tasks ... done.
+
+
+
 -- 
-1.8.2.1
+Janusz Dziedzic
