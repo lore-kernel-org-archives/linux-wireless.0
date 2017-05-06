@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36423 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764354AbdEYRsY (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:52984 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751935AbdEFOqy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 13:48:24 -0400
-Received: by mail-oi0-f68.google.com with SMTP id w138so38629152oiw.3
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:48:23 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Sat, 6 May 2017 10:46:54 -0400
+Date: Sat, 6 May 2017 07:46:45 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ian W MORRISON <ianwmorrison@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Bastien Nocera <hadess@hadess.net>,
         Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 4/7] rtlwifi: btcoex: 92e: rename function that was missing to be consistent
-Date: Thu, 25 May 2017 12:48:11 -0500
-Message-Id: <20170525174814.25005-5-Larry.Finger@lwfinger.net> (sfid-20170525_194903_001098_F5B137EC)
-In-Reply-To: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
-References: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
+        Hans de Goede <hdegoede@redhat.com>,
+        Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH v2] staging: rtl8723bs: remove re-positioned call to
+ kfree in os_dep/ioctl_cfg80211.c
+Message-ID: <20170506144645.GB30980@kroah.com> (sfid-20170506_164855_862734_E77FD149)
+References: <CAFXWsS8TnyA=PnLLL-QJzn00RDLfKwUZ_6XpsYPhd6eRSSKnnw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFXWsS8TnyA=PnLLL-QJzn00RDLfKwUZ_6XpsYPhd6eRSSKnnw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Fri, Apr 28, 2017 at 08:50:05AM +1000, Ian W MORRISON wrote:
+> This patch is to remove the re-positioned call to kfree() in
+> drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c which otherwise
+> results in segmentation fault.
+> 
+> Signed-off-by: Ian W Morrison <linuxium@linuxium.com.au>
+> ---
+>  drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+> b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+> index f17f4fb..2ee9df5 100644
+> --- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+> +++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+> @@ -3527,7 +3527,6 @@ int rtw_wdev_alloc(struct adapter *padapter,
+> struct device *dev)
+>                 pwdev_priv->power_mgmt = true;
+>         else
+>                 pwdev_priv->power_mgmt = false;
+> -       kfree((u8 *)wdev);
+> 
+>         return ret;
+> 
 
-rename the function name to be consistent with other btcoex functions
+Patch has whitespace all turned into spaces :(
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Please fix up.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-index 9015512ed647..44c25724529e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-@@ -3194,7 +3194,7 @@ void ex_btc8192e2ant_bt_info_notify(struct btc_coexist *btcoexist,
- 	btc8192e2ant_run_coexist_mechanism(btcoexist);
- }
- 
--void ex_halbtc8192e2ant_halt_notify(struct btc_coexist *btcoexist)
-+void ex_btc8192e2ant_halt_notify(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 
--- 
-2.12.0
+thanks,
+
+greg k-h
