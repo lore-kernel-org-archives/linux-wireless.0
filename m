@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:35816 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751519AbdEMQlg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 May 2017 12:41:36 -0400
-Received: by mail-wr0-f195.google.com with SMTP id g12so10240195wrg.2
-        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 09:41:36 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/5] staging: rtl8192e: Remove RX: IEEE802.1X EAPOL frame! warning.
-Date: Sat, 13 May 2017 17:41:17 +0100
-Message-Id: <20170513164121.14373-1-tvboxspy@gmail.com> (sfid-20170513_184149_535086_D2776547)
+Received: from mx1.redhat.com ([209.132.183.28]:59628 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751619AbdEFPuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 6 May 2017 11:50:22 -0400
+Message-ID: <1494085819.19292.5.camel@redhat.com> (sfid-20170506_175025_994651_EA718BCF)
+Subject: Re: mwifiex won't connect to WPA2 anymore
+From: Dan Williams <dcbw@redhat.com>
+To: Julien Cubizolles <j.cubizolles@free.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 06 May 2017 10:50:19 -0500
+In-Reply-To: <87mvaq4bsg.fsf@free.fr>
+References: <87wpa3kxgi.fsf@free.fr> <87tw51y91z.fsf@free.fr>
+         <1493844237.5647.9.camel@redhat.com> <87a86sfh2e.fsf@free.fr>
+         <1493948347.26081.1.camel@redhat.com> <87mvaq4bsg.fsf@free.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RX will receive countless EAPOL frames over the life of the connection.
+On Sat, 2017-05-06 at 10:41 +0200, Julien Cubizolles wrote:
+> Dan Williams <dcbw@redhat.com> writes:
+> 
+> 
+> > Just to test, could you add:
+> > 
+> > auth_alg=OPEN
+> > key_mgmt=WPA-PSK
+> > scan_ssid=1
+> > 
+> > to the block and retry with the supplicant?  I don't know why those
+> > would make a difference but they might.
+> 
+> They don't: wpa_supplicant still connects with these settings.
 
-A number of conditional calls to rtllib_is_eapol_frame are made in this function.
+Ok, at this point the only thing I can think of is the MAC
+randomization that NM has.  Please see:
 
-So this call serves no purpose other than to spam logs with false warning that
-it is indeed a EAPOL frame, remove it.
+https://blogs.gnome.org/thaller/2016/08/26/mac-address-spoofing-in-networkmanager-1-4-0/
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/rtl8192e/rtllib_rx.c | 3 ---
- 1 file changed, 3 deletions(-)
+and look at the section "Randomization during Wi-Fi scanning" where it
+says:
 
-diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
-index 43a77745e6fb..0033dc6979e7 100644
---- a/drivers/staging/rtl8192e/rtllib_rx.c
-+++ b/drivers/staging/rtl8192e/rtllib_rx.c
-@@ -1214,9 +1214,6 @@ static int rtllib_rx_decrypt(struct rtllib_device *ieee, struct sk_buff *skb,
- 		return -1;
- 	}
- 
--	if (rtllib_is_eapol_frame(ieee, skb, hdrlen))
--		netdev_warn(ieee->dev, "RX: IEEE802.1X EAPOL frame!\n");
--
- 	return 0;
- }
- 
--- 
-2.11.0
+----
+This default behavior can be disabled with a global configuration
+option in NetworkManager.conf:
+
+[device]
+wifi.scan-rand-mac-address=no
+----
+
+if you set that, and restart NetworkManager, does that magically make
+things work?
+
+Dan
