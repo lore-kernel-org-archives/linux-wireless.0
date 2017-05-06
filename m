@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:52446 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750944AbdEQUd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 16:33:26 -0400
-To: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] staging: wilc1000: Delete an error message for a failed
- memory allocation in Handle_Key()
-Message-ID: <d61db605-523e-5f48-37ca-0748b41705cc@users.sourceforge.net> (sfid-20170517_223348_478493_F22A3B39)
-Date: Wed, 17 May 2017 22:33:14 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33202 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754820AbdEFPm6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 6 May 2017 11:42:58 -0400
+From: Geliang Tang <geliangtang@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Colin Ian King <colin.king@canonical.com>
+Cc: Geliang Tang <geliangtang@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wlcore: use memdup_user
+Date: Sat,  6 May 2017 23:42:20 +0800
+Message-Id: <69124563157776eb4187fa35b0161dc8675ebeaf.1493781907.git.geliangtang@gmail.com> (sfid-20170506_174408_847093_96C35617)
+In-Reply-To: <df8091d4c64a0d5a7ab0a5989f34552a5eebd15e.1493778999.git.geliangtang@gmail.com>
+References: <df8091d4c64a0d5a7ab0a5989f34552a5eebd15e.1493778999.git.geliangtang@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 17 May 2017 22:26:07 +0200
+Use memdup_user() helper instead of open-coding to simplify the code.
 
-Omit an extra message for a memory allocation failure in this function.
-
-This issue was detected by using the Coccinelle software.
-
-Link: http://events.linuxfoundation.org/sites/events/files/slides/LCJ16-Refactor_Strings-WSang_0.pdf
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Geliang Tang <geliangtang@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/debugfs.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c3a8af081880..17a31bbd3665 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1688,7 +1688,6 @@ static int Handle_Key(struct wilc_vif *vif,
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
--				netdev_err(vif->ndev, "No buffer send PTK\n");
- 				ret = -ENOMEM;
- 				goto _WPAPtk_end_case_;
- 			}
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index de7e2a5..a2cb408 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -1149,15 +1149,9 @@ static ssize_t dev_mem_write(struct file *file, const char __user *user_buf,
+ 	part.mem.start = *ppos;
+ 	part.mem.size = bytes;
+ 
+-	buf = kmalloc(bytes, GFP_KERNEL);
+-	if (!buf)
+-		return -ENOMEM;
+-
+-	ret = copy_from_user(buf, user_buf, bytes);
+-	if (ret) {
+-		ret = -EFAULT;
+-		goto err_out;
+-	}
++	buf = memdup_user(user_buf, bytes);
++	if (IS_ERR(buf))
++		return PTR_ERR(buf);
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -1197,7 +1191,6 @@ static ssize_t dev_mem_write(struct file *file, const char __user *user_buf,
+ 	if (ret == 0)
+ 		*ppos += bytes;
+ 
+-err_out:
+ 	kfree(buf);
+ 
+ 	return ((ret == 0) ? bytes : ret);
 -- 
-2.13.0
+2.9.3
