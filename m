@@ -1,103 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:33446 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1164732AbdEYALp (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33323 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752064AbdEGVmA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 20:11:45 -0400
-Received: by mail-pf0-f173.google.com with SMTP id e193so150313895pfh.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:45 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 13/14] mwifiex: drop 'add_tail' param from mwifiex_insert_cmd_to_pending_q()
-Date: Wed, 24 May 2017 17:11:18 -0700
-Message-Id: <20170525001119.64791-13-briannorris@chromium.org> (sfid-20170525_021435_215751_04181FDB)
-In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
-References: <20170525001119.64791-1-briannorris@chromium.org>
+        Sun, 7 May 2017 17:42:00 -0400
+To: gregkh@linuxfoundation.org
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, hadess@hadess.net,
+        Larry.Finger@lwfinger.net, hdegoede@redhat.com,
+        jes.sorensen@gmail.com, kvalo@qca.qualcomm.com
+From: Ian W MORRISON <ianwmorrison@gmail.com>
+Subject: [PATCH v3] staging: rtl8723bs: remove re-positioned call to kfree in
+ os_dep/ioctl_cfg80211.c
+Message-ID: <b4a25189-3e3e-a051-70c3-7fbedc366a26@gmail.com> (sfid-20170507_234510_842370_C1670B86)
+Date: Sun, 7 May 2017 13:37:39 +1000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's always called with 'true' -- we only determine it 'false' locally
-within this function. So drop the parameter.
+A kernel cloned from git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git and built with the latest RTL8723BS driver included (CONFIG_RTL8723BS=m) fails when booting on an Intel Atom device with the RTL8723BS wifi chipset due to an error in drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c.
 
-Also, this should be 'bool' (since we use true/false), not 'u32'.
+The kernel when booted with Ubuntu 17.04 results in an unusable system however with the following patch booting is successful and the system is usable. The patch and kernel builds have been tested against on an Intel Compute Stick (STCK1A32WFC model).
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+This version of the patch (version 3) has tabs rather than spaces and no wrap around. The patch has received one review:
+
+Patch looks good to me:
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+Regards,
+Ian
+
+From: Ian W Morrison <linuxium@linuxium.com.au>
+Date: Fri, 28 Apr 2017 02:20:38 +1000
+Subject: [PATCH] staging: rtl8723bs: remove a call to kfree in
+ os_dep/ioctl_cfg80211.c
+
+Signed-off-by: Ian W Morrison <linuxium@linuxium.com.au>
 ---
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 5 +++--
- drivers/net/wireless/marvell/mwifiex/main.h   | 3 +--
- drivers/net/wireless/marvell/mwifiex/scan.c   | 5 ++---
- 3 files changed, 6 insertions(+), 7 deletions(-)
+ drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 95221306a4e5..2d94104fe7ea 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -667,7 +667,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 	    cmd_no == HostCmd_CMD_802_11_SCAN_EXT) {
- 		mwifiex_queue_scan_cmd(priv, cmd_node);
- 	} else {
--		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node, true);
-+		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node);
- 		queue_work(adapter->workqueue, &adapter->main_work);
- 		if (cmd_node->wait_q_enabled)
- 			ret = mwifiex_wait_queue_complete(adapter, cmd_node);
-@@ -685,11 +685,12 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
-  */
- void
- mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
--				struct cmd_ctrl_node *cmd_node, u32 add_tail)
-+				struct cmd_ctrl_node *cmd_node)
- {
- 	struct host_cmd_ds_command *host_cmd = NULL;
- 	u16 command;
- 	unsigned long flags;
-+	bool add_tail = true;
+diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+index f17f4fb..2ee9df5 100644
+--- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+@@ -3527,7 +3527,6 @@ int rtw_wdev_alloc(struct adapter *padapter, struct device *dev)
+ 		pwdev_priv->power_mgmt = true;
+ 	else
+ 		pwdev_priv->power_mgmt = false;
+-	kfree((u8 *)wdev);
  
- 	host_cmd = (struct host_cmd_ds_command *) (cmd_node->cmd_skb->data);
- 	if (!host_cmd) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index c1d96c64af74..96d68ca9394f 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1071,8 +1071,7 @@ void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
- 			      struct cmd_ctrl_node *cmd_node);
+ 	return ret;
  
- void mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
--				     struct cmd_ctrl_node *cmd_node,
--				     u32 addtail);
-+				     struct cmd_ctrl_node *cmd_node);
- 
- int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter);
- int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter);
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index ce6936d0c5c0..2ed6a22d5247 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -1534,8 +1534,7 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
- 			list_del(&cmd_node->list);
- 			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
- 					       flags);
--			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
--							true);
-+			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node);
- 			queue_work(adapter->workqueue, &adapter->main_work);
- 
- 			/* Perform internal scan synchronously */
-@@ -2033,7 +2032,7 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 					    struct cmd_ctrl_node, list);
- 		list_del(&cmd_node->list);
- 		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
--		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node, true);
-+		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node);
- 	}
- 
- 	return;
 -- 
-2.13.0.219.gdb65acc882-goog
+1.9.1
