@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.g8.pair.com ([66.39.4.88]:33033 "EHLO mail1.g8.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750727AbdE0SGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 May 2017 14:06:17 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH] Per chain RSSI reporting
-From: Michael Ney <neym@vorklift.com>
-In-Reply-To: <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
-Date: Sat, 27 May 2017 13:56:54 -0400
-Cc: Ben Greear <greearb@candelatech.com>,
-        Norik Dzhandzhapanyan <norikd@ethertronics.com>,
-        Adrian Chadd <adrian@freebsd.org>
-Message-Id: <4A8583B3-FFB2-4BDE-8041-9478CAD9EF73@vorklift.com> (sfid-20170527_200627_301094_7227850E)
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
- <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
- <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36814 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756623AbdEGWFF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 7 May 2017 18:05:05 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH 3/3] staging: rtl8192e rtl92e_get_eeprom_size Fix read size of EPROM_CMD.
+Date: Sun,  7 May 2017 20:03:53 +0100
+Message-Id: <20170507190353.3195-3-tvboxspy@gmail.com> (sfid-20170508_000517_256253_EAAB07FE)
+In-Reply-To: <20170507190353.3195-1-tvboxspy@gmail.com>
+References: <20170507190353.3195-1-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The submitted code also doesn't appear to handle RSSI per-peer which would be needed for any use when configured as an access point.
+EPROM_CMD is 2 byte aligned on PCI map so calling with rtl92e_readl
+will return invalid data so use rtl92e_readw.
 
-> On May 27, 2017, at 12:39 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> 
-> On 27 May 2017 at 09:07, Ben Greear <greearb@candelatech.com> wrote:
->> At low encoding rates, especially if it switches to a single-chain encoding,
->> maybe the on-air signal really is stronger?
->> 
->> Have you verified in some other manner than the signals reported by ath10k
->> are
->> wrong?
-> 
-> Hiya,
-> 
-> So yeah, multipath, higher TX rates == weaker TX signal, TPC, etc are
-> all interesting to know about at the receiver. it's hard to separate
-> that out from the noise sometimes, but in some controlled deployments
-> its really obvious.
-> 
-> 
-> 
-> -adrian
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+The device is unable to select the right eeprom type.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+index e03d0a3a6dcc..1c6ed5b2a6f9 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+@@ -625,7 +625,7 @@ void rtl92e_get_eeprom_size(struct net_device *dev)
+ 	struct r8192_priv *priv = rtllib_priv(dev);
+ 
+ 	RT_TRACE(COMP_INIT, "===========>%s()\n", __func__);
+-	curCR = rtl92e_readl(dev, EPROM_CMD);
++	curCR = rtl92e_readw(dev, EPROM_CMD);
+ 	RT_TRACE(COMP_INIT, "read from Reg Cmd9346CR(%x):%x\n", EPROM_CMD,
+ 		 curCR);
+ 	priv->epromtype = (curCR & EPROM_CMD_9356SEL) ? EEPROM_93C56 :
+-- 
+2.11.0
