@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35270 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933397AbdEOOgq (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33896 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750999AbdEGWDS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 10:36:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170515142520.GA13996@redhat.com>
-References: <20170515134711.2770374-1-arnd@arndb.de> <20170515142520.GA13996@redhat.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 15 May 2017 16:36:45 +0200
-Message-ID: <CAK8P3a1xYah7_4=DAcN+M83noUQyLZ9hV=WWD0Q79sQrFsoroA@mail.gmail.com> (sfid-20170515_163738_370400_A39B2271)
-Subject: Re: [PATCH] rt2x00: improve calling conventions for register accessors
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        =?UTF-8?Q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 7 May 2017 18:03:18 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH 2/3] staging: rtl8192e: fix 2 byte alignment of register BSSIR.
+Date: Sun,  7 May 2017 20:03:52 +0100
+Message-Id: <20170507190353.3195-2-tvboxspy@gmail.com> (sfid-20170508_000622_348468_7703F019)
+In-Reply-To: <20170507190353.3195-1-tvboxspy@gmail.com>
+References: <20170507190353.3195-1-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 15, 2017 at 4:28 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Mon, May 15, 2017 at 03:46:55PM +0200, Arnd Bergmann wrote:
->> With CONFIG_KASAN enabled and gcc-7, we get a warning about rather high
->> stack usage (with a private patch set I have to turn on this warning,
->> which I intend to get into the next kernel release):
->>
->> wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_bw_filter_calibration':
->> wireless/ralink/rt2x00/rt2800lib.c:7990:1: error: the frame size of 2144 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
->>
->> The problem is that KASAN inserts a redzone around each local variable that
->> gets passed by reference, and the newly added function has a lot of them.
->> We can easily avoid that here by changing the calling convention to have
->> the output as the return value of the function. This should also results in
->> smaller object code, saving around 4KB in .text with KASAN, or 2KB without
->> KASAN.
->>
->> Fixes: 41977e86c984 ("rt2x00: add support for MT7620")
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> ---
->>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 319 +++++++++++++------------
->>  1 file changed, 164 insertions(+), 155 deletions(-)
->
-> We have read(, &val) calling convention since forever in rt2x00 and that
-> was never a problem. I dislike to change that now to make some tools
-> happy, I think problem should be fixed in the tools instead.
+BSSID has two byte alignment on PCI ioremap correct the write
+by swapping to 16 bits first.
 
-How about adding 'depends on !KASAN' in Kconfig instead?
+This fixes a problem that the device associates fail because
+the filter is not set correctly.
 
-       Arnd
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+index a23628f390c9..e03d0a3a6dcc 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+@@ -97,8 +97,9 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
+ 
+ 	switch (variable) {
+ 	case HW_VAR_BSSID:
+-		rtl92e_writel(dev, BSSIDR, ((u32 *)(val))[0]);
+-		rtl92e_writew(dev, BSSIDR+2, ((u16 *)(val+2))[0]);
++		/* BSSIDR 2 byte alignment */
++		rtl92e_writew(dev, BSSIDR, *(u16 *)val);
++		rtl92e_writel(dev, BSSIDR + 2, *(u32 *)(val + 2));
+ 		break;
+ 
+ 	case HW_VAR_MEDIA_STATUS:
+@@ -961,8 +962,8 @@ static void _rtl92e_net_update(struct net_device *dev)
+ 	rtl92e_config_rate(dev, &rate_config);
+ 	priv->dot11CurrentPreambleMode = PREAMBLE_AUTO;
+ 	 priv->basic_rate = rate_config &= 0x15f;
+-	rtl92e_writel(dev, BSSIDR, ((u32 *)net->bssid)[0]);
+-	rtl92e_writew(dev, BSSIDR+4, ((u16 *)net->bssid)[2]);
++	rtl92e_writew(dev, BSSIDR, *(u16 *)net->bssid);
++	rtl92e_writel(dev, BSSIDR + 2, *(u32 *)(net->bssid + 2));
+ 
+ 	if (priv->rtllib->iw_mode == IW_MODE_ADHOC) {
+ 		rtl92e_writew(dev, ATIMWND, 2);
+-- 
+2.11.0
