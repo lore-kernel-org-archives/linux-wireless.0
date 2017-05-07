@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36437 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752152AbdEDSrG (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35482 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752982AbdEGVvQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 14:47:06 -0400
-Received: by mail-io0-f196.google.com with SMTP id x86so5673944ioe.3
-        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2017 11:47:06 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 0/4] rtlwifi: btcoex: Remove all references to BT_AUTO_REPORT_ONLY* parameters
-Date: Thu,  4 May 2017 13:46:57 -0500
-Message-Id: <20170504184701.16560-1-Larry.Finger@lwfinger.net> (sfid-20170504_204716_874950_0F46FEE1)
+        Sun, 7 May 2017 17:51:16 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH 1/3] staging: rtl8192e rtl92e_fill_tx_desc fix write to mapped out memory.
+Date: Sun,  7 May 2017 20:03:51 +0100
+Message-Id: <20170507190353.3195-1-tvboxspy@gmail.com> (sfid-20170507_235150_241346_F7BEA37F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The btcoex code uses #if constructs to compile conditional code. There
-is no way to modify this behavior without editting the source. This
-logic is converted into regular if statements that interrogate a
-boolean variable in a structure known to all routines. The new form
-does not provide any mechanism for dynamic changes, but it now is in a
-form whereby module parameters could be added to select the behavior
-at module load time. In these patches, a number of routines removed
-because they were not referenced must be restored.
+The driver attempts to alter memory that is mapped to PCI device.
 
-v2 - Some earlier patches were missed in V1.
+This is because tx_fwinfo_8190pci points to skb->data.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Move the pci_map_single to when completed buffer is ready to be mapped with
+psdec is empty to drop on mapping error.
 
-Larry Finger (4):
-  rtlwifi: btcoex: Remove 21a 1ant configuration parameter
-  rtlwifi: btcoex: Remove 23b 1ant configuration parameter
-  rtlwifi: btcoex: Remove 23b 2ant configuration parameter
-  rtlwifi: btcoex: Remove 92e 2ant configuration parameter
+Fixes slow operation and tx queue fails.
 
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  72 ++++++++----
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   1 -
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 123 +++++++++++++++++----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  84 +++++++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   1 -
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  18 +--
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   5 +
- 9 files changed, 229 insertions(+), 79 deletions(-)
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+index 4723a0bd5067..a23628f390c9 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+@@ -1182,8 +1182,7 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
+ 			  struct cb_desc *cb_desc, struct sk_buff *skb)
+ {
+ 	struct r8192_priv *priv = rtllib_priv(dev);
+-	dma_addr_t mapping = pci_map_single(priv->pdev, skb->data, skb->len,
+-			 PCI_DMA_TODEVICE);
++	dma_addr_t mapping;
+ 	struct tx_fwinfo_8190pci *pTxFwInfo;
+ 
+ 	pTxFwInfo = (struct tx_fwinfo_8190pci *)skb->data;
+@@ -1194,8 +1193,6 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
+ 	pTxFwInfo->Short = _rtl92e_query_is_short(pTxFwInfo->TxHT,
+ 						  pTxFwInfo->TxRate, cb_desc);
+ 
+-	if (pci_dma_mapping_error(priv->pdev, mapping))
+-		netdev_err(dev, "%s(): DMA Mapping error\n", __func__);
+ 	if (cb_desc->bAMPDUEnable) {
+ 		pTxFwInfo->AllowAggregation = 1;
+ 		pTxFwInfo->RxMF = cb_desc->ampdu_factor;
+@@ -1230,6 +1227,14 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
+ 	}
+ 
+ 	memset((u8 *)pdesc, 0, 12);
++
++	mapping = pci_map_single(priv->pdev, skb->data, skb->len,
++				 PCI_DMA_TODEVICE);
++	if (pci_dma_mapping_error(priv->pdev, mapping)) {
++		netdev_err(dev, "%s(): DMA Mapping error\n", __func__);
++		return;
++	}
++
+ 	pdesc->LINIP = 0;
+ 	pdesc->CmdInit = 1;
+ 	pdesc->Offset = sizeof(struct tx_fwinfo_8190pci) + 8;
 -- 
-2.12.2
+2.11.0
