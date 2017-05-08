@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:36732 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755848AbdESJHF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 05:07:05 -0400
-Received: by mail-pg0-f68.google.com with SMTP id h64so9105555pge.3
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 02:07:00 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v3 2/6] mwifiex: usb: kill urb before free its memory
-Date: Fri, 19 May 2017 09:06:41 +0000
-Message-Id: <1495184805-6631-2-git-send-email-huxinming820@gmail.com> (sfid-20170519_110715_906074_6F3B513B)
-In-Reply-To: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35952 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751791AbdEHOI0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 May 2017 10:08:26 -0400
+Message-ID: <1494252504.8248.2.camel@redhat.com> (sfid-20170508_160835_323301_8D587E98)
+Subject: Re: mwifiex won't connect to WPA2 anymore
+From: Dan Williams <dcbw@redhat.com>
+To: Julien Cubizolles <j.cubizolles@free.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 08 May 2017 09:08:24 -0500
+In-Reply-To: <8737chpwfx.fsf@free.fr>
+References: <87wpa3kxgi.fsf@free.fr> <87tw51y91z.fsf@free.fr>
+         <1493844237.5647.9.camel@redhat.com> <87a86sfh2e.fsf@free.fr>
+         <1493948347.26081.1.camel@redhat.com> <87mvaq4bsg.fsf@free.fr>
+         <1494085819.19292.5.camel@redhat.com> <8737chpwfx.fsf@free.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Sat, 2017-05-06 at 22:22 +0200, Julien Cubizolles wrote:
+> Dan Williams <dcbw@redhat.com> writes:
+> 
+> 
+> > Ok, at this point the only thing I can think of is the MAC
+> > randomization that NM has.  Please see:
+> > 
+> > https://blogs.gnome.org/thaller/2016/08/26/mac-address-spoofing-in-
+> > networkmanager-1-4-0/
+> > 
+> > and look at the section "Randomization during Wi-Fi scanning" where
+> > it
+> > says:
+> > 
+> > ----
+> > This default behavior can be disabled with a global configuration
+> > option in NetworkManager.conf:
+> > 
+> > [device]
+> > wifi.scan-rand-mac-address=no
+> > ----
+> > 
+> > if you set that, and restart NetworkManager, does that magically
+> > make
+> > things work?
+> 
+> Yes! It's now working fine, thanks a lot. I have my wifi AP set to
+> only
+> accept a whitelist of MAC addresses so it makes sense that I can't
+> connect if the MAC address is random. I'll disable the randomization
+> for
+> now on.
 
-we have observed host system hang when device firmware crash,
-stack trace show it was an use-after-free case: previous submitted
-urb will be holding in usbcore, and given back to device driver
-when device disconnected, while the urb have been freed in usb
-device disconnect handler. This patch kill the holding urb before
-free its memory.
+Well, ideally you wouldn't have to do this, but we haven't quite
+figured out whether it's a bug in the way NM does randomization or
+whether the drivers that require this switch (there are a few) are just
+broken somehow.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
-v2: replace unnecessary sanity check with right handle of
-    pending urb (Arend)
-v3: same as v2
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 2f7705c..5a760ec 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -363,6 +363,7 @@ static void mwifiex_usb_free(struct usb_card_rec *card)
- 	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
- 		port = &card->port[i];
- 		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
-+			usb_kill_urb(port->tx_data_list[j].urb);
- 			usb_free_urb(port->tx_data_list[j].urb);
- 			port->tx_data_list[j].urb = NULL;
- 		}
--- 
-1.9.1
+Dan
