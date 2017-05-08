@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37584 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966147AbdEXErG (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33396 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751791AbdEHNkm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 00:47:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Kyle McMartin <kyle@infradead.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        linux-firmware@kernel.org
-Subject: Re: [PATCH] linux-firmware: add wil6210 firmware 4.1.0.55
-References: <1495370937-5369-1-git-send-email-qca_merez@qca.qualcomm.com>
-        <20170523215351.GX13400@bombadil.infradead.org>
-Date: Wed, 24 May 2017 07:47:01 +0300
-In-Reply-To: <20170523215351.GX13400@bombadil.infradead.org> (Kyle McMartin's
-        message of "Tue, 23 May 2017 14:53:51 -0700")
-Message-ID: <87mva250ai.fsf@purkki.adurom.net> (sfid-20170524_064808_108489_C98ED962)
+        Mon, 8 May 2017 09:40:42 -0400
+Subject: [PATCH v6] staging: rtl8723bs: remove re-positioned call to kfree in
+ os_dep/ioctl_cfg80211.c
+From: Ian W MORRISON <ianwmorrison@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, hadess@hadess.net,
+        Larry.Finger@lwfinger.net, hdegoede@redhat.com,
+        jes.sorensen@gmail.com, kvalo@qca.qualcomm.com
+References: <b4a25189-3e3e-a051-70c3-7fbedc366a26@gmail.com>
+ <8b27a07c-ecb1-21be-bf8f-e7365ec000f4@gmail.com>
+ <40c81df4-d17f-c374-e5a8-c5b8edd914b5@gmail.com>
+Message-ID: <862374c4-39ac-8f0a-e5d1-c239d6910e1f@gmail.com> (sfid-20170508_154113_509830_0E410A08)
+Date: Mon, 8 May 2017 23:40:35 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40c81df4-d17f-c374-e5a8-c5b8edd914b5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kyle McMartin <kyle@infradead.org> writes:
+A re-positioned call to kfree() in 
+drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+causes a segmentation error. This patch removed the kfree() call.
 
-> On Sun, May 21, 2017 at 03:48:57PM +0300, Maya Erez wrote:
->> This is the latest firmware from wil6210 4.1 firmware branch.
->> 
->> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
->> ---
->>  WHENCE      |  10 ++++++++++
->>  wil6210.brd | Bin 0 -> 3588 bytes
->>  wil6210.fw  | Bin 0 -> 350748 bytes
->>  3 files changed, 10 insertions(+)
->>  create mode 100644 wil6210.brd
->>  create mode 100644 wil6210.fw
->
-> Sigh, I wish this was under a subdirectory, but since the kernel driver
-> is already upstream, I guess we're SOL.
+Fixes 6557ddfec348 ("staging: rtl8723bs: Fix various errors in os_dep/ioctl_cfg80211.c")
+Signed-off-by: Ian W Morrison <ianwmorrison@gmail.com>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+---
+This version of the patch (version 6) fixes errors in the patch submission.
+ drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Yeah, I wish so too. We could always change the driver to use a
-subdirectory but still we would have to keep these files without the
-subdirectory in linux-firmware as the fallback for older kernels.
-
-But I'll (try) make sure that all new wireless drivers will use a
-subdirectory with firmware files.
-
+diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+index f17f4fb..2ee9df5 100644
+--- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+@@ -3527,7 +3527,6 @@ int rtw_wdev_alloc(struct adapter *padapter, struct device *dev)
+ 		pwdev_priv->power_mgmt = true;
+ 	else
+ 		pwdev_priv->power_mgmt = false;
+-	kfree((u8 *)wdev);
+ 
+ 	return ret;
+ 
 -- 
-Kalle Valo
+1.9.1
