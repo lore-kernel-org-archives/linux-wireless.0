@@ -1,137 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:53606 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758246AbdEVQVZ (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35094 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbdEHWea (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 12:21:25 -0400
-Date: Mon, 22 May 2017 18:21:15 +0200
-From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-To: Rob Herring <robh+dt@kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        David Miller <davem@davemloft.net>,
-        Tony Lindgren <tony@atomide.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCHv4] wlcore: add wl1285 compatible
-Message-ID: <20170522162114.w4pw25pcecsm6lhi@earth> (sfid-20170522_182348_475982_3DE07CA3)
-References: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk>
- <8737bx5jgr.fsf@purkki.adurom.net>
- <20170522.103010.1779800840743690143.davem@davemloft.net>
- <87wp99t0hj.fsf@kamboji.qca.qualcomm.com>
- <20170522152112.634mnsv65lryrmkp@earth>
- <CAL_JsqL91sruKNaWmVEqT+L_OCh5xFkkGY07mBBUmqkKHc5fQw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="qudstgvlcj7ysmyi"
-In-Reply-To: <CAL_JsqL91sruKNaWmVEqT+L_OCh5xFkkGY07mBBUmqkKHc5fQw@mail.gmail.com>
+        Mon, 8 May 2017 18:34:30 -0400
+From: Karim Eshapa <karim.eshapa@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Karim Eshapa <karim.eshapa@gmail.com>
+Subject: [PATCH] drivers: net: wireless: rsi: rsi_91x_core: Use time_after time comparison
+Date: Tue,  9 May 2017 00:34:10 +0200
+Message-Id: <1494282850-13782-1-git-send-email-karim.eshapa@gmail.com> (sfid-20170509_003546_332653_712E093E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Use time_after kernel macro for time comparison.
 
---qudstgvlcj7ysmyi
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Karim Eshapa <karim.eshapa@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hi,
-
-On Mon, May 22, 2017 at 11:11:49AM -0500, Rob Herring wrote:
-> On Mon, May 22, 2017 at 10:21 AM, Sebastian Reichel
-> <sebastian.reichel@collabora.co.uk> wrote:
-> > Hi,
-> >
-> > On Mon, May 22, 2017 at 05:44:24PM +0300, Kalle Valo wrote:
-> >> David Miller <davem@davemloft.net> writes:
-> >> > From: Kalle Valo <kvalo@codeaurora.org>
-> >> > Date: Mon, 22 May 2017 12:28:20 +0300
-> >> >
-> >> >> Sebastian Reichel <sebastian.reichel@collabora.co.uk> writes:
-> >> >>
-> >> >>> Motorola Droid 4 uses a WL1285C. With differences between the
-> >> >>> chips not being public let's add explicit binding for wl1285
-> >> >>> instead of relying on wl1283 being very similar.
-> >> >>>
-> >> >>> Reviewed-by: Rob Herring <robh@kernel.org>
-> >> >>> Acked-by: Kalle Valo <kvalo@codeaurora.org>
-> >> >>> Acked-by: Tony Lindgren <tony@atomide.com>
-> >> >>> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.u=
-k>
-> >> >>> ---
-> >> >>> Hi Dave,
-> >> >>>
-> >> >>> I previously send this in two patches, but its hard to apply witho=
-ut
-> >> >>> requiring multiple kernel releases (the driver must be updated bef=
-ore
-> >> >>> the DTS change). Since the actual change is not very complex Marcel
-> >> >>> Holtmann & Tony Lindgren suggested, that I send this directly to y=
-ou
-> >> >>> in a single patch for inclusion into 4.12. This also means, that t=
-he
-> >> >>> remaining series can be queued normally for 4.13.
-> >> >>
-> >> >> I noticed that Dave set this patch to Awaiting Upstream state on his
-> >> >> patchwork:
-> >> >>
-> >> >> https://patchwork.ozlabs.org/patch/759042/
-> >> >>
-> >> >> Which makes me suspect that he is waiting me to apply this (as I
-> >> >> normally apply wlcore patches). Dave, should I actually take this p=
-atch?
-> >> >> What do you prefer?
-> >> >
-> >> > Anything that touches wireless drivers I defer to you, yes.
-> >>
-> >> Thanks, I'll take it then. Not sure why Sebastian was suggested to
-> >> submit this patch via your tree in the first place.
-> >>
-> >> https://patchwork.kernel.org/patch/9713645/
-> >
-> > Thanks. The idea was to get into early 4.12-rc to avoid merge
-> > conflicts in the droid 4 *.dts during 4.13 cycle. This strategy
-> > obviously failed :)
->=20
-> First, I'm not sure why you combined everything. A maintainer can just
-> as easily take a series as a single patch and we prefer binding doc,
-> dts and driver changes all separate.
->=20
-> Second, the dts changes could go thru arm-soc and the driver change
-> thru netdev. The binding doc can be thru either. There's no bisecting
-> dependency and things shouldn't break. It just won't all work until
-> you have both branches.
-
-This is only true for new devices. WLAN for droid4 works at the
-moment using incorrect compatible string. If *.dts is updated and
-driver is not yet updated WLAN does not work. IMHO that is a
-bisecting dependency.
-
-It would have been fine to sneak the driver change into 4.12 and
-queue the *.dts change in 4.13, though. IIRC Tony suggest to make
-it one patch.
-
--- Sebastian
-
---qudstgvlcj7ysmyi
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlkjD/gACgkQ2O7X88g7
-+potAQ//Zg4paFigzw/mj9gBU3ClP6Uok7Jh92nHYiOIzIb7AyWDhmz8oUJWwHU7
-Jpj1zO3ZJHx9SvEZ15UqZOEmzIvSZkJF9k6q8gxJLBMfEbQLQqtXvgjsBAlXq5Tk
-fEtDVFbpl+NDNGJZaVqy2D48pz0CCJ01QpDt+XeoVJjUkNmuoWb6VexZAEoKgE9i
-7j0hxHxhfxbyebFVxZD5tgzC3c7+kS2ev7PAQ8ugCjVn/uPcVOAO8GOXYO9vtBbD
-ZjNiDg51u5Qev0DRXHXZErbjgf/Exxyo9H+kRLzOTvEJuWYpWPeRvX9UOuH+KSPs
-4RMweYw/MCnpIFH/SMzBNVcxs4OfnF0EzjGHVw9rOXHcC5B2werltKq08mEaHsJk
-ukxqp+jsDUxiPiMqrYH3QjakNJ1Zvhs9Co1wdqoRP/5NI+JqWjxVCqxdKE30KkwH
-YIHnRV0BiSbcsIy25m+nWKInA3kIOEW8Z8o15s6I7Cfd+oXCZvhmpm5q4pU47k3P
-zz3w+Mi/VRAnOyi9JeKvUi0dSfWPmA0I+zk7kpLgHZouZWj87RgNg7aaaJozfPrZ
-vFDLZkxcJS8qEX8/EGIJ9SDX7zm1P+MACo4fjyjlGchd35uj2xDVUGqc3XFhcv3C
-dUpT2LjatyzAsTHPwnHLtf0CFIeVjHfTqqURE75C6FsKvZYEewE=
-=yoyo
------END PGP SIGNATURE-----
-
---qudstgvlcj7ysmyi--
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index f3d3995..68f04a7 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -306,7 +306,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 		tstamp_2 = jiffies;
+ 		mutex_unlock(&common->tx_rxlock);
+ 
+-		if (tstamp_2 > tstamp_1 + (300 * HZ / 1000))
++		if (time_after(tstamp_2, tstamp_1 + (300 * HZ) / 1000))
+ 			schedule();
+ 	}
+ }
+-- 
+2.7.4
