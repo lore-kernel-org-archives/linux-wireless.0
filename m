@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33224 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757801AbdEVJiA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 05:38:00 -0400
-Received: by mail-pf0-f181.google.com with SMTP id e193so77142389pfh.0
-        for <linux-wireless@vger.kernel.org>; Mon, 22 May 2017 02:38:00 -0700 (PDT)
-Subject: Re: [PATCH 1/1] dt-binding: net: wireless: fix node name in the
- BCM43xx example
-To: =?UTF-8?Q?Andreas_F=c3=a4rber?= <afaerber@suse.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: robh+dt@kernel.org, kvalo@codeaurora.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-References: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
- <20170515201356.26384-2-martin.blumenstingl@googlemail.com>
- <8155d0f1-aed3-fc47-4524-635067f9ee7b@broadcom.com>
- <CAFBinCBeijYMJ+hTajCA-2D7S1aH6E2mc_gm-2cAqKt87XVNkg@mail.gmail.com>
- <11675313-d92f-e562-0fd5-21339b5aa599@suse.de>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <9e7ee577-d01e-150c-1785-52d8b9024775@broadcom.com> (sfid-20170522_113830_809060_61B8592B)
-Date: Mon, 22 May 2017 11:37:56 +0200
-MIME-Version: 1.0
-In-Reply-To: <11675313-d92f-e562-0fd5-21339b5aa599@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:35380 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754315AbdEHOq2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 May 2017 10:46:28 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-05-08
+Date: Mon,  8 May 2017 16:46:21 +0200
+Message-Id: <20170508144622.19986-1-johannes@sipsolutions.net> (sfid-20170508_164706_194279_2F10591A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/21/2017 4:19 PM, Andreas Färber wrote:
-> Hi,
-> 
-> Am 16.05.2017 um 21:56 schrieb Martin Blumenstingl:
->> On Tue, May 16, 2017 at 12:05 AM, Arend Van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 15-5-2017 22:13, Martin Blumenstingl wrote:
->>>> The example in the BCM43xx documentation uses "brcmf" as node name.
->>>> However, wireless devices should be named "wifi" instead. Fix this to
->>>
->>> Since when is that a rule. I never got the memo and the DTC did not ever
->>> complain to me about the naming.
-> 
-> How do you expect it to? Maintain a blacklist of every device model
-> someone might use, including all typo variations?
+Hi Dave,
 
-Not really why I was asking it. Just saying the node name is trivial as 
-I don't think there is different kernel behaviour depending on the node 
-name.
+Thanks for merging the rate fix quickly the other day. I've got a
+few more fixes lined up, so this time as a pull request.
 
->> That being said I do not really care
->>> and I suppose it is for the sake of consistency only.
->> I'm not sure if it's actually a rule or (as you already noted) just
->> for consistency. back when I added devicetree support to ath9k Rob
->> pointed out that the node should be named "wifi" (instead of "ath9k"),
->> see [0]
-> 
-> The general rule is that the node name should be the type of the device,
-> not duplicate its compatible string.
-> 
-> For consistency Rob was asking we use "wifi" as node name.
-
-Fine with that. Not sure how long ago it was that I added this binding, 
-but DT folks were involved back than. I never looked back so I should 
-not be surprised with new consistency rules. I was just curious about 
-the story behind it.
+Please pull and let me know if there's any problem.
 
 Thanks,
-Arend
+johannes
+
+
+
+The following changes since commit 4ac4d584886a4f47f8ff3bca0f32ff9a2987d3e5:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2017-05-04 12:26:43 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-05-08
+
+for you to fetch changes up to 6406c91943a0f29b6e8786921aaa038663e08055:
+
+  cfg80211: fix multi scheduled scan kernel-doc (2017-05-08 13:09:38 +0200)
+
+----------------------------------------------------------------
+A couple more fixes:
+ * don't try to authenticate during reconfiguration, which causes
+   drivers to get confused
+ * fix a kernel-doc warning for a recently merged change
+ * fix MU-MIMO group configuration (relevant only for monitor mode)
+ * more rate flags fix: remove stray RX_ENC_FLAG_40MHZ
+ * fix IBSS probe response allocation size
+
+----------------------------------------------------------------
+Johannes Berg (4):
+      mac80211: properly remove RX_ENC_FLAG_40MHZ
+      nl80211: correctly validate MU-MIMO groups
+      mac80211: fix IBSS presp allocation size
+      cfg80211: fix multi scheduled scan kernel-doc
+
+Luca Coelho (1):
+      mac80211: bail out from prep_connection() if a reconfig is ongoing
+
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c    | 2 +-
+ drivers/net/wireless/ath/ath9k/mac.c           | 4 ++--
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c | 4 +++-
+ drivers/net/wireless/intel/iwlwifi/dvm/rx.c    | 4 +++-
+ drivers/net/wireless/mac80211_hwsim.c          | 8 +++++++-
+ include/net/cfg80211.h                         | 2 +-
+ include/net/mac80211.h                         | 2 --
+ net/mac80211/ibss.c                            | 2 ++
+ net/mac80211/mlme.c                            | 4 ++++
+ net/wireless/nl80211.c                         | 4 ++--
+ 10 files changed, 25 insertions(+), 11 deletions(-)
