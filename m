@@ -1,211 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:36216 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750999AbdEaLQk (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:34497 "EHLO
+        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752105AbdEHLSJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 07:16:40 -0400
-Received: by mail-it0-f65.google.com with SMTP id i206so1488597ita.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 04:16:39 -0700 (PDT)
+        Mon, 8 May 2017 07:18:09 -0400
+Received: by mail-oi0-f42.google.com with SMTP id b204so46218279oii.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 May 2017 04:18:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1496147754-2303-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com> <1496147754-2303-2-git-send-email-arend.vanspriel@broadcom.com>
-From: Enric Balletbo Serra <eballetbo@gmail.com>
-Date: Wed, 31 May 2017 13:16:38 +0200
-Message-ID: <CAFqH_522JHk3oT4bQCObQ_EfUwVV3P_GvnRw8b24YmO9F8qjYg@mail.gmail.com> (sfid-20170531_131644_150966_2B0C0B89)
-Subject: Re: [RFT 1/3] brcmfmac: add parameter to pass error code in firmware callback
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+From: Maxime Vincent <maxime.vince@gmail.com>
+Date: Mon, 8 May 2017 13:18:07 +0200
+Message-ID: <CACBz14-1sf++sFT6gXawNdf87B6fsyETZu+SVcyVQA5KApwmrg@mail.gmail.com> (sfid-20170508_131813_463676_B170EB81)
+Subject: mwifiex_pcie does not recover after suspend
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-05-30 14:35 GMT+02:00 Arend van Spriel <arend.vanspriel@broadcom.com>:
-> Extend the parameters in the firmware callback so it can be called
-> upon success and failure. This allows the caller to properly clear
-> all resources in the failure path. Right now the error code is
-> always zero, ie. success.
->
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 10 +++++-----
->  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.h |  4 ++--
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 17 ++++++++++++-----
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 17 +++++++++++------
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c  |  6 ++++--
->  5 files changed, 34 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> index c7c1e99..ae61a24 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> @@ -442,7 +442,7 @@ struct brcmf_fw {
->         const char *nvram_name;
->         u16 domain_nr;
->         u16 bus_nr;
-> -       void (*done)(struct device *dev, const struct firmware *fw,
-> +       void (*done)(struct device *dev, int err, const struct firmware *fw,
->                      void *nvram_image, u32 nvram_len);
->  };
->
-> @@ -477,7 +477,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->         if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->                 goto fail;
->
-> -       fwctx->done(fwctx->dev, fwctx->code, nvram, nvram_length);
-> +       fwctx->done(fwctx->dev, 0, fwctx->code, nvram, nvram_length);
->         kfree(fwctx);
->         return;
->
-> @@ -499,7 +499,7 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
->
->         /* only requested code so done here */
->         if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM)) {
-> -               fwctx->done(fwctx->dev, fw, NULL, 0);
-> +               fwctx->done(fwctx->dev, 0, fw, NULL, 0);
->                 kfree(fwctx);
->                 return;
->         }
-> @@ -522,7 +522,7 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
->
->  int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
->                                 const char *code, const char *nvram,
-> -                               void (*fw_cb)(struct device *dev,
-> +                               void (*fw_cb)(struct device *dev, int err,
->                                               const struct firmware *fw,
->                                               void *nvram_image, u32 nvram_len),
->                                 u16 domain_nr, u16 bus_nr)
-> @@ -555,7 +555,7 @@ int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
->
->  int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
->                            const char *code, const char *nvram,
-> -                          void (*fw_cb)(struct device *dev,
-> +                          void (*fw_cb)(struct device *dev, int err,
->                                          const struct firmware *fw,
->                                          void *nvram_image, u32 nvram_len))
->  {
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-> index d3c9f0d..8fa4b7e 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-> @@ -73,13 +73,13 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
->   */
->  int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
->                                 const char *code, const char *nvram,
-> -                               void (*fw_cb)(struct device *dev,
-> +                               void (*fw_cb)(struct device *dev, int err,
->                                               const struct firmware *fw,
->                                               void *nvram_image, u32 nvram_len),
->                                 u16 domain_nr, u16 bus_nr);
->  int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
->                            const char *code, const char *nvram,
-> -                          void (*fw_cb)(struct device *dev,
-> +                          void (*fw_cb)(struct device *dev, int err,
->                                          const struct firmware *fw,
->                                          void *nvram_image, u32 nvram_len));
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> index f36b96d..f878706 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> @@ -1650,16 +1650,23 @@ static void brcmf_pcie_buscore_activate(void *ctx, struct brcmf_chip *chip,
->         .write32 = brcmf_pcie_buscore_write32,
->  };
->
-> -static void brcmf_pcie_setup(struct device *dev, const struct firmware *fw,
-> +static void brcmf_pcie_setup(struct device *dev, int ret,
-> +                            const struct firmware *fw,
->                              void *nvram, u32 nvram_len)
->  {
-> -       struct brcmf_bus *bus = dev_get_drvdata(dev);
-> -       struct brcmf_pciedev *pcie_bus_dev = bus->bus_priv.pcie;
-> -       struct brcmf_pciedev_info *devinfo = pcie_bus_dev->devinfo;
-> +       struct brcmf_bus *bus;
-> +       struct brcmf_pciedev *pcie_bus_dev;
-> +       struct brcmf_pciedev_info *devinfo;
->         struct brcmf_commonring **flowrings;
-> -       int ret;
->         u32 i;
->
-> +       /* check firmware loading result */
-> +       if (ret)
-> +               goto fail;
-> +
-> +       bus = dev_get_drvdata(dev);
-> +       pcie_bus_dev = bus->bus_priv.pcie;
-> +       devinfo = pcie_bus_dev->devinfo;
->         brcmf_pcie_attach(devinfo);
->
->         /* Some of the firmwares have the size of the memory of the device
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index a999f95..270c0ad 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -3978,21 +3978,26 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
->         .get_memdump = brcmf_sdio_bus_get_memdump,
->  };
->
-> -static void brcmf_sdio_firmware_callback(struct device *dev,
-> +static void brcmf_sdio_firmware_callback(struct device *dev, int err,
->                                          const struct firmware *code,
->                                          void *nvram, u32 nvram_len)
->  {
-> -       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-> -       struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-> -       struct brcmf_sdio *bus = sdiodev->bus;
-> -       int err = 0;
-> +       struct brcmf_bus *bus_if;
-> +       struct brcmf_sdio_dev *sdiodev;
-> +       struct brcmf_sdio *bus;
->         u8 saveclk;
->
-> -       brcmf_dbg(TRACE, "Enter: dev=%s\n", dev_name(dev));
-> +       brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
-> +       if (err)
-> +               goto fail;
->
-> +       bus_if = dev_get_drvdata(dev);
->         if (!bus_if->drvr)
->                 return;
->
-> +       sdiodev = bus_if->bus_priv.sdio;
-> +       bus = sdiodev->bus;
-> +
->         /* try to download image and nvram to the dongle */
->         bus->alp_only = true;
->         err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> index e4d545f..9ce3b55 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> @@ -1159,13 +1159,15 @@ static int brcmf_usb_bus_setup(struct brcmf_usbdev_info *devinfo)
->         return ret;
->  }
->
-> -static void brcmf_usb_probe_phase2(struct device *dev,
-> +static void brcmf_usb_probe_phase2(struct device *dev, int ret,
+I am running the latest linux-next wireless stack, backported on 4.4,
+including the latest mwifiex patches that have been posted on this
+mailing list. (thanks!)
+Latest patch I applied is "mwifiex: pcie: add card_reset() support"
+from Brian Norris.
 
-nit: int err ?
+I am running this kernel on a Microsoft Surface Pro 4.
 
-IMHO is more clear use err than ret which is normally used as a return
-value in a function not as a parameter
+After suspending (to disk) and resuming, the relevant dmesg output is:
+[  158.094407] Restarting tasks ...
+[  158.096470] usb 1-5: USB disconnect, device number 3
+[  158.096515] done.
+[  158.097137] ieee80211 phy0: sched_scan start : n_ssids=1 n_match_sets=1
+[  158.097144] ieee80211 phy0: n_channels=41 interval=10 ie_len=126
+[  168.118775] mwifiex_pcie 0000:02:00.0: mwifiex_cmd_timeout_func:
+Timeout cmd id = 0x6b, act = 0x1
+[  168.118797] mwifiex_pcie 0000:02:00.0: num_data_h2c_failure = 0
+[  168.118804] mwifiex_pcie 0000:02:00.0: num_cmd_h2c_failure = 0
+[  168.118810] mwifiex_pcie 0000:02:00.0: is_cmd_timedout = 1
+[  168.118816] mwifiex_pcie 0000:02:00.0: num_tx_timeout = 0
+[  168.118822] mwifiex_pcie 0000:02:00.0: last_cmd_index = 1
+[  168.118829] mwifiex_pcie 0000:02:00.0: last_cmd_id: e5 00 6b 00 28
+00 28 00 28 00
+[  168.118835] mwifiex_pcie 0000:02:00.0: last_cmd_act: 01 00 01 00 13
+00 13 00 13 00
+[  168.118841] mwifiex_pcie 0000:02:00.0: last_cmd_resp_index = 0
+[  168.118848] mwifiex_pcie 0000:02:00.0: last_cmd_resp_id: e5 80 28
+80 28 80 28 80 28 80
+[  168.118854] mwifiex_pcie 0000:02:00.0: last_event_index = 2
+[  168.118860] mwifiex_pcie 0000:02:00.0: last_event: 0b 00 0a 00 0a
+00 58 00 58 00
+[  168.118866] mwifiex_pcie 0000:02:00.0: data_sent=0 cmd_sent=1
+[  168.118873] mwifiex_pcie 0000:02:00.0: ps_mode=1 ps_state=0
+[  168.120902] ieee80211 phy0: sched_scan start : n_ssids=1 n_match_sets=1
+[  168.120914] ieee80211 phy0: n_channels=41 interval=10 ie_len=126
+[  168.120925] mwifiex_pcie 0000:02:00.0: PREP_CMD: FW is in bad state
+[  168.121770] mwifiex_pcie 0000:02:00.0: Ignore scan. Card removed or
+firmware in bad state
+[  168.121780] mwifiex_pcie 0000:02:00.0: scan failed: -14
+[  168.125201] mwifiex_pcie 0000:02:00.0: ===mwifiex driverinfo dump start===
+[  168.125278] mwifiex_pcie 0000:02:00.0: info: MWIFIEX VERSION:
+mwifiex 1.0 (15.68.7.p77)
+[  168.125288] mwifiex_pcie 0000:02:00.0: PCIE register dump start
+[  168.125382] mwifiex_pcie 0000:02:00.0: pcie scratch register:
+[  168.125392] mwifiex_pcie 0000:02:00.0: reg:0xcf0, value=0x0
+               reg:0xcf8, value=0x0
+               reg:0xcfc, value=0x0
 
->                                    const struct firmware *fw,
->                                    void *nvram, u32 nvlen)
->  {
->         struct brcmf_bus *bus = dev_get_drvdata(dev);
->         struct brcmf_usbdev_info *devinfo;
-> -       int ret;
-> +
-> +       if (ret)
-nit: if (err)
-> +               goto error;
->
->         brcmf_dbg(USB, "Start fw downloading\n");
->
-> --
-> 1.9.1
->
+[  168.125395] mwifiex_pcie 0000:02:00.0: PCIE register dump end
+[  168.125433] mwifiex_pcie 0000:02:00.0: ===mwifiex driverinfo dump end===
+[  168.125436] mwifiex_pcie 0000:02:00.0: == mwifiex firmware dump start ==
+[  168.156435] mwifiex_pcie 0000:02:00.0: Fail to pull ctrl_data
+[  168.156469] mwifiex_pcie 0000:02:00.0: == mwifiex dump information
+to /sys/class/devcoredump start
+[  168.156548] mwifiex_pcie 0000:02:00.0: == mwifiex dump information
+to /sys/class/devcoredump end
+[  168.156728] mwifiex_pcie 0000:02:00.0: info: shutdown mwifiex...
+[  168.157429] mwifiex_pcie 0000:02:00.0: PREP_CMD: card is removed
+[  168.157437] mwifiex_pcie 0000:02:00.0: PREP_CMD: card is removed
+[  169.282762] mwifiex_pcie 0000:02:00.0: FW CRC error indicated by
+the helper: len = 0x0011, txlen = 17
+[  169.282784] mwifiex_pcie 0000:02:00.0: Invalid parameter in
+mwifiex_pcie_send_boot_cmd <ffff8801506e0cc0. len 0>
+[  169.282786] mwifiex_pcie 0000:02:00.0: Failed to send firmware
+download command
+[  169.282794] mwifiex_pcie 0000:02:00.0: prog_fw failed ret=0xffffffff
+[  169.282801] mwifiex_pcie 0000:02:00.0: info: _mwifiex_fw_dpc:
+unregister device
+
+
+ I am willing to do some experiments, by modifying the driver myself,
+but need some pointers on where to look, or what to try. Would
+downloading the firmware to the controller again help?
+
+Any help is welcome! Thanks.
+
+Maxime Vincent
