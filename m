@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:34775 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750796AbdEEQR0 (ORCPT
+Received: from gateway32.websitewelcome.com ([192.185.145.170]:19962 "EHLO
+        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752461AbdEIMzT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 12:17:26 -0400
-Received: by mail-io0-f194.google.com with SMTP id 12so2446060iol.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:25 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 05/10] rtlwifi: btcoex: 21a 2ant: add pnp notidy to avoid LPS/IPS mismatch
-Date: Fri,  5 May 2017 11:17:07 -0500
-Message-Id: <20170505161712.8685-6-Larry.Finger@lwfinger.net> (sfid-20170505_183118_111074_4767102B)
-In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
-References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+        Tue, 9 May 2017 08:55:19 -0400
+Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
+        by gateway32.websitewelcome.com (Postfix) with ESMTP id 48FEE38A4E9
+        for <linux-wireless@vger.kernel.org>; Tue,  9 May 2017 07:34:43 -0500 (CDT)
+Date: Tue, 09 May 2017 07:34:42 -0500
+Message-ID: <20170509073442.Horde.Q8CbZi0XhNUcuRQ3NxtQfks@gator4166.hostgator.com> (sfid-20170509_145523_770886_E7A993D4)
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH] net: wireless: ath: ath10k: remove unnecessary code
+References: <20170509042159.GA19727@embeddedgus>
+ <87lgq6387s.fsf@kamboji.qca.qualcomm.com>
+ <76408651-07c6-fe31-863f-e1cb73b49663@broadcom.com>
+In-Reply-To: <76408651-07c6-fe31-863f-e1cb73b49663@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi Arend,
 
-When driver is going to sleep, it does not leave LPS/IPS, thus the
-BTCoex may have mismatch when driver wakes up. To avoid that, BTCoex
-needs to clear the IPS/LPS state when it receives a pnp notify, then
-it can properly set up the hw when driver wakes up.
+Quoting Arend Van Spriel <arend.vanspriel@broadcom.com>:
 
-Routine ex_btc8821a2ant_pnp_notify() restored.
+> On 9-5-2017 7:33, Kalle Valo wrote:
+>> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
+>>
+>>> The name of an array used by itself will always return the array's address.
+>>> So these tests will always evaluate as false and therefore the _return_
+>>> will never be executed.
+>>>
+>>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>>
+>> I don't understand the commit log, especially what does "The name of an
+>> array used by itself" mean?
+>
+> The array fields in struct wmi_start_scan_arg that are checked here are
+> fixed size arrays so they can never be NULL.
+>
+> Maybe that helps rephrasing this commit message.
+>
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c        | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 9aa140a46d46..ca7649dca352 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -4147,6 +4147,24 @@ void ex_btc8821a2ant_halt_notify(struct btc_coexist *btcoexist)
- 	ex_btc8821a2ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
- }
- 
-+void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
-+{
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+
-+	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD, "[BTCoex], Pnp notify\n");
-+
-+	if (pnp_state == BTC_WIFI_PNP_SLEEP) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], Pnp notify to SLEEP\n");
-+	} else if (pnp_state == BTC_WIFI_PNP_WAKE_UP) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], Pnp notify to WAKE UP\n");
-+		ex_btc8821a2ant_init_hwconfig(btcoexist);
-+		btc8821a2ant_init_coex_dm(btcoexist);
-+		btc8821a2ant_query_bt_info(btcoexist);
-+	}
-+}
-+
- void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--- 
-2.12.2
+Definitely. Thank you!
+--
+Gustavo A. R. Silva
