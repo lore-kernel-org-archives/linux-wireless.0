@@ -1,105 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34009 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932173AbdEUUBm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24601 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752541AbdEIMUn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 16:01:42 -0400
-Received: by mail-lf0-f67.google.com with SMTP id q24so3696320lfb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:36 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 7/9] ath10k: dma fixes for high latency devices
-Date: Sun, 21 May 2017 21:59:09 +0200
-Message-Id: <1495396751-4805-8-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220204_704952_5D9736BA)
-In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+        Tue, 9 May 2017 08:20:43 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+CC: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] net: wireless: ath: ath10k: remove unnecessary code
+Date: Tue, 9 May 2017 12:20:40 +0000
+Message-ID: <87wp9qz0fd.fsf@kamboji.qca.qualcomm.com> (sfid-20170509_142123_497725_9A37F9E2)
+References: <20170509042159.GA19727@embeddedgus>
+        <87lgq6387s.fsf@kamboji.qca.qualcomm.com>
+        <76408651-07c6-fe31-863f-e1cb73b49663@broadcom.com>
+In-Reply-To: <76408651-07c6-fe31-863f-e1cb73b49663@broadcom.com> (Arend Van
+        Spriel's message of "Tue, 9 May 2017 14:07:57 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several DMA related functions (such as the dma_map_xxx functions)
-are not used with high latency devices and don't need to be invoked
-in this case.
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c    | 13 ++++++++-----
- drivers/net/wireless/ath/ath10k/htt_rx.c |  3 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +++
- drivers/net/wireless/ath/ath10k/txrx.c   |  5 +++--
- 4 files changed, 16 insertions(+), 8 deletions(-)
+> On 9-5-2017 7:33, Kalle Valo wrote:
+>> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
+>>=20
+>>> The name of an array used by itself will always return the array's addr=
+ess.
+>>> So these tests will always evaluate as false and therefore the _return_
+>>> will never be executed.
+>>>
+>>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>>=20
+>> I don't understand the commit log, especially what does "The name of an
+>> array used by itself" mean?
+>
+> The array fields in struct wmi_start_scan_arg that are checked here are
+> fixed size arrays so they can never be NULL.
+>
+> Maybe that helps rephrasing this commit message.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index e5c80f5..232740c 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -137,11 +137,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	ath10k_htc_prepare_tx_skb(ep, skb);
- 
- 	skb_cb->eid = eid;
--	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
--	ret = dma_mapping_error(dev, skb_cb->paddr);
--	if (ret) {
--		ret = -EIO;
--		goto err_credits;
-+	if (!ar->is_high_latency) {
-+		skb_cb->paddr = dma_map_single(dev, skb->data, skb->len,
-+					       DMA_TO_DEVICE);
-+		ret = dma_mapping_error(dev, skb_cb->paddr);
-+		if (ret) {
-+			ret = -EIO;
-+			goto err_credits;
-+		}
- 	}
- 
- 	sg_item.transfer_id = ep->eid;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 31654bd..e1cb754 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2484,7 +2484,8 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
--		ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
-+		if (!ar->is_high_latency)
-+			ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
- 		break;
- 	case HTT_T2H_MSG_TYPE_SEC_IND: {
- 		struct ath10k *ar = htt->ar;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index e3b820d..27bbc3e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -409,6 +409,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
- 	if (htt->tx_mem_allocated)
- 		return 0;
- 
-+	if (ar->is_high_latency)
-+		return 0;
-+
- 	ret = ath10k_htt_tx_alloc_buf(htt);
- 	if (ret)
- 		goto free_idr_pending_tx;
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index d4986f6..fae143e 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -90,11 +90,12 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
- 	ath10k_htt_tx_dec_pending(htt);
--	if (htt->num_pending_tx == 0)
-+	if (!ar->is_high_latency && (htt->num_pending_tx == 0))
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
--	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-+	if (!ar->is_high_latency)
-+		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
- 	ath10k_report_offchan_tx(htt->ar, msdu);
- 
--- 
-2.7.4
+Much much better, thanks!
+
+--=20
+Kalle Valo=
