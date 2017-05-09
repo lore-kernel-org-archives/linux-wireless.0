@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:36179 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756264AbdETUeC (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61722 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752597AbdEIMV7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 May 2017 16:34:02 -0400
-Received: by mail-lf0-f68.google.com with SMTP id h4so2393485lfj.3
-        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 13:34:01 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v2 2/3] ath10k: different fw file names for usb
-Date: Sat, 20 May 2017 22:33:29 +0200
-Message-Id: <1495312410-9937-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170520_223413_022397_507645B0)
-In-Reply-To: <1495312410-9937-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1495312410-9937-1-git-send-email-erik.stromdahl@gmail.com>
+        Tue, 9 May 2017 08:21:59 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net: wireless: ath: ath9k: remove unnecessary code
+Date: Tue, 9 May 2017 12:21:54 +0000
+Message-ID: <87shkez0da.fsf@kamboji.qca.qualcomm.com> (sfid-20170509_142234_890138_359A6E6B)
+References: <20170509034814.GA18034@embeddedgus>
+        <87efvy1d07.fsf@kamboji.qca.qualcomm.com>
+        <20170509070158.Horde.dYleVB-aK1cNNyQpdVsVMNp@gator4166.hostgator.com>
+In-Reply-To: <20170509070158.Horde.dYleVB-aK1cNNyQpdVsVMNp@gator4166.hostgator.com>
+        (Gustavo A. R. Silva's message of "Tue, 9 May 2017 07:01:58 -0500")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-USB firmware will be named in the same way as SDIO files,
-i.e, the bus type will be added to the firmware file name.
+"Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- 1 file changed, 1 insertion(+)
+> Hi Kalle,
+>
+> Quoting Kalle Valo <kvalo@qca.qualcomm.com>:
+>
+>> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
+>>
+>>> The name of an array used by itself will always return the array's addr=
+ess.
+>>> So this test will always evaluate as true.
+>>>
+>>> Addresses-Coverity-ID: 1364903
+>>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c
+>>> b/drivers/net/wireless/ath/ath9k/eeprom.c
+>>> index fb80ec8..5c3bc28 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/eeprom.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+>>> @@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32
+>>> off, u16 *data)
+>>>
+>>>  	if (ah->eeprom_blob)
+>>>  		ret =3D ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
+>>> -	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
+>>> +	else if (pdata && !pdata->use_eeprom)
+>>>  		ret =3D ath9k_hw_nvram_read_pdata(pdata, off, data);
+>>>  	else
+>>>  		ret =3D common->bus_ops->eeprom_read(common, off, data);
+>>
+>> The patch may very well be valid (didn't check yet) but the commit log
+>> is gibberish for me.
+>>
+>
+> Let me correct that and I'll send the patch again.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index eea111d..46ce263 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1412,6 +1412,7 @@ static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
- {
- 	switch (ar->hif.bus) {
- 	case ATH10K_BUS_SDIO:
-+	case ATH10K_BUS_USB:
- 		scnprintf(fw_name, fw_name_len, "%s-%s-%d.bin",
- 			  ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
- 			  fw_api);
--- 
-2.7.4
+Thanks.
+
+Also no need to have that long "net: wireless: ath:" prefix, "ath9k: "
+or "ath10k: " is enough.
+
+--=20
+Kalle Valo=
