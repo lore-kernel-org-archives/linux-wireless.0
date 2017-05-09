@@ -1,120 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34407 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934324AbdEKTBf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 15:01:35 -0400
-Received: by mail-oi0-f65.google.com with SMTP id w10so5513934oif.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:35 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 09/10] rtlwifi: btcoex: 21a 2ant: fix PTA unstable problem when hw init
-Date: Thu, 11 May 2017 14:01:18 -0500
-Message-Id: <20170511190119.23426-10-Larry.Finger@lwfinger.net> (sfid-20170511_210147_308846_CE6A8D49)
-In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
-References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+Received: from mout.web.de ([212.227.17.11]:52911 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752559AbdEIH07 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 May 2017 03:26:59 -0400
+Subject: [PATCH 1/3] ath9k: Reduce function calls for sequence output in
+ read_file_dma()
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
+Message-ID: <2bae9fbe-a5a7-f2bb-0769-0d035738650c@users.sourceforge.net> (sfid-20170509_092743_468913_24ED442C)
+Date: Tue, 9 May 2017 09:26:49 +0200
+MIME-Version: 1.0
+In-Reply-To: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 8 May 2017 21:55:09 +0200
 
-In the hardware initialisation stage, the PTA circuits may be unstable,
-so we reset it after 6 secs to fix the problem.
+Some data were put into a sequence by separate function calls.
+Print the same data with two function calls less.
 
-dis_ver_info_cnt is used to indicate the time after init, and we can set
-PTA according to it.
+This issue was detected by using the Coccinelle software.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
-v3 - no changes
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 38 +++++++---------------
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  2 ++
- 2 files changed, 14 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 6c7023566802..acdba4268f71 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3598,6 +3598,7 @@ void ex_btc8821a2ant_init_hwconfig(struct btc_coexist *btcoexist)
- 
- 	/* Antenna config */
- 	btc8821a2ant_set_ant_path(btcoexist, BTC_ANT_WIFI_AT_MAIN, true, false);
-+	coex_sta->dis_ver_info_cnt = 0;
- 
- 	/* PTA parameter */
- 	btc8821a2ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
-@@ -4245,36 +4246,21 @@ void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--	static u8 dis_ver_info_cnt;
--	struct btc_board_info *board_info = &btcoexist->board_info;
--	struct btc_stack_info *stack_info = &btcoexist->stack_info;
--	u32 fw_ver = 0, bt_patch_ver = 0;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], ==========================Periodical===========================\n");
- 
--	if (dis_ver_info_cnt <= 5) {
--		dis_ver_info_cnt += 1;
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], ****************************************************************\n");
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], Ant PG Num/ Ant Mech/ Ant Pos = %d/ %d/ %d\n",
--			 board_info->pg_ant_num,
--			 board_info->btdm_ant_num,
--			 board_info->btdm_ant_pos);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], BT stack/ hci ext ver = %s / %d\n",
--			 stack_info->profile_notified ? "Yes" : "No",
--			 stack_info->hci_version);
--		btcoexist->btc_get(btcoexist, BTC_GET_U4_BT_PATCH_VER,
--				   &bt_patch_ver);
--		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], CoexVer/ FwVer/ PatchVer = %d_%x/ 0x%x/ 0x%x(%d)\n",
--			 glcoex_ver_date_8821a_2ant, glcoex_ver_8821a_2ant,
--			 fw_ver, bt_patch_ver, bt_patch_ver);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], ****************************************************************\n");
-+	if (coex_sta->dis_ver_info_cnt <= 5) {
-+		coex_sta->dis_ver_info_cnt += 1;
-+		if (coex_sta->dis_ver_info_cnt == 3) {
-+			/* Antenna config to set 0x765 = 0x0 (GNT_BT control by
-+			 * PTA) after initial
-+			 */
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], Set GNT_BT control by PTA\n");
-+			btc8821a2ant_set_ant_path(btcoexist,
-+					BTC_ANT_WIFI_AT_MAIN, false, false);
-+		}
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 2e64977a8ab6..981b38a1e352 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -427,9 +427,7 @@ static int read_file_dma(struct seq_file *file, void *data)
+ 		seq_printf(file, "%d: %08x ", i, val[i]);
  	}
  
- 	if (btcoexist->auto_report_2ant) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-index d268f424249f..74edfd75875a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-@@ -168,6 +168,8 @@ struct coex_sta_8821a_2ant {
+-	seq_puts(file, "\n\n");
+-	seq_puts(file, "Num QCU: chain_st fsp_ok fsp_st DCU: chain_st\n");
+-
++	seq_puts(file, "\n\nNum QCU: chain_st fsp_ok fsp_st DCU: chain_st\n");
+ 	for (i = 0; i < ATH9K_NUM_QUEUES; i++, qcuOffset += 4, dcuOffset += 5) {
+ 		if (i == 8) {
+ 			qcuOffset = 0;
+@@ -448,9 +446,8 @@ static int read_file_dma(struct seq_file *file, void *data)
+ 			   (*dcuBase & (0x1f << dcuOffset)) >> dcuOffset);
+ 	}
  
- 	u8	coex_table_type;
- 	bool	force_lps_on;
-+
-+	u8	dis_ver_info_cnt;
- };
- 
- /*===========================================
+-	seq_puts(file, "\n");
+-
+-	seq_printf(file, "qcu_stitch state:   %2x    qcu_fetch state:        %2x\n",
++	seq_printf(file,
++		   "\nqcu_stitch state:   %2x    qcu_fetch state:        %2x\n",
+ 		   (val[3] & 0x003c0000) >> 18, (val[3] & 0x03c00000) >> 22);
+ 	seq_printf(file, "qcu_complete state: %2x    dcu_complete state:     %2x\n",
+ 		   (val[3] & 0x1c000000) >> 26, (val[6] & 0x3));
 -- 
-2.12.0
+2.12.2
