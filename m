@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f176.google.com ([209.85.213.176]:35329 "EHLO
-        mail-yb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755070AbdERWu1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 18:50:27 -0400
-Received: by mail-yb0-f176.google.com with SMTP id p143so14115702yba.2
-        for <linux-wireless@vger.kernel.org>; Thu, 18 May 2017 15:50:27 -0700 (PDT)
+Received: from mout.web.de ([212.227.17.12]:58869 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752153AbdEIH3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 May 2017 03:29:15 -0400
+Subject: [PATCH 3/3] ath9k: Adjust a null pointer check in three functions
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
+Message-ID: <6c3d87e0-d758-6f9b-4b1f-156d890b788d@users.sourceforge.net> (sfid-20170509_093017_137889_779F5E65)
+Date: Tue, 9 May 2017 09:29:04 +0200
 MIME-Version: 1.0
-In-Reply-To: <8780fd64-329f-2a42-4bcd-10abf60976fc@lwfinger.net>
-References: <9b9d08fb-cbcd-5c12-feb8-5434a20cbd94@kpanic.de> <8780fd64-329f-2a42-4bcd-10abf60976fc@lwfinger.net>
-From: Ian W MORRISON <ianwmorrison@gmail.com>
-Date: Fri, 19 May 2017 08:50:26 +1000
-Message-ID: <CAFXWsS85L6tahPX_34smvAU6rRhhkd_EQC3EMU2ev2t3aSpNww@mail.gmail.com> (sfid-20170519_005032_072434_29D09408)
-Subject: Re: crash in r8723bs
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stefan Assmann <sassmann@kpanic.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 May 2017 at 05:03, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/17/2017 10:05 AM, Stefan Assmann wrote:
->>
->> Hi Larry,
->>
->> the rtl8723bs made it into staging, awesome.
->> I built a kernel to test it but it goes down the drain pretty quickly
->> on modprobe. Going forward who should I discuss bugs with?
->>
->> Here's what's going on atm.
->>
->>    Stefan
->>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 8 May 2017 22:17:13 +0200
 
->> [  125.485622] CPU: 1 PID: 456 Comm: modprobe Tainted: G         C
->> 4.12.0-rc1+ #1
+The script "checkpatch.pl" pointed information out like the following.
 
-If the kernel is built from v4.12-rc1 then you need to add
-https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git/commit/?h=staging-linus&id=ca6e8cdbe1865caf7b05483e1a242e72d9bc919f
+Comparison to NULL could be written "!buf"
 
-Regards,
-Ian
+Thus adjust this expression.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 0d215598193c..5f2c1d8e8e70 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -161,7 +161,7 @@ static ssize_t read_file_ani(struct file *file, char __user *user_buf,
+ 	};
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
++	if (!buf)
+ 		return -ENOMEM;
+ 
+ 	len += scnprintf(buf + len, size - len, "%15s: %s\n", "ANI",
+@@ -315,7 +315,7 @@ static ssize_t read_file_antenna_diversity(struct file *file,
+ 	};
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
++	if (!buf)
+ 		return -ENOMEM;
+ 
+ 	if (!(pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)) {
+@@ -1008,7 +1008,7 @@ static ssize_t read_file_btcoex(struct file *file, char __user *user_buf,
+ 	size_t retval;
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
++	if (!buf)
+ 		return -ENOMEM;
+ 
+ 	if (!sc->sc_ah->common.btcoex_enabled) {
+-- 
+2.12.2
