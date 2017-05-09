@@ -1,198 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:34605 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933277AbdELQml (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34178 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754049AbdEINcK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 12:42:41 -0400
-Received: by mail-pf0-f178.google.com with SMTP id e64so32714191pfd.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:36 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Tue, 9 May 2017 09:32:10 -0400
+Received: by mail-pf0-f195.google.com with SMTP id w69so57097pfk.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 06:32:09 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
         Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 01/11] mwifiex: fixup error cases in mwifiex_add_virtual_intf()
-Date: Fri, 12 May 2017 09:41:58 -0700
-Message-Id: <20170512164208.38725-1-briannorris@chromium.org> (sfid-20170512_184322_071616_49E8BFF0)
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 09/11] rsi: Add new host interface operations
+Date: Tue,  9 May 2017 19:00:12 +0530
+Message-Id: <1494336614-2107-10-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170509_153219_989225_608FEB59)
+In-Reply-To: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we fail to add an interface in mwifiex_add_virtual_intf(), we might
-hit a BUG_ON() in the networking code, because we didn't tear things
-down properly. Among the problems:
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
- (a) when failing to allocate workqueues, we fail to unregister the
-     netdev before calling free_netdev()
- (b) even if we do try to unregister the netdev, we're still holding the
-     rtnl lock, so the device never properly unregistered; we'll be at
-     state NETREG_UNREGISTERING, and then hit free_netdev()'s:
-	BUG_ON(dev->reg_state != NETREG_UNREGISTERED);
- (c) we're allocating some dependent resources (e.g., DFS workqueues)
-     after we've registered the interface; this may or may not cause
-     problems, but it's good practice to allocate these before registering
- (d) we're not even trying to unwind anything when mwifiex_send_cmd() or
-     mwifiex_sta_init_cmd() fail
+Host interface opearation master_reg_read, master_reg_write and
+load_data_master_write are added. These functions are needed for the
+new firmware loading method. As part of this, the function
+master_access_msword is moved from rsi_91x_sdio_ops.c to rsi_91x_sdio.c.
 
-To fix these issues, let's:
-
- * add a stacked set of error handling labels, to keep error handling
-   consistent and properly ordered (resolving (a) and (d))
- * move the workqueue allocations before the registration (to resolve
-   (c); also resolves (b) by avoiding error cases where we have to
-   unregister)
-
-[Incidentally, it's pretty easy to interrupt the alloc_workqueue() in,
-e.g., the following:
-
-  iw phy phy0 interface add mlan0 type station
-
-by sending it SIGTERM.]
-
-This bugfix covers commits like commit 7d652034d1a0 ("mwifiex: channel
-switch support for mwifiex"), but parts of this bug exist all the way
-back to the introduction of dynamic interface handling in commit
-93a1df48d224 ("mwifiex: add cfg80211 handlers add/del_virtual_intf").
-
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 71 ++++++++++++-------------
- 1 file changed, 35 insertions(+), 36 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 179 ++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   3 +-
+ drivers/net/wireless/rsi/rsi_91x_usb.c      |  65 ++++++++++
+ drivers/net/wireless/rsi/rsi_main.h         |   8 ++
+ drivers/net/wireless/rsi/rsi_sdio.h         |   1 +
+ 5 files changed, 254 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 7ec06bf13413..025bc06a19d6 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2964,10 +2964,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	if (!dev) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "no memory available for netdevice\n");
--		memset(&priv->wdev, 0, sizeof(priv->wdev));
--		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
--		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
--		return ERR_PTR(-ENOMEM);
-+		ret = -ENOMEM;
-+		goto err_alloc_netdev;
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index bdbec8b..b397e2c 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -552,6 +552,182 @@ int rsi_sdio_write_register_multiple(struct rsi_hw *adapter,
+ 	return status;
+ }
  
- 	mwifiex_init_priv_params(priv, dev);
-@@ -2976,11 +2974,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
- 			       HostCmd_ACT_GEN_SET, 0, NULL, true);
- 	if (ret)
--		return ERR_PTR(ret);
-+		goto err_set_bss_mode;
- 
- 	ret = mwifiex_sta_init_cmd(priv, false, false);
- 	if (ret)
--		return ERR_PTR(ret);
-+		goto err_sta_init;
- 
- 	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
- 	if (adapter->is_hw_11ac_capable)
-@@ -3011,31 +3009,14 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 
- 	SET_NETDEV_DEV(dev, adapter->dev);
- 
--	/* Register network device */
--	if (register_netdevice(dev)) {
--		mwifiex_dbg(adapter, ERROR,
--			    "cannot register virtual network device\n");
--		free_netdev(dev);
--		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
--		priv->netdev = NULL;
--		memset(&priv->wdev, 0, sizeof(priv->wdev));
--		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
--		return ERR_PTR(-EFAULT);
--	}
--
- 	priv->dfs_cac_workqueue = alloc_workqueue("MWIFIEX_DFS_CAC%s",
- 						  WQ_HIGHPRI |
- 						  WQ_MEM_RECLAIM |
- 						  WQ_UNBOUND, 1, name);
- 	if (!priv->dfs_cac_workqueue) {
--		mwifiex_dbg(adapter, ERROR,
--			    "cannot register virtual network device\n");
--		free_netdev(dev);
--		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
--		priv->netdev = NULL;
--		memset(&priv->wdev, 0, sizeof(priv->wdev));
--		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
--		return ERR_PTR(-ENOMEM);
-+		mwifiex_dbg(adapter, ERROR, "cannot alloc DFS CAC queue\n");
-+		ret = -ENOMEM;
-+		goto err_alloc_cac;
- 	}
- 
- 	INIT_DELAYED_WORK(&priv->dfs_cac_work, mwifiex_dfs_cac_work_queue);
-@@ -3044,16 +3025,9 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 						      WQ_HIGHPRI | WQ_UNBOUND |
- 						      WQ_MEM_RECLAIM, 1, name);
- 	if (!priv->dfs_chan_sw_workqueue) {
--		mwifiex_dbg(adapter, ERROR,
--			    "cannot register virtual network device\n");
--		free_netdev(dev);
--		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
--		priv->netdev = NULL;
--		memset(&priv->wdev, 0, sizeof(priv->wdev));
--		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
--		destroy_workqueue(priv->dfs_cac_workqueue);
--		priv->dfs_cac_workqueue = NULL;
--		return ERR_PTR(-ENOMEM);
-+		mwifiex_dbg(adapter, ERROR, "cannot alloc DFS channel sw queue\n");
-+		ret = -ENOMEM;
-+		goto err_alloc_chsw;
- 	}
- 
- 	INIT_DELAYED_WORK(&priv->dfs_chan_sw_work,
-@@ -3061,6 +3035,13 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 
- 	sema_init(&priv->async_sem, 1);
- 
-+	/* Register network device */
-+	if (register_netdevice(dev)) {
-+		mwifiex_dbg(adapter, ERROR, "cannot register network device\n");
-+		ret = -EFAULT;
-+		goto err_reg_netdev;
++static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
++					   u32 base_address,
++					   u32 instructions_sz,
++					   u16 block_size,
++					   u8 *ta_firmware)
++{
++	u32 num_blocks, offset, i;
++	u16 msb_address, lsb_address;
++	u8 temp_buf[block_size];
++	int status;
++
++	num_blocks = instructions_sz / block_size;
++	msb_address = base_address >> 16;
++
++	rsi_dbg(INFO_ZONE, "ins_size: %d, num_blocks: %d\n",
++		instructions_sz, num_blocks);
++
++	/* Loading DM ms word in the sdio slave */
++	status = rsi_sdio_master_access_msword(adapter, msb_address);
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to set ms word reg\n", __func__);
++		return status;
 +	}
 +
- 	mwifiex_dbg(adapter, INFO,
- 		    "info: %s: Marvell 802.11 Adapter\n", dev->name);
- 
-@@ -3081,11 +3062,29 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		adapter->curr_iface_comb.p2p_intf++;
- 		break;
- 	default:
-+		/* This should be dead code; checked above */
- 		mwifiex_dbg(adapter, ERROR, "type not supported\n");
- 		return ERR_PTR(-EINVAL);
- 	}
- 
- 	return &priv->wdev;
++	for (offset = 0, i = 0; i < num_blocks; i++, offset += block_size) {
++		memset(temp_buf, 0, block_size);
++		memcpy(temp_buf, ta_firmware + offset, block_size);
++		lsb_address = (u16)base_address;
++		status = rsi_sdio_write_register_multiple
++					(adapter,
++					 lsb_address | RSI_SD_REQUEST_MASTER,
++					 temp_buf, block_size);
++		if (status < 0) {
++			rsi_dbg(ERR_ZONE, "%s: failed to write\n", __func__);
++			return status;
++		}
++		rsi_dbg(INFO_ZONE, "%s: loading block: %d\n", __func__, i);
++		base_address += block_size;
 +
-+err_reg_netdev:
-+	destroy_workqueue(priv->dfs_chan_sw_workqueue);
-+	priv->dfs_chan_sw_workqueue = NULL;
-+err_alloc_chsw:
-+	destroy_workqueue(priv->dfs_cac_workqueue);
-+	priv->dfs_cac_workqueue = NULL;
-+err_alloc_cac:
-+	free_netdev(dev);
-+	priv->netdev = NULL;
-+err_sta_init:
-+err_set_bss_mode:
-+err_alloc_netdev:
-+	memset(&priv->wdev, 0, sizeof(priv->wdev));
-+	priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
-+	priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
-+	return ERR_PTR(ret);
- }
- EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
++		if ((base_address >> 16) != msb_address) {
++			msb_address += 1;
++
++			/* Loading DM ms word in the sdio slave */
++			status = rsi_sdio_master_access_msword(adapter,
++							       msb_address);
++			if (status < 0) {
++				rsi_dbg(ERR_ZONE,
++					"%s: Unable to set ms word reg\n",
++					__func__);
++				return status;
++			}
++		}
++	}
++
++	if (instructions_sz % block_size) {
++		memset(temp_buf, 0, block_size);
++		memcpy(temp_buf, ta_firmware + offset,
++		       instructions_sz % block_size);
++		lsb_address = (u16)base_address;
++		status = rsi_sdio_write_register_multiple
++					(adapter,
++					 lsb_address | RSI_SD_REQUEST_MASTER,
++					 temp_buf,
++					 instructions_sz % block_size);
++		if (status < 0)
++			return status;
++		rsi_dbg(INFO_ZONE,
++			"Written Last Block in Address 0x%x Successfully\n",
++			offset | RSI_SD_REQUEST_MASTER);
++	}
++	return 0;
++}
++
++#define FLASH_SIZE_ADDR                 0x04000016
++static int rsi_sdio_master_reg_read(struct rsi_hw *adapter, u32 addr,
++				    u32 *read_buf, u16 size)
++{
++	u32 addr_on_bus, *data;
++	u32 align[2] = {};
++	u16 ms_addr;
++	int status;
++
++	data = PTR_ALIGN(&align[0], 8);
++
++	ms_addr = (addr >> 16);
++	status = rsi_sdio_master_access_msword(adapter, ms_addr);
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE,
++			"%s: Unable to set ms word to common reg\n",
++			__func__);
++		return status;
++	}
++	addr &= 0xFFFF;
++
++	addr_on_bus = (addr & 0xFF000000);
++	if ((addr_on_bus == (FLASH_SIZE_ADDR & 0xFF000000)) ||
++	    (addr_on_bus == 0x0))
++		addr_on_bus = (addr & ~(0x3));
++	else
++		addr_on_bus = addr;
++
++	/* Bring TA out of reset */
++	status = rsi_sdio_read_register_multiple
++					(adapter,
++					 (addr_on_bus | RSI_SD_REQUEST_MASTER),
++					 (u8 *)data, 4);
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE, "%s: AHB register read failed\n", __func__);
++		return status;
++	}
++	if (size == 2) {
++		if ((addr & 0x3) == 0)
++			*read_buf = *data;
++		else
++			*read_buf  = (*data >> 16);
++		*read_buf = (*read_buf & 0xFFFF);
++	} else if (size == 1) {
++		if ((addr & 0x3) == 0)
++			*read_buf = *data;
++		else if ((addr & 0x3) == 1)
++			*read_buf = (*data >> 8);
++		else if ((addr & 0x3) == 2)
++			*read_buf = (*data >> 16);
++		else
++			*read_buf = (*data >> 24);
++		*read_buf = (*read_buf & 0xFF);
++	} else {
++		*read_buf = *data;
++	}
++
++	return 0;
++}
++
++static int rsi_sdio_master_reg_write(struct rsi_hw *adapter,
++				     unsigned long addr,
++				     unsigned long data, u16 size)
++{
++	unsigned long data1[2], *data_aligned;
++	int status;
++
++	data_aligned = PTR_ALIGN(&data1[0], 8);
++
++	if (size == 2) {
++		*data_aligned = ((data << 16) | (data & 0xFFFF));
++	} else if (size == 1) {
++		u32 temp_data = data & 0xFF;
++
++		*data_aligned = ((temp_data << 24) | (temp_data << 16) |
++				 (temp_data << 8) | temp_data);
++	} else {
++		*data_aligned = data;
++	}
++	size = 4;
++
++	status = rsi_sdio_master_access_msword(adapter, (addr >> 16));
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE,
++			"%s: Unable to set ms word to common reg\n",
++			__func__);
++		return -EIO;
++	}
++	addr = addr & 0xFFFF;
++
++	/* Bring TA out of reset */
++	status = rsi_sdio_write_register_multiple
++					(adapter,
++					 (addr | RSI_SD_REQUEST_MASTER),
++					 (u8 *)data_aligned, size);
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE,
++			"%s: Unable to do AHB reg write\n", __func__);
++		return status;
++	}
++	return 0;
++}
++
+ /**
+  * rsi_sdio_host_intf_write_pkt() - This function writes the packet to device.
+  * @adapter: Pointer to the adapter structure.
+@@ -694,6 +870,9 @@ static struct rsi_host_intf_ops sdio_host_intf_ops = {
+ 	.read_pkt		= rsi_sdio_host_intf_read_pkt,
+ 	.read_reg_multiple	= rsi_sdio_read_register_multiple,
+ 	.write_reg_multiple	= rsi_sdio_write_register_multiple,
++	.master_reg_read	= rsi_sdio_master_reg_read,
++	.master_reg_write	= rsi_sdio_master_reg_write,
++	.load_data_master_write	= rsi_sdio_load_data_master_write,
+ };
  
+ /**
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 7c9cf01..225042f 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -27,8 +27,7 @@
+  *
+  * Return: status: 0 on success, -1 on failure.
+  */
+-static int rsi_sdio_master_access_msword(struct rsi_hw *adapter,
+-					 u16 ms_word)
++int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
+ {
+ 	u8 byte;
+ 	u8 function = 0;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 8b81a73..7156fcb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -382,10 +382,75 @@ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
+ 				  len);
+ }
+ 
++static int rsi_usb_master_reg_read(struct rsi_hw *adapter, u32 reg,
++				   u32 *value, u16 len)
++{
++	struct usb_device *usbdev =
++		((struct rsi_91x_usbdev *)adapter->rsi_dev)->usbdev;
++
++	return rsi_usb_reg_read(usbdev, reg, (u16 *)value, len);
++}
++
++static int rsi_usb_master_reg_write(struct rsi_hw *adapter,
++				    unsigned long reg,
++				    unsigned long value, u16 len)
++{
++	struct usb_device *usbdev =
++		((struct rsi_91x_usbdev *)adapter->rsi_dev)->usbdev;
++
++	return rsi_usb_reg_write(usbdev, reg, value, len);
++}
++
++static int rsi_usb_load_data_master_write(struct rsi_hw *adapter,
++					  u32 base_address,
++					  u32 instructions_sz, u16 block_size,
++					  u8 *ta_firmware)
++{
++	u16 num_blocks;
++	u32 cur_indx, i;
++	u8 temp_buf[256];
++	int status;
++
++	num_blocks = instructions_sz / block_size;
++	rsi_dbg(INFO_ZONE, "num_blocks: %d\n", num_blocks);
++
++	for (cur_indx = 0, i = 0; i < num_blocks; i++, cur_indx += block_size) {
++		memset(temp_buf, 0, block_size);
++		memcpy(temp_buf, ta_firmware + cur_indx, block_size);
++		status = rsi_usb_write_register_multiple(adapter, base_address,
++							 (u8 *)(temp_buf),
++							 block_size);
++		if (status < 0)
++			return status;
++
++		rsi_dbg(INFO_ZONE, "%s: loading block: %d\n", __func__, i);
++		base_address += block_size;
++	}
++
++	if (instructions_sz % block_size) {
++		memset(temp_buf, 0, block_size);
++		memcpy(temp_buf, ta_firmware + cur_indx,
++		       instructions_sz % block_size);
++		status = rsi_usb_write_register_multiple
++						(adapter, base_address,
++						 (u8 *)temp_buf,
++						 instructions_sz % block_size);
++		if (status < 0)
++			return status;
++		rsi_dbg(INFO_ZONE,
++			"Written Last Block in Address 0x%x Successfully\n",
++			cur_indx);
++	}
++	return 0;
++}
++
+ static struct rsi_host_intf_ops usb_host_intf_ops = {
+ 	.write_pkt		= rsi_usb_host_intf_write_pkt,
+ 	.read_reg_multiple	= rsi_usb_read_register_multiple,
+ 	.write_reg_multiple	= rsi_usb_write_register_multiple,
++	.master_reg_read	= rsi_usb_master_reg_read,
++	.master_reg_write	= rsi_usb_master_reg_write,
++	.load_data_master_write	= rsi_usb_load_data_master_write,
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 7fdeda7..2ac5bcf 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -244,5 +244,13 @@ struct rsi_host_intf_ops {
+ 				 u8 *data, u16 count);
+ 	int (*write_reg_multiple)(struct rsi_hw *adapter, u32 addr,
+ 				  u8 *data, u16 count);
++	int (*master_reg_read)(struct rsi_hw *adapter, u32 addr,
++			       u32 *read_buf, u16 size);
++	int (*master_reg_write)(struct rsi_hw *adapter,
++				unsigned long addr, unsigned long data,
++				u16 size);
++	int (*load_data_master_write)(struct rsi_hw *adapter, u32 addr,
++				      u32 instructions_size, u16 block_size,
++				      u8 *fw);
+ };
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index a82bc4c..7ae6d51 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -123,6 +123,7 @@ int rsi_sdio_write_register(struct rsi_hw *adapter, u8 function,
+ 			    u32 addr, u8 *data);
+ int rsi_sdio_write_register_multiple(struct rsi_hw *adapter, u32 addr,
+ 				     u8 *data, u16 count);
++int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word);
+ void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
+ int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
+ int rsi_sdio_read_buffer_status_register(struct rsi_hw *adapter, u8 q_num);
 -- 
-2.13.0.rc2.291.g57267f2277-goog
+2.7.4
