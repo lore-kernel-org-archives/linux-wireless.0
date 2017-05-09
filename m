@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33039 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750933AbdESGue (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35962 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753810AbdEINcE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 02:50:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <87r2zl8lvi.fsf@codeaurora.org>
-References: <20170517144702.1381136-1-arnd@arndb.de> <87r2zl8lvi.fsf@codeaurora.org>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 19 May 2017 08:50:33 +0200
-Message-ID: <CAK8P3a3YGxNBQq3RYucMCCvSyXOD8skF_Db-eba0PcBL4_P8Dg@mail.gmail.com> (sfid-20170519_085134_459426_BE64C028)
-Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for
- register accessors
+        Tue, 9 May 2017 09:32:04 -0400
+Received: by mail-pg0-f65.google.com with SMTP id 64so7573969pgb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 06:32:04 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 06/11] rsi: Handle usb multi-byte write failure case properly
+Date: Tue,  9 May 2017 19:00:09 +0530
+Message-Id: <1494336614-2107-7-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170509_153214_747513_6CB43C45)
+In-Reply-To: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 19, 2017 at 7:18 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
->
->> I've managed to split up my long patch into a series of reasonble
->> steps now.
->>
->> The first two are required to fix a regression from commit 41977e86c984
->> ("rt2x00: add support for MT7620"), the rest are just cleanups to
->> have a consistent state across all the register access functions.
->
-> Can these all go to 4.13 or would you prefer me to push the first two
-> 4.12? Or what?
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-I think you can reasonably argue either way: the second patch does
-fix a real bug that may or may not lead to an exploitable stack overflow
-when CONFIG_KASAN is enabled, which would be a reason to put it
-into 4.12. On the other hand, I have another 20 patches for similar
-(or worse) stack overflow issues with KASAN that I'm hoping to all
-get into 4.13 and backported into stable kernel later if necessary,
-so we could treat this one like the others.
+In function usb_write_register_multiple, if any intermediate block transfer
+is failed, further operations should be terminated. 'else' is removed, as
+there is no significance for it after return.
 
-The only difference between this and the others is that in rt2x00 it
-is a regression against 4.11, while the others have all been present
-for a long time.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-      Arnd
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 8eb7407..634f726 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -306,11 +306,12 @@ int rsi_usb_write_register_multiple(struct rsi_hw *adapter,
+ 			rsi_dbg(ERR_ZONE,
+ 				"Reg write failed with error code :%d\n",
+ 				status);
+-		} else {
+-			count -= transfer;
+-			data += transfer;
+-			addr += transfer;
++			kfree(buf);
++			return status;
+ 		}
++		count -= transfer;
++		data += transfer;
++		addr += transfer;
+ 	}
+ 
+ 	kfree(buf);
+-- 
+2.7.4
