@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58706 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754643AbdEVJD4 (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35975 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752783AbdEIMZZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 05:03:56 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: b43: Add missing MODULE_FIRMWARE()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170504092752.2422-1-tiwai@suse.de>
-References: <20170504092752.2422-1-tiwai@suse.de>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Message-Id: <20170522090355.9C07F60A09@smtp.codeaurora.org> (sfid-20170522_110454_890700_59B4B081)
-Date: Mon, 22 May 2017 09:03:55 +0000 (UTC)
+        Tue, 9 May 2017 08:25:25 -0400
+Message-ID: <1494332723.7796.74.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20170509_142636_037602_BDA958D2)
+Subject: Re: [PATCH] wil6210: Replace five seq_puts() calls by seq_putc()
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: wil6210@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Date: Tue, 09 May 2017 05:25:23 -0700
+In-Reply-To: <64747f85-e373-a0ff-b6dc-70cdfe35f71a@users.sourceforge.net>
+References: <64747f85-e373-a0ff-b6dc-70cdfe35f71a@users.sourceforge.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Takashi Iwai <tiwai@suse.de> wrote:
-> Some firmware entries were forgotten to be added via MODULE_FIRMWARE(), which
-> may result in the non-functional state when the driver is loaded in initrd.
+On Tue, 2017-05-09 at 09:50 +0200, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Mon, 8 May 2017 22:22:04 +0200
 > 
-> Link: http://bugzilla.opensuse.org/show_bug.cgi?id=1037344
-> Fixes: 15be8e89cdd9 ("b43: add more bcma cores")
-> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+> Five single characters (line breaks) should be put into a sequence.
+> Thus use the corresponding function "seq_putc".
+> 
+> This issue was detected by using the Coccinelle software.
 
-Patch applied to wireless-drivers-next.git, thanks.
+There is no _issue_ at all here, only a matter of taste.
 
-3c89a72ad80c b43: Add missing MODULE_FIRMWARE()
-
--- 
-https://patchwork.kernel.org/patch/9711225/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+printf("\n")  or putchar('\n')  in some slow path is really not that
+interesting.
