@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51122 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1763463AbdEZG6x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 02:58:53 -0400
-Message-ID: <1495781929.2572.0.camel@sipsolutions.net> (sfid-20170526_085914_844604_080E74DE)
-Subject: Re: [RFC] skbuff: introduce skb_put_zero()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Fri, 26 May 2017 08:58:49 +0200
-In-Reply-To: <20170525.130117.551364108206528221.davem@davemloft.net>
-References: <20170524070747.18573-1-johannes@sipsolutions.net>
-         <20170525.130117.551364108206528221.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from gateway34.websitewelcome.com ([192.185.148.194]:46928 "EHLO
+        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753357AbdEINEh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 May 2017 09:04:37 -0400
+Received: from cm4.websitewelcome.com (unknown [108.167.139.16])
+        by gateway34.websitewelcome.com (Postfix) with ESMTP id 6E7E617EA
+        for <linux-wireless@vger.kernel.org>; Tue,  9 May 2017 08:04:34 -0500 (CDT)
+Date: Tue, 9 May 2017 08:04:30 -0500
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH v2] ath9k: remove unnecessary code
+Message-ID: <20170509130430.GA22190@embeddedgus> (sfid-20170509_150508_909669_3F179888)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-05-25 at 13:01 -0400, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Wed, 24 May 2017 09:07:47 +0200
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > This pattern was introduced a number of times in mac80211 just now,
-> > and since it's present in a number of other places it makes sense
-> > to add a little helper for it.
-> > 
-> > The transformations of all code were done with the following
-> spatch:
-[...]
-> > NB: the patch won't apply to net-next because a few of the mac80211
-> >     users don't exist there yet
-> 
-> Acked-by: David S. Miller <davem@davemloft.net>
-> 
-> No objections, feel free to push this in via your mac80211 tree.
+The array field eeprom_data in struct th9k_platform_data
+is a fixed size array so it can never be NULL.
 
-Do you think I should include the conversions in other drivers, or
-would you prefer to get those as a separate patch later?
+Addresses-Coverity-ID: 1364903
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+Changes in v2:
+ Rephrase commit log.
 
-johannes
+ drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index fb80ec8..5c3bc28 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
+ 
+ 	if (ah->eeprom_blob)
+ 		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
+-	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
++	else if (pdata && !pdata->use_eeprom)
+ 		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
+ 	else
+ 		ret = common->bus_ops->eeprom_read(common, off, data);
+-- 
+2.5.0
