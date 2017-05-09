@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:55909 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752375AbdEQSeV (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21373 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751360AbdEILdC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 14:34:21 -0400
-Date: Wed, 17 May 2017 20:34:31 +0200
-From: Bastian Bittorf <bb@npl.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-        netdev <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 'iw events' stops receiving events after a while on 4.9 + hacks
-Message-ID: <20170517183431.GG2849@medion.lan> (sfid-20170517_203433_130030_50FB7768)
-References: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
- <20170517100844.GC2849@medion.lan>
- <1495027835.2442.13.camel@sipsolutions.net>
+        Tue, 9 May 2017 07:33:02 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net: wireless: ath: ath9k: remove unnecessary code
+Date: Tue, 9 May 2017 11:32:58 +0000
+Message-ID: <87efvy1d07.fsf@kamboji.qca.qualcomm.com> (sfid-20170509_133338_364618_2487BF6B)
+References: <20170509034814.GA18034@embeddedgus>
+In-Reply-To: <20170509034814.GA18034@embeddedgus> (Gustavo A. R. Silva's
+        message of "Mon, 8 May 2017 22:48:14 -0500")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1495027835.2442.13.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Johannes Berg <johannes@sipsolutions.net> [17.05.2017 20:18]:
-> On Wed, 2017-05-17 at 12:08 +0200, Bastian Bittorf wrote:
-> > * Ben Greear <greearb@candelatech.com> [17.05.2017 11:51]:
+"Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
 
-[...]
+> The name of an array used by itself will always return the array's addres=
+s.
+> So this test will always evaluate as true.
+>
+> Addresses-Coverity-ID: 1364903
+> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wirele=
+ss/ath/ath9k/eeprom.c
+> index fb80ec8..5c3bc28 100644
+> --- a/drivers/net/wireless/ath/ath9k/eeprom.c
+> +++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+> @@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, =
+u16 *data)
+> =20
+>  	if (ah->eeprom_blob)
+>  		ret =3D ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
+> -	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
+> +	else if (pdata && !pdata->use_eeprom)
+>  		ret =3D ath9k_hw_nvram_read_pdata(pdata, off, data);
+>  	else
+>  		ret =3D common->bus_ops->eeprom_read(common, off, data);
 
-> > > kernels, but when testing on 4.9 overnight, I notice that 'iw
-> > > events' is not showing any input.  'strace' shows
-> > > that it is waiting on recvmsg.  If I start a second 'iw events'
-> > > then it will get
-> > > wifi events as expected.
-> > 
-> > me too, also seen on 4.4 - i'am happy for debug ideas.
-> 
-> I've never seen this.
-> 
-> Does it happen when it's very long-running? Or when there are lots of
-> events?
+The patch may very well be valid (didn't check yet) but the commit log
+is gibberish for me.
 
-only a couple of hours. hard to say which is the culprit. here
-i run it like:
-
-#!/bin/sh
-iw event | while read -r LINE; do
- case "$LINE" in
-  *': new station '*) ... ;;
-  *': del station '*) ... ;;
- esac
-done
-
-
-The script marks new stations with "touch /tmp/$mac"
-and removes this file during 'del station'.
-
-What is interesting: i can recognize, that sometimes and
-somehow i have stations in 'iw dev wlanX station dump' which
-the script has not seen. When debugging this, the script
-does not get any new events. A new started 'iw event' can
-see further events without problems.
-
-Hard to say where the error happens. I'am on busybox here.
-
-bye, Bastian
+--=20
+Kalle Valo=
