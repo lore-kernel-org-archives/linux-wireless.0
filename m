@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56232 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758030AbdEKQix (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35631 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750909AbdEIEgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 12:38:53 -0400
-Date: Thu, 11 May 2017 09:38:52 -0700
-From: Kyle McMartin <kyle@infradead.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-firmware@kernel.org
-Subject: Re: pull-request mwifiex-firmware 2017-05-02
-Message-ID: <20170511163852.GT13400@bombadil.infradead.org> (sfid-20170511_183906_940490_3D680641)
-References: <cb95cb7a8066454587eca34a619e1ece@SC-EXCH02.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cb95cb7a8066454587eca34a619e1ece@SC-EXCH02.marvell.com>
+        Tue, 9 May 2017 00:36:41 -0400
+Received: by mail-pf0-f180.google.com with SMTP id v14so43128462pfd.2
+        for <linux-wireless@vger.kernel.org>; Mon, 08 May 2017 21:36:41 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Eyal Ilsar <c_eilsar@qti.qualcomm.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: [PATCH] wcn36xx: Close SMD channel on device removal
+Date: Mon,  8 May 2017 21:36:37 -0700
+Message-Id: <20170509043637.28179-1-bjorn.andersson@linaro.org> (sfid-20170509_063721_450711_A0AE8953)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 02, 2017 at 07:09:53AM +0000, Ganapathi Bhat wrote:
-> The following changes since commit c2ff512b4939b2140ed62cc3f60b1a93110764bc:
-> 
->   linux-firmware: update Marvell SD8897-B0 firmware image (2017-04-21 13:04:39 +0530)
-> 
-> are available in the git repository at:
-> 
->   git://git.marvell.com/mwifiex-firmware.git
-> 
-> for you to fetch changes up to 47afd9950fbcadeb7cefc093b21d6123bdc76f79:
-> 
->   linux-firmware: add Marvell USB8997 firmware image (2017-05-02 12:28:34 +0530)
-> 
+The SMD channel is not the primary WCNSS channel and must explicitly be
+closed as the device is removed, or the channel will already by open on
+a subsequent probe call in e.g. the case of reloading the kernel module.
 
-Pulled, thanks Ganapathi.
+This issue was introduced because I simplified the underlying SMD
+implementation while the SMD adaptions of the driver sat on the mailing
+list, but missed to update these patches. The patch does however only
+apply back to the transition to rpmsg, hence the limited Fixes.
 
-regards, Kyle
+Fixes: 5052de8deff5 ("soc: qcom: smd: Transition client drivers from smd to rpmsg")
+Reported-by: Eyal Ilsar <c_eilsar@qti.qualcomm.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> ----------------------------------------------------------------
-> Ganapathi Bhat (1):
->       linux-firmware: add Marvell USB8997 firmware image
-> 
->  WHENCE                       |   3 +++
->  mrvl/usbusb8997_combo_v4.bin | Bin 0 -> 602100 bytes
->  2 files changed, 3 insertions(+)
->  create mode 100644 mrvl/usbusb8997_combo_v4.bin
-> 
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index d5e993dc9b23..517a315e259b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -1271,6 +1271,8 @@ static int wcn36xx_remove(struct platform_device *pdev)
+ 	qcom_smem_state_put(wcn->tx_enable_state);
+ 	qcom_smem_state_put(wcn->tx_rings_empty_state);
+ 
++	rpmsg_destroy_ept(wcn->smd_channel);
++
+ 	iounmap(wcn->dxe_base);
+ 	iounmap(wcn->ccu_base);
+ 
+-- 
+2.12.0
