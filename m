@@ -1,48 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41126 "EHLO mx1.redhat.com"
+Received: from mout.web.de ([217.72.192.78]:49358 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935988AbdEZLC6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 07:02:58 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH 4.12 REGRESSION fix] brcmfmac: Use ALIGNMENT rather then hardcoded "4" for bus:txglomalign
-Date: Fri, 26 May 2017 13:02:55 +0200
-Message-Id: <20170526110255.21342-1-hdegoede@redhat.com> (sfid-20170526_130304_010370_C89E38A9)
+        id S1751840AbdEIHut (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 May 2017 03:50:49 -0400
+To: wil6210@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] wil6210: Replace five seq_puts() calls by seq_putc()
+Message-ID: <64747f85-e373-a0ff-b6dc-70cdfe35f71a@users.sourceforge.net> (sfid-20170509_095233_422214_ACF722B1)
+Date: Tue, 9 May 2017 09:50:34 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 8 May 2017 22:22:04 +0200
 
-This fixes the following errors showing up in dmesg:
+Five single characters (line breaks) should be put into a sequence.
+Thus use the corresponding function "seq_putc".
 
-[   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
-[   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
-[   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
+This issue was detected by using the Coccinelle software.
 
-Fixes: 6e84ab604bde ("properly align buffers ... with 64 bit DMA")
-Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index fc64b8913aa6..e03450059b06 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3422,7 +3422,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
- 		/* otherwise, set txglomalign */
- 		value = sdiodev->settings->bus.sdio.sd_sgentry_align;
- 		/* SDIO ADMA requires at least 32 bit alignment */
--		value = max_t(u32, value, 4);
-+		value = max_t(u32, value, ALIGNMENT);
- 		err = brcmf_iovar_data_set(dev, "bus:txglomalign", &value,
- 					   sizeof(u32));
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 5648ebbd0e16..90118d286fb9 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -76,11 +76,11 @@ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
+ 			volatile struct vring_tx_desc *d = &vring->va[i].tx;
+ 
+ 			if ((i % 128) == 0 && (i != 0))
+-				seq_puts(s, "\n");
++				seq_putc(s, '\n');
+ 			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
+ 					_s : (vring->ctx[i].skb ? _h : 'h'));
+ 		}
+-		seq_puts(s, "\n");
++		seq_putc(s, '\n');
  	}
+ 	seq_puts(s, "}\n");
+ }
+@@ -233,7 +233,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
+ 				wil_seq_hexdump(s, databuf, len, "      : ");
+ 			}
+ 		} else {
+-			seq_puts(s, "\n");
++			seq_putc(s, '\n');
+ 		}
+ 	}
+  out:
+@@ -1366,7 +1366,7 @@ static void wil_print_rxtid_crypto(struct seq_file *s, int tid,
+ 		seq_printf(s, " [%i%s]%6phN", i, cc->key_set ? "+" : "-",
+ 			   cc->pn);
+ 	}
+-	seq_puts(s, "\n");
++	seq_putc(s, '\n');
+ }
+ 
+ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+@@ -1423,7 +1423,7 @@ __acquires(&p->tid_rx_lock) __releases(&p->tid_rx_lock)
+ 			     mcs++)
+ 				seq_printf(s, " %lld",
+ 					   p->stats.rx_per_mcs[mcs]);
+-			seq_puts(s, "\n");
++			seq_putc(s, '\n');
+ 		}
+ 	}
+ 
 -- 
-2.13.0
+2.12.2
