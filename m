@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:35568 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934356AbdEOOky (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33315 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753810AbdEINcA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 10:40:54 -0400
-Date: Mon, 15 May 2017 10:40:52 -0400 (EDT)
-Message-Id: <20170515.104052.1376354562934671974.davem@davemloft.net> (sfid-20170515_164130_550715_B0A486D3)
-To: arnd@arndb.de
-Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-        kvalo@codeaurora.org, daniel@makrotopia.org, dev@kresin.me,
-        johannes.berg@intel.com, pozega.tomislav@gmail.com,
-        vasilugin@yandex.ru, roman@advem.lv,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: improve calling conventions for register
- accessors
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAK8P3a1xYah7_4=DAcN+M83noUQyLZ9hV=WWD0Q79sQrFsoroA@mail.gmail.com>
-References: <20170515134711.2770374-1-arnd@arndb.de>
-        <20170515142520.GA13996@redhat.com>
-        <CAK8P3a1xYah7_4=DAcN+M83noUQyLZ9hV=WWD0Q79sQrFsoroA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Tue, 9 May 2017 09:32:00 -0400
+Received: by mail-pf0-f193.google.com with SMTP id a23so62467pfe.0
+        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 06:32:00 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 05/11] rsi: Remove unnecessary buffer allocation
+Date: Tue,  9 May 2017 19:00:08 +0530
+Message-Id: <1494336614-2107-6-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170509_153219_738921_BD774159)
+In-Reply-To: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 15 May 2017 16:36:45 +0200
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> On Mon, May 15, 2017 at 4:28 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Mon, May 15, 2017 at 03:46:55PM +0200, Arnd Bergmann wrote:
->>> With CONFIG_KASAN enabled and gcc-7, we get a warning about rather high
->>> stack usage (with a private patch set I have to turn on this warning,
->>> which I intend to get into the next kernel release):
->>>
->>> wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_bw_filter_calibration':
->>> wireless/ralink/rt2x00/rt2800lib.c:7990:1: error: the frame size of 2144 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
->>>
->>> The problem is that KASAN inserts a redzone around each local variable that
->>> gets passed by reference, and the newly added function has a lot of them.
->>> We can easily avoid that here by changing the calling convention to have
->>> the output as the return value of the function. This should also results in
->>> smaller object code, saving around 4KB in .text with KASAN, or 2KB without
->>> KASAN.
->>>
->>> Fixes: 41977e86c984 ("rt2x00: add support for MT7620")
->>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->>> ---
->>>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 319 +++++++++++++------------
->>>  1 file changed, 164 insertions(+), 155 deletions(-)
->>
->> We have read(, &val) calling convention since forever in rt2x00 and that
->> was never a problem. I dislike to change that now to make some tools
->> happy, I think problem should be fixed in the tools instead.
-> 
-> How about adding 'depends on !KASAN' in Kconfig instead?
+In functions usb read register and usb write register, dynamic allocation
+of 4 bytes is used. This is removed as it is unncessary for local variable
+and for such small data.
 
-Please let's not go down that route and make such facilities less
-useful due to decreased coverage.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
-Thanks.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 73b01a8..8eb7407 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -157,12 +157,8 @@ static int rsi_usb_reg_read(struct usb_device *usbdev,
+ 			    u16 *value,
+ 			    u16 len)
+ {
+-	u8 *buf;
+-	int status = -ENOMEM;
+-
+-	buf  = kmalloc(0x04, GFP_KERNEL);
+-	if (!buf)
+-		return status;
++	u8 buf[4];
++	int status;
+ 
+ 	status = usb_control_msg(usbdev,
+ 				 usb_rcvctrlpipe(usbdev, 0),
+@@ -179,7 +175,6 @@ static int rsi_usb_reg_read(struct usb_device *usbdev,
+ 			"%s: Reg read failed with error code :%d\n",
+ 			__func__, status);
+ 	}
+-	kfree(buf);
+ 
+ 	return status;
+ }
+@@ -199,12 +194,8 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
+ 			     u16 value,
+ 			     u16 len)
+ {
+-	u8 *usb_reg_buf;
+-	int status = -ENOMEM;
+-
+-	usb_reg_buf  = kmalloc(0x04, GFP_KERNEL);
+-	if (!usb_reg_buf)
+-		return status;
++	u8 usb_reg_buf[4];
++	int status;
+ 
+ 	usb_reg_buf[0] = (value & 0x00ff);
+ 	usb_reg_buf[1] = (value & 0xff00) >> 8;
+@@ -225,7 +216,6 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
+ 			"%s: Reg write failed with error code :%d\n",
+ 			__func__, status);
+ 	}
+-	kfree(usb_reg_buf);
+ 
+ 	return status;
+ }
+-- 
+2.7.4
