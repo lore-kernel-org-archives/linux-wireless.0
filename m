@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35364 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750895AbdEEQR1 (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33066 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754049AbdEINcN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 12:17:27 -0400
-Received: by mail-io0-f196.google.com with SMTP id v34so2444242iov.2
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:27 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
+        Tue, 9 May 2017 09:32:13 -0400
+Received: by mail-pg0-f68.google.com with SMTP id s62so15183168pgc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 06:32:12 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 07/10] rtlwifi: btcoex: 21a 2ant: init wlan when leave ips
-Date: Fri,  5 May 2017 11:17:09 -0500
-Message-Id: <20170505161712.8685-8-Larry.Finger@lwfinger.net> (sfid-20170505_181916_615716_99FAC210)
-In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
-References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 07/11] rsi: Add usb multi-byte read operation
+Date: Tue,  9 May 2017 19:00:10 +0530
+Message-Id: <1494336614-2107-8-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170509_153218_795822_85A5F915)
+In-Reply-To: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-If the wifi is leaving ips, re-init the coex mechanisms, and before it is
-going into ips, the bt can just ignore the wifi activities.
+USB multibyte read will be used in the new firmware loading method
+for RS9113 chipset.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 40 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 56972d36fe84..531598366327 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3899,11 +3899,15 @@ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
- 			 "[BTCoex], IPS ENTER notify\n");
- 		coex_sta->under_ips = true;
- 		btc8821a2ant_wifi_off_hw_cfg(btcoexist);
-+		btc8821a2ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
- 		btc8821a2ant_coex_all_off(btcoexist);
- 	} else if (BTC_IPS_LEAVE == type) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], IPS LEAVE notify\n");
- 		coex_sta->under_ips = false;
-+		ex_btc8821a2ant_init_hwconfig(btcoexist);
-+		btc8821a2ant_init_coex_dm(btcoexist);
-+		btc8821a2ant_query_bt_info(btcoexist);
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 634f726..fc52311 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -266,6 +266,46 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter)
+ 	return status;
  }
  
++static int rsi_usb_read_register_multiple(struct rsi_hw *adapter, u32 addr,
++					  u8 *data, u16 count)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	u8 *buf;
++	u16 transfer;
++	int status;
++
++	if (!addr)
++		return -EINVAL;
++
++	buf = kzalloc(4096, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	while (count) {
++		transfer = min_t(u16, count, 4096);
++		status = usb_control_msg(dev->usbdev,
++					 usb_rcvctrlpipe(dev->usbdev, 0),
++					 USB_VENDOR_REGISTER_READ,
++					 RSI_USB_REQ_IN,
++					 ((addr & 0xffff0000) >> 16),
++					 (addr & 0xffff), (void *)buf,
++					 transfer, USB_CTRL_GET_TIMEOUT);
++		if (status < 0) {
++			rsi_dbg(ERR_ZONE,
++				"Reg read failed with error code :%d\n",
++				 status);
++			kfree(buf);
++			return status;
++		}
++		memcpy(data, buf, transfer);
++		count -= transfer;
++		data += transfer;
++		addr += transfer;
++	}
++	kfree(buf);
++	return 0;
++}
++
+ /**
+  * rsi_usb_write_register_multiple() - This function writes multiple bytes of
+  *				       information to multiple registers.
 -- 
-2.12.2
+2.7.4
