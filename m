@@ -1,32 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59982 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754183AbdERIvb (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35037 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753810AbdEINbm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 04:51:31 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tom =?utf-8?Q?Gaudasi=C5=84ski?= <tomg@records.headdesk.com.au>
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        helmut.schaa@googlemail.com
-Subject: Re: [PATCH] rt2800usb: Add Epson wireless adapter device-id
-References: <8e00714b-ab62-15e9-e86a-e0de5009797d@records.headdesk.com.au>
-        <87shk267jc.fsf@purkki.adurom.net>
-        <8177522a-e1c0-353a-8ce7-d7506415b6d7@records.headdesk.com.au>
-Date: Thu, 18 May 2017 11:51:26 +0300
-In-Reply-To: <8177522a-e1c0-353a-8ce7-d7506415b6d7@records.headdesk.com.au>
-        ("Tom \=\?utf-8\?Q\?Gaudasi\=C5\=84ski\=22's\?\= message of "Thu, 18 May 2017
- 18:46:14 +1000")
-Message-ID: <878tlu5z01.fsf@kamboji.qca.qualcomm.com> (sfid-20170518_105136_660886_9E2FA110)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Tue, 9 May 2017 09:31:42 -0400
+Received: by mail-pf0-f193.google.com with SMTP id u26so51566pfd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 06:31:42 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 01/11] rsi: Rename file rsi_91x_pkt.c to rsi_91x_hal.c
+Date: Tue,  9 May 2017 19:00:04 +0530
+Message-Id: <1494336614-2107-2-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170509_153146_994584_CAA76D6B)
+In-Reply-To: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tom Gaudasi=C5=84ski <tomg@records.headdesk.com.au> writes:
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> Is it advisable to re-submit with the noted corrections fixed?
+The file rsi_91x_hal.c is going to contain device specific code i.e new
+firmware loading method for RS9113 chipset. As the file rsi_91x_pkt.c
+contains code to prepare device specific descriptors for transmit packet,
+this file is renamed to rsi_91x_hal.c which is more relevant as per it's
+functionality.
 
-Yes, please resend.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/Makefile                         | 2 +-
+ drivers/net/wireless/rsi/{rsi_91x_pkt.c => rsi_91x_hal.c} | 0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename drivers/net/wireless/rsi/{rsi_91x_pkt.c => rsi_91x_hal.c} (100%)
 
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/rsi/Makefile b/drivers/net/wireless/rsi/Makefile
+index 25828b6..a475c81 100644
+--- a/drivers/net/wireless/rsi/Makefile
++++ b/drivers/net/wireless/rsi/Makefile
+@@ -2,7 +2,7 @@ rsi_91x-y			+= rsi_91x_main.o
+ rsi_91x-y			+= rsi_91x_core.o
+ rsi_91x-y			+= rsi_91x_mac80211.o
+ rsi_91x-y			+= rsi_91x_mgmt.o
+-rsi_91x-y			+= rsi_91x_pkt.o
++rsi_91x-y			+= rsi_91x_hal.o
+ rsi_91x-$(CONFIG_RSI_DEBUGFS)	+= rsi_91x_debugfs.o
+ 
+ rsi_usb-y			+= rsi_91x_usb.o rsi_91x_usb_ops.o
+diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+similarity index 100%
+rename from drivers/net/wireless/rsi/rsi_91x_pkt.c
+rename to drivers/net/wireless/rsi/rsi_91x_hal.c
+-- 
+2.7.4
