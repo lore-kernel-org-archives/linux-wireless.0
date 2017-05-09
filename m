@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41959 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751817AbdECO0D (ORCPT
+Received: from gateway24.websitewelcome.com ([192.185.51.228]:26352 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752049AbdEIM07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 10:26:03 -0400
-From: Colin King <colin.king@canonical.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R . Rodriguez" <mcgrof@do-not-panic.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] ath5k: fix memory leak on buf on failed eeprom read
-Date: Wed,  3 May 2017 15:26:00 +0100
-Message-Id: <20170503142600.32609-1-colin.king@canonical.com> (sfid-20170503_162609_570784_7046017D)
+        Tue, 9 May 2017 08:26:59 -0400
+Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id 31747485B
+        for <linux-wireless@vger.kernel.org>; Tue,  9 May 2017 07:01:59 -0500 (CDT)
+Date: Tue, 09 May 2017 07:01:58 -0500
+Message-ID: <20170509070158.Horde.dYleVB-aK1cNNyQpdVsVMNp@gator4166.hostgator.com> (sfid-20170509_142702_466051_9B63FA1E)
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: ath: ath9k: remove unnecessary code
+References: <20170509034814.GA18034@embeddedgus>
+ <87efvy1d07.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87efvy1d07.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi Kalle,
 
-The AR5K_EEPROM_READ macro returns with -EIO if a read error
-occurs causing a memory leak on the allocated buffer buf. Fix
-this by explicitly calling ath5k_hw_nvram_read and exiting on
-the via the freebuf label that performs the necessary free'ing
-of buf when a read error occurs.
+Quoting Kalle Valo <kvalo@qca.qualcomm.com>:
 
-Detected by CoverityScan, CID#1248782 ("Resource Leak")
+> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
+>
+>> The name of an array used by itself will always return the array's address.
+>> So this test will always evaluate as true.
+>>
+>> Addresses-Coverity-ID: 1364903
+>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c  
+>> b/drivers/net/wireless/ath/ath9k/eeprom.c
+>> index fb80ec8..5c3bc28 100644
+>> --- a/drivers/net/wireless/ath/ath9k/eeprom.c
+>> +++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+>> @@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32  
+>> off, u16 *data)
+>>
+>>  	if (ah->eeprom_blob)
+>>  		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
+>> -	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
+>> +	else if (pdata && !pdata->use_eeprom)
+>>  		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
+>>  	else
+>>  		ret = common->bus_ops->eeprom_read(common, off, data);
+>
+> The patch may very well be valid (didn't check yet) but the commit log
+> is gibberish for me.
+>
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/ath/ath5k/debug.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Let me correct that and I'll send the patch again.
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index d068df520e7a..bd7f6d7b199e 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -938,7 +938,10 @@ static int open_file_eeprom(struct inode *inode, struct file *file)
- 	}
- 
- 	for (i = 0; i < eesize; ++i) {
--		AR5K_EEPROM_READ(i, val);
-+		if (!ath5k_hw_nvram_read(ah, i, &val)) {
-+			ret = -EIO;
-+			goto freebuf;
-+		}
- 		buf[i] = val;
- 	}
- 
--- 
-2.11.0
+Thanks!
+--
+Gustavo A. R. Silva
