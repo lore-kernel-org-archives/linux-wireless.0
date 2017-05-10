@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:36175 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161867AbdEYALv (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:51274 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752511AbdEJMaX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 20:11:51 -0400
-Received: by mail-pf0-f181.google.com with SMTP id m17so150176720pfg.3
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:51 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 14/14] mwifiex: pcie: fix whitespace
-Date: Wed, 24 May 2017 17:11:19 -0700
-Message-Id: <20170525001119.64791-14-briannorris@chromium.org> (sfid-20170525_021433_861582_80E14A32)
-In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
-References: <20170525001119.64791-1-briannorris@chromium.org>
+        Wed, 10 May 2017 08:30:23 -0400
+Date: Wed, 10 May 2017 15:24:58 +0300
+From: Jouni Malinen <j@w1.fi>
+To: mike@hellotwist.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Validate michael MIC before attempting packet
+ decode.
+Message-ID: <20170510122458.GA4796@w1.fi> (sfid-20170510_143026_821027_254071E1)
+References: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This keeps annoying me.
+On Tue, May 09, 2017 at 02:16:31PM -0400, Michael Skeffington wrote:
+> In order to allow wpa_supplicant to correctly identify a perceived WPA TKIP key
+> recovery attack the michael MIC must be checked before the packet decode is
+> attempted.  A packet with an invalid MIC will always fail a decrypt check which
+> previously was being checked first.  Therefore the MIC failure bit of
+> status flags
+> describing the error would remain unset.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Which driver and WLAN hardware are you using? Michael MIC is encrypted,
+so to be able to check that, the frame will obviously need to be
+decrypted first. If that WEP decryption fails, this frame needs to be
+dropped without indicating Michael MIC failure. WEP part here is
+completely independent of Michael MIC.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index c86119b05f52..4f1d946ea460 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -3211,7 +3211,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- 	} else {
- 		mwifiex_dbg(adapter, INFO,
- 			    "%s(): calling free_irq()\n", __func__);
--	       free_irq(card->dev->irq, &card->share_irq_ctx);
-+		free_irq(card->dev->irq, &card->share_irq_ctx);
- 
- 		if (card->msi_enable)
- 			pci_disable_msi(pdev);
+It is possible that there is a driver that handles these steps in
+hardware/firmware and if so, that driver may have a bug if you do not
+see Michael MIC failures reported correctly. Anyway, as Johannes pointed
+out, this part in mac80211 is in the correct sequence and that cannot be
+changed since it would completely break TKIP for more or less all
+software-based cases.
+
 -- 
-2.13.0.219.gdb65acc882-goog
+Jouni Malinen                                            PGP id EFC895FA
