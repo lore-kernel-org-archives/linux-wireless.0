@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35952 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751791AbdEHOI0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2017 10:08:26 -0400
-Message-ID: <1494252504.8248.2.camel@redhat.com> (sfid-20170508_160835_323301_8D587E98)
-Subject: Re: mwifiex won't connect to WPA2 anymore
-From: Dan Williams <dcbw@redhat.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 08 May 2017 09:08:24 -0500
-In-Reply-To: <8737chpwfx.fsf@free.fr>
-References: <87wpa3kxgi.fsf@free.fr> <87tw51y91z.fsf@free.fr>
-         <1493844237.5647.9.camel@redhat.com> <87a86sfh2e.fsf@free.fr>
-         <1493948347.26081.1.camel@redhat.com> <87mvaq4bsg.fsf@free.fr>
-         <1494085819.19292.5.camel@redhat.com> <8737chpwfx.fsf@free.fr>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0189.hostedemail.com ([216.40.44.189]:40654 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751555AbdEJEdY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 May 2017 00:33:24 -0400
+Message-ID: <1494390797.4564.5.camel@perches.com> (sfid-20170510_063419_652299_30F65FBD)
+Subject: Re: [PATCH] libertas: Avoid reading past end of buffer
+From: Joe Perches <joe@perches.com>
+To: Kees Cook <keescook@chromium.org>, netdev@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>
+Date: Tue, 09 May 2017 21:33:17 -0700
+In-Reply-To: <20170509232334.GA55070@beast>
+References: <20170509232334.GA55070@beast>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-05-06 at 22:22 +0200, Julien Cubizolles wrote:
-> Dan Williams <dcbw@redhat.com> writes:
+On Tue, 2017-05-09 at 16:23 -0700, Kees Cook wrote:
+> Using memcpy() from a string that is shorter than the length copied means
+> the destination buffer is being filled with arbitrary data from the kernel
+> rodata segment. Instead, use strncpy() which will fill the trailing bytes
+> with zeros. Additionally adjust indentation to keep checkpatch.pl happy.
 > 
-> 
-> > Ok, at this point the only thing I can think of is the MAC
-> > randomization that NM has.  Please see:
-> > 
-> > https://blogs.gnome.org/thaller/2016/08/26/mac-address-spoofing-in-
-> > networkmanager-1-4-0/
-> > 
-> > and look at the section "Randomization during Wi-Fi scanning" where
-> > it
-> > says:
-> > 
-> > ----
-> > This default behavior can be disabled with a global configuration
-> > option in NetworkManager.conf:
-> > 
-> > [device]
-> > wifi.scan-rand-mac-address=no
-> > ----
-> > 
-> > if you set that, and restart NetworkManager, does that magically
-> > make
-> > things work?
-> 
-> Yes! It's now working fine, thanks a lot. I have my wifi AP set to
-> only
-> accept a whitelist of MAC addresses so it makes sense that I can't
-> connect if the MAC address is random. I'll disable the randomization
-> for
-> now on.
+> This was found with the future CONFIG_FORTIFY_SOURCE feature.
+[]
+> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+[]
+> @@ -1177,9 +1177,9 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
+>  	switch (stringset) {
+>  	case ETH_SS_STATS:
+>  		for (i = 0; i < MESH_STATS_NUM; i++) {
+> -			memcpy(s + i * ETH_GSTRING_LEN,
+> -					mesh_stat_strings[i],
+> -					ETH_GSTRING_LEN);
+> +			strncpy(s + i * ETH_GSTRING_LEN,
+> +				mesh_stat_strings[i],
+> +				ETH_GSTRING_LEN);
+>  		}
 
-Well, ideally you wouldn't have to do this, but we haven't quite
-figured out whether it's a bug in the way NM does randomization or
-whether the drivers that require this switch (there are a few) are just
-broken somehow.
+The better solution is to declare
+mesh_stat_strings in in the normal way
 
-Dan
+---
+ drivers/net/wireless/marvell/libertas/mesh.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+index d0c881dd5846..a535e7f48d2d 100644
+--- a/drivers/net/wireless/marvell/libertas/mesh.c
++++ b/drivers/net/wireless/marvell/libertas/mesh.c
+@@ -1108,15 +1108,15 @@ void lbs_mesh_set_txpd(struct lbs_private *priv,
+  * Ethtool related
+  */
+ 
+-static const char * const mesh_stat_strings[] = {
+-			"drop_duplicate_bcast",
+-			"drop_ttl_zero",
+-			"drop_no_fwd_route",
+-			"drop_no_buffers",
+-			"fwded_unicast_cnt",
+-			"fwded_bcast_cnt",
+-			"drop_blind_table",
+-			"tx_failed_cnt"
++static const char mesh_stat_strings[][ETH_GSTRING_LEN] = {
++	"drop_duplicate_bcast",
++	"drop_ttl_zero",
++	"drop_no_fwd_route",
++	"drop_no_buffers",
++	"fwded_unicast_cnt",
++	"fwded_bcast_cnt",
++	"drop_blind_table",
++	"tx_failed_cnt",
+ };
+ 
+ void lbs_mesh_ethtool_get_stats(struct net_device *dev,
