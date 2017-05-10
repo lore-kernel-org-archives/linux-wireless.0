@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43528 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964793AbdEVPY4 (ORCPT
+Received: from smtprelay0065.hostedemail.com ([216.40.44.65]:38421 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932125AbdEJXFN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 11:24:56 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [15/16] hostap: convert hostap_cmd_queue.usecnt from atomic_t to
- refcount_t
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1490691403-4016-16-git-send-email-elena.reshetova@intel.com>
-References: <1490691403-4016-16-git-send-email-elena.reshetova@intel.com>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-ppp@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ganeshgr@chelsio.com,
-        nbd@openwrt.org, blogic@openwrt.org, matthias.bgg@gmail.com,
-        yishaih@mellanox.com, saeedm@mellanox.com, matanb@mellanox.com,
-        leonro@mellanox.com, ajk@comnets.uni-bremen.de, paulus@samba.org,
-        j@w1.fi, peterz@infradead.org, keescook@chromium.org,
-        gregkh@linuxfoundation.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>
-Message-Id: <20170522152455.DF19960AEE@smtp.codeaurora.org> (sfid-20170522_172635_608076_97527360)
-Date: Mon, 22 May 2017 15:24:55 +0000 (UTC)
+        Wed, 10 May 2017 19:05:13 -0400
+Message-ID: <1494457506.2028.1.camel@perches.com> (sfid-20170511_010550_352911_684A07DE)
+Subject: Re: [PATCH] libertas: Avoid reading past end of buffer
+From: Joe Perches <joe@perches.com>
+To: Kees Cook <keescook@chromium.org>, netdev@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Daniel Micay <danielmicay@gmail.com>,
+        linux-kernel@vger.kernel.org
+Date: Wed, 10 May 2017 16:05:06 -0700
+In-Reply-To: <20170510192451.GA115771@beast>
+References: <20170510192451.GA115771@beast>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Elena Reshetova <elena.reshetova@intel.com> wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
+On Wed, 2017-05-10 at 12:24 -0700, Kees Cook wrote:
+> Using memcpy() from a string that is shorter than the length copied means
+[]
+> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+[]
+> @@ -1170,17 +1170,11 @@ int lbs_mesh_ethtool_get_sset_count(struct net_device *dev, int sset)
+>  void lbs_mesh_ethtool_get_strings(struct net_device *dev,
+>  	uint32_t stringset, uint8_t *s)
+>  {
+> -	int i;
+> -
+>  	lbs_deb_enter(LBS_DEB_ETHTOOL);
+>  
+>  	switch (stringset) {
+>  	case ETH_SS_STATS:
+> -		for (i = 0; i < MESH_STATS_NUM; i++) {
+> -			memcpy(s + i * ETH_GSTRING_LEN,
+> -					mesh_stat_strings[i],
+> -					ETH_GSTRING_LEN);
+> -		}
+> +		memcpy(s, *mesh_stat_strings, sizeof(mesh_stat_strings));
+>  		break;
+>  	}
+>  	lbs_deb_enter(LBS_DEB_ETHTOOL);
 
-2 patches applied to wireless-drivers-next.git, thanks.
+unrelated trivia:
 
-552aa585faff hostap: convert hostap_cmd_queue.usecnt from atomic_t to refcount_t
-0aeffa7041d8 orinoco_usb: convert request_context.refcount from atomic_t to refcount_t
+lbs_deb_enter is used incorrectly here at
+function exit as both enter and leave calls.
 
--- 
-https://patchwork.kernel.org/patch/9648427/
+That type of copy/paste defect may be common.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+$ git grep -w lbs_deb_enter | wc -l
+148
+$ git grep -w lbs_deb_leave | wc -l
+71
+
+One would expect these numbers to be the same.
+
+Another option would be to delete all these
+calls as ftrace function tracing works well.
