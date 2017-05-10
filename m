@@ -1,121 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:33146 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750765AbdEPObD (ORCPT
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:33127 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753924AbdEJTYy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 10:31:03 -0400
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] rt2x00: improve calling conventions for register
- accessors
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        =?UTF-8?Q?Tomislav_Po=c5=beega?= <pozega.tomislav@gmail.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20170515134711.2770374-1-arnd@arndb.de>
- <20170515142520.GA13996@redhat.com>
- <20170515.103951.2305484593464882104.davem@davemloft.net>
- <20170516115511.GA4230@redhat.com>
- <0ce21c48-1d2c-3035-3c6e-52c7debf86d5@gmail.com>
- <CAK8P3a18opkvCyoNmYhR6M7XXEq8f__hMZH1A6w8UFP7qbmQWw@mail.gmail.com>
-Message-ID: <0080a870-2d15-9b60-b7fb-8847d3c8aa8a@gmail.com> (sfid-20170516_163110_419326_579DCBDD)
-Date: Tue, 16 May 2017 10:31:00 -0400
+        Wed, 10 May 2017 15:24:54 -0400
+Received: by mail-pg0-f44.google.com with SMTP id u187so2554936pgb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 10 May 2017 12:24:53 -0700 (PDT)
+Date: Wed, 10 May 2017 12:24:51 -0700
+From: Kees Cook <keescook@chromium.org>
+To: netdev@vger.kernel.org
+Cc: Joe Perches <joe@perches.com>, Kalle Valo <kvalo@codeaurora.org>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Daniel Micay <danielmicay@gmail.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] libertas: Avoid reading past end of buffer
+Message-ID: <20170510192451.GA115771@beast> (sfid-20170510_212529_085310_FAFB8000)
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a18opkvCyoNmYhR6M7XXEq8f__hMZH1A6w8UFP7qbmQWw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/16/2017 10:19 AM, Arnd Bergmann wrote:
-> On Tue, May 16, 2017 at 3:44 PM, Jes Sorensen <jes.sorensen@gmail.com> wrote:
->> On 05/16/2017 07:55 AM, Stanislaw Gruszka wrote:
->>>
->>> On Mon, May 15, 2017 at 10:39:51AM -0400, David Miller wrote:
->>>>
->>>> Passing return values by reference is and always has been a really
->>>> poor way to achieve what these functions are doing.
->>>>
->>>> And frankly, whilst the tool could see what's going on here better, we
->>>> should be making code easier rather than more difficult to audit.
->>>>
->>>> I am therefore very much in favor of Arnd's change.
->>>>
->>>> This isn't even a situation where there are multiple return values,
->>>> such as needing to signal an error and return an unsigned value at the
->>>> same time.
->>>>
->>>> These functions return _one_ value, and therefore they should be
->>>> returned as a true return value.
->>>
->>>
->>> In rt2x00 driver we use poor convention in other kind of registers
->>> accessors like bbp, mac, eeprom. I dislike to changing only rfcsr
->>> accessors and leaving others in the old way. And changing all accessors
->>> would be massive and error prone change, which I'm not prefer either.
->>
->>
->> That's why you do it in multiple smaller patches rather than one ugly giant
->> patch.
-> 
-> I did  the first step using a search&replace in vim using
-> 
-> s:\(rt2800_rfcsr_read(.*,.*\), &\(.*\));:\2 = \1);:
-> 
-> but had to introduce a conversion function
-> 
-> static void rt2800_rfcsr_readreg(struct rt2x00_dev *rt2x00dev,
->                                  const unsigned int word, u8 *value)
-> {
->         *value = rt2800_rfcsr_read(rt2x00dev, word);
-> }
-> 
-> to keep the correct types in place for struct rt2x00debug. I now
-> did all the other ones too, and removed that helper again. The
-> result in much nicer, but I basically ended up having to do
-> the same regex search for all of these at once:
-> 
-> static void rt2400pci_bbp_read(struct rt2x00_dev *rt2x00dev,
-> static void rt2500pci_bbp_read(struct rt2x00_dev *rt2x00dev,
-> static void rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
-> static void rt2500usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
-> static void rt2500usb_bbp_read(struct rt2x00_dev *rt2x00dev,
-> static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
-> static void rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
-> static void rt2800_eeprom_read(struct rt2x00_dev *rt2x00dev,
-> static void rt2800_rfcsr_readreg(struct rt2x00_dev *rt2x00dev,
-> static void rt2800_bbp_dcoc_read(struct rt2x00_dev *rt2x00dev,
-> void (*register_read)(struct rt2x00_dev *rt2x00dev,
-> void (*register_read_lock)(struct rt2x00_dev *rt2x00dev,
-> static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
-> static inline void rt2800_register_read_lock(struct rt2x00_dev *rt2x00dev,
-> static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
-> static inline void rt2x00_eeprom_read(struct rt2x00_dev *rt2x00dev,
-> void (*read)(struct rt2x00_dev *rt2x00dev, \
-> static inline void rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
-> static inline void _rt2x00_desc_read(__le32 *desc, const u8 word, __le32 *value)
-> static inline void rt2x00_desc_read(__le32 *desc, const u8 word, u32 *value)
-> static inline void rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
-> static inline void rt2x00usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
-> static void rt61pci_bbp_read(struct rt2x00_dev *rt2x00dev,
-> static void rt73usb_bbp_read(struct rt2x00_dev *rt2x00dev,
-> 
-> and that ended up as a 300KB patch [1]. Splitting it up is clearly possibly,
-> but I fear that would be more error-prone as we then need to add
-> those helpers for the other debug stuff as well, and remove it again
-> afterwards.
+Using memcpy() from a string that is shorter than the length copied means
+the destination buffer is being filled with arbitrary data from the kernel
+rodata segment. Instead, redefine the stat strings to be ETH_GSTRING_LEN
+sizes, like other drivers. This lets us use a single memcpy that does not
+leak rodata contents. Additionally adjust indentation to keep checkpatch.pl
+happy.
 
-True - if the automatic conversion works without automatic intervention, 
-I am less worried about it. Personally I would still focus on converting 
-one function at a time to reduce the impact of each patch.
+This was found with the future CONFIG_FORTIFY_SOURCE feature.
 
-Cheers,
-Jes
+Cc: Daniel Micay <danielmicay@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+v2: use ETH_GSTRING_LEN; joe
+---
+ drivers/net/wireless/marvell/libertas/mesh.c | 26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+index d0c881dd5846..6076c83ce5ab 100644
+--- a/drivers/net/wireless/marvell/libertas/mesh.c
++++ b/drivers/net/wireless/marvell/libertas/mesh.c
+@@ -1108,15 +1108,15 @@ void lbs_mesh_set_txpd(struct lbs_private *priv,
+  * Ethtool related
+  */
+ 
+-static const char * const mesh_stat_strings[] = {
+-			"drop_duplicate_bcast",
+-			"drop_ttl_zero",
+-			"drop_no_fwd_route",
+-			"drop_no_buffers",
+-			"fwded_unicast_cnt",
+-			"fwded_bcast_cnt",
+-			"drop_blind_table",
+-			"tx_failed_cnt"
++static const char mesh_stat_strings[MESH_STATS_NUM][ETH_GSTRING_LEN] = {
++	"drop_duplicate_bcast",
++	"drop_ttl_zero",
++	"drop_no_fwd_route",
++	"drop_no_buffers",
++	"fwded_unicast_cnt",
++	"fwded_bcast_cnt",
++	"drop_blind_table",
++	"tx_failed_cnt"
+ };
+ 
+ void lbs_mesh_ethtool_get_stats(struct net_device *dev,
+@@ -1170,17 +1170,11 @@ int lbs_mesh_ethtool_get_sset_count(struct net_device *dev, int sset)
+ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
+ 	uint32_t stringset, uint8_t *s)
+ {
+-	int i;
+-
+ 	lbs_deb_enter(LBS_DEB_ETHTOOL);
+ 
+ 	switch (stringset) {
+ 	case ETH_SS_STATS:
+-		for (i = 0; i < MESH_STATS_NUM; i++) {
+-			memcpy(s + i * ETH_GSTRING_LEN,
+-					mesh_stat_strings[i],
+-					ETH_GSTRING_LEN);
+-		}
++		memcpy(s, *mesh_stat_strings, sizeof(mesh_stat_strings));
+ 		break;
+ 	}
+ 	lbs_deb_enter(LBS_DEB_ETHTOOL);
+-- 
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
