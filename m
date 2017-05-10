@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35139 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764354AbdEYRsU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 13:48:20 -0400
-Received: by mail-oi0-f65.google.com with SMTP id m17so38647117oik.2
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:48:19 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 0/7] rtlwifi: btcoex: Final round of fixes
-Date: Thu, 25 May 2017 12:48:07 -0500
-Message-Id: <20170525174814.25005-1-Larry.Finger@lwfinger.net> (sfid-20170525_194901_724075_BE6EB6F2)
+Received: from mx1.redhat.com ([209.132.183.28]:59492 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751507AbdEJJdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 May 2017 05:33:00 -0400
+Date: Wed, 10 May 2017 11:31:17 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Marek =?utf-8?Q?Floria=C5=84czyk?= <marek.florianczyk@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Cubieboard2 + hostapd + 100 wireless devices
+Message-ID: <20170510093113.GA9584@redhat.com> (sfid-20170510_113304_341154_0386E5EB)
+References: <1946348.9jam7OIK4C@franki>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1946348.9jam7OIK4C@franki>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These 7 patches finish this round of fixes for the various components
-of btcoex.
+On Sun, May 07, 2017 at 02:19:25PM +0200, Marek Floriańczyk wrote:
+> Hello all,
+> 
+> I need to set up such a configuration:
+> Cubieboard2 with Debian Jessie, Hostapd 2.6 as an AP, usb wifi dongle + 100 
+> devices with NodeMCU module:
+> http://www.electrodragon.com/product/esp-12f-esp8266-wifi-board/
+> 
+> I'm using usb wifi dongle based on Ralink RT5370 Wireless Adapter,
+> after I have switched hostapd network mode to "b" it works quite well (tested 
+> with 70 devices). Only text commands are going to be send from server to 
+> devices, so I don't need high speed, I need reliability.
+> 
+> Has someone any experience with such a setup ?
+> Would one recommend different wifi dongle (maybe more powerful), with different 
+> chipset?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+If RT5370 works for you I would stick with it. RTxxx chips with rt2800
+driver are capable to support up to 190 stations with HW encryption and
+11n aggregation (something that you are not interested). Theoretically
+more stations can be added and those should fallback to software
+encryption and frame aggregation will not be done, but I'm not sure if
+anyone test that.
 
-Larry Finger (3):
-  rtlwifi: btcoex: Fix Sparse messages for undeclared symbols
-  rtlwifi: btcoex: Fix logic error in 21a 1ant
-  rtlwifi: btcoex: Fix another edit mistake in 21a 1ant
+I'm also not sure if many people test 11b, perhaps 11g would be better
+choice. BTW, what kernel version are you using (I'm curious if 11b
+still works on latest kernels) ?
 
-Yan-Hsuan Chuang (4):
-  rtlwifi: btcoex: update new btcoex version
-  rtlwifi: btcoex: fix compiler warnings for unused functions
-  rtlwifi: btcoex: bind bt to the adapter when initialization
-  rtlwifi: btcoex: 92e: rename function that was missing to be
-    consistent
-
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  22 +
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |   2 +-
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |  32 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  53 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  41 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |   1 +
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  62 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  38 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  26 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 764 +++++++++++++++------
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  43 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  36 +-
- 14 files changed, 747 insertions(+), 379 deletions(-)
-
--- 
-2.12.0
+Stanislaw
