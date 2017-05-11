@@ -1,51 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33396 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751791AbdEHNkm (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33717 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934302AbdEKTB2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2017 09:40:42 -0400
-Subject: [PATCH v6] staging: rtl8723bs: remove re-positioned call to kfree in
- os_dep/ioctl_cfg80211.c
-From: Ian W MORRISON <ianwmorrison@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, hadess@hadess.net,
-        Larry.Finger@lwfinger.net, hdegoede@redhat.com,
-        jes.sorensen@gmail.com, kvalo@qca.qualcomm.com
-References: <b4a25189-3e3e-a051-70c3-7fbedc366a26@gmail.com>
- <8b27a07c-ecb1-21be-bf8f-e7365ec000f4@gmail.com>
- <40c81df4-d17f-c374-e5a8-c5b8edd914b5@gmail.com>
-Message-ID: <862374c4-39ac-8f0a-e5d1-c239d6910e1f@gmail.com> (sfid-20170508_154113_509830_0E410A08)
-Date: Mon, 8 May 2017 23:40:35 +1000
-MIME-Version: 1.0
-In-Reply-To: <40c81df4-d17f-c374-e5a8-c5b8edd914b5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 11 May 2017 15:01:28 -0400
+Received: by mail-oi0-f66.google.com with SMTP id h4so5535813oib.0
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:28 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 02/10] rtlwifi: btcoex: 21a 2ant: refine btc8821a2ant_action_hid_a2dp
+Date: Thu, 11 May 2017 14:01:11 -0500
+Message-Id: <20170511190119.23426-3-Larry.Finger@lwfinger.net> (sfid-20170511_210153_344556_6CAC55C7)
+In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A re-positioned call to kfree() in 
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-causes a segmentation error. This patch removed the kfree() call.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Fixes 6557ddfec348 ("staging: rtl8723bs: Fix various errors in os_dep/ioctl_cfg80211.c")
-Signed-off-by: Ian W Morrison <ianwmorrison@gmail.com>
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+For hid a2dp profiling, decrease the bt power because of the distance of
+bt is usually short, and do not adjust the wifi duration to a longer
+period since it may be interrupted by bt easily, set tdma instead.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
-This version of the patch (version 6) fixes errors in the patch submission.
- drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 1 -
- 1 file changed, 1 deletion(-)
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+v3 - no changes
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 108 ++++++++-------------
+ 1 file changed, 42 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-index f17f4fb..2ee9df5 100644
---- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-+++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-@@ -3527,7 +3527,6 @@ int rtw_wdev_alloc(struct adapter *padapter, struct device *dev)
- 		pwdev_priv->power_mgmt = true;
- 	else
- 		pwdev_priv->power_mgmt = false;
--	kfree((u8 *)wdev);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index a0f2eb53a011..60386c7571e8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3295,19 +3295,46 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
  
- 	return ret;
+ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ {
+-	u8 wifi_rssi_state, bt_rssi_state, bt_info_ext;
+ 	u32 wifi_bw;
++	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
++	u8 ap_num = 0;
  
+-	bt_info_ext = coex_sta->bt_info_ext;
+ 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
+-	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
++	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
++				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
++	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
++				3, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 37);
+ 
+-	if (BTC_RSSI_HIGH(bt_rssi_state))
+-		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, true);
+-	else
+-		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
++	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
++
++	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
++	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
++	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
++		if (BTC_RSSI_HIGH(bt_rssi_state))
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else if (BTC_RSSI_MEDIUM(bt_rssi_state))
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		else
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++	} else {
++		/* only 802.11N mode we have to dec bt power to 4 degree */
++		if (BTC_RSSI_HIGH(bt_rssi_state)) {
++			btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM,
++					   &ap_num);
++			if (ap_num < 10)
++				btc8821a2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 4);
++			else
++				btc8821a2ant_dec_bt_pwr(btcoexist,
++							NORMAL_EXEC, 2);
++		} else if (BTC_RSSI_MEDIUM(bt_rssi_state)) {
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
++		} else {
++			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
++		}
++	}
+ 
+ 	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
+ 		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+@@ -3319,36 +3346,15 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 					      0x4);
+ 	}
+ 
+-	if (BTC_WIFI_BW_HT40 == wifi_bw) {
+-		/* fw mechanism */
+-		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		} else {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		}
++	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
++	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
++		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
++	} else {
++		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
++	}
+ 
+-		/* sw mechanism */
++	/* sw mechanism */
++	if (wifi_bw == BTC_WIFI_BW_HT40) {
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, true, true,
+@@ -3362,36 +3368,6 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ 						   false, 0x18);
+ 		}
+ 	} else {
+-		/* fw mechanism */
+-		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+-		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+-			if (bt_info_ext & BIT0) {
+-				/* a2dp basic rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-
+-			} else {
+-				/* a2dp edr rate */
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		} else {
+-			if (bt_info_ext & BIT0) {
+-				/*a2dp basic rate*/
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			} else {
+-				/*a2dp edr rate*/
+-				btc8821a2ant_tdma_duration_adjust(btcoexist,
+-								  true, true,
+-								  2);
+-			}
+-		}
+-
+-		/* sw mechanism */
+ 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a2ant_sw_mechanism1(btcoexist, false, true,
 -- 
-1.9.1
+2.12.0
