@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:33105 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753004AbdEPTqQ (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36226 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932948AbdEKTBb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 15:46:16 -0400
-Received: by mail-yw0-f195.google.com with SMTP id 203so8599430ywe.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 12:46:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1fdab9d5-d8c6-88dc-38ac-2948e5fa74ec@rempel-privat.de>
-References: <1fdab9d5-d8c6-88dc-38ac-2948e5fa74ec@rempel-privat.de>
-From: Max Filippov <jcmvbkbc@gmail.com>
-Date: Tue, 16 May 2017 12:46:09 -0700
-Message-ID: <CAMo8Bf+xbS46Kj4VP_+F2aZPZpOJ2UHV6WdHP_Ku_eaSQwm-7g@mail.gmail.com> (sfid-20170516_214656_217652_DEDFEF5C)
-Subject: Re: Search for devices with Xtensa cores
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@qca.qualcomm.com,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 11 May 2017 15:01:31 -0400
+Received: by mail-oi0-f67.google.com with SMTP id w138so5501983oiw.3
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:31 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 05/10] rtlwifi: btcoex: 21a 2ant: add pnp notidy to avoid LPS/IPS mismatch
+Date: Thu, 11 May 2017 14:01:14 -0500
+Message-Id: <20170511190119.23426-6-Larry.Finger@lwfinger.net> (sfid-20170511_210145_657510_EC8B8343)
+In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HI Oleksij,
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-On Fri, Apr 28, 2017 at 11:23 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> this year started with inclusion of open-ath9k-htc-firmware to debian
-> *main* repository. As first we started to getting advantage of regular
-> compile tests. See results here:
-> https://tests.reproducible-builds.org/debian/rb-pkg/unstable/i386/open-ath9k-htc-firmware.html
->
-> Most of the problems which we currently get, are related to gcc xtensa
-> compiler.
-> In details: device specific patch set is used to provide our own
-> gcc/binutils version because Xtensa don't really have defined CPU cores.
-> As result, upstream compiler developers will never notice if some thing
-> will brake this patch set.
+When driver is going to sleep, it does not leave LPS/IPS, thus the
+BTCoex may have mismatch when driver wakes up. To avoid that, BTCoex
+needs to clear the IPS/LPS state when it receives a pnp notify, then
+it can properly set up the hw when driver wakes up.
 
-Below are the links to the xtensa-dynconfig repository and xtensa-plugin-env
-branches in binutils-gdb and gcc repositories. Together it is a draft
-implementation of dynamically configurable xtensa toolchain.
-Could you please take a look at it and see if it's useful for you?
+Routine ex_btc8821a2ant_pnp_notify() restored.
 
-https://github.com/jcmvbkbc/xtensa-dynconfig
-https://github.com/jcmvbkbc/binutils-gdb-xtensa/commits/xtensa-plugin-env
-https://github.com/jcmvbkbc/gcc-xtensa/commits/xtensa-plugin-env
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+v3 - no changes
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c        | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 9aa140a46d46..ca7649dca352 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -4147,6 +4147,24 @@ void ex_btc8821a2ant_halt_notify(struct btc_coexist *btcoexist)
+ 	ex_btc8821a2ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
+ }
+ 
++void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
++{
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
++
++	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD, "[BTCoex], Pnp notify\n");
++
++	if (pnp_state == BTC_WIFI_PNP_SLEEP) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], Pnp notify to SLEEP\n");
++	} else if (pnp_state == BTC_WIFI_PNP_WAKE_UP) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], Pnp notify to WAKE UP\n");
++		ex_btc8821a2ant_init_hwconfig(btcoexist);
++		btc8821a2ant_init_coex_dm(btcoexist);
++		btc8821a2ant_query_bt_info(btcoexist);
++	}
++}
++
+ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
 -- 
-Thanks.
--- Max
+2.12.0
