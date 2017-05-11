@@ -1,173 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44610 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750734AbdESH6D (ORCPT
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:34818 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752011AbdEKJJh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 03:58:03 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V4 3/3] brcmfmac: add scheduled scan support for specified BSSIDs
-Date: Fri, 19 May 2017 08:57:39 +0100
-Message-Id: <1495180659-12406-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170519_095808_692383_70CAAF54)
-In-Reply-To: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 11 May 2017 05:09:37 -0400
+Received: by mail-wr0-f172.google.com with SMTP id z52so15087465wrc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 02:09:37 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, akolli@qti.qualcomm.com,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH] ath10k: Fix reported HT MCS rates with NSS > 1
+Date: Thu, 11 May 2017 11:09:30 +0200
+Message-Id: <20170511090930.18205-1-sven.eckelmann@openmesh.com> (sfid-20170511_111115_739915_7B184692)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+The QCA4019 firmware 10.4-3.2.1-00050 reports only HT MCS rates between
+0-9. But 802.11n MCS rates can be larger than that. For example a 2x2
+device can send with up to MCS 15.
 
-Add support to handle scheduled scan request containing BSSID in
-the matchsets. The firmware can send event upon finding BSSIDs and
-SSIDs. To get these in one event the bit REPORT_SEPARATELY needed
-to be removed from the flags in brcmf_pno_config().
+The firmware encodes the higher MCS rates using the NSS field. The actual
+calculation is not documented by QCA but it seems like the NSS field can be
+mapped for HT rates to following MCS offsets:
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+ * NSS 1: 0
+ * NSS 2: 8
+ * NSS 3: 16
+ * NSS 4: 24
+
+This offset therefore has to be added for HT rates before they are stored
+in the rate_info struct.
+
+Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 ---
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 11 ++++
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 58 ++++++++++++++++------
- 2 files changed, 53 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 45aaae8..b857d53 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -806,6 +806,17 @@ struct brcmf_pno_macaddr_le {
- };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 84b6067ff6e7..6c0a821fe79d 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2229,9 +2229,15 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
+ 	txrate.mcs = ATH10K_HW_MCS_RATE(peer_stats->ratecode);
+ 	sgi = ATH10K_HW_GI(peer_stats->flags);
  
- /**
-+ * struct brcmf_pno_bssid_le - bssid configuration for PNO scan.
-+ *
-+ * @bssid: BSS network identifier.
-+ * @flags: flags for this BSSID.
-+ */
-+struct brcmf_pno_bssid_le {
-+	u8 bssid[ETH_ALEN];
-+	__le16 flags;
-+};
+-	if (((txrate.flags == WMI_RATE_PREAMBLE_HT) ||
+-	     (txrate.flags == WMI_RATE_PREAMBLE_VHT)) && txrate.mcs > 9) {
+-		ath10k_warn(ar, "Invalid mcs %hhd peer stats", txrate.mcs);
++	if (txrate.flags == WMI_RATE_PREAMBLE_VHT && txrate.mcs > 9) {
++		ath10k_warn(ar, "Invalid VHT mcs %hhd peer stats",  txrate.mcs);
++		return;
++	}
 +
-+/**
-  * struct brcmf_pktcnt_le - packet counters.
-  *
-  * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index 81e8549..9623157 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -120,7 +120,6 @@ static int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
- 
- 	/* set extra pno params */
- 	flags = BIT(BRCMF_PNO_IMMEDIATE_SCAN_BIT) |
--		BIT(BRCMF_PNO_REPORT_SEPARATELY_BIT) |
- 		BIT(BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
- 	pfn_param.repeat = BRCMF_PNO_REPEAT;
- 	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
-@@ -205,6 +204,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 			      bool active)
- {
- 	struct brcmf_pno_net_param_le pfn;
-+	int err;
- 
- 	pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
- 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
-@@ -215,7 +215,28 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
- 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
- 	memcpy(pfn.ssid.SSID, ssid->ssid, ssid->ssid_len);
--	return brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
-+
-+	brcmf_dbg(SCAN, "adding ssid=%.32s (active=%d)\n", ssid->ssid, active);
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
-+	if (err < 0)
-+		brcmf_err("adding failed: err=%d\n", err);
-+	return err;
-+}
-+
-+static int brcmf_pno_add_bssid(struct brcmf_if *ifp, const u8 *bssid)
-+{
-+	struct brcmf_pno_bssid_le bssid_cfg;
-+	int err;
-+
-+	memcpy(bssid_cfg.bssid, bssid, ETH_ALEN);
-+	bssid_cfg.flags = 0;
-+
-+	brcmf_dbg(SCAN, "adding bssid=%pM\n", bssid);
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_add_bssid", &bssid_cfg,
-+				       sizeof(bssid_cfg));
-+	if (err < 0)
-+		brcmf_err("adding failed: err=%d\n", err);
-+	return err;
- }
- 
- static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
-@@ -342,29 +363,29 @@ static int brcmf_pno_prep_fwconfig(struct brcmf_pno_info *pi,
- 	return err;
- }
- 
--static int brcmf_pno_config_ssids(struct brcmf_if *ifp,
--				  struct brcmf_pno_info *pi)
-+static int brcmf_pno_config_networks(struct brcmf_if *ifp,
-+				     struct brcmf_pno_info *pi)
- {
- 	struct cfg80211_sched_scan_request *r;
- 	struct cfg80211_match_set *ms;
- 	bool active;
--	int i, j, err;
-+	int i, j, err = 0;
- 
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		r = pi->reqs[i];
- 
- 		for (j = 0; j < r->n_match_sets; j++) {
- 			ms = &r->match_sets[j];
--			if (!ms->ssid.ssid_len)
--				continue;
--			active = brcmf_is_ssid_active(&ms->ssid, r);
--			brcmf_dbg(SCAN, "adding %.32s (active=%d)\n",
--				  ms->ssid.ssid, active);
--			err = brcmf_pno_add_ssid(ifp, &ms->ssid, active);
--			if (err < 0) {
--				brcmf_err("adding failed: err=%d\n", err);
--				return err;
-+			if (ms->ssid.ssid_len) {
-+				active = brcmf_is_ssid_active(&ms->ssid, r);
-+				err = brcmf_pno_add_ssid(ifp, &ms->ssid,
-+							 active);
- 			}
-+			if (!err && is_valid_ether_addr(ms->bssid))
-+				err = brcmf_pno_add_bssid(ifp, ms->bssid);
-+
-+			if (err < 0)
-+				return err;
- 		}
++	if (txrate.flags == WMI_RATE_PREAMBLE_HT &&
++	    (txrate.mcs > 7 || txrate.nss < 1)) {
++		ath10k_warn(ar, "Invalid HT mcs %hhd nss %hhd peer stats",
++			    txrate.mcs, txrate.nss);
+ 		return;
  	}
- 	return 0;
-@@ -428,7 +449,7 @@ static int brcmf_pno_config_sched_scans(struct brcmf_if *ifp)
- 	if (err < 0)
- 		goto clean;
  
--	err = brcmf_pno_config_ssids(ifp, pi);
-+	err = brcmf_pno_config_networks(ifp, pi);
- 	if (err < 0)
- 		goto clean;
- 
-@@ -555,7 +576,12 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 		for (j = 0; j < req->n_match_sets; j++) {
- 			ms = &req->match_sets[j];
- 			if (ms->ssid.ssid_len == ni->SSID_len &&
--			    !strncmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
-+			    !memcmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
-+				bucket_map |= BIT(i);
-+				break;
-+			}
-+			if (is_valid_ether_addr(ms->bssid) &&
-+			    !memcmp(ms->bssid, ni->bssid, ETH_ALEN)) {
- 				bucket_map |= BIT(i);
- 				break;
- 			}
+@@ -2254,7 +2260,7 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
+ 		arsta->txrate.legacy = rate;
+ 	} else if (txrate.flags == WMI_RATE_PREAMBLE_HT) {
+ 		arsta->txrate.flags = RATE_INFO_FLAGS_MCS;
+-		arsta->txrate.mcs = txrate.mcs;
++		arsta->txrate.mcs = txrate.mcs + 8 * (txrate.nss - 1);
+ 	} else {
+ 		arsta->txrate.flags = RATE_INFO_FLAGS_VHT_MCS;
+ 		arsta->txrate.mcs = txrate.mcs;
 -- 
-1.9.1
+2.11.0
