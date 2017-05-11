@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58394 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933175AbdEXIgt (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:58319 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932385AbdEKLxS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 04:36:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [PATCH v4 1/5] mwifiex: use variable interface header length
-References: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
-Date: Wed, 24 May 2017 11:36:26 +0300
-In-Reply-To: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
-        (Xinming Hu's message of "Tue, 23 May 2017 07:12:30 +0000")
-Message-ID: <8737buslbp.fsf@kamboji.qca.qualcomm.com> (sfid-20170524_103847_086424_60F1BC1E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 11 May 2017 07:53:18 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org,
+        "Reizer, Eyal" <eyalr@ti.com>, Tony Lindgren <tony@atomide.com>,
+        Wei Yongjun <weiyj.lk@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wlcore: fix 64K page support
+Date: Thu, 11 May 2017 13:52:09 +0200
+Message-Id: <20170511115307.3060650-1-arnd@arndb.de> (sfid-20170511_135504_707495_AC9FBE57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxinming820@gmail.com> writes:
+In the stable linux-3.16 branch, I ran into a warning in the
+wlcore driver:
 
-> From: Xinming Hu <huxm@marvell.com>
->
-> Usb tx aggregation feature will utilize 4-bytes bus interface header,
-> otherwise it will be set to zero in default case.
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> ---
-> Drop 5/6 patch in v3
-> v4: same as v1,v2,v3
+drivers/net/wireless/ti/wlcore/spi.c: In function 'wl12xx_spi_raw_write':
+drivers/net/wireless/ti/wlcore/spi.c:315:1: error: the frame size of 12848 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
 
-BTW, I would prefer that you don't use my qualcomm.com address when
-submitting patches. Using codeaurora.org or not CCing me at all (as I
-take all patches from patchwork anyway) is much better for me.
+Newer kernels no longer show the warning, but the bug is still there,
+as the allocation is based on the CPU page size rather than the
+actual capabilities of the hardware.
 
+This replaces the PAGE_SIZE macro with the SZ_4K macro, i.e. 4096 bytes
+per buffer.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/ti/wlcore/spi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index f949ad2bd898..fa3547e06424 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -70,10 +70,10 @@
+ #define WSPI_MAX_CHUNK_SIZE    4092
+ 
+ /*
+- * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
+- * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
++ * wl18xx driver aggregation buffer size is (13 * 4K) compared to
++ * (4 * 4K) for wl12xx, so use the larger buffer needed for wl18xx
+  */
+-#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
++#define SPI_AGGR_BUFFER_SIZE (13 * SZ_4K)
+ 
+ /* Maximum number of SPI write chunks */
+ #define WSPI_MAX_NUM_OF_CHUNKS \
 -- 
-Kalle Valo
+2.9.0
