@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46844 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758733AbdEXNqm (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:33965 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933485AbdEKR6E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 09:46:42 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,
- 01/10] rt2x00: change function pointers for register accessors
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170517144702.1381136-2-arnd@arndb.de>
-References: <20170517144702.1381136-2-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Message-Id: <20170524134641.96A31611D2@smtp.codeaurora.org> (sfid-20170524_154715_387701_2B9A666C)
-Date: Wed, 24 May 2017 13:46:41 +0000 (UTC)
+        Thu, 11 May 2017 13:58:04 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH 4/4] staging: rtl8192e: GetTs Fix invalid TID 7 warning.
+Date: Thu, 11 May 2017 18:57:46 +0100
+Message-Id: <20170511175746.12378-4-tvboxspy@gmail.com> (sfid-20170511_195815_800455_A7F98B01)
+In-Reply-To: <20170511175746.12378-1-tvboxspy@gmail.com>
+References: <20170511175746.12378-1-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-> This prepares the driver for changing all the 'read' register accessors
-> to return the value instead of passing it by reference. Since a lot
-> of them are used in callbacks, this takes care of the callbacks first,
-> adding a couple of helpers that will be removed again one at a time.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+TID 7 is a valid value for QoS IEEE 802.11e.
 
-10 patches applied to wireless-drivers-next.git, thanks.
+The switch statement that follows states 7 is valid.
 
-6b81745e36e3 rt2x00: change function pointers for register accessors
-16d571bb0fe6 rt2x00: convert rt2800_rfcsr_read return type
-aea8baa10ac5 rt2x00: convert rt2x00_rf_read return type
-3954b4e30609 rt2x00: convert rt2x00mmio_register_read return type
-48bde9c96972 rt2x00: convert rt2x00usb_register_read return type
-eebd68e7824b rt2x00: convert rt2800_register_read return type
-5fbbe378890f rt2x00: convert rt2*_bbp_read return type
-38651683aa98 rt2x00: convert rt2x00_eeprom_read return type
-5c6a25855cbd rt2x00: convert rt2800_eeprom_read return type
-b9b238726716 rt2x00: convert rt2x00_desc_read return type
+Remove function IsACValid and use the default case to filter
+invalid TIDs.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/staging/rtl8192e/rtl819x_TSProc.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+index 48bbd9e8a52f..dcc4eb691889 100644
+--- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
++++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+@@ -306,11 +306,6 @@ static void MakeTSEntry(struct ts_common_info *pTsCommonInfo, u8 *Addr,
+ 	pTsCommonInfo->TClasNum = TCLAS_Num;
+ }
+ 
+-static bool IsACValid(unsigned int tid)
+-{
+-	return tid < 7;
+-}
+-
+ bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
+ 	   u8 *Addr, u8 TID, enum tr_select TxRxSelect, bool bAddNewTs)
+ {
+@@ -328,12 +323,6 @@ bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
+ 	if (ieee->current_network.qos_data.supported == 0) {
+ 		UP = 0;
+ 	} else {
+-		if (!IsACValid(TID)) {
+-			netdev_warn(ieee->dev, "%s(): TID(%d) is not valid\n",
+-				    __func__, TID);
+-			return false;
+-		}
+-
+ 		switch (TID) {
+ 		case 0:
+ 		case 3:
+@@ -351,6 +340,10 @@ bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
+ 		case 7:
+ 			UP = 7;
+ 			break;
++		default:
++			netdev_warn(ieee->dev, "%s(): TID(%d) is not valid\n",
++				    __func__, TID);
++			return false;
+ 		}
+ 	}
+ 
 -- 
-https://patchwork.kernel.org/patch/9731331/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
