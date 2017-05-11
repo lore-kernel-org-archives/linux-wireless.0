@@ -1,199 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:60775 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754468AbdEQOrv (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34391 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932948AbdEKTBd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 10:47:51 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Subject: [PATCH v2 03/10] rt2x00: convert rt2x00_rf_read return type
-Date: Wed, 17 May 2017 16:46:55 +0200
-Message-Id: <20170517144702.1381136-4-arnd@arndb.de> (sfid-20170517_165810_750555_E1054DBA)
-In-Reply-To: <20170517144702.1381136-1-arnd@arndb.de>
-References: <20170517144702.1381136-1-arnd@arndb.de>
+        Thu, 11 May 2017 15:01:33 -0400
+Received: by mail-oi0-f66.google.com with SMTP id w10so5513744oif.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:33 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 07/10] rtlwifi: btcoex: 21a 2ant: init wlan when leave ips
+Date: Thu, 11 May 2017 14:01:16 -0500
+Message-Id: <20170511190119.23426-8-Larry.Finger@lwfinger.net> (sfid-20170511_210146_214277_2738D372)
+In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a semi-automated conversion to change rt2x00_rf_read()
-to return the register contents instead of passing them by value,
-resulting in much better object code. The majority of the patch
-was done using:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-sed -i 's:\(\<rt2x00_rf_read\>(.*, .*\), &\(.*\));:\2 = \1);:' \
-	drivers/net/wireless/ralink/rt2x00/rt*
+If the wifi is leaving ips, re-init the coex mechanisms, and before it is
+going into ips, the bt can just ignore the wifi activities.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2400pci.c |  2 +-
- drivers/net/wireless/ralink/rt2x00/rt2500pci.c |  4 ++--
- drivers/net/wireless/ralink/rt2x00/rt2500usb.c |  4 ++--
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    | 11 ++---------
- drivers/net/wireless/ralink/rt2x00/rt61pci.c   | 10 +++++-----
- drivers/net/wireless/ralink/rt2x00/rt73usb.c   | 10 +++++-----
- 7 files changed, 18 insertions(+), 25 deletions(-)
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+v3 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-index 3ba9a1674e1d..d41832292db2 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-@@ -199,7 +199,7 @@ static const struct rt2x00debug rt2400pci_rt2x00debug = {
- 		.word_count	= BBP_SIZE / sizeof(u8),
- 	},
- 	.rf	= {
--		.read		= _rt2x00_rf_read,
-+		.read		= rt2x00_rf_read,
- 		.write		= rt2400pci_rf_write,
- 		.word_base	= RF_BASE,
- 		.word_size	= sizeof(u32),
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-index d9b061b73e83..232feba0773f 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-@@ -199,7 +199,7 @@ static const struct rt2x00debug rt2500pci_rt2x00debug = {
- 		.word_count	= BBP_SIZE / sizeof(u8),
- 	},
- 	.rf	= {
--		.read		= _rt2x00_rf_read,
-+		.read		= rt2x00_rf_read,
- 		.write		= rt2500pci_rf_write,
- 		.word_base	= RF_BASE,
- 		.word_size	= sizeof(u32),
-@@ -556,7 +556,7 @@ static void rt2500pci_config_txpower(struct rt2x00_dev *rt2x00dev,
- {
- 	u32 rf3;
- 
--	rt2x00_rf_read(rt2x00dev, 3, &rf3);
-+	rf3 = rt2x00_rf_read(rt2x00dev, 3);
- 	rt2x00_set_field32(&rf3, RF3_TXPOWER, TXPOWER_TO_DEV(txpower));
- 	rt2500pci_rf_write(rt2x00dev, 3, rf3);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 0d97e214ee10..cc354563cf35 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3899,11 +3899,15 @@ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 			 "[BTCoex], IPS ENTER notify\n");
+ 		coex_sta->under_ips = true;
+ 		btc8821a2ant_wifi_off_hw_cfg(btcoexist);
++		btc8821a2ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
+ 		btc8821a2ant_coex_all_off(btcoexist);
+ 	} else if (BTC_IPS_LEAVE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], IPS LEAVE notify\n");
+ 		coex_sta->under_ips = false;
++		ex_btc8821a2ant_init_hwconfig(btcoexist);
++		btc8821a2ant_init_coex_dm(btcoexist);
++		btc8821a2ant_query_bt_info(btcoexist);
+ 	}
  }
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-index 5bd160f732de..9cff9ddafb72 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-@@ -268,7 +268,7 @@ static const struct rt2x00debug rt2500usb_rt2x00debug = {
- 		.word_count	= BBP_SIZE / sizeof(u8),
- 	},
- 	.rf	= {
--		.read		= _rt2x00_rf_read,
-+		.read		= rt2x00_rf_read,
- 		.write		= rt2500usb_rf_write,
- 		.word_base	= RF_BASE,
- 		.word_size	= sizeof(u32),
-@@ -639,7 +639,7 @@ static void rt2500usb_config_txpower(struct rt2x00_dev *rt2x00dev,
- {
- 	u32 rf3;
  
--	rt2x00_rf_read(rt2x00dev, 3, &rf3);
-+	rf3 = rt2x00_rf_read(rt2x00dev, 3);
- 	rt2x00_set_field32(&rf3, RF3_TXPOWER, TXPOWER_TO_DEV(txpower));
- 	rt2500usb_rf_write(rt2x00dev, 3, rf3);
- }
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 9b8c19dcdb2c..fef53d6a888a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1265,7 +1265,7 @@ const struct rt2x00debug rt2800_rt2x00debug = {
- 		.word_count	= BBP_SIZE / sizeof(u8),
- 	},
- 	.rf	= {
--		.read		= _rt2x00_rf_read,
-+		.read		= rt2x00_rf_read,
- 		.write		= rt2800_rf_write,
- 		.word_base	= RF_BASE,
- 		.word_size	= sizeof(u32),
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index f2ae33bf2ef2..36791f7ae2ce 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -1049,15 +1049,8 @@ struct rt2x00_bar_list_entry {
-  * Generic RF access.
-  * The RF is being accessed by word index.
-  */
--static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
--				  const unsigned int word, u32 *data)
--{
--	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
--	*data = rt2x00dev->rf[word - 1];
--}
--
--static inline u32 _rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
--				  const unsigned int word)
-+static inline u32 rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
-+				 const unsigned int word)
- {
- 	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
- 	return rt2x00dev->rf[word - 1];
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-index efe8a766b251..147d1d2cc0a6 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-@@ -236,7 +236,7 @@ static const struct rt2x00debug rt61pci_rt2x00debug = {
- 		.word_count	= BBP_SIZE / sizeof(u8),
- 	},
- 	.rf	= {
--		.read		= _rt2x00_rf_read,
-+		.read		= rt2x00_rf_read,
- 		.write		= rt61pci_rf_write,
- 		.word_base	= RF_BASE,
- 		.word_size	= sizeof(u32),
-@@ -922,10 +922,10 @@ static void rt61pci_config_txpower(struct rt2x00_dev *rt2x00dev,
- {
- 	struct rf_channel rf;
- 
--	rt2x00_rf_read(rt2x00dev, 1, &rf.rf1);
--	rt2x00_rf_read(rt2x00dev, 2, &rf.rf2);
--	rt2x00_rf_read(rt2x00dev, 3, &rf.rf3);
--	rt2x00_rf_read(rt2x00dev, 4, &rf.rf4);
-+	rf.rf1 = rt2x00_rf_read(rt2x00dev, 1);
-+	rf.rf2 = rt2x00_rf_read(rt2x00dev, 2);
-+	rf.rf3 = rt2x00_rf_read(rt2x00dev, 3);
-+	rf.rf4 = rt2x00_rf_read(rt2x00dev, 4);
- 
- 	rt61pci_config_channel(rt2x00dev, &rf, txpower);
- }
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-index 5db174922120..a36dee1a4f20 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-@@ -181,7 +181,7 @@ static const struct rt2x00debug rt73usb_rt2x00debug = {
- 		.word_count	= BBP_SIZE / sizeof(u8),
- 	},
- 	.rf	= {
--		.read		= _rt2x00_rf_read,
-+		.read		= rt2x00_rf_read,
- 		.write		= rt73usb_rf_write,
- 		.word_base	= RF_BASE,
- 		.word_size	= sizeof(u32),
-@@ -805,10 +805,10 @@ static void rt73usb_config_txpower(struct rt2x00_dev *rt2x00dev,
- {
- 	struct rf_channel rf;
- 
--	rt2x00_rf_read(rt2x00dev, 1, &rf.rf1);
--	rt2x00_rf_read(rt2x00dev, 2, &rf.rf2);
--	rt2x00_rf_read(rt2x00dev, 3, &rf.rf3);
--	rt2x00_rf_read(rt2x00dev, 4, &rf.rf4);
-+	rf.rf1 = rt2x00_rf_read(rt2x00dev, 1);
-+	rf.rf2 = rt2x00_rf_read(rt2x00dev, 2);
-+	rf.rf3 = rt2x00_rf_read(rt2x00dev, 3);
-+	rf.rf4 = rt2x00_rf_read(rt2x00dev, 4);
- 
- 	rt73usb_config_channel(rt2x00dev, &rf, txpower);
- }
 -- 
-2.9.0
+2.12.0
