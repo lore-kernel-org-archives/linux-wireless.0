@@ -1,55 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33502 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752980AbdEHOmI (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34407 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934324AbdEKTBf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2017 10:42:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <40c81df4-d17f-c374-e5a8-c5b8edd914b5@gmail.com>
-References: <b4a25189-3e3e-a051-70c3-7fbedc366a26@gmail.com>
- <8b27a07c-ecb1-21be-bf8f-e7365ec000f4@gmail.com> <40c81df4-d17f-c374-e5a8-c5b8edd914b5@gmail.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 8 May 2017 17:42:06 +0300
-Message-ID: <CAHp75Vd8g9aczv4V+dKJoE7Lw8d2yyNQggKp6msLzcnZpQ+-_w@mail.gmail.com> (sfid-20170508_164341_194807_6E8B44F3)
-Subject: Re: [PATCH v5] staging: rtl8723bs: remove re-positioned call to kfree
- in os_dep/ioctl_cfg80211.c
-To: Ian W MORRISON <ianwmorrison@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@linuxdriverproject.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        Bastien Nocera <hadess@hadess.net>,
+        Thu, 11 May 2017 15:01:35 -0400
+Received: by mail-oi0-f65.google.com with SMTP id w10so5513934oif.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:35 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
-        Hans de Goede <hdegoede@redhat.com>, jes.sorensen@gmail.com,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 09/10] rtlwifi: btcoex: 21a 2ant: fix PTA unstable problem when hw init
+Date: Thu, 11 May 2017 14:01:18 -0500
+Message-Id: <20170511190119.23426-10-Larry.Finger@lwfinger.net> (sfid-20170511_210147_308846_CE6A8D49)
+In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 7, 2017 at 1:04 PM, Ian W MORRISON <ianwmorrison@gmail.com> wrote:
-> A kernel cloned from
-> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git and
-> built with the latest RTL8723BS driver included (CONFIG_RTL8723BS=m)
-> fails when booting on an Intel Atom device with the RTL8723BS wifi
-> chipset due to an error in
-> drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c.
->
-> The kernel when booted with Ubuntu 17.04 results in an unusable system
-> however with the following patch booting is successful and the system
-> is usable. The patch and kernel builds have been tested against on an
-> Intel Compute Stick (STCK1A32WFC model).
->
-> This version of the patch (version 5) has tabs rather than spaces, no
-> wrap around, a changelog and a sign-off email.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-What are you trying to achieve by posting this patch over and over so often?
+In the hardware initialisation stage, the PTA circuits may be unstable,
+so we reset it after 6 secs to fix the problem.
 
-Version 5 look pretty good to me. Just stop posting it again and wait
-when Greg takes it.
+dis_ver_info_cnt is used to indicate the time after init, and we can set
+PTA according to it.
 
-FWIW (version 5!):
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+v3 - no changes
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 38 +++++++---------------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  2 ++
+ 2 files changed, 14 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 6c7023566802..acdba4268f71 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3598,6 +3598,7 @@ void ex_btc8821a2ant_init_hwconfig(struct btc_coexist *btcoexist)
+ 
+ 	/* Antenna config */
+ 	btc8821a2ant_set_ant_path(btcoexist, BTC_ANT_WIFI_AT_MAIN, true, false);
++	coex_sta->dis_ver_info_cnt = 0;
+ 
+ 	/* PTA parameter */
+ 	btc8821a2ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
+@@ -4245,36 +4246,21 @@ void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-	static u8 dis_ver_info_cnt;
+-	struct btc_board_info *board_info = &btcoexist->board_info;
+-	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+-	u32 fw_ver = 0, bt_patch_ver = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], ==========================Periodical===========================\n");
+ 
+-	if (dis_ver_info_cnt <= 5) {
+-		dis_ver_info_cnt += 1;
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], Ant PG Num/ Ant Mech/ Ant Pos = %d/ %d/ %d\n",
+-			 board_info->pg_ant_num,
+-			 board_info->btdm_ant_num,
+-			 board_info->btdm_ant_pos);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], BT stack/ hci ext ver = %s / %d\n",
+-			 stack_info->profile_notified ? "Yes" : "No",
+-			 stack_info->hci_version);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_BT_PATCH_VER,
+-				   &bt_patch_ver);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], CoexVer/ FwVer/ PatchVer = %d_%x/ 0x%x/ 0x%x(%d)\n",
+-			 glcoex_ver_date_8821a_2ant, glcoex_ver_8821a_2ant,
+-			 fw_ver, bt_patch_ver, bt_patch_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
++	if (coex_sta->dis_ver_info_cnt <= 5) {
++		coex_sta->dis_ver_info_cnt += 1;
++		if (coex_sta->dis_ver_info_cnt == 3) {
++			/* Antenna config to set 0x765 = 0x0 (GNT_BT control by
++			 * PTA) after initial
++			 */
++			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++				 "[BTCoex], Set GNT_BT control by PTA\n");
++			btc8821a2ant_set_ant_path(btcoexist,
++					BTC_ANT_WIFI_AT_MAIN, false, false);
++		}
+ 	}
+ 
+ 	if (btcoexist->auto_report_2ant) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index d268f424249f..74edfd75875a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -168,6 +168,8 @@ struct coex_sta_8821a_2ant {
+ 
+ 	u8	coex_table_type;
+ 	bool	force_lps_on;
++
++	u8	dis_ver_info_cnt;
+ };
+ 
+ /*===========================================
 -- 
-With Best Regards,
-Andy Shevchenko
+2.12.0
