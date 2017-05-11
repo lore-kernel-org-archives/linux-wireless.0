@@ -1,88 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36443 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S970096AbdEYRs0 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48586 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751208AbdEKELC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 13:48:26 -0400
-Received: by mail-oi0-f66.google.com with SMTP id w138so38629309oiw.3
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:48:26 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 7/7] rtlwifi: btcoex: Fix another edit mistake in 21a 1ant
-Date: Thu, 25 May 2017 12:48:14 -0500
-Message-Id: <20170525174814.25005-8-Larry.Finger@lwfinger.net> (sfid-20170525_194903_571359_3877C368)
-In-Reply-To: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
-References: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
+        Thu, 11 May 2017 00:11:02 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Su Kang Yin <paradyse@gmail.com>
+CC: Adrian Chadd <adrian@freebsd.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
+ firmware scratch memory.
+Date: Thu, 11 May 2017 04:10:57 +0000
+Message-ID: <877f1ovxrj.fsf@kamboji.qca.qualcomm.com> (sfid-20170511_061107_818451_125952FD)
+References: <20170501214327.5621-1-adrian@freebsd.org>
+        <CAHjFwoAr6Tjh=Zpr_JhEp_-g_0XJ+LDUagsfJh=vqseqzBC1Pw@mail.gmail.com>
+        <87bmr0vyhe.fsf@kamboji.qca.qualcomm.com>
+        <CAHjFwoDexNAqCFhpwShbTVHuQbP+ZbzDw8dHjq-ohO5jfuus6w@mail.gmail.com>
+In-Reply-To: <CAHjFwoDexNAqCFhpwShbTVHuQbP+ZbzDw8dHjq-ohO5jfuus6w@mail.gmail.com>       (Su Kang
+ Yin's message of "Thu, 11 May 2017 12:02:40 +0800")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In routine btc8821a1ant_action_wifi_multi_port(), an edit that removed
-several lines was missed.
+Su Kang Yin <paradyse@gmail.com> writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 27 ----------------------
- 1 file changed, 27 deletions(-)
+> On 11 May 2017 at 11:55, Kalle Valo wrote:
+>> Su Kang Yin writes:
+>>
+>>> Without this patch QCA9888 is not working. Also I have to update
+>>> board2.bin from Kalle's git repo.
+>>
+>> More details would be good to know, as the behaviour seems to vary quite
+>> a lot. What platform are you using, x86, some ARM board or what? And
+>> what kernel exactly?
+>
+> Kernel 4.9.25 on X86 Intel Atom
+>
+> Panic message is something like that:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 30364966b938..6a1d0dece485 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -44,8 +44,6 @@ static struct coex_dm_8821a_1ant glcoex_dm_8821a_1ant;
- static struct coex_dm_8821a_1ant *coex_dm = &glcoex_dm_8821a_1ant;
- static struct coex_sta_8821a_1ant glcoex_sta_8821a_1ant;
- static struct coex_sta_8821a_1ant *coex_sta = &glcoex_sta_8821a_1ant;
--static void btc8821a1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
--						  u8 wifi_status);
- 
- static const char *const glbt_info_src_8821a_1ant[] = {
- 	  "BT Info[wifi fw]",
-@@ -1472,35 +1470,10 @@ static void btc8821a1ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- static
- void btc8821a1ant_action_wifi_multi_port(struct btc_coexist *btcoexist)
- {
--	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
--
- 	btc8821a1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
--	/* tdma and coex table */
--	if (coex_dm->bt_status == BT_8821A_1ANT_BT_STATUS_ACL_BUSY) {
--		if (bt_link_info->a2dp_exist) {
--			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 14);
--			btc8821a1ant_coex_table_with_type(btcoexist,
--							  NORMAL_EXEC, 1);
--		} else if (bt_link_info->a2dp_exist &&
--			   bt_link_info->pan_exist) {
--			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
--			btc8821a1ant_coex_table_with_type(btcoexist,
--							  NORMAL_EXEC, 4);
--		} else {
--			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
--			btc8821a1ant_coex_table_with_type(btcoexist,
--							  NORMAL_EXEC, 4);
--		}
--	} else if ((coex_dm->bt_status == BT_8821A_1ANT_BT_STATUS_SCO_BUSY) ||
--		   (BT_8821A_1ANT_BT_STATUS_ACL_SCO_BUSY ==
--		    coex_dm->bt_status)) {
--		btc8821a1ant_act_bt_sco_hid_only_busy(btcoexist,
--				BT_8821A_1ANT_WIFI_STATUS_CONNECTED_SCAN);
--	} else {
- 		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
- 		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
- 	}
--}
- 
- static
- void btc8821a1ant_action_wifi_not_connected_asso_auth(
--- 
-2.12.0
+Thanks, this was very helpful.
+
+--=20
+Kalle Valo=
