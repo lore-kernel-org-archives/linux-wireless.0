@@ -1,96 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f54.google.com ([74.125.83.54]:33224 "EHLO
-        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdEAThE (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35328 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751096AbdEKEDL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2017 15:37:04 -0400
-Received: by mail-pg0-f54.google.com with SMTP id y4so43831628pge.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 May 2017 12:37:03 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v3 1/2] mwifiex: initiate card-specific work atomically
-Date: Mon,  1 May 2017 12:36:59 -0700
-Message-Id: <20170501193700.89264-1-briannorris@chromium.org> (sfid-20170501_213737_436985_9978D41C)
+        Thu, 11 May 2017 00:03:11 -0400
+Received: by mail-io0-f195.google.com with SMTP id o12so2034220iod.2
+        for <linux-wireless@vger.kernel.org>; Wed, 10 May 2017 21:03:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87bmr0vyhe.fsf@kamboji.qca.qualcomm.com>
+References: <20170501214327.5621-1-adrian@freebsd.org> <CAHjFwoAr6Tjh=Zpr_JhEp_-g_0XJ+LDUagsfJh=vqseqzBC1Pw@mail.gmail.com>
+ <87bmr0vyhe.fsf@kamboji.qca.qualcomm.com>
+From: Su Kang Yin <paradyse@gmail.com>
+Date: Thu, 11 May 2017 12:02:40 +0800
+Message-ID: <CAHjFwoDexNAqCFhpwShbTVHuQbP+ZbzDw8dHjq-ohO5jfuus6w@mail.gmail.com> (sfid-20170511_060323_567063_AF2BB4CE)
+Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
+ firmware scratch memory.
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The non-atomic test + set is a little awkward here, and it technically
-means we might double-schedule work unnecessarily. AFAICT, this is not
-really a problem, since the extra "work" will be a no-op (the flag(s)
-will be cleared by then), but it's still an anti-pattern.
+On 11 May 2017 at 11:55, Kalle Valo wrote:
+> Su Kang Yin writes:
+>
+>> Without this patch QCA9888 is not working. Also I have to update
+>> board2.bin from Kalle's git repo.
+>
+> More details would be good to know, as the behaviour seems to vary quite
+> a lot. What platform are you using, x86, some ARM board or what? And
+> what kernel exactly?
 
-Rewrite this to use the atomic test_and_set_bit() helper instead.
+Kernel 4.9.25 on X86 Intel Atom
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v3: fix bisectability (unused code warning) -- some code from patch 2
-    crept in here
+Panic message is something like that:
 
-v2: new
----
- drivers/net/wireless/marvell/mwifiex/pcie.c |  9 +++------
- drivers/net/wireless/marvell/mwifiex/sdio.c | 16 +++++-----------
- 2 files changed, 8 insertions(+), 17 deletions(-)
+Workqueue: ath10k_aux_wq ath10k_wmi_event_service_ready_work [ath10k_core]
+task: ffff880036433a00 ti: ffff880036440000 task.ti: ffff880036440000
+RIP: 0010:[<ffffffff8124592a>]  [<ffffffff8124592a>] new_slab+0x39a/0x410
+RSP: 0018:ffff880036443b58  EFLAGS: 00010092
+RAX: 0000000000000006 RBX: 00000000024082c4 RCX: 0000000000000000
+RDX: 0000000000000006 RSI: ffff88021e30dd08 RDI: ffff88021e30dd08
+RBP: ffff880036443b90 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000372 R12: ffff88021dc01200
+R13: ffff88021dc00cc0 R14: ffff88021dc01200 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff88021e300000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f3e65c1c730 CR3: 0000000001e06000 CR4: 00000000001406e0
+Stack:
+  ffffffff8127a4fc ffff0a01ffffff10 00000000024082c4 ffff88021dc01200
+  ffff88021dc00cc0 ffff88021dc01200 0000000000000001 ffff880036443c58
+  ffffffff81247ac6 ffff88021e31b360 ffff880036433a00 ffff880036433a00
+Call Trace:
+  [<ffffffff8127a4fc>] ? __d_lookup+0x9c/0x160
+  [<ffffffff81247ac6>] ___slab_alloc+0x396/0x4a0
+  [<ffffffffa0f8e14d>] ?
+ath10k_wmi_event_service_ready_work+0x5ad/0x800 [ath10k_core]
+  [<ffffffff811f5279>] ? alloc_kmem_pages+0x9/0x10
+  [<ffffffff8120f203>] ? kmalloc_order+0x13/0x40
+  [<ffffffffa0f8e14d>] ?
+ath10k_wmi_event_service_ready_work+0x5ad/0x800 [ath10k_core]
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ac62bce50e96..5f56e8e6d612 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2837,12 +2837,9 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 
--	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
--		return;
--
--	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
--
--	schedule_work(&card->work);
-+	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-+			      &card->work_flags))
-+		schedule_work(&card->work);
- }
- 
- static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 0af1c6733c92..d38d31bb9b79 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2533,12 +2533,8 @@ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
- {
- 	struct sdio_mmc_card *card = adapter->card;
- 
--	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
--		return;
--
--	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
--
--	schedule_work(&card->work);
-+	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
-+		schedule_work(&card->work);
- }
- 
- /* This function dumps FW information */
-@@ -2546,11 +2542,9 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
- {
- 	struct sdio_mmc_card *card = adapter->card;
- 
--	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
--		return;
--
--	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
--	schedule_work(&card->work);
-+	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-+			      &card->work_flags))
-+		schedule_work(&card->work);
- }
- 
- /* Function to dump SDIO function registers and SDIO scratch registers in case
--- 
-2.13.0.rc0.306.g87b477812d-goog
+-- Yin
