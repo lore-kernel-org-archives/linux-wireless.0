@@ -1,49 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61217 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750846AbdEWP3D (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35470 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932948AbdEKTBg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 11:29:03 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Fix reported HT MCS rates with NSS > 1
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170511090930.18205-1-sven.eckelmann@openmesh.com>
-References: <20170511090930.18205-1-sven.eckelmann@openmesh.com>
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>
-CC: <ath10k@lists.infradead.org>, <akolli@qti.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Message-ID: <0a29ec25ec374a12adbc222af9a7dda1@euamsexm01a.eu.qualcomm.com> (sfid-20170523_172911_795449_3C26164A)
-Date: Tue, 23 May 2017 17:28:55 +0200
+        Thu, 11 May 2017 15:01:36 -0400
+Received: by mail-oi0-f68.google.com with SMTP id m17so5520330oik.2
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:36 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 10/10] rtlwifi: btcoex: 21a 2ant: remove unused antenna detection variables
+Date: Thu, 11 May 2017 14:01:19 -0500
+Message-Id: <20170511190119.23426-11-Larry.Finger@lwfinger.net> (sfid-20170511_210147_942134_AAC515CE)
+In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
-> The QCA4019 firmware 10.4-3.2.1-00050 reports only HT MCS rates between
-> 0-9. But 802.11n MCS rates can be larger than that. For example a 2x2
-> device can send with up to MCS 15.
-> 
-> The firmware encodes the higher MCS rates using the NSS field. The actual
-> calculation is not documented by QCA but it seems like the NSS field can be
-> mapped for HT rates to following MCS offsets:
-> 
->  * NSS 1: 0
->  * NSS 2: 8
->  * NSS 3: 16
->  * NSS 4: 24
-> 
-> This offset therefore has to be added for HT rates before they are stored
-> in the rate_info struct.
-> 
-> Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
-> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+PSD and LNA are for antenna detection, but we do not use them for 8821A.
+Remove them and the corresponding display messages.
 
-c1dd8016ae02 ath10k: fix reported HT MCS rates with NSS > 1
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
+v3 - no changes
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 13 -------------
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  4 ----
+ 2 files changed, 17 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index acdba4268f71..41943c34edff 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -3747,14 +3747,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
+ 		    ((BTC_WIFI_TRAFFIC_TX == wifi_traffic_dir) ?
+ 		     "uplink" : "downlink")));
+ 
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "\r\n %-35s = [%s/ %d/ %d] ", "BT [status/ rssi/ retryCnt]",
+-		   ((coex_sta->c2h_bt_inquiry_page) ? ("inquiry/page scan") :
+-		    ((BT_8821A_2ANT_BT_STATUS_IDLE == coex_dm->bt_status)
+-		     ? "idle" : ((BT_8821A_2ANT_BT_STATUS_CON_IDLE ==
+-		     coex_dm->bt_status) ? "connected-idle" : "busy"))),
+-		    coex_sta->bt_rssi, coex_sta->bt_retry_cnt);
+-
+ 	if (stack_info->profile_notified) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 			 "\r\n %-35s = %d / %d / %d / %d", "SCO/HID/PAN/A2DP",
+@@ -3790,11 +3782,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s",
+ 		 "============[Sw mechanism]============");
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "\r\n %-35s = %d/ %d/ %d/ %d ",
+-		 "SM1[ShRf/ LpRA/ LimDig/ btLna]",
+-		 coex_dm->cur_rf_rx_lpf_shrink, coex_dm->cur_low_penalty_ra,
+-		 coex_dm->limited_dig, coex_dm->cur_bt_lna_constrain);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 		 "\r\n %-35s = %d/ %d/ %d(0x%x) ",
+ 		 "SM2[AgcT/ AdcB/ SwDacSwing(lvl)]",
+ 		 coex_dm->cur_agc_table_en, coex_dm->cur_adc_back_off,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index 74edfd75875a..a1603e2d44e3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -79,10 +79,6 @@ struct coex_dm_8821a_2ant {
+ 	/* fw mechanism */
+ 	bool		pre_dec_bt_pwr_lvl;
+ 	bool		cur_dec_bt_pwr_lvl;
+-	bool		pre_bt_lna_constrain;
+-	bool		cur_bt_lna_constrain;
+-	u8		pre_bt_psd_mode;
+-	u8		cur_bt_psd_mode;
+ 	u8		pre_fw_dac_swing_lvl;
+ 	u8		cur_fw_dac_swing_lvl;
+ 	bool		cur_ignore_wlan_act;
 -- 
-https://patchwork.kernel.org/patch/9721111/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
