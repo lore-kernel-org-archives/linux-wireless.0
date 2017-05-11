@@ -1,97 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:39017 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751428AbdEEJok (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34634 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932376AbdEKR6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 05:44:40 -0400
-From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-To: Sebastian Reichel <sre@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Tony Lindgren <tony@atomide.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Subject: [PATCHv3] wlcore: add wl1285 compatible
-Date: Fri,  5 May 2017 11:44:34 +0200
-Message-Id: <20170505094434.28312-1-sebastian.reichel@collabora.co.uk> (sfid-20170505_114611_088391_A6B96D74)
+        Thu, 11 May 2017 13:58:03 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH v2 3/4] staging: rtl8192e: rtl92e_get_eeprom_size Fix read size of EPROM_CMD.
+Date: Thu, 11 May 2017 18:57:45 +0100
+Message-Id: <20170511175746.12378-3-tvboxspy@gmail.com> (sfid-20170511_195808_481983_8F7A3111)
+In-Reply-To: <20170511175746.12378-1-tvboxspy@gmail.com>
+References: <20170511175746.12378-1-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Motorola Droid 4 uses a WL1285C. With differences between the
-chips not being public let's add explicit binding for wl1285
-instead of relying on wl1283 being very similar.
+EPROM_CMD is 2 byte aligned on PCI map so calling with rtl92e_readl
+will return invalid data so use rtl92e_readw.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+The device is unable to select the right eeprom type.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org>
 ---
-Hi Dave,
+v2 - Fix typo in subject line
+ drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I previously send this in two patches, but its hard to apply without
-requiring multiple kernel releases (the driver must be updated before
-the DTS change). Since the actual change is not very complex Marcel
-Holtmann & Tony Lindgren suggested, that I send this directly to you
-in a single patch for inclusion into 4.12. This also means, that the
-remaining series can be queued normally for 4.13.
-
--- Sebastian
----
- Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt | 1 +
- arch/arm/boot/dts/omap4-droid4-xt894.dts                     | 2 +-
- drivers/net/wireless/ti/wlcore/sdio.c                        | 1 +
- drivers/net/wireless/ti/wlcore/spi.c                         | 1 +
- 4 files changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-index 2a3d90de18ee..7b2cbb14113e 100644
---- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-@@ -10,6 +10,7 @@ Required properties:
-     * "ti,wl1273"
-     * "ti,wl1281"
-     * "ti,wl1283"
-+    * "ti,wl1285"
-     * "ti,wl1801"
-     * "ti,wl1805"
-     * "ti,wl1807"
-diff --git a/arch/arm/boot/dts/omap4-droid4-xt894.dts b/arch/arm/boot/dts/omap4-droid4-xt894.dts
-index 89eb607f4a9e..c09b51d6ccf7 100644
---- a/arch/arm/boot/dts/omap4-droid4-xt894.dts
-+++ b/arch/arm/boot/dts/omap4-droid4-xt894.dts
-@@ -301,7 +301,7 @@
- 	#address-cells = <1>;
- 	#size-cells = <0>;
- 	wlcore: wlcore@2 {
--		compatible = "ti,wl1283";
-+		compatible = "ti,wl1285";
- 		reg = <2>;
- 		interrupt-parent = <&gpio4>;
- 		interrupts = <4 IRQ_TYPE_LEVEL_HIGH>; /* gpio100 */
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 287023ef4a78..2fb38717346f 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -237,6 +237,7 @@ static const struct of_device_id wlcore_sdio_of_match_table[] = {
- 	{ .compatible = "ti,wl1273", .data = &wl127x_data },
- 	{ .compatible = "ti,wl1281", .data = &wl128x_data },
- 	{ .compatible = "ti,wl1283", .data = &wl128x_data },
-+	{ .compatible = "ti,wl1285", .data = &wl128x_data },
- 	{ .compatible = "ti,wl1801", .data = &wl18xx_data },
- 	{ .compatible = "ti,wl1805", .data = &wl18xx_data },
- 	{ .compatible = "ti,wl1807", .data = &wl18xx_data },
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index f949ad2bd898..1f5d9ebb0925 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -433,6 +433,7 @@ static const struct of_device_id wlcore_spi_of_match_table[] = {
- 	{ .compatible = "ti,wl1273", .data = &wl127x_data},
- 	{ .compatible = "ti,wl1281", .data = &wl128x_data},
- 	{ .compatible = "ti,wl1283", .data = &wl128x_data},
-+	{ .compatible = "ti,wl1285", .data = &wl128x_data},
- 	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+index e03d0a3a6dcc..1c6ed5b2a6f9 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+@@ -625,7 +625,7 @@ void rtl92e_get_eeprom_size(struct net_device *dev)
+ 	struct r8192_priv *priv = rtllib_priv(dev);
+ 
+ 	RT_TRACE(COMP_INIT, "===========>%s()\n", __func__);
+-	curCR = rtl92e_readl(dev, EPROM_CMD);
++	curCR = rtl92e_readw(dev, EPROM_CMD);
+ 	RT_TRACE(COMP_INIT, "read from Reg Cmd9346CR(%x):%x\n", EPROM_CMD,
+ 		 curCR);
+ 	priv->epromtype = (curCR & EPROM_CMD_9356SEL) ? EEPROM_93C56 :
 -- 
 2.11.0
