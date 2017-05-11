@@ -1,79 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([217.72.192.78]:49358 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751840AbdEIHut (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 03:50:49 -0400
-To: wil6210@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] wil6210: Replace five seq_puts() calls by seq_putc()
-Message-ID: <64747f85-e373-a0ff-b6dc-70cdfe35f71a@users.sourceforge.net> (sfid-20170509_095233_422214_ACF722B1)
-Date: Tue, 9 May 2017 09:50:34 +0200
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27245 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753487AbdEKDzd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 May 2017 23:55:33 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Su Kang Yin <paradyse@gmail.com>
+CC: Adrian Chadd <adrian@freebsd.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
+ firmware scratch memory.
+Date: Thu, 11 May 2017 03:55:25 +0000
+Message-ID: <87bmr0vyhe.fsf@kamboji.qca.qualcomm.com> (sfid-20170511_055543_244407_333BCF82)
+References: <20170501214327.5621-1-adrian@freebsd.org>
+        <CAHjFwoAr6Tjh=Zpr_JhEp_-g_0XJ+LDUagsfJh=vqseqzBC1Pw@mail.gmail.com>
+In-Reply-To: <CAHjFwoAr6Tjh=Zpr_JhEp_-g_0XJ+LDUagsfJh=vqseqzBC1Pw@mail.gmail.com>       (Su Kang
+ Yin's message of "Thu, 11 May 2017 01:21:06 +0800")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 8 May 2017 22:22:04 +0200
+Su Kang Yin <paradyse@gmail.com> writes:
 
-Five single characters (line breaks) should be put into a sequence.
-Thus use the corresponding function "seq_putc".
+> Without this patch QCA9888 is not working. Also I have to update
+> board2.bin from Kalle's git repo.
 
-This issue was detected by using the Coccinelle software.
+More details would be good to know, as the behaviour seems to vary quite
+a lot. What platform are you using, x86, some ARM board or what? And
+what kernel exactly?
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 5648ebbd0e16..90118d286fb9 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -76,11 +76,11 @@ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
- 			volatile struct vring_tx_desc *d = &vring->va[i].tx;
- 
- 			if ((i % 128) == 0 && (i != 0))
--				seq_puts(s, "\n");
-+				seq_putc(s, '\n');
- 			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
- 					_s : (vring->ctx[i].skb ? _h : 'h'));
- 		}
--		seq_puts(s, "\n");
-+		seq_putc(s, '\n');
- 	}
- 	seq_puts(s, "}\n");
- }
-@@ -233,7 +233,7 @@ static void wil_print_ring(struct seq_file *s, const char *prefix,
- 				wil_seq_hexdump(s, databuf, len, "      : ");
- 			}
- 		} else {
--			seq_puts(s, "\n");
-+			seq_putc(s, '\n');
- 		}
- 	}
-  out:
-@@ -1366,7 +1366,7 @@ static void wil_print_rxtid_crypto(struct seq_file *s, int tid,
- 		seq_printf(s, " [%i%s]%6phN", i, cc->key_set ? "+" : "-",
- 			   cc->pn);
- 	}
--	seq_puts(s, "\n");
-+	seq_putc(s, '\n');
- }
- 
- static int wil_sta_debugfs_show(struct seq_file *s, void *data)
-@@ -1423,7 +1423,7 @@ __acquires(&p->tid_rx_lock) __releases(&p->tid_rx_lock)
- 			     mcs++)
- 				seq_printf(s, " %lld",
- 					   p->stats.rx_per_mcs[mcs]);
--			seq_puts(s, "\n");
-+			seq_putc(s, '\n');
- 		}
- 	}
- 
--- 
-2.12.2
+--=20
+Kalle Valo=
