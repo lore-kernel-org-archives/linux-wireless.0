@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42888 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1035560AbdEXNm6 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39093 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758508AbdELRWT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 09:42:58 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 12 May 2017 13:22:19 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] mac80211: strictly check mesh address extension mode
+Date: Fri, 12 May 2017 10:21:59 -0700
+Message-ID: <1494609719-27936-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20170512_192421_750406_7B1753F5)
 MIME-Version: 1.0
-Subject: Re: wlcore: fix 64K page support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170511115307.3060650-1-arnd@arndb.de>
-References: <20170511115307.3060650-1-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org,
-        "Reizer, Eyal" <eyalr@ti.com>, Tony Lindgren <tony@atomide.com>,
-        Wei Yongjun <weiyj.lk@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20170524134257.AB8C361155@smtp.codeaurora.org> (sfid-20170524_154340_366185_33656DB2)
-Date: Wed, 24 May 2017 13:42:57 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-> In the stable linux-3.16 branch, I ran into a warning in the
-> wlcore driver:
-> 
-> drivers/net/wireless/ti/wlcore/spi.c: In function 'wl12xx_spi_raw_write':
-> drivers/net/wireless/ti/wlcore/spi.c:315:1: error: the frame size of 12848 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
-> 
-> Newer kernels no longer show the warning, but the bug is still there,
-> as the allocation is based on the CPU page size rather than the
-> actual capabilities of the hardware.
-> 
-> This replaces the PAGE_SIZE macro with the SZ_4K macro, i.e. 4096 bytes
-> per buffer.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Mesh forwarding path checks for address extension mode to fetch
+appropriate proxied address and MPP address. Existing condition
+that looks for 6 address format is not so strict enough so that
+frames with improper values are processed and invalid entries
+are added into MPP table. Fix that by adding strick check and
+drop those invalid frames.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ net/mac80211/rx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-4a4274bf2dbb wlcore: fix 64K page support
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 35f4c7d7a500..1f75280ba26c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2492,7 +2492,8 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
+ 		if (is_multicast_ether_addr(hdr->addr1)) {
+ 			mpp_addr = hdr->addr3;
+ 			proxied_addr = mesh_hdr->eaddr1;
+-		} else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
++		} else if ((mesh_hdr->flags & MESH_FLAGS_AE) ==
++			    MESH_FLAGS_AE_A5_A6) {
+ 			/* has_a4 already checked in ieee80211_rx_mesh_check */
+ 			mpp_addr = hdr->addr4;
+ 			proxied_addr = mesh_hdr->eaddr2;
 -- 
-https://patchwork.kernel.org/patch/9721269/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
