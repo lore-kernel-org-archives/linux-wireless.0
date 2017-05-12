@@ -1,95 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:33370 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754354AbdERFFi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35746 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750803AbdELPSz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 01:05:38 -0400
-Received: by mail-qk0-f170.google.com with SMTP id y201so27248369qka.0
-        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2017 22:05:38 -0700 (PDT)
-Date: Wed, 17 May 2017 22:05:38 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
-        "nicolas.dechesne@linaro.org" <nicolas.dechesne@linaro.org>
-Subject: Re: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
-Message-ID: <20170518050538.GL12920@tuxbook> (sfid-20170518_070611_915838_D0D0658F)
-References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
- <1493281332.2529.1.camel@sipsolutions.net>
- <20170428234247.GQ15143@minitux>
- <87fugkrchl.fsf@kamboji.qca.qualcomm.com>
- <1495026867.2442.9.camel@sipsolutions.net>
+        Fri, 12 May 2017 11:18:55 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495026867.2442.9.camel@sipsolutions.net>
+Subject: Re: [v6] qtnfmac: introduce new FullMAC driver for Quantenna chipsets
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Message-Id: <20170512151854.6F16A60953@smtp.codeaurora.org> (sfid-20170512_171900_178500_DCE677CA)
+Date: Fri, 12 May 2017 15:18:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 17 May 06:14 PDT 2017, Johannes Berg wrote:
-
-> On Thu, 2017-05-04 at 13:13 +0000, Kalle Valo wrote:
-> > 
-> > > > This code intentionally checked if TX status was requested, and
-> > > > if not then it doesn't go to the effort of building it.
-> > > > 
-> > > 
-> > > What I'm finding puzzling is the fact that the only caller of
-> > > ieee80211_led_tx() is ieee80211_tx_status() and it seems like
-> > > drivers, such as ath10k, call this for each packet handled - but
-> > > I'm likely missing something.
+Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:
+> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 > 
-> Yes, many drivers do call it for each packet, and as such, this
-> deficiency was never noted.
+> This patch adds support for new FullMAC WiFi driver for Quantenna
+> QSR10G chipsets.
 > 
-> > > > As it is with your patch, it'll go and report the TX status
-> > > > without any
-> > > > TX status information - which is handled in
-> > > > wcn36xx_dxe_tx_ack_ind()
-> > > > for those frames needing it.
-> > > > 
-> > > 
-> > > Right, it doesn't sound desired. However, during normal operation
-> > > I'm not seeing IEEE80211_TX_CTL_REQ_TX_STATUS being set and as such
-> > > ieee80211_led_tx() is never called.
-> > 
-> > So what's the conclusion? How do we get leds working?
+> QSR10G (aka Pearl) is Quantenna's 8x8, 160M, 11ac offering.
+> QSR10G supports 2 simultaneous WMACs - one 5G and one 2G.
+> 5G WMAC supports 160M, 8x8 configuration. FW supports
+> up to 8 concurrent virtual interfaces on each WMAC.
 > 
-> Well, frankly, I never thought the TX LED was a super good idea - but
-> it had been supported by the original code IIRC, so never removed. Some
-> people like frantic blinking I guess ;-)
+> Patch introduces 2 new drivers:
+> - qtnfmac.ko for interfacing with kernel wireless core
+> - qtnfmac_pearl_pcie.ko for interfacing with hardware over PCIe interface
 > 
+> Signed-off-by: Dmitrii Lebed <dlebed@quantenna.com>
+> Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
+> Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
+> Signed-off-by: Bindu Therthala <btherthala@quantenna.com>
+> Signed-off-by: Huizhao Wang <hwang@quantenna.com>
+> Signed-off-by: Kamlesh Rath <krath@quantenna.com>
+> Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-It seems very important to a lot of people...
+I applied this now to the pending branch so that the kbuild bot can do it's
+magic:
 
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/log/?h=pending
 
-But if ieee80211_free_txskb() is the counterpart of
-ieee80211_tx_status() then we should be able to push the
-ieee80211_led_tx() call down into ieee80211_report_used_skb() and handle
-both cases.
+If all goes smooth I'm planning to apply this to wireless-drivers-next master
+branch within the next week or two. So if there's something still to comment
+about this driver better speak up now. And unless it's something really
+critical any changes can be done as followup patches. I don't want to delay
+this any longer.
 
-The ieee80211_free_txskb() seems to be used in various cases where we
-discard skbs, but perhaps this is not an issue in reality.
+-- 
+https://patchwork.kernel.org/patch/9723191/
 
-> But I think the problem also applies to the throughput trigger thing,
-> so perhaps we need to stick some LED feedback calls into other places,
-> like _noskb() or provide an extra way to do it?
-> 
-
-Looking around it seems that we either have a call to free_txskb() or
-one of the tx_status(); where the _noskb() would need some special
-handling. Are there others or would it be reasonable to add a call in
-this one "special" case?
-
-Regards,
-Bjorn
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
