@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:35534 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751233AbdECXvF (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63225 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751881AbdELJV0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 19:51:05 -0400
-Received: by mail-io0-f195.google.com with SMTP id v34so5942375iov.2
-        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 16:51:04 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 0/4] rtlwifi: btcoex: Remove all references to BT_AUTO_REPORT_ONLY* parameters
-Date: Wed,  3 May 2017 18:50:53 -0500
-Message-Id: <20170503235057.23211-1-Larry.Finger@lwfinger.net> (sfid-20170504_015116_210975_A14FBD30)
+        Fri, 12 May 2017 05:21:26 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: net: ath: tx99: fixed a spelling issue
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1493310697-18610-1-git-send-email-ammly@gmail.com>
+References: <1493310697-18610-1-git-send-email-ammly@gmail.com>
+To: ammly <ammlyf@gmail.com>
+CC: <ath9k-devel@qca.qualcomm.com>, <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Ammly Fredrick <ammlyf@gmail.com>
+Message-ID: <af27ca4be4084c66991089e220881f1c@euamsexm01a.eu.qualcomm.com> (sfid-20170512_112201_325777_BFF5F95B)
+Date: Fri, 12 May 2017 11:21:18 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The btcoex code uses #if constructs to compile conditional code. There
-is no way to modify this behavior without editting the source. This
-logic is converted into regular if statements that interrogate a
-boolean variable in a structure known to all routines. The new form
-does not provide any mechanism for dynamic changes, but it now is in a
-form whereby module parameters could be added to select the behavior
-at module load time. In these patches, a number of routines removed
-because they were not referenced must be restored.
+ammly <ammlyf@gmail.com> wrote:
+> Fixed a spelling issue.
+> 
+> Signed-off-by: Ammly Fredrick <ammlyf@gmail.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+I changed the commit log. Also check your From header in the email headers,
+it's missing your last name.
 
-Larry Finger (4):
-  rtlwifi: btcoex: Remove 21a 1ant configuration parameter
-  rtlwifi: btcoex: Remove 23b 1ant configuration parameter
-  rtlwifi: btcoex: Remove 23b 2ant configuration parameter
-  rtlwifi: btcoex: Remove 92e 2ant configuration parameter
+Author: Ammly Fredrick <ammlyf@gmail.com>
+Date:   Thu Apr 27 19:31:37 2017 +0300
 
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |  72 ++++++++----
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   1 -
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 123 +++++++++++++++++----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  84 +++++++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   1 -
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  18 +--
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   5 +
- 9 files changed, 229 insertions(+), 79 deletions(-)
+    ath9k: fix spelling in ath9k_tx99_init()
+    
+    It's spelled hardware, not harware.
+    
+    Signed-off-by: Ammly Fredrick <ammlyf@gmail.com>
+    [kvalo@qca.qualcomm.com: improve commit log]
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
 -- 
-2.12.2
+https://patchwork.kernel.org/patch/9703211/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
