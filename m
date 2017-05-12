@@ -1,59 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58840 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750878AbdEaNqz (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:34605 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933277AbdELQml (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 09:46:55 -0400
-Subject: Re: 'iw events' stops receiving events after a while on 4.9 + hacks
-To: Bastian Bittorf <bb@npl.de>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
- <20170517100844.GC2849@medion.lan>
- <1495027835.2442.13.camel@sipsolutions.net>
- <fa96dfad-8d1b-c48f-df3b-3df0d548a5c6@candelatech.com>
- <1496150322.3327.9.camel@sipsolutions.net> <20170531081836.GC2849@medion.lan>
-Cc: netdev <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <6df299af-c053-9b60-19b9-8fb187d75d22@candelatech.com> (sfid-20170531_154705_510723_11EC81B5)
-Date: Wed, 31 May 2017 06:46:53 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170531081836.GC2849@medion.lan>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Fri, 12 May 2017 12:42:41 -0400
+Received: by mail-pf0-f178.google.com with SMTP id e64so32714191pfd.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:36 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 01/11] mwifiex: fixup error cases in mwifiex_add_virtual_intf()
+Date: Fri, 12 May 2017 09:41:58 -0700
+Message-Id: <20170512164208.38725-1-briannorris@chromium.org> (sfid-20170512_184322_071616_49E8BFF0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If we fail to add an interface in mwifiex_add_virtual_intf(), we might
+hit a BUG_ON() in the networking code, because we didn't tear things
+down properly. Among the problems:
 
+ (a) when failing to allocate workqueues, we fail to unregister the
+     netdev before calling free_netdev()
+ (b) even if we do try to unregister the netdev, we're still holding the
+     rtnl lock, so the device never properly unregistered; we'll be at
+     state NETREG_UNREGISTERING, and then hit free_netdev()'s:
+	BUG_ON(dev->reg_state != NETREG_UNREGISTERED);
+ (c) we're allocating some dependent resources (e.g., DFS workqueues)
+     after we've registered the interface; this may or may not cause
+     problems, but it's good practice to allocate these before registering
+ (d) we're not even trying to unwind anything when mwifiex_send_cmd() or
+     mwifiex_sta_init_cmd() fail
 
-On 05/31/2017 01:18 AM, Bastian Bittorf wrote:
-> * Johannes Berg <johannes@sipsolutions.net> [31.05.2017 10:09]:
->>> Is there any way to dump out the socket information if we reproduce
->>> the problem?
->>
->> I have no idea, sorry.
->>
->> If you or Bastian can tell me how to reproduce the problem, I can try
->> to investigate it.
->
-> there was an interesting fix regarding the shell-builtin 'read' in
-> busybox[1]. I will retest again and report if this changes anything.
->
-> bye, bastian
->
-> PS: @ben: are you also using 'iw event | while read -r LINE ...'?
+To fix these issues, let's:
 
-I'm using a perl script to read the output, and not using busybox.
+ * add a stacked set of error handling labels, to keep error handling
+   consistent and properly ordered (resolving (a) and (d))
+ * move the workqueue allocations before the registration (to resolve
+   (c); also resolves (b) by avoiding error cases where we have to
+   unregister)
 
-I have not seen the problem again, so it is not easy for me to reproduce.
+[Incidentally, it's pretty easy to interrupt the alloc_workqueue() in,
+e.g., the following:
 
-If you reproduce it, maybe check 'strace' on the 'iw' process to see if it is
-hung on writing output to the pipe or reading input?  In my case, it appeared
-to be hung reading input from netlink, input that never arrived.
+  iw phy phy0 interface add mlan0 type station
 
-Thanks,
-Ben
+by sending it SIGTERM.]
 
+This bugfix covers commits like commit 7d652034d1a0 ("mwifiex: channel
+switch support for mwifiex"), but parts of this bug exist all the way
+back to the introduction of dynamic interface handling in commit
+93a1df48d224 ("mwifiex: add cfg80211 handlers add/del_virtual_intf").
 
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 71 ++++++++++++-------------
+ 1 file changed, 35 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 7ec06bf13413..025bc06a19d6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -2964,10 +2964,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	if (!dev) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "no memory available for netdevice\n");
+-		memset(&priv->wdev, 0, sizeof(priv->wdev));
+-		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
+-		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+-		return ERR_PTR(-ENOMEM);
++		ret = -ENOMEM;
++		goto err_alloc_netdev;
+ 	}
+ 
+ 	mwifiex_init_priv_params(priv, dev);
+@@ -2976,11 +2974,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
+ 			       HostCmd_ACT_GEN_SET, 0, NULL, true);
+ 	if (ret)
+-		return ERR_PTR(ret);
++		goto err_set_bss_mode;
+ 
+ 	ret = mwifiex_sta_init_cmd(priv, false, false);
+ 	if (ret)
+-		return ERR_PTR(ret);
++		goto err_sta_init;
+ 
+ 	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
+ 	if (adapter->is_hw_11ac_capable)
+@@ -3011,31 +3009,14 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 	SET_NETDEV_DEV(dev, adapter->dev);
+ 
+-	/* Register network device */
+-	if (register_netdevice(dev)) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "cannot register virtual network device\n");
+-		free_netdev(dev);
+-		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+-		priv->netdev = NULL;
+-		memset(&priv->wdev, 0, sizeof(priv->wdev));
+-		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
+-		return ERR_PTR(-EFAULT);
+-	}
+-
+ 	priv->dfs_cac_workqueue = alloc_workqueue("MWIFIEX_DFS_CAC%s",
+ 						  WQ_HIGHPRI |
+ 						  WQ_MEM_RECLAIM |
+ 						  WQ_UNBOUND, 1, name);
+ 	if (!priv->dfs_cac_workqueue) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "cannot register virtual network device\n");
+-		free_netdev(dev);
+-		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+-		priv->netdev = NULL;
+-		memset(&priv->wdev, 0, sizeof(priv->wdev));
+-		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
+-		return ERR_PTR(-ENOMEM);
++		mwifiex_dbg(adapter, ERROR, "cannot alloc DFS CAC queue\n");
++		ret = -ENOMEM;
++		goto err_alloc_cac;
+ 	}
+ 
+ 	INIT_DELAYED_WORK(&priv->dfs_cac_work, mwifiex_dfs_cac_work_queue);
+@@ -3044,16 +3025,9 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 						      WQ_HIGHPRI | WQ_UNBOUND |
+ 						      WQ_MEM_RECLAIM, 1, name);
+ 	if (!priv->dfs_chan_sw_workqueue) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "cannot register virtual network device\n");
+-		free_netdev(dev);
+-		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+-		priv->netdev = NULL;
+-		memset(&priv->wdev, 0, sizeof(priv->wdev));
+-		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
+-		destroy_workqueue(priv->dfs_cac_workqueue);
+-		priv->dfs_cac_workqueue = NULL;
+-		return ERR_PTR(-ENOMEM);
++		mwifiex_dbg(adapter, ERROR, "cannot alloc DFS channel sw queue\n");
++		ret = -ENOMEM;
++		goto err_alloc_chsw;
+ 	}
+ 
+ 	INIT_DELAYED_WORK(&priv->dfs_chan_sw_work,
+@@ -3061,6 +3035,13 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 	sema_init(&priv->async_sem, 1);
+ 
++	/* Register network device */
++	if (register_netdevice(dev)) {
++		mwifiex_dbg(adapter, ERROR, "cannot register network device\n");
++		ret = -EFAULT;
++		goto err_reg_netdev;
++	}
++
+ 	mwifiex_dbg(adapter, INFO,
+ 		    "info: %s: Marvell 802.11 Adapter\n", dev->name);
+ 
+@@ -3081,11 +3062,29 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		adapter->curr_iface_comb.p2p_intf++;
+ 		break;
+ 	default:
++		/* This should be dead code; checked above */
+ 		mwifiex_dbg(adapter, ERROR, "type not supported\n");
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+ 	return &priv->wdev;
++
++err_reg_netdev:
++	destroy_workqueue(priv->dfs_chan_sw_workqueue);
++	priv->dfs_chan_sw_workqueue = NULL;
++err_alloc_chsw:
++	destroy_workqueue(priv->dfs_cac_workqueue);
++	priv->dfs_cac_workqueue = NULL;
++err_alloc_cac:
++	free_netdev(dev);
++	priv->netdev = NULL;
++err_sta_init:
++err_set_bss_mode:
++err_alloc_netdev:
++	memset(&priv->wdev, 0, sizeof(priv->wdev));
++	priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
++	priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
++	return ERR_PTR(ret);
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.13.0.rc2.291.g57267f2277-goog
