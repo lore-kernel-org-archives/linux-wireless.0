@@ -1,110 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33878 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751138AbdEEMIo (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:36659 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757307AbdELIhN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 08:08:44 -0400
-Received: by mail-pg0-f68.google.com with SMTP id u187so584885pgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 05:08:44 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v2 6/6] mwifiex: check next packet length for usb tx aggregation
-Date: Fri,  5 May 2017 12:08:20 +0000
-Message-Id: <1493986100-24509-6-git-send-email-huxinming820@gmail.com> (sfid-20170505_140848_793694_F7B14F6D)
-In-Reply-To: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
-References: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
+        Fri, 12 May 2017 04:37:13 -0400
+Received: by mail-pf0-f182.google.com with SMTP id m17so26836542pfg.3
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 01:37:13 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Xie Qirong <cheerx1994@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20170512073555.12333-1-cheerx1994@gmail.com>
+ <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com> (sfid-20170512_103732_929620_4D43A672)
+Date: Fri, 12 May 2017 10:36:56 +0200
+MIME-Version: 1.0
+In-Reply-To: <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 5/12/2017 10:19 AM, Kalle Valo wrote:
+> Xie Qirong <cheerx1994@gmail.com> writes:
+> 
+>> The combination of init_timer and setting up the data and function field
+>> manually is equivalent to calling setup_timer(). This is an api
+>> consolidation only and improves readability.
+>>
+>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
+>> ---
+>>
+>>   setup_timer.cocci suggested the following improvement:
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
+>>   setup_timer function for function on line 384.
+>>
+>>   Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
+>>   CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
+>>   CONFIG_BRCMDBG=y
+>>
+>>   Kernel version: 4.11.0 (localversion-next is next-20170512)
+> 
+> How is this different from the first version?
+> 
+> https://patchwork.kernel.org/patch/9709467/
 
-The next packet length will be used by interface driver, to check if the
-next packet still could be aggregated.
+Hi Kalle,
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v2: same as v1
----
- drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 8 ++++----
- drivers/net/wireless/marvell/mwifiex/txrx.c     | 4 ++--
- drivers/net/wireless/marvell/mwifiex/wmm.c      | 8 ++++----
- 3 files changed, 10 insertions(+), 10 deletions(-)
+This is actually the third version. You are referring to the 
+not-specifically-named "v2" here, but how are you to know ;-) This third 
+version is the same as v1 on which I commented to put the coccinelle 
+output in the commit message. So I would still keep v2 if nothing else 
+changed in v3 apart from my Acked-by: tag.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-index cbf3bc2..8041f2d 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-@@ -254,15 +254,15 @@
- 		return 0;
- 	}
- 
--	if (adapter->iface_type == MWIFIEX_USB) {
--		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
--						   skb_aggr, NULL);
--	} else {
- 		if (skb_src)
- 			tx_param.next_pkt_len =
- 					skb_src->len + sizeof(struct txpd);
- 		else
- 			tx_param.next_pkt_len = 0;
-+	if (adapter->iface_type == MWIFIEX_USB) {
-+		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
-+						   skb_aggr, &tx_param);
-+	} else {
- 
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
- 						   skb_aggr, &tx_param);
-diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
-index 15e92af..d848933 100644
---- a/drivers/net/wireless/marvell/mwifiex/txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
-@@ -117,7 +117,7 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
- 		if (adapter->iface_type == MWIFIEX_USB) {
- 			ret = adapter->if_ops.host_to_card(adapter,
- 							   priv->usb_port,
--							   skb, NULL);
-+							   skb, tx_param);
- 		} else {
- 			ret = adapter->if_ops.host_to_card(adapter,
- 							   MWIFIEX_TYPE_DATA,
-@@ -185,7 +185,7 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
- 	if (adapter->iface_type == MWIFIEX_USB) {
- 		ret = adapter->if_ops.host_to_card(adapter,
- 						   priv->usb_port,
--						   skb, NULL);
-+						   skb, tx_param);
- 	} else {
- 		ret = adapter->if_ops.host_to_card(adapter,
- 						   MWIFIEX_TYPE_DATA,
-diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
-index e4ff3b9..75cdd55 100644
---- a/drivers/net/wireless/marvell/mwifiex/wmm.c
-+++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
-@@ -1363,13 +1363,13 @@ void mwifiex_rotate_priolists(struct mwifiex_private *priv,
- 
- 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
- 
-+	tx_param.next_pkt_len =
-+		((skb_next) ? skb_next->len +
-+		 sizeof(struct txpd) : 0);
- 	if (adapter->iface_type == MWIFIEX_USB) {
- 		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
--						   skb, NULL);
-+						   skb, &tx_param);
- 	} else {
--		tx_param.next_pkt_len =
--			((skb_next) ? skb_next->len +
--			 sizeof(struct txpd) : 0);
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
- 						   skb, &tx_param);
- 	}
--- 
-1.9.1
+Regards,
+Arend
+
+> Always add patch version "[PATCH v2]" and a changelog. I added a section
+> "Frequent problems" to the wiki to mention about these common problems:
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+> 
