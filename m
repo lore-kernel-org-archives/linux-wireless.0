@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47409 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751125AbdEaLx1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36757 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757714AbdELOBT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 07:53:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add configurable debugging.
-Date: Wed, 31 May 2017 11:53:13 +0000
-Message-ID: <8737blnsz6.fsf@kamboji.qca.qualcomm.com> (sfid-20170531_135330_824796_8A92ADC8)
-References: <20170510211925.17468-1-adrian@freebsd.org>
-In-Reply-To: <20170510211925.17468-1-adrian@freebsd.org> (Adrian Chadd's
-        message of "Wed, 10 May 2017 14:19:25 -0700")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 12 May 2017 10:01:19 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [7/7] wil6210: low level RF sector API
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1477720287-17606-8-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1477720287-17606-8-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Lior David <qca_liord@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <d1c2f4300d4843239e5339b0fa6a2e2f@euamsexm01a.eu.qualcomm.com> (sfid-20170512_160234_432283_C519A72B)
+Date: Fri, 12 May 2017 16:01:11 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd <adrian@freebsd.org> writes:
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+> From: Lior David <qca_liord@qca.qualcomm.com>
+> 
+> Added vendor commands for low level control over
+> RF sectors. It allows user space a fine-grained control
+> over RF characteristics for TX and RX, such as direction
+> and gain of TX/RX. Main usages are debugging and diagnostics,
+> but also operational use cases.
+> API includes getting/setting a specific RF sector
+> configuration, as well as getting/setting the selected
+> sector which is used to communicate with a station.
+> 
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-> This adds a few configurable debugging options:
->
-> * driver debugging and tracing is now configurable per device
+Sorry for taking so long to get back to this. I was still able to apply the
+patch to my pending branch, only the nla_parse() interface had changed but that
+was a simple fix:
 
-So this means that there's a debugfs file
-/sys/kernel/debug/ieee80211/phy0/ath10k/debug for every ath10k device.
-Sounds like a good idea. I just don't like the name of file, would
-debug_mask be more descriptive?
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=d31df2dcc53e4901d4c26de45f4877fbd8783124
 
-> * driver debugging and tracing is now configurable at runtime
+But when I started to look this more closely I don't see wiphy->vendor_commands
+set anywhere, did you forgot to set that?
 
-Correction, debug_mask has been always to possible change via
-/sys/module/ath10k_core/parameters/debug_mask file. Now it doesn't work
-anymore, which is ok, but I think we should make it clear for users as
-well.
+-- 
+https://patchwork.kernel.org/patch/9403071/
 
-I wonder would that work if we change the mask to 0444:
-
-module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
-
-> * the debugging / tracing is not run at all (besides a mask check)
->   unless the specific debugging bitmap field is configured.
-
-So I guess with this you mean that the function ath10k_dbg() is not
-called if debug messages are disabled? This is something which is good
-to do in another patch. And the original assumption was that if you care
-about performance you won't even enable CONFIG_ATH10K_DEBUG, so that
-path was not optimised in any way. How much benefit does this bring?
-
-> --- a/drivers/net/wireless/ath/ath10k/debug.c
-> +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> @@ -2418,6 +2418,79 @@ int ath10k_debug_create(struct ath10k *ar)
->  	return 0;
->  }
-> =20
-> +#ifdef	CONFIG_ATH10K_DEBUGFS
-> +static ssize_t ath10k_write_debug_mask(struct file *file,
-> +				       const char __user *ubuf,
-> +				       size_t count, loff_t *ppos)
-> +{
-
-The ifdef looks wrong, it's already inside CONFIG_ATH10K_DEBUGFS. Was it
-supposed to be CONFIG_ATH10K_DEBUG?
-
---=20
-Kalle Valo=
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
