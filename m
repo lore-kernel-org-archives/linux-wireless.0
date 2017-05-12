@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40730 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760527AbdEOJ3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 05:29:13 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 99A3580463
-        for <linux-wireless@vger.kernel.org>; Mon, 15 May 2017 09:29:12 +0000 (UTC)
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2] iwlegacy: warn when enabling power save
-Date: Mon, 15 May 2017 11:28:26 +0200
-Message-Id: <1494840506-16485-1-git-send-email-sgruszka@redhat.com> (sfid-20170515_112916_466952_0283E872)
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:32954 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932787AbdELJKl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 May 2017 05:10:41 -0400
+Received: by mail-qk0-f173.google.com with SMTP id y201so42749937qka.0
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 02:10:41 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Xie Qirong <cheerx1994@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20170512073555.12333-1-cheerx1994@gmail.com>
+ <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
+ <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com>
+ <87d1beqwtc.fsf@kamboji.qca.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <036761ff-85a9-6042-57ed-ca3968550737@broadcom.com> (sfid-20170512_111117_966182_70317F57)
+Date: Fri, 12 May 2017 11:10:36 +0200
+MIME-Version: 1.0
+In-Reply-To: <87d1beqwtc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlegacy firmware can crash when power save is configured. PS was
-allowed in "dbdac2b iwlegacy: properly enable power saving" with belive
-that user who enable PS is aware of that and can relate firmware crahes
-with PS. However some distributions seems to enable PS without user
-intervention, so warn about that.
+On 5/12/2017 10:54 AM, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+> 
+>> On 5/12/2017 10:19 AM, Kalle Valo wrote:
+>>> Xie Qirong <cheerx1994@gmail.com> writes:
+>>>
+>>>> The combination of init_timer and setting up the data and function field
+>>>> manually is equivalent to calling setup_timer(). This is an api
+>>>> consolidation only and improves readability.
+>>>>
+>>>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>> Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
+>>>> ---
+>>>>
+>>>>    setup_timer.cocci suggested the following improvement:
+>>>>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
+>>>>    setup_timer function for function on line 384.
+>>>>
+>>>>    Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
+>>>>    CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
+>>>>    CONFIG_BRCMDBG=y
+>>>>
+>>>>    Kernel version: 4.11.0 (localversion-next is next-20170512)
+>>>
+>>> How is this different from the first version?
+>>>
+>>> https://patchwork.kernel.org/patch/9709467/
+>>
+>> Hi Kalle,
+>>
+>> This is actually the third version. You are referring to the
+>> not-specifically-named "v2" here, but how are you to know ;-)
+> 
+> Exactly :)
+> 
+>> This third version is the same as v1 on which I commented to put the
+>> coccinelle output in the commit message. So I would still keep v2 if
+>> nothing else changed in v3 apart from my Acked-by: tag.
+> 
+> Ok, but I can easily take v3 (ie. this one) so that you get credit ;)
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-v1 -> v2: do not print call trace
+If you add the coccinelle output in the commit message, ie. above the 
+'---' that would be great. So for both you have to do additional stuff 
+provided you find it useful to have the coccinelle output. :-p
 
- drivers/net/wireless/intel/iwlegacy/common.c |    2 ++
- drivers/net/wireless/intel/iwlegacy/common.h |    1 +
- 2 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 140b6ea..8d5acda 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -5147,6 +5147,8 @@ void il_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	if (changed & (IEEE80211_CONF_CHANGE_PS | IEEE80211_CONF_CHANGE_IDLE)) {
- 		il->power_data.ps_disabled = !(conf->flags & IEEE80211_CONF_PS);
-+		if (!il->power_data.ps_disabled)
-+			IL_WARN_ONCE("Enabling power save might cause firmware crashes\n");
- 		ret = il_power_update_mode(il, false);
- 		if (ret)
- 			D_MAC80211("Error setting sleep level\n");
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index 3bba521..18c60c9 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -45,6 +45,7 @@
- 
- #define IL_ERR(f, a...) dev_err(&il->pci_dev->dev, f, ## a)
- #define IL_WARN(f, a...) dev_warn(&il->pci_dev->dev, f, ## a)
-+#define IL_WARN_ONCE(f, a...) dev_warn_once(&il->pci_dev->dev, f, ## a)
- #define IL_INFO(f, a...) dev_info(&il->pci_dev->dev, f, ## a)
- 
- #define RX_QUEUE_SIZE                         256
--- 
-1.7.1
+Regards,
+Arend
