@@ -1,86 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx07-00252a01.pphosted.com ([62.209.51.214]:8625 "EHLO
-        mx07-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1035436AbdEXNQ7 (ORCPT
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:33752 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933216AbdELQm3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 09:16:59 -0400
-Received: from pps.filterd (m0102628.ppops.net [127.0.0.1])
-        by mx07-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4ODFxeY002058
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 14:16:52 +0100
-Received: from mail-wm0-f69.google.com (mail-wm0-f69.google.com [74.125.82.69])
-        by mx07-00252a01.pphosted.com with ESMTP id 2ajb6ya1tv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 14:16:52 +0100
-Received: by mail-wm0-f69.google.com with SMTP id x184so38387112wmf.14
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 06:16:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <8ec01afb-7c9d-2cde-0007-b4d9fd2dbdbd@broadcom.com>
-References: <CAE_XsMKBQJDVbiH1RN_9zvOtToQgA74wbZWmnfXLbDAATua_kA@mail.gmail.com>
- <8ec01afb-7c9d-2cde-0007-b4d9fd2dbdbd@broadcom.com>
-From: James Hughes <james.hughes@raspberrypi.org>
-Date: Wed, 24 May 2017 14:16:50 +0100
-Message-ID: <CAE_XsMJ8DxHUEpegYzc-9KOAsQveYxKzRea+KJ2Jfk3VQTzT7w@mail.gmail.com> (sfid-20170524_151709_995782_4FBDAEF0)
-Subject: Re: brcmfmac: brcm43430 Invalid mailbox value issue
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 12 May 2017 12:42:29 -0400
+Received: by mail-pg0-f42.google.com with SMTP id u187so32675722pgb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:28 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 04/11] mwifiex: Add locking to mwifiex_11n_delba
+Date: Fri, 12 May 2017 09:42:01 -0700
+Message-Id: <20170512164208.38725-4-briannorris@chromium.org> (sfid-20170512_184436_738989_5DCC1919)
+In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
+References: <20170512164208.38725-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 May 2017 at 14:13, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
-> On 24-05-17 14:50, James Hughes wrote:
->> We are seeing an issue on Raspberry Pi which uses the bcm43430 chip. It's
->> been tested up to 4.9 which still shows the issue (it's been there for some
->> time, > 1yr). I'm trying to find someone who can test on 4.11 as I cannot
->> replicate  (The latest kernel we have that works on a Pi)
->>
->> It exhibits as a log entry, and subsequent death of wireless connectivity.
->>
->> "Unknown mailbox data content: 0x40012"
->>
->> Look at the driver code, it appears to be checking the return
->> value from a mailbox (presumably the one to the chip firmware), which
->> has the 0x4 in the top word which shouldn't be there.
->>
->> The driver simply adds a log entry, but otherwise ignores the situation.
->> However, we see wireless failure from this point.
->>
->> Since I believe this value is being returned from the chip, I cannot
->> investigate much further. The public datasheet is of no help. We do appear
->> to be using the latest firmware file.
->>
->> I'm not sure how to proceed on this one. It would be interesting to know
->> under what circumstances that value can be returned from the mailbox.
->>
->> More details can be found at the end of this github issue.
->>
->> https://github.com/raspberrypi/linux/issues/1342
->
-> Hi James,
->
-> I looked through the issue on github and it seems you are getting -110
-> (-ETIMEDOUT) on SDIO transfers. This could be a signal integrity issue
-> of the SDIO bus signals, which may happen if the RPi3 power supply can
-> not provide enough amps. So you could try to replicate it by
-> deliberately use a power supply below specs.
->
-> I did not get my RPi3 going yet, but I can try next monday or so. Office
-> closed due to Ascension day. Do you know what SDIO host controller is
-> used on RPi3? I can check myself, but if you know the answer up front
-> let me know.
->
-> Regards,
-> Arend
+From: Douglas Anderson <dianders@chromium.org>
 
-Hi Arend,
+The mwifiex_11n_delba() function walked the rx_reorder_tbl_ptr without
+holding the lock, which was an obvious violation.
 
-It's the one built in to the SoC (the bcm2835) and I believe is an
-Arasan device. If you need anything else (HW etc) please let me know.
+Grab the lock.
 
-I'll try the low power setup you suggest. Might be the reason why I
-cannot replicate, I always use decent power supplies.
+NOTE: we hold the lock while calling mwifiex_send_delba().  There's also
+several callers in 11n_rxreorder.c that hold the lock and the comments
+in the struct sound just like very other list/lock pair -- as if the
+lock should definitely be help for all operations like this.
 
-James
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/11n.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index c75b6abf16a0..16c77c27f1b6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -653,11 +653,13 @@ int mwifiex_send_delba(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ void mwifiex_11n_delba(struct mwifiex_private *priv, int tid)
+ {
+ 	struct mwifiex_rx_reorder_tbl *rx_reor_tbl_ptr;
++	unsigned long flags;
+ 
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	if (list_empty(&priv->rx_reorder_tbl_ptr)) {
+ 		dev_dbg(priv->adapter->dev,
+ 			"mwifiex_11n_delba: rx_reorder_tbl_ptr empty\n");
+-		return;
++		goto exit;
+ 	}
+ 
+ 	list_for_each_entry(rx_reor_tbl_ptr, &priv->rx_reorder_tbl_ptr, list) {
+@@ -666,9 +668,11 @@ void mwifiex_11n_delba(struct mwifiex_private *priv, int tid)
+ 				"Send delba to tid=%d, %pM\n",
+ 				tid, rx_reor_tbl_ptr->ta);
+ 			mwifiex_send_delba(priv, tid, rx_reor_tbl_ptr->ta, 0);
+-			return;
++			goto exit;
+ 		}
+ 	}
++exit:
++	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ }
+ 
+ /*
+-- 
+2.13.0.rc2.291.g57267f2277-goog
