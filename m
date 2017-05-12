@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47992 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60946 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754672AbdESGIj (ORCPT
+        with ESMTP id S932928AbdELJQp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 02:08:39 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: Make BCMA a menuconfig to ease disabling it all
+        Fri, 12 May 2017 05:16:45 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170417100730.3648-2-vincent.legoll@gmail.com>
-References: <20170417100730.3648-2-vincent.legoll@gmail.com>
-To: Vincent Legoll <vincent.legoll@gmail.com>
-Cc: linux-kernel@vger.kernel.org, zajec5@gmail.com,
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Xie Qirong <cheerx1994@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
         linux-wireless@vger.kernel.org,
-        Vincent Legoll <vincent.legoll@gmail.com>
-Message-Id: <20170519060838.88CF960FEC@smtp.codeaurora.org> (sfid-20170519_080909_119033_1D9C73ED)
-Date: Fri, 19 May 2017 06:08:38 +0000 (UTC)
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
+References: <20170512073555.12333-1-cheerx1994@gmail.com>
+        <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
+        <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com>
+        <87d1beqwtc.fsf@kamboji.qca.qualcomm.com>
+        <036761ff-85a9-6042-57ed-ca3968550737@broadcom.com>
+Date: Fri, 12 May 2017 12:16:38 +0300
+In-Reply-To: <036761ff-85a9-6042-57ed-ca3968550737@broadcom.com> (Arend van
+        Spriel's message of "Fri, 12 May 2017 11:10:36 +0200")
+Message-ID: <878tm2qvt5.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_111709_760941_2C675423)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vincent Legoll <vincent.legoll@gmail.com> wrote:
-> No need to get into the submenu to disable all BCMA-related config entries
-> 
-> Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-I would like to get an ack from someone before I'll apply this.
+>>> This third version is the same as v1 on which I commented to put the
+>>> coccinelle output in the commit message. So I would still keep v2 if
+>>> nothing else changed in v3 apart from my Acked-by: tag.
+>>
+>> Ok, but I can easily take v3 (ie. this one) so that you get credit ;)
+>
+> If you add the coccinelle output in the commit message, ie. above the
+> '---' that would be great. So for both you have to do additional stuff
+> provided you find it useful to have the coccinelle output. :-p
 
-Patch set to Deferred.
+Sure, I can add that. Thanks to my patchwork script it's actually pretty
+easy to edit commit logs before it commits them. If only I had time to
+implement a proper GTK interface for the script...
 
 -- 
-https://patchwork.kernel.org/patch/9683685/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
