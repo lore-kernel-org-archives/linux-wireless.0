@@ -1,102 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63813 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752424AbdESJCT (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:36757 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755723AbdELHgF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 05:02:19 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Adrian Chadd <adrian@freebsd.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "simon.wunderlich@openmesh.com" <simon.wunderlich@openmesh.com>
-Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
- firmware scratch memory.
-Date: Fri, 19 May 2017 09:02:08 +0000
-Message-ID: <8760gxw776.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_110242_113178_37685E15)
-References: <20170501214327.5621-1-adrian@freebsd.org>
-        <2107639.cIofNFgAHq@bentobox>
-In-Reply-To: <2107639.cIofNFgAHq@bentobox> (Sven Eckelmann's message of "Wed,
-        17 May 2017 12:06:01 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 12 May 2017 03:36:05 -0400
+From: Xie Qirong <cheerx1994@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Xie Qirong <cheerx1994@gmail.com>
+Subject: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
+Date: Fri, 12 May 2017 15:35:55 +0800
+Message-Id: <20170512073555.12333-1-cheerx1994@gmail.com> (sfid-20170512_093629_010927_1C84A4A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann <sven.eckelmann@openmesh.com> writes:
+The combination of init_timer and setting up the data and function field
+manually is equivalent to calling setup_timer(). This is an api
+consolidation only and improves readability.
 
-> On Montag, 1. Mai 2017 14:43:27 CEST Adrian Chadd wrote:
->> This reverts b057886524be060021e3cfad0ba8458c850330cd in 2015
->> which converted this allocation from dma_map_coherent() to
->> kzalloc() / dma_map_single().
->>=20
->> The current problem manifests when using later model NICs with larger
->> (>700KiB) scratch spaces in memory.  Although the kzalloc call
->> succeeds, the software IOMMU TLB code (via dma_map_single()) panics
->> because it can't find 700KiB of linear physmem bounce buffers for DMA.
->> Now, this is a bit of a silly failure mode for the dma map API,
->> but it's what we currently have to play with.
-> [....]
->>=20
->> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
->> ---
->>  drivers/net/wireless/ath/ath10k/wmi.c | 35 ++++++++++------------------=
--------
->>  1 file changed, 10 insertions(+), 25 deletions(-)
->
-> Thanks for investigating this. This partial revert fixes following crash =
-for
-> me with QCA99X0 on amd64 with SWIOMMU:
->
->     [    9.167281] DMA: Out of SW-IOMMU space for 689816 bytes at device =
-0000:02:00.0
->     [    9.174719] Kernel panic - not syncing: DMA: Random memory could b=
-e DMA read
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
+---
 
-I recently got a Compex WLE1216V5-20 board and this patch also fixed a
-similar crash for me on my HP x86_64 test laptop:
+ setup_timer.cocci suggested the following improvement:
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
+ setup_timer function for function on line 384.
 
-[  840.491019] do_IRQ: 3.82 No irq handler for vector
-[  840.965049] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mod=
-e 0 reset_mode 0
-[  841.094985] ath10k_pci 0000:02:00.0: qca9984/qca9994 hw1.0 target 0x0100=
-0000 chip_id 0x00000000 sub 168c:cafe
-[  841.095096] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1=
- dfs 1 testmode 1
-[  841.095603] ath10k_pci 0000:02:00.0: firmware ver 10.4-3.4-00082 api 5 f=
-eatures no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast crc32 f301=
-de65
-[  842.518071] ath10k_pci 0000:02:00.0: board_file api 2 bmi_id 0:1 crc32 7=
-51efba1
-[  845.220186] ath10k_pci 0000:02:00.0: swiotlb buffer is full (sz: 1172264=
- bytes)
-[  845.220478] ath10k_pci 0000:02:00.0: DMA: Out of SW-IOMMU space for 1172=
-264 bytes
-[  845.220506] Kernel panic - not syncing: DMA: Random memory could be DMA =
-accessed#012[  845.220506]=20
-[  845.220532] CPU: 0 PID: 116 Comm: kworker/u16:4 Tainted: G            E =
-  4.11.0-wt-ath+ #336
-[  845.220554] Hardware name: Hewlett-Packard HP ProBook 6540b/1722, BIOS 6=
-8CDD Ver. F.04 01/27/2010
-[  845.220600] Workqueue: ath10k_aux_wq ath10k_wmi_event_service_ready_work=
- [ath10k_core]
-[  845.220626] Call Trace:
-[  845.220656]  dump_stack+0x85/0xc2
-[  845.220684]  panic+0xda/0x228
-[  845.220719]  swiotlb_full+0x88/0xa0
-[  845.220746]  swiotlb_map_page+0x214/0x280
-[  845.220785]  ath10k_wmi_event_service_ready_work+0x3f2/0x7d0 [ath10k_cor=
-e]
-[  845.220812]  ? swiotlb_map_sg_attrs+0x140/0x140
-[  845.220858]  process_one_work+0x23b/0x7d0
-[  845.221093]  worker_thread+0x4e/0x4a0
-[  845.221126]  kthread+0x117/0x150
-[  845.221149]  ? process_one_work+0x7d0/0x7d0
-[  845.221175]  ? kthread_create_on_node+0x40/0x40
-[  845.221205]  ret_from_fork+0x31/0x40
-[  845.221314] Kernel Offset: 0xb000000 from 0xffffffff81000000 (relocation=
- range: 0xffffffff80000000-0xffffffffbfffffff)
+ Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
+ CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
+ CONFIG_BRCMDBG=y
 
+ Kernel version: 4.11.0 (localversion-next is next-20170512)
 
---=20
-Kalle Valo=
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
+index 14a70d4b4e86..3559fb5b8fb0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
+@@ -380,9 +380,7 @@ int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg)
+ 	/* Set up timer for BT  */
+ 	btci->timer_on = false;
+ 	btci->timeout = BRCMF_BTCOEX_OPPR_WIN_TIME;
+-	init_timer(&btci->timer);
+-	btci->timer.data = (ulong)btci;
+-	btci->timer.function = brcmf_btcoex_timerfunc;
++	setup_timer(&btci->timer, brcmf_btcoex_timerfunc, (ulong)btci);
+ 	btci->cfg = cfg;
+ 	btci->saved_regs_part1 = false;
+ 	btci->saved_regs_part2 = false;
+-- 
+2.12.2
