@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53042 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752309AbdEVQRB (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34354 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933039AbdELKQH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 12:17:01 -0400
-Subject: Re: ath10k: Initialize nbytes to 0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-References: <1483653641-8377-1-git-send-email-greearb@candelatech.com>
- <0fa10cfb9e514244a0c39fa2688574e4@euamsexm01a.eu.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <ad091f4e-b315-3cf7-c3aa-a0fddfe8c1c3@candelatech.com> (sfid-20170522_181705_590601_5FB6D40C)
-Date: Mon, 22 May 2017 09:17:00 -0700
-MIME-Version: 1.0
-In-Reply-To: <0fa10cfb9e514244a0c39fa2688574e4@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 12 May 2017 06:16:07 -0400
+From: Johan Hovold <johan@kernel.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Johan Hovold <johan@kernel.org>
+Subject: [PATCH] wireless: mwifiex: add missing USB-descriptor endianness conversion
+Date: Fri, 12 May 2017 12:15:55 +0200
+Message-Id: <20170512101555.2111-1-johan@kernel.org> (sfid-20170512_121633_935277_F0A0B450)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2017 07:53 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> ath10k firmware checks nbytes == 0 as part of determining if DMA
->> has completed successfully.  To help make this work more often,
->> have the driver initialize nbytes to zero when freeing the descriptor
->> slot.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->
-> This patch was in linux-wireless patchwork instance but not in ath10k instance,
-> which means that the patch was not delivered to ath10k list. I guesss mailing
-> list problems?
->
-> But anyway, I didn't see any comments. Is this still valid?
+Add the missing endianness conversions to a debug statement printing
+the USB device-descriptor bcdUSB field during probe.
 
- From my reading of the firmware, it appears the patch is a good idea.
-It at least does not seem to make anything worse as it has not
-been implicated in any problems in our testing and it has been in our kernel
-since I posted the patch.
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-So, I think it should be applied.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 2f7705c50161..debd6216366a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -424,7 +424,8 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 	card->intf = intf;
+ 
+ 	pr_debug("info: bcdUSB=%#x Device Class=%#x SubClass=%#x Protocol=%#x\n",
+-		 udev->descriptor.bcdUSB, udev->descriptor.bDeviceClass,
++		 le16_to_cpu(udev->descriptor.bcdUSB),
++		 udev->descriptor.bDeviceClass,
+ 		 udev->descriptor.bDeviceSubClass,
+ 		 udev->descriptor.bDeviceProtocol);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.13.0
