@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45141 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751176AbdEBMmy (ORCPT
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:33866 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933260AbdELQme (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 08:42:54 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 8/9] brcmfmac: switch to using cfg80211_connect_done()
-Date: Tue,  2 May 2017 13:42:28 +0100
-Message-Id: <1493728949-10797-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170502_144302_925222_6F56A866)
-In-Reply-To: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 12 May 2017 12:42:34 -0400
+Received: by mail-pg0-f47.google.com with SMTP id u28so32713994pgn.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:33 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 10/11] mwifiex: pcie: remove useless pdev check
+Date: Fri, 12 May 2017 09:42:07 -0700
+Message-Id: <20170512164208.38725-10-briannorris@chromium.org> (sfid-20170512_184438_010811_F9AA5719)
+In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
+References: <20170512164208.38725-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver used cfg80211_connect_result() which is basically a wrapper
-around cfg80211_connect_done() passing a subset of the information that
-can be passed. For upcoming functionality this is not sufficient so
-switching to use cfg80211_connect_done().
-
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cc5b8ba..9d345c7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5537,26 +5537,28 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
- 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg);
-+	struct cfg80211_connect_resp_params conn_params;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index ac62bce50e96..d7e563a622f7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2380,11 +2380,6 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+ 	struct pcie_service_card *card;
+ 	struct mwifiex_adapter *adapter;
  
- 	brcmf_dbg(TRACE, "Enter\n");
+-	if (!pdev) {
+-		pr_err("info: %s: pdev is NULL\n", __func__);
+-		goto exit;
+-	}
+-
+ 	card = pci_get_drvdata(pdev);
  
- 	if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTING,
- 			       &ifp->vif->sme_state)) {
-+		memset(&conn_params, 0, sizeof(conn_params));
- 		if (completed) {
- 			brcmf_get_assoc_ies(cfg, ifp);
- 			brcmf_update_bss_info(cfg, ifp);
- 			set_bit(BRCMF_VIF_STATUS_CONNECTED,
- 				&ifp->vif->sme_state);
-+			conn_params.status = WLAN_STATUS_SUCCESS;
-+		} else {
-+			conn_params.status = WLAN_STATUS_AUTH_TIMEOUT;
- 		}
--		cfg80211_connect_result(ndev,
--					(u8 *)profile->bssid,
--					conn_info->req_ie,
--					conn_info->req_ie_len,
--					conn_info->resp_ie,
--					conn_info->resp_ie_len,
--					completed ? WLAN_STATUS_SUCCESS :
--						    WLAN_STATUS_AUTH_TIMEOUT,
--					GFP_KERNEL);
-+		conn_params.bssid = profile->bssid;
-+		conn_params.req_ie = conn_info->req_ie;
-+		conn_params.req_ie_len = conn_info->req_ie_len;
-+		conn_params.resp_ie = conn_info->resp_ie;
-+		conn_params.resp_ie_len = conn_info->resp_ie_len;
-+		cfg80211_connect_done(ndev, &conn_params, GFP_KERNEL);
- 		brcmf_dbg(CONN, "Report connect result - connection %s\n",
- 			  completed ? "succeeded" : "failed");
- 	}
+ 	if (!card->adapter) {
 -- 
-1.9.1
+2.13.0.rc2.291.g57267f2277-goog
