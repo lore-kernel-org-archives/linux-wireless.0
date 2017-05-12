@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40178 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753814AbdEQMZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 08:25:49 -0400
-Message-ID: <1495023947.2442.2.camel@sipsolutions.net> (sfid-20170517_142555_918125_74AB9CD4)
-Subject: Re: [PATCH v2] mac80211: strictly check mesh address extension mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
-Date: Wed, 17 May 2017 14:25:47 +0200
-In-Reply-To: <1494823315-26575-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1494823315-26575-1-git-send-email-rmanohar@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:50876 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755879AbdELIq5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 May 2017 04:46:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: Re: [v2 11/11] rsi: Remove old firmware loading method
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+        <1494336614-2107-12-git-send-email-amit.karwar@redpinesignals.com>
+Date: Fri, 12 May 2017 11:46:50 +0300
+In-Reply-To: <1494336614-2107-12-git-send-email-amit.karwar@redpinesignals.com>
+        (Amitkumar Karwar's message of "Tue, 9 May 2017 19:00:14 +0530")
+Message-ID: <87h90qqx6t.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_104703_564367_80525633)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2017-05-14 at 21:41 -0700, Rajkumar Manoharan wrote:
-> Mesh forwarding path checks for address extension mode to fetch
-> appropriate proxied address and MPP address. Existing condition
-> that looks for 6 address format is not strict enough so that
-> frames with improper values are processed and invalid entries
-> are added into MPP table. Fix that by adding a stricter check before
-> processing the packet.
-> 
-> Per IEEE Std 802.11s-2011 spec. Table 7-6g1 lists address extension
-> mode 0x3 as reserved one. And also Table Table 9-13 does not specify
-> 0x3 as valid address field.
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-Yeah ...
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>
+> The older firmware loading method is not usable by any Redpine chipset.
+> Hence removing that part of the code.
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-applied, thanks.
+Please document in the commit log the firmware files which are not used
+anymore.
 
-johannes
+-- 
+Kalle Valo
