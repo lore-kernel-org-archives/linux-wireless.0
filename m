@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56762 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751039AbdEJU6p (ORCPT
+Received: from smtprelay0162.hostedemail.com ([216.40.44.162]:56833 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932871AbdELPnK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 16:58:45 -0400
-Message-ID: <1494449916.3094.66.camel@coelho.fi> (sfid-20170510_225849_572659_9925B0D2)
-From: Luca Coelho <luca@coelho.fi>
-To: Kyle McMartin <kyle@infradead.org>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
-        linux-firmware@kernel.org,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Wed, 10 May 2017 23:58:36 +0300
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 12 May 2017 11:43:10 -0400
+Message-ID: <1494603783.2028.21.camel@perches.com> (sfid-20170512_174434_594037_0595CD27)
+Subject: Re: [v6] qtnfmac: introduce new FullMAC driver for Quantenna
+ chipsets
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        "hwang@quantenna.com" <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Fri, 12 May 2017 08:43:03 -0700
+In-Reply-To: <87shkap0e5.fsf@kamboji.qca.qualcomm.com>
+References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+         <20170512151854.6F16A60953@smtp.codeaurora.org>
+         <87shkap0e5.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
-Subject: pull-request: iwlwifi firmwares update 2017-05-10
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kyle,
+On Fri, 2017-05-12 at 15:20 +0000, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> Here's the diff between v5 and v6:
 
-The last time we pushed new -22 firmwares, we forgot to update the
-relevant version for 3168 devices.  This pull-request contains only this
-update.
+trivia:
 
-Please pull or let me know if there are any issues.
+> diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+[]
+> @@ -93,9 +94,11 @@ qtnf_change_virtual_intf(struct wiphy *wiphy,
+>  
+>  	qtnf_scan_done(vif->mac, true);
+>  
+> -	if (qtnf_cmd_send_change_intf_type(vif, type, mac_addr)) {
+> -		pr_err("failed to change interface type\n");
+> -		return -EFAULT;
+> +	ret = qtnf_cmd_send_change_intf_type(vif, type, mac_addr);
+> +	if (ret) {
+> +		pr_err("VIF%u.%u: failed to change VIF type: %d\n",
+> +		       vif->mac->macid, vif->vifid, ret);
 
-Cheers,
-Luca.
+It might make sense to add vif_<level> macros or functions
+to make sure the vif->mac->macid, vif->vifid are emitted
+consistently and simplify the calls
 
+For instance:
+		vif_err(vif, "failed to change VIF type %d\n", ret);
 
-The following changes since commit ade8332383e228cbdcfc605b5e5ef3aa51211401:
+etc...
 
-  Merge branch 'master' of git://git.marvell.com/mwifiex-firmware (2017-04-22 11:25:59 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2017-05-10
-
-for you to fetch changes up to ca89d62df8fbeb0b8131437dfd5b8098c85f8164:
-
-  iwlwifi: update -22 firmware for 3168 (2017-05-10 23:43:18 +0300)
-
-----------------------------------------------------------------
-Update firmware for 3168
-
-* update -22 firmware binaries for iwlwifi device 3168
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: update -22 firmware for 3168
-
- WHENCE                |   2 +-
- iwlwifi-3168-22.ucode | Bin 1028032 -> 1028092 bytes
- 2 files changed, 1 insertion(+), 1 deletion(-)
+Not necessarily in this patch, maybe in a future one.
