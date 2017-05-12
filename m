@@ -1,512 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36856 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755902AbdESP7o (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:33744 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933182AbdELQm1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 11:59:44 -0400
-Received: by mail-oi0-f67.google.com with SMTP id w138so13040338oiw.3
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 08:59:43 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 01/10] rtlwifi: btcoex: 23b 1ant: Switch antenna to wifi or BT.
-Date: Fri, 19 May 2017 10:59:28 -0500
-Message-Id: <20170519155937.17526-2-Larry.Finger@lwfinger.net> (sfid-20170519_175949_372506_22E2D0E7)
-In-Reply-To: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
-References: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
+        Fri, 12 May 2017 12:42:27 -0400
+Received: by mail-pg0-f43.google.com with SMTP id u187so32675385pgb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:27 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 02/11] mwifiex: Don't release tx_ba_stream_tbl_lock while iterating
+Date: Fri, 12 May 2017 09:41:59 -0700
+Message-Id: <20170512164208.38725-2-briannorris@chromium.org> (sfid-20170512_184515_840364_687B7098)
+In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
+References: <20170512164208.38725-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Douglas Anderson <dianders@chromium.org>
 
-Since wifi and BT share the same physical antenna, we should switch antenna
-to fit every situation.
+Despite the macro list_for_each_entry_safe() having the word "safe" in
+the name, it's still not actually safe to release the list spinlock
+while iterating over the list.  The "safe" in the macro name actually
+only means that it's safe to delete the current entry while iterating
+over the list.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Releasing the spinlock while iterating over the list means that someone
+else could come in and adjust the list while we don't have the
+spinlock.  If they do that it can totally mix up our iteration and fully
+corrupt the list.  Later iterating over a corrupted list while holding a
+spinlock and having IRQs off can cause all sorts of hard to debug
+problems.
+
+As evidenced by the other call to
+mwifiex_11n_delete_tx_ba_stream_tbl_entry() in
+mwifiex_11n_delete_all_tx_ba_stream_tbl(), it's actually safe to skip
+the spinlock release.  Let's do that.
+
+No known problems are fixed by this patch, but it could fix all sorts of
+weird problems and it should be very safe.
+
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 326 ++++++++++++---------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +
- 2 files changed, 198 insertions(+), 131 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/11n.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index f3704d7db4d5..3ff0d55e8f22 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -751,14 +751,18 @@ static void halbtc8723b1ant_sw_mechanism(struct btc_coexist *btcoexist,
- }
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index c174e79e6df2..c75b6abf16a0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -764,14 +764,9 @@ void mwifiex_del_tx_ba_stream_tbl_by_ra(struct mwifiex_private *priv, u8 *ra)
+ 		return;
  
- static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
--					 u8 ant_pos_type, bool init_hw_cfg,
--					 bool wifi_off)
-+					 u8 ant_pos_type, bool force_exec,
-+					 bool init_hw_cfg, bool wifi_off)
- {
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	struct btc_board_info *board_info = &btcoexist->board_info;
--	u32 fw_ver = 0, u32tmp = 0;
-+	u32 fw_ver = 0, u32tmp = 0, cnt_bt_cal_chk = 0;
- 	bool pg_ext_switch = false;
- 	bool use_ext_switch = false;
--	u8 h2c_parameter[2] = {0};
-+	bool is_in_mp_mode = false;
-+	u8 h2c_parameter[2] = {0}, u8tmp = 0;
-+
-+	coex_dm->cur_ant_pos_type = ant_pos_type;
+ 	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+-	list_for_each_entry_safe(tbl, tmp, &priv->tx_ba_stream_tbl_ptr, list) {
+-		if (!memcmp(tbl->ra, ra, ETH_ALEN)) {
+-			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
+-					       flags);
++	list_for_each_entry_safe(tbl, tmp, &priv->tx_ba_stream_tbl_ptr, list)
++		if (!memcmp(tbl->ra, ra, ETH_ALEN))
+ 			mwifiex_11n_delete_tx_ba_stream_tbl_entry(priv, tbl);
+-			spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+-		}
+-	}
+ 	spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
  
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_EXT_SWITCH, &pg_ext_switch);
- 	/* [31:16] = fw ver, [15:0] = fw sub ver */
-@@ -768,24 +772,103 @@ static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
- 		use_ext_switch = true;
- 
- 	if (init_hw_cfg) {
--		/*BT select s0/s1 is controlled by WiFi */
--		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x1);
-+		/* WiFi TRx Mask on */
-+		btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff,
-+					  0x780);
-+		/* remove due to interrupt is disabled that polling c2h will
-+		 * fail and delay 100ms.
-+		 */
- 
--		/*Force GNT_BT to Normal */
--		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x0);
--	} else if (wifi_off) {
--		/*Force GNT_BT to High */
--		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x3);
--		/*BT select s0/s1 is controlled by BT */
-+		if (fw_ver >= 0x180000) {
-+			/* Use H2C to set GNT_BT to HIGH */
-+			h2c_parameter[0] = 1;
-+			btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
-+						h2c_parameter);
-+		} else {
-+			/* set grant_bt to high */
-+			btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
-+		}
-+		/* set wlan_act control by PTA */
-+		btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
-+
-+		/* BT select s0/s1 is controlled by BT */
- 		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67, 0x20, 0x0);
-+		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x39, 0x8, 0x1);
-+		btcoexist->btc_write_1byte(btcoexist, 0x974, 0xff);
-+		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x944, 0x3, 0x3);
-+		btcoexist->btc_write_1byte(btcoexist, 0x930, 0x77);
-+	} else if (wifi_off) {
-+		if (fw_ver >= 0x180000) {
-+			/* Use H2C to set GNT_BT to HIGH */
-+			h2c_parameter[0] = 1;
-+			btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
-+						h2c_parameter);
-+		} else {
-+			/* set grant_bt to high */
-+			btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
-+		}
-+		/* set wlan_act to always low */
-+		btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
-+
-+		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_IS_IN_MP_MODE,
-+				   &is_in_mp_mode);
-+		if (!is_in_mp_mode)
-+			/* BT select s0/s1 is controlled by BT */
-+			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67,
-+							   0x20, 0x0);
-+		else
-+			/* BT select s0/s1 is controlled by WiFi */
-+			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x67,
-+							   0x20, 0x1);
- 
--		/* 0x4c[24:23] = 00, Set Antenna control by BT_RFE_CTRL
--		 * BT Vendor 0xac = 0xf002
-+		/* 0x4c[24:23]=00, Set Antenna control by BT_RFE_CTRL
-+		 * BT Vendor 0xac=0xf002
- 		 */
- 		u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x4c);
- 		u32tmp &= ~BIT23;
- 		u32tmp &= ~BIT24;
- 		btcoexist->btc_write_4byte(btcoexist, 0x4c, u32tmp);
-+	} else {
-+		/* Use H2C to set GNT_BT to LOW */
-+		if (fw_ver >= 0x180000) {
-+			if (btcoexist->btc_read_1byte(btcoexist, 0x765) != 0) {
-+				h2c_parameter[0] = 0;
-+				btcoexist->btc_fill_h2c(btcoexist, 0x6E, 1,
-+							h2c_parameter);
-+			}
-+		} else {
-+			/* BT calibration check */
-+			while (cnt_bt_cal_chk <= 20) {
-+				u8tmp = btcoexist->btc_read_1byte(btcoexist,
-+								  0x49d);
-+				cnt_bt_cal_chk++;
-+				if (u8tmp & BIT(0)) {
-+					RT_TRACE(rtlpriv, COMP_BT_COEXIST,
-+						 DBG_LOUD,
-+						 "[BTCoex], ########### BT is calibrating (wait cnt=%d) ###########\n",
-+						 cnt_bt_cal_chk);
-+					mdelay(50);
-+				} else {
-+					RT_TRACE(rtlpriv, COMP_BT_COEXIST,
-+						 DBG_LOUD,
-+						 "[BTCoex], ********** BT is NOT calibrating (wait cnt=%d)**********\n",
-+						 cnt_bt_cal_chk);
-+					break;
-+				}
-+			}
-+
-+			/* set grant_bt to PTA */
-+			btcoexist->btc_write_1byte(btcoexist, 0x765, 0x0);
-+		}
-+
-+		if (btcoexist->btc_read_1byte(btcoexist, 0x76e) != 0xc) {
-+			/* set wlan_act control by PTA */
-+			btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
-+		}
-+
-+		btcoexist->btc_write_1byte_bitmask(
-+			btcoexist, 0x67, 0x20,
-+			0x1); /* BT select s0/s1 is controlled by WiFi */
- 	}
- 
- 	if (use_ext_switch) {
-@@ -798,155 +881,130 @@ static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
- 			u32tmp |= BIT24;
- 			btcoexist->btc_write_4byte(btcoexist, 0x4c, u32tmp);
- 
-+			/* fixed internal switch S1->WiFi, S0->BT */
-+			btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
-+
- 			if (board_info->btdm_ant_pos ==
- 			    BTC_ANTENNA_AT_MAIN_PORT) {
--				/* Main Ant to BT for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x1);
--
- 				/* tell firmware "no antenna inverse" */
- 				h2c_parameter[0] = 0;
--				h2c_parameter[1] = 1;  /*ext switch type*/
-+				/* ext switch type */
-+				h2c_parameter[1] = 1;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			} else {
--				/* Aux Ant to  BT for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x0);
--
- 				/* tell firmware "antenna inverse" */
- 				h2c_parameter[0] = 1;
--				h2c_parameter[1] = 1; /* ext switch type */
-+				/* ext switch type */
-+				h2c_parameter[1] = 1;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			}
- 		}
- 
--		/* fixed internal switch first
--		 * fixed internal switch S1->WiFi, S0->BT
--		 */
--		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
--			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
--		else	/* fixed internal switch S0->WiFi, S1->BT */
--			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
--
--		/* ext switch setting */
--		switch (ant_pos_type) {
--		case BTC_ANT_PATH_WIFI:
--			if (board_info->btdm_ant_pos ==
--			    BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x1);
--			else
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x2);
--			break;
--		case BTC_ANT_PATH_BT:
--			if (board_info->btdm_ant_pos ==
--			    BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x2);
--			else
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x1);
--			break;
--		default:
--		case BTC_ANT_PATH_PTA:
--			if (board_info->btdm_ant_pos ==
--			    BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x1);
--			else
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x92c, 0x3,
--								   0x2);
--			break;
-+		if (force_exec ||
-+		    (coex_dm->cur_ant_pos_type != coex_dm->pre_ant_pos_type)) {
-+			/* ext switch setting */
-+			switch (ant_pos_type) {
-+			case BTC_ANT_PATH_WIFI:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x1);
-+				else
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x2);
-+				break;
-+			case BTC_ANT_PATH_BT:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x2);
-+				else
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x1);
-+				break;
-+			default:
-+			case BTC_ANT_PATH_PTA:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x1);
-+				else
-+					btcoexist->btc_write_1byte_bitmask(
-+						btcoexist, 0x92c, 0x3, 0x2);
-+				break;
-+			}
- 		}
--
- 	} else {
- 		if (init_hw_cfg) {
--			/* 0x4c[23] = 1, 0x4c[24] = 0 Antenna control by 0x64 */
-+			/* 0x4c[23] = 1, 0x4c[24] = 0,
-+			 * Antenna control by 0x64
-+			 */
- 			u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x4c);
- 			u32tmp |= BIT23;
- 			u32tmp &= ~BIT24;
- 			btcoexist->btc_write_4byte(btcoexist, 0x4c, u32tmp);
- 
-+			/* Fix Ext switch Main->S1, Aux->S0 */
-+			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x64, 0x1,
-+							   0x0);
-+
- 			if (board_info->btdm_ant_pos ==
- 			    BTC_ANTENNA_AT_MAIN_PORT) {
--				/* Main Ant to WiFi for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x0);
--
- 				/* tell firmware "no antenna inverse" */
- 				h2c_parameter[0] = 0;
--				h2c_parameter[1] = 0; /* internal switch type */
-+				/* internal switch type */
-+				h2c_parameter[1] = 0;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			} else {
--				/* Aux Ant to BT for IPS case 0x4c[23] = 1 */
--				btcoexist->btc_write_1byte_bitmask(btcoexist,
--								   0x64, 0x1,
--								   0x1);
--
- 				/* tell firmware "antenna inverse" */
- 				h2c_parameter[0] = 1;
--				h2c_parameter[1] = 0; /* internal switch type */
-+				/* internal switch type */
-+				h2c_parameter[1] = 0;
- 				btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 							h2c_parameter);
- 			}
- 		}
- 
--		/* fixed external switch first
--		 * Main->WiFi, Aux->BT
--		 */
--		if (board_info->btdm_ant_pos ==
--			BTC_ANTENNA_AT_MAIN_PORT)
--			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x92c,
--							   0x3, 0x1);
--		else	/* Main->BT, Aux->WiFi */
--			btcoexist->btc_write_1byte_bitmask(btcoexist, 0x92c,
--							   0x3, 0x2);
--
--		/* internal switch setting */
--		switch (ant_pos_type) {
--		case BTC_ANT_PATH_WIFI:
--			if (board_info->btdm_ant_pos ==
--				BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x0);
--			else
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x280);
--			break;
--		case BTC_ANT_PATH_BT:
--			if (board_info->btdm_ant_pos ==
--				BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x280);
--			else
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x0);
--			break;
--		default:
--		case BTC_ANT_PATH_PTA:
--			if (board_info->btdm_ant_pos ==
--				BTC_ANTENNA_AT_MAIN_PORT)
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x200);
--			else
--				btcoexist->btc_write_2byte(btcoexist, 0x948,
--							   0x80);
--			break;
-+		if (force_exec ||
-+		    (coex_dm->cur_ant_pos_type != coex_dm->pre_ant_pos_type)) {
-+			/* internal switch setting */
-+			switch (ant_pos_type) {
-+			case BTC_ANT_PATH_WIFI:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x0);
-+				else
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x280);
-+				break;
-+			case BTC_ANT_PATH_BT:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x280);
-+				else
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x0);
-+				break;
-+			default:
-+			case BTC_ANT_PATH_PTA:
-+				if (board_info->btdm_ant_pos ==
-+				    BTC_ANTENNA_AT_MAIN_PORT)
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x200);
-+				else
-+					btcoexist->btc_write_4byte(btcoexist,
-+							0x948, 0x80);
-+				break;
-+			}
- 		}
- 	}
-+
-+	coex_dm->pre_ant_pos_type = coex_dm->cur_ant_pos_type;
- }
- 
- static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
-@@ -1146,6 +1204,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 						       0x0, 0x0, 0x0);
- 			halbtc8723b1ant_set_ant_path(btcoexist,
- 						     BTC_ANT_PATH_PTA,
-+						     FORCE_EXEC,
- 						     false, false);
- 			break;
- 		case 0:
-@@ -1155,6 +1214,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 						       0x0, 0x0, 0x0);
- 			halbtc8723b1ant_set_ant_path(btcoexist,
- 						     BTC_ANT_PATH_BT,
-+						     FORCE_EXEC,
- 						     false, false);
- 			break;
- 		case 9:
-@@ -1163,6 +1223,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 						       0x0, 0x0, 0x0);
- 			halbtc8723b1ant_set_ant_path(btcoexist,
- 						     BTC_ANT_PATH_WIFI,
-+						     FORCE_EXEC,
- 						     false, false);
- 			break;
- 		}
-@@ -1429,7 +1490,8 @@ static void halbtc8723b1ant_action_wifi_only(struct btc_coexist *btcoexist)
- {
- 	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
- 	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
--	halbtc8723b1ant_set_ant_path(btcoexist, false, false, BTC_ANT_PATH_PTA);
-+	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
-+				     FORCE_EXEC, false, false);
- }
- 
- /* check if BT is disabled */
-@@ -2004,7 +2066,8 @@ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
- 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
- 
- 	/* Antenna config */
--	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA, true, false);
-+	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA, FORCE_EXEC,
-+				     true, false);
- 	/* PTA parameter */
- 	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
- }
-@@ -2323,7 +2386,7 @@ void ex_halbtc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
- 		coex_sta->under_ips = true;
- 
- 		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT,
--					     false, true);
-+					     FORCE_EXEC, false, true);
- 		/* set PTA control */
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 0);
- 		halbtc8723b1ant_coex_table_with_type(btcoexist,
-@@ -2728,7 +2791,8 @@ void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
- 
- 	btcoexist->stop_coex_dm = true;
- 
--	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT, false, true);
-+	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT, FORCE_EXEC,
-+				     false, true);
- 
- 	halbtc8723b1ant_ignore_wlan_act(btcoexist, FORCE_EXEC, true);
- 
-@@ -2749,8 +2813,8 @@ void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Pnp notify to SLEEP\n");
- 		btcoexist->stop_coex_dm = true;
--		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT, false,
--					     true);
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT,
-+					     FORCE_EXEC, false, true);
- 		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
- 						 0x0, 0x0);
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 0);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index d502a31812ab..da99addc8474 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -82,6 +82,9 @@ enum _BT_8723B_1ANT_COEX_ALGO {
- };
- 
- struct coex_dm_8723b_1ant {
-+	/* hw setting */
-+	u8 pre_ant_pos_type;
-+	u8 cur_ant_pos_type;
- 	/* fw mechanism */
- 	bool cur_ignore_wlan_act;
- 	bool pre_ignore_wlan_act;
+ 	return;
 -- 
-2.12.0
+2.13.0.rc2.291.g57267f2277-goog
