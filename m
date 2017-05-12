@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33334 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966991AbdEZPDa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 11:03:30 -0400
-Received: by mail-pf0-f194.google.com with SMTP id f27so3362271pfe.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2017 08:03:29 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH] rsi: use subdirectory for firmware file
-Date: Fri, 26 May 2017 20:31:31 +0530
-Message-Id: <1495810891-2914-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170526_170406_992666_CCCDCFDA)
+Received: from s3.sipsolutions.net ([5.9.151.49]:33850 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754971AbdELIwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 May 2017 04:52:30 -0400
+Message-ID: <1494579146.32348.3.camel@sipsolutions.net> (sfid-20170512_105236_948453_C6E3F45B)
+Subject: Re: [PATCH] mac80211: Validate michael MIC before attempting packet
+ decode.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mike@hellotwist.com, Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 May 2017 10:52:26 +0200
+In-Reply-To: <CAKXXJEymJXEp70bUMuNCxDAA1CLCOJN4DjnPBkf5oh6Nqn7JQA@mail.gmail.com> (sfid-20170511_222236_614264_021DE9B1)
+References: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
+         <20170510122458.GA4796@w1.fi>
+         <CAKXXJEymJXEp70bUMuNCxDAA1CLCOJN4DjnPBkf5oh6Nqn7JQA@mail.gmail.com>
+         (sfid-20170511_222236_614264_021DE9B1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-linux-firmware maintainers prefer to have a subdirectory for
-firmware files. Code is changed here to pick firmware file from
-a subdirectory. Firmware file with a new loading mechanism will
-be submitted inside rsi directory.
+On Thu, 2017-05-11 at 16:22 -0400, Michael Skeffington wrote:
+> I am using an rt5350 SoC using the rt2x00 driver.  We were doing
+> WiFi-alliance certification testing on our device and the it wasn't
+> issuing countermeasures appropriately.
+> 
+> Your assumption is correct.  I had overlooked that devices using this
+> driver have hardware decoding and the driver sets RX_FLAG_MMIC_ERROR.
+> In retrospect, the change I proposed is totally broken.
+> 
+> I'm running through the failure case again so I can identify where in
+> the rx_decrypt function it falls through.  It seems odd that it would
+> drop the packet in rx_decrypt given that it doesn't actually do any
+> decryption.  I suspect thats related to the underlying bug.
 
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_hal.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Here's the driver code from rt2500usb (but it's similar in the others):
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index d49dbaa..3d24e8e 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -22,7 +22,7 @@
- /* FLASH Firmware */
- static struct ta_metadata metadata_flash_content[] = {
- 	{"flash_content", 0x00010000},
--	{"rs9113_wlan_qspi.rps", 0x00010000},
-+	{"rsi/rs9113_wlan_qspi.rps", 0x00010000},
- };
- 
- /**
--- 
-2.7.4
+                rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
+                if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
+                        rxdesc->flags |= RX_FLAG_DECRYPTED;
+                else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
+                        rxdesc->flags |= RX_FLAG_MMIC_ERROR;
+
+I think if you just change it to be
+
+[...]
+                else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
+                        rxdesc->flags |= RX_FLAG_MMIC_ERROR |
+					 RX_FLAG_DECRYPTED;
+
+things will start working. This is arguably correct since to be able to
+check the MMIC, the frame has to have been decrypted (properly) before.
+
+johannes
