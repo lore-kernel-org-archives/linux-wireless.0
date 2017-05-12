@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f179.google.com ([209.85.216.179]:35100 "EHLO
-        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757417AbdELOLL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53474 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755927AbdELNv6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 10:11:11 -0400
-Received: by mail-qt0-f179.google.com with SMTP id v27so29752870qtg.2
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 07:11:11 -0700 (PDT)
-MIME-Version: 1.0
-From: Sergey Naumov <sknaumov@gmail.com>
-Date: Fri, 12 May 2017 17:11:10 +0300
-Message-ID: <CAH3pVZMe4p_0eq+19mnPgjaXxPTUYeA6cUOe0K1kK4TohH6tgw@mail.gmail.com> (sfid-20170512_161148_697381_B02E8B2E)
-Subject: iw reg get since iw-4.x
+        Fri, 12 May 2017 09:51:58 -0400
+Received: from potku.adurom.net (a88-114-241-177.elisa-laajakaista.fi [88.114.241.177])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A14D360A08
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 13:51:56 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: nl80211 vendor commands on upstream drivers
+Date: Fri, 12 May 2017 16:51:52 +0300
+Message-ID: <87wp9mp4hz.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_155201_855594_38A6052A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All.
+Hi,
 
-I see that since iw-4.x "iw reg get" reports multiple region
-information - per-phy and global. Moreover, per-phy information could
-be marked as "self-managed".
+last fall at Wireless Summit at Santa Fe we talked about having nl80211
+vendor commands in upstream drivers[1]. The discussion starter was this
+wil6210 patch:
 
-Could somebody clarify when a driver uses phy-specific region and when
-- the global one?
+wil6210: low level RF sector API
+https://patchwork.kernel.org/patch/9403071/
 
-Looking at a list of channels from "iw phy phyX info" I can conclude
-that if "self-managed" is true, then phy-specific region is used,
-otherwise - the global one. Is it a correct assumption? If yes, then
-why phy-specific regions are reported at all for non-self-managed
-devices, and why the global region is reported for self-managed ones?
+The conclusion from the discussion was that in some (rare) cases having
+vendor commands in upstream is acceptable, for example like here when
+interfacing low level hw features which most likely is not not
+compatible with other designs.
 
-I think it would be natural to use new "iw phy phyX reg get" command
-to report region information that is actually used, but unfortunately
-this command returns exactly the same as "iw reg get":
+But this does not mean that the gates are open for all possible hacks
+via vendor commands, we still want to have generic nl80211 interface for
+all normal functionality. Just to give some examples of something which
+is NOT acceptable:
 
-root@OpenWrt:~# iw --version
-iw version 4.9
-root@OpenWrt:~# iw phy phy0 reg get
-global
-country RU: DFS-ETSI
-        (2402 - 2482 @ 40), (N/A, 20), (N/A)
-        (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
-        (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
-        (5650 - 5730 @ 80), (N/A, 30), (0 ms), DFS
-        (5735 - 5835 @ 80), (N/A, 30), (N/A)
-        (57000 - 66000 @ 2160), (N/A, 40), (N/A)
+* yet another scanning interface (exception maybe being spectral scan?)
+* power save settings
+* btcoex settings
 
-phy#1
-country US: DFS-FCC
-        (2402 - 2472 @ 40), (N/A, 30), (N/A)
-        (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
-        (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
-        (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
-        (5735 - 5835 @ 80), (N/A, 30), (N/A)
-        (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+Comments? Am I forgetting something from the discussion?
 
-phy#0
-country US: DFS-FCC
-        (2402 - 2472 @ 40), (N/A, 30), (N/A)
-        (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
-        (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
-        (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
-        (5735 - 5835 @ 80), (N/A, 30), (N/A)
-        (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+[1] https://docs.google.com/document/u/1/d/e/2PACX-1vQXbVQ-3zQt3Bcr3OWfwzbw_C49tTvf0ed8Hmf7b20E6tXc3a40tWZmPku49iGDE-OhgxNmO_lkkHEn/pub
 
-Thanks in advance,
-Sergey.
+-- 
+Kalle Valo
