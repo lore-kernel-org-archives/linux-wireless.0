@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45972 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763742AbdEXNoX (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59974 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756392AbdELOpv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 09:44:23 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 12 May 2017 10:45:51 -0400
+Subject: Re: ath10k: controlling TX aggregation
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+References: <CABPxzY+mQ-G6PTsQV9_WVgju4bmQHwxKKW070j7v6=DDgZop4Q@mail.gmail.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <b830b657-3f73-de7f-d61c-1565dc14c2ef@candelatech.com> (sfid-20170512_164554_157131_8C8D8481)
+Date: Fri, 12 May 2017 07:45:49 -0700
 MIME-Version: 1.0
-Subject: Re: [v3] libertas: Avoid reading past end of buffer
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170515212640.GA45443@beast>
-References: <20170515212640.GA45443@beast>
-To: Kees Cook <keescook@chromium.org>
-Cc: netdev@vger.kernel.org, Joe Perches <joe@perches.com>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>,
-        linux-kernel@vger.kernel.org
-Message-Id: <20170524134422.7230F60DD9@smtp.codeaurora.org> (sfid-20170524_154504_430182_9778114F)
-Date: Wed, 24 May 2017 13:44:22 +0000 (UTC)
+In-Reply-To: <CABPxzY+mQ-G6PTsQV9_WVgju4bmQHwxKKW070j7v6=DDgZop4Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> wrote:
-> Using memcpy() from a string that is shorter than the length copied means
-> the destination buffer is being filled with arbitrary data from the kernel
-> rodata segment. Instead, redefine the stat strings to be ETH_GSTRING_LEN
-> sizes, like other drivers. This lets us use a single memcpy that does not
-> leak rodata contents. Additionally adjust indentation to keep checkpatch.pl
-> happy.
-> 
-> This was found with the future CONFIG_FORTIFY_SOURCE feature.
-> 
-> Cc: Daniel Micay <danielmicay@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+What chipset, and what firmware version?
 
-Patch applied to wireless-drivers-next.git, thanks.
+Thanks,
+Ben
 
-12e3c0433e8a libertas: Avoid reading past end of buffer
+On 05/12/2017 07:43 AM, Krishna Chaitanya wrote:
+> Hi,
+>
+> I am doing some comparative tests, wanted to configure common
+> settings btw all STA's. wanted to limit agg_size to 24 in ath10k with
+> the below command.
+>
+> echo "3 24" > /sys/kernel/debug/ieee80211/phy0/ath10k/htt_max_amsdu_ampdu
+>
+> The ADDBA request still has 64 and when i run iperf it is aggregating 64 frames.
+>
+> Except for 1 no number takes effect. If i configure 1 there is no ADDBA exchange
+> initiated by ath10k.
+>
+> Is this expected? Can we control the aggregation size through driver?
+>
+> latest wireless-drivers-next and linux-firmware git is used.
+>
 
 -- 
-https://patchwork.kernel.org/patch/9727997/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
