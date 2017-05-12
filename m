@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:33331 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751653AbdEPKJ3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54100 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757205AbdELIzB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 06:09:29 -0400
-Received: by mail-qt0-f177.google.com with SMTP id t26so113941307qtg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:09:29 -0700 (PDT)
+        Fri, 12 May 2017 04:55:01 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Xie Qirong <cheerx1994@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
+References: <20170512073555.12333-1-cheerx1994@gmail.com>
+        <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
+        <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com>
+Date: Fri, 12 May 2017 11:54:55 +0300
+In-Reply-To: <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com> (Arend van
+        Spriel's message of "Fri, 12 May 2017 10:36:56 +0200")
+Message-ID: <87d1beqwtc.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_105530_155149_35A932AA)
 MIME-Version: 1.0
-In-Reply-To: <87lgq2qx8a.fsf@kamboji.qca.qualcomm.com>
-References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
- <1494336614-2107-11-git-send-email-amit.karwar@redpinesignals.com> <87lgq2qx8a.fsf@kamboji.qca.qualcomm.com>
-From: amit karwar <amitkarwar@gmail.com>
-Date: Tue, 16 May 2017 15:39:28 +0530
-Message-ID: <CAEhWJFnGA8iUpCs+CfZNVP6OTdpoMCOV8_bPkjy=0j0m4b6PLw@mail.gmail.com> (sfid-20170516_120933_326926_7BA10E2A)
-Subject: Re: [v2 10/11] rsi: Add new firmware loading method
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 12, 2017 at 2:15 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>
->> The older firmware loading method has been deprecated and not in use
->> for any chipets. New method is introduced which works based on soft
->> boot loader. In this method, complete RAM image and FLASH image are
->> present in the flash. Before loading the functional firmware, host
->> issues boot loader commands to verify whether firmware to load is
->> different from the current functional firmware. If not, firmware
->> upgrade progresses and boot loader will switch to the new functional
->> firmware.
->>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> Please document in the commit log the new firmware filenames used by
-> this patch.
->
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Sure. This has been taken care in updated version.
+> On 5/12/2017 10:19 AM, Kalle Valo wrote:
+>> Xie Qirong <cheerx1994@gmail.com> writes:
+>>
+>>> The combination of init_timer and setting up the data and function field
+>>> manually is equivalent to calling setup_timer(). This is an api
+>>> consolidation only and improves readability.
+>>>
+>>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>> Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
+>>> ---
+>>>
+>>>   setup_timer.cocci suggested the following improvement:
+>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
+>>>   setup_timer function for function on line 384.
+>>>
+>>>   Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
+>>>   CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
+>>>   CONFIG_BRCMDBG=y
+>>>
+>>>   Kernel version: 4.11.0 (localversion-next is next-20170512)
+>>
+>> How is this different from the first version?
+>>
+>> https://patchwork.kernel.org/patch/9709467/
+>
+> Hi Kalle,
+>
+> This is actually the third version. You are referring to the
+> not-specifically-named "v2" here, but how are you to know ;-) 
 
-Regards,
-Amitkumar
+Exactly :)
+
+> This third version is the same as v1 on which I commented to put the
+> coccinelle output in the commit message. So I would still keep v2 if
+> nothing else changed in v3 apart from my Acked-by: tag.
+
+Ok, but I can easily take v3 (ie. this one) so that you get credit ;)
+
+-- 
+Kalle Valo
