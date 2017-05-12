@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35247 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752570AbdEPT5F (ORCPT
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:35890 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933279AbdELQmf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 15:57:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <8155d0f1-aed3-fc47-4524-635067f9ee7b@broadcom.com>
-References: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
- <20170515201356.26384-2-martin.blumenstingl@googlemail.com> <8155d0f1-aed3-fc47-4524-635067f9ee7b@broadcom.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Tue, 16 May 2017 21:56:38 +0200
-Message-ID: <CAFBinCBeijYMJ+hTajCA-2D7S1aH6E2mc_gm-2cAqKt87XVNkg@mail.gmail.com> (sfid-20170516_215727_297171_4E532931)
-Subject: Re: [PATCH 1/1] dt-binding: net: wireless: fix node name in the
- BCM43xx example
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>, robh+dt@kernel.org
-Cc: kvalo@codeaurora.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 12 May 2017 12:42:35 -0400
+Received: by mail-pg0-f49.google.com with SMTP id x64so13284200pgd.3
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:34 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 11/11] mwifiex: pcie: stop setting/clearing 'surprise_removed'
+Date: Fri, 12 May 2017 09:42:08 -0700
+Message-Id: <20170512164208.38725-11-briannorris@chromium.org> (sfid-20170512_184320_928251_B845FEA5)
+In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
+References: <20170512164208.38725-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+These are already handled by mwifiex_shutdown_sw() and
+mwifiex_reinit_sw(). Ideally, we'll kill the flag entirely eventually,
+as I suspect it breeds race conditions.
 
-On Tue, May 16, 2017 at 12:05 AM, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 15-5-2017 22:13, Martin Blumenstingl wrote:
->> The example in the BCM43xx documentation uses "brcmf" as node name.
->> However, wireless devices should be named "wifi" instead. Fix this to
->
-> Hi Martin,
->
-> Since when is that a rule. I never got the memo and the DTC did not ever
-> complain to me about the naming. That being said I do not really care
-> and I suppose it is for the sake of consistency only.
-I'm not sure if it's actually a rule or (as you already noted) just
-for consistency. back when I added devicetree support to ath9k Rob
-pointed out that the node should be named "wifi" (instead of "ath9k"),
-see [0]
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 2 --
+ 1 file changed, 2 deletions(-)
 
->> make sure that .dts authors can simply use the documentation as
->> reference (or simply copy the node from the documentation and then
->> adjust only the board specific bits).
->
-> Please feel free to add my...
->
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-thank you!
-
-@Rob: maybe you can ACK this as well if you're fine with this patch?
-
->> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
->> ---
->>  Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> index 5dbf169cd81c..590f622188de 100644
->> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> @@ -31,7 +31,7 @@ mmc3: mmc@01c12000 {
->>       non-removable;
->>       status = "okay";
->>
->> -     brcmf: bcrmf@1 {
->> +     brcmf: wifi@1 {
->>               reg = <1>;
->>               compatible = "brcm,bcm4329-fmac";
->>               interrupt-parent = <&pio>;
->>
-
-[0] http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg14678.html
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index d7e563a622f7..da042d15f8f0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -370,7 +370,6 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
+ 		 * PCIe and HW.
+ 		 */
+ 		mwifiex_shutdown_sw(adapter);
+-		adapter->surprise_removed = true;
+ 		clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
+ 		clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
+ 	} else {
+@@ -378,7 +377,6 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
+ 		 * after performing FLR respectively. Reconfigure the software
+ 		 * and firmware including firmware redownload
+ 		 */
+-		adapter->surprise_removed = false;
+ 		ret = mwifiex_reinit_sw(adapter);
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "reinit failed: %d\n", ret);
+-- 
+2.13.0.rc2.291.g57267f2277-goog
