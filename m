@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:33841 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751055AbdESPc4 (ORCPT
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:35127 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933250AbdELQmc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 11:32:56 -0400
-Received: by mail-wr0-f180.google.com with SMTP id l9so19346769wre.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 08:32:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87wp9durwe.fsf@kamboji.qca.qualcomm.com>
-References: <1493217698-22451-1-git-send-email-c_vnaral@qti.qualcomm.com>
- <40f2b7a2-7276-6de6-afc6-407348c92e70@nbd.name> <87wp9durwe.fsf@kamboji.qca.qualcomm.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Fri, 19 May 2017 08:32:54 -0700
-Message-ID: <CAJ-Vmok6UXVpYfK5c_tDnFGN1uLfx+sGp0W2zFppB=TYtax72g@mail.gmail.com> (sfid-20170519_173300_356433_4FB5D671)
-Subject: Re: [PATCH] ath10k : Fix channel survey dump
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "nbd@nbd.name" <nbd@nbd.name>,
-        Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 12 May 2017 12:42:32 -0400
+Received: by mail-pg0-f49.google.com with SMTP id q125so13291041pgq.2
+        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:32 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 08/11] mwifiex: remove redundant 'adapter' check in mwifiex_adapter_cleanup
+Date: Fri, 12 May 2017 09:42:05 -0700
+Message-Id: <20170512164208.38725-8-briannorris@chromium.org> (sfid-20170512_184437_376738_B578884A)
+In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
+References: <20170512164208.38725-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 May 2017 at 02:17, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
->
->> On 2017-04-26 16:41, Venkateswara Rao Naralasetty wrote:
->>> Channel active/busy time are showing incorrect
->>> (less than previous or sometimes zero) for
->>> successive survey dump command.
+We're using 'adapter' right before calling this. Stop being
+unnecessarily paranoid.
 
-[snip]
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/init.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
->> Does the firmware read the registers directly, or does it accumulate
->> the results in a way that can't overflow? If you don't clear the
->> counters on reset, the overflow will be problematic for the
->> current-channel stats. I think a better approach would be to use
->> READ_CLEAR for in-use channels and store the sum inside the driver.
->
-> Venkateswara, any comments?
-
-I just bumped into this at work. I'm thinking of teaching mac80211
-about optionally summing things so each driver doesn't need another
-per-channel array.
-
-
-
--adrian
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 2bff87bd76a6..80bdf1c5f77f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -409,11 +409,6 @@ static void mwifiex_free_lock_list(struct mwifiex_adapter *adapter)
+ static void
+ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ {
+-	if (!adapter) {
+-		pr_err("%s: adapter is NULL\n", __func__);
+-		return;
+-	}
+-
+ 	del_timer(&adapter->wakeup_timer);
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
+-- 
+2.13.0.rc2.291.g57267f2277-goog
