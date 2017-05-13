@@ -1,184 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33717 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934302AbdEKTB2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 15:01:28 -0400
-Received: by mail-oi0-f66.google.com with SMTP id h4so5535813oib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:28 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 02/10] rtlwifi: btcoex: 21a 2ant: refine btc8821a2ant_action_hid_a2dp
-Date: Thu, 11 May 2017 14:01:11 -0500
-Message-Id: <20170511190119.23426-3-Larry.Finger@lwfinger.net> (sfid-20170511_210153_344556_6CAC55C7)
-In-Reply-To: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
-References: <20170511190119.23426-1-Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:52044 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750935AbdEMMcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 13 May 2017 08:32:47 -0400
+Subject: Re: New brcmfmac errors in 4.12: brcmf_sdio_rxglom: sublen ... not
+ multiple of 8
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <e8055bc7-eaf4-1ab6-31d1-130d83485980@redhat.com>
+Message-ID: <54dace3c-b0dc-92d5-152f-49b24ba27a44@redhat.com> (sfid-20170513_143251_837400_C86C102A)
+Date: Sat, 13 May 2017 14:32:44 +0200
+MIME-Version: 1.0
+In-Reply-To: <e8055bc7-eaf4-1ab6-31d1-130d83485980@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi,
 
-For hid a2dp profiling, decrease the bt power because of the distance of
-bt is usually short, and do not adjust the wifi duration to a longer
-period since it may be interrupted by bt easily, set tdma instead.
+On 13-05-17 14:19, Hans de Goede wrote:
+> Hi,
+> 
+> I've just rebased my personal kernel tree to what will soon be 4.12-rc1
+> and I'm getting my dmesg log filled with the following errors:
+> 
+> [   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
+> [   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
+> [   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
+> 
+> Other brcmfmac dmesg messages:
+> 
+> [   16.020013] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013 07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
+> 
+> This is on a Asus T100TA which uses a 43241b1
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
-v3 - no changes
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 108 ++++++++-------------
- 1 file changed, 42 insertions(+), 66 deletions(-)
+Ok, this seems to be a regression caused by:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index a0f2eb53a011..60386c7571e8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3295,19 +3295,46 @@ static void btc8821a2ant_act_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 
- static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- {
--	u8 wifi_rssi_state, bt_rssi_state, bt_info_ext;
- 	u32 wifi_bw;
-+	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
-+	u8 ap_num = 0;
- 
--	bt_info_ext = coex_sta->bt_info_ext;
- 	wifi_rssi_state = btc8821a2ant_wifi_rssi_state(btcoexist, 0, 2, 15, 0);
--	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist, 2, 35, 0);
-+	wifi_rssi_state1 = btc8821a2ant_wifi_rssi_state(btcoexist, 1, 2,
-+				BT_8821A_2ANT_WIFI_RSSI_COEXSWITCH_THRES, 0);
-+	bt_rssi_state = btc8821a2ant_bt_rssi_state(btcoexist,
-+				3, BT_8821A_2ANT_BT_RSSI_COEXSWITCH_THRES, 37);
- 
--	if (BTC_RSSI_HIGH(bt_rssi_state))
--		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, true);
--	else
--		btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, false);
-+	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
-+
-+	btc8821a2ant_limited_rx(btcoexist, NORMAL_EXEC, false, true, 0x5);
-+	btc8821a2ant_fw_dac_swing_lvl(btcoexist, NORMAL_EXEC, 6);
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
-+	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
-+		if (BTC_RSSI_HIGH(bt_rssi_state))
-+			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
-+		else if (BTC_RSSI_MEDIUM(bt_rssi_state))
-+			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
-+		else
-+			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
-+	} else {
-+		/* only 802.11N mode we have to dec bt power to 4 degree */
-+		if (BTC_RSSI_HIGH(bt_rssi_state)) {
-+			btcoexist->btc_get(btcoexist, BTC_GET_U1_AP_NUM,
-+					   &ap_num);
-+			if (ap_num < 10)
-+				btc8821a2ant_dec_bt_pwr(btcoexist,
-+							NORMAL_EXEC, 4);
-+			else
-+				btc8821a2ant_dec_bt_pwr(btcoexist,
-+							NORMAL_EXEC, 2);
-+		} else if (BTC_RSSI_MEDIUM(bt_rssi_state)) {
-+			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 2);
-+		} else {
-+			btc8821a2ant_dec_bt_pwr(btcoexist, NORMAL_EXEC, 0);
-+		}
-+	}
- 
- 	if (wifi_bw == BTC_WIFI_BW_LEGACY) {
- 		btc8821a2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
-@@ -3319,36 +3346,15 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- 					      0x4);
- 	}
- 
--	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		/* fw mechanism */
--		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			if (bt_info_ext & BIT0) {
--				/* a2dp basic rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--			} else {
--				/* a2dp edr rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--			}
--		} else {
--			if (bt_info_ext & BIT0) {
--				/* a2dp basic rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--			} else {
--				/* a2dp edr rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--			}
--		}
-+	if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
-+	    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
-+		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
-+	} else {
-+		btc8821a2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 23);
-+	}
- 
--		/* sw mechanism */
-+	/* sw mechanism */
-+	if (wifi_bw == BTC_WIFI_BW_HT40) {
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, true, true,
-@@ -3362,36 +3368,6 @@ static void btc8821a2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- 						   false, 0x18);
- 		}
- 	} else {
--		/* fw mechanism */
--		if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			if (bt_info_ext & BIT0) {
--				/* a2dp basic rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--
--			} else {
--				/* a2dp edr rate */
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--			}
--		} else {
--			if (bt_info_ext & BIT0) {
--				/*a2dp basic rate*/
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--			} else {
--				/*a2dp edr rate*/
--				btc8821a2ant_tdma_duration_adjust(btcoexist,
--								  true, true,
--								  2);
--			}
--		}
--
--		/* sw mechanism */
- 		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a2ant_sw_mechanism1(btcoexist, false, true,
--- 
-2.12.0
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6e84ab604bded
+"brcmfmac: properly align buffers on certain platforms with 64 bit DMA"
+
+I believe this may need a different fix then that.
+
+Regards,
+
+Hans
