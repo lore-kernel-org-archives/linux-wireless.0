@@ -1,104 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35119 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751787AbdEATiL (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:38723 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752128AbdEMMMu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2017 15:38:11 -0400
-Date: Mon, 1 May 2017 12:38:07 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] mwifiex: initiate card-specific work atomically
-Message-ID: <20170501193807.GA34444@dtor-ws> (sfid-20170501_213956_801681_9673317E)
-References: <20170501193700.89264-1-briannorris@chromium.org>
+        Sat, 13 May 2017 08:12:50 -0400
+Received: by mail-wm0-f44.google.com with SMTP id v15so5033283wmv.1
+        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 05:12:49 -0700 (PDT)
+Subject: Re: [v2,1/3] ath9k: Support channels in licensed bands
+To: Steve deRosier <derosier@gmail.com>,
+        Ben Greear <greearb@candelatech.com>
+References: <20170323133048.30062-2-sw@simonwunderlich.de>
+ <1811221.G4Vz0DPyQ8@prime>
+ <12133a0e-b030-5b21-8de1-3bf7334d47df@fit.fraunhofer.de>
+ <1863250.VEhGCjvYY0@prime> <87efvvvd0t.fsf@kamboji.qca.qualcomm.com>
+ <1c5720d5-8264-26a8-a63e-b225524471cc@candelatech.com>
+ <CALLGbR+3JZL4=t78TQbLwKdq938B3cw0qj369dd6sY4q5A5ctw@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        ath10k@lists.infradead.org,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        Julian Calaby <julian.calaby@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath9k-devel@qca.qualcomm.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5ef5997b-f243-e9e3-2c45-b3bf8b6d39d7@broadcom.com> (sfid-20170513_141257_021736_F06D80BE)
+Date: Sat, 13 May 2017 14:12:48 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170501193700.89264-1-briannorris@chromium.org>
+In-Reply-To: <CALLGbR+3JZL4=t78TQbLwKdq938B3cw0qj369dd6sY4q5A5ctw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 01, 2017 at 12:36:59PM -0700, Brian Norris wrote:
-> The non-atomic test + set is a little awkward here, and it technically
-> means we might double-schedule work unnecessarily. AFAICT, this is not
-> really a problem, since the extra "work" will be a no-op (the flag(s)
-> will be cleared by then), but it's still an anti-pattern.
+On 12-5-2017 21:21, Steve deRosier wrote:
+> Hi Ben,
 > 
-> Rewrite this to use the atomic test_and_set_bit() helper instead.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> On Fri, May 12, 2017 at 7:12 AM, Ben Greear <greearb@candelatech.com> wrote:
+>>
+>>
+>> On 05/11/2017 04:38 AM, Kalle Valo wrote:
+>>>
 
-Reviewed-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+[snip]
 
-> ---
-> v3: fix bisectability (unused code warning) -- some code from patch 2
->     crept in here
+>>> o I don't know about other countries, but in Finland applying for any
+>>>   type of license (even if just to a license to drive a moped) needs
+>>>   both time and money. So there is significant effort anyway needed to
+>>>   legally use this band. And how many users there really are is unclear.
+>>
+>>
+>> This is almost certainly not going to be used by regular end-users.  It is
+>> going to be
+>> used by public safety organizations who are buying equipment from companies
+>> using open-wrt, LEDE, or similar, or possibly small teams at public safety
+>> organizations doing the work themselves.  Rather than having each of these
+>> vendors
 > 
-> v2: new
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c |  9 +++------
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 16 +++++-----------
->  2 files changed, 8 insertions(+), 17 deletions(-)
+> I agree 100% that this won't be used by "regular end-users", if you
+> define those users as the 99% of the population who will go to Best
+> Buy and buy a router, plug it into their network and use it to get
+> their iOS updates and download movies from Netflix. These aren't the
+> users that the FCC is worried about.  They're concerned about the user
+> who buys an OpenWRT compatible router, installs OpenWRT on it, builds
+> a custom kernel. And that person happens to live in an area with
+> congested WiFi bands, the person notices an option to use these other
+> non-congested bands, decides that ignoring the warning would be
+> harmless and the FCC won't ever know anyway.
 > 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index ac62bce50e96..5f56e8e6d612 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -2837,12 +2837,9 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
->  {
->  	struct pcie_service_card *card = adapter->card;
->  
-> -	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
-> -		return;
-> -
-> -	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
-> -
-> -	schedule_work(&card->work);
-> +	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-> +			      &card->work_flags))
-> +		schedule_work(&card->work);
->  }
->  
->  static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index 0af1c6733c92..d38d31bb9b79 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -2533,12 +2533,8 @@ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
->  {
->  	struct sdio_mmc_card *card = adapter->card;
->  
-> -	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
-> -		return;
-> -
-> -	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
-> -
-> -	schedule_work(&card->work);
-> +	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
-> +		schedule_work(&card->work);
->  }
->  
->  /* This function dumps FW information */
-> @@ -2546,11 +2542,9 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
->  {
->  	struct sdio_mmc_card *card = adapter->card;
->  
-> -	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
-> -		return;
-> -
-> -	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
-> -	schedule_work(&card->work);
-> +	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-> +			      &card->work_flags))
-> +		schedule_work(&card->work);
->  }
->  
->  /* Function to dump SDIO function registers and SDIO scratch registers in case
-> -- 
-> 2.13.0.rc0.306.g87b477812d-goog
+> And then there's a fire or other event in the area, and the emergency
+> workers can't communicate. At best case, the FCC investigates and
+> slaps a $25,000 fine on the operator. At worst case, someone dies.
 > 
+> I don't feel it's responsible as an engineer to hide behind "well, we
+> warned them that they shouldn't do that" while ignoring my culpability
+> in the matter. Setting the stage for others to fail due to their
+> ignorance is not ethical.
 
--- 
-Dmitry
+Totally agree this is about being responsible.
+
+> Anyone building a custom kernel is able to enable a config option. You
+> can say that, "sure they can pull the patch from here and enable it
+> anyway" or "they can figure it out and do it themselves, it's easy",
+> but I do think there's a significant difference between being able to
+> build a custom kernel with a configuration enabled vs being able to
+> find and apply a random patch to a kernel and get it building and
+> working. That's a different level of expertise. And going through that
+> effort gives a person some time to reflect and think about if it
+> should be done in the first place.
+> 
+> Adding this code to mainline makes it a feature of Linux and this
+> driver. There's no way around that argument. Saying that "this is
+> almost certainly not going to be used by regular end-users" is both
+> fairly true as well as disingenuous. You're still making it an
+> accepted feature.
+
+Indeed. I had my concerns back when the CFG80211_CERTIFICATION_ONUS was
+added to the kernel, but that is water under the bridge. It is not only
+these kind of changes the FCC is looking at. They also have issues with
+802.11d support. That does not even need a custom kernel. The end-user
+just sets the country to some nice EU channel while being in the US and
+screw up some weather radar. It has happened. Not life-threatening,
+unless some tornado was missed maybe, but the concern is justified. How
+the FCC is handling it may indeed be pointless and technically
+misinformed, but that is because there is no good solution right now. At
+least not a solution that assures it will not happen. I can only agree
+that we as a community should not accommodate such (ab)use. Finding a
+solution that is working for everyone is indeed the real challenge.
+
+Regards,
+Arend
