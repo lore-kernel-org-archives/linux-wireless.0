@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:39382 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753078AbdEWPAt (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:50123 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756333AbdEMWhL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 11:00:49 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH v2 0/2] extend mac80211 mesh DFS and CSA functionality
-Date: Tue, 23 May 2017 17:00:41 +0200
-Message-Id: <20170523150043.22093-1-sw@simonwunderlich.de> (sfid-20170523_170053_135206_49D5DC22)
+        Sat, 13 May 2017 18:37:11 -0400
+From: Colin King <colin.king@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Joe Perches <joe@perches.com>,
+        Christian Engelmayer <cengelma@gmx.at>,
+        Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8723ae:fix spelling mistake: "Coexistance" -> "Coexistence"
+Date: Sat, 13 May 2017 23:37:02 +0100
+Message-Id: <20170513223702.19748-1-colin.king@canonical.com> (sfid-20170514_003744_568413_A44979AD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset includes the remaining two patches for the CSA handling,
-with Johannes change suggestions integrated.
+From: Colin Ian King <colin.king@canonical.com>
 
-Cheers,
-     Simon
+Trivial fix to spelling mistake in RT_TRACE text
 
-Simon Wunderlich (2):
-  mac80211: mesh: support sending wide bandwidth CSA
-  mac80211: enable VHT for mesh channel processing
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/mesh.c        | 49 +++++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/util.c        | 40 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 88 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 859c045bd37c..47e5f9003bb0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -2313,7 +2313,7 @@ static void rtl8723e_bt_var_init(struct ieee80211_hw *hw)
+ 		rtlpriv->btcoexist.eeprom_bt_radio_shared;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
+-		 "BT Coexistance = 0x%x\n",
++		 "BT Coexistence = 0x%x\n",
+ 		 rtlpriv->btcoexist.bt_coexistence);
+ 
+ 	if (rtlpriv->btcoexist.bt_coexistence) {
 -- 
 2.11.0
