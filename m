@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36564 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751653AbdEIGRL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 02:17:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Eyal Ilsar <c_eilsar@qti.qualcomm.com>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] wcn36xx: Close SMD channel on device removal
-References: <20170509043637.28179-1-bjorn.andersson@linaro.org>
-Date: Tue, 09 May 2017 09:17:05 +0300
-In-Reply-To: <20170509043637.28179-1-bjorn.andersson@linaro.org> (Bjorn
-        Andersson's message of "Mon, 8 May 2017 21:36:37 -0700")
-Message-ID: <87h90u3672.fsf@kamboji.qca.qualcomm.com> (sfid-20170509_081744_321066_EEA04FA0)
+Received: from mx1.redhat.com ([209.132.183.28]:43308 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753155AbdEMOzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 13 May 2017 10:55:06 -0400
+Subject: Re: New brcmfmac errors in 4.12: brcmf_sdio_rxglom: sublen ... not
+ multiple of 8
+To: Heiner Kallweit <hkallweit1@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <e8055bc7-eaf4-1ab6-31d1-130d83485980@redhat.com>
+ <540e89cd-c222-e81a-5e34-600ae0aa052e@redhat.com>
+ <701cc6a7-b66b-8a51-8755-13dd584cbebd@gmail.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <cf896651-18a6-ee07-62a4-437c191ddde4@redhat.com> (sfid-20170513_165513_148324_D39C56B1)
+Date: Sat, 13 May 2017 16:55:02 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <701cc6a7-b66b-8a51-8755-13dd584cbebd@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+Hi,
 
-> The SMD channel is not the primary WCNSS channel and must explicitly be
-> closed as the device is removed, or the channel will already by open on
-> a subsequent probe call in e.g. the case of reloading the kernel module.
->
-> This issue was introduced because I simplified the underlying SMD
-> implementation while the SMD adaptions of the driver sat on the mailing
-> list, but missed to update these patches. The patch does however only
-> apply back to the transition to rpmsg, hence the limited Fixes.
->
-> Fixes: 5052de8deff5 ("soc: qcom: smd: Transition client drivers from smd to rpmsg")
-> Reported-by: Eyal Ilsar <c_eilsar@qti.qualcomm.com>
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+On 13-05-17 15:39, Heiner Kallweit wrote:
+> Am 13.05.2017 um 14:35 schrieb Hans de Goede:
+>> <resend with the author of the commit causing this added>
+>>
+>> Hi,
+>>
+>> On 13-05-17 14:19, Hans de Goede wrote:
+>>> Hi,
+>>>
+>>> I've just rebased my personal kernel tree to what will soon be 4.12-rc1
+>>> and I'm getting my dmesg log filled with the following errors:
+>>>
+>>> [   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
+>>> [   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
+>>> [   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
+>>>
+> After a brief look at the code I'm not sure that the check actually checks
+> for an error condition. Apart from the error messages:
+> Do you face issues with the functionality of the driver?
 
-As this is a regression I'll queue this to 4.12.
+Yes after a while I get -ETIMEOUT errors for any sdio transfers
+to the device. But I'm not sure if this is caused by this commit,
+I think I've seen this once with 4.11 too.
 
-But if this is an older bug (didn't quite understand your description
-though) should there be a separate patch for stable releases?
+I've reverted the commit for now, but I'm fine with instead of
+doing the revert dropping the error check if the brcmfmac developers
+think that is ok. Currently the ETIMEOUT seems to be gone, so
+if dropping the revert causes it to re-appear then we know more.
 
--- 
-Kalle Valo
+Regards,
+
+Hans
