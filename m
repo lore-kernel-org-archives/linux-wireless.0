@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:36469 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbdEASpz (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:36257 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752203AbdEMQlk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2017 14:45:55 -0400
-Received: by mail-pf0-f173.google.com with SMTP id q66so33751913pfi.3
-        for <linux-wireless@vger.kernel.org>; Mon, 01 May 2017 11:45:54 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 2/2] mwifiex: pcie: add card_reset() support
-Date: Mon,  1 May 2017 11:45:49 -0700
-Message-Id: <20170501184549.52896-2-briannorris@chromium.org> (sfid-20170501_204559_452981_80062981)
-In-Reply-To: <20170501184549.52896-1-briannorris@chromium.org>
-References: <20170501184549.52896-1-briannorris@chromium.org>
+        Sat, 13 May 2017 12:41:40 -0400
+Received: by mail-wr0-f194.google.com with SMTP id v42so10222163wrc.3
+        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 09:41:40 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 5/5] staging: rtl8192e: _rtl92e_dm_check_edca_turbo remove peername message.
+Date: Sat, 13 May 2017 17:41:21 +0100
+Message-Id: <20170513164121.14373-5-tvboxspy@gmail.com> (sfid-20170513_184151_217119_47C03D45)
+In-Reply-To: <20170513164121.14373-1-tvboxspy@gmail.com>
+References: <20170513164121.14373-1-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar to the SDIO driver, we should implement this so that we will
-automatically reset the device whenever there's a command timeout or
-similar.
+This kinda reports this as if it was an error message.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v2: use atomic test/set, based on Dmitry's suggestion
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Now that bssid is reported at associate remove this piece of code
+serves no purpose as there is no code for peers so remove it.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 8e7d6f41a952..78688ff6ecd0 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2822,6 +2822,13 @@ static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
- 	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
- }
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/rtl8192e/rtl8192e/rtl_dm.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
+
+diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c b/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c
+index 1a43c684f9f3..b8205ebafd72 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c
++++ b/drivers/staging/rtl8192e/rtl8192e/rtl_dm.c
+@@ -1693,22 +1693,6 @@ static void _rtl92e_dm_check_edca_turbo(struct net_device *dev)
+ 	if (priv->rtllib->pHTInfo->IOTAction & HT_IOT_ACT_DISABLE_EDCA_TURBO)
+ 		goto dm_CheckEdcaTurbo_EXIT;
  
-+static void mwifiex_pcie_card_reset_work(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+
-+	pci_reset_function(card->dev);
-+}
-+
- static void mwifiex_pcie_work(struct work_struct *work)
- {
- 	struct pcie_service_card *card =
-@@ -2830,6 +2837,9 @@ static void mwifiex_pcie_work(struct work_struct *work)
- 	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
- 			       &card->work_flags))
- 		mwifiex_pcie_device_dump_work(card->adapter);
-+	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
-+			       &card->work_flags))
-+		mwifiex_pcie_card_reset_work(card->adapter);
- }
- 
- /* This function dumps FW information */
-@@ -3279,6 +3289,7 @@ static struct mwifiex_if_ops pcie_ops = {
- 	.cleanup_mpa_buf =		NULL,
- 	.init_fw_port =			mwifiex_pcie_init_fw_port,
- 	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
-+	.card_reset =			mwifiex_pcie_card_reset,
- 	.reg_dump =			mwifiex_pcie_reg_dump,
- 	.device_dump =			mwifiex_pcie_device_dump,
- 	.down_dev =			mwifiex_pcie_down_dev,
+-	{
+-		u8 *peername[11] = {
+-			"unknown", "realtek_90", "realtek_92se", "broadcom",
+-			"ralink", "atheros", "cisco", "marvell", "92u_softap",
+-			"self_softap"
+-		};
+-		static int wb_tmp;
+-
+-		if (wb_tmp == 0) {
+-			netdev_info(dev,
+-				    "%s():iot peer is %s, bssid: %pM\n",
+-				    __func__, peername[pHTInfo->IOTPeer],
+-				    priv->rtllib->current_network.bssid);
+-			wb_tmp = 1;
+-		}
+-	}
+ 	if (!priv->rtllib->bis_any_nonbepkts) {
+ 		curTxOkCnt = priv->stats.txbytesunicast - lastTxOkCnt;
+ 		curRxOkCnt = priv->stats.rxbytesunicast - lastRxOkCnt;
 -- 
-2.13.0.rc0.306.g87b477812d-goog
+2.11.0
