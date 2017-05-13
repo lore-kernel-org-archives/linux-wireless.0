@@ -1,152 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35413 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751915AbdESJHC (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:36252 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751519AbdEMQli (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 05:07:02 -0400
-Received: by mail-pf0-f194.google.com with SMTP id u26so8913921pfd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 02:07:02 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v3 5/6] mwifiex: do not aggregate tcp ack in usb tx aggregation queue
-Date: Fri, 19 May 2017 09:06:44 +0000
-Message-Id: <1495184805-6631-5-git-send-email-huxinming820@gmail.com> (sfid-20170519_110714_798823_6FB4F09D)
-In-Reply-To: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+        Sat, 13 May 2017 12:41:38 -0400
+Received: by mail-wr0-f195.google.com with SMTP id v42so10222127wrc.3
+        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 09:41:38 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/5] staging: rtl8192e: HTSetConnectBwMode message replace with debug.
+Date: Sat, 13 May 2017 17:41:19 +0100
+Message-Id: <20170513164121.14373-3-tvboxspy@gmail.com> (sfid-20170513_184150_663871_059DCB83)
+In-Reply-To: <20170513164121.14373-1-tvboxspy@gmail.com>
+References: <20170513164121.14373-1-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+The flag status of bCurBW40MHz is printed as info and is
+only useful as debug message.
 
-Tcp ack should be send as soon to avoid throuput drop during receive tcp
-traffic.
+Replace with netdev_dbg in line with rest of driver.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
-v2: same as v1
-v3: avoid to use magic tcp flag (Kalle)
----
- drivers/net/wireless/marvell/mwifiex/11n_aggr.c |  4 ++++
- drivers/net/wireless/marvell/mwifiex/decl.h     |  1 +
- drivers/net/wireless/marvell/mwifiex/main.c     | 26 +++++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.h     |  1 +
- drivers/net/wireless/marvell/mwifiex/usb.c      |  6 ++++--
- 5 files changed, 36 insertions(+), 2 deletions(-)
+ drivers/staging/rtl8192e/rtl819x_HTProc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-index e8ffb26..cbf3bc2 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-@@ -194,6 +194,10 @@
- 
- 	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
- 		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
-+
-+	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TCP_ACK)
-+		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
-+
- 	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
- 	skb_aggr->priority = skb_src->priority;
- 	skb_aggr->tstamp = skb_src->tstamp;
-diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
-index 188e4c3..0487420 100644
---- a/drivers/net/wireless/marvell/mwifiex/decl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/decl.h
-@@ -89,6 +89,7 @@
- #define MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS   BIT(3)
- #define MWIFIEX_BUF_FLAG_ACTION_TX_STATUS  BIT(4)
- #define MWIFIEX_BUF_FLAG_AGGR_PKT          BIT(5)
-+#define MWIFIEX_BUF_FLAG_TCP_ACK           BIT(6)
- 
- #define MWIFIEX_BRIDGED_PKTS_THR_HIGH      1024
- #define MWIFIEX_BRIDGED_PKTS_THR_LOW        128
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 2c42191..b7d835c 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -851,6 +851,30 @@ struct sk_buff *
- 	return skb;
- }
- 
-+static bool is_piggyback_tcp_ack(struct sk_buff *skb)
-+{
-+	struct ethhdr *ethh = NULL;
-+	struct iphdr  *iph = NULL;
-+	struct tcphdr *tcph = NULL;
-+
-+	ethh = (struct ethhdr *)skb->data;
-+	if (ntohs(ethh->h_proto) != ETH_P_IP)
-+		return false;
-+
-+	iph = (struct iphdr *)((u8 *)ethh + sizeof(struct ethhdr));
-+	if (iph->protocol != IPPROTO_TCP)
-+		return false;
-+
-+	tcph = (struct tcphdr *)((u8 *)iph + iph->ihl * 4);
-+	/* Piggyback ack without payload*/
-+	if (tcp_flag_word(tcph) == TCP_FLAG_ACK &&
-+	    ntohs(iph->tot_len) <= (iph->ihl + tcph->doff) * 4) {
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- /*
-  * CFG802.11 network device handler for data transmission.
-  */
-@@ -904,6 +928,8 @@ struct sk_buff *
- 	tx_info->bss_num = priv->bss_num;
- 	tx_info->bss_type = priv->bss_type;
- 	tx_info->pkt_len = skb->len;
-+	if (is_piggyback_tcp_ack(skb))
-+		tx_info->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
- 
- 	multicast = is_multicast_ether_addr(skb->data);
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 1f7e6c3..b0010a9 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -49,6 +49,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/slab.h>
- #include <linux/of_irq.h>
-+#include <linux/tcp.h>
- 
- #include "decl.h"
- #include "ioctl.h"
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index f230017..e9c3d43 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -934,6 +934,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 	struct urb_context *context = NULL;
- 	struct txpd *local_tx_pd =
- 		(struct txpd *)((u8 *)skb->data + adapter->intf_hdr_len);
-+	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
- 	u8 f_send_aggr_buf = 0;
- 	u8 f_send_cur_buf = 0;
- 	u8 f_precopy_cur_buf = 0;
-@@ -989,8 +990,9 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		}
+diff --git a/drivers/staging/rtl8192e/rtl819x_HTProc.c b/drivers/staging/rtl8192e/rtl819x_HTProc.c
+index 4ae1d382ac5c..f0e11726a72a 100644
+--- a/drivers/staging/rtl8192e/rtl819x_HTProc.c
++++ b/drivers/staging/rtl8192e/rtl819x_HTProc.c
+@@ -908,8 +908,8 @@ void HTSetConnectBwMode(struct rtllib_device *ieee,
+ 		pHTInfo->CurSTAExtChnlOffset = HT_EXTCHNL_OFFSET_NO_EXT;
  	}
  
--	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET) {
--		/* Send NULL packet immediately*/
-+	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET ||
-+	    tx_info->flags & MWIFIEX_BUF_FLAG_TCP_ACK) {
-+		/* Send NULL data/TCP ACK packet immediately*/
- 		if (f_precopy_cur_buf) {
- 			if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
- 				f_precopy_cur_buf = 0;
+-	pr_info("%s():pHTInfo->bCurBW40MHz:%x\n", __func__,
+-	       pHTInfo->bCurBW40MHz);
++	netdev_dbg(ieee->dev, "%s():pHTInfo->bCurBW40MHz:%x\n", __func__,
++		   pHTInfo->bCurBW40MHz);
+ 
+ 	pHTInfo->bSwBwInProgress = true;
+ 
 -- 
-1.9.1
+2.11.0
