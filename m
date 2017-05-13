@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34735 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751037AbdEaUXe (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:38736 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752465AbdEMLkP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 16:23:34 -0400
-Received: by mail-wm0-f65.google.com with SMTP id d127so6262684wmf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 13:23:34 -0700 (PDT)
+        Sat, 13 May 2017 07:40:15 -0400
+Received: by mail-wm0-f43.google.com with SMTP id v15so4643616wmv.1
+        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 04:40:14 -0700 (PDT)
+Subject: Re: Participation in common kernel API recommendation?
+To: Eric Schultz <eschultz@prplfoundation.org>,
+        linux-wireless@vger.kernel.org
+References: <3ae60be2-63b5-1409-8b6c-f0a363c7968b@prplfoundation.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <42258cf0-ed93-4d18-8114-012d1d227532@broadcom.com> (sfid-20170513_134022_183968_4CC84693)
+Date: Sat, 13 May 2017 13:40:13 +0200
 MIME-Version: 1.0
-In-Reply-To: <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com>
-References: <20170510211925.17468-1-adrian@freebsd.org> <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
- <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Wed, 31 May 2017 13:23:32 -0700
-Message-ID: <CAJ-Vmom0SpsrTWK8-rdZk3AKW_JGcFLGeQzfVbvX81UBKw=REg@mail.gmail.com> (sfid-20170531_222339_089819_D5DCDAC6)
-Subject: Re: [PATCH] ath10k: add configurable debugging.
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <3ae60be2-63b5-1409-8b6c-f0a363c7968b@prplfoundation.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 May 2017 at 13:20, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
-> On 31-05-17 14:16, Kalle Valo wrote:
->> Adrian Chadd <adrian@freebsd.org> writes:
->>
->>> This adds a few configurable debugging options:
->>>
->>> * driver debugging and tracing is now configurable per device
->>> * driver debugging and tracing is now configurable at runtime
->>> * the debugging / tracing is not run at all (besides a mask check)
->>>   unless the specific debugging bitmap field is configured.
->>>
->>> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
->>
->> [...]
->>
->>> --- a/drivers/net/wireless/ath/ath10k/core.c
->>> +++ b/drivers/net/wireless/ath/ath10k/core.c
->>> @@ -2444,6 +2444,8 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
->>>      ar->hw_rev = hw_rev;
->>>      ar->hif.ops = hif_ops;
->>>      ar->hif.bus = bus;
->>> +    ar->debug_mask = ath10k_debug_mask;
->>> +    ar->trace_debug_mask = ath10k_debug_mask;
->>
->> Until now tracing has been always enabled, irrespective what debug_mask
->> has contained. Now you are changing that and by default log messages are
->> not delivered through tracing until user enables them. So I think to
->> keep the old behaviour trace_debug_mask should be ATH10K_DBG_ANY
->> (0xffffffff) by default and the user can modify the mask per device via
->> the debugfs file.
->>
->> But is it really needed to be able to filter trace messages? debug_mask
->> I understand, but not sure about trace_debug_mask.
->
-> FWIW, in brcmfmac I decided not to filter trace messages. The overhead
-> is relatively small and if needed you can pass filter expressions with
-> trace-cmd record.
+On 12-5-2017 23:28, Eric Schultz wrote:
+> Hey all,
+> 
+> My name’s Eric Schultz, I’m the Community Manager at prpl Foundation
+> (https://prpl.works <https://prpl.works/>). prpl Foundation has an
+> effort, called the Low-Level Common API subcommittee, led by Felix
+> Fietkau of OpenWrt/LEDE and Wouter Cloutens of SoftAtHome to work with
+> chipset vendors, OEMs and carriers to improve support for and usage of
+> common kernel APIs. Our first targeted API is cfg80211 and we’ve written
+> a recommendation draft. While we we’re mostly encouraging all the
+> parties to simply use cfg80211 and participate in the community, we’d
+> like to get feedback from some members of the Linux Wireless community
+> before publishing. After all, we don’t want to make a recommendation
+> that would cause problems for the community!
 
-The reason for configuring it via a mask is that:
+Hi Eric,
 
-* the previous behaviour is "always call debug(), conditionally print,
-always pass to trace"
+Just clarifying the terminology. cfg80211 is the kernel module that
+provides the nl80211 API to user-space, which is a netlink protocol family.
 
-This meant that function arguments were evaluated even if things
-weren't being printed.
+> Would any members be interested in spending a one hour meeting with the
+> subcommittee to give some feedback on the recommendation? If so, please
+> let me know.
 
-So to avoid that in the default case, there are now two masks. If I
-have one mask then I can only trace what is being printed, which is
-not desired. I'd like to be able to have no overhead when doing no
-debugging, a little overhead when doing tracing (and only the items
-being traced), and then printing when I want to print.
+Just throwing a wild idea at you. In the spirit of how the community
+works why not post it (on refer to some public link) on the mailing list
+for review to get the feedback.
 
-
-
--adrian
+Regards,
+Arend
