@@ -1,68 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35380 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49848 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754315AbdEHOq2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2017 10:46:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-05-08
-Date: Mon,  8 May 2017 16:46:21 +0200
-Message-Id: <20170508144622.19986-1-johannes@sipsolutions.net> (sfid-20170508_164706_194279_2F10591A)
+        id S1752330AbdEMMTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 13 May 2017 08:19:30 -0400
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: New brcmfmac errors in 4.12: brcmf_sdio_rxglom: sublen ... not
+ multiple of 8
+Message-ID: <e8055bc7-eaf4-1ab6-31d1-130d83485980@redhat.com> (sfid-20170513_141939_165453_92874B5C)
+Date: Sat, 13 May 2017 14:19:25 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Hi,
 
-Thanks for merging the rate fix quickly the other day. I've got a
-few more fixes lined up, so this time as a pull request.
+I've just rebased my personal kernel tree to what will soon be 4.12-rc1
+and I'm getting my dmesg log filled with the following errors:
 
-Please pull and let me know if there's any problem.
+[   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
+[   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
+[   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
 
-Thanks,
-johannes
+Other brcmfmac dmesg messages:
 
+[   16.020013] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013 07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
 
+This is on a Asus T100TA which uses a 43241b1
 
-The following changes since commit 4ac4d584886a4f47f8ff3bca0f32ff9a2987d3e5:
+Regards,
 
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2017-05-04 12:26:43 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-05-08
-
-for you to fetch changes up to 6406c91943a0f29b6e8786921aaa038663e08055:
-
-  cfg80211: fix multi scheduled scan kernel-doc (2017-05-08 13:09:38 +0200)
-
-----------------------------------------------------------------
-A couple more fixes:
- * don't try to authenticate during reconfiguration, which causes
-   drivers to get confused
- * fix a kernel-doc warning for a recently merged change
- * fix MU-MIMO group configuration (relevant only for monitor mode)
- * more rate flags fix: remove stray RX_ENC_FLAG_40MHZ
- * fix IBSS probe response allocation size
-
-----------------------------------------------------------------
-Johannes Berg (4):
-      mac80211: properly remove RX_ENC_FLAG_40MHZ
-      nl80211: correctly validate MU-MIMO groups
-      mac80211: fix IBSS presp allocation size
-      cfg80211: fix multi scheduled scan kernel-doc
-
-Luca Coelho (1):
-      mac80211: bail out from prep_connection() if a reconfig is ongoing
-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c    | 2 +-
- drivers/net/wireless/ath/ath9k/mac.c           | 4 ++--
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 4 +++-
- drivers/net/wireless/intel/iwlwifi/dvm/rx.c    | 4 +++-
- drivers/net/wireless/mac80211_hwsim.c          | 8 +++++++-
- include/net/cfg80211.h                         | 2 +-
- include/net/mac80211.h                         | 2 --
- net/mac80211/ibss.c                            | 2 ++
- net/mac80211/mlme.c                            | 4 ++++
- net/wireless/nl80211.c                         | 4 ++--
- 10 files changed, 25 insertions(+), 11 deletions(-)
+Hans
