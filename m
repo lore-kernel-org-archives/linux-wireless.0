@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:36254 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753155AbdEMQlj (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:34463 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751477AbdENOft (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 May 2017 12:41:39 -0400
-Received: by mail-wr0-f195.google.com with SMTP id v42so10222139wrc.3
-        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 09:41:39 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/5] staging: rtl8192e: Let user know mac address associated with.
-Date: Sat, 13 May 2017 17:41:20 +0100
-Message-Id: <20170513164121.14373-4-tvboxspy@gmail.com> (sfid-20170513_184151_773431_825F9B1E)
-In-Reply-To: <20170513164121.14373-1-tvboxspy@gmail.com>
-References: <20170513164121.14373-1-tvboxspy@gmail.com>
+        Sun, 14 May 2017 10:35:49 -0400
+Received: by mail-qt0-f196.google.com with SMTP id l39so12456112qtb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 May 2017 07:35:49 -0700 (PDT)
+MIME-Version: 1.0
+From: George M <geodownunder@gmail.com>
+Date: Mon, 15 May 2017 00:35:48 +1000
+Message-ID: <CAKdKBFDM6+xRG9GDW1T71roUV8EAwPJM7w7kCtJn5egdpPSWRQ@mail.gmail.com> (sfid-20170514_163553_060599_AD151340)
+Subject: mac80211 background scanning for station mode
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-User cannot tell which mac address(BSIDD) associated with so add
-this to info message.
+Hi,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/rtl8192e/rtllib_softmac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+A couple of questions regarding background scanning in mac80211.
 
-diff --git a/drivers/staging/rtl8192e/rtllib_softmac.c b/drivers/staging/rtl8192e/rtllib_softmac.c
-index eeda17d6409b..776e99741431 100644
---- a/drivers/staging/rtl8192e/rtllib_softmac.c
-+++ b/drivers/staging/rtl8192e/rtllib_softmac.c
-@@ -1525,7 +1525,8 @@ static void rtllib_associate_complete_wq(void *data)
- 				     associate_complete_wq);
- 	struct rt_pwr_save_ctrl *pPSC = &(ieee->PowerSaveControl);
- 
--	netdev_info(ieee->dev, "Associated successfully\n");
-+	netdev_info(ieee->dev, "Associated successfully with %pM\n",
-+		    ieee->current_network.bssid);
- 	if (!ieee->is_silent_reset) {
- 		netdev_info(ieee->dev, "normal associate\n");
- 		notify_wx_assoc_event(ieee);
--- 
-2.11.0
+I'm currently looking at kernel version 3.18.23 and mac80211 module to
+understand whether background scanning is supported for station mode
+for an Atheros 9000 chipset. Mac80211 is used here.
+
+A google search shows some proposed code changes in this area in 2009,
+but these don't appear in newer code. Madwifi class of drivers
+supports this feature (including support for a cli command bgscan).
+Please help to understand:
+
+1) Is this feature supported in version 3.18.23? If so, from which
+version was this support added?
+
+2) Any link/pointers to relevant documentation?
+
+Your help is sincerely appreciated.
+
+Regards,
+George
