@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51608 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761153AbdEXKrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 06:47:25 -0400
-Message-ID: <1495622843.2665.11.camel@sipsolutions.net> (sfid-20170524_124952_880917_A096E05C)
-Subject: Re: WPA and WPA2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Tobin C. Harding" <me@tobin.cc>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 24 May 2017 12:47:23 +0200
-In-Reply-To: <20170524101309.GA2319@eros>
-References: <20170524072750.GI8158@eros>
-         <1495611651.2665.9.camel@sipsolutions.net> <20170524101309.GA2319@eros>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:34670 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbdENIV7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 14 May 2017 04:21:59 -0400
+Received: by mail-pf0-f176.google.com with SMTP id 9so8807416pfj.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 May 2017 01:21:59 -0700 (PDT)
+Subject: Re: New brcmfmac errors in 4.12: brcmf_sdio_rxglom: sublen ... not
+ multiple of 8
+To: Hans de Goede <hdegoede@redhat.com>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <e8055bc7-eaf4-1ab6-31d1-130d83485980@redhat.com>
+ <540e89cd-c222-e81a-5e34-600ae0aa052e@redhat.com>
+ <701cc6a7-b66b-8a51-8755-13dd584cbebd@gmail.com>
+ <cf896651-18a6-ee07-62a4-437c191ddde4@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a4cf8400-3b11-4d09-9b46-6d6382423ce7@broadcom.com> (sfid-20170514_102204_479226_7BB51211)
+Date: Sun, 14 May 2017 10:21:50 +0200
+MIME-Version: 1.0
+In-Reply-To: <cf896651-18a6-ee07-62a4-437c191ddde4@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-05-24 at 20:13 +1000, Tobin C. Harding wrote:
-
-> For this driver I think it matters. It is not a soft MAC driver, but
-> it is not a Full MAC either. The firmware was released in 2009, I
-> don't imagine it is getting any updates. The WEXT driver adds/checks
-> the TKIP Michael MIC in software.
-
-Right. It might matter, but it depends - does the device actually
-select the BSS (AP) to connect to?
-
-It only really matters if it selects the BSS, or tries to roam, or
-builds the association request IEs itself. If it doesn't do any of
-those, and just takes the IEs from wpa_supplicant, it will not matter -
-then it would only matter what key cipher you configure.
-
-> Perhaps for the initial cfg80211 implementation we could simply
-> support RSN only (i.e either WPA2 or no security)?
-
-I'm not sure how much that buys you, but sure, doing things step by
-step isn't a bad idea in general :)
-
-> > Does this driver actually work with standard wpa_supplicant?
+On 13-5-2017 16:55, Hans de Goede wrote:
+> Hi,
 > 
-> I'm not sure, I got hardware in the mail a couple of days ago but
-> have not tested it yet. The current driver may be broken thanks to my
-> refactoring efforts of late. I believe it was tested and functional
-> when it was first brought into staging. I do not know to what depth
-> it was tested.
+> On 13-05-17 15:39, Heiner Kallweit wrote:
+>> Am 13.05.2017 um 14:35 schrieb Hans de Goede:
+>>> <resend with the author of the commit causing this added>
+>>>
+>>> Hi,
+>>>
+>>> On 13-05-17 14:19, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> I've just rebased my personal kernel tree to what will soon be 4.12-rc1
+>>>> and I'm getting my dmesg log filled with the following errors:
+>>>>
+>>>> [   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple
+>>>> of 8
+>>>> [   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
+>>>> [   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple
+>>>> of 8
+>>>>
+>> After a brief look at the code I'm not sure that the check actually
+>> checks
+>> for an error condition. Apart from the error messages:
+>> Do you face issues with the functionality of the driver?
+> 
+> Yes after a while I get -ETIMEOUT errors for any sdio transfers
+> to the device. But I'm not sure if this is caused by this commit,
+> I think I've seen this once with 4.11 too.
+> 
+> I've reverted the commit for now, but I'm fine with instead of
+> doing the revert dropping the error check if the brcmfmac developers
+> think that is ok. Currently the ETIMEOUT seems to be gone, so
+> if dropping the revert causes it to re-appear then we know more.
 
-I think you should try this first, and try to get some kind of logging
-out to see what's going on with the firmware. Perhaps even put
-tracepoints like iwlwifi has (iwlwifi_dev_hcmd) to see what
-communication goes on with the device...
+Instead of reverting please give this patch a try and let me know if it
+works for you.
 
-If it does work with the standard supplicant with wext, then I believe
-it has to be using the IEs from there, and then the whole WPA/WPA2
-thing shouldn't matter.
-
-johannes
+Regards,
+Arend
+---
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+b/drivers/n
+index fc64b89..e034500 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3422,7 +3422,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+                /* otherwise, set txglomalign */
+                value = sdiodev->settings->bus.sdio.sd_sgentry_align;
+                /* SDIO ADMA requires at least 32 bit alignment */
+-               value = max_t(u32, value, 4);
++               value = max_t(u32, value, ALIGNMENT);
+                err = brcmf_iovar_data_set(dev, "bus:txglomalign", &value,
+                                           sizeof(u32));
+        }
