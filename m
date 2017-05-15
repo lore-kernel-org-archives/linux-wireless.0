@@ -1,34 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52116 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750796AbdE3HZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 03:25:05 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1dFbWa-0005AW-EH
-        for linux-wireless@vger.kernel.org; Tue, 30 May 2017 09:25:04 +0200
-Message-ID: <1496129103.3327.5.camel@sipsolutions.net> (sfid-20170530_092508_775937_18EE3273)
-Subject: heads-up: wireless summit planning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 30 May 2017 09:25:03 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18796 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756867AbdEOLqO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 May 2017 07:46:14 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 5/5] wil6210: support devices with different PCIe bar size
+Date: Mon, 15 May 2017 14:45:59 +0300
+Message-Id: <1494848759-3651-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170515_134621_334467_7BCABC8C)
+In-Reply-To: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+wil6210 devices can have different PCIe bar size, hence get the
+bar size from PCIe device instead of using a constant bar size.
 
-Netdev 2.2 has been announced for Seoul, South Korea, November 8-10:
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/ioctl.c    |  4 ++--
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 17 ++++++++++-------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  4 +++-
+ drivers/net/wireless/ath/wil6210/wmi.c      |  4 ++--
+ 4 files changed, 17 insertions(+), 12 deletions(-)
 
-http://netdevconf.org/2.2/
-
-We're planning to hold the next wireless workshop there.
-
-Formalities will be as usual - open (discussion) session, you have to
-be registered for netdev. The details for that haven't been announced
-yet, but I figured everyone could use an early warning for planning
-purposes :-)
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/ioctl.c b/drivers/net/wireless/ath/wil6210/ioctl.c
+index 6303800..1c49ad8 100644
+--- a/drivers/net/wireless/ath/wil6210/ioctl.c
++++ b/drivers/net/wireless/ath/wil6210/ioctl.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2014 Qualcomm Atheros, Inc.
++ * Copyright (c) 2014,2017 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -46,7 +46,7 @@ static void __iomem *wil_ioc_addr(struct wil6210_priv *wil, uint32_t addr,
+ 	}
+ 
+ 	off = a - wil->csr;
+-	if (size >= WIL6210_MEM_SIZE - off) {
++	if (size >= wil->bar_size - off) {
+ 		wil_err(wil, "Requested block does not fit into memory: "
+ 			"off = 0x%08x size = 0x%08x\n", off, size);
+ 		return NULL;
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 33bd85c..bf9f265 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -200,16 +200,18 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.ramdump = wil_platform_rop_ramdump,
+ 		.fw_recovery = wil_platform_rop_fw_recovery,
+ 	};
++	u32 bar_size = pci_resource_len(pdev, 0);
+ 
+ 	/* check HW */
+ 	dev_info(&pdev->dev, WIL_NAME
+-		 " device found [%04x:%04x] (rev %x)\n",
+-		 (int)pdev->vendor, (int)pdev->device, (int)pdev->revision);
+-
+-	if (pci_resource_len(pdev, 0) != WIL6210_MEM_SIZE) {
+-		dev_err(&pdev->dev, "Not " WIL_NAME "? "
+-			"BAR0 size is %lu while expecting %lu\n",
+-			(ulong)pci_resource_len(pdev, 0), WIL6210_MEM_SIZE);
++		 " device found [%04x:%04x] (rev %x) bar size 0x%x\n",
++		 (int)pdev->vendor, (int)pdev->device, (int)pdev->revision,
++		 bar_size);
++
++	if ((bar_size < WIL6210_MIN_MEM_SIZE) ||
++	    (bar_size > WIL6210_MAX_MEM_SIZE)) {
++		dev_err(&pdev->dev, "Unexpected BAR0 size 0x%x\n",
++			bar_size);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -222,6 +224,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	wil->pdev = pdev;
+ 	pci_set_drvdata(pdev, wil);
++	wil->bar_size = bar_size;
+ 	/* rollback to if_free */
+ 
+ 	wil->platform_handle =
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index fe942ba..ca532c7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -58,7 +58,8 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ 	return (x >> b0) & ((1 << (b1 - b0 + 1)) - 1);
+ }
+ 
+-#define WIL6210_MEM_SIZE (2*1024*1024UL)
++#define WIL6210_MIN_MEM_SIZE (2 * 1024 * 1024UL)
++#define WIL6210_MAX_MEM_SIZE (4 * 1024 * 1024UL)
+ 
+ #define WIL_TX_Q_LEN_DEFAULT		(4000)
+ #define WIL_RX_RING_SIZE_ORDER_DEFAULT	(10)
+@@ -599,6 +600,7 @@ struct blink_on_off_time {
+ 
+ struct wil6210_priv {
+ 	struct pci_dev *pdev;
++	u32 bar_size;
+ 	struct wireless_dev *wdev;
+ 	void __iomem *csr;
+ 	DECLARE_BITMAP(status, wil_status_last);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 814c356..93902cb 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -157,7 +157,7 @@ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
+ 		return NULL;
+ 
+ 	off = HOSTADDR(ptr);
+-	if (off > WIL6210_MEM_SIZE - 4)
++	if (off > wil->bar_size - 4)
+ 		return NULL;
+ 
+ 	return wil->csr + off;
+@@ -177,7 +177,7 @@ void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr)
+ 		return NULL;
+ 
+ 	off = HOSTADDR(ptr);
+-	if (off > WIL6210_MEM_SIZE - 4)
++	if (off > wil->bar_size - 4)
+ 		return NULL;
+ 
+ 	return wil->csr + off;
+-- 
+1.9.1
