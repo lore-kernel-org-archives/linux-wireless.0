@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:60464 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753014AbdEQQW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 12:22:59 -0400
-To: linux-wireless@vger.kernel.org,
-        =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] ssb: Delete an error message for a failed memory allocation
- in ssb_devices_register()
-Message-ID: <b8db3326-5f45-04c0-a6c3-d5183d602e8d@users.sourceforge.net> (sfid-20170517_182315_385238_303D6A2C)
-Date: Wed, 17 May 2017 18:22:49 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45044 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756867AbdEOLqJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 May 2017 07:46:09 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 3/5] wil6210: Improve AP stop handling
+Date: Mon, 15 May 2017 14:45:57 +0300
+Message-Id: <1494848759-3651-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170515_134620_788300_ACBAB5A7)
+In-Reply-To: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 17 May 2017 18:12:16 +0200
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Omit an extra message for a memory allocation failure in this function.
+Set resetting flag early when stopping AP to avoid
+disconnect events as a result of disconnect command
+sent during AP stop procedure.
 
-This issue was detected by using the Coccinelle software.
-
-Link: http://events.linuxfoundation.org/sites/events/files/slides/LCJ16-Refactor_Strings-WSang_0.pdf
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/ssb/main.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index d1a750760cf3..65420a9f0e82 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -480,7 +480,6 @@ static int ssb_devices_register(struct ssb_bus *bus)
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index aa9ce30..567fe43 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1446,6 +1446,8 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
+ 	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ 	wil_set_recovery_state(wil, fw_recovery_idle);
  
- 		devwrap = kzalloc(sizeof(*devwrap), GFP_KERNEL);
- 		if (!devwrap) {
--			ssb_err("Could not allocate device\n");
- 			err = -ENOMEM;
- 			goto error;
- 		}
++	set_bit(wil_status_resetting, wil->status);
++
+ 	mutex_lock(&wil->mutex);
+ 
+ 	wmi_pcp_stop(wil);
 -- 
-2.13.0
+1.9.1
