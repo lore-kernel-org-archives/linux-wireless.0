@@ -1,30 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:53287 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752482AbdEQKIa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45044 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756785AbdEOLqH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 06:08:30 -0400
-Date: Wed, 17 May 2017 12:08:45 +0200
-From: Bastian Bittorf <bb@npl.de>
-To: Ben Greear <greearb@candelatech.com>
-Cc: netdev <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 'iw events' stops receiving events after a while on 4.9 + hacks
-Message-ID: <20170517100844.GC2849@medion.lan> (sfid-20170517_120840_185521_D3BC3321)
-References: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
+        Mon, 15 May 2017 07:46:07 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 2/5] wil6210: add option to load FTM FW
+Date: Mon, 15 May 2017 14:45:56 +0300
+Message-Id: <1494848759-3651-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170515_134620_207189_DCBBD504)
+In-Reply-To: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Ben Greear <greearb@candelatech.com> [17.05.2017 11:51]:
-> I have been keeping an 'iw events' program running with a perl script gathering its
-> output and post-processing it.  This has been working for several years on 4.7 and earlier
-> kernels, but when testing on 4.9 overnight, I notice that 'iw events' is not showing any input.  'strace' shows
-> that it is waiting on recvmsg.  If I start a second 'iw events' then it will get
-> wifi events as expected.
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-me too, also seen on 4.4 - i'am happy for debug ideas.
+Module parameter allows to load specific FW used
+for FTM testing.
 
-bye, bastian
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 18 +++++++++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  9 +++++++--
+ 2 files changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index b38515f..33bd85c 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2016 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -26,6 +26,10 @@
+ module_param(use_msi, bool, 0444);
+ MODULE_PARM_DESC(use_msi, " Use MSI interrupt, default - true");
+ 
++static bool ftm_mode;
++module_param(ftm_mode, bool, 0444);
++MODULE_PARM_DESC(ftm_mode, " Set factory test mode, default - false");
++
+ #ifdef CONFIG_PM
+ #ifdef CONFIG_PM_SLEEP
+ static int wil6210_pm_notify(struct notifier_block *notify_block,
+@@ -36,13 +40,15 @@ static int wil6210_pm_notify(struct notifier_block *notify_block,
+ static
+ void wil_set_capabilities(struct wil6210_priv *wil)
+ {
++	const char *wil_fw_name;
+ 	u32 jtag_id = wil_r(wil, RGF_USER_JTAG_DEV_ID);
+ 	u8 chip_revision = (wil_r(wil, RGF_USER_REVISION_ID) &
+ 			    RGF_USER_REVISION_ID_MASK);
+ 
+ 	bitmap_zero(wil->hw_capabilities, hw_capability_last);
+ 	bitmap_zero(wil->fw_capabilities, WMI_FW_CAPABILITY_MAX);
+-	wil->wil_fw_name = WIL_FW_NAME_DEFAULT;
++	wil->wil_fw_name = ftm_mode ? WIL_FW_NAME_FTM_DEFAULT :
++			   WIL_FW_NAME_DEFAULT;
+ 	wil->chip_revision = chip_revision;
+ 
+ 	switch (jtag_id) {
+@@ -51,9 +57,11 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 		case REVISION_ID_SPARROW_D0:
+ 			wil->hw_name = "Sparrow D0";
+ 			wil->hw_version = HW_VER_SPARROW_D0;
+-			if (wil_fw_verify_file_exists(wil,
+-						      WIL_FW_NAME_SPARROW_PLUS))
+-				wil->wil_fw_name = WIL_FW_NAME_SPARROW_PLUS;
++			wil_fw_name = ftm_mode ? WIL_FW_NAME_FTM_SPARROW_PLUS :
++				      WIL_FW_NAME_SPARROW_PLUS;
++
++			if (wil_fw_verify_file_exists(wil, wil_fw_name))
++				wil->wil_fw_name = wil_fw_name;
+ 			break;
+ 		case REVISION_ID_SPARROW_B0:
+ 			wil->hw_name = "Sparrow B0";
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b00c803..fe942ba 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -37,8 +37,13 @@
+ extern bool disable_ap_sme;
+ 
+ #define WIL_NAME "wil6210"
+-#define WIL_FW_NAME_DEFAULT "wil6210.fw" /* code Sparrow B0 */
+-#define WIL_FW_NAME_SPARROW_PLUS "wil6210_sparrow_plus.fw" /* code Sparrow D0 */
++
++#define WIL_FW_NAME_DEFAULT "wil6210.fw"
++#define WIL_FW_NAME_FTM_DEFAULT "wil6210_ftm.fw"
++
++#define WIL_FW_NAME_SPARROW_PLUS "wil6210_sparrow_plus.fw"
++#define WIL_FW_NAME_FTM_SPARROW_PLUS "wil6210_sparrow_plus_ftm.fw"
++
+ #define WIL_BOARD_FILE_NAME "wil6210.brd" /* board & radio parameters */
+ 
+ #define WIL_DEFAULT_BUS_REQUEST_KBPS 128000 /* ~1Gbps */
+-- 
+1.9.1
