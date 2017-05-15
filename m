@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10094 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031016AbdEWPbL (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:38283 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760622AbdEOJZ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 11:31:11 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 15 May 2017 05:25:59 -0400
+Received: by mail-wm0-f49.google.com with SMTP id v15so38799698wmv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 May 2017 02:25:58 -0700 (PDT)
+Subject: Re: [PATCH] iwlegacy: warn when enabling power save
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+References: <1494835148-12945-1-git-send-email-sgruszka@redhat.com>
+ <87ziee5x7i.fsf@purkki.adurom.net> <20170515092037.GA9899@redhat.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <e12d8965-d97b-f5b6-381c-0eaebee86983@broadcom.com> (sfid-20170515_112620_445217_A392C107)
+Date: Mon, 15 May 2017 11:25:51 +0200
 MIME-Version: 1.0
-Subject: Re: [v2,1/5] wil6210: low level RF sector API
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1494848759-3651-2-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1494848759-3651-2-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Lior David <qca_liord@qca.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-ID: <d6b67da8fc144432827932025637f632@euamsexm01a.eu.qualcomm.com> (sfid-20170523_173120_805935_4F1666F8)
-Date: Tue, 23 May 2017 17:31:03 +0200
+In-Reply-To: <20170515092037.GA9899@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-> From: Lior David <qca_liord@qca.qualcomm.com>
+On 5/15/2017 11:20 AM, Stanislaw Gruszka wrote:
+> On Mon, May 15, 2017 at 11:41:05AM +0300, Kalle Valo wrote:
+>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>>
+>>> iwlegacy firmware can crash when power save is configured. PS was
+>>> allowed in "dbdac2b iwlegacy: properly enable power saving" with belive
+>>> that user who enable PS is aware of that and can relate firmware crahes
+>>> with PS. However some distributions seems to enable PS without user
+>>> intervention, so warn about that.
+>>>
+>>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>>> ---
+>>>   drivers/net/wireless/intel/iwlegacy/common.c |    2 ++
+>>>   1 files changed, 2 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+>>> index 140b6ea..6aaa0e7 100644
+>>> --- a/drivers/net/wireless/intel/iwlegacy/common.c
+>>> +++ b/drivers/net/wireless/intel/iwlegacy/common.c
+>>> @@ -5147,6 +5147,8 @@ void il_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>>>   
+>>>   	if (changed & (IEEE80211_CONF_CHANGE_PS | IEEE80211_CONF_CHANGE_IDLE)) {
+>>>   		il->power_data.ps_disabled = !(conf->flags & IEEE80211_CONF_PS);
+>>> +		WARN_ONCE(!il->power_data.ps_disabled,
+>>> +			  "Enabling power save might cause firmware crashes\n");
+>>
+>> This prints the whole stack trace, right? Isn't that excessive and
+>> fooling the users to think that they found a bug, which would mean more
+>> bug reports sent to us? So maybe a simple printk is better here?
 > 
-> Added vendor commands for low level control over
-> RF sectors. It allows user space a fine-grained control
-> over RF characteristics for TX and RX, such as direction
-> and gain of TX/RX. Main usages are debugging and diagnostics,
-> but also operational use cases.
-> API includes getting/setting a specific RF sector
-> configuration, as well as getting/setting the selected
-> sector which is used to communicate with a station.
-> 
-> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> I wanted to have back trace to assure problem will not be missed, but
+> I think you have right, I'll post v2.
 
-4 patches applied to ath-next branch of ath.git, thanks.
+I think instead of printk, a wiphy_warn() would be better here using 
+hw->wiphy.
 
-0216a895946f wil6210: low level RF sector API
-1c3964540425 wil6210: add option to load FTM FW
-646d402d9f8f wil6210: Improve AP stop handling
-d86d47164b22 wil6210: support devices with different PCIe bar size
-
--- 
-https://patchwork.kernel.org/patch/9726747/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
