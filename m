@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:33940 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751309AbdEOWFd (ORCPT
+Received: from mail-it0-f42.google.com ([209.85.214.42]:36931 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760452AbdEOJch (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 18:05:33 -0400
-Received: by mail-qt0-f171.google.com with SMTP id c13so48606477qtc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 May 2017 15:05:33 -0700 (PDT)
-Subject: Re: [PATCH 1/1] dt-binding: net: wireless: fix node name in the
- BCM43xx example
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        kvalo@codeaurora.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org
-References: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
- <20170515201356.26384-2-martin.blumenstingl@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <8155d0f1-aed3-fc47-4524-635067f9ee7b@broadcom.com> (sfid-20170516_000540_701181_AC01D20B)
-Date: Tue, 16 May 2017 00:05:30 +0200
+        Mon, 15 May 2017 05:32:37 -0400
+Received: by mail-it0-f42.google.com with SMTP id g126so65099156ith.0
+        for <linux-wireless@vger.kernel.org>; Mon, 15 May 2017 02:32:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170515201356.26384-2-martin.blumenstingl@googlemail.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <b830b657-3f73-de7f-d61c-1565dc14c2ef@candelatech.com>
+References: <CABPxzY+mQ-G6PTsQV9_WVgju4bmQHwxKKW070j7v6=DDgZop4Q@mail.gmail.com>
+ <b830b657-3f73-de7f-d61c-1565dc14c2ef@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 15 May 2017 15:02:16 +0530
+Message-ID: <CABPxzY+Y3Jcxw9UitytgrFS1H53pT7mCvVSbFM0qoj74x4gdFg@mail.gmail.com> (sfid-20170515_113241_483344_9A422429)
+Subject: Re: ath10k: controlling TX aggregation
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-5-2017 22:13, Martin Blumenstingl wrote:
-> The example in the BCM43xx documentation uses "brcmf" as node name.
-> However, wireless devices should be named "wifi" instead. Fix this to
+On Fri, May 12, 2017 at 8:15 PM, Ben Greear <greearb@candelatech.com> wrote:
+> What chipset, and what firmware version?
+>
+> Thanks,
+> Ben
 
-Hi Martin,
+Hi Ben,
 
-Since when is that a rule. I never got the memo and the DTC did not ever
-complain to me about the naming. That being said I do not really care
-and I suppose it is for the sake of consistency only.
+I have missed your response. PFB details.
 
-> make sure that .dts authors can simply use the documentation as
-> reference (or simply copy the node from the documentation and then
-> adjust only the board specific bits).
+ chip: QCA986x/988x PCIe
+ FW ver: 10.2.4.70.54 api 5
+ kernel: 4.11.0-rc+7 (wireless-drivers-next)
 
-Please feel free to add my...
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> ---
->  Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> index 5dbf169cd81c..590f622188de 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> @@ -31,7 +31,7 @@ mmc3: mmc@01c12000 {
->  	non-removable;
->  	status = "okay";
->  
-> -	brcmf: bcrmf@1 {
-> +	brcmf: wifi@1 {
->  		reg = <1>;
->  		compatible = "brcm,bcm4329-fmac";
->  		interrupt-parent = <&pio>;
-> 
+> On 05/12/2017 07:43 AM, Krishna Chaitanya wrote:
+>>
+>> Hi,
+>>
+>> I am doing some comparative tests, wanted to configure common
+>> settings btw all STA's. wanted to limit agg_size to 24 in ath10k with
+>> the below command.
+>>
+>> echo "3 24" > /sys/kernel/debug/ieee80211/phy0/ath10k/htt_max_amsdu_ampdu
+>>
+>> The ADDBA request still has 64 and when i run iperf it is aggregating 64
+>> frames.
+>>
+>> Except for 1 no number takes effect. If i configure 1 there is no ADDBA
+>> exchange
+>> initiated by ath10k.
+>>
+>> Is this expected? Can we control the aggregation size through driver?
+>>
+>> latest wireless-drivers-next and linux-firmware git is used.
+>>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+
+
+
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
