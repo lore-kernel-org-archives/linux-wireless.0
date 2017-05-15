@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58986 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752240AbdEHJcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2017 05:32:15 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: correctly validate MU-MIMO groups
-Date: Mon,  8 May 2017 11:32:11 +0200
-Message-Id: <20170508093211.9611-1-johannes@sipsolutions.net> (sfid-20170508_113218_435247_46183D39)
+Received: from smtp.codeaurora.org ([198.145.29.96]:45466 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752780AbdEOIlJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 May 2017 04:41:09 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlegacy: warn when enabling power save
+References: <1494835148-12945-1-git-send-email-sgruszka@redhat.com>
+Date: Mon, 15 May 2017 11:41:05 +0300
+In-Reply-To: <1494835148-12945-1-git-send-email-sgruszka@redhat.com>
+        (Stanislaw Gruszka's message of "Mon, 15 May 2017 09:59:08 +0200")
+Message-ID: <87ziee5x7i.fsf@purkki.adurom.net> (sfid-20170515_104141_864861_9ACDAC83)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-Since groups 0 and 63 are invalid, we should check for those bits.
-Note that the 802.11 spec specifies the *bit* order, but the CPU
-doesn't care about bit order since it can't address bits, so it's
-always treating BIT(0) as the lowest bit within a byte.
+> iwlegacy firmware can crash when power save is configured. PS was
+> allowed in "dbdac2b iwlegacy: properly enable power saving" with belive
+> that user who enable PS is aware of that and can relate firmware crahes
+> with PS. However some distributions seems to enable PS without user
+> intervention, so warn about that.
+>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/intel/iwlegacy/common.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+> index 140b6ea..6aaa0e7 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/common.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/common.c
+> @@ -5147,6 +5147,8 @@ void il_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>  
+>  	if (changed & (IEEE80211_CONF_CHANGE_PS | IEEE80211_CONF_CHANGE_IDLE)) {
+>  		il->power_data.ps_disabled = !(conf->flags & IEEE80211_CONF_PS);
+> +		WARN_ONCE(!il->power_data.ps_disabled,
+> +			  "Enabling power save might cause firmware crashes\n");
 
-Reported-by: Jan Fuchs <jan.fuchs@lancom.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This prints the whole stack trace, right? Isn't that excessive and
+fooling the users to think that they found a bug, which would mean more
+bug reports sent to us? So maybe a simple printk is better here?
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 570fc95dc507..c3bc9da30cff 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2764,8 +2764,8 @@ static int nl80211_parse_mon_options(struct cfg80211_registered_device *rdev,
- 			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]);
- 
- 		/* bits 0 and 63 are reserved and must be zero */
--		if ((mumimo_groups[0] & BIT(7)) ||
--		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(0)))
-+		if ((mumimo_groups[0] & BIT(0)) ||
-+		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(7)))
- 			return -EINVAL;
- 
- 		params->vht_mumimo_groups = mumimo_groups;
 -- 
-2.11.0
+Kalle Valo
