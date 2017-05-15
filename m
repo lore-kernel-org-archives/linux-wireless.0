@@ -1,258 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:36411 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbdEaRLD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 13:11:03 -0400
-Received: by mail-pf0-f182.google.com with SMTP id m17so13408658pfg.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 10:11:03 -0700 (PDT)
-Date: Wed, 31 May 2017 10:10:59 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: linux-kernel@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/14] mwifiex: pcie: properly synchronize, disable
- interrupts in driver callbacks
-Message-ID: <20170531171058.GA54739@google.com> (sfid-20170531_191127_169242_D63B0763)
-References: <20170525001119.64791-1-briannorris@chromium.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37140 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757106AbdEOJdl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 May 2017 05:33:41 -0400
+Date: Mon, 15 May 2017 11:33:00 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlegacy: warn when enabling power save
+Message-ID: <20170515093259.GA16559@redhat.com> (sfid-20170515_113348_044346_155CCAFA)
+References: <1494835148-12945-1-git-send-email-sgruszka@redhat.com>
+ <87ziee5x7i.fsf@purkki.adurom.net>
+ <20170515092037.GA9899@redhat.com>
+ <e12d8965-d97b-f5b6-381c-0eaebee86983@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
+In-Reply-To: <e12d8965-d97b-f5b6-381c-0eaebee86983@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By the way, this had a few review comments elsewhere, which I'll
-summarize here, since I plan to resubmit a new version sometime.
-
-On Wed, May 24, 2017 at 05:11:06PM -0700, Brian Norris wrote:
-> It seems that the implicit assumption of the mwifiex
-> {enable,disable}_int() callbacks is that after ->disable_int(), all
-> interrupt handling should be complete (synchronized) and not fire again
-> until after ->enable_int(). Also, interrupts should not be serviced
-> until after the first ->enable_int().
+On Mon, May 15, 2017 at 11:25:51AM +0200, Arend van Spriel wrote:
+> On 5/15/2017 11:20 AM, Stanislaw Gruszka wrote:
+> >On Mon, May 15, 2017 at 11:41:05AM +0300, Kalle Valo wrote:
+> >>Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> >>
+> >>>iwlegacy firmware can crash when power save is configured. PS was
+> >>>allowed in "dbdac2b iwlegacy: properly enable power saving" with belive
+> >>>that user who enable PS is aware of that and can relate firmware crahes
+> >>>with PS. However some distributions seems to enable PS without user
+> >>>intervention, so warn about that.
+> >>>
+> >>>Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> >>>---
+> >>>  drivers/net/wireless/intel/iwlegacy/common.c |    2 ++
+> >>>  1 files changed, 2 insertions(+), 0 deletions(-)
+> >>>
+> >>>diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+> >>>index 140b6ea..6aaa0e7 100644
+> >>>--- a/drivers/net/wireless/intel/iwlegacy/common.c
+> >>>+++ b/drivers/net/wireless/intel/iwlegacy/common.c
+> >>>@@ -5147,6 +5147,8 @@ void il_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+> >>>  	if (changed & (IEEE80211_CONF_CHANGE_PS | IEEE80211_CONF_CHANGE_IDLE)) {
+> >>>  		il->power_data.ps_disabled = !(conf->flags & IEEE80211_CONF_PS);
+> >>>+		WARN_ONCE(!il->power_data.ps_disabled,
+> >>>+			  "Enabling power save might cause firmware crashes\n");
+> >>
+> >>This prints the whole stack trace, right? Isn't that excessive and
+> >>fooling the users to think that they found a bug, which would mean more
+> >>bug reports sent to us? So maybe a simple printk is better here?
+> >
+> >I wanted to have back trace to assure problem will not be missed, but
+> >I think you have right, I'll post v2.
 > 
-> However, the PCIe driver does none of this. First, the existing
-> interrupt mask programming appears to only have an effect for legacy
-> interrupts. It doesn't actually prevent MSI/MSI-X interrupts. Second,
-> even when it might mask interrupts, we're doing nothing to ensure that
-> pending IRQs have finished processing; they could be already in-flight
-> when a CPU masks them.
-> 
-> Another quirk of this driver's design is the use of a racy
-> "surprise_removed" check in mwifiex_pcie_interrupt(). This appears to
-> act like a racy poor-man's version of masking our interrupts -- it
-> allows us to short-circuit the ISR if it fires when we're not prepared
-> to handle more work.
-> 
-> We can resolve this all by:
-> (a) disabling our IRQs after requesting them
-> (b) call {enable,disable}_irq() in the {enable,disable}_int() callbacks
-> (c) remove the racy '->surprise_removed' hack from
->     mwifiex_pcie_interrupt()
-> (d) document the effect (or lack thereof) of PCIE_HOST_INT_MASK, to
->     clarify and possibly prevent future misuse
-> 
-> Along the way, I decided to use underscores to prefix the driver-private
-> forms of "disabling interrupts" (instead of the awkward "_noerr" suffix
-> used already), partly to discourage their use.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 70 ++++++++++++++++++++---------
->  1 file changed, 49 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 394224d6c219..ea75315bf19d 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -505,12 +505,10 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
->  }
->  
->  /*
-> - * This function disables the host interrupt.
-> - *
-> - * The host interrupt mask is read, the disable bit is reset and
-> - * written back to the card host interrupt mask register.
-> + * This function masks the host interrupt. Effective only for legacy PCI
-> + * interrupts.
->   */
-> -static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
-> +static int __mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
->  {
->  	if (mwifiex_pcie_ok_to_access_hw(adapter)) {
->  		if (mwifiex_write_reg(adapter, PCIE_HOST_INT_MASK,
-> @@ -525,18 +523,30 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
->  	return 0;
->  }
->  
-> -static void mwifiex_pcie_disable_host_int_noerr(struct mwifiex_adapter *adapter)
-> +/*
-> + * Disable interrupts, synchronizing with any outstanding interrupts.
-> + */
-> +static void mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
->  {
-> -	WARN_ON(mwifiex_pcie_disable_host_int(adapter));
-> +	struct pcie_service_card *card = adapter->card;
-> +	int i;
-> +
-> +	WARN_ON(__mwifiex_pcie_disable_host_int(adapter));
-> +
-> +	if (card->msix_enable) {
-> +		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++) {
-> +			disable_irq(card->msix_entries[i].vector);
-> +		}
-> +	} else {
-> +		disable_irq(card->dev->irq);
+> I think instead of printk, a wiphy_warn() would be better here using
+> hw->wiphy.
 
-This approach is not safe for the non-MSI-X case, since we actually
-requested this IRQ with IRQF_SHARED. That's likely mostly for the legacy
-PCI interrupt case (where we *have* to support shared interrupts) and
-could probably be modified, but at any rate, this is unsafe as written.
+I used dev_warn variant, what is consistent with the driver code.
 
-Also, I've fielded objections to using the host-level IRQ masking for
-disabling MSI interrupts here. I'm still not completely sure *why* the
-objection, but I'm investigating whether there's any device-level
-mechanism for disabling MSI interrupts on the Wif card. (Marvell folks,
-feel free to speak up here.)
-
-> +	}
->  }
->  
->  /*
-> - * This function enables the host interrupt.
-> - *
-> - * The host interrupt enable mask is written to the card
-> - * host interrupt mask register.
-> + * This function unmasks the host interrupt. Effective only for legacy PCI
-> + * interrupts.
->   */
-> -static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
-> +static int __mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
->  {
->  	if (mwifiex_pcie_ok_to_access_hw(adapter)) {
->  		/* Simply write the mask to the register */
-> @@ -551,6 +561,26 @@ static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
->  	return 0;
->  }
->  
-> +static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
-> +{
-> +	struct pcie_service_card *card = adapter->card;
-> +	int i, ret;
-> +
-> +	ret = __mwifiex_pcie_enable_host_int(adapter);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (card->msix_enable) {
-> +		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++) {
-> +			enable_irq(card->msix_entries[i].vector);
-> +		}
-> +	} else {
-> +		enable_irq(card->dev->irq);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  /*
->   * This function initializes TX buffer ring descriptors
->   */
-> @@ -1738,7 +1768,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
->  			while (reg->sleep_cookie && (count++ < 10) &&
->  			       mwifiex_pcie_ok_to_access_hw(adapter))
->  				usleep_range(50, 60);
-> -			mwifiex_pcie_enable_host_int(adapter);
-> +			__mwifiex_pcie_enable_host_int(adapter);
->  			mwifiex_process_sleep_confirm_resp(adapter, skb->data,
->  							   skb->len);
->  		} else {
-> @@ -2081,7 +2111,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
->  		    "info: Downloading FW image (%d bytes)\n",
->  		    firmware_len);
->  
-> -	if (mwifiex_pcie_disable_host_int(adapter)) {
-> +	if (__mwifiex_pcie_disable_host_int(adapter)) {
->  		mwifiex_dbg(adapter, ERROR,
->  			    "%s: Disabling interrupts failed.\n", __func__);
->  		return -1;
-> @@ -2335,8 +2365,7 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
->  		if ((pcie_ireg == 0xFFFFFFFF) || !pcie_ireg)
->  			return;
->  
-> -
-> -		mwifiex_pcie_disable_host_int(adapter);
-> +		__mwifiex_pcie_disable_host_int(adapter);
->  
->  		/* Clear the pending interrupts */
->  		if (mwifiex_write_reg(adapter, PCIE_HOST_INT_STATUS,
-> @@ -2387,9 +2416,6 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
->  	}
->  	adapter = card->adapter;
->  
-> -	if (adapter->surprise_removed)
-> -		goto exit;
-> -
->  	if (card->msix_enable)
->  		mwifiex_interrupt_status(adapter, ctx->msg_id);
->  	else
-> @@ -2494,7 +2520,7 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
->  		    "info: cmd_sent=%d data_sent=%d\n",
->  		    adapter->cmd_sent, adapter->data_sent);
->  	if (!card->msi_enable && adapter->ps_state != PS_STATE_SLEEP)
-> -		mwifiex_pcie_enable_host_int(adapter);
-> +		__mwifiex_pcie_enable_host_int(adapter);
->  
->  	return 0;
->  }
-> @@ -3055,6 +3081,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
->  						  &card->msix_ctx[i]);
->  				if (ret)
->  					break;
-> +				disable_irq(card->msix_entries[i].vector);
-
-Also, if we're really dealing with spurious interrupts at init time,
-then this leaves a window of time in between request_irq() and this
-disable_irq() in which we could still receive a bad IRQ. So this should
-be reworked to do one of:
-(a) move the request_irq() later, until we're really able to handle
-interrupts
-(b) set the IRQ_NOAUTOEN flag (for the non-shared case), to avoid
-enabling IRQs initially
-(c) use some sort of (yet-unknown) device-level mask for MSI interrupts.
-
-I'm looking to address these problems in a v2. Many of the other patches
-are likely independent. I'll plan to resubmit them in the next series
-(if they aren't applied before then), to avoid conflicts with those that
-aren't independent, and because I intentionally put bugfixes (like this
-patch) first in the series.
-
-Brian
-
->  			}
->  
->  			if (ret) {
-> @@ -3087,6 +3114,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
->  		pr_err("request_irq failed: ret=%d\n", ret);
->  		return -1;
->  	}
-> +	disable_irq(pdev->irq);
->  
->  	return 0;
->  }
-> @@ -3244,7 +3272,7 @@ static struct mwifiex_if_ops pcie_ops = {
->  	.register_dev =			mwifiex_register_dev,
->  	.unregister_dev =		mwifiex_unregister_dev,
->  	.enable_int =			mwifiex_pcie_enable_host_int,
-> -	.disable_int =			mwifiex_pcie_disable_host_int_noerr,
-> +	.disable_int =			mwifiex_pcie_disable_host_int,
->  	.process_int_status =		mwifiex_process_int_status,
->  	.host_to_card =			mwifiex_pcie_host_to_card,
->  	.wakeup =			mwifiex_pm_wakeup_card,
-> -- 
-> 2.13.0.219.gdb65acc882-goog
-> 
+Stanislaw
