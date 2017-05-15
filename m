@@ -1,77 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60996 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750755AbdESHy4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43315 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751005AbdEOEm3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 03:54:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
-Subject: Re: [PATCH] brcmfmac: remove setting IBSS mode when stopping AP
-References: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
-        <87efvla1s9.fsf@codeaurora.org>
-        <2dd93d16-e793-9d71-b36d-ac2592b060ea@broadcom.com>
-Date: Fri, 19 May 2017 10:54:49 +0300
-In-Reply-To: <2dd93d16-e793-9d71-b36d-ac2592b060ea@broadcom.com> (Arend van
-        Spriel's message of "Fri, 19 May 2017 09:49:52 +0200")
-Message-ID: <87a869waba.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_095500_609206_4A018C93)
+        Mon, 15 May 2017 00:42:29 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2] mac80211: strictly check mesh address extension mode
+Date: Sun, 14 May 2017 21:41:55 -0700
+Message-ID: <1494823315-26575-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20170515_064234_357942_7823E1EB)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Mesh forwarding path checks for address extension mode to fetch
+appropriate proxied address and MPP address. Existing condition
+that looks for 6 address format is not strict enough so that
+frames with improper values are processed and invalid entries
+are added into MPP table. Fix that by adding a stricter check before
+processing the packet.
 
-> On 5/19/2017 6:49 AM, Kalle Valo wrote:
->> Wright Feng <wright.feng@cypress.com> writes:
->>
->>> From: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
->>>
->>> Setting IBSS mode when stopping AP may affect functionality of INFRA
->>> mode on another interface. For instance, if user creates and stops
->>> hostap daemon on virtual interface, then association cannot work on
->>> primary interface because default BSS has been set to IBSS mode in
->>> firmware side. The IBSS mode should be set when cfg80211 changes the
->>> interface.
->>>
->>> Reviewed-by: Wright Feng <wright.feng@cypress.com>
->>> Signed-off-by: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
->>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
->>> ---
->>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ---
->>>   1 file changed, 3 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>> index 944b83c..ce2a5b6 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>> @@ -4658,9 +4658,6 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
->>>   		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 0);
->>>   		if (err < 0)
->>>   			brcmf_err("setting AP mode failed %d\n", err);
->>> -		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 0);
->>> -		if (err < 0)
->>> -			brcmf_err("setting INFRA mode failed %d\n", err);
->>
->> The title talks about setting IBSS mode but the code looks to be about
->> setting INFRA mode. Is this correct?
->
-> Both are correct :-p Have to admit this is confusing. The command
-> SET_INFRA with zero value means "disable INFRA; thus enable IBSS".
+Per IEEE Std 802.11s-2011 spec. Table 7-6g1 lists address extension
+mode 0x3 as reserved one. And also Table Table 9-13 does not specify
+0x3 as valid address field.
 
-Ah, that IS confusing :)
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+v2: updated commit log and handled other AE cases
 
-> I would rephrase the commit message indeed explaining what the code
-> currently does, ie.:
->
-> Upon stopping an AP interface the driver disable INFRA mode
-> effectively setting the interface in IBSS mode. However, this may
-> affect other interfaces running in INFRA mode. For instance, ....
+ net/mac80211/rx.c   |  3 ++-
+ net/wireless/util.c | 10 ++++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-I can fix that during commit. Thanks.
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 35f4c7d7a500..1f75280ba26c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2492,7 +2492,8 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
+ 		if (is_multicast_ether_addr(hdr->addr1)) {
+ 			mpp_addr = hdr->addr3;
+ 			proxied_addr = mesh_hdr->eaddr1;
+-		} else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
++		} else if ((mesh_hdr->flags & MESH_FLAGS_AE) ==
++			    MESH_FLAGS_AE_A5_A6) {
+ 			/* has_a4 already checked in ieee80211_rx_mesh_check */
+ 			mpp_addr = hdr->addr4;
+ 			proxied_addr = mesh_hdr->eaddr2;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 7198373e2920..4992f1025c9d 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -454,6 +454,8 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
+ 	if (iftype == NL80211_IFTYPE_MESH_POINT)
+ 		skb_copy_bits(skb, hdrlen, &mesh_flags, 1);
+ 
++	mesh_flags &= MESH_FLAGS_AE;
++
+ 	switch (hdr->frame_control &
+ 		cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+ 	case cpu_to_le16(IEEE80211_FCTL_TODS):
+@@ -469,9 +471,9 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
+ 			     iftype != NL80211_IFTYPE_STATION))
+ 			return -1;
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
+-			if (mesh_flags & MESH_FLAGS_AE_A4)
++			if (mesh_flags == MESH_FLAGS_AE_A4)
+ 				return -1;
+-			if (mesh_flags & MESH_FLAGS_AE_A5_A6) {
++			if (mesh_flags == MESH_FLAGS_AE_A5_A6) {
+ 				skb_copy_bits(skb, hdrlen +
+ 					offsetof(struct ieee80211s_hdr, eaddr1),
+ 					tmp.h_dest, 2 * ETH_ALEN);
+@@ -487,9 +489,9 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
+ 		     ether_addr_equal(tmp.h_source, addr)))
+ 			return -1;
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
+-			if (mesh_flags & MESH_FLAGS_AE_A5_A6)
++			if (mesh_flags == MESH_FLAGS_AE_A5_A6)
+ 				return -1;
+-			if (mesh_flags & MESH_FLAGS_AE_A4)
++			if (mesh_flags == MESH_FLAGS_AE_A4)
+ 				skb_copy_bits(skb, hdrlen +
+ 					offsetof(struct ieee80211s_hdr, eaddr1),
+ 					tmp.h_source, ETH_ALEN);
 -- 
-Kalle Valo
+1.9.1
