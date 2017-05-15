@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1966 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751136AbdEDNNt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37906 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750991AbdEOHNC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 09:13:49 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
-        "nicolas.dechesne@linaro.org" <nicolas.dechesne@linaro.org>
-Subject: Re: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
-Date: Thu, 4 May 2017 13:13:43 +0000
-Message-ID: <87fugkrchl.fsf@kamboji.qca.qualcomm.com> (sfid-20170504_151518_358821_FAFEB77C)
-References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
-        <1493281332.2529.1.camel@sipsolutions.net>      <20170428234247.GQ15143@minitux>
-In-Reply-To: <20170428234247.GQ15143@minitux> (Bjorn Andersson's message of
-        "Fri, 28 Apr 2017 16:42:47 -0700")
-Content-Type: text/plain; charset="utf-8"
+        Mon, 15 May 2017 03:13:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Eric Schultz <eschultz@prplfoundation.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: Participation in common kernel API recommendation?
+References: <3ae60be2-63b5-1409-8b6c-f0a363c7968b@prplfoundation.org>
+        <42258cf0-ed93-4d18-8114-012d1d227532@broadcom.com>
+Date: Mon, 15 May 2017 10:12:57 +0300
+In-Reply-To: <42258cf0-ed93-4d18-8114-012d1d227532@broadcom.com> (Arend Van
+        Spriel's message of "Sat, 13 May 2017 13:40:13 +0200")
+Message-ID: <874lwm7fuu.fsf@purkki.adurom.net> (sfid-20170515_091306_274913_8D3FC856)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Qmpvcm4gQW5kZXJzc29uIDxiam9ybi5hbmRlcnNzb25AbGluYXJvLm9yZz4gd3JpdGVzOg0KDQo+
-IE9uIFRodSAyNyBBcHIgMDE6MjIgUERUIDIwMTcsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+DQo+
-PiANCj4+ID4gQEAgLTM3MSw3ICszNzEsNyBAQCBzdGF0aWMgdm9pZCByZWFwX3R4X2R4ZXMoc3Ry
-dWN0IHdjbjM2eHggKndjbiwNCj4+ID4gc3RydWN0IHdjbjM2eHhfZHhlX2NoICpjaCkNCj4+ID4g
-wqAJCQlpbmZvID0gSUVFRTgwMjExX1NLQl9DQihjdGwtPnNrYik7DQo+PiA+IMKgCQkJaWYgKCEo
-aW5mby0+ZmxhZ3MgJg0KPj4gPiBJRUVFODAyMTFfVFhfQ1RMX1JFUV9UWF9TVEFUVVMpKSB7DQo+
-PiA+IMKgCQkJCS8qIEtlZXAgZnJhbWUgdW50aWwgVFggc3RhdHVzIGNvbWVzDQo+PiA+ICovDQo+
-PiA+IC0JCQkJaWVlZTgwMjExX2ZyZWVfdHhza2Iod2NuLT5odywgY3RsLQ0KPj4gPiA+c2tiKTsN
-Cj4+ID4gKwkJCQlpZWVlODAyMTFfdHhfc3RhdHVzKHdjbi0+aHcsIGN0bC0NCj4+ID4gPnNrYik7
-DQo+PiA+IA0KPj4gDQo+PiBJIGRvbid0IHRoaW5rIHRoaXMgaXMgYSBnb29kIGlkZWEuDQo+DQo+
-IFRoYW5rcyBmb3IgbGV0dGluZyBtZSBrbm93IDopDQo+DQo+PiBUaGlzIGNvZGUgaW50ZW50aW9u
-YWxseSBjaGVja2VkIGlmIFRYIHN0YXR1cyB3YXMgcmVxdWVzdGVkLCBhbmQgaWYgbm90DQo+PiB0
-aGVuIGl0IGRvZXNuJ3QgZ28gdG8gdGhlIGVmZm9ydCBvZiBidWlsZGluZyBpdC4NCj4+IA0KPg0K
-PiBXaGF0IEknbSBmaW5kaW5nIHB1enpsaW5nIGlzIHRoZSBmYWN0IHRoYXQgdGhlIG9ubHkgY2Fs
-bGVyIG9mDQo+IGllZWU4MDIxMV9sZWRfdHgoKSBpcyBpZWVlODAyMTFfdHhfc3RhdHVzKCkgYW5k
-IGl0IHNlZW1zIGxpa2UgZHJpdmVycywNCj4gc3VjaCBhcyBhdGgxMGssIGNhbGwgdGhpcyBmb3Ig
-ZWFjaCBwYWNrZXQgaGFuZGxlZCAtIGJ1dCBJJ20gbGlrZWx5DQo+IG1pc3Npbmcgc29tZXRoaW5n
-Lg0KPg0KPj4gQXMgaXQgaXMgd2l0aCB5b3VyIHBhdGNoLCBpdCdsbCBnbyBhbmQgcmVwb3J0IHRo
-ZSBUWCBzdGF0dXMgd2l0aG91dCBhbnkNCj4+IFRYIHN0YXR1cyBpbmZvcm1hdGlvbiAtIHdoaWNo
-IGlzIGhhbmRsZWQgaW4gd2NuMzZ4eF9keGVfdHhfYWNrX2luZCgpDQo+PiBmb3IgdGhvc2UgZnJh
-bWVzIG5lZWRpbmcgaXQuDQo+PiANCj4NCj4gUmlnaHQsIGl0IGRvZXNuJ3Qgc291bmQgZGVzaXJl
-ZC4gSG93ZXZlciwgZHVyaW5nIG5vcm1hbCBvcGVyYXRpb24gSSdtDQo+IG5vdCBzZWVpbmcgSUVF
-RTgwMjExX1RYX0NUTF9SRVFfVFhfU1RBVFVTIGJlaW5nIHNldCBhbmQgYXMgc3VjaA0KPiBpZWVl
-ODAyMTFfbGVkX3R4KCkgaXMgbmV2ZXIgY2FsbGVkLg0KDQpTbyB3aGF0J3MgdGhlIGNvbmNsdXNp
-b24/IEhvdyBkbyB3ZSBnZXQgbGVkcyB3b3JraW5nPw0KDQotLSANCkthbGxlIFZhbG8=
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+
+>> Would any members be interested in spending a one hour meeting with the
+>> subcommittee to give some feedback on the recommendation? If so, please
+>> let me know.
+>
+> Just throwing a wild idea at you. In the spirit of how the community
+> works why not post it (on refer to some public link) on the mailing list
+> for review to get the feedback.
+
+Indeed. Much more time efficient and no need to have a call in some odd
+time of the day.
+
+-- 
+Kalle Valo
