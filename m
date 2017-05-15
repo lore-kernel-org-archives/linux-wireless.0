@@ -1,40 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:34463 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751477AbdENOft (ORCPT
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:36807 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758435AbdEOV0n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 May 2017 10:35:49 -0400
-Received: by mail-qt0-f196.google.com with SMTP id l39so12456112qtb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 May 2017 07:35:49 -0700 (PDT)
+        Mon, 15 May 2017 17:26:43 -0400
+Received: by mail-pg0-f49.google.com with SMTP id x64so46532763pgd.3
+        for <linux-wireless@vger.kernel.org>; Mon, 15 May 2017 14:26:43 -0700 (PDT)
+Date: Mon, 15 May 2017 14:26:40 -0700
+From: Kees Cook <keescook@chromium.org>
+To: netdev@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Joe Perches <joe@perches.com>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3] libertas: Avoid reading past end of buffer
+Message-ID: <20170515212640.GA45443@beast> (sfid-20170515_232718_870861_7D0A3177)
 MIME-Version: 1.0
-From: George M <geodownunder@gmail.com>
-Date: Mon, 15 May 2017 00:35:48 +1000
-Message-ID: <CAKdKBFDM6+xRG9GDW1T71roUV8EAwPJM7w7kCtJn5egdpPSWRQ@mail.gmail.com> (sfid-20170514_163553_060599_AD151340)
-Subject: mac80211 background scanning for station mode
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Using memcpy() from a string that is shorter than the length copied means
+the destination buffer is being filled with arbitrary data from the kernel
+rodata segment. Instead, redefine the stat strings to be ETH_GSTRING_LEN
+sizes, like other drivers. This lets us use a single memcpy that does not
+leak rodata contents. Additionally adjust indentation to keep checkpatch.pl
+happy.
 
-A couple of questions regarding background scanning in mac80211.
+This was found with the future CONFIG_FORTIFY_SOURCE feature.
 
-I'm currently looking at kernel version 3.18.23 and mac80211 module to
-understand whether background scanning is supported for station mode
-for an Atheros 9000 chipset. Mac80211 is used here.
+Cc: Daniel Micay <danielmicay@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+v3:
+- drop needless "*"; joe
+- fix entry/exit in separate patch
+v2:
+- use ETH_GSTRING_LEN; joe
+---
+ drivers/net/wireless/marvell/libertas/mesh.c | 26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
 
-A google search shows some proposed code changes in this area in 2009,
-but these don't appear in newer code. Madwifi class of drivers
-supports this feature (including support for a cli command bgscan).
-Please help to understand:
+diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+index d0c881dd5846..2229fb448189 100644
+--- a/drivers/net/wireless/marvell/libertas/mesh.c
++++ b/drivers/net/wireless/marvell/libertas/mesh.c
+@@ -1108,15 +1108,15 @@ void lbs_mesh_set_txpd(struct lbs_private *priv,
+  * Ethtool related
+  */
+ 
+-static const char * const mesh_stat_strings[] = {
+-			"drop_duplicate_bcast",
+-			"drop_ttl_zero",
+-			"drop_no_fwd_route",
+-			"drop_no_buffers",
+-			"fwded_unicast_cnt",
+-			"fwded_bcast_cnt",
+-			"drop_blind_table",
+-			"tx_failed_cnt"
++static const char mesh_stat_strings[MESH_STATS_NUM][ETH_GSTRING_LEN] = {
++	"drop_duplicate_bcast",
++	"drop_ttl_zero",
++	"drop_no_fwd_route",
++	"drop_no_buffers",
++	"fwded_unicast_cnt",
++	"fwded_bcast_cnt",
++	"drop_blind_table",
++	"tx_failed_cnt"
+ };
+ 
+ void lbs_mesh_ethtool_get_stats(struct net_device *dev,
+@@ -1170,17 +1170,11 @@ int lbs_mesh_ethtool_get_sset_count(struct net_device *dev, int sset)
+ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
+ 	uint32_t stringset, uint8_t *s)
+ {
+-	int i;
+-
+ 	lbs_deb_enter(LBS_DEB_ETHTOOL);
+ 
+ 	switch (stringset) {
+ 	case ETH_SS_STATS:
+-		for (i = 0; i < MESH_STATS_NUM; i++) {
+-			memcpy(s + i * ETH_GSTRING_LEN,
+-					mesh_stat_strings[i],
+-					ETH_GSTRING_LEN);
+-		}
++		memcpy(s, mesh_stat_strings, sizeof(mesh_stat_strings));
+ 		break;
+ 	}
+ 	lbs_deb_enter(LBS_DEB_ETHTOOL);
+-- 
+2.7.4
 
-1) Is this feature supported in version 3.18.23? If so, from which
-version was this support added?
 
-2) Any link/pointers to relevant documentation?
-
-Your help is sincerely appreciated.
-
-Regards,
-George
+-- 
+Kees Cook
+Pixel Security
