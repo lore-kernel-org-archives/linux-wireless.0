@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:37919 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762061AbdEWHT3 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45044 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756785AbdEOLqE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 03:19:29 -0400
-Received: by mail-wm0-f46.google.com with SMTP id e127so15181378wmg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 May 2017 00:19:28 -0700 (PDT)
-Subject: Re: 4.12-RC2 BUG: scheduling while atomic: irq/47-iwlwifi
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Sander Eikelenboom <linux@eikelenboom.it>
-References: <a54f3f4f-2365-2154-ad18-82e4cd572aac@eikelenboom.it>
- <1495450628.2653.14.camel@sipsolutions.net>
- <764a929c-ce8a-c859-a49e-2f20cb05ae44@broadcom.com>
- <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com>
- <1495487095.26008.7.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <09ddb018-7093-2e2a-c84b-148889f7f06d@broadcom.com> (sfid-20170523_091958_986476_0AEB523C)
-Date: Tue, 23 May 2017 09:19:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <1495487095.26008.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Mon, 15 May 2017 07:46:04 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 0/5] wil6210 patches
+Date: Mon, 15 May 2017 14:45:54 +0300
+Message-Id: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170515_134608_454737_C0AF9A48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-5-2017 23:04, Johannes Berg wrote:
-> Hi Arend,
-> 
-> Sorry, I forgot that the original message wasn't Cc'ed to the wireless
-> list, only netdev.
+This set of patches include the following:
+- Fix for "low level RF sector API" patch
+- Addtotional wil6210 fixes
 
-That explains. Not subscribed to that.
+Hamad Kadmany (2):
+  wil6210: add option to load FTM FW
+  wil6210: Improve AP stop handling
 
->> +++ b/net/wireless/scan.c
->> @@ -322,9 +322,7 @@ static void cfg80211_del_sched_scan_req(struct
->> cfg80211_regi
->>  {
->>         struct cfg80211_sched_scan_request *pos;
->>
->> -       ASSERT_RTNL();
->> -
->> -       list_for_each_entry(pos, &rdev->sched_scan_req_list, list) {
->> +       list_for_each_entry_rcu(pos, &rdev->sched_scan_req_list,
->> list) {
-> 
-> [snip]
-> 
-> This looks fine, but perhaps in the above we should have some kind of
-> locking assertion, e.g.
-> 
-> 	WARN_ON_ONCE(!rcu_read_lock_held() && !lockdep_rtnl_is_held());
+Lior David (1):
+  wil6210: low level RF sector API
 
-Thought about something like this after sending the email. So there are
-two call sites. One for scheduled scan results notification and one in
-scheduled scan stop scenario. So for the latter it is not needed to use
-the rcu_read_lock() as it should have RTNL lock hence the two checks above?
+Maya Erez (2):
+  wil6210: add option to ignore OTA regulatory hints
+  wil6210: support devices with different PCIe bar size
 
-Will create a formal patch.
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 585 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/ioctl.c    |   4 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  35 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  13 +-
+ drivers/net/wireless/ath/wil6210/wmi.c      |   4 +-
+ 5 files changed, 622 insertions(+), 19 deletions(-)
 
-Regards,
-Arend
+-- 
+1.9.1
