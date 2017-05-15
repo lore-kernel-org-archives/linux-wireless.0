@@ -1,81 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53287 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751583AbdEUQU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 12:20:27 -0400
-To: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Cc: netdev@vger.kernel.org,
-        technicalsupport <techsupport@friendlyarm.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-amlogic <linux-amlogic@lists.infradead.org>
-From: =?UTF-8?Q?Andreas_F=c3=a4rber?= <afaerber@suse.de>
-Subject: brcmfmac firmware issue on NanoPi K2
-Message-ID: <ab713116-ab12-5f87-1ecf-cae2e0d68b93@suse.de> (sfid-20170521_182130_182639_59EBE1A0)
-Date: Sun, 21 May 2017 18:20:25 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:51934 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757293AbdEOH7y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 May 2017 03:59:54 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9E6533D955
+        for <linux-wireless@vger.kernel.org>; Mon, 15 May 2017 07:59:53 +0000 (UTC)
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwlegacy: warn when enabling power save
+Date: Mon, 15 May 2017 09:59:08 +0200
+Message-Id: <1494835148-12945-1-git-send-email-sgruszka@redhat.com> (sfid-20170515_095957_887001_9CD92947)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+iwlegacy firmware can crash when power save is configured. PS was
+allowed in "dbdac2b iwlegacy: properly enable power saving" with belive
+that user who enable PS is aware of that and can relate firmware crahes
+with PS. However some distributions seems to enable PS without user
+intervention, so warn about that.
 
-The NanoPi K2 has an Ampak AP6212 SDIO module. brcmfmac driver loads
-brcmfmac43430-sdio.bin.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/intel/iwlegacy/common.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-When using the firmware file from linux-firmware.git that openSUSE ships
-I get the following errors on 4.11.0 and next-20170519:
-
-[ 2103.618716] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
-clkctl 0x50
-[ 2104.668746] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
-clkctl 0x50
-[ 2105.678677] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
-clkctl 0x50
-
-If I overwrite /lib/firmware/brcm/bcm43430-sdio.bin with
-fw_bcm43438a0.bin from FriendlyARM's Android repository it suddenly works:
-
-[  +0.157738] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
-Jun  6 2014 14:50:39 version 7.10.226.49 (r) FWID 01-8962686a
-[  +0.160108] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code
-(0x30 0x30)
-
-I recall using the linux-firmware.git brcmfmac43430-sdio.bin file
-successfully on the Raspberry Pi 3 with a downstream (Leap 42.2) kernel.
-
-I've tested both nvram_ap6212.txt and nvram_ap6212a.txt, the latter has
-the following diff to nvram.txt:
-
---- nvram_ap6212.txt    2017-05-21 04:24:40.372113426 +0200
-+++ nvram_ap6212a.txt   2017-05-21 04:24:49.852116599 +0200
-@@ -1,4 +1,4 @@
--#AP6212_NVRAM_V1.0_20140603
-+#AP6212_NVRAM_V1.0.1_20160606
- # 2.4 GHz, 20 MHz BW mode
-
- # The following parameter values are just placeholders, need to be updated.
-@@ -51,4 +51,4 @@
- muxenab=0x10
- # CLDO PWM voltage settings - 0x4 - 1.1 volt
- #cldo_pwm=0x4
--
-+glitch_based_crsmin=1
-
-https://github.com/friendlyarm/android_hardware_amlogic_wifi/tree/l-amlogic-gx-sync/bcm_ampak/config/6212
-
-* Does the linux-firmware.git brcmfmac43430-sdio.bin need a fix for AP6212?
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/brcm
-
-* Does the brcmfmac driver need to distinguish revisions in sdio.c as
-done for 43241, plus a separate firmware file?
-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
-
-* Any other ideas?
-
-Thanks,
-Andreas
-
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index 140b6ea..6aaa0e7 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -5147,6 +5147,8 @@ void il_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 	if (changed & (IEEE80211_CONF_CHANGE_PS | IEEE80211_CONF_CHANGE_IDLE)) {
+ 		il->power_data.ps_disabled = !(conf->flags & IEEE80211_CONF_PS);
++		WARN_ONCE(!il->power_data.ps_disabled,
++			  "Enabling power save might cause firmware crashes\n");
+ 		ret = il_power_update_mode(il, false);
+ 		if (ret)
+ 			D_MAC80211("Error setting sleep level\n");
 -- 
-SUSE Linux GmbH, Maxfeldstr. 5, 90409 Nürnberg, Germany
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
+1.7.1
