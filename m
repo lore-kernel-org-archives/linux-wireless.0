@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41052 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752150AbdEQN73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 09:59:29 -0400
-Message-ID: <1495029567.2442.18.camel@sipsolutions.net> (sfid-20170517_155933_807420_FB2E8590)
-Subject: Re: [PATCH v2] mac80211: mesh - always do every discovery retry
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: Jesse Jones <jjones@uniumwifi.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Alexis Green <agreen@cococorp.com>,
-        Alexis Green <agreen@uniumwifi.com>
-Date: Wed, 17 May 2017 15:59:27 +0200
-In-Reply-To: <CAEFj986RfzE_AjuO0woU9JLcaUPetRYfx1HTNa+MXfEyRWqTbA@mail.gmail.com> (sfid-20170329_123356_020574_F9F8F5DD)
-References: <CAEFj984umxKZgMqzgbQvX+VgPjqCW98E17bfED9+Yg3XGzatOw@mail.gmail.com>
-         <b285e11810b612a6a156693f34e232ac@mail.gmail.com>
-         <CAEFj9874ynLcjn7AhpB-ajre3twpwHM4iEVN2ozYEGDPGErs0Q@mail.gmail.com>
-         <39c846a5bcfa1fff26f69a082466e414@mail.gmail.com>
-         <CAEFj987m=5a6pWZLMtTcVshmVfOmwwbb-+s0FR_+Dz6_xx7Dtw@mail.gmail.com>
-         <CAEFj9868zDVomdjQhrzNKs9ANaRF85wdA49vKwVZJ2dUiTpoVg@mail.gmail.com>
-         <faafc817ee74ba39171199985756b87b@mail.gmail.com>
-         <CAEFj984B=6C_AvzHqKnLLS5-h3cKMDmasXANQF1UZT64JSfW8g@mail.gmail.com>
-         <1490775841.7948.5.camel@sipsolutions.net>
-         <CAEFj986RfzE_AjuO0woU9JLcaUPetRYfx1HTNa+MXfEyRWqTbA@mail.gmail.com>
-         (sfid-20170329_123356_020574_F9F8F5DD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35913 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753144AbdEPNUL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 May 2017 09:20:11 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w138so3299847oiw.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:11 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 10/10] rtlwifi: btcoex: 23b 1ant: check PS state before setting tdma duration
+Date: Tue, 16 May 2017 08:19:57 -0500
+Message-Id: <20170516131957.9513-11-Larry.Finger@lwfinger.net> (sfid-20170516_152024_393411_C085C789)
+In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-03-29 at 18:33 +0800, Chun-Yeow Yeoh wrote:
-> I would suggest the following modification of commit messages and
-> code. Let me know whether this is fine.
-> 
-> ---------
-> I would suggest the following edition to the commit message:
-> 
-> Instead of stopping path discovery when a path is established,
-> continue the
-> attempts to find alternative paths until we hit the
-> dot11MeshHWMPmaxPREQretries
-> limit. However, this is not a standard behavior and may easily
-> increase the number of
-> broadcast PREQ frame in your network. So this feature is turned off
-> by default.
-> 
-> and the remaining are removed due to misleading explanation.
-> 
-> Then, in the mesh_path_timer, I think that only the following is
-> needed:
-> 
-> - if (mpath->flags & MESH_PATH_RESOLVED ||
-> - (!(mpath->flags & MESH_PATH_RESOLVING))) {
-> + if (!multiple_discoveries &&
-> +    (mpath->flags & MESH_PATH_RESOLVED ||
-> +     (!(mpath->flags & MESH_PATH_RESOLVING)))) {
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Alexis?
+For time division multiple access, the wifi and bt take turns to
+transmit, but we need to let AP know that wifi is under standby mode by
+sending null data to "pretend" entering power saving state using lps
+rpwm.
 
-johannes
+But, the fw does not know if it is the actual power saving mode or just a
+fake one to cheat to the AP. Hence, before fw setting the tdma duration,
+the fw needs the driver to check the power saving state first.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 3 +++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h | 1 +
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index b07883eaec5e..f3704d7db4d5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1401,6 +1401,7 @@ static void halbtc8723b1ant_power_save_state(struct btc_coexist *btcoexist,
+ 		btcoexist->btc_set(btcoexist, BTC_SET_ACT_DISABLE_LOW_POWER,
+ 				   &low_pwr_disable);
+ 		btcoexist->btc_set(btcoexist, BTC_SET_ACT_NORMAL_LPS, NULL);
++		coex_sta->force_lps_on = false;
+ 		break;
+ 	case BTC_PS_LPS_ON:
+ 		halbtc8723b1ant_ps_tdma_chk_pwr_save(btcoexist, true);
+@@ -1412,10 +1413,12 @@ static void halbtc8723b1ant_power_save_state(struct btc_coexist *btcoexist,
+ 				   &low_pwr_disable);
+ 		/* power save must executed before psTdma */
+ 		btcoexist->btc_set(btcoexist, BTC_SET_ACT_ENTER_LPS, NULL);
++		coex_sta->force_lps_on = true;
+ 		break;
+ 	case BTC_PS_LPS_OFF:
+ 		halbtc8723b1ant_ps_tdma_chk_pwr_save(btcoexist, false);
+ 		btcoexist->btc_set(btcoexist, BTC_SET_ACT_LEAVE_LPS, NULL);
++		coex_sta->force_lps_on = false;
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 0b7b9b2a8e12..d502a31812ab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -161,6 +161,7 @@ struct coex_sta_8723b_1ant {
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
+ 	bool cck_ever_lock;
++	bool force_lps_on;
+ 	u32 pop_event_cnt;
+ 
+ 	u32 crc_ok_cck;
+-- 
+2.12.0
