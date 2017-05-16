@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:33348 "EHLO
-        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdE1TiB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 May 2017 15:38:01 -0400
-Received: by mail-qk0-f176.google.com with SMTP id y201so36277476qka.0
-        for <linux-wireless@vger.kernel.org>; Sun, 28 May 2017 12:38:01 -0700 (PDT)
-Subject: Re: Probelm on (brcmfmac: use pre-allocated scatter-gather table for
- txglomming)
-To: Michael Trimarchi <michael@amarulasolutions.com>,
-        Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-References: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <531d6bb5-e864-111a-b976-8664b6f68e80@broadcom.com> (sfid-20170528_213805_573684_9C22C51D)
-Date: Sun, 28 May 2017 21:37:56 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56066 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750839AbdEPL7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 May 2017 07:59:18 -0400
+Message-ID: <1494935936.15923.0.camel@sipsolutions.net> (sfid-20170516_135953_122312_53150A17)
+Subject: Re: [PATCH] rt2x00: improve calling conventions for register
+ accessors
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>
+Cc: arnd@arndb.de, helmut.schaa@googlemail.com, kvalo@codeaurora.org,
+        daniel@makrotopia.org, dev@kresin.me, pozega.tomislav@gmail.com,
+        vasilugin@yandex.ru, roman@advem.lv,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Tue, 16 May 2017 13:58:56 +0200
+In-Reply-To: <20170516115511.GA4230@redhat.com> (sfid-20170516_135707_063500_1838FD88)
+References: <20170515134711.2770374-1-arnd@arndb.de>
+         <20170515142520.GA13996@redhat.com>
+         <20170515.103951.2305484593464882104.davem@davemloft.net>
+         <20170516115511.GA4230@redhat.com> (sfid-20170516_135707_063500_1838FD88)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-03-16 16:23, Michael Trimarchi wrote:
-> Hi
+On Tue, 2017-05-16 at 13:55 +0200, Stanislaw Gruszka wrote:
 > 
-> I have a kernel panic on the brcmf_sdiod_sgtable_alloc just because
-> the function is called before brcmf_sdio_probe.
-> 
-> I think that
->  nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
->                       sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
-> 
-> drvr is null. Can you explain how it can work or do you have already a
-> fix for this?
+> In rt2x00 driver we use poor convention in other kind of registers
+> accessors like bbp, mac, eeprom. I dislike to changing only rfcsr
+> accessors and leaving others in the old way. And changing all
+> accessors would be massive and error prone change, which I'm not
+> prefer either.
 
-It sounds familiar so what kernel version are you seeing this.
+That's a stupid argument, but for the sake of it - the conversion can
+easily be done with coccinelle/spatch without being "error prone".
 
-Regards,
-Arend
+johannes
