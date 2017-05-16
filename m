@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39638 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750748AbdESFTF (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36647 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752528AbdEPKCp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 01:19:05 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for register accessors
-References: <20170517144702.1381136-1-arnd@arndb.de>
-Date: Fri, 19 May 2017 08:18:57 +0300
-In-Reply-To: <20170517144702.1381136-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Wed, 17 May 2017 16:46:52 +0200")
-Message-ID: <87r2zl8lvi.fsf@codeaurora.org> (sfid-20170519_071911_324318_0AE03BA4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 16 May 2017 06:02:45 -0400
+Received: by mail-pg0-f65.google.com with SMTP id h64so16095889pge.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:02:45 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v3 01/11] rsi: Rename file rsi_91x_pkt.c to rsi_91x_hal.c
+Date: Tue, 16 May 2017 15:31:07 +0530
+Message-Id: <1494928877-27168-2-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170516_120249_804989_F7B036B4)
+In-Reply-To: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> I've managed to split up my long patch into a series of reasonble
-> steps now.
->
-> The first two are required to fix a regression from commit 41977e86c984
-> ("rt2x00: add support for MT7620"), the rest are just cleanups to
-> have a consistent state across all the register access functions.
+The file rsi_91x_hal.c is going to contain device specific code i.e new
+firmware loading method for RS9113 chipset. As the file rsi_91x_pkt.c
+contains code to prepare device specific descriptors for transmit packet,
+this file is renamed to rsi_91x_hal.c which is more relevant as per it's
+functionality.
 
-Can these all go to 4.13 or would you prefer me to push the first two
-4.12? Or what?
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v3: Same as earlier
+---
+ drivers/net/wireless/rsi/Makefile                         | 2 +-
+ drivers/net/wireless/rsi/{rsi_91x_pkt.c => rsi_91x_hal.c} | 0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename drivers/net/wireless/rsi/{rsi_91x_pkt.c => rsi_91x_hal.c} (100%)
 
+diff --git a/drivers/net/wireless/rsi/Makefile b/drivers/net/wireless/rsi/Makefile
+index 25828b6..a475c81 100644
+--- a/drivers/net/wireless/rsi/Makefile
++++ b/drivers/net/wireless/rsi/Makefile
+@@ -2,7 +2,7 @@ rsi_91x-y			+= rsi_91x_main.o
+ rsi_91x-y			+= rsi_91x_core.o
+ rsi_91x-y			+= rsi_91x_mac80211.o
+ rsi_91x-y			+= rsi_91x_mgmt.o
+-rsi_91x-y			+= rsi_91x_pkt.o
++rsi_91x-y			+= rsi_91x_hal.o
+ rsi_91x-$(CONFIG_RSI_DEBUGFS)	+= rsi_91x_debugfs.o
+ 
+ rsi_usb-y			+= rsi_91x_usb.o rsi_91x_usb_ops.o
+diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+similarity index 100%
+rename from drivers/net/wireless/rsi/rsi_91x_pkt.c
+rename to drivers/net/wireless/rsi/rsi_91x_hal.c
 -- 
-Kalle Valo
+2.7.4
