@@ -1,62 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34897 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752389AbdEINb1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 09:31:27 -0400
-Received: by mail-pf0-f196.google.com with SMTP id u26so50525pfd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 06:31:26 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 00/11] Firmware loading changes
-Date: Tue,  9 May 2017 19:00:03 +0530
-Message-Id: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170509_153140_951626_26AACED1)
+Received: from mx1.redhat.com ([209.132.183.28]:42090 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751483AbdEPL4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 May 2017 07:56:21 -0400
+Date: Tue, 16 May 2017 13:55:17 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: David Miller <davem@davemloft.net>
+Cc: arnd@arndb.de, helmut.schaa@googlemail.com, kvalo@codeaurora.org,
+        daniel@makrotopia.org, dev@kresin.me, johannes.berg@intel.com,
+        pozega.tomislav@gmail.com, vasilugin@yandex.ru, roman@advem.lv,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: improve calling conventions for register
+ accessors
+Message-ID: <20170516115511.GA4230@redhat.com> (sfid-20170516_135707_063500_1838FD88)
+References: <20170515134711.2770374-1-arnd@arndb.de>
+ <20170515142520.GA13996@redhat.com>
+ <20170515.103951.2305484593464882104.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170515.103951.2305484593464882104.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series includes firmware loading enhancements for
-Redpine 9113 chipset. The older method is not being used by any
-Redpine chipset. There is no firmware image submitted to upstream
-yet. We will submit 9113's firmware image once these changes are
-accepted.
+On Mon, May 15, 2017 at 10:39:51AM -0400, David Miller wrote:
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date: Mon, 15 May 2017 16:28:01 +0200
+> 
+> > On Mon, May 15, 2017 at 03:46:55PM +0200, Arnd Bergmann wrote:
+> >> With CONFIG_KASAN enabled and gcc-7, we get a warning about rather high
+> >> stack usage (with a private patch set I have to turn on this warning,
+> >> which I intend to get into the next kernel release):
+> >> 
+> >> wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_bw_filter_calibration':
+> >> wireless/ralink/rt2x00/rt2800lib.c:7990:1: error: the frame size of 2144 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+> >> 
+> >> The problem is that KASAN inserts a redzone around each local variable that
+> >> gets passed by reference, and the newly added function has a lot of them.
+> >> We can easily avoid that here by changing the calling convention to have
+> >> the output as the return value of the function. This should also results in
+> >> smaller object code, saving around 4KB in .text with KASAN, or 2KB without
+> >> KASAN.
+> >> 
+> >> Fixes: 41977e86c984 ("rt2x00: add support for MT7620")
+> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> >> ---
+> >>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 319 +++++++++++++------------
+> >>  1 file changed, 164 insertions(+), 155 deletions(-)
+> > 
+> > We have read(, &val) calling convention since forever in rt2x00 and that
+> > was never a problem. I dislike to change that now to make some tools
+> > happy, I think problem should be fixed in the tools instead.
+> 
+> Passing return values by reference is and always has been a really
+> poor way to achieve what these functions are doing.
+> 
+> And frankly, whilst the tool could see what's going on here better, we
+> should be making code easier rather than more difficult to audit.
+> 
+> I am therefore very much in favor of Arnd's change.
+> 
+> This isn't even a situation where there are multiple return values,
+> such as needing to signal an error and return an unsigned value at the
+> same time.
+> 
+> These functions return _one_ value, and therefore they should be
+> returned as a true return value.
 
-This patch series is based on original work submitted by Prameela
-earlier. We have done some cleanup work and prepared smaller
-incremental patches. We will start maintaining changelog for further
-revisions.
+In rt2x00 driver we use poor convention in other kind of registers
+accessors like bbp, mac, eeprom. I dislike to changing only rfcsr
+accessors and leaving others in the old way. And changing all accessors
+would be massive and error prone change, which I'm not prefer either.
 
-Prameela Rani Garnepudi (11):
-  rsi: Rename file rsi_91x_pkt.c to rsi_91x_hal.c
-  rsi: Changes to sdio reads and writes
-  rsi: Changes in USB read and write operations
-  rsi: use macros in USB specific code
-  rsi: Remove unnecessary buffer allocation
-  rsi: Handle usb multi-byte write failure case properly
-  rsi: Add usb multi-byte read operation
-  rsi: Add host interface operations as separate structure.
-  rsi: Add new host interface operations
-  rsi: Add new firmware loading method
-  rsi: Remove old firmware loading method
+Arnd, could this be fixed by refactoring rt2800_bw_filter_calibration()
+function (which is enormous and definitely should be split into smaller
+subroutines) ? If not, I would accept this patch.
 
- drivers/net/wireless/rsi/Makefile           |   2 +-
- drivers/net/wireless/rsi/rsi_91x_hal.c      | 740 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_pkt.c      | 215 --------
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 211 +++++++-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 190 +------
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 182 +++++--
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 125 -----
- drivers/net/wireless/rsi/rsi_common.h       |   3 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  90 ++++
- drivers/net/wireless/rsi/rsi_main.h         |  36 +-
- drivers/net/wireless/rsi/rsi_sdio.h         |   6 +-
- drivers/net/wireless/rsi/rsi_usb.h          |   3 -
- 12 files changed, 1215 insertions(+), 588 deletions(-)
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_hal.c
- delete mode 100644 drivers/net/wireless/rsi/rsi_91x_pkt.c
- create mode 100644 drivers/net/wireless/rsi/rsi_hal.h
-
--- 
-2.7.4
+Thanks
+Stanislaw
