@@ -1,80 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway23.websitewelcome.com ([192.185.50.161]:21644 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754113AbdEQWPR (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34642 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751680AbdEPNUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 18:15:17 -0400
-Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id 8F9881AE5F
-        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2017 16:52:32 -0500 (CDT)
-Date: Wed, 17 May 2017 16:52:32 -0500
-Message-ID: <20170517165232.Horde.v4lHW1-r73ZYdz2POOdERBa@gator4166.hostgator.com> (sfid-20170518_001521_201522_332E89FD)
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [net-realtek-btcoexist] question about identical code for different
- branches
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-MIME-Version: 1.0
+        Tue, 16 May 2017 09:20:07 -0400
+Received: by mail-oi0-f67.google.com with SMTP id w10so3309222oif.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:06 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 05/10] rtlwifi: btcoex: 23b 1ant: rename and coding style modification.
+Date: Tue, 16 May 2017 08:19:52 -0500
+Message-Id: <20170516131957.9513-6-Larry.Finger@lwfinger.net> (sfid-20170516_152014_071699_1718DD55)
+In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Hello everybody,
+Rename:
+ * tdma_adj_type to ps_tdma_du_adj_type
+ * wifiCentralChnl to wifi_central_chnl
 
-While looking into Coverity ID 1362263 I ran into the following piece  
-of code at  
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1000:
+Coding style:
+ * move constant from right to left side in if-statement
 
-1000void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num)
-1001{
-1002        if (BT_COEX_ANT_TYPE_PG == type) {
-1003                gl_bt_coexist.board_info.pg_ant_num = ant_num;
-1004                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-1005                /* The antenna position:
-1006                 * Main (default) or Aux for pgAntNum=2 && btdmAntNum =1.
-1007                 * The antenna position should be determined by
-1008                 * auto-detect mechanism.
-1009                 * The following is assumed to main,
-1010                 * and those must be modified
-1011                 * if y auto-detect mechanism is ready
-1012                 */
-1013                if ((gl_bt_coexist.board_info.pg_ant_num == 2) &&
-1014                    (gl_bt_coexist.board_info.btdm_ant_num == 1))
-1015                        gl_bt_coexist.board_info.btdm_ant_pos =
-1016                                                        
-BTC_ANTENNA_AT_MAIN_PORT;
-1017                else
-1018                        gl_bt_coexist.board_info.btdm_ant_pos =
-1019                                                        
-BTC_ANTENNA_AT_MAIN_PORT;
-1020        } else if (BT_COEX_ANT_TYPE_ANTDIV == type) {
-1021                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-1022                gl_bt_coexist.board_info.btdm_ant_pos =
-1023                                                        
-BTC_ANTENNA_AT_MAIN_PORT;
-1024        } else if (type == BT_COEX_ANT_TYPE_DETECTED) {
-1025                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-1026                if (rtlpriv->cfg->mod_params->ant_sel == 1)
-1027                        gl_bt_coexist.board_info.btdm_ant_pos =
-1028                                BTC_ANTENNA_AT_AUX_PORT;
-1029                else
-1030                        gl_bt_coexist.board_info.btdm_ant_pos =
-1031                                BTC_ANTENNA_AT_MAIN_PORT;
-1032        }
-1033}
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 88 +++++++++++-----------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  2 +-
+ 2 files changed, 44 insertions(+), 46 deletions(-)
 
-The issue is that lines of code 1015-1016 and 1018-1019 are identical  
-for different branches.
-
-My question here is if one of those assignments should be modified, or  
-the entire _if_ statement replaced and the function refactored?
-
-I'd really appreciate any comment on this.
-
-Thank you!
---
-Gustavo A. R. Silva
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index df0782c17905..2e1ba8fed982 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1094,7 +1094,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 		    coex_dm->cur_ps_tdma != 3 && coex_dm->cur_ps_tdma != 9) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 						true, 9);
+-			coex_dm->tdma_adj_type = 9;
++			coex_dm->ps_tdma_du_adj_type = 9;
+ 
+ 			up = 0;
+ 			dn = 0;
+@@ -1112,7 +1112,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 			 "[BTCoex], first run TdmaDurationAdjust()!!\n");
+ 
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 2);
+-		coex_dm->tdma_adj_type = 2;
++		coex_dm->ps_tdma_du_adj_type = 2;
+ 
+ 		up = 0;
+ 		dn = 0;
+@@ -1191,19 +1191,19 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 			     (coex_dm->cur_ps_tdma == 2))) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 9);
+-				coex_dm->tdma_adj_type = 9;
++				coex_dm->ps_tdma_du_adj_type = 9;
+ 			} else if (coex_dm->cur_ps_tdma == 1) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 2);
+-				coex_dm->tdma_adj_type = 2;
++				coex_dm->ps_tdma_du_adj_type = 2;
+ 			} else if (coex_dm->cur_ps_tdma == 2) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 9);
+-				coex_dm->tdma_adj_type = 9;
++				coex_dm->ps_tdma_du_adj_type = 9;
+ 			} else if (coex_dm->cur_ps_tdma == 9) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 11);
+-				coex_dm->tdma_adj_type = 11;
++				coex_dm->ps_tdma_du_adj_type = 11;
+ 			}
+ 		} else if (result == 1) {
+ 			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
+@@ -1211,19 +1211,19 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 			     (coex_dm->cur_ps_tdma == 2))) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 9);
+-				coex_dm->tdma_adj_type = 9;
++				coex_dm->ps_tdma_du_adj_type = 9;
+ 			} else if (coex_dm->cur_ps_tdma == 11) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 9);
+-				coex_dm->tdma_adj_type = 9;
++				coex_dm->ps_tdma_du_adj_type = 9;
+ 			} else if (coex_dm->cur_ps_tdma == 9) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 2);
+-				coex_dm->tdma_adj_type = 2;
++				coex_dm->ps_tdma_du_adj_type = 2;
+ 			} else if (coex_dm->cur_ps_tdma == 2) {
+ 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 							true, 1);
+-				coex_dm->tdma_adj_type = 1;
++				coex_dm->ps_tdma_du_adj_type = 1;
+ 			}
+ 		} else {
+ 			/* if busy / idle change */
+@@ -1236,7 +1236,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 		    coex_dm->cur_ps_tdma != 9 && coex_dm->cur_ps_tdma != 11) {
+ 			/* recover to previous adjust type */
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
+-						coex_dm->tdma_adj_type);
++						coex_dm->ps_tdma_du_adj_type);
+ 		}
+ 	}
+ }
+@@ -1501,7 +1501,7 @@ btc8723b1ant_action_wifi_not_conn_scan(struct btc_coexist *btcoexist)
+ 					 0x0, 0x0);
+ 
+ 	/* tdma and coex table */
+-	if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
++	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
+ 		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 						true, 22);
+@@ -1518,9 +1518,8 @@ btc8723b1ant_action_wifi_not_conn_scan(struct btc_coexist *btcoexist)
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+ 							     NORMAL_EXEC, 1);
+ 		}
+-	} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY == coex_dm->bt_status) ||
+-		   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
+-		    coex_dm->bt_status)){
++	} else if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
++		   coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY){
+ 		btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
+ 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
+ 	} else {
+@@ -1556,7 +1555,7 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
+ 					 0x0, 0x0);
+ 
+ 	/* tdma and coex table */
+-	if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
++	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
+ 		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 						true, 22);
+@@ -1573,9 +1572,8 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+ 							     NORMAL_EXEC, 1);
+ 		}
+-	} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY == coex_dm->bt_status) ||
+-		   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
+-		    coex_dm->bt_status)) {
++	} else if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
++		   coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
+ 		btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
+ 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
+ 	} else {
+@@ -1646,7 +1644,7 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
+ 	/* power save state */
+ 	if (!ap_enable &&
+-	    BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status &&
++	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY &&
+ 	    !btcoexist->bt_link_info.hid_only) {
+ 		if (!wifi_busy && btcoexist->bt_link_info.a2dp_only)
+ 			halbtc8723b1ant_power_save_state(btcoexist,
+@@ -1662,13 +1660,14 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ 	}
+ 	/* tdma and coex table */
+ 	if (!wifi_busy) {
+-		if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
+-			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(btcoexist,
+-				      BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE);
+-		} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY ==
+-						coex_dm->bt_status) ||
+-			   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
+-						coex_dm->bt_status)) {
++		if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
++			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
++				btcoexist,
++				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE);
++		} else if (coex_dm->bt_status ==
++				BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
++			   coex_dm->bt_status ==
++				BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
+ 			btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
+ 				     BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE);
+ 		} else {
+@@ -1678,13 +1677,14 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ 							     NORMAL_EXEC, 2);
+ 		}
+ 	} else {
+-		if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
+-			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(btcoexist,
+-				    BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
+-		} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY ==
+-			   coex_dm->bt_status) ||
+-			   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
+-			    coex_dm->bt_status)) {
++		if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
++			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
++				btcoexist,
++				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
++		} else if (coex_dm->bt_status ==
++				BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
++			   coex_dm->bt_status ==
++				BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
+ 			btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
+ 				    BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
+ 		} else {
+@@ -1728,11 +1728,10 @@ static void halbtc8723b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 		return;
+ 	}
+ 
+-	if ((BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) ||
+-	    (BT_8723B_1ANT_BT_STATUS_SCO_BUSY == coex_dm->bt_status) ||
+-	    (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY == coex_dm->bt_status)) {
++	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY ||
++	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
++	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY)
+ 		increase_scan_dev_num = true;
+-	}
+ 
+ 	btcoexist->btc_set(btcoexist, BTC_SET_BL_INC_SCAN_DEV_NUM,
+ 			   &increase_scan_dev_num);
+@@ -2349,7 +2348,7 @@ void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 h2c_parameter[3] = {0};
+ 	u32 wifi_bw;
+-	u8 wifiCentralChnl;
++	u8 wifi_central_chnl;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
+ 	    btcoexist->bt_info.bt_disabled)
+@@ -2364,12 +2363,11 @@ void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 
+ 	/* only 2.4G we need to inform bt the chnl mask */
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U1_WIFI_CENTRAL_CHNL,
+-			   &wifiCentralChnl);
++			   &wifi_central_chnl);
+ 
+-	if ((BTC_MEDIA_CONNECT == type) &&
+-	    (wifiCentralChnl <= 14)) {
++	if (type == BTC_MEDIA_CONNECT && wifi_central_chnl <= 14) {
+ 		h2c_parameter[0] = 0x0;
+-		h2c_parameter[1] = wifiCentralChnl;
++		h2c_parameter[1] = wifi_central_chnl;
+ 		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
+ 		if (BTC_WIFI_BW_HT40 == wifi_bw)
+ 			h2c_parameter[2] = 0x30;
+@@ -2464,8 +2462,8 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				 "0x%02x, ", tmp_buf[i]);
+ 	}
+ 
+-	if (BT_INFO_SRC_8723B_1ANT_WIFI_FW != rsp_source) {
+-		coex_sta->bt_retry_cnt =	/* [3:0] */
++	if (rsp_source != BT_INFO_SRC_8723B_1ANT_WIFI_FW) {
++		coex_sta->bt_retry_cnt = /* [3:0] */
+ 			coex_sta->bt_info_c2h[rsp_source][2] & 0xf;
+ 
+ 		coex_sta->bt_rssi =
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 7e91901122c3..cd6369ef0e3a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -88,7 +88,7 @@ struct coex_dm_8723b_1ant {
+ 	u8 pre_ps_tdma;
+ 	u8 cur_ps_tdma;
+ 	u8 ps_tdma_para[5];
+-	u8 tdma_adj_type;
++	u8 ps_tdma_du_adj_type;
+ 	bool auto_tdma_adjust;
+ 	bool pre_ps_tdma_on;
+ 	bool cur_ps_tdma_on;
+-- 
+2.12.0
