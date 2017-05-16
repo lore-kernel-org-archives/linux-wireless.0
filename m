@@ -1,120 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:36043 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756979AbdEUUBY (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:55994 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750765AbdEPL4H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 16:01:24 -0400
-Received: by mail-lf0-f66.google.com with SMTP id h4so3696051lfj.3
-        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:23 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 4/9] ath10k: add start_once support
-Date: Sun, 21 May 2017 21:59:06 +0200
-Message-Id: <1495396751-4805-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220218_272360_896EB43D)
-In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+        Tue, 16 May 2017 07:56:07 -0400
+Date: Tue, 16 May 2017 13:55:46 +0200
+From: Bastian Bittorf <bb@npl.de>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        benjamin@sipsolutions.net
+Subject: Re: [PATCH 0/7] extend mac80211 mesh DFS and CSA functionality
+Message-ID: <20170516115546.GZ18518@medion.lan> (sfid-20170516_135617_020783_134A240E)
+References: <20170516092316.15636-1-sw@simonwunderlich.de>
+ <20170516094403.GX18518@medion.lan>
+ <4020776.cO0ANP896r@prime>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4020776.cO0ANP896r@prime>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add possibility to configure the driver to only start target once.
-This can reduce startup time of SDIO devices significantly since
-loading the firmware can take a substantial amount of time.
+* Simon Wunderlich <sw@simonwunderlich.de> [16.05.2017 12:24]:
+>  * station A detects a Radar, and informs userspace
+>  * userspace of station A will initiate a CSA, kernel will execute it (action 
+> frame, beacons)
+>  * station B picks up the CSA, and executes it as well
+>  * station B also marks the channel as unavailable
+>  * both station A and station B will send an event to userspace once the 
+> channel switch is complete
 
-The patch is also necessary for high latency devices in general
-since it does not seem to be possible to rerun the BMI phase
-(fw upload) without power-cycling the device.
+ah, I remember the slides from last battlemesh.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 19 +++++++++++++++----
- drivers/net/wireless/ath/ath10k/core.h |  2 ++
- drivers/net/wireless/ath/ath10k/hw.h   |  6 ++++++
- 3 files changed, 23 insertions(+), 4 deletions(-)
+The "problems" in userspace are: we must maintain a global list
+(so each node) which channel is the next best and we must time
+the final channel switch. IMHO the specs are saying, that we must
+switch within 30 secs after detecting the first radar-pattern.
+Also we must mark/show the new channel somehow for new/crashed/upcoming nodes.
+quite hard...
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 0c46004..54bf396 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1956,6 +1956,9 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 	int status;
- 	u32 val;
- 
-+	if (ar->is_started && ar->hw_params.start_once)
-+		return 0;
-+
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
-@@ -2175,6 +2178,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 	if (status)
- 		goto err_hif_stop;
- 
-+	ar->is_started = true;
- 	return 0;
- 
- err_hif_stop:
-@@ -2227,6 +2231,7 @@ void ath10k_core_stop(struct ath10k *ar)
- 	ath10k_htt_tx_stop(&ar->htt);
- 	ath10k_htt_rx_free(&ar->htt);
- 	ath10k_wmi_detach(ar);
-+	ar->is_started = false;
- }
- EXPORT_SYMBOL(ath10k_core_stop);
- 
-@@ -2329,12 +2334,18 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_unlock;
- 	}
- 
--	ath10k_debug_print_boot_info(ar);
--	ath10k_core_stop(ar);
-+	/* Leave target running if hw_params.start_once is set */
-+	if (ar->hw_params.start_once) {
-+		mutex_unlock(&ar->conf_mutex);
-+	} else {
-+		ath10k_debug_print_boot_info(ar);
-+		ath10k_core_stop(ar);
- 
--	mutex_unlock(&ar->conf_mutex);
-+		mutex_unlock(&ar->conf_mutex);
-+
-+		ath10k_hif_power_down(ar);
-+	}
- 
--	ath10k_hif_power_down(ar);
- 	return 0;
- 
- err_unlock:
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index cdac923..0e75441 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -784,6 +784,8 @@ struct ath10k {
- 
- 	bool is_high_latency;
- 
-+	bool is_started;
-+
- 	struct {
- 		enum ath10k_bus bus;
- 		const struct ath10k_hif_ops *ops;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 160377aa..f733e73 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -473,6 +473,12 @@ struct ath10k_hw_params {
- 	bool is_high_latency;
- 
- 	enum ath10k_bus bus;
-+
-+	/* Specifies whether or not the device should be started once.
-+	 * If set, the device will be started once by the early fw probe
-+	 * and it will not be terminated afterwards.
-+	 */
-+	bool start_once;
- };
- 
- struct htt_rx_desc;
--- 
-2.7.4
+bye, bastian
