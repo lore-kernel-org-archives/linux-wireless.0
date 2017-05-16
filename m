@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36757 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757714AbdELOBT (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34936 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752345AbdEPNUE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 10:01:19 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [7/7] wil6210: low level RF sector API
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1477720287-17606-8-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1477720287-17606-8-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Lior David <qca_liord@qca.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-ID: <d1c2f4300d4843239e5339b0fa6a2e2f@euamsexm01a.eu.qualcomm.com> (sfid-20170512_160234_432283_C519A72B)
-Date: Fri, 12 May 2017 16:01:11 +0200
+        Tue, 16 May 2017 09:20:04 -0400
+Received: by mail-oi0-f68.google.com with SMTP id m17so3303973oik.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:04 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 02/10] rtlwifi: btcoex: 21a 1ant: fix some coding style issues
+Date: Tue, 16 May 2017 08:19:49 -0500
+Message-Id: <20170516131957.9513-3-Larry.Finger@lwfinger.net> (sfid-20170516_152028_557617_3902EE7F)
+In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-> From: Lior David <qca_liord@qca.qualcomm.com>
-> 
-> Added vendor commands for low level control over
-> RF sectors. It allows user space a fine-grained control
-> over RF characteristics for TX and RX, such as direction
-> and gain of TX/RX. Main usages are debugging and diagnostics,
-> but also operational use cases.
-> API includes getting/setting a specific RF sector
-> configuration, as well as getting/setting the selected
-> sector which is used to communicate with a station.
-> 
-> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Sorry for taking so long to get back to this. I was still able to apply the
-patch to my pending branch, only the nla_parse() interface had changed but that
-was a simple fix:
+Fix alignment for coding style consistency.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=d31df2dcc53e4901d4c26de45f4877fbd8783124
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c   | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-But when I started to look this more closely I don't see wiphy->vendor_commands
-set anywhere, did you forgot to set that?
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index a5ac07cf0dca..93644bedaa0f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -2839,14 +2839,14 @@ void ex_btc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 	}
+ 
+ 	if (BT_INFO_SRC_8821A_1ANT_WIFI_FW != rsp_source) {
+-		coex_sta->bt_retry_cnt =	/* [3:0]*/
+-			coex_sta->bt_info_c2h[rsp_source][2]&0xf;
++		/* [3:0] */
++		coex_sta->bt_retry_cnt =
++			coex_sta->bt_info_c2h[rsp_source][2] & 0xf;
+ 
+ 		coex_sta->bt_rssi =
+-			coex_sta->bt_info_c2h[rsp_source][3]*2+10;
++			coex_sta->bt_info_c2h[rsp_source][3] * 2 + 10;
+ 
+-		coex_sta->bt_info_ext =
+-			coex_sta->bt_info_c2h[rsp_source][4];
++		coex_sta->bt_info_ext = coex_sta->bt_info_c2h[rsp_source][4];
+ 
+ 		/* Here we need to resend some wifi info to BT
+ 		 * because bt is reset and lost the info
+@@ -2928,11 +2928,11 @@ void ex_btc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], BtInfoNotify(), BT Connected-idle!!!\n");
+ 	} else if ((bt_info&BT_INFO_8821A_1ANT_B_SCO_ESCO) ||
+-		(bt_info&BT_INFO_8821A_1ANT_B_SCO_BUSY)) {
++		(bt_info & BT_INFO_8821A_1ANT_B_SCO_BUSY)) {
+ 		coex_dm->bt_status = BT_8821A_1ANT_BT_STATUS_SCO_BUSY;
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], BtInfoNotify(), BT SCO busy!!!\n");
+-	} else if (bt_info&BT_INFO_8821A_1ANT_B_ACL_BUSY) {
++	} else if (bt_info & BT_INFO_8821A_1ANT_B_ACL_BUSY) {
+ 		if (BT_8821A_1ANT_BT_STATUS_ACL_BUSY != coex_dm->bt_status)
+ 			coex_dm->auto_tdma_adjust = false;
+ 		coex_dm->bt_status = BT_8821A_1ANT_BT_STATUS_ACL_BUSY;
 -- 
-https://patchwork.kernel.org/patch/9403071/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
