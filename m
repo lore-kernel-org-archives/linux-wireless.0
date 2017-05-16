@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34634 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932376AbdEKR6D (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:33074 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751997AbdEPKIT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 13:58:03 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH v2 3/4] staging: rtl8192e: rtl92e_get_eeprom_size Fix read size of EPROM_CMD.
-Date: Thu, 11 May 2017 18:57:45 +0100
-Message-Id: <20170511175746.12378-3-tvboxspy@gmail.com> (sfid-20170511_195808_481983_8F7A3111)
-In-Reply-To: <20170511175746.12378-1-tvboxspy@gmail.com>
-References: <20170511175746.12378-1-tvboxspy@gmail.com>
+        Tue, 16 May 2017 06:08:19 -0400
+Received: by mail-qt0-f193.google.com with SMTP id a46so19920296qte.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:08:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87bmqzs0m9.fsf@kamboji.qca.qualcomm.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+ <1494336614-2107-8-git-send-email-amit.karwar@redpinesignals.com> <87bmqzs0m9.fsf@kamboji.qca.qualcomm.com>
+From: amit karwar <amitkarwar@gmail.com>
+Date: Tue, 16 May 2017 15:38:17 +0530
+Message-ID: <CAEhWJFm+jYLwctwzEU4YwWBj+KhGKkjYzLMO6q=_NRCwFt0qEg@mail.gmail.com> (sfid-20170516_120845_766071_023AF81A)
+Subject: Re: [v2 07/11] rsi: Add usb multi-byte read operation
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-EPROM_CMD is 2 byte aligned on PCI map so calling with rtl92e_readl
-will return invalid data so use rtl92e_readw.
+On Fri, May 12, 2017 at 12:05 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> USB multibyte read will be used in the new firmware loading method
+>> for RS9113 chipset.
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
+> [...]
+>
+>> +static int rsi_usb_read_register_multiple(struct rsi_hw *adapter, u32 addr,
+>> +                                       u8 *data, u16 count)
+>> +{
+>> +     struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+>> +     u8 *buf;
+>> +     u16 transfer;
+>> +     int status;
+>> +
+>> +     if (!addr)
+>> +             return -EINVAL;
+>> +
+>> +     buf = kzalloc(4096, GFP_KERNEL);
+>> +     if (!buf)
+>> +             return -ENOMEM;
+>> +
+>> +     while (count) {
+>> +             transfer = min_t(u16, count, 4096);
+>
+> A minor thing, no need to resend just because of this. But a define for
+> 4096 would be nice.
+>
 
-The device is unable to select the right eeprom type.
+I have defined a macro for 4096 in v3 series.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org>
----
-v2 - Fix typo in subject line
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index e03d0a3a6dcc..1c6ed5b2a6f9 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -625,7 +625,7 @@ void rtl92e_get_eeprom_size(struct net_device *dev)
- 	struct r8192_priv *priv = rtllib_priv(dev);
- 
- 	RT_TRACE(COMP_INIT, "===========>%s()\n", __func__);
--	curCR = rtl92e_readl(dev, EPROM_CMD);
-+	curCR = rtl92e_readw(dev, EPROM_CMD);
- 	RT_TRACE(COMP_INIT, "read from Reg Cmd9346CR(%x):%x\n", EPROM_CMD,
- 		 curCR);
- 	priv->epromtype = (curCR & EPROM_CMD_9356SEL) ? EEPROM_93C56 :
--- 
-2.11.0
+Regards,
+Amitkumar Karwar
