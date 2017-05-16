@@ -1,63 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44786 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932314AbdERPrj (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35909 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753074AbdEPNUL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 11:47:39 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [V3, 5/9] brcmfmac: add firmware feature detection for gscan feature
-References: <1492776308-15120-6-git-send-email-arend.vanspriel@broadcom.com>
-        <20170518133655.91D0660F60@smtp.codeaurora.org>
-Date: Thu, 18 May 2017 18:47:35 +0300
-In-Reply-To: <20170518133655.91D0660F60@smtp.codeaurora.org> (Kalle Valo's
-        message of "Thu, 18 May 2017 13:36:55 +0000 (UTC)")
-Message-ID: <87h90i5fqg.fsf@purkki.adurom.net> (sfid-20170518_174805_235425_7D81EDC5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 16 May 2017 09:20:11 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w138so3299796oiw.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:10 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 09/10] rtlwifi: btcoex: 23b 1ant: monitor bt is enabled or disabled
+Date: Tue, 16 May 2017 08:19:56 -0500
+Message-Id: <20170516131957.9513-10-Larry.Finger@lwfinger.net> (sfid-20170516_152019_349943_ED463FA5)
+In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->> From: Arend van Spriel <arend@broadcom.com>
->> 
->> Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
->> invalid version.
->> 
->> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->
-> Failed to apply:
->
-> fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c).
-> error: could not build fake ancestor
-> Applying: brcmfmac: add support multi-scheduled scan
-> Patch failed at 0001 brcmfmac: add support multi-scheduled scan
-> The copy of the patch that failed is found in: .git/rebase-apply/patch
->
-> 5 patches set to Changes Requested.
->
-> 9692541 [V3,5/9] brcmfmac: add firmware feature detection for gscan feature
-> 9692537 [V3,6/9] brcmfmac: move scheduled scan wiphy param setting to pno module
-> 9692543 [V3,7/9] brcmfmac: add support multi-scheduled scan
-> 9692535 [V3,8/9] brcmfmac: add mutex to protect pno requests
-> 9692539 [V3,9/9] brcmfmac: add scheduled scan support for specified BSSIDs
+Check BT's status, and record it in field bt_disabled. When BT is disabled,
+We do special action called wifi_only.  Also, we move the field from
+'struct btc_coexist' to 'struct coex_sta_8723b_1ant'.
 
-Actually I made a mistake and forgot to manually remove patches 5 and 6
-from the tree after the conflict (I haven't automated that part yet in
-my script). So these are now applied:
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-9fe929aaace6 brcmfmac: add firmware feature detection for gscan feature
-94ed6ffb7965 brcmfmac: move scheduled scan wiphy param setting to pno module
-
-Please resend patches 7-9 and double check that the tree looks ok :)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 9178cccb5ddf..b07883eaec5e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -2136,7 +2136,7 @@ void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
+ 
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = [%s/ %d/ %d] ",
+ 		 "BT [status/ rssi/ retryCnt]",
+-		 ((btcoexist->bt_info.bt_disabled) ? ("disabled") :
++		 ((coex_sta->bt_disabled) ? ("disabled") :
+ 		  ((coex_sta->c2h_bt_inquiry_page) ? ("inquiry/page scan") :
+ 		   ((BT_8723B_1ANT_BT_STATUS_NON_CONNECTED_IDLE ==
+ 		     coex_dm->bt_status) ?
+@@ -2422,7 +2422,7 @@ void ex_halbtc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ 	u8 agg_buf_size = 5;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
+-	    btcoexist->bt_info.bt_disabled)
++	    coex_sta->bt_disabled)
+ 		return;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
+@@ -2472,7 +2472,7 @@ void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 	u8 wifi_central_chnl;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
+-	    btcoexist->bt_info.bt_disabled)
++	    coex_sta->bt_disabled)
+ 		return;
+ 
+ 	if (BTC_MEDIA_CONNECT == type)
+@@ -2519,7 +2519,7 @@ void ex_halbtc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 	u8 agg_buf_size = 5;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
+-	    btcoexist->bt_info.bt_disabled)
++	    coex_sta->bt_disabled)
+ 		return;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
 -- 
-Kalle Valo
+2.12.0
