@@ -1,76 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33432 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1164693AbdEYALn (ORCPT
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:33146 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750765AbdEPObD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 20:11:43 -0400
-Received: by mail-pf0-f172.google.com with SMTP id e193so150313259pfh.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:43 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Tue, 16 May 2017 10:31:03 -0400
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] rt2x00: improve calling conventions for register
+ accessors
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 11/14] mwifiex: utilize netif_tx_{wake,stop}_all_queues()
-Date: Wed, 24 May 2017 17:11:16 -0700
-Message-Id: <20170525001119.64791-11-briannorris@chromium.org> (sfid-20170525_021436_318556_90C9EDA0)
-In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
-References: <20170525001119.64791-1-briannorris@chromium.org>
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        =?UTF-8?Q?Tomislav_Po=c5=beega?= <pozega.tomislav@gmail.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20170515134711.2770374-1-arnd@arndb.de>
+ <20170515142520.GA13996@redhat.com>
+ <20170515.103951.2305484593464882104.davem@davemloft.net>
+ <20170516115511.GA4230@redhat.com>
+ <0ce21c48-1d2c-3035-3c6e-52c7debf86d5@gmail.com>
+ <CAK8P3a18opkvCyoNmYhR6M7XXEq8f__hMZH1A6w8UFP7qbmQWw@mail.gmail.com>
+Message-ID: <0080a870-2d15-9b60-b7fb-8847d3c8aa8a@gmail.com> (sfid-20170516_163110_419326_579DCBDD)
+Date: Tue, 16 May 2017 10:31:00 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAK8P3a18opkvCyoNmYhR6M7XXEq8f__hMZH1A6w8UFP7qbmQWw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're open-coding these. Just use the helpers.
+On 05/16/2017 10:19 AM, Arnd Bergmann wrote:
+> On Tue, May 16, 2017 at 3:44 PM, Jes Sorensen <jes.sorensen@gmail.com> wrote:
+>> On 05/16/2017 07:55 AM, Stanislaw Gruszka wrote:
+>>>
+>>> On Mon, May 15, 2017 at 10:39:51AM -0400, David Miller wrote:
+>>>>
+>>>> Passing return values by reference is and always has been a really
+>>>> poor way to achieve what these functions are doing.
+>>>>
+>>>> And frankly, whilst the tool could see what's going on here better, we
+>>>> should be making code easier rather than more difficult to audit.
+>>>>
+>>>> I am therefore very much in favor of Arnd's change.
+>>>>
+>>>> This isn't even a situation where there are multiple return values,
+>>>> such as needing to signal an error and return an unsigned value at the
+>>>> same time.
+>>>>
+>>>> These functions return _one_ value, and therefore they should be
+>>>> returned as a true return value.
+>>>
+>>>
+>>> In rt2x00 driver we use poor convention in other kind of registers
+>>> accessors like bbp, mac, eeprom. I dislike to changing only rfcsr
+>>> accessors and leaving others in the old way. And changing all accessors
+>>> would be massive and error prone change, which I'm not prefer either.
+>>
+>>
+>> That's why you do it in multiple smaller patches rather than one ugly giant
+>> patch.
+> 
+> I did  the first step using a search&replace in vim using
+> 
+> s:\(rt2800_rfcsr_read(.*,.*\), &\(.*\));:\2 = \1);:
+> 
+> but had to introduce a conversion function
+> 
+> static void rt2800_rfcsr_readreg(struct rt2x00_dev *rt2x00dev,
+>                                  const unsigned int word, u8 *value)
+> {
+>         *value = rt2800_rfcsr_read(rt2x00dev, word);
+> }
+> 
+> to keep the correct types in place for struct rt2x00debug. I now
+> did all the other ones too, and removed that helper again. The
+> result in much nicer, but I basically ended up having to do
+> the same regex search for all of these at once:
+> 
+> static void rt2400pci_bbp_read(struct rt2x00_dev *rt2x00dev,
+> static void rt2500pci_bbp_read(struct rt2x00_dev *rt2x00dev,
+> static void rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+> static void rt2500usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
+> static void rt2500usb_bbp_read(struct rt2x00_dev *rt2x00dev,
+> static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+> static void rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
+> static void rt2800_eeprom_read(struct rt2x00_dev *rt2x00dev,
+> static void rt2800_rfcsr_readreg(struct rt2x00_dev *rt2x00dev,
+> static void rt2800_bbp_dcoc_read(struct rt2x00_dev *rt2x00dev,
+> void (*register_read)(struct rt2x00_dev *rt2x00dev,
+> void (*register_read_lock)(struct rt2x00_dev *rt2x00dev,
+> static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
+> static inline void rt2800_register_read_lock(struct rt2x00_dev *rt2x00dev,
+> static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
+> static inline void rt2x00_eeprom_read(struct rt2x00_dev *rt2x00dev,
+> void (*read)(struct rt2x00_dev *rt2x00dev, \
+> static inline void rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
+> static inline void _rt2x00_desc_read(__le32 *desc, const u8 word, __le32 *value)
+> static inline void rt2x00_desc_read(__le32 *desc, const u8 word, u32 *value)
+> static inline void rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
+> static inline void rt2x00usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
+> static void rt61pci_bbp_read(struct rt2x00_dev *rt2x00dev,
+> static void rt73usb_bbp_read(struct rt2x00_dev *rt2x00dev,
+> 
+> and that ended up as a 300KB patch [1]. Splitting it up is clearly possibly,
+> but I fear that would be more error-prone as we then need to add
+> those helpers for the other debug stuff as well, and remove it again
+> afterwards.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/init.c | 20 ++------------------
- 1 file changed, 2 insertions(+), 18 deletions(-)
+True - if the automatic conversion works without automatic intervention, 
+I am less worried about it. Personally I would still focus on converting 
+one function at a time to reduce the impact of each patch.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 80bdf1c5f77f..d3b8ca402d08 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -332,17 +332,9 @@ void mwifiex_wake_up_net_dev_queue(struct net_device *netdev,
- 					struct mwifiex_adapter *adapter)
- {
- 	unsigned long dev_queue_flags;
--	unsigned int i;
- 
- 	spin_lock_irqsave(&adapter->queue_lock, dev_queue_flags);
--
--	for (i = 0; i < netdev->num_tx_queues; i++) {
--		struct netdev_queue *txq = netdev_get_tx_queue(netdev, i);
--
--		if (netif_tx_queue_stopped(txq))
--			netif_tx_wake_queue(txq);
--	}
--
-+	netif_tx_wake_all_queues(netdev);
- 	spin_unlock_irqrestore(&adapter->queue_lock, dev_queue_flags);
- }
- 
-@@ -353,17 +345,9 @@ void mwifiex_stop_net_dev_queue(struct net_device *netdev,
- 					struct mwifiex_adapter *adapter)
- {
- 	unsigned long dev_queue_flags;
--	unsigned int i;
- 
- 	spin_lock_irqsave(&adapter->queue_lock, dev_queue_flags);
--
--	for (i = 0; i < netdev->num_tx_queues; i++) {
--		struct netdev_queue *txq = netdev_get_tx_queue(netdev, i);
--
--		if (!netif_tx_queue_stopped(txq))
--			netif_tx_stop_queue(txq);
--	}
--
-+	netif_tx_stop_all_queues(netdev);
- 	spin_unlock_irqrestore(&adapter->queue_lock, dev_queue_flags);
- }
- 
--- 
-2.13.0.219.gdb65acc882-goog
+Cheers,
+Jes
