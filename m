@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55198 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752302AbdEPJXj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 05:23:39 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH 7/7] mac80211: mark as action frame when parsing IEs of CSA action frames
-Date: Tue, 16 May 2017 11:23:16 +0200
-Message-Id: <20170516092316.15636-8-sw@simonwunderlich.de> (sfid-20170516_112816_170245_E8BD3E72)
-In-Reply-To: <20170516092316.15636-1-sw@simonwunderlich.de>
-References: <20170516092316.15636-1-sw@simonwunderlich.de>
+Received: from mx1.redhat.com ([209.132.183.28]:60002 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751931AbdEPMoY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 May 2017 08:44:24 -0400
+Date: Tue, 16 May 2017 14:43:41 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, arnd@arndb.de,
+        helmut.schaa@googlemail.com, kvalo@codeaurora.org,
+        daniel@makrotopia.org, dev@kresin.me, pozega.tomislav@gmail.com,
+        vasilugin@yandex.ru, roman@advem.lv,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: improve calling conventions for register
+ accessors
+Message-ID: <20170516124255.GA5440@redhat.com> (sfid-20170516_144504_863606_91F8E090)
+References: <20170515134711.2770374-1-arnd@arndb.de>
+ <20170515142520.GA13996@redhat.com>
+ <20170515.103951.2305484593464882104.davem@davemloft.net>
+ <20170516115511.GA4230@redhat.com>
+ <1494935936.15923.0.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1494935936.15923.0.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
----
- net/mac80211/mesh.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, May 16, 2017 at 01:58:56PM +0200, Johannes Berg wrote:
+> On Tue, 2017-05-16 at 13:55 +0200, Stanislaw Gruszka wrote:
+> > 
+> > In rt2x00 driver we use poor convention in other kind of registers
+> > accessors like bbp, mac, eeprom. I dislike to changing only rfcsr
+> > accessors and leaving others in the old way. And changing all
+> > accessors would be massive and error prone change, which I'm not
+> > prefer either.
+> 
+> That's a stupid argument, but for the sake of it - the conversion can
+> easily be done with coccinelle/spatch without being "error prone".
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a57af5df7ee4..ab07974cdcf4 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1308,7 +1308,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
- 	pos = mgmt->u.action.u.chan_switch.variable;
- 	baselen = offsetof(struct ieee80211_mgmt,
- 			   u.action.u.chan_switch.variable);
--	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
-+	ieee802_11_parse_elems(pos, len - baselen, true, &elems);
- 
- 	ifmsh->chsw_ttl = elems.mesh_chansw_params_ie->mesh_ttl;
- 	if (!--ifmsh->chsw_ttl)
--- 
-2.11.0
+Sure, but still I think it would be preferable to fix newly added
+rt2800_bw_filter_calibration() function, instead of ancient rfcsr
+accessors.
+
+Stanislaw  
