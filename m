@@ -1,43 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57436 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751037AbdE3NSp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 09:18:45 -0400
-Message-ID: <1496150322.3327.9.camel@sipsolutions.net> (sfid-20170530_151856_892178_3B5E3770)
-Subject: Re: 'iw events' stops receiving events after a while on 4.9 + hacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>, Bastian Bittorf <bb@npl.de>
-Cc: netdev <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 30 May 2017 15:18:42 +0200
-In-Reply-To: <fa96dfad-8d1b-c48f-df3b-3df0d548a5c6@candelatech.com>
-References: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
-         <20170517100844.GC2849@medion.lan>
-         <1495027835.2442.13.camel@sipsolutions.net>
-         <fa96dfad-8d1b-c48f-df3b-3df0d548a5c6@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from packetmixer.de ([79.140.42.25]:55182 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752303AbdEPJXj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 May 2017 05:23:39 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH 3/7] wireless: Require HANDLE_DFS flag to switch channel for non-AP mode
+Date: Tue, 16 May 2017 11:23:12 +0200
+Message-Id: <20170516092316.15636-4-sw@simonwunderlich.de> (sfid-20170516_112816_714596_F7018CF4)
+In-Reply-To: <20170516092316.15636-1-sw@simonwunderlich.de>
+References: <20170516092316.15636-1-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-05-17 at 08:22 -0700, Ben Greear wrote:
-> 
-> I saw it exactly once so far, and it happened overnight,
-> but we have not been doing a lot of work with the 4.9 kernel until
-> recently.
-> 
-> I don't think there were many messages on this system, and certainly
-> others have run much longer on systems that should be generating many
-> more events without trouble.
+From: Benjamin Berg <benjamin@sipsolutions.net>
 
-Ok.
+In the case the channel should be switched to one requiring DFS we need
+to make sure that userspace will handle radar events when they happen.
+For AP mode this is assumed to be the case, as a manager like hostapd
+is required. However IBSS and MESH modes can work without further
+userspace assistance, so refuse to use DFS channels unless userspace
+vouches that it handles DFS.
 
-> Is there any way to dump out the socket information if we reproduce
-> the problem?
+NOTE: Userspace should have already flagged support earlier during mesh
+or IBSS setup. However, this information is not readily accessible
+currently.
 
-I have no idea, sorry.
+Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
+[sw: style cleanups]
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+---
+ net/wireless/nl80211.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-If you or Bastian can tell me how to reproduce the problem, I can try
-to investigate it.
-
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d47e55e3f445..9eb59196a378 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7501,6 +7501,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	static struct nlattr *csa_attrs[NL80211_ATTR_MAX+1];
+ 	int err;
+ 	bool need_new_beacon = false;
++	bool need_handle_dfs_flag = true;
+ 	int len, i;
+ 	u32 cs_count;
+ 
+@@ -7512,6 +7513,12 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		need_new_beacon = true;
++		/* For all modes except AP the handle_dfs flag needs to be
++		 * supplied to tell the kernel that userspace will handle radar
++		 * events when they happen. Otherwise a switch to a channel
++		 * requiring DFS will be rejected.
++		 */
++		need_handle_dfs_flag = false;
+ 
+ 		/* useless if AP is not running */
+ 		if (!wdev->beacon_interval)
+@@ -7634,8 +7641,13 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	if (err < 0)
+ 		return err;
+ 
+-	if (err > 0)
++	if (err > 0) {
+ 		params.radar_required = true;
++		if (need_handle_dfs_flag &&
++		    !nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS])) {
++			return -EINVAL;
++		}
++	}
+ 
+ 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
+ 		params.block_tx = true;
+-- 
+2.11.0
