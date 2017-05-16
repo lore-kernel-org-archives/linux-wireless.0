@@ -1,76 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0089.outbound.protection.outlook.com ([104.47.41.89]:55808
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935659AbdEVVFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 17:05:00 -0400
-Date: Tue, 23 May 2017 00:04:46 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna
- chipsets
-Message-ID: <20170522210445.bj3zlyc4stjmojf5@bars> (sfid-20170522_230604_034230_2A24B8F3)
-References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
- <1495026753.2442.7.camel@sipsolutions.net>
- <20170518200810.pch7tivugqyjmy4d@bars>
- <1495189094.3274.2.camel@sipsolutions.net>
- <20170521170814.d7ljne2pgopymxud@bars>
- <1495434501.2653.7.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495434501.2653.7.camel@sipsolutions.net>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35396 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752531AbdEPKCt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 May 2017 06:02:49 -0400
+Received: by mail-pf0-f195.google.com with SMTP id u26so19383531pfd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:02:49 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v3 02/11] rsi: Changes to sdio reads and writes
+Date: Tue, 16 May 2017 15:31:08 +0530
+Message-Id: <1494928877-27168-3-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170516_120253_938354_AA1691FF)
+In-Reply-To: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > - reply to action frames rejected by userspace tools
-> >   in the same way as it is done by mac80211
-> 
-> I think you're probably thinking of the right thing, but just to
-> clarify:
->  * if userspace decides to send a reject frame (0x80|action) then
->    that's just a regular mgmt-TX, nothing special about that
->  * if the cfg80211_rx_mgmt() *function* returns saying it wasn't
->    handled, that's just cfg80211 doing it due to the filters - then
->    there's no userspace code involved
-> 
-> I think you were thinking of the latter case, and yes, just adding the
-> few lines of code to send rejects for action frames would be
-> sufficient.
-Correct, this is the case.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> 
-> > Adding reject code seems to be straightforward. Adding
-> > NL80211_RXMGMT_FLAG_ANSWERED flag to firmware is a more involved
-> > task. But it can be done gradually, from simple usecases to the
-> > complicated ones. Besides, IIUC the support of this flag by userspace
-> > tools is still a work in progress. E.g., hostapd is not yet using it,
-> > so we keep using 'send_probe_response = 0' config option.
-> 
-> Yeah, like I said above, this whole thing isn't really fully thought
-> out it seems. I'm not sure what you mean by "send_probe_response = 0"
-> though.
-Hostapd registers for acton frames and probe requests. In our case probe
-responses are sent by firmware. However hostapd needs to look at them anyway
-in certain usecases. Bug hostapd doesn't try to respond to probe requests
-when option 'send_probe_response = 0' is set in hostapd config.
+SDIO read or write maximum size is limited to 2^16. This is done to make
+the host interface operations common for SDIO and USB.
 
-IIRC the idea was to use 'send_probe_response' for now and then to implement
-the use of NL80211_RXMGMT_FLAG_ANSWERED flag in hostapd, at least for probe
-requests for the start. But it definitely doesn't make sense if you
-plan to get rid of this flag in the long run.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v3: Same as earlier
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 10 +++++-----
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  8 ++++----
+ drivers/net/wireless/rsi/rsi_sdio.h         |  4 ++--
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-> > Does it make sense if I post an RFC patch modifying current interface
-> > of mgmt_frame_register in cfg80211_ops to collect feedback ?
-> 
-> Sure. I think there are some complications, like what happens if you
-> just pass this through to the firmware and then the firmware crashes,
-> and you need to recover this state? Perhaps cfg80211 should have some
-> state accessors ("iterate list of subscriptions") for this purpose. Of
-> course that can be added later as well.
-Ok
-
-Regards,
-Sergey
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 8428858..39d94b3 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -487,8 +487,8 @@ void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit)
+  */
+ static int rsi_sdio_read_register_multiple(struct rsi_hw *adapter,
+ 					   u32 addr,
+-					   u32 count,
+-					   u8 *data)
++					   u8 *data,
++					   u16 count)
+ {
+ 	struct rsi_91x_sdiodev *dev =
+ 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+@@ -518,7 +518,7 @@ static int rsi_sdio_read_register_multiple(struct rsi_hw *adapter,
+ int rsi_sdio_write_register_multiple(struct rsi_hw *adapter,
+ 				     u32 addr,
+ 				     u8 *data,
+-				     u32 count)
++				     u16 count)
+ {
+ 	struct rsi_91x_sdiodev *dev =
+ 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+@@ -614,8 +614,8 @@ int rsi_sdio_host_intf_read_pkt(struct rsi_hw *adapter,
+ 
+ 	status = rsi_sdio_read_register_multiple(adapter,
+ 						 length,
+-						 length, /*num of bytes*/
+-						 (u8 *)pkt);
++						 (u8 *)pkt,
++						 length); /*num of bytes*/
+ 
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to read frame: %d\n", __func__,
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 40d7231..7c9cf01 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -75,13 +75,13 @@ static int rsi_sdio_master_access_msword(struct rsi_hw *adapter,
+ static int rsi_copy_to_card(struct rsi_common *common,
+ 			    const u8 *fw,
+ 			    u32 len,
+-			    u32 num_blocks)
++			    u16 num_blocks)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct rsi_91x_sdiodev *dev =
+ 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 	u32 indx, ii;
+-	u32 block_size = dev->tx_blk_size;
++	u16 block_size = dev->tx_blk_size;
+ 	u32 lsb_address;
+ 	__le32 data[] = { TA_HOLD_THREAD_VALUE, TA_SOFT_RST_CLR,
+ 			  TA_PC_ZERO, TA_RELEASE_THREAD_VALUE };
+@@ -171,10 +171,10 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
+ 	struct rsi_91x_sdiodev *dev =
+ 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 	u32 len;
+-	u32 num_blocks;
++	u16 num_blocks;
+ 	const u8 *fw;
+ 	const struct firmware *fw_entry = NULL;
+-	u32 block_size = dev->tx_blk_size;
++	u16 block_size = dev->tx_blk_size;
+ 	int status = 0;
+ 	u32 base_address;
+ 	u16 msb_address;
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index c7e8f2b..a82bc4c 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -110,7 +110,7 @@ struct rsi_91x_sdiodev {
+ 	u8 sdio_clock_speed;
+ 	u32 cardcapability;
+ 	u8 prev_desc[16];
+-	u32 tx_blk_size;
++	u16 tx_blk_size;
+ 	u8 write_fail;
+ };
+ 
+@@ -122,7 +122,7 @@ int rsi_sdio_host_intf_read_pkt(struct rsi_hw *adapter, u8 *pkt, u32 length);
+ int rsi_sdio_write_register(struct rsi_hw *adapter, u8 function,
+ 			    u32 addr, u8 *data);
+ int rsi_sdio_write_register_multiple(struct rsi_hw *adapter, u32 addr,
+-				     u8 *data, u32 count);
++				     u8 *data, u16 count);
+ void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
+ int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
+ int rsi_sdio_read_buffer_status_register(struct rsi_hw *adapter, u8 q_num);
+-- 
+2.7.4
