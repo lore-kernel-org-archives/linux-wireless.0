@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:58319 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932385AbdEKLxS (ORCPT
+Received: from mail-vk0-f49.google.com ([209.85.213.49]:36304 "EHLO
+        mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752592AbdEPT5H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 07:53:18 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org,
-        "Reizer, Eyal" <eyalr@ti.com>, Tony Lindgren <tony@atomide.com>,
-        Wei Yongjun <weiyj.lk@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wlcore: fix 64K page support
-Date: Thu, 11 May 2017 13:52:09 +0200
-Message-Id: <20170511115307.3060650-1-arnd@arndb.de> (sfid-20170511_135504_707495_AC9FBE57)
+        Tue, 16 May 2017 15:57:07 -0400
+Received: by mail-vk0-f49.google.com with SMTP id p85so51153005vkd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 12:57:06 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: mike@hellotwist.com
+In-Reply-To: <1494579146.32348.3.camel@sipsolutions.net>
+References: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
+ <20170510122458.GA4796@w1.fi> <CAKXXJEymJXEp70bUMuNCxDAA1CLCOJN4DjnPBkf5oh6Nqn7JQA@mail.gmail.com>
+ <1494579146.32348.3.camel@sipsolutions.net>
+From: Michael Skeffington <mike@astro.ai>
+Date: Tue, 16 May 2017 15:57:05 -0400
+Message-ID: <CAKXXJEwTWEeBP3gS6nnAxrhim1XbHGjiWZRmAGnDZdizD=1nzw@mail.gmail.com> (sfid-20170516_215728_378584_E0A55824)
+Subject: Re: [PATCH] mac80211: Validate michael MIC before attempting packet decode.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the stable linux-3.16 branch, I ran into a warning in the
-wlcore driver:
+Johannes,
 
-drivers/net/wireless/ti/wlcore/spi.c: In function 'wl12xx_spi_raw_write':
-drivers/net/wireless/ti/wlcore/spi.c:315:1: error: the frame size of 12848 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
+Thank you for that.  I need to make a quick hack to send an invalid
+MIC packet from another device to test the countermeasures.  Should I
+submit a new patch with this change when I've completed testing or are
+you already prepared to do so?
 
-Newer kernels no longer show the warning, but the bug is still there,
-as the allocation is based on the CPU page size rather than the
-actual capabilities of the hardware.
+Michael
 
-This replaces the PAGE_SIZE macro with the SZ_4K macro, i.e. 4096 bytes
-per buffer.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/ti/wlcore/spi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index f949ad2bd898..fa3547e06424 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -70,10 +70,10 @@
- #define WSPI_MAX_CHUNK_SIZE    4092
- 
- /*
-- * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
-- * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
-+ * wl18xx driver aggregation buffer size is (13 * 4K) compared to
-+ * (4 * 4K) for wl12xx, so use the larger buffer needed for wl18xx
-  */
--#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
-+#define SPI_AGGR_BUFFER_SIZE (13 * SZ_4K)
- 
- /* Maximum number of SPI write chunks */
- #define WSPI_MAX_NUM_OF_CHUNKS \
--- 
-2.9.0
+On Fri, May 12, 2017 at 4:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Here's the driver code from rt2500usb (but it's similar in the others):
+>
+>                 rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
+>                 if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
+>                         rxdesc->flags |= RX_FLAG_DECRYPTED;
+>                 else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
+>                         rxdesc->flags |= RX_FLAG_MMIC_ERROR;
+>
+> I think if you just change it to be
+>
+> [...]
+>                 else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
+>                         rxdesc->flags |= RX_FLAG_MMIC_ERROR |
+>                                          RX_FLAG_DECRYPTED;
+>
+> things will start working. This is arguably correct since to be able to
+> check the MMIC, the frame has to have been decrypted (properly) before.
+>
+> johannes
