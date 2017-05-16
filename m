@@ -1,231 +1,446 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33282 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756974AbdEUUBX (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34704 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752074AbdEPKDm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 16:01:23 -0400
-Received: by mail-lf0-f68.google.com with SMTP id m18so3697241lfj.0
-        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:22 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 3/9] ath10k: per target configurablity of various items
-Date: Sun, 21 May 2017 21:59:05 +0200
-Message-Id: <1495396751-4805-4-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220201_424401_A67E2DFC)
-In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+        Tue, 16 May 2017 06:03:42 -0400
+Received: by mail-pf0-f193.google.com with SMTP id w69so19397671pfk.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:03:32 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v3 11/11] rsi: Remove old firmware loading method
+Date: Tue, 16 May 2017 15:31:17 +0530
+Message-Id: <1494928877-27168-12-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170516_120350_334292_64C9ADE5)
+In-Reply-To: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added ability to set bus type and configure the max number of
-peers in the ath10k_hw_params struct.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-With this functionality it is possible to have a different
-hw configuration depending on bus type for the same radio
-chipset.
+The older firmware loading method is not usable by any Redpine chipset.
+Hence removing that part of the code. Older firmware image with
+rsi_91x.fw name is deprecated
 
-E.g. SDIO and USB devices using the same chipset as PCIe
-devices will potentially use different board files and perhaps
-other configuration parameters.
-
-One such parameter is the max number of peers.
-Instead of using a default value (suitable for PCIe devices)
-derived from the WMI op version, a per target value can be
-used instead.
-
-This is needed by the QCA9377 USB device in order to prevent
-the target fw to crash after HTT RX ring cfg is issued.
-
-Apparently, the QCA9377 HL device does not seem to handle the
-same amount of peers as the LL devices.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c    | 33 +++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath10k/core.h    |  7 -------
- drivers/net/wireless/ath/ath10k/hw.h      | 22 +++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
- 4 files changed, 49 insertions(+), 17 deletions(-)
+v3: Included the name of older firmware which won't be used anymore in
+commit description(Kalle Valo)
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 187 ----------------------------
+ drivers/net/wireless/rsi/rsi_91x_usb.c      |   6 +-
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 126 -------------------
+ drivers/net/wireless/rsi/rsi_common.h       |   3 +-
+ drivers/net/wireless/rsi/rsi_sdio.h         |   1 -
+ drivers/net/wireless/rsi/rsi_usb.h          |   3 -
+ 6 files changed, 3 insertions(+), 323 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 627954e..0c46004 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1621,9 +1621,19 @@ static int ath10k_init_hw_params(struct ath10k *ar)
- 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
- 		hw_params = &ath10k_hw_params_list[i];
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 225042f..df2a63b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -60,171 +60,6 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
+ }
  
--		if (hw_params->id == ar->target_version &&
--		    hw_params->dev_id == ar->dev_id)
--			break;
-+		if (ar->is_high_latency) {
-+			/* High latency devices will use different fw depending
-+			 * on if it is a USB or SDIO device.
-+			 */
-+			if (hw_params->bus == ar->hif.bus &&
-+			    hw_params->id == ar->target_version &&
-+			    hw_params->dev_id == ar->dev_id)
-+				break;
-+		} else {
-+			if (hw_params->id == ar->target_version &&
-+			    hw_params->dev_id == ar->dev_id)
-+				break;
-+		}
- 	}
- 
- 	if (i == ARRAY_SIZE(ath10k_hw_params_list)) {
-@@ -1722,6 +1732,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
- static int ath10k_core_init_firmware_features(struct ath10k *ar)
- {
- 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
-+	int max_num_peers;
- 
- 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
- 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
-@@ -1801,7 +1812,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 
- 	switch (fw_file->wmi_op_version) {
- 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
--		ar->max_num_peers = TARGET_NUM_PEERS;
-+		max_num_peers = TARGET_NUM_PEERS;
- 		ar->max_num_stations = TARGET_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
-@@ -1813,10 +1824,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
- 		if (ath10k_peer_stats_enabled(ar)) {
--			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
-+			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
- 		} else {
--			ar->max_num_peers = TARGET_10X_NUM_PEERS;
-+			max_num_peers = TARGET_10X_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
- 		}
- 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
-@@ -1825,7 +1836,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_TLV:
--		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
-+		max_num_peers = TARGET_TLV_NUM_PEERS;
- 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
- 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
-@@ -1836,7 +1847,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_4:
--		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
-+		max_num_peers = TARGET_10_4_NUM_PEERS;
- 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
- 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
- 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
-@@ -1853,10 +1864,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-+	default:
- 		WARN_ON(1);
- 		return -EINVAL;
- 	}
- 
-+	if (ar->hw_params.max_num_peers)
-+		ar->max_num_peers = ar->hw_params.max_num_peers;
-+	else
-+		ar->max_num_peers = max_num_peers;
-+
- 	/* Backwards compatibility for firmwares without
- 	 * ATH10K_FW_IE_HTT_OP_VERSION.
- 	 */
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 90069b8..cdac923 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -88,13 +88,6 @@
- 
- struct ath10k;
- 
--enum ath10k_bus {
--	ATH10K_BUS_PCI,
--	ATH10K_BUS_AHB,
--	ATH10K_BUS_SDIO,
--	ATH10K_BUS_USB,
--};
+ /**
+- * rsi_copy_to_card() - This function includes the actual funtionality of
+- *			copying the TA firmware to the card.Basically this
+- *			function includes opening the TA file,reading the
+- *			TA file and writing their values in blocks of data.
+- * @common: Pointer to the driver private structure.
+- * @fw: Pointer to the firmware value to be written.
+- * @len: length of firmware file.
+- * @num_blocks: Number of blocks to be written to the card.
+- *
+- * Return: 0 on success and -1 on failure.
+- */
+-static int rsi_copy_to_card(struct rsi_common *common,
+-			    const u8 *fw,
+-			    u32 len,
+-			    u16 num_blocks)
+-{
+-	struct rsi_hw *adapter = common->priv;
+-	struct rsi_91x_sdiodev *dev =
+-		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+-	u32 indx, ii;
+-	u16 block_size = dev->tx_blk_size;
+-	u32 lsb_address;
+-	__le32 data[] = { TA_HOLD_THREAD_VALUE, TA_SOFT_RST_CLR,
+-			  TA_PC_ZERO, TA_RELEASE_THREAD_VALUE };
+-	u32 address[] = { TA_HOLD_THREAD_REG, TA_SOFT_RESET_REG,
+-			  TA_TH0_PC_REG, TA_RELEASE_THREAD_REG };
+-	u32 base_address;
+-	u16 msb_address;
 -
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+-	base_address = TA_LOAD_ADDRESS;
+-	msb_address = base_address >> 16;
+-
+-	for (indx = 0, ii = 0; ii < num_blocks; ii++, indx += block_size) {
+-		lsb_address = ((u16) base_address | RSI_SD_REQUEST_MASTER);
+-		if (rsi_sdio_write_register_multiple(adapter,
+-						     lsb_address,
+-						     (u8 *)(fw + indx),
+-						     block_size)) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Unable to load %s blk\n", __func__,
+-				FIRMWARE_RSI9113);
+-			return -1;
+-		}
+-		rsi_dbg(INIT_ZONE, "%s: loading block: %d\n", __func__, ii);
+-		base_address += block_size;
+-		if ((base_address >> 16) != msb_address) {
+-			msb_address += 1;
+-			if (rsi_sdio_master_access_msword(adapter,
+-							  msb_address)) {
+-				rsi_dbg(ERR_ZONE,
+-					"%s: Unable to set ms word reg\n",
+-					__func__);
+-				return -1;
+-			}
+-		}
+-	}
+-
+-	if (len % block_size) {
+-		lsb_address = ((u16) base_address | RSI_SD_REQUEST_MASTER);
+-		if (rsi_sdio_write_register_multiple(adapter,
+-						     lsb_address,
+-						     (u8 *)(fw + indx),
+-						     len % block_size)) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Unable to load f/w\n", __func__);
+-			return -1;
+-		}
+-	}
+-	rsi_dbg(INIT_ZONE,
+-		"%s: Succesfully loaded TA instructions\n", __func__);
+-
+-	if (rsi_sdio_master_access_msword(adapter, TA_BASE_ADDR)) {
+-		rsi_dbg(ERR_ZONE,
+-			"%s: Unable to set ms word to common reg\n",
+-			__func__);
+-		return -1;
+-	}
+-
+-	for (ii = 0; ii < ARRAY_SIZE(data); ii++) {
+-		/* Bringing TA out of reset */
+-		if (rsi_sdio_write_register_multiple(adapter,
+-						     (address[ii] |
+-						     RSI_SD_REQUEST_MASTER),
+-						     (u8 *)&data[ii],
+-						     4)) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Unable to hold TA threads\n", __func__);
+-			return -1;
+-		}
+-	}
+-
+-	rsi_dbg(INIT_ZONE, "%s: loaded firmware\n", __func__);
+-	return 0;
+-}
+-
+-/**
+- * rsi_load_ta_instructions() - This function includes the actual funtionality
+- *				of loading the TA firmware.This function also
+- *				includes opening the TA file,reading the TA
+- *				file and writing their value in blocks of data.
+- * @common: Pointer to the driver private structure.
+- *
+- * Return: status: 0 on success, -1 on failure.
+- */
+-static int rsi_load_ta_instructions(struct rsi_common *common)
+-{
+-	struct rsi_hw *adapter = common->priv;
+-	struct rsi_91x_sdiodev *dev =
+-		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+-	u32 len;
+-	u16 num_blocks;
+-	const u8 *fw;
+-	const struct firmware *fw_entry = NULL;
+-	u16 block_size = dev->tx_blk_size;
+-	int status = 0;
+-	u32 base_address;
+-	u16 msb_address;
+-
+-	if (rsi_sdio_master_access_msword(adapter, TA_BASE_ADDR)) {
+-		rsi_dbg(ERR_ZONE,
+-			"%s: Unable to set ms word to common reg\n",
+-			__func__);
+-		return -1;
+-	}
+-	base_address = TA_LOAD_ADDRESS;
+-	msb_address = (base_address >> 16);
+-
+-	if (rsi_sdio_master_access_msword(adapter, msb_address)) {
+-		rsi_dbg(ERR_ZONE,
+-			"%s: Unable to set ms word reg\n", __func__);
+-		return -1;
+-	}
+-
+-	status = request_firmware(&fw_entry, FIRMWARE_RSI9113, adapter->device);
+-	if (status < 0) {
+-		rsi_dbg(ERR_ZONE, "%s Firmware file %s not found\n",
+-			__func__, FIRMWARE_RSI9113);
+-		return status;
+-	}
+-
+-	/* Copy firmware into DMA-accessible memory */
+-	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+-	if (!fw) {
+-		status = -ENOMEM;
+-		goto out;
+-	}
+-	len = fw_entry->size;
+-
+-	if (len % 4)
+-		len += (4 - (len % 4));
+-
+-	num_blocks = (len / block_size);
+-
+-	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
+-	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
+-
+-	status = rsi_copy_to_card(common, fw, len, num_blocks);
+-	kfree(fw);
+-
+-out:
+-	release_firmware(fw_entry);
+-	return status;
+-}
+-
+-/**
+  * rsi_process_pkt() - This Function reads rx_blocks register and figures out
+  *		       the size of the rx pkt.
+  * @common: Pointer to the driver private structure.
+@@ -471,28 +306,6 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ }
+ 
+ /**
+- * rsi_device_init() - This Function Initializes The HAL.
+- * @common: Pointer to the driver private structure.
+- *
+- * Return: 0 on success, -1 on failure.
+- */
+-int rsi_sdio_device_init(struct rsi_common *common)
+-{
+-	if (rsi_load_ta_instructions(common))
+-		return -1;
+-
+-	if (rsi_sdio_master_access_msword(common->priv, MISC_CFG_BASE_ADDR)) {
+-		rsi_dbg(ERR_ZONE, "%s: Unable to set ms word reg\n",
+-			__func__);
+-		return -1;
+-	}
+-	rsi_dbg(INIT_ZONE,
+-		"%s: Setting ms word to 0x41050000\n", __func__);
+-
+-	return 0;
+-}
+-
+-/**
+  * rsi_sdio_read_buffer_status_register() - This function is used to the read
+  *					    buffer status register and set
+  *					    relevant fields in
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 72c7f3a..f5de693 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -327,10 +327,8 @@ static int rsi_usb_read_register_multiple(struct rsi_hw *adapter, u32 addr,
+  *
+  * Return: status: 0 on success, a negative error code on failure.
+  */
+-int rsi_usb_write_register_multiple(struct rsi_hw *adapter,
+-				    u32 addr,
+-				    u8 *data,
+-				    u16 count)
++static int rsi_usb_write_register_multiple(struct rsi_hw *adapter, u32 addr,
++					   u8 *data, u16 count)
  {
- 	switch (bus) {
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index d342728..160377aa 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -20,6 +20,13 @@
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+ 	u8 *buf;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+index 1c3e654..d3e0a07 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -19,67 +19,6 @@
+ #include "rsi_usb.h"
  
- #include "targaddrs.h"
+ /**
+- * rsi_copy_to_card() - This function includes the actual funtionality of
+- *			copying the TA firmware to the card.Basically this
+- *			function includes opening the TA file,reading the TA
+- *			file and writing their values in blocks of data.
+- * @common: Pointer to the driver private structure.
+- * @fw: Pointer to the firmware value to be written.
+- * @len: length of firmware file.
+- * @num_blocks: Number of blocks to be written to the card.
+- *
+- * Return: 0 on success and -1 on failure.
+- */
+-static int rsi_copy_to_card(struct rsi_common *common,
+-			    const u8 *fw,
+-			    u32 len,
+-			    u16 num_blocks)
+-{
+-	struct rsi_hw *adapter = common->priv;
+-	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+-	u32 indx, ii;
+-	u16 block_size = dev->tx_blk_size;
+-	u32 lsb_address;
+-	u32 base_address;
+-
+-	base_address = TA_LOAD_ADDRESS;
+-
+-	for (indx = 0, ii = 0; ii < num_blocks; ii++, indx += block_size) {
+-		lsb_address = base_address;
+-		if (rsi_usb_write_register_multiple(adapter,
+-						    lsb_address,
+-						    (u8 *)(fw + indx),
+-						    block_size)) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Unable to load %s blk\n", __func__,
+-				FIRMWARE_RSI9113);
+-			return -EIO;
+-		}
+-		rsi_dbg(INIT_ZONE, "%s: loading block: %d\n", __func__, ii);
+-		base_address += block_size;
+-	}
+-
+-	if (len % block_size) {
+-		lsb_address = base_address;
+-		if (rsi_usb_write_register_multiple(adapter,
+-						    lsb_address,
+-						    (u8 *)(fw + indx),
+-						    len % block_size)) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Unable to load %s blk\n", __func__,
+-				FIRMWARE_RSI9113);
+-			return -EIO;
+-		}
+-	}
+-	rsi_dbg(INIT_ZONE,
+-		"%s: Succesfully loaded %s instructions\n", __func__,
+-		FIRMWARE_RSI9113);
+-
+-	rsi_dbg(INIT_ZONE, "%s: loaded firmware\n", __func__);
+-	return 0;
+-}
+-
+-/**
+  * rsi_usb_rx_thread() - This is a kernel thread to receive the packets from
+  *			 the USB device.
+  * @common: Pointer to the driver private structure.
+@@ -119,68 +58,3 @@ void rsi_usb_rx_thread(struct rsi_common *common)
+ 	complete_and_exit(&dev->rx_thread.completion, 0);
+ }
  
-+enum ath10k_bus {
-+	ATH10K_BUS_PCI,
-+	ATH10K_BUS_AHB,
-+	ATH10K_BUS_SDIO,
-+	ATH10K_BUS_USB,
-+};
-+
- #define ATH10K_FW_DIR			"ath10k"
+-
+-/**
+- * rsi_load_ta_instructions() - This function includes the actual funtionality
+- *				of loading the TA firmware.This function also
+- *				includes opening the TA file,reading the TA
+- *				file and writing their value in blocks of data.
+- * @common: Pointer to the driver private structure.
+- *
+- * Return: status: 0 on success, -1 on failure.
+- */
+-static int rsi_load_ta_instructions(struct rsi_common *common)
+-{
+-	struct rsi_hw *adapter = common->priv;
+-	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+-	const struct firmware *fw_entry = NULL;
+-	u16 block_size = dev->tx_blk_size;
+-	const u8 *fw;
+-	u16 num_blocks;
+-	u32 len;
+-	int status = 0;
+-
+-	status = request_firmware(&fw_entry, FIRMWARE_RSI9113, adapter->device);
+-	if (status < 0) {
+-		rsi_dbg(ERR_ZONE, "%s Firmware file %s not found\n",
+-			__func__, FIRMWARE_RSI9113);
+-		return status;
+-	}
+-
+-	/* Copy firmware into DMA-accessible memory */
+-	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+-	if (!fw) {
+-		status = -ENOMEM;
+-		goto out;
+-	}
+-	len = fw_entry->size;
+-
+-	if (len % 4)
+-		len += (4 - (len % 4));
+-
+-	num_blocks = (len / block_size);
+-
+-	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
+-	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
+-
+-	status = rsi_copy_to_card(common, fw, len, num_blocks);
+-	kfree(fw);
+-
+-out:
+-	release_firmware(fw_entry);
+-	return status;
+-}
+-
+-/**
+- * rsi_device_init() - This Function Initializes The HAL.
+- * @common: Pointer to the driver private structure.
+- *
+- * Return: 0 on success, -1 on failure.
+- */
+-int rsi_usb_device_init(struct rsi_common *common)
+-{
+-	if (rsi_load_ta_instructions(common))
+-		return -EIO;
+-
+-	return 0;
+-		}
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index d3fbe33..4434969 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -20,8 +20,7 @@
+ #include <linux/kthread.h>
  
- #define QCA988X_2_0_DEVICE_ID   (0x003c)
-@@ -454,6 +461,18 @@ struct ath10k_hw_params {
+ #define EVENT_WAIT_FOREVER              0
+-#define TA_LOAD_ADDRESS                 0x00
+-#define FIRMWARE_RSI9113                "rsi_91x.fw"
++#define FIRMWARE_RSI9113                "rs9113_wlan_qspi.rps"
+ #define QUEUE_NOT_FULL                  1
+ #define QUEUE_FULL                      0
  
- 	/* Number of bytes to be discarded for each FFT sample */
- 	int spectral_bin_discard;
-+
-+	/* max_num_peers can be used to override the setting derived from
-+	 * the WMI op version. If this value is non-zero, it will always
-+	 * be used instead of the default value derived from the WMI op
-+	 * version.
-+	 */
-+	int max_num_peers;
-+
-+	/* Specifies whether or not the device is a high latency device */
-+	bool is_high_latency;
-+
-+	enum ath10k_bus bus;
- };
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index 7ae6d51..9fb73f6 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -116,7 +116,6 @@ struct rsi_91x_sdiodev {
  
- struct htt_rx_desc;
-@@ -564,6 +583,9 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
- #define TARGET_TLV_NUM_WOW_PATTERNS		22
+ void rsi_interrupt_handler(struct rsi_hw *adapter);
+ int rsi_init_sdio_slave_regs(struct rsi_hw *adapter);
+-int rsi_sdio_device_init(struct rsi_common *common);
+ int rsi_sdio_read_register(struct rsi_hw *adapter, u32 addr, u8 *data);
+ int rsi_sdio_host_intf_read_pkt(struct rsi_hw *adapter, u8 *pkt, u32 length);
+ int rsi_sdio_write_register(struct rsi_hw *adapter, u8 function,
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index d1e01bc..59513ac 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -63,8 +63,5 @@ static inline int rsi_usb_event_timeout(struct rsi_hw *adapter)
+ 	return EVENT_WAIT_FOREVER;
+ }
  
-+/* Target specific defines for QCA9377 high latency firmware */
-+#define TARGET_QCA9377_HL_NUM_PEERS		15
-+
- /* Diagnostic Window */
- #define CE_DIAG_PIPE	7
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index f918802..754d445 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1406,7 +1406,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
- 
- 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
--	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
-+	cfg->num_peers = __cpu_to_le32(ar->max_num_peers);
- 
- 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
- 		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-@@ -1417,7 +1417,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	}
- 
- 	cfg->num_peer_keys = __cpu_to_le32(2);
--	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
-+	cfg->num_tids = __cpu_to_le32(ar->max_num_peers * 2);
- 	cfg->ast_skid_limit = __cpu_to_le32(0x10);
- 	cfg->tx_chain_mask = __cpu_to_le32(0x7);
- 	cfg->rx_chain_mask = __cpu_to_le32(0x7);
+-int rsi_usb_device_init(struct rsi_common *common);
+-int rsi_usb_write_register_multiple(struct rsi_hw *adapter, u32 addr,
+-				    u8 *data, u16 count);
+ void rsi_usb_rx_thread(struct rsi_common *common);
+ #endif
 -- 
 2.7.4
