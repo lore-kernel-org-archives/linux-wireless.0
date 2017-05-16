@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f47.google.com ([74.125.83.47]:33866 "EHLO
-        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933260AbdELQme (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:40660 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750784AbdEPRMj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 12:42:34 -0400
-Received: by mail-pg0-f47.google.com with SMTP id u28so32713994pgn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 09:42:33 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 10/11] mwifiex: pcie: remove useless pdev check
-Date: Fri, 12 May 2017 09:42:07 -0700
-Message-Id: <20170512164208.38725-10-briannorris@chromium.org> (sfid-20170512_184438_010811_F9AA5719)
-In-Reply-To: <20170512164208.38725-1-briannorris@chromium.org>
-References: <20170512164208.38725-1-briannorris@chromium.org>
+        Tue, 16 May 2017 13:12:39 -0400
+To: netdev <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: 'iw events' stops receiving events after a while on 4.9 + hacks
+Message-ID: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com> (sfid-20170516_191242_840791_C3E856EE)
+Date: Tue, 16 May 2017 10:12:37 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 5 -----
- 1 file changed, 5 deletions(-)
+I have been keeping an 'iw events' program running with a perl script gathering its
+output and post-processing it.  This has been working for several years on 4.7 and earlier
+kernels, but when testing on 4.9 overnight, I notice that 'iw events' is not showing any input.  'strace' shows
+that it is waiting on recvmsg.  If I start a second 'iw events' then it will get
+wifi events as expected.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ac62bce50e96..d7e563a622f7 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2380,11 +2380,6 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 	struct pcie_service_card *card;
- 	struct mwifiex_adapter *adapter;
- 
--	if (!pdev) {
--		pr_err("info: %s: pdev is NULL\n", __func__);
--		goto exit;
--	}
--
- 	card = pci_get_drvdata(pdev);
- 
- 	if (!card->adapter) {
+Are there any known issues in this area?
+
+Thanks,
+Ben
+
 -- 
-2.13.0.rc2.291.g57267f2277-goog
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
