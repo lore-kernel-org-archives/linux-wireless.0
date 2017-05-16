@@ -1,94 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45139 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750980AbdEBMmy (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35247 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752570AbdEPT5F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 08:42:54 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 9/9] brcmfmac: provide port authorized state in CONNECT event
-Date: Tue,  2 May 2017 13:42:29 +0100
-Message-Id: <1493728949-10797-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170502_144305_868663_2A6EFE76)
-In-Reply-To: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 16 May 2017 15:57:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <8155d0f1-aed3-fc47-4524-635067f9ee7b@broadcom.com>
+References: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
+ <20170515201356.26384-2-martin.blumenstingl@googlemail.com> <8155d0f1-aed3-fc47-4524-635067f9ee7b@broadcom.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Tue, 16 May 2017 21:56:38 +0200
+Message-ID: <CAFBinCBeijYMJ+hTajCA-2D7S1aH6E2mc_gm-2cAqKt87XVNkg@mail.gmail.com> (sfid-20170516_215727_297171_4E532931)
+Subject: Re: [PATCH 1/1] dt-binding: net: wireless: fix node name in the
+ BCM43xx example
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>, robh+dt@kernel.org
+Cc: kvalo@codeaurora.org, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fill struct cfg80211_connection_params::authorized field according
-the supplicant state received from the device.
+Hi Arend,
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 27 +++++++++++++---------
- 1 file changed, 16 insertions(+), 11 deletions(-)
+On Tue, May 16, 2017 at 12:05 AM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 15-5-2017 22:13, Martin Blumenstingl wrote:
+>> The example in the BCM43xx documentation uses "brcmf" as node name.
+>> However, wireless devices should be named "wifi" instead. Fix this to
+>
+> Hi Martin,
+>
+> Since when is that a rule. I never got the memo and the DTC did not ever
+> complain to me about the naming. That being said I do not really care
+> and I suppose it is for the sake of consistency only.
+I'm not sure if it's actually a rule or (as you already noted) just
+for consistency. back when I added devicetree support to ath9k Rob
+pointed out that the node should be named "wifi" (instead of "ath9k"),
+see [0]
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 9d345c7..0e45993 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5327,10 +5327,12 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
- 	u32 event = e->event_code;
- 	u32 status = e->status;
- 
--	if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_PSK &&
--	    event == BRCMF_E_PSK_SUP &&
--	    status == BRCMF_E_STATUS_FWSUP_COMPLETED)
-+	if (event == BRCMF_E_PSK_SUP &&
-+	    status == BRCMF_E_STATUS_FWSUP_COMPLETED) {
- 		set_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
-+		if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_1X)
-+			return true;
-+	}
- 	if (event == BRCMF_E_SET_SSID && status == BRCMF_E_STATUS_SUCCESS) {
- 		brcmf_dbg(CONN, "Processing set ssid\n");
- 		memcpy(vif->profile.bssid, e->addr, ETH_ALEN);
-@@ -5341,11 +5343,9 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
- 	}
- 
- 	if (test_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state) &&
--	    test_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state)) {
--		clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
--		clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state);
-+	    test_and_clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state))
- 		return true;
--	}
-+
- 	return false;
- }
- 
-@@ -5542,22 +5542,27 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTING,
--			       &ifp->vif->sme_state)) {
-+			       &ifp->vif->sme_state) ||
-+	    e->event_code == BRCMF_E_PSK_SUP) {
- 		memset(&conn_params, 0, sizeof(conn_params));
--		if (completed) {
-+		if (e->event_code != BRCMF_E_PSK_SUP && completed) {
- 			brcmf_get_assoc_ies(cfg, ifp);
- 			brcmf_update_bss_info(cfg, ifp);
- 			set_bit(BRCMF_VIF_STATUS_CONNECTED,
- 				&ifp->vif->sme_state);
-+		}
-+		if (completed)
- 			conn_params.status = WLAN_STATUS_SUCCESS;
--		} else {
-+		else
- 			conn_params.status = WLAN_STATUS_AUTH_TIMEOUT;
--		}
- 		conn_params.bssid = profile->bssid;
- 		conn_params.req_ie = conn_info->req_ie;
- 		conn_params.req_ie_len = conn_info->req_ie_len;
- 		conn_params.resp_ie = conn_info->resp_ie;
- 		conn_params.resp_ie_len = conn_info->resp_ie_len;
-+		conn_params.authorized =
-+			test_and_clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS,
-+					   &ifp->vif->sme_state);
- 		cfg80211_connect_done(ndev, &conn_params, GFP_KERNEL);
- 		brcmf_dbg(CONN, "Report connect result - connection %s\n",
- 			  completed ? "succeeded" : "failed");
--- 
-1.9.1
+>> make sure that .dts authors can simply use the documentation as
+>> reference (or simply copy the node from the documentation and then
+>> adjust only the board specific bits).
+>
+> Please feel free to add my...
+>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+thank you!
+
+@Rob: maybe you can ACK this as well if you're fine with this patch?
+
+>> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+>> ---
+>>  Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> index 5dbf169cd81c..590f622188de 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> @@ -31,7 +31,7 @@ mmc3: mmc@01c12000 {
+>>       non-removable;
+>>       status = "okay";
+>>
+>> -     brcmf: bcrmf@1 {
+>> +     brcmf: wifi@1 {
+>>               reg = <1>;
+>>               compatible = "brcm,bcm4329-fmac";
+>>               interrupt-parent = <&pio>;
+>>
+
+[0] http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg14678.html
