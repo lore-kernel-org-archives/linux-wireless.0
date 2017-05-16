@@ -1,83 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:38412 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751333AbdEDPXi (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34947 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751649AbdEPOTZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 11:23:38 -0400
-Received: by mail-it0-f49.google.com with SMTP id e65so14120607ita.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2017 08:23:38 -0700 (PDT)
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linuxwifi@intel.com, Johannes Berg <johannes.berg@intel.com>
-From: Jens Axboe <axboe@kernel.dk>
-Subject: WARNING: CPU: 2 PID: 682 at net/wireless/util.c:1236
-Message-ID: <240bae44-56e4-f342-0d1b-358a573e2eeb@kernel.dk> (sfid-20170504_172441_266184_E17EEF2C)
-Date: Thu, 4 May 2017 09:23:36 -0600
+        Tue, 16 May 2017 10:19:25 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <0ce21c48-1d2c-3035-3c6e-52c7debf86d5@gmail.com>
+References: <20170515134711.2770374-1-arnd@arndb.de> <20170515142520.GA13996@redhat.com>
+ <20170515.103951.2305484593464882104.davem@davemloft.net> <20170516115511.GA4230@redhat.com>
+ <0ce21c48-1d2c-3035-3c6e-52c7debf86d5@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 16 May 2017 16:19:17 +0200
+Message-ID: <CAK8P3a18opkvCyoNmYhR6M7XXEq8f__hMZH1A6w8UFP7qbmQWw@mail.gmail.com> (sfid-20170516_161959_318291_045BEE56)
+Subject: Re: [PATCH] rt2x00: improve calling conventions for register accessors
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        =?UTF-8?Q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, May 16, 2017 at 3:44 PM, Jes Sorensen <jes.sorensen@gmail.com> wrote:
+> On 05/16/2017 07:55 AM, Stanislaw Gruszka wrote:
+>>
+>> On Mon, May 15, 2017 at 10:39:51AM -0400, David Miller wrote:
+>>>
+>>> Passing return values by reference is and always has been a really
+>>> poor way to achieve what these functions are doing.
+>>>
+>>> And frankly, whilst the tool could see what's going on here better, we
+>>> should be making code easier rather than more difficult to audit.
+>>>
+>>> I am therefore very much in favor of Arnd's change.
+>>>
+>>> This isn't even a situation where there are multiple return values,
+>>> such as needing to signal an error and return an unsigned value at the
+>>> same time.
+>>>
+>>> These functions return _one_ value, and therefore they should be
+>>> returned as a true return value.
+>>
+>>
+>> In rt2x00 driver we use poor convention in other kind of registers
+>> accessors like bbp, mac, eeprom. I dislike to changing only rfcsr
+>> accessors and leaving others in the old way. And changing all accessors
+>> would be massive and error prone change, which I'm not prefer either.
+>
+>
+> That's why you do it in multiple smaller patches rather than one ugly giant
+> patch.
 
-Running current -git on my laptop, and I see this spew every once
-in a while. This is new, haven't seen it in 4.11 or previously. Driver
-is iwlwifi:
+I did  the first step using a search&replace in vim using
 
-04:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
+s:\(rt2800_rfcsr_read(.*,.*\), &\(.*\));:\2 = \1);:
 
+but had to introduce a conversion function
 
-[ 3285.862640] IPv6: ADDRCONF(NETDEV_CHANGE): wlp4s0: link becomes ready
-[ 3285.978482] ------------[ cut here ]------------
-[ 3285.978501] WARNING: CPU: 2 PID: 682 at net/wireless/util.c:1236 cfg80211_calculate_bitrate+0x130/0x160 [cfg80211]
-[ 3285.978502] Modules linked in: ctr ccm rfcomm fuse bnep arc4 snd_hda_codec_hdmi iwlmvm snd_hda_codec_conexant snd_hda_codec_generic mac80211 snd_hda_intel snd_hda_codec binfmt_misc snd_hwdep snd_hda_core snd_pcm x86_pkg_temp_thermal nls_iso8859_1 intel_powerclamp nls_cp437 kvm_intel vfat snd_seq_midi fat kvm iwlwifi snd_seq_midi_event btusb snd_rawmidi btintel bluetooth snd_seq uvcvideo irqbypass aesni_intel videobuf2_vmalloc videobuf2_memops snd_seq_device aes_x86_64 videobuf2_v4l2 crypto_simd snd_timer videobuf2_core cryptd glue_helper videodev cfg80211 ecdh_generic snd soundcore hid_generic usbhid hid i915 psmouse e1000e ptp pps_core xhci_pci xhci_hcd intel_gtt
-[ 3285.978536] CPU: 2 PID: 682 Comm: NetworkManager Tainted: G     U          4.11.0+ #59
-[ 3285.978537] Hardware name: LENOVO 20FBCTO1WW/20FBCTO1WW, BIOS N1FET50W (1.24 ) 03/08/2017
-[ 3285.978538] task: ffff880421de2880 task.stack: ffff8804234a8000
-[ 3285.978551] RIP: 0010:cfg80211_calculate_bitrate+0x130/0x160 [cfg80211]
-[ 3285.978552] RSP: 0018:ffff8804234ab638 EFLAGS: 00010293
-[ 3285.978553] RAX: 0000000000000000 RBX: ffff88042df2cf00 RCX: 0000000000000002
-[ 3285.978554] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8804234ab7d6
-[ 3285.978555] RBP: ffff8804234ab638 R08: 0000000000000004 R09: ffff8804252c20d4
-[ 3285.978556] R10: 00000000088002aa R11: ffffffffa02a6000 R12: ffff8804234ab7d6
-[ 3285.978557] R13: ffff8804252c20d0 R14: ffff8804252c2030 R15: ffff880424bf0000
-[ 3285.978559] FS:  00007f4e016a8940(0000) GS:ffff880441500000(0000) knlGS:0000000000000000
-[ 3285.978560] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 3285.978561] CR2: 00000c5e5d540010 CR3: 000000042b626000 CR4: 00000000001406e0
-[ 3285.978561] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 3285.978562] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[ 3285.978563] Call Trace:
-[ 3285.978577]  nl80211_put_sta_rate+0x4e/0x1f0 [cfg80211]
-[ 3285.978591]  nl80211_send_station.isra.66+0x344/0xcc0 [cfg80211]
-[ 3285.978595]  ? __kmalloc_track_caller+0x31/0x1a0
-[ 3285.978608]  nl80211_get_station+0x1d9/0x250 [cfg80211]
-[ 3285.978620]  genl_family_rcv_msg+0x1bf/0x380
-[ 3285.978622]  genl_rcv_msg+0x4c/0x90
-[ 3285.978623]  ? genl_family_rcv_msg+0x380/0x380
-[ 3285.978629]  netlink_rcv_skb+0x7f/0x110
-[ 3285.978630]  genl_rcv+0x28/0x40
-[ 3285.978633]  netlink_unicast+0x183/0x220
-[ 3285.978635]  netlink_sendmsg+0x293/0x390
-[ 3285.978637]  sock_sendmsg+0x38/0x50
-[ 3285.978638]  ___sys_sendmsg+0x256/0x2b0
-[ 3285.978641]  ? __slab_free+0x1d1/0x2c0
-[ 3285.978643]  ? destroy_inode+0x3b/0x60
-[ 3285.978645]  ? do_wp_page+0x103/0x440
-[ 3285.978646]  ? __handle_mm_fault+0x34e/0xa10
-[ 3285.978648]  ? __fget+0x6e/0x90
-[ 3285.978650]  __sys_sendmsg+0x45/0x80
-[ 3285.978652]  ? __sys_sendmsg+0x45/0x80
-[ 3285.978654]  SyS_sendmsg+0x12/0x20
-[ 3285.978656]  entry_SYSCALL_64_fastpath+0x13/0x94
-[ 3285.978657] RIP: 0033:0x7f4dff521a6d
-[ 3285.978658] RSP: 002b:00007ffc7507aec0 EFLAGS: 00000293 ORIG_RAX: 000000000000002e
-[ 3285.978660] RAX: ffffffffffffffda RBX: 0000000002044b60 RCX: 00007f4dff521a6d
-[ 3285.978661] RDX: 0000000000000000 RSI: 00007ffc7507af50 RDI: 0000000000000010
-[ 3285.978661] RBP: 00007f4dff50bb20 R08: 0000000000000000 R09: 0000000000000000
-[ 3285.978662] R10: 0000000001fd8df0 R11: 0000000000000293 R12: 0000000000001010
-[ 3285.978663] R13: 00007f4dff50bb78 R14: 00000000000026fc R15: 0000000001ffc570
-[ 3285.978664] Code: d0 f7 e1 d1 ea 8d 14 92 01 d2 81 c2 50 c3 00 00 b9 c5 5a 7c 0a 5d c1 ea 05 89 d0 f7 e1 89 d0 c1 e8 07 c3 31 c0 40 80 fe 02 74 b6 <0f> ff 31 c0 eb b0 8d 14 52 01 d2 e9 41 ff ff ff 0f ff 31 c0 5d 
-[ 3285.978693] ---[ end trace ae08dfa326cc120a ]---
+static void rt2800_rfcsr_readreg(struct rt2x00_dev *rt2x00dev,
+                                const unsigned int word, u8 *value)
+{
+       *value = rt2800_rfcsr_read(rt2x00dev, word);
+}
 
--- 
-Jens Axboe
+to keep the correct types in place for struct rt2x00debug. I now
+did all the other ones too, and removed that helper again. The
+result in much nicer, but I basically ended up having to do
+the same regex search for all of these at once:
+
+static void rt2400pci_bbp_read(struct rt2x00_dev *rt2x00dev,
+static void rt2500pci_bbp_read(struct rt2x00_dev *rt2x00dev,
+static void rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+static void rt2500usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
+static void rt2500usb_bbp_read(struct rt2x00_dev *rt2x00dev,
+static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+static void rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
+static void rt2800_eeprom_read(struct rt2x00_dev *rt2x00dev,
+static void rt2800_rfcsr_readreg(struct rt2x00_dev *rt2x00dev,
+static void rt2800_bbp_dcoc_read(struct rt2x00_dev *rt2x00dev,
+void (*register_read)(struct rt2x00_dev *rt2x00dev,
+void (*register_read_lock)(struct rt2x00_dev *rt2x00dev,
+static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
+static inline void rt2800_register_read_lock(struct rt2x00_dev *rt2x00dev,
+static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
+static inline void rt2x00_eeprom_read(struct rt2x00_dev *rt2x00dev,
+void (*read)(struct rt2x00_dev *rt2x00dev, \
+static inline void rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
+static inline void _rt2x00_desc_read(__le32 *desc, const u8 word, __le32 *value)
+static inline void rt2x00_desc_read(__le32 *desc, const u8 word, u32 *value)
+static inline void rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
+static inline void rt2x00usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
+static void rt61pci_bbp_read(struct rt2x00_dev *rt2x00dev,
+static void rt73usb_bbp_read(struct rt2x00_dev *rt2x00dev,
+
+and that ended up as a 300KB patch [1]. Splitting it up is clearly possibly,
+but I fear that would be more error-prone as we then need to add
+those helpers for the other debug stuff as well, and remove it again
+afterwards.
+
+     Arnd
+
+[1] https://pastebin.com/raw/Qis257mG
