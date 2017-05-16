@@ -1,90 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:41054 "EHLO
-        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751015AbdEBGE3 (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:55178 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752252AbdEPJX3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 02:04:29 -0400
-From: Shikha Singh <shikha.singh@st.com>
-To: <sameo@linux.intel.com>, <linux-wireless@vger.kernel.org>,
-        <linux-nfc@lists.01.org>
-CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
-        <sylvain.fidelis@st.com>, <raphael.collado@st.com>,
-        <shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
-Subject: [[linux-nfc][PATCH v1] 5/6] DT: bindings: net: nfc: stnfc binding doc
-Date: Tue, 2 May 2017 02:03:42 -0400
-Message-ID: <1493705023-8710-6-git-send-email-shikha.singh@st.com> (sfid-20170502_080449_200878_B2CEF1F9)
-In-Reply-To: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
-References: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 16 May 2017 05:23:29 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH 2/7] wireless: Only join DFS channels in mesh mode if userspace flags support
+Date: Tue, 16 May 2017 11:23:11 +0200
+Message-Id: <20170516092316.15636-3-sw@simonwunderlich.de> (sfid-20170516_112813_968260_E1943F5A)
+In-Reply-To: <20170516092316.15636-1-sw@simonwunderlich.de>
+References: <20170516092316.15636-1-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds ST NFC binding doc that guides
-how to make SPI slave node entry of ST NFC transceiver
-in DT file of any platform.
+From: Benjamin Berg <benjamin@sipsolutions.net>
 
-Signed-off-by: Shikha Singh <shikha.singh@st.com>
+When joining a mesh network it is not guaranteed that userspace has a
+daemon listening for radar events. This is however required for channels
+requiring DFS. To flag that userspace will handle radar events, it needs
+to set NL80211_ATTR_HANDLE_DFS.
+
+This matches the current mechanism used for IBSS mode.
+
+Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 ---
- .../devicetree/bindings/net/nfc/stnfc.txt          | 50 ++++++++++++++++++++++
- 1 file changed, 50 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/stnfc.txt
+ include/net/cfg80211.h | 4 ++++
+ net/wireless/mesh.c    | 8 ++++++++
+ net/wireless/nl80211.c | 3 +++
+ 3 files changed, 15 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/stnfc.txt b/Documentation/devicetree/bindings/net/nfc/stnfc.txt
-new file mode 100644
-index 0000000..b050b3e
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/nfc/stnfc.txt
-@@ -0,0 +1,50 @@
-+* STMicroelectronics : NFC Transceiver
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b083e6cbae8c..fa25fbb67cb6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1441,6 +1441,9 @@ struct mesh_config {
+  * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
+  * @basic_rates: basic rates to use when creating the mesh
+  * @beacon_rate: bitrate to be used for beacons
++ * @userspace_handles_dfs: whether user space controls DFS operation, i.e.
++ *	changes the channel when a radar is detected. This is required
++ *	to operate on DFS channels.
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -1462,6 +1465,7 @@ struct mesh_setup {
+ 	int mcast_rate[NUM_NL80211_BANDS];
+ 	u32 basic_rates;
+ 	struct cfg80211_bitrate_mask beacon_rate;
++	bool userspace_handles_dfs;
+ };
+ 
+ /**
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index ec0b1c20ac99..421a6b80ec62 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -174,6 +174,14 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 							       scan_width);
+ 	}
+ 
++	err = cfg80211_chandef_dfs_required(&rdev->wiphy,
++					    &setup->chandef,
++					    NL80211_IFTYPE_MESH_POINT);
++	if (err < 0)
++		return err;
++	if (err > 0 && !setup->userspace_handles_dfs)
++		return -EINVAL;
 +
-+ST NFC Transceiver can be attached with SPI bus.
-+ST NFC node should be defined in DT as SPI slave device of SPI
-+master with which  transceiver is physically connected.
-+The properties defined below are required to be the part of DT
-+to include ST NFC transceiver over SPI into the platform.
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef,
+ 				     NL80211_IFTYPE_MESH_POINT))
+ 		return -EINVAL;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c3bc9da30cff..d47e55e3f445 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9962,6 +9962,9 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
+ 
++	setup.userspace_handles_dfs =
++		nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS]);
 +
-+Required properties:
-+===================
-+- reg: Address of SPI slave "ST NFC transceiver" on SPI master bus.
-+
-+- compatible: should be "st,stnfc" for ST NFC transceiver
-+
-+- spi-max-frequency: Max. operating SPI frequency for ST NFC
-+	transceiver.
-+
-+- enable-gpio: GPIO line to enable ST NFC transceiver.
-+
-+- interrupt-parent : Standard way to specify the controller to which
-+	transceiver's interrupt is routed.
-+
-+- interrupts : Standard way to define ST NFC transceiver's out
-+	interrupt.
-+
-+Optional property:
-+=================
-+- nfcstvin : This is an optional property. It contains a
-+	phandle to ST NFC transceiver's regulator supply node in DT.
-+
-+Example:
-+=======
-+spi@9840000 {
-+	reg = <0x9840000 0x110>;
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	cs-gpios = <&pio0 4>;
-+	status = "okay";
-+
-+	stnfc@0{
-+		reg = <0>;
-+		compatible = "st,stnfc";
-+		status = "okay";
-+		spi-max-frequency = <1000000>;
-+		enable-gpio = <&pio4 0>;
-+		interrupt-parent = <&pio0>;
-+		interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
-+	};
-+
-+};
+ 	return cfg80211_join_mesh(rdev, dev, &setup, &cfg);
+ }
+ 
 -- 
-1.8.2.1
+2.11.0
