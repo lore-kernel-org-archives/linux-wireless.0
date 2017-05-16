@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37520 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751412AbdE3MgK (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34611 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750970AbdEPNUC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 08:36:10 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+        Tue, 16 May 2017 09:20:02 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w10so3308911oif.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:01 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFT 3/3] brcmfmac: unbind all devices upon failure in firmware callback
-Date: Tue, 30 May 2017 13:35:54 +0100
-Message-Id: <1496147754-2303-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170530_143620_972142_EF6DFEF2)
-In-Reply-To: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 00/10] rtlwifi: btcoex: More changes to Bluetooth Coexistence
+Date: Tue, 16 May 2017 08:19:47 -0500
+Message-Id: <20170516131957.9513-1-Larry.Finger@lwfinger.net> (sfid-20170516_152006_902899_EB52CD60)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_sdio_firmware_callback() we need to unbind the driver from
-both sdio_func devices.
+This set of patches complete the updates for the 8821a 1ant code and
+starts the updates for 8723b 1ant.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Pkshih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 270c0ad..a5b27a4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3988,14 +3988,14 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	u8 saveclk;
- 
- 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
-+	bus_if = dev_get_drvdata(dev);
-+	sdiodev = bus_if->bus_priv.sdio;
- 	if (err)
- 		goto fail;
- 
--	bus_if = dev_get_drvdata(dev);
- 	if (!bus_if->drvr)
- 		return;
- 
--	sdiodev = bus_if->bus_priv.sdio;
- 	bus = sdiodev->bus;
- 
- 	/* try to download image and nvram to the dongle */
-@@ -4084,6 +4084,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- fail:
- 	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
- 	device_release_driver(dev);
-+	device_release_driver(&sdiodev->func[1]->dev);
- }
- 
- struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+Larry Finger (1):
+  rtlwifi: btcoex: Restore 23b 1ant routine for tdma adjustment
+
+Ping-Ke Shih (6):
+  rtlwifi: btcoex: 23b 1ant: rename and coding style modification.
+  rtlwifi: btcoex: 23b 1ant: TDMA duration for ACL busy
+  rtlwifi: btcoex: 23b 1ant: monitor wifi and BT counter
+  rtlwifi: btcoex: 23b 1ant: check if BT high priority packet exist
+  rtlwifi: btcoex: 23b 1ant: monitor bt is enabled or disabled
+  rtlwifi: btcoex: 23b 1ant: check PS state before setting tdma duration
+
+Yan-Hsuan Chuang (3):
+  rtlwifi: btcoex: 21a 1ant: treat ARP as special packet
+  rtlwifi: btcoex: 21a 1ant: fix some coding style issues
+  rtlwifi: btcoex: 21a 1ant: add bt_tx_rx_mask into bt info
+
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 422 ++++++++++++++++++---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  19 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  77 +++-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   2 +
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   1 +
+ 5 files changed, 456 insertions(+), 65 deletions(-)
+
 -- 
-1.9.1
+2.12.0
