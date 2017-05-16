@@ -1,239 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35289 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756357AbdESP7r (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36613 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752038AbdEPKCk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 11:59:47 -0400
-Received: by mail-oi0-f68.google.com with SMTP id m17so13044504oik.2
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 08:59:46 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/10] rtlwifi: btcoex: 23b 1ant: add wifi_only argument to init_hwconfig
-Date: Fri, 19 May 2017 10:59:31 -0500
-Message-Id: <20170519155937.17526-5-Larry.Finger@lwfinger.net> (sfid-20170519_180006_882442_E3AFB1FC)
-In-Reply-To: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
-References: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
+        Tue, 16 May 2017 06:02:40 -0400
+Received: by mail-pg0-f65.google.com with SMTP id h64so16095640pge.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:02:40 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v3 00/11] Firmware loading changes
+Date: Tue, 16 May 2017 15:31:06 +0530
+Message-Id: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170516_120246_131549_BD7FFFB4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+This patch series includes firmware loading enhancements for
+Redpine 9113 chipset. The older method is not being used by any
+Redpine chipset. There is no firmware image submitted to upstream
+yet. We will submit 9113's firmware image once these changes are
+accepted.
 
-In case of wifi_only, we can simply switch antenna to wifi.
+Amitkumar Karwar (1):
+  rsi: define RSI_USB_BUF_SIZE macro
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 102 +++++++++------------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   4 +-
- 2 files changed, 47 insertions(+), 59 deletions(-)
+Prameela Rani Garnepudi (10):
+  rsi: Rename file rsi_91x_pkt.c to rsi_91x_hal.c
+  rsi: Changes to sdio reads and writes
+  rsi: Changes in USB read and write operations
+  rsi: use macros in USB specific code
+  rsi: Handle usb multi-byte write failure case properly
+  rsi: Add usb multi-byte read operation
+  rsi: Add host interface operations as separate structure.
+  rsi: Add new host interface operations
+  rsi: Add new firmware loading method
+  rsi: Remove old firmware loading method
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 36fa9a27aa01..71ce0fe886a3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -2162,86 +2162,63 @@ static void halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
- 	/* sw all off */
- 	halbtc8723b1ant_sw_mechanism(btcoexist, false);
- 
--	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
--	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
- 	coex_sta->pop_event_cnt = 0;
- }
- 
- static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
--					   bool backup)
-+					   bool backup, bool wifi_only)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	u32 u32tmp = 0;
--	u8 u8tmp = 0;
--	u32 cnt_bt_cal_chk = 0;
-+	u8 u8tmpa = 0, u8tmpb = 0;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], 1Ant Init HW Config!!\n");
- 
--	if (backup) {/* backup rf 0x1e value */
--		coex_dm->backup_arfr_cnt1 =
--			btcoexist->btc_read_4byte(btcoexist, 0x430);
--		coex_dm->backup_arfr_cnt2 =
--			btcoexist->btc_read_4byte(btcoexist, 0x434);
--		coex_dm->backup_retry_limit =
--			btcoexist->btc_read_2byte(btcoexist, 0x42a);
--		coex_dm->backup_ampdu_max_time =
--			btcoexist->btc_read_1byte(btcoexist, 0x456);
--	}
--
--	/* WiFi goto standby while GNT_BT 0-->1 */
--	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x780);
--	/* BT goto standby while GNT_BT 1-->0 */
--	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x2, 0xfffff, 0x500);
--
--	btcoexist->btc_write_1byte(btcoexist, 0x974, 0xff);
--	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x944, 0x3, 0x3);
--	btcoexist->btc_write_1byte(btcoexist, 0x930, 0x77);
--
--	/* BT calibration check */
--	while (cnt_bt_cal_chk <= 20) {
--		u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x49d);
--		cnt_bt_cal_chk++;
--		if (u32tmp & BIT0) {
--			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--				 "[BTCoex], ########### BT calibration(cnt=%d) ###########\n",
--				      cnt_bt_cal_chk);
--			mdelay(50);
--		} else {
--			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--				 "[BTCoex], ********** BT NOT calibration (cnt=%d)**********\n",
--				      cnt_bt_cal_chk);
--			break;
--		}
--	}
-+	/* 0xf0[15:12] --> Chip Cut information */
-+	coex_sta->cut_version =
-+		(btcoexist->btc_read_1byte(btcoexist, 0xf1) & 0xf0) >> 4;
-+	/* enable TBTT interrupt */
-+	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x550, 0x8, 0x1);
- 
- 	/* 0x790[5:0] = 0x5 */
--	u8tmp = btcoexist->btc_read_1byte(btcoexist, 0x790);
--	u8tmp &= 0xc0;
--	u8tmp |= 0x5;
--	btcoexist->btc_write_1byte(btcoexist, 0x790, u8tmp);
-+	btcoexist->btc_write_1byte(btcoexist, 0x790, 0x5);
- 
- 	/* Enable counter statistics */
--	/*0x76e[3] = 1, WLAN_Act control by PTA */
--	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0xc);
- 	btcoexist->btc_write_1byte(btcoexist, 0x778, 0x1);
- 	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x40, 0x20, 0x1);
- 
-+	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
-+
- 	/* Antenna config */
--	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA, FORCE_EXEC,
--				     true, false);
-+	if (wifi_only)
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_WIFI,
-+					     FORCE_EXEC, true, false);
-+	else
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT,
-+					     FORCE_EXEC, true, false);
-+
- 	/* PTA parameter */
- 	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
-+
-+	u32tmp = btcoexist->btc_read_4byte(btcoexist, 0x948);
-+	u8tmpa = btcoexist->btc_read_1byte(btcoexist, 0x765);
-+	u8tmpb = btcoexist->btc_read_1byte(btcoexist, 0x67);
-+
-+	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+		 "############# [BTCoex], 0x948=0x%x, 0x765=0x%x, 0x67=0x%x\n",
-+		 u32tmp, u8tmpa, u8tmpb);
- }
- 
- /**************************************************************
-  * extern function start with ex_halbtc8723b1ant_
-  **************************************************************/
- 
--void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist)
-+void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
-+				      bool wifi_only)
- {
--	halbtc8723b1ant_init_hw_config(btcoexist, true);
--	btcoexist->auto_report_1ant = true;
-+	halbtc8723b1ant_init_hw_config(btcoexist, true, wifi_only);
-+	btcoexist->stop_coex_dm = false;
- }
- 
- void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
-@@ -2558,7 +2535,7 @@ void ex_halbtc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
- 			 "[BTCoex], IPS LEAVE notify\n");
- 		coex_sta->under_ips = false;
- 
--		halbtc8723b1ant_init_hw_config(btcoexist, false);
-+		halbtc8723b1ant_init_hw_config(btcoexist, false, false);
- 		halbtc8723b1ant_init_coex_dm(btcoexist);
- 		halbtc8723b1ant_query_bt_info(btcoexist);
- 	}
-@@ -2989,6 +2966,8 @@ void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
- 	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 0);
- 
- 	ex_halbtc8723b1ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
-+
-+	btcoexist->stop_coex_dm = true;
- }
- 
- void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
-@@ -3000,18 +2979,27 @@ void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- 	if (BTC_WIFI_PNP_SLEEP == pnp_state) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Pnp notify to SLEEP\n");
--		btcoexist->stop_coex_dm = true;
- 		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_BT,
- 					     FORCE_EXEC, false, true);
- 		halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
- 						 0x0, 0x0);
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 0);
- 		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
-+
-+		/* Driver do not leave IPS/LPS when driver is going to sleep, so
-+		 * BTCoexistence think wifi is still under IPS/LPS
-+		 *
-+		 * BT should clear UnderIPS/UnderLPS state to avoid mismatch
-+		 * state after wakeup.
-+		 */
-+		coex_sta->under_ips = false;
-+		coex_sta->under_lps = false;
-+		btcoexist->stop_coex_dm = true;
- 	} else if (BTC_WIFI_PNP_WAKE_UP == pnp_state) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Pnp notify to WAKE UP\n");
- 		btcoexist->stop_coex_dm = false;
--		halbtc8723b1ant_init_hw_config(btcoexist, false);
-+		halbtc8723b1ant_init_hw_config(btcoexist, false, false);
- 		halbtc8723b1ant_init_coex_dm(btcoexist);
- 		halbtc8723b1ant_query_bt_info(btcoexist);
- 	}
-@@ -3024,9 +3012,7 @@ void ex_halbtc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], *****************Coex DM Reset****************\n");
- 
--	halbtc8723b1ant_init_hw_config(btcoexist, false);
--	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x1, 0xfffff, 0x0);
--	btcoexist->btc_set_rf_reg(btcoexist, BTC_RF_A, 0x2, 0xfffff, 0x0);
-+	halbtc8723b1ant_init_hw_config(btcoexist, false, false);
- 	halbtc8723b1ant_init_coex_dm(btcoexist);
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 557108494a87..aadac2afc900 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -182,12 +182,14 @@ struct coex_sta_8723b_1ant {
- 	bool pre_ccklock;
- 
- 	u8 a2dp_bit_pool;
-+	u8 cut_version;
- };
- 
- /*************************************************************************
-  * The following is interface which will notify coex module.
-  *************************************************************************/
--void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist);
-+void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
-+				      bool wifi_only);
- void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist);
- void ex_halbtc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type);
- void ex_halbtc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type);
+ drivers/net/wireless/rsi/Makefile           |   2 +-
+ drivers/net/wireless/rsi/rsi_91x_hal.c      | 740 ++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_pkt.c      | 215 --------
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 211 +++++++-
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 190 +------
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 166 ++++++-
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 125 -----
+ drivers/net/wireless/rsi/rsi_common.h       |   3 +-
+ drivers/net/wireless/rsi/rsi_hal.h          |  81 +++
+ drivers/net/wireless/rsi/rsi_main.h         |  36 +-
+ drivers/net/wireless/rsi/rsi_sdio.h         |   6 +-
+ drivers/net/wireless/rsi/rsi_usb.h          |   5 +-
+ 12 files changed, 1205 insertions(+), 575 deletions(-)
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_hal.c
+ delete mode 100644 drivers/net/wireless/rsi/rsi_91x_pkt.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_hal.h
+
 -- 
-2.12.0
+2.7.4
