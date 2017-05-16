@@ -1,501 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33752 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753083AbdEINhF (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34618 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751726AbdEPNUD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 09:37:05 -0400
-Received: by mail-qt0-f196.google.com with SMTP id a46so13814544qte.0
-        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 06:37:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1491282009-2854-1-git-send-email-prameela.j04cs@gmail.com>
-References: <1491282009-2854-1-git-send-email-prameela.j04cs@gmail.com>
-From: amit karwar <amitkarwar@gmail.com>
-Date: Tue, 9 May 2017 19:07:03 +0530
-Message-ID: <CAEhWJFnf3ofgQo4POORaF1-0fHvaSTdJk27HyauMrnbGcfn+zg@mail.gmail.com> (sfid-20170509_153709_415534_F5E301BA)
-Subject: Re: [PATCH 1/3] rsi: Rename the file rsi_91x_pkt.c to rsi_91x_hal.c
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Tue, 16 May 2017 09:20:03 -0400
+Received: by mail-oi0-f67.google.com with SMTP id w10so3308971oif.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:02 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/10] rtlwifi: btcoex: 21a 1ant: treat ARP as special packet
+Date: Tue, 16 May 2017 08:19:48 -0500
+Message-Id: <20170516131957.9513-2-Larry.Finger@lwfinger.net> (sfid-20170516_152008_775625_0EC96F34)
+In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kvalle,
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-On Tue, Apr 4, 2017 at 10:30 AM, Prameela Rani Garnepudi
-<prameela.j04cs@gmail.com> wrote:
-> The file rsi_91x_hal.c will contain new firmware loading method for
-> RSI 9113 chipset. So this file will have device specific operations.
-> As the file 'rsi_91x_pkt.c' contains code for preparing device
-> (frimware understandable) specific descriptors for the transmit frames,
-> it is moved to 'rsi_91x_hal.c'
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> ---
->  drivers/net/wireless/rsi/Makefile      |   2 +-
->  drivers/net/wireless/rsi/rsi_91x_hal.c | 215 +++++++++++++++++++++++++++++++++
->  drivers/net/wireless/rsi/rsi_91x_pkt.c | 215 ---------------------------------
->  3 files changed, 216 insertions(+), 216 deletions(-)
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_hal.c
->  delete mode 100644 drivers/net/wireless/rsi/rsi_91x_pkt.c
->
-> diff --git a/drivers/net/wireless/rsi/Makefile b/drivers/net/wireless/rsi/Makefile
-> index 25828b6..a475c81 100644
-> --- a/drivers/net/wireless/rsi/Makefile
-> +++ b/drivers/net/wireless/rsi/Makefile
-> @@ -2,7 +2,7 @@ rsi_91x-y                       += rsi_91x_main.o
->  rsi_91x-y                      += rsi_91x_core.o
->  rsi_91x-y                      += rsi_91x_mac80211.o
->  rsi_91x-y                      += rsi_91x_mgmt.o
-> -rsi_91x-y                      += rsi_91x_pkt.o
-> +rsi_91x-y                      += rsi_91x_hal.o
->  rsi_91x-$(CONFIG_RSI_DEBUGFS)  += rsi_91x_debugfs.o
->
->  rsi_usb-y                      += rsi_91x_usb.o rsi_91x_usb_ops.o
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> new file mode 100644
-> index 0000000..02920c9
-> --- /dev/null
-> +++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> @@ -0,0 +1,215 @@
-> +/**
-> + * Copyright (c) 2014 Redpine Signals Inc.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#include "rsi_mgmt.h"
-> +
-> +/**
-> + * rsi_send_data_pkt() - This function sends the recieved data packet from
-> + *                      driver to device.
-> + * @common: Pointer to the driver private structure.
-> + * @skb: Pointer to the socket buffer structure.
-> + *
-> + * Return: status: 0 on success, -1 on failure.
-> + */
-> +int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
-> +{
-> +       struct rsi_hw *adapter = common->priv;
-> +       struct ieee80211_hdr *tmp_hdr;
-> +       struct ieee80211_tx_info *info;
-> +       struct skb_info *tx_params;
-> +       struct ieee80211_bss_conf *bss;
-> +       int status;
-> +       u8 ieee80211_size = MIN_802_11_HDR_LEN;
-> +       u8 extnd_size;
-> +       __le16 *frame_desc;
-> +       u16 seq_num;
-> +
-> +       info = IEEE80211_SKB_CB(skb);
-> +       bss = &info->control.vif->bss_conf;
-> +       tx_params = (struct skb_info *)info->driver_data;
-> +
-> +       if (!bss->assoc) {
-> +               status = -EINVAL;
-> +               goto err;
-> +       }
-> +
-> +       tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
-> +       seq_num = (le16_to_cpu(tmp_hdr->seq_ctrl) >> 4);
-> +
-> +       extnd_size = ((uintptr_t)skb->data & 0x3);
-> +
-> +       if ((FRAME_DESC_SZ + extnd_size) > skb_headroom(skb)) {
-> +               rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
-> +               status = -ENOSPC;
-> +               goto err;
-> +       }
-> +
-> +       skb_push(skb, (FRAME_DESC_SZ + extnd_size));
-> +       frame_desc = (__le16 *)&skb->data[0];
-> +       memset((u8 *)frame_desc, 0, FRAME_DESC_SZ);
-> +
-> +       if (ieee80211_is_data_qos(tmp_hdr->frame_control)) {
-> +               ieee80211_size += 2;
-> +               frame_desc[6] |= cpu_to_le16(BIT(12));
-> +       }
-> +
-> +       if ((!(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)) &&
-> +           (common->secinfo.security_enable)) {
-> +               if (rsi_is_cipher_wep(common))
-> +                       ieee80211_size += 4;
-> +               else
-> +                       ieee80211_size += 8;
-> +               frame_desc[6] |= cpu_to_le16(BIT(15));
-> +       }
-> +
-> +       frame_desc[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
-> +                                   (RSI_WIFI_DATA_Q << 12));
-> +       frame_desc[2] = cpu_to_le16((extnd_size) | (ieee80211_size) << 8);
-> +
-> +       if (common->min_rate != 0xffff) {
-> +               /* Send fixed rate */
-> +               frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
-> +               frame_desc[4] = cpu_to_le16(common->min_rate);
-> +
-> +               if (conf_is_ht40(&common->priv->hw->conf))
-> +                       frame_desc[5] = cpu_to_le16(FULL40M_ENABLE);
-> +
-> +               if (common->vif_info[0].sgi) {
-> +                       if (common->min_rate & 0x100) /* Only MCS rates */
-> +                               frame_desc[4] |=
-> +                                       cpu_to_le16(ENABLE_SHORTGI_RATE);
-> +               }
-> +
-> +       }
-> +
-> +       frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
-> +       frame_desc[7] = cpu_to_le16(((tx_params->tid & 0xf) << 4) |
-> +                                   (skb->priority & 0xf) |
-> +                                   (tx_params->sta_id << 8));
-> +
-> +       status = adapter->host_intf_write_pkt(common->priv,
-> +                                             skb->data,
-> +                                             skb->len);
-> +       if (status)
-> +               rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
-> +                       __func__);
-> +
-> +err:
-> +       ++common->tx_stats.total_tx_pkt_freed[skb->priority];
-> +       rsi_indicate_tx_status(common->priv, skb, status);
-> +       return status;
-> +}
-> +
-> +/**
-> + * rsi_send_mgmt_pkt() - This functions sends the received management packet
-> + *                      from driver to device.
-> + * @common: Pointer to the driver private structure.
-> + * @skb: Pointer to the socket buffer structure.
-> + *
-> + * Return: status: 0 on success, -1 on failure.
-> + */
-> +int rsi_send_mgmt_pkt(struct rsi_common *common,
-> +                     struct sk_buff *skb)
-> +{
-> +       struct rsi_hw *adapter = common->priv;
-> +       struct ieee80211_hdr *wh;
-> +       struct ieee80211_tx_info *info;
-> +       struct ieee80211_bss_conf *bss;
-> +       struct ieee80211_hw *hw = adapter->hw;
-> +       struct ieee80211_conf *conf = &hw->conf;
-> +       struct skb_info *tx_params;
-> +       int status = -E2BIG;
-> +       __le16 *msg;
-> +       u8 extnd_size;
-> +       u8 vap_id = 0;
-> +
-> +       info = IEEE80211_SKB_CB(skb);
-> +       tx_params = (struct skb_info *)info->driver_data;
-> +       extnd_size = ((uintptr_t)skb->data & 0x3);
-> +
-> +       if (tx_params->flags & INTERNAL_MGMT_PKT) {
-> +               if ((extnd_size) > skb_headroom(skb)) {
-> +                       rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
-> +                       dev_kfree_skb(skb);
-> +                       return -ENOSPC;
-> +               }
-> +               skb_push(skb, extnd_size);
-> +               skb->data[extnd_size + 4] = extnd_size;
-> +               status = adapter->host_intf_write_pkt(common->priv,
-> +                                                     (u8 *)skb->data,
-> +                                                     skb->len);
-> +               if (status) {
-> +                       rsi_dbg(ERR_ZONE,
-> +                               "%s: Failed to write the packet\n", __func__);
-> +               }
-> +               dev_kfree_skb(skb);
-> +               return status;
-> +       }
-> +
-> +       bss = &info->control.vif->bss_conf;
-> +       wh = (struct ieee80211_hdr *)&skb->data[0];
-> +
-> +       if (FRAME_DESC_SZ > skb_headroom(skb))
-> +               goto err;
-> +
-> +       skb_push(skb, FRAME_DESC_SZ);
-> +       memset(skb->data, 0, FRAME_DESC_SZ);
-> +       msg = (__le16 *)skb->data;
-> +
-> +       if (skb->len > MAX_MGMT_PKT_SIZE) {
-> +               rsi_dbg(INFO_ZONE, "%s: Dropping mgmt pkt > 512\n", __func__);
-> +               goto err;
-> +       }
-> +
-> +       msg[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
-> +                           (RSI_WIFI_MGMT_Q << 12));
-> +       msg[1] = cpu_to_le16(TX_DOT11_MGMT);
-> +       msg[2] = cpu_to_le16(MIN_802_11_HDR_LEN << 8);
-> +       msg[3] = cpu_to_le16(RATE_INFO_ENABLE);
-> +       msg[6] = cpu_to_le16(le16_to_cpu(wh->seq_ctrl) >> 4);
-> +
-> +       if (wh->addr1[0] & BIT(0))
-> +               msg[3] |= cpu_to_le16(RSI_BROADCAST_PKT);
-> +
-> +       if (common->band == NL80211_BAND_2GHZ)
-> +               msg[4] = cpu_to_le16(RSI_11B_MODE);
-> +       else
-> +               msg[4] = cpu_to_le16((RSI_RATE_6 & 0x0f) | RSI_11G_MODE);
-> +
-> +       if (conf_is_ht40(conf)) {
-> +               msg[4] = cpu_to_le16(0xB | RSI_11G_MODE);
-> +               msg[5] = cpu_to_le16(0x6);
-> +       }
-> +
-> +       /* Indicate to firmware to give cfm */
-> +       if ((skb->data[16] == IEEE80211_STYPE_PROBE_REQ) && (!bss->assoc)) {
-> +               msg[1] |= cpu_to_le16(BIT(10));
-> +               msg[7] = cpu_to_le16(PROBEREQ_CONFIRM);
-> +               common->mgmt_q_block = true;
-> +       }
-> +
-> +       msg[7] |= cpu_to_le16(vap_id << 8);
-> +
-> +       status = adapter->host_intf_write_pkt(common->priv,
-> +                                             (u8 *)msg,
-> +                                             skb->len);
-> +       if (status)
-> +               rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
-> +
-> +err:
-> +       rsi_indicate_tx_status(common->priv, skb, status);
-> +       return status;
-> +}
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-> deleted file mode 100644
-> index 02920c9..0000000
-> --- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
-> +++ /dev/null
-> @@ -1,215 +0,0 @@
-> -/**
-> - * Copyright (c) 2014 Redpine Signals Inc.
-> - *
-> - * Permission to use, copy, modify, and/or distribute this software for any
-> - * purpose with or without fee is hereby granted, provided that the above
-> - * copyright notice and this permission notice appear in all copies.
-> - *
-> - * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> - * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> - * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> - * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> - * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> - * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> - * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> - */
-> -
-> -#include "rsi_mgmt.h"
-> -
-> -/**
-> - * rsi_send_data_pkt() - This function sends the recieved data packet from
-> - *                      driver to device.
-> - * @common: Pointer to the driver private structure.
-> - * @skb: Pointer to the socket buffer structure.
-> - *
-> - * Return: status: 0 on success, -1 on failure.
-> - */
-> -int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
-> -{
-> -       struct rsi_hw *adapter = common->priv;
-> -       struct ieee80211_hdr *tmp_hdr;
-> -       struct ieee80211_tx_info *info;
-> -       struct skb_info *tx_params;
-> -       struct ieee80211_bss_conf *bss;
-> -       int status;
-> -       u8 ieee80211_size = MIN_802_11_HDR_LEN;
-> -       u8 extnd_size;
-> -       __le16 *frame_desc;
-> -       u16 seq_num;
-> -
-> -       info = IEEE80211_SKB_CB(skb);
-> -       bss = &info->control.vif->bss_conf;
-> -       tx_params = (struct skb_info *)info->driver_data;
-> -
-> -       if (!bss->assoc) {
-> -               status = -EINVAL;
-> -               goto err;
-> -       }
-> -
-> -       tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
-> -       seq_num = (le16_to_cpu(tmp_hdr->seq_ctrl) >> 4);
-> -
-> -       extnd_size = ((uintptr_t)skb->data & 0x3);
-> -
-> -       if ((FRAME_DESC_SZ + extnd_size) > skb_headroom(skb)) {
-> -               rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
-> -               status = -ENOSPC;
-> -               goto err;
-> -       }
-> -
-> -       skb_push(skb, (FRAME_DESC_SZ + extnd_size));
-> -       frame_desc = (__le16 *)&skb->data[0];
-> -       memset((u8 *)frame_desc, 0, FRAME_DESC_SZ);
-> -
-> -       if (ieee80211_is_data_qos(tmp_hdr->frame_control)) {
-> -               ieee80211_size += 2;
-> -               frame_desc[6] |= cpu_to_le16(BIT(12));
-> -       }
-> -
-> -       if ((!(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)) &&
-> -           (common->secinfo.security_enable)) {
-> -               if (rsi_is_cipher_wep(common))
-> -                       ieee80211_size += 4;
-> -               else
-> -                       ieee80211_size += 8;
-> -               frame_desc[6] |= cpu_to_le16(BIT(15));
-> -       }
-> -
-> -       frame_desc[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
-> -                                   (RSI_WIFI_DATA_Q << 12));
-> -       frame_desc[2] = cpu_to_le16((extnd_size) | (ieee80211_size) << 8);
-> -
-> -       if (common->min_rate != 0xffff) {
-> -               /* Send fixed rate */
-> -               frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
-> -               frame_desc[4] = cpu_to_le16(common->min_rate);
-> -
-> -               if (conf_is_ht40(&common->priv->hw->conf))
-> -                       frame_desc[5] = cpu_to_le16(FULL40M_ENABLE);
-> -
-> -               if (common->vif_info[0].sgi) {
-> -                       if (common->min_rate & 0x100) /* Only MCS rates */
-> -                               frame_desc[4] |=
-> -                                       cpu_to_le16(ENABLE_SHORTGI_RATE);
-> -               }
-> -
-> -       }
-> -
-> -       frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
-> -       frame_desc[7] = cpu_to_le16(((tx_params->tid & 0xf) << 4) |
-> -                                   (skb->priority & 0xf) |
-> -                                   (tx_params->sta_id << 8));
-> -
-> -       status = adapter->host_intf_write_pkt(common->priv,
-> -                                             skb->data,
-> -                                             skb->len);
-> -       if (status)
-> -               rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
-> -                       __func__);
-> -
-> -err:
-> -       ++common->tx_stats.total_tx_pkt_freed[skb->priority];
-> -       rsi_indicate_tx_status(common->priv, skb, status);
-> -       return status;
-> -}
-> -
-> -/**
-> - * rsi_send_mgmt_pkt() - This functions sends the received management packet
-> - *                      from driver to device.
-> - * @common: Pointer to the driver private structure.
-> - * @skb: Pointer to the socket buffer structure.
-> - *
-> - * Return: status: 0 on success, -1 on failure.
-> - */
-> -int rsi_send_mgmt_pkt(struct rsi_common *common,
-> -                     struct sk_buff *skb)
-> -{
-> -       struct rsi_hw *adapter = common->priv;
-> -       struct ieee80211_hdr *wh;
-> -       struct ieee80211_tx_info *info;
-> -       struct ieee80211_bss_conf *bss;
-> -       struct ieee80211_hw *hw = adapter->hw;
-> -       struct ieee80211_conf *conf = &hw->conf;
-> -       struct skb_info *tx_params;
-> -       int status = -E2BIG;
-> -       __le16 *msg;
-> -       u8 extnd_size;
-> -       u8 vap_id = 0;
-> -
-> -       info = IEEE80211_SKB_CB(skb);
-> -       tx_params = (struct skb_info *)info->driver_data;
-> -       extnd_size = ((uintptr_t)skb->data & 0x3);
-> -
-> -       if (tx_params->flags & INTERNAL_MGMT_PKT) {
-> -               if ((extnd_size) > skb_headroom(skb)) {
-> -                       rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
-> -                       dev_kfree_skb(skb);
-> -                       return -ENOSPC;
-> -               }
-> -               skb_push(skb, extnd_size);
-> -               skb->data[extnd_size + 4] = extnd_size;
-> -               status = adapter->host_intf_write_pkt(common->priv,
-> -                                                     (u8 *)skb->data,
-> -                                                     skb->len);
-> -               if (status) {
-> -                       rsi_dbg(ERR_ZONE,
-> -                               "%s: Failed to write the packet\n", __func__);
-> -               }
-> -               dev_kfree_skb(skb);
-> -               return status;
-> -       }
-> -
-> -       bss = &info->control.vif->bss_conf;
-> -       wh = (struct ieee80211_hdr *)&skb->data[0];
-> -
-> -       if (FRAME_DESC_SZ > skb_headroom(skb))
-> -               goto err;
-> -
-> -       skb_push(skb, FRAME_DESC_SZ);
-> -       memset(skb->data, 0, FRAME_DESC_SZ);
-> -       msg = (__le16 *)skb->data;
-> -
-> -       if (skb->len > MAX_MGMT_PKT_SIZE) {
-> -               rsi_dbg(INFO_ZONE, "%s: Dropping mgmt pkt > 512\n", __func__);
-> -               goto err;
-> -       }
-> -
-> -       msg[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
-> -                           (RSI_WIFI_MGMT_Q << 12));
-> -       msg[1] = cpu_to_le16(TX_DOT11_MGMT);
-> -       msg[2] = cpu_to_le16(MIN_802_11_HDR_LEN << 8);
-> -       msg[3] = cpu_to_le16(RATE_INFO_ENABLE);
-> -       msg[6] = cpu_to_le16(le16_to_cpu(wh->seq_ctrl) >> 4);
-> -
-> -       if (wh->addr1[0] & BIT(0))
-> -               msg[3] |= cpu_to_le16(RSI_BROADCAST_PKT);
-> -
-> -       if (common->band == NL80211_BAND_2GHZ)
-> -               msg[4] = cpu_to_le16(RSI_11B_MODE);
-> -       else
-> -               msg[4] = cpu_to_le16((RSI_RATE_6 & 0x0f) | RSI_11G_MODE);
-> -
-> -       if (conf_is_ht40(conf)) {
-> -               msg[4] = cpu_to_le16(0xB | RSI_11G_MODE);
-> -               msg[5] = cpu_to_le16(0x6);
-> -       }
-> -
-> -       /* Indicate to firmware to give cfm */
-> -       if ((skb->data[16] == IEEE80211_STYPE_PROBE_REQ) && (!bss->assoc)) {
-> -               msg[1] |= cpu_to_le16(BIT(10));
-> -               msg[7] = cpu_to_le16(PROBEREQ_CONFIRM);
-> -               common->mgmt_q_block = true;
-> -       }
-> -
-> -       msg[7] |= cpu_to_le16(vap_id << 8);
-> -
-> -       status = adapter->host_intf_write_pkt(common->priv,
-> -                                             (u8 *)msg,
-> -                                             skb->len);
-> -       if (status)
-> -               rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
-> -
-> -err:
-> -       rsi_indicate_tx_status(common->priv, skb, status);
-> -       return status;
-> -}
+We need to pay attention to ARP packets to correctly establish
+connection, and reset the ARP counter when disconnected.
 
-Kindly ignore this patch series.
-We have split the work and submitted updated version.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pkshih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 49 ++++++++++++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  1 +
+ 2 files changed, 47 insertions(+), 3 deletions(-)
 
-Regards,
-Amitkumar Karwar
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 84cc0bcc5f80..a5ac07cf0dca 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -2592,7 +2592,7 @@ void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-	bool	wifi_connected = false, bt_hs_on = false;
++	bool wifi_connected = false, bt_hs_on = false;
+ 	u32 wifi_link_status = 0;
+ 	u32 num_of_wifi_link = 0;
+ 	bool bt_ctrl_agg_buf_size = false;
+@@ -2610,6 +2610,18 @@ void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ 		return;
+ 	}
+ 
++	if (type == BTC_ASSOCIATE_START) {
++		coex_sta->wifi_is_high_pri_task = true;
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], CONNECT START notify\n");
++		coex_dm->arp_cnt = 0;
++	} else {
++		coex_sta->wifi_is_high_pri_task = false;
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], CONNECT FINISH notify\n");
++		coex_dm->arp_cnt = 0;
++	}
++
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
+ 			   &wifi_link_status);
+ 	num_of_wifi_link = wifi_link_status >> 16;
+@@ -2675,6 +2687,7 @@ void ex_btc8821a1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], MEDIA disconnect notify\n");
++		coex_dm->arp_cnt = 0;
+ 	}
+ 
+ 	/* only 2.4G we need to inform bt the chnl mask */
+@@ -2728,6 +2741,24 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 		return;
+ 	}
+ 
++	if (type == BTC_PACKET_DHCP || type == BTC_PACKET_EAPOL ||
++	    type == BTC_PACKET_ARP) {
++		coex_sta->wifi_is_high_pri_task = true;
++
++		if (type == BTC_PACKET_ARP) {
++			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++				 "[BTCoex], specific Packet ARP notify\n");
++		} else {
++			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++				 "[BTCoex], specific Packet DHCP or EAPOL notify\n");
++		}
++	} else {
++		coex_sta->wifi_is_high_pri_task = false;
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++			 "[BTCoex], specific Packet [Type = %d] notify\n",
++			 type);
++	}
++
+ 	coex_sta->special_pkt_period_cnt = 0;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_LINK_STATUS,
+@@ -2750,8 +2781,20 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 		return;
+ 	}
+ 
+-	if (BTC_PACKET_DHCP == type ||
+-	    BTC_PACKET_EAPOL == type) {
++	if (type == BTC_PACKET_DHCP || type == BTC_PACKET_EAPOL ||
++	    type == BTC_PACKET_ARP) {
++		if (type == BTC_PACKET_ARP) {
++			coex_dm->arp_cnt++;
++			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++				 "[BTCoex], ARP Packet Count = %d\n",
++				 coex_dm->arp_cnt);
++			if (coex_dm->arp_cnt >= 10)
++				/* if APR PKT > 10 after connect, do not go to
++				 * btc8821a1ant_act_wifi_conn_sp_pkt
++				 */
++				return;
++		}
++
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], special Packet(%d) notify\n", type);
+ 		btc8821a1ant_act_wifi_conn_sp_pkt(btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
+index d6dacf32a4c4..1eba3b0d32ae 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
+@@ -133,6 +133,7 @@ struct coex_dm_8821a_1ant {
+ 	u8	cur_retry_limit_type;
+ 	u8	pre_ampdu_time_type;
+ 	u8	cur_ampdu_time_type;
++	u32	arp_cnt;
+ 
+ 	u8	error_condition;
+ };
+-- 
+2.12.0
