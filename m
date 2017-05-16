@@ -1,67 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:34619 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbdEJQoZ (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:34369 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751212AbdEPKG5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 12:44:25 -0400
-Received: by mail-wr0-f195.google.com with SMTP id 6so162456wrb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 May 2017 09:44:24 -0700 (PDT)
+        Tue, 16 May 2017 06:06:57 -0400
+Received: by mail-qt0-f196.google.com with SMTP id l39so19912879qtb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:06:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170510162546.15439-1-adrian@freebsd.org>
-References: <20170510162546.15439-1-adrian@freebsd.org>
-From: Steve deRosier <derosier@gmail.com>
-Date: Wed, 10 May 2017 09:44:23 -0700
-Message-ID: <CALLGbRL8NQi03U60AwEtOq-W0mFOn1uDmc_TXWRJofPqcP6VXg@mail.gmail.com> (sfid-20170510_184429_300873_6513E38A)
-Subject: Re: [PATCH] ath10k: add configurable debugging.
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <72458624-9a4d-bb20-2bdb-1a8f4c53ca6e@broadcom.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+ <1494336614-2107-6-git-send-email-amit.karwar@redpinesignals.com>
+ <87fugbs0x5.fsf@kamboji.qca.qualcomm.com> <72458624-9a4d-bb20-2bdb-1a8f4c53ca6e@broadcom.com>
+From: amit karwar <amitkarwar@gmail.com>
+Date: Tue, 16 May 2017 15:36:56 +0530
+Message-ID: <CAEhWJFmAStDyagTcq0=qa8RBu-pOZF50iviaWtxh-cv5koy5JQ@mail.gmail.com> (sfid-20170516_120712_842020_FD9B0EAD)
+Subject: Re: [v2 05/11] rsi: Remove unnecessary buffer allocation
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Adrian,
-
-On Wed, May 10, 2017 at 9:25 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-
-> diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-> index 257d10985c6e..7bd461927029 100644
-> --- a/drivers/net/wireless/ath/ath10k/debug.h
-> +++ b/drivers/net/wireless/ath/ath10k/debug.h
-> @@ -200,27 +200,43 @@ void ath10k_sta_update_rx_duration(struct ath10k *ar,
->  #endif /* CONFIG_MAC80211_DEBUGFS */
+On Fri, May 12, 2017 at 1:58 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 5/11/2017 8:28 PM, Kalle Valo wrote:
+>>
+>> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>>
+>>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>>
+>>> In functions usb read register and usb write register, dynamic allocation
+>>> of 4 bytes is used. This is removed as it is unncessary for local
+>>> variable
+>>> and for such small data.
+>>>
+>>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>>> ---
+>>>   drivers/net/wireless/rsi/rsi_91x_usb.c | 18 ++++--------------
+>>>   1 file changed, 4 insertions(+), 14 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c
+>>> b/drivers/net/wireless/rsi/rsi_91x_usb.c
+>>> index 73b01a8..8eb7407 100644
+>>> --- a/drivers/net/wireless/rsi/rsi_91x_usb.c
+>>> +++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+>>> @@ -157,12 +157,8 @@ static int rsi_usb_reg_read(struct usb_device
+>>> *usbdev,
+>>>                             u16 *value,
+>>>                             u16 len)
+>>>   {
+>>> -       u8 *buf;
+>>> -       int status = -ENOMEM;
+>>> -
+>>> -       buf  = kmalloc(0x04, GFP_KERNEL);
+>>> -       if (!buf)
+>>> -               return status;
+>>> +       u8 buf[4];
+>>> +       int status;
+>>>         status = usb_control_msg(usbdev,
+>>>                                  usb_rcvctrlpipe(usbdev, 0),
+>>
+>>
+>> Recently I got a patch to orinoco_usb which did exactly the opposite
+>> (unless I'm missing something):
+>>
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=2f6ae79cb04bb7f9b4be3f1c32b6fda35bf976bc
+>>
+>> The documentation for usb_control_msg() does not mention anything if
+>> it's possible to use stack memory, but AFAIU it's not possible to use
+>> stack memory with DMA. Can anyone clarify?
 >
->  #ifdef CONFIG_ATH10K_DEBUG
-> -__printf(3, 4) void ath10k_dbg(struct ath10k *ar,
-> +static inline int
-> +_ath10k_do_dbg(struct ath10k *ar, enum ath10k_debug_mask mask)
-> +{
-> +       if (ar->trace_debug_mask & mask)
-> +               return (1);
-> +       if (ar->debug_mask & mask)
-> +               return (1);
-> +       return (0);
-> +}
-> +
-> +void _ath10k_dbg(struct ath10k *ar,
->                                enum ath10k_debug_mask mask,
->                                const char *fmt, ...);
-> -void ath10k_dbg_dump(struct ath10k *ar,
-> +
-> +void _ath10k_dbg_dump(struct ath10k *ar,
->                      enum ath10k_debug_mask mask,
->                      const char *msg, const char *prefix,
->                      const void *buf, size_t len);
-> +
-> +#define        ath10k_dbg(ar, mask, ...)                                       \
-> +       do {                                                            \
-> +               if (_ath10k_do_dbg(ar, mask)) {                         \
-> +                       _ath10k_dbg((ar), (mask), __VA_ARGS__);         \
-> +               };                                                      \
-> +       } while (0)
-> +
+>
+> After private message I sent to Kalle here my public response :-p
+> According to Greg this has been a USB core requirement for a long, long time
+> (see below).
+>
 
-Looks to me you dropped the "__printf(3, 4)" safety check. Was that intentional?
+Thanks Arend.
+I have dropped this patch in V3 series.
 
-Thanks,
-- Steve
+Regards,
+Amitkumar Karwar
