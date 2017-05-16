@@ -1,69 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40710 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751782AbdEQNOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 09:14:30 -0400
-Message-ID: <1495026867.2442.9.camel@sipsolutions.net> (sfid-20170517_151541_511431_706E090D)
-Subject: Re: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
-        "nicolas.dechesne@linaro.org" <nicolas.dechesne@linaro.org>
-Date: Wed, 17 May 2017 15:14:27 +0200
-In-Reply-To: <87fugkrchl.fsf@kamboji.qca.qualcomm.com>
-References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
-         <1493281332.2529.1.camel@sipsolutions.net>     <20170428234247.GQ15143@minitux>
-         <87fugkrchl.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:32903 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751987AbdEPKDK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 May 2017 06:03:10 -0400
+Received: by mail-pf0-f195.google.com with SMTP id f27so9050755pfe.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:03:09 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v3 07/11] rsi: Add usb multi-byte read operation
+Date: Tue, 16 May 2017 15:31:13 +0530
+Message-Id: <1494928877-27168-8-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170516_120348_009050_D6AE1F6B)
+In-Reply-To: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-05-04 at 13:13 +0000, Kalle Valo wrote:
-> 
-> > > This code intentionally checked if TX status was requested, and
-> > > if not then it doesn't go to the effort of building it.
-> > > 
-> > 
-> > What I'm finding puzzling is the fact that the only caller of
-> > ieee80211_led_tx() is ieee80211_tx_status() and it seems like
-> > drivers, such as ath10k, call this for each packet handled - but
-> > I'm likely missing something.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Yes, many drivers do call it for each packet, and as such, this
-deficiency was never noted.
+USB multibyte read will be used in the new firmware loading method
+for RS9113 chipset.
 
-> > > As it is with your patch, it'll go and report the TX status
-> > > without any
-> > > TX status information - which is handled in
-> > > wcn36xx_dxe_tx_ack_ind()
-> > > for those frames needing it.
-> > > 
-> > 
-> > Right, it doesn't sound desired. However, during normal operation
-> > I'm not seeing IEEE80211_TX_CTL_REQ_TX_STATUS being set and as such
-> > ieee80211_led_tx() is never called.
-> 
-> So what's the conclusion? How do we get leds working?
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v3: Use RSI_USB_BUF_SIZE macro for 4096
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 40 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-Well, frankly, I never thought the TX LED was a super good idea - but
-it had been supported by the original code IIRC, so never removed. Some
-people like frantic blinking I guess ;-)
-
-But I think the problem also applies to the throughput trigger thing,
-so perhaps we need to stick some LED feedback calls into other places,
-like _noskb() or provide an extra way to do it?
-
-johannes
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index a900a72..31f96f0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -276,6 +276,46 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter)
+ 	return status;
+ }
+ 
++static int rsi_usb_read_register_multiple(struct rsi_hw *adapter, u32 addr,
++					  u8 *data, u16 count)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	u8 *buf;
++	u16 transfer;
++	int status;
++
++	if (!addr)
++		return -EINVAL;
++
++	buf = kzalloc(RSI_USB_BUF_SIZE, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	while (count) {
++		transfer = min_t(u16, count, RSI_USB_BUF_SIZE);
++		status = usb_control_msg(dev->usbdev,
++					 usb_rcvctrlpipe(dev->usbdev, 0),
++					 USB_VENDOR_REGISTER_READ,
++					 RSI_USB_REQ_IN,
++					 ((addr & 0xffff0000) >> 16),
++					 (addr & 0xffff), (void *)buf,
++					 transfer, USB_CTRL_GET_TIMEOUT);
++		if (status < 0) {
++			rsi_dbg(ERR_ZONE,
++				"Reg read failed with error code :%d\n",
++				 status);
++			kfree(buf);
++			return status;
++		}
++		memcpy(data, buf, transfer);
++		count -= transfer;
++		data += transfer;
++		addr += transfer;
++	}
++	kfree(buf);
++	return 0;
++}
++
+ /**
+  * rsi_usb_write_register_multiple() - This function writes multiple bytes of
+  *				       information to multiple registers.
+-- 
+2.7.4
