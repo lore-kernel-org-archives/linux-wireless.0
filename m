@@ -1,82 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:32955 "EHLO
-        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S376348AbdEAI5w (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35411 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752067AbdEPKDO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2017 04:57:52 -0400
-Received: by mail-qk0-f175.google.com with SMTP id u68so6050116qkd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 May 2017 01:57:52 -0700 (PDT)
-Subject: Re: brcmfmac: don't warn user if requested nvram fails
-To: Hans de Goede <hdegoede@redhat.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <09063fc2-af77-ced6-ed90-ab20e2884969@redhat.com>
- <577dc508-07ff-c74f-5c90-b6baf4e7694a@broadcom.com>
- <e6ef170b-2ec7-e364-5097-6e0daf5b8f0d@redhat.com>
- <ae29eb44-76cb-783f-6e76-81ed15c8e0dd@broadcom.com>
- <6cee092a-f8b7-f658-cd71-829f66559882@redhat.com>
- <20170427003616.GD28800@wotan.suse.de>
- <3ca61682-7267-c87b-2c3e-e4c185134cba@redhat.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a3730d43-1137-6cec-6ede-093ee1e3e806@broadcom.com> (sfid-20170501_105802_684812_6A3668CB)
-Date: Mon, 1 May 2017 10:57:49 +0200
-MIME-Version: 1.0
-In-Reply-To: <3ca61682-7267-c87b-2c3e-e4c185134cba@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 16 May 2017 06:03:14 -0400
+Received: by mail-pg0-f67.google.com with SMTP id i63so20850100pgd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:03:13 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v3 08/11] rsi: Add host interface operations as separate structure.
+Date: Tue, 16 May 2017 15:31:14 +0530
+Message-Id: <1494928877-27168-9-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170516_120348_548615_7F93A8FF)
+In-Reply-To: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/30/2017 9:39 PM, Hans de Goede wrote:
-> Hi,
-> 
-> On 27-04-17 02:36, Luis R. Rodriguez wrote:
->> On Tue, Apr 11, 2017 at 10:53:57AM +0200, Hans de Goede wrote:
-> 
-> <snip>
-> 
->>>>> Right, sorry. For the pcie device I'm looking at the
->>>>> name is brcmfmac4356-pcie.txt and I would like to propose
->>>>> to first check for 
->>>>> "brcmfmac4356-<pci-subsys-vid>-<pci-subsys-pid>.txt"
->>>>>
->>>>>> So who is going to provide these nvram files. We can not
->>>>>> maintain that as there are too many variants and they are under 
->>>>>> control
->>>>>> of the OEM/ODM.
->>>>>
->>>>> Users / people like me who are interested in using certain
->>>>> devices with Linux. The idea is to at least make it possible to
->>>>> have these devices just work. E.g. I would like a user to be
->>>>> able to insert a USB-stick with a live Fedora 27 and then
->>>>> have everything just work on the GPD win.
->>>>>
->>>>> To make this happen I will submit the nvram file from the
->>>>> Windows install on the GPDwin to linux-firmware as
->>>>> "brcmfmac4356-<pci-subsys-vid>-<pci-subsys-pid>.txt"
->>>>> and yes I've checked that there are sensible values in
->>>>> the subsys ids.
->>>>
->>>> I suppose the "nvram file from the Windows install" than has a
->>>> redistributable license?
->>>
->>> IANAL but I fail to see how the contents of this file is
->>> anything but functional and as such not copyright-able.
->>
->> We take licensing serious on linux-firmware, a IANAL is no excuse for
->> being sloppy.
-> 
-> I don't mean to be sloppy. As I already stated I plan to make it
-> clear in the commit msg that there is no license info for the nvram
-> file and that in my non expert opinion that is not a problem.
-> 
-> If people disagree then we will likely need to ask an actual lawyer
-> for advice and see from there,
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-I think what Luis mean to say here is that you should be sure about this 
-instead of submitting the patch and see what happens. In that respect I 
-will inform internally what Broadcom policy is regarding the 
-distribution requirements/restriction of the nvram files.
+Host interface operations are currently function pointers in rsi_hw
+structure. As more host interface operations are going to be introduced,
+separate structure is added for these for convenience.
 
-Regards,
-Arend
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v3: Same as earlier
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c  | 16 +++++++---------
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 11 +++++++++--
+ drivers/net/wireless/rsi/rsi_91x_usb.c  |  9 ++++++++-
+ drivers/net/wireless/rsi/rsi_main.h     | 18 ++++++++++++++++--
+ 4 files changed, 40 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 02920c9..8fbf904 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -100,9 +100,8 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 				    (skb->priority & 0xf) |
+ 				    (tx_params->sta_id << 8));
+ 
+-	status = adapter->host_intf_write_pkt(common->priv,
+-					      skb->data,
+-					      skb->len);
++	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
++						   skb->len);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
+ 			__func__);
+@@ -148,9 +147,9 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 		}
+ 		skb_push(skb, extnd_size);
+ 		skb->data[extnd_size + 4] = extnd_size;
+-		status = adapter->host_intf_write_pkt(common->priv,
+-						      (u8 *)skb->data,
+-						      skb->len);
++		status = adapter->host_intf_ops->write_pkt(common->priv,
++							   (u8 *)skb->data,
++							   skb->len);
+ 		if (status) {
+ 			rsi_dbg(ERR_ZONE,
+ 				"%s: Failed to write the packet\n", __func__);
+@@ -203,9 +202,8 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 
+ 	msg[7] |= cpu_to_le16(vap_id << 8);
+ 
+-	status = adapter->host_intf_write_pkt(common->priv,
+-					      (u8 *)msg,
+-					      skb->len);
++	status = adapter->host_intf_ops->write_pkt(common->priv, (u8 *)msg,
++						   skb->len);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 39d94b3..bdbec8b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -676,8 +676,6 @@ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
+ 	}
+ 	sdio_release_host(pfunction);
+ 
+-	adapter->host_intf_write_pkt = rsi_sdio_host_intf_write_pkt;
+-	adapter->host_intf_read_pkt = rsi_sdio_host_intf_read_pkt;
+ 	adapter->determine_event_timeout = rsi_sdio_determine_event_timeout;
+ 	adapter->check_hw_queue_status = rsi_sdio_read_buffer_status_register;
+ 
+@@ -691,6 +689,13 @@ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
+ 	return status;
+ }
+ 
++static struct rsi_host_intf_ops sdio_host_intf_ops = {
++	.write_pkt		= rsi_sdio_host_intf_write_pkt,
++	.read_pkt		= rsi_sdio_host_intf_read_pkt,
++	.read_reg_multiple	= rsi_sdio_read_register_multiple,
++	.write_reg_multiple	= rsi_sdio_write_register_multiple,
++};
++
+ /**
+  * rsi_probe() - This function is called by kernel when the driver provided
+  *		 Vendor and device IDs are matched. All the initialization
+@@ -713,6 +718,8 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 			__func__);
+ 		return 1;
+ 	}
++	adapter->rsi_host_intf = RSI_HOST_INTF_SDIO;
++	adapter->host_intf_ops = &sdio_host_intf_ops;
+ 
+ 	if (rsi_init_sdio_interface(adapter, pfunction)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init sdio interface\n",
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 31f96f0..9000e09 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -392,6 +392,12 @@ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
+ 				  len);
+ }
+ 
++static struct rsi_host_intf_ops usb_host_intf_ops = {
++	.write_pkt		= rsi_usb_host_intf_write_pkt,
++	.read_reg_multiple	= rsi_usb_read_register_multiple,
++	.write_reg_multiple	= rsi_usb_write_register_multiple,
++};
++
+ /**
+  * rsi_deinit_usb_interface() - This function deinitializes the usb interface.
+  * @adapter: Pointer to the adapter structure.
+@@ -457,9 +463,10 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 
+ 	/* Initializing function callbacks */
+ 	adapter->rx_urb_submit = rsi_rx_urb_submit;
+-	adapter->host_intf_write_pkt = rsi_usb_host_intf_write_pkt;
+ 	adapter->check_hw_queue_status = rsi_usb_check_queue_status;
+ 	adapter->determine_event_timeout = rsi_usb_event_timeout;
++	adapter->rsi_host_intf = RSI_HOST_INTF_USB;
++	adapter->host_intf_ops = &usb_host_intf_ops;
+ 
+ 	rsi_init_event(&rsi_dev->rx_thread.event);
+ 	status = rsi_create_kthread(common, &rsi_dev->rx_thread,
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 1d5904b..7fdeda7 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -209,6 +209,11 @@ struct rsi_common {
+ 	u8 ant_in_use;
+ };
+ 
++enum host_intf {
++	RSI_HOST_INTF_SDIO = 0,
++	RSI_HOST_INTF_USB
++};
++
+ struct rsi_hw {
+ 	struct rsi_common *priv;
+ 	struct ieee80211_hw *hw;
+@@ -219,16 +224,25 @@ struct rsi_hw {
+ 	struct device *device;
+ 	u8 sc_nvifs;
+ 
++	enum host_intf rsi_host_intf;
+ #ifdef CONFIG_RSI_DEBUGFS
+ 	struct rsi_debugfs *dfsentry;
+ 	u8 num_debugfs_entries;
+ #endif
+ 	u8 dfs_region;
+ 	void *rsi_dev;
+-	int (*host_intf_read_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
+-	int (*host_intf_write_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
++	struct rsi_host_intf_ops *host_intf_ops;
+ 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
+ 	int (*rx_urb_submit)(struct rsi_hw *adapter);
+ 	int (*determine_event_timeout)(struct rsi_hw *adapter);
+ };
++
++struct rsi_host_intf_ops {
++	int (*read_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
++	int (*write_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
++	int (*read_reg_multiple)(struct rsi_hw *adapter, u32 addr,
++				 u8 *data, u16 count);
++	int (*write_reg_multiple)(struct rsi_hw *adapter, u32 addr,
++				  u8 *data, u16 count);
++};
+ #endif
+-- 
+2.7.4
