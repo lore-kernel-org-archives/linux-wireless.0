@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:35821 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752203AbdEMQlh (ORCPT
+Received: from mail-qt0-f177.google.com ([209.85.216.177]:33331 "EHLO
+        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbdEPKJ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 May 2017 12:41:37 -0400
-Received: by mail-wr0-f195.google.com with SMTP id g12so10240221wrg.2
-        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2017 09:41:37 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/5] staging: rtl8192e: print alg name as debug.
-Date: Sat, 13 May 2017 17:41:18 +0100
-Message-Id: <20170513164121.14373-2-tvboxspy@gmail.com> (sfid-20170513_184150_115340_77AEB4D7)
-In-Reply-To: <20170513164121.14373-1-tvboxspy@gmail.com>
-References: <20170513164121.14373-1-tvboxspy@gmail.com>
+        Tue, 16 May 2017 06:09:29 -0400
+Received: by mail-qt0-f177.google.com with SMTP id t26so113941307qtg.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:09:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87lgq2qx8a.fsf@kamboji.qca.qualcomm.com>
+References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
+ <1494336614-2107-11-git-send-email-amit.karwar@redpinesignals.com> <87lgq2qx8a.fsf@kamboji.qca.qualcomm.com>
+From: amit karwar <amitkarwar@gmail.com>
+Date: Tue, 16 May 2017 15:39:28 +0530
+Message-ID: <CAEhWJFnGA8iUpCs+CfZNVP6OTdpoMCOV8_bPkjy=0j0m4b6PLw@mail.gmail.com> (sfid-20170516_120933_326926_7BA10E2A)
+Subject: Re: [v2 10/11] rsi: Add new firmware loading method
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-alg name will be printed a number times during a connection it
-is only really useful as a debug message.
+On Fri, May 12, 2017 at 2:15 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> The older firmware loading method has been deprecated and not in use
+>> for any chipets. New method is introduced which works based on soft
+>> boot loader. In this method, complete RAM image and FLASH image are
+>> present in the flash. Before loading the functional firmware, host
+>> issues boot loader commands to verify whether firmware to load is
+>> different from the current functional firmware. If not, firmware
+>> upgrade progresses and boot loader will switch to the new functional
+>> firmware.
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
+> Please document in the commit log the new firmware filenames used by
+> this patch.
+>
 
-Change to netdev_dbg.
+Sure. This has been taken care in updated version.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/rtl8192e/rtllib_wx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/rtl8192e/rtllib_wx.c b/drivers/staging/rtl8192e/rtllib_wx.c
-index c5c0d9676dc8..f7eba01b5d15 100644
---- a/drivers/staging/rtl8192e/rtllib_wx.c
-+++ b/drivers/staging/rtl8192e/rtllib_wx.c
-@@ -595,7 +595,7 @@ int rtllib_wx_set_encode_ext(struct rtllib_device *ieee,
- 		ret = -EINVAL;
- 		goto done;
- 	}
--	netdev_info(dev, "alg name:%s\n", alg);
-+	netdev_dbg(dev, "alg name:%s\n", alg);
- 
- 	ops = lib80211_get_crypto_ops(alg);
- 	if (ops == NULL) {
--- 
-2.11.0
+Regards,
+Amitkumar
