@@ -1,61 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0162.hostedemail.com ([216.40.44.162]:56833 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932871AbdELPnK (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:55186 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752255AbdEPJXa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 11:43:10 -0400
-Message-ID: <1494603783.2028.21.camel@perches.com> (sfid-20170512_174434_594037_0595CD27)
-Subject: Re: [v6] qtnfmac: introduce new FullMAC driver for Quantenna
- chipsets
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        "hwang@quantenna.com" <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Fri, 12 May 2017 08:43:03 -0700
-In-Reply-To: <87shkap0e5.fsf@kamboji.qca.qualcomm.com>
-References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
-         <20170512151854.6F16A60953@smtp.codeaurora.org>
-         <87shkap0e5.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Tue, 16 May 2017 05:23:30 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH 4/7] mac80211: Allow following CSA to DFS channels if userspace handles it
+Date: Tue, 16 May 2017 11:23:13 +0200
+Message-Id: <20170516092316.15636-5-sw@simonwunderlich.de> (sfid-20170516_112814_517463_AF28D14A)
+In-Reply-To: <20170516092316.15636-1-sw@simonwunderlich.de>
+References: <20170516092316.15636-1-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-05-12 at 15:20 +0000, Kalle Valo wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> Here's the diff between v5 and v6:
+From: Benjamin Berg <benjamin@sipsolutions.net>
 
-trivia:
+If userspace has flagged support for DFS earlier, then we can follow CSA
+to DFS channels. So instead of rejecting the switch, allow it to happen
+if the flag has been set during mesh setup.
 
-> diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-[]
-> @@ -93,9 +94,11 @@ qtnf_change_virtual_intf(struct wiphy *wiphy,
->  
->  	qtnf_scan_done(vif->mac, true);
->  
-> -	if (qtnf_cmd_send_change_intf_type(vif, type, mac_addr)) {
-> -		pr_err("failed to change interface type\n");
-> -		return -EFAULT;
-> +	ret = qtnf_cmd_send_change_intf_type(vif, type, mac_addr);
-> +	if (ret) {
-> +		pr_err("VIF%u.%u: failed to change VIF type: %d\n",
-> +		       vif->mac->macid, vif->vifid, ret);
+Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+---
+ net/mac80211/cfg.c         |  1 +
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/mesh.c        | 15 ++++++++++++---
+ 3 files changed, 15 insertions(+), 3 deletions(-)
 
-It might make sense to add vif_<level> macros or functions
-to make sure the vif->mac->macid, vif->vifid are emitted
-consistently and simplify the calls
-
-For instance:
-		vif_err(vif, "failed to change VIF type %d\n", ret);
-
-etc...
-
-Not necessarily in this patch, maybe in a future one.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6c2e6060cd54..6980a936a437 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1874,6 +1874,7 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	ifmsh->user_mpm = setup->user_mpm;
+ 	ifmsh->mesh_auth_id = setup->auth_id;
+ 	ifmsh->security = IEEE80211_MESH_SEC_NONE;
++	ifmsh->userspace_handles_dfs = setup->userspace_handles_dfs;
+ 	if (setup->is_authenticated)
+ 		ifmsh->security |= IEEE80211_MESH_SEC_AUTHED;
+ 	if (setup->is_secure)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 60bed6c69801..c960e4999380 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -643,6 +643,8 @@ struct ieee80211_if_mesh {
+ 	unsigned long wrkq_flags;
+ 	unsigned long mbss_changed;
+ 
++	bool userspace_handles_dfs;
++
+ 	u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
+ 	size_t mesh_id_len;
+ 	/* Active Path Selection Protocol Identifier */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 3702e3d9141d..4807a5d77572 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -979,7 +979,9 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.count = csa_ie.count;
+ 
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
+-				     IEEE80211_CHAN_DISABLED)) {
++				     IEEE80211_CHAN_DISABLED) ||
++	    !cfg80211_reg_can_beacon(sdata->local->hw.wiphy, &params.chandef,
++				     NL80211_IFTYPE_MESH_POINT)) {
+ 		sdata_info(sdata,
+ 			   "mesh STA %pM switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), aborting\n",
+ 			   sdata->vif.addr,
+@@ -995,9 +997,16 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 					    NL80211_IFTYPE_MESH_POINT);
+ 	if (err < 0)
+ 		return false;
+-	if (err > 0)
+-		/* TODO: DFS not (yet) supported */
++	if (err > 0 && !ifmsh->userspace_handles_dfs) {
++		sdata_info(sdata,
++			   "mesh STA %pM switches to channel requiring DFS (%d MHz, width:%d, CF1/2: %d/%d MHz), aborting\n",
++			   sdata->vif.addr,
++			   params.chandef.chan->center_freq,
++			   params.chandef.width,
++			   params.chandef.center_freq1,
++			   params.chandef.center_freq2);
+ 		return false;
++	}
+ 
+ 	params.radar_required = err;
+ 
+-- 
+2.11.0
