@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32978 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753420AbdESFDk (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:33105 "EHLO
+        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753004AbdEPTqQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 01:03:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [V3, 5/9] brcmfmac: add firmware feature detection for gscan feature
-References: <1492776308-15120-6-git-send-email-arend.vanspriel@broadcom.com>
-        <20170518133655.91D0660F60@smtp.codeaurora.org>
-        <87h90i5fqg.fsf@purkki.adurom.net>
-        <fb2b7327-39c6-dc75-e792-e255f8689754@broadcom.com>
-Date: Fri, 19 May 2017 08:03:35 +0300
-In-Reply-To: <fb2b7327-39c6-dc75-e792-e255f8689754@broadcom.com> (Arend Van
-        Spriel's message of "Thu, 18 May 2017 21:34:26 +0200")
-Message-ID: <87y3tt8ml4.fsf@codeaurora.org> (sfid-20170519_070352_673560_36102202)
+        Tue, 16 May 2017 15:46:16 -0400
+Received: by mail-yw0-f195.google.com with SMTP id 203so8599430ywe.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 12:46:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1fdab9d5-d8c6-88dc-38ac-2948e5fa74ec@rempel-privat.de>
+References: <1fdab9d5-d8c6-88dc-38ac-2948e5fa74ec@rempel-privat.de>
+From: Max Filippov <jcmvbkbc@gmail.com>
+Date: Tue, 16 May 2017 12:46:09 -0700
+Message-ID: <CAMo8Bf+xbS46Kj4VP_+F2aZPZpOJ2UHV6WdHP_Ku_eaSQwm-7g@mail.gmail.com> (sfid-20170516_214656_217652_DEDFEF5C)
+Subject: Re: Search for devices with Xtensa cores
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@qca.qualcomm.com,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+HI Oleksij,
 
-> On 18-5-2017 17:47, Kalle Valo wrote:
->> Kalle Valo <kvalo@codeaurora.org> writes:
->> 
->>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>>> From: Arend van Spriel <arend@broadcom.com>
->>>>
->>>> Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
->>>> invalid version.
->>>>
->>>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->>>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->>>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>
->>> Failed to apply:
->>>
->>> fatal: sha1 information is lacking or useless
->>> (drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c).
->>> error: could not build fake ancestor
->>> Applying: brcmfmac: add support multi-scheduled scan
->>> Patch failed at 0001 brcmfmac: add support multi-scheduled scan
->>> The copy of the patch that failed is found in: .git/rebase-apply/patch
->>>
->>> 5 patches set to Changes Requested.
->>>
->>> 9692541 [V3,5/9] brcmfmac: add firmware feature detection for gscan feature
->>> 9692537 [V3,6/9] brcmfmac: move scheduled scan wiphy param setting to pno module
->>> 9692543 [V3,7/9] brcmfmac: add support multi-scheduled scan
->>> 9692535 [V3,8/9] brcmfmac: add mutex to protect pno requests
->>> 9692539 [V3,9/9] brcmfmac: add scheduled scan support for specified BSSIDs
->> 
->> Actually I made a mistake and forgot to manually remove patches 5 and 6
->> from the tree after the conflict (I haven't automated that part yet in
->> my script). So these are now applied:
->> 
->> 9fe929aaace6 brcmfmac: add firmware feature detection for gscan feature
->> 94ed6ffb7965 brcmfmac: move scheduled scan wiphy param setting to pno module
->> 
->> Please resend patches 7-9 and double check that the tree looks ok :)
+On Fri, Apr 28, 2017 at 11:23 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> this year started with inclusion of open-ath9k-htc-firmware to debian
+> *main* repository. As first we started to getting advantage of regular
+> compile tests. See results here:
+> https://tests.reproducible-builds.org/debian/rb-pkg/unstable/i386/open-ath9k-htc-firmware.html
 >
-> Will do. These patches were in same series as cfg80211 changes and all
-> based on mac80211-next/master. I already mentioned to you and Johannes
-> in earlier version of the patch series (posted April 7) that this would
-> result in a merge conflict, but I can imagine that info got lost after
-> more than a month.
+> Most of the problems which we currently get, are related to gcc xtensa
+> compiler.
+> In details: device specific patch set is used to provide our own
+> gcc/binutils version because Xtensa don't really have defined CPU cores.
+> As result, upstream compiler developers will never notice if some thing
+> will brake this patch set.
 
-Ah, I remember now. But yeah, too many emails so I tend to forget so old
-discussions while looking at patches.
+Below are the links to the xtensa-dynconfig repository and xtensa-plugin-env
+branches in binutils-gdb and gcc repositories. Together it is a draft
+implementation of dynamically configurable xtensa toolchain.
+Could you please take a look at it and see if it's useful for you?
+
+https://github.com/jcmvbkbc/xtensa-dynconfig
+https://github.com/jcmvbkbc/binutils-gdb-xtensa/commits/xtensa-plugin-env
+https://github.com/jcmvbkbc/gcc-xtensa/commits/xtensa-plugin-env
 
 -- 
-Kalle Valo
+Thanks.
+-- Max
