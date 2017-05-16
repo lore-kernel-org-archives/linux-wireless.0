@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47700 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753797AbdETFhD (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:55195 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752323AbdEPJXs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 May 2017 01:37:03 -0400
-Date: Sat, 20 May 2017 08:33:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] rtlwifi: btcoex: 23b 1ant: fix
- halbtc8723b1ant_action_wifi_only()
-Message-ID: <20170520053343.gwdinyn447bwpia2@mwanda> (sfid-20170520_073710_971987_55D677F7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 16 May 2017 05:23:48 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH 6/7] mac80211: enable VHT for mesh channel processing
+Date: Tue, 16 May 2017 11:23:15 +0200
+Message-Id: <20170516092316.15636-7-sw@simonwunderlich.de> (sfid-20170516_112817_777559_43F067C4)
+In-Reply-To: <20170516092316.15636-1-sw@simonwunderlich.de>
+References: <20170516092316.15636-1-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The parameters are in the wrong order when we call
-halbtc8723b1ant_set_ant_path() so it's equivalent of calling:
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+---
+ net/mac80211/mesh.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_WIFI, false, true);
-
-Fixes: f66509e3d7c2 ("rtlwifi: btcoex: Remove 23b 1ant configuration parameter")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index f3704d7db4d5..2a7a6ec525a2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1429,7 +1429,7 @@ static void halbtc8723b1ant_action_wifi_only(struct btc_coexist *btcoexist)
- {
- 	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
- 	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
--	halbtc8723b1ant_set_ant_path(btcoexist, false, false, BTC_ANT_PATH_PTA);
-+	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA, false, false);
- }
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 7c6593c0d453..a57af5df7ee4 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -991,12 +991,14 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	if (!sband)
+ 		return false;
  
- /* check if BT is disabled */
+-	sta_flags = IEEE80211_STA_DISABLE_VHT;
++	sta_flags = 0;
+ 	switch (sdata->vif.bss_conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		sta_flags |= IEEE80211_STA_DISABLE_HT;
+ 	case NL80211_CHAN_WIDTH_20:
+ 		sta_flags |= IEEE80211_STA_DISABLE_40MHZ;
++	case NL80211_CHAN_WIDTH_40:
++		sta_flags |= IEEE80211_STA_DISABLE_VHT;
+ 		break;
+ 	default:
+ 		break;
+-- 
+2.11.0
