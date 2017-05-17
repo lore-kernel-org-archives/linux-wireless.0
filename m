@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51614 "EHLO mail.kernel.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40788 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753168AbdECOri (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 10:47:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
-References: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Wed, 3 May 2017 09:47:13 -0500
-Message-ID: <CAL_JsqKktwFmxXijB0FVVoWGkswXm3twzD7She7zGR=rVQ4hWA@mail.gmail.com> (sfid-20170503_164810_535775_D18795F1)
-Subject: Re: [PATCHv2 0/4] Motorola Droid 4: Add WL1285C support
-To: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Cc: Sebastian Reichel <sre@kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
+        id S1753178AbdEQNWn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 09:22:43 -0400
+Message-ID: <1495027350.2442.12.camel@sipsolutions.net> (sfid-20170517_152357_944098_7D476DDB)
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        David Gnedt <david.gnedt@davizone.at>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Takashi Iwai <tiwai@suse.de>,
+        AKASHI Takahiro <takahiro.akashi@linaro.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
+Date: Wed, 17 May 2017 15:22:30 +0200
+In-Reply-To: <20170517132131.GH10015@pali> (sfid-20170517_152143_910249_81751B88)
+References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
+         <20170515231339.GF17314@wotan.suse.de>
+         <1495022766.2442.1.camel@sipsolutions.net> <20170517125335.GG10015@pali>
+         <1495026290.2442.6.camel@sipsolutions.net> <20170517132131.GH10015@pali>
+         (sfid-20170517_152143_910249_81751B88)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 3, 2017 at 9:22 AM, Sebastian Reichel
-<sebastian.reichel@collabora.co.uk> wrote:
-> Hi,
->
-> Motorola Droid 4 uses a WL1285C, as visible on iFixit [0]. This
-> fixes the DT file to use correct compatible for the wifi node
-> and adds the bluetooth node.
->
-> [0] https://www.ifixit.com/Teardown/Motorola+Droid+4+Teardown/7759#s31961
->
-> Changes to PATCHv1:
->  - use proper compatible value for bluetooth / shared transport
->  - add patches fixing wlcore compatible for Droid 4
->
-> -- Sebastian
->
-> Sebastian Reichel (4):
->   wlcore: add wl1285 compatible
->   ARM: dts: omap4-droid4: Use wl1285 for wifi compatible
->   Bluetooth: hci_ll: Add compatible values for more WL chips
->   ARM: dts: omap4-droid4: Add bluetooth
+On Wed, 2017-05-17 at 15:21 +0200, Pali Rohár wrote:
+> On Wednesday 17 May 2017 15:04:50 Johannes Berg wrote:
+> > On Wed, 2017-05-17 at 14:53 +0200, Pali Rohár wrote:
+> > 
+> > > > In fact, why should the *driver* care either? IOW - why should
+> > > > "request_firmware_prefer_user()" even exist?
+> > > 
+> > > There are default/example NVS data, which are stored in
+> > > /lib/firmware
+> > > and installed by linux-firmware package.
+> > 
+> > [...]
+> > 
+> > Oh, so you're saying you want this to invert the order ... Ok, that
+> > makes some sense.
+> 
+> Yes! I thought that this fact can be understood from commit message.
+> If not, I can change it, but provide how to improve it.
 
-For the series,
+It probably can, I was only Cc'ed later :)
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Sorry for the noise.
+
+johannes
