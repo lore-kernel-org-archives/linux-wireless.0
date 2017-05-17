@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:35358 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751309AbdEVKOa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 06:14:30 -0400
-Received: by mail-pf0-f174.google.com with SMTP id n23so77969740pfb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 22 May 2017 03:14:30 -0700 (PDT)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake offload
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41220 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752083AbdEQOT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 10:19:57 -0400
+Message-ID: <1495030794.2442.21.camel@sipsolutions.net> (sfid-20170517_162011_655063_1E3D63C9)
+Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
+ offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 17 May 2017 16:19:54 +0200
+In-Reply-To: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
 References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
- <1495030794.2442.21.camel@sipsolutions.net>
- <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
- <1495099355.2553.1.camel@sipsolutions.net>
- <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
- <1495104012.2553.3.camel@sipsolutions.net>
- <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
- <1495189263.3274.4.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com> (sfid-20170522_121437_689356_F431248C)
-Date: Mon, 22 May 2017 12:14:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <1495189263.3274.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/19/2017 12:21 PM, Johannes Berg wrote:
-> On Thu, 2017-05-18 at 14:48 +0200, Arend Van Spriel wrote:
-> 
->> True. However, we touched this topic a while ago in generic context,
->> ie. preference for ext_features over supported_commands. Right now
->> wpa_supplicant does not check NEW_KEY support so we can go either
->> way.
-> 
-> Right. That's a separate discussion though - whether we add two flags
-> here or check NEW_KEY support doesn't really matter, except that we
-> need to decide
-> 
->   * if we want to support such an override at all, and
->   * if it should be tested at all
->     (perhaps we can just live with that failing entirely?)
-> 
->> I have cleaned up the wpa_supplicant patches for the offloads, but
->> waited with submitting them until the kernel side got applied. So
->> depending on what is decided here I can rework it.
-> 
-> I don't really know. I personally don't think that we need to allow
-> both ways, but then I'm coming with a driver that doesn't even support
-> the old way.
+Hi,
 
-Ok. I know for sure that I have firmware in linux-firmware that supports 
-the offload. So for people using that out there things will change from 
-one way to the other when they change to a newer wpa_supplicant.
+I think this looks really good. One thing though:
 
-> So you should probably decide yourself if you want to keep this
-> fallback option, and how well it should work (be rejected if used on a
-> driver that doesn't support it, or just fail later?)
+> Another change is the
+> addition of the flag ATTR_WANT_1X_4WAY_HS that user-space has to pass
+> in CONNECT request. Some drivers may need to be aware before the PMK
+> is programmed through SET_PMK request.
 
-There is a (small) chance of regression with older devices as stated 
-above and I would like to keep the fallback option for that. Also people 
-may like to have a choice. I am not so sure about whether NEW_KEY 
-support is enough or a new ext_feature flag is needed. I am inclined to 
-say the NEW_KEY support is sufficient.
+I wonder how we really should do this, and if this is good enough.
 
-Regards,
-Arend
+There might be drivers that simply don't support the non-offloaded
+case, so they assume you always have the newer wpa_s. That would seem
+to be a legitimate decision, since the compatibility with that might
+not make much sense for a completely new driver, and it might be a lot
+of work to support TK operations.
+
+We should therefore probably set the expectation that wpa_s - if it's
+new enough - always uses the offloaded functionality and always sets
+the WANT_1X. Then this is even better with such drivers, since they can
+immediately reject the connect() command if want_1x isn't set.
+
+Thoughts?
+
+johannes
