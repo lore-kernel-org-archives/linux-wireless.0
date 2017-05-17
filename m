@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34016 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932292AbdETPtU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 May 2017 11:49:20 -0400
-Received: by mail-oi0-f67.google.com with SMTP id w10so16697639oif.1
-        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:20 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 09/10] rtlwifi: btcoex: 23b 1ant: fine tune for bt_sco_hid busy
-Date: Sat, 20 May 2017 10:49:06 -0500
-Message-Id: <20170520154907.15590-10-Larry.Finger@lwfinger.net> (sfid-20170520_174940_839554_21357713)
-In-Reply-To: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
-References: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:40732 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751637AbdEQNQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 09:16:00 -0400
+Message-ID: <1495026958.2442.11.camel@sipsolutions.net> (sfid-20170517_151605_798771_CD09FA26)
+Subject: Re: when to use wdev_lock()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 17 May 2017 15:15:58 +0200
+In-Reply-To: <49584b67-0bdf-0acf-fb98-a7bea5978fbc@broadcom.com> (sfid-20170503_120449_325519_EDC2F7D8)
+References: <49584b67-0bdf-0acf-fb98-a7bea5978fbc@broadcom.com>
+         (sfid-20170503_120449_325519_EDC2F7D8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hi Arend,
 
-Fine tune the parameters in case of act_bt_sco_hid_only_busy.
+Sorry for the long delay.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> I bumped into use of wdev_lock() again with 802.1X 4-way-hs offload 
+> stuff. So for .set_pmk() and .del_pmk() it takes wdev_lock(). Is
+> there a  rule of thumb when this lock is needed. What is it
+> protecting in general  and in the case of pmk configuration.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index d938c8a4b180..5d780d8d7bbf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1843,7 +1843,7 @@ static void btc8723b1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
- 	/* tdma and coex table */
- 	if (bt_link_info->sco_exist) {
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 5);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 5);
- 	} else {
- 		/* HID */
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 6);
--- 
-2.12.0
+No, unfortunately it's not very well defined.
+
+One thing that drove this is that mac80211 (and perhaps some full-mac
+drivers) uses the same lock to prevent races between their own and
+cfg80211's state. So some of the locking is driven by that as well.
+
+I think it may have been done here just for consistency with other
+calls.
+
+johannes
