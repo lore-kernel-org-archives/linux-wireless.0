@@ -1,357 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:35381 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751383AbdEEMI2 (ORCPT
+Received: from smtprelay.synopsys.com ([198.182.47.9]:60956 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752849AbdEQILT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 08:08:28 -0400
-Received: by mail-pg0-f65.google.com with SMTP id i63so580139pgd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 05:08:28 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v2 1/6] mwifiex: use variable interface header length
-Date: Fri,  5 May 2017 12:08:15 +0000
-Message-Id: <1493986100-24509-1-git-send-email-huxinming820@gmail.com> (sfid-20170505_140833_973194_36675B87)
+        Wed, 17 May 2017 04:11:19 -0400
+From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+To: "prameela.j04cs@gmail.com" <prameela.j04cs@gmail.com>,
+        "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: git repo with Redpine changes
+Date: Wed, 17 May 2017 08:11:16 +0000
+Message-ID: <1495008675.2606.72.camel@synopsys.com> (sfid-20170517_101127_255597_54272BD9)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
-
-Usb tx aggregation feature will utilize 4-bytes bus interface header,
-otherwise it will be set to zero in default case.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v2: same as v1
----
- drivers/net/wireless/marvell/mwifiex/11n_aggr.c |  2 +-
- drivers/net/wireless/marvell/mwifiex/cmdevt.c   |  8 ++++----
- drivers/net/wireless/marvell/mwifiex/init.c     |  5 +++++
- drivers/net/wireless/marvell/mwifiex/main.h     |  1 +
- drivers/net/wireless/marvell/mwifiex/pcie.c     | 19 ++++++++++---------
- drivers/net/wireless/marvell/mwifiex/sdio.c     | 12 ++++++------
- drivers/net/wireless/marvell/mwifiex/sta_tx.c   | 12 ++++++------
- drivers/net/wireless/marvell/mwifiex/txrx.c     | 11 +++--------
- drivers/net/wireless/marvell/mwifiex/uap_txrx.c |  5 ++---
- 9 files changed, 38 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-index a75013a..e8ffb26 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-@@ -164,7 +164,7 @@
- 	int pad = 0, aggr_num = 0, ret;
- 	struct mwifiex_tx_param tx_param;
- 	struct txpd *ptx_pd = NULL;
--	int headroom = adapter->iface_type == MWIFIEX_USB ? 0 : INTF_HEADER_LEN;
-+	int headroom = adapter->intf_hdr_len;
- 
- 	skb_src = skb_peek(&pra_list->skb_head);
- 	if (!skb_src) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 0c3b217..d62f729 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -258,10 +258,10 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 		if (ret == -EBUSY)
- 			cmd_node->cmd_skb = NULL;
- 	} else {
--		skb_push(cmd_node->cmd_skb, INTF_HEADER_LEN);
-+		skb_push(cmd_node->cmd_skb, adapter->intf_hdr_len);
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_CMD,
- 						   cmd_node->cmd_skb, NULL);
--		skb_pull(cmd_node->cmd_skb, INTF_HEADER_LEN);
-+		skb_pull(cmd_node->cmd_skb, adapter->intf_hdr_len);
- 	}
- 
- 	if (ret == -1) {
-@@ -351,10 +351,10 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- 		if (ret != -EBUSY)
- 			dev_kfree_skb_any(sleep_cfm_tmp);
- 	} else {
--		skb_push(adapter->sleep_cfm, INTF_HEADER_LEN);
-+		skb_push(adapter->sleep_cfm, adapter->intf_hdr_len);
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_CMD,
- 						   adapter->sleep_cfm, NULL);
--		skb_pull(adapter->sleep_cfm, INTF_HEADER_LEN);
-+		skb_pull(adapter->sleep_cfm, adapter->intf_hdr_len);
- 	}
- 
- 	if (ret == -1) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 7569483..0710b917 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -217,6 +217,11 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	else
- 		adapter->data_sent = false;
- 
-+	if (adapter->iface_type == MWIFIEX_USB)
-+		adapter->intf_hdr_len = 0;
-+	else
-+		adapter->intf_hdr_len = INTF_HEADER_LEN;
-+
- 	adapter->cmd_resp_received = false;
- 	adapter->event_received = false;
- 	adapter->data_received = false;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index bb2a467..96d1bbe 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -849,6 +849,7 @@ struct mwifiex_adapter {
- 	u8 perm_addr[ETH_ALEN];
- 	bool surprise_removed;
- 	u32 fw_release_number;
-+	u8 intf_hdr_len;
- 	u16 init_wait_q_woken;
- 	wait_queue_head_t init_wait_q;
- 	void *card;
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ac62bce..189c76d 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1391,7 +1391,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 		 * first 2 bytes for len, next 2 bytes is for type
- 		 */
- 		rx_len = get_unaligned_le16(skb_data->data);
--		if (WARN_ON(rx_len <= INTF_HEADER_LEN ||
-+		if (WARN_ON(rx_len <= adapter->intf_hdr_len ||
- 			    rx_len > MWIFIEX_RX_DATA_BUF_SIZE)) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "Invalid RX len %d, Rd=%#x, Wr=%#x\n",
-@@ -1402,7 +1402,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 			mwifiex_dbg(adapter, DATA,
- 				    "info: RECV DATA: Rd=%#x, Wr=%#x, Len=%d\n",
- 				    card->rxbd_rdptr, wrptr, rx_len);
--			skb_pull(skb_data, INTF_HEADER_LEN);
-+			skb_pull(skb_data, adapter->intf_hdr_len);
- 			if (adapter->rx_work_enabled) {
- 				skb_queue_tail(&adapter->rx_data_q, skb_data);
- 				adapter->data_received = true;
-@@ -1736,7 +1736,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 						       MWIFIEX_MAX_DELAY_COUNT);
- 			mwifiex_unmap_pci_memory(adapter, skb,
- 						 PCI_DMA_FROMDEVICE);
--			skb_pull(skb, INTF_HEADER_LEN);
-+			skb_pull(skb, adapter->intf_hdr_len);
- 			while (reg->sleep_cookie && (count++ < 10) &&
- 			       mwifiex_pcie_ok_to_access_hw(adapter))
- 				usleep_range(50, 60);
-@@ -1749,12 +1749,12 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 		}
- 		memcpy(adapter->upld_buf, skb->data,
- 		       min_t(u32, MWIFIEX_SIZE_OF_CMD_BUFFER, skb->len));
--		skb_push(skb, INTF_HEADER_LEN);
-+		skb_push(skb, adapter->intf_hdr_len);
- 		if (mwifiex_map_pci_memory(adapter, skb, MWIFIEX_UPLD_SIZE,
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
- 	} else if (mwifiex_pcie_ok_to_access_hw(adapter)) {
--		skb_pull(skb, INTF_HEADER_LEN);
-+		skb_pull(skb, adapter->intf_hdr_len);
- 		adapter->curr_cmd->resp_skb = skb;
- 		adapter->cmd_resp_received = true;
- 		/* Take the pointer and set it to CMD node and will
-@@ -1791,7 +1791,7 @@ static int mwifiex_pcie_cmdrsp_complete(struct mwifiex_adapter *adapter,
- 
- 	if (skb) {
- 		card->cmdrsp_buf = skb;
--		skb_push(card->cmdrsp_buf, INTF_HEADER_LEN);
-+		skb_push(card->cmdrsp_buf, adapter->intf_hdr_len);
- 		if (mwifiex_map_pci_memory(adapter, skb, MWIFIEX_UPLD_SIZE,
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
-@@ -1856,14 +1856,15 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
- 		desc = card->evtbd_ring[rdptr];
- 		memset(desc, 0, sizeof(*desc));
- 
--		event = get_unaligned_le32(&skb_cmd->data[INTF_HEADER_LEN]);
-+		event = get_unaligned_le32(
-+			&skb_cmd->data[adapter->intf_hdr_len]);
- 		adapter->event_cause = event;
- 		/* The first 4bytes will be the event transfer header
- 		   len is 2 bytes followed by type which is 2 bytes */
- 		memcpy(&data_len, skb_cmd->data, sizeof(__le16));
- 		evt_len = le16_to_cpu(data_len);
- 		skb_trim(skb_cmd, evt_len);
--		skb_pull(skb_cmd, INTF_HEADER_LEN);
-+		skb_pull(skb_cmd, adapter->intf_hdr_len);
- 		mwifiex_dbg(adapter, EVENT,
- 			    "info: Event length: %d\n", evt_len);
- 
-@@ -1922,7 +1923,7 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
- 	}
- 
- 	if (!card->evt_buf_list[rdptr]) {
--		skb_push(skb, INTF_HEADER_LEN);
-+		skb_push(skb, adapter->intf_hdr_len);
- 		skb_put(skb, MAX_EVENT_SIZE - skb->len);
- 		if (mwifiex_map_pci_memory(adapter, skb,
- 					   MAX_EVENT_SIZE,
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 0af1c67..8e6706f 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1125,7 +1125,7 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
- 	data = skb->data;
- 	total_pkt_len = skb->len;
- 
--	while (total_pkt_len >= (SDIO_HEADER_OFFSET + INTF_HEADER_LEN)) {
-+	while (total_pkt_len >= (SDIO_HEADER_OFFSET + adapter->intf_hdr_len)) {
- 		if (total_pkt_len < adapter->sdio_rx_block_size)
- 			break;
- 		blk_num = *(data + BLOCK_NUMBER_OFFSET);
-@@ -1152,7 +1152,7 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
- 			break;
- 		skb_put(skb_deaggr, pkt_len);
- 		memcpy(skb_deaggr->data, data + SDIO_HEADER_OFFSET, pkt_len);
--		skb_pull(skb_deaggr, INTF_HEADER_LEN);
-+		skb_pull(skb_deaggr, adapter->intf_hdr_len);
- 
- 		mwifiex_handle_rx_packet(adapter, skb_deaggr);
- 		data += blk_size;
-@@ -1178,7 +1178,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 
- 	if (upld_typ != MWIFIEX_TYPE_AGGR_DATA) {
- 		skb_trim(skb, pkt_len);
--		skb_pull(skb, INTF_HEADER_LEN);
-+		skb_pull(skb, adapter->intf_hdr_len);
- 	}
- 
- 	switch (upld_typ) {
-@@ -1537,7 +1537,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
- 		rx_len = card->mp_regs[reg->cmd_rd_len_1] << 8;
- 		rx_len |= (u16)card->mp_regs[reg->cmd_rd_len_0];
- 		rx_blocks = DIV_ROUND_UP(rx_len, MWIFIEX_SDIO_BLOCK_SIZE);
--		if (rx_len <= INTF_HEADER_LEN ||
-+		if (rx_len <= adapter->intf_hdr_len ||
- 		    (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE) >
- 		     MWIFIEX_RX_DATA_BUF_SIZE)
- 			return -1;
-@@ -1635,7 +1635,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
- 			rx_blocks =
- 				(rx_len + MWIFIEX_SDIO_BLOCK_SIZE -
- 				 1) / MWIFIEX_SDIO_BLOCK_SIZE;
--			if (rx_len <= INTF_HEADER_LEN ||
-+			if (rx_len <= adapter->intf_hdr_len ||
- 			    (card->mpa_rx.enabled &&
- 			     ((rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE) >
- 			      card->mpa_rx.buf_size))) {
-@@ -1896,7 +1896,7 @@ static int mwifiex_sdio_host_to_card(struct mwifiex_adapter *adapter,
- 		adapter->cmd_sent = true;
- 		/* Type must be MWIFIEX_TYPE_CMD */
- 
--		if (pkt_len <= INTF_HEADER_LEN ||
-+		if (pkt_len <= adapter->intf_hdr_len ||
- 		    pkt_len > MWIFIEX_UPLD_SIZE)
- 			mwifiex_dbg(adapter, ERROR,
- 				    "%s: payload=%p, nb=%d\n",
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_tx.c b/drivers/net/wireless/marvell/mwifiex/sta_tx.c
-index f6683ea..620f865 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_tx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_tx.c
-@@ -49,8 +49,7 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
- 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
- 	unsigned int pad;
- 	u16 pkt_type, pkt_offset;
--	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
--		       INTF_HEADER_LEN;
-+	int hroom = adapter->intf_hdr_len;
- 
- 	if (!skb->len) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -116,7 +115,7 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
- 
- 	local_tx_pd->tx_pkt_offset = cpu_to_le16(pkt_offset);
- 
--	/* make space for INTF_HEADER_LEN */
-+	/* make space for adapter->intf_hdr_len */
- 	skb_push(skb, hroom);
- 
- 	if (!local_tx_pd->tx_control)
-@@ -165,8 +164,9 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
- 	memset(tx_info, 0, sizeof(*tx_info));
- 	tx_info->bss_num = priv->bss_num;
- 	tx_info->bss_type = priv->bss_type;
--	tx_info->pkt_len = data_len - (sizeof(struct txpd) + INTF_HEADER_LEN);
--	skb_reserve(skb, sizeof(struct txpd) + INTF_HEADER_LEN);
-+	tx_info->pkt_len = data_len -
-+			(sizeof(struct txpd) + adapter->intf_hdr_len);
-+	skb_reserve(skb, sizeof(struct txpd) + adapter->intf_hdr_len);
- 	skb_push(skb, sizeof(struct txpd));
- 
- 	local_tx_pd = (struct txpd *) skb->data;
-@@ -177,11 +177,11 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
- 	local_tx_pd->bss_num = priv->bss_num;
- 	local_tx_pd->bss_type = priv->bss_type;
- 
-+	skb_push(skb, adapter->intf_hdr_len);
- 	if (adapter->iface_type == MWIFIEX_USB) {
- 		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
- 						   skb, NULL);
- 	} else {
--		skb_push(skb, INTF_HEADER_LEN);
- 		tx_param.next_pkt_len = 0;
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
- 						   skb, &tx_param);
-diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
-index fac28bd..15e92af 100644
---- a/drivers/net/wireless/marvell/mwifiex/txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
-@@ -91,7 +91,7 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
- 	struct mwifiex_sta_node *dest_node;
- 	struct ethhdr *hdr = (void *)skb->data;
- 
--	hroom = (adapter->iface_type == MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
-+	hroom = adapter->intf_hdr_len;
- 
- 	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP) {
- 		dest_node = mwifiex_get_sta_entry(priv, hdr->h_dest);
-@@ -179,13 +179,8 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
- 		mwifiex_write_data_complete(adapter, skb, 0, 0);
- 		return ret;
- 	}
--	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) {
--		if (adapter->iface_type == MWIFIEX_USB)
--			local_tx_pd = (struct txpd *)head_ptr;
--		else
--			local_tx_pd = (struct txpd *) (head_ptr +
--				INTF_HEADER_LEN);
--	}
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA)
-+		local_tx_pd = (struct txpd *)(head_ptr + adapter->intf_hdr_len);
- 
- 	if (adapter->iface_type == MWIFIEX_USB) {
- 		ret = adapter->if_ops.host_to_card(adapter,
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-index bf5660e..1e6a62c 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-@@ -468,8 +468,7 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
- 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
- 	int pad;
- 	u16 pkt_type, pkt_offset;
--	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
--		       INTF_HEADER_LEN;
-+	int hroom = adapter->intf_hdr_len;
- 
- 	if (!skb->len) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -521,7 +520,7 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
- 
- 	txpd->tx_pkt_offset = cpu_to_le16(pkt_offset);
- 
--	/* make space for INTF_HEADER_LEN */
-+	/* make space for adapter->intf_hdr_len */
- 	skb_push(skb, hroom);
- 
- 	if (!txpd->tx_control)
--- 
-1.9.1
+SGVsbG/CoEFtaXRrdW1hcizCoFByYW1lZWxhLA0KDQpJIHdhcyBsdWNreSBlbm91Z2ggdG8gZ2V0
+IGhvbGQgb2YgUlM5MTEzIEV2YWx1YXRpb24gS2l0IGFuZCBub3cgSSdtIHRyeWluZw0KdG8gZ2V0
+IGl0IHdvcmtpbmcgd2l0aCBteSBib2FyZCB2aWEgVVNCIGFuZCBTRElPIGludGVyZmFjZXMgYnV0
+IHNlZWluZyBpc3N1ZXMgaGVyZSBhbmQgdGhlcmU6DQrCoDEpIEluIGNhc2Ugb2YgU0RJTyBJIHNl
+ZSB0aGlzIG9uIGludGVyZmFjZSB1cCB3aXRoIHZhbmlsbGEgNC4xMS4xIGtlcm5lbDoNCi0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tPjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0KIyBpZmNvbmZpZyB3bGFu
+MCB1cA0KcnNpXzkxeDogU2VuZGluZyBSWCBmaWx0ZXIgZnJhbWUNCnJzaV85MXg6IHJzaV9jb3Jl
+X3Fvc19wcm9jZXNzb3I6IFF1ZXVlIG51bWJlciA9IDQNCnJzaV85MXg6IHJzaV9zZGlvX2hvc3Rf
+aW50Zl93cml0ZV9wa3Q6IFN1Y2Nlc3NmdWxseSB3cml0dGVuIG9udG8gY2FyZA0KcnNpXzkxeDog
+cnNpX3NldF92YXBfY2FwYWJpbGl0aWVzOiBTZW5kaW5nIFZBUCBjYXBhYmlsaXRpZXMgZnJhbWUN
+CnJzaV85MXg6IHJzaV9tYWM4MDIxMV9jb25mX3R4OiBDb25mIHF1ZXVlIDAsIGFpZnM6IDIsIGN3
+bWluOiAxNSBjd21heDogMTAyMywgdHhvcDogMA0KcnNpXzkxeDogcnNpX21hYzgwMjExX2NvbmZf
+dHg6IENvbmYgcXVldWUgMSwgYWlmczogMiwgY3dtaW46IDE1IGN3bWF4OiAxMDIzLCB0eG9wOiAw
+DQpyc2lfOTF4OiByc2lfbWFjODAyMTFfY29uZl90eDogQ29uZiBxdWV1ZSAyLCBhaWZzOiAyLCBj
+d21pbjogMTUgY3dtYXg6IDEwMjMsIHR4b3A6IDANCiMgcnNpXzkxeDogcnNpX21hYzgwMjExX2Nv
+bmZfdHg6IENvbmYgcXVldWUgMywgYWlmczogMiwgY3dtaW46IDE1IGN3bWF4OiAxMDIzLCB0eG9w
+OiAwDQpyc2lfOTF4OiByc2lfY2hhbm5lbF9jaGFuZ2U6IFNldCBjaGFubmVsOiAyNDEyIE1IeiB0
+eXBlOiA0MTYgY2hhbm5lbF9ubyAxDQpyc2lfOTF4OiByc2lfc2V0X2NoYW5uZWw6IFNlbmRpbmcg
+c2NhbiByZXEgZnJhbWUNCnJzaV85MXg6IHJzaV9tYWM4MDIxMV9jb25maWc6IENvbmZpZ3VyaW5n
+IFBvd2VyDQpyc2lfOTF4OiByc2lfY29uZmlnX3Bvd2VyOiBTZXQgdHggcG93ZXI6IDIwIGRCTQ0K
+cnNpXzkxeDogcnNpX3NlbmRfcmFkaW9fcGFyYW1zX3VwZGF0ZTogU2VuZGluZyBSYWRpbyBQYXJh
+bXMgdXBkYXRlIGZyYW1lDQpyc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBRdWV1ZSBu
+dW1iZXIgPSA0DQpyc2lfOTF4OiByc2lfaW50ZXJydXB0X2hhbmRsZXI6IEludHJfc3RhdHVzID0g
+OCA4IDQNCnJzaV85MXg6IFBrdCBwZW5kaW5nIGludGVycnVwdA0KcnNpXzkxeDogcnNpX21nbXRf
+cGt0X3JlY3Y6IE1zZyBMZW46IDAsIE1zZyBUeXBlOsKgwqDCoMKgMQ0KcnNpXzkxeDogcnNpX2hh
+bmRsZV90YV9jb25maXJtX3R5cGU6IEludmFsaWQgVEEgY29uZmlybSBwa3QgcmVjZWl2ZWQNCnJz
+aV85MXg6IHJzaV9zZGlvX2hvc3RfaW50Zl93cml0ZV9wa3Q6IFN1Y2Nlc3NmdWxseSB3cml0dGVu
+IG9udG8gY2FyZA0KcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogUXVldWUgbnVtYmVy
+ID0gNA0KcnNpXzkxeDogcnNpX3NkaW9faG9zdF9pbnRmX3dyaXRlX3BrdDogU3VjY2Vzc2Z1bGx5
+IHdyaXR0ZW4gb250byBjYXJkDQpyc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBRdWV1
+ZSBudW1iZXIgPSA0DQpyc2lfOTF4OiByc2lfaW50ZXJydXB0X2hhbmRsZXI6IEludHJfc3RhdHVz
+ID0gOCA4IDQNCnJzaV85MXg6IFBrdCBwZW5kaW5nIGludGVycnVwdA0KcnNpXzkxeDogcnNpX21n
+bXRfcGt0X3JlY3Y6IE1zZyBMZW46IDAsIE1zZyBUeXBlOsKgwqDCoMKgMQ0KcnNpXzkxeDogcnNp
+X2hhbmRsZV90YV9jb25maXJtX3R5cGU6IEludmFsaWQgVEEgY29uZmlybSBwa3QgcmVjZWl2ZWQN
+CnJzaV85MXg6IHJzaV9pbnRlcnJ1cHRfaGFuZGxlcjogSW50cl9zdGF0dXMgPSA4IDggNA0KcnNp
+XzkxeDogUGt0IHBlbmRpbmcgaW50ZXJydXB0DQpyc2lfOTF4OiByc2lfbWdtdF9wa3RfcmVjdjog
+TXNnIExlbjogMzIxLCBNc2cgVHlwZTrCoMKgwqDCoDINCnJzaV85MXg6IHJzaV9zZGlvX2hvc3Rf
+aW50Zl93cml0ZV9wa3Q6IFN1Y2Nlc3NmdWxseSB3cml0dGVuIG9udG8gY2FyZA0KcnNpXzkxeDog
+cnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogUXVldWUgbnVtYmVyID0gMjU1DQpyc2lfOTF4OiByc2lf
+Y29yZV9xb3NfcHJvY2Vzc29yOiBObyBNb3JlIFBrdA0KcnNpXzkxeDogcnNpX2ludGVycnVwdF9o
+YW5kbGVyOiBJbnRyX3N0YXR1cyA9IGMgOCA0DQpyc2lfOTF4OiBQa3QgcGVuZGluZyBpbnRlcnJ1
+cHQNCnJzaV85MXg6IHJzaV9tZ210X3BrdF9yZWN2OiBNc2cgTGVuOiAyOTksIE1zZyBUeXBlOsKg
+wqDCoMKgMg0KcnNpXzkxeDogcnNpX2ludGVycnVwdF9oYW5kbGVyOiA9PT4gRklSTVdBUkUgQXNz
+ZXJ0IDw9PQ0KcnNpXzkxeDogcnNpX2ludGVycnVwdF9oYW5kbGVyOiBGaXJtd2FyZSBTdGF0dXMg
+aXMgMHg2NQ0KcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogUXVldWUgbnVtYmVyID0g
+MjU1DQpyc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBObyBNb3JlIFBrdA0KLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0+OC0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCmFuZCB5b3UgcmVjZW50
+IHBhdGNoIHNlcmllcyBmb3IgbndlIGZpcm13YXJlIGxvYWRpbmcgSSBzZWUgc29tZXRoaW5nIGEg
+Yml0DQpkaWZmZXJlbnQ6DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0t
+LS0tLS0NCm1tY19ob3N0IG1tYzA6IEJ1cyBzcGVlZCAoc2xvdCAwKSA9IDUwMDAwMDAwSHogKHNs
+b3QgcmVxIDI1MDAwMDAwSHosIGFjdHVhbCAyNTAwMDAwMEhaIGRpdiA9IDEpDQptbWMwOiBuZXcg
+U0RJTyBjYXJkIGF0IGFkZHJlc3MgZmZmZA0KcnNpXzkxeDogcnNpX3Byb2JlOiBJbml0IGZ1bmN0
+aW9uIGNhbGxlZA0KcnNpXzkxeDogcnNpX2luaXRfc2Rpb19pbnRlcmZhY2U6IEVuYWJsZWQgdGhl
+IGludGVyZmFjZQ0KbW1jX2hvc3QgbW1jMDogQnVzIHNwZWVkIChzbG90IDApID0gNTAwMDAwMDBI
+eiAoc2xvdCByZXEgNTAwMDAwMDBIeiwgYWN0dWFsIDUwMDAwMDAwSFogZGl2ID0gMCkNCnJzaV85
+MXg6IHJzaV9zZXRibG9ja2xlbmd0aDogU2V0dGluZyB0aGUgYmxvY2sgbGVuZ3RoDQpyc2lfOTF4
+OiByc2lfc2V0YmxvY2tsZW5ndGg6IE9wZXJhdGlvbmFsIGJsayBsZW5ndGggaXMgMjU2DQpyc2lf
+OTF4OiByc2lfaW5pdF9zZGlvX2ludGVyZmFjZTogU2V0dXAgY2FyZCBzdWNjZXNmdWxseQ0KcnNp
+XzkxeDogcnNpX2luaXRfc2Rpb19zbGF2ZV9yZWdzOiBJbml0aWFsemluZyBTRElPIHJlYWQgc3Rh
+cnQgbGV2ZWwNCnJzaV85MXg6IHJzaV9pbml0X3NkaW9fc2xhdmVfcmVnczogSW5pdGlhbHppbmcg
+RklGTyBjdHJsIHJlZ2lzdGVycw0KcnNpXzkxeDogcnNpX3NkaW9fbWFzdGVyX2FjY2Vzc19tc3dv
+cmQ6IE1BU1RFUl9BQ0NFU1NfTVNCWVRFOjB4NQ0KcnNpXzkxeDogcnNpX3NkaW9fbWFzdGVyX2Fj
+Y2Vzc19tc3dvcmQ6TUFTVEVSX0FDQ0VTU19MU0JZVEU6MHg0MQ0KcnNpXzkxeDogcnNpX3NkaW9f
+cmVhZF9yZWdpc3Rlcl9tdWx0aXBsZTogU3luY2ggQ21kNTMgcmVhZCBmYWlsZWQNCnJzaV85MXg6
+IHJzaV9zZGlvX21hc3Rlcl9yZWdfcmVhZDogQUhCIHJlZ2lzdGVyIHJlYWQgZmFpbGVkDQpyc2lf
+OTF4OiByc2lfbG9hZF9maXJtd2FyZTogUkVHT1VUIHJlYWQgZmFpbGVkDQpyc2lfOTF4OiByc2lf
+aGFsX2RldmljZV9pbml0OiBGYWlsZWQgdG8gbG9hZCBUQSBpbnN0cnVjdGlvbnMNCnJzaV85MXg6
+IHJzaV9wcm9iZTogRmFpbGVkIGluIGRldmljZSBpbml0DQpyc2lfOTF4OiByc2lfOTF4X2RlaW5p
+dDogUGVyZm9ybWluZyBkZWluaXQgb3Mgb3BzDQpyc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vz
+c29yOiBRdWV1ZSBudW1iZXIgPSAyNTUNCnJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9jZXNzb3I6
+IE5vIE1vcmUgUGt0DQpyc2lfOTF4OiByc2lfcHJvYmU6IEZhaWxlZCBpbiBwcm9iZS4uLkV4aXRp
+bmcNClJTSS1TRElPIFdMQU46IHByb2JlIG9mIG1tYzA6ZmZmZDoxIGZhaWxlZCB3aXRoIGVycm9y
+IDENCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tPjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0KDQrCoDIp
+IEluIGNhc2Ugb2YgVVNCIEkganVzdCBzZWU6DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0t
+LS0tLS0tLS0tLS0tLS0tLS0NCnVzYiAxLTE6IG5ldyBoaWdoLXNwZWVkIFVTQiBkZXZpY2UgbnVt
+YmVyIDYgdXNpbmcgZWhjaS1wbGF0Zm9ybQ0KdXNiIDEtMTogY29uZmlnIDEgaW50ZXJmYWNlIDAg
+YWx0c2V0dGluZyAwIGVuZHBvaW50IDB4ODMgaGFzIGFuIGludmFsaWQgYkludGVydmFsIDI1NSwg
+Y2hhbmdpbmcgdG8gMTENCnVzYiAxLTE6IE5ldyBVU0IgZGV2aWNlIGZvdW5kLCBpZFZlbmRvcj0x
+NjE4LCBpZFByb2R1Y3Q9OTExMw0KdXNiIDEtMTogTmV3IFVTQiBkZXZpY2Ugc3RyaW5nczogTWZy
+PTEsIFByb2R1Y3Q9MiwgU2VyaWFsTnVtYmVyPTANCnVzYiAxLTE6IFByb2R1Y3Q6IFdpcmVsZXNz
+IFVTQi1DREMgTmV0d29yayBNb2R1bGUNCnVzYiAxLTE6IE1hbnVmYWN0dXJlcjogUmVkcGluZSBT
+aWduYWxzLCBJbmMuDQpjZGNfYWNtIDEtMToxLjA6IHR0eUFDTTA6IFVTQiBBQ00gZGV2aWNlDQot
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0KSSBub3RpY2Vk
+IHRoYXQgdGhlcmUncmUgcXVpdGUgc29tZSBwYXRjaGVzIGZsb2F0aW5nIG9uIGxpbnV4LXdpcmVs
+ZXNzIG1haWxpbmcgbGlzdCB3aGljaA0Kd2VyZSBub3QgeWV0IG1lcmdlZCBpbiB1cHN0cmVhbSBr
+ZXJuZWwgKGV2ZW4gaW4gbGludXgtbmV4dCBvciB3aXJlbGVzcy10ZXN0aW5nKS4NCg0KU28gYXQg
+dGhpcyBwb2ludCBJJ20gbm90IHJlYWxseSBzdXJlIHdoYXQgY291bGQgYmUgYSBzYWZlIGJhc2Vs
+aW5lIGZvciBteSBleHBlcmltZW50czoNCsKgLSBpZiBleGlzdGluZyB2YW5pbGxhIHNheSA0LjEx
+IGtlcm5lbCBpcyBnb29kIGVub3VnaCBhbmQgdGhpbmdzIHRoYXQgZG9lc24ndCB3b3JrIGFyZSBj
+YXVzZWQNCsKgIMKgYnkgb3RoZXIgcHJvYmxlbXMgbm90IHJlbGF0ZWQgdG8gUmVkcGluZSBtb2R1
+bGUgKHRoYXQgd291bGQgYmUgc3RyYW5nZSBiZWNhdXNlIGJvdGggVVNCIGFiZCBTRC1jYXJkDQrC
+oCDCoHNsb3QgYXJlIHByb3ZlbiB0byB3b3JrIHByZXR0eSB3ZWxsIHdpdGggb3RoZXIgZGV2aWNl
+cykNCsKgLSBpZiBJIG5lZWQgYW4gYXJiaXRyYXJ5IHNldCBvZiBwYXRjaGVzIHRvIGdldCB0aGlu
+Z3MgdXAgYW5kIHJ1bm5pbmcgZXRjDQoNClRoYXQgc2FpZCBpZiB0aGVyZSdzIGEgcHVibGljIGdp
+dCByZXBvIHdoaWNoIGNvbnRhaW5zIGV2ZXJ5dGhpbmcgcmVxdWlyZWQgZm9yIFJlZHBpbmUgbW9k
+dWxlIHRvDQp3b3JrIFtwcmVmZXJhYmx5IGJhc2VkIG9uIHRoZSBsYXRlc3Qga2VybmVsIHNvdXJj
+ZXNdIEknZCBsaWtlIHRvIGdldCBhIHJlZmVyZW5jZSB0byBpdC4NCg0KQW55IGhpbnRzIGhlcmUg
+YXJlIG11Y2ggYXBwcmVjaWF0ZWQuDQoNClJlZ2FyZHMsDQpBbGV4ZXk=
