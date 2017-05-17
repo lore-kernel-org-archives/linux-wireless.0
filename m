@@ -1,36 +1,603 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19421 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753392AbdEDM7a (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:49877 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754622AbdEQOry (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 08:59:30 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [RESEND] ath10k: fix out of bounds access to local buffer
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170424071157.6979-1-dev@michaelmera.com>
-References: <20170424071157.6979-1-dev@michaelmera.com>
-To: Michael Mera <dev@michaelmera.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Michael Mera" <dev@michaelmera.com>
-Message-ID: <afaf2e43f4d341e98650d6deb4b7769c@eusanexr01a.eu.qualcomm.com> (sfid-20170504_150021_103459_590B9DC3)
-Date: Thu, 4 May 2017 05:59:26 -0700
+        Wed, 17 May 2017 10:47:54 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+Subject: [PATCH v2 01/10] rt2x00: change function pointers for register accessors
+Date: Wed, 17 May 2017 16:46:53 +0200
+Message-Id: <20170517144702.1381136-2-arnd@arndb.de> (sfid-20170517_165808_530461_1032068C)
+In-Reply-To: <20170517144702.1381136-1-arnd@arndb.de>
+References: <20170517144702.1381136-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Mera <dev@michaelmera.com> wrote:
-> During write to debugfs file simulate_fw_crash, fixed-size local buffer
-> 'buf' is accessed and modified at index 'count-1', where 'count' is the
-> size of the write (so potentially out of bounds).
-> This patch fixes this problem.
-> 
-> Signed-off-by: Michael Mera <dev@michaelmera.com>
+This prepares the driver for changing all the 'read' register accessors
+to return the value instead of passing it by reference. Since a lot
+of them are used in callbacks, this takes care of the callbacks first,
+adding a couple of helpers that will be removed again one at a time.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2400pci.c   | 18 +++++++++++----
+ drivers/net/wireless/ralink/rt2x00/rt2500pci.c   | 18 +++++++++++----
+ drivers/net/wireless/ralink/rt2x00/rt2500usb.c   | 24 ++++++++++++++------
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c   | 28 +++++++++++++++++++-----
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h   | 20 ++++++++++++-----
+ drivers/net/wireless/ralink/rt2x00/rt2800pci.c   |  4 ++--
+ drivers/net/wireless/ralink/rt2x00/rt2800soc.c   |  4 ++--
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c   |  4 ++--
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h      | 13 +++++++++++
+ drivers/net/wireless/ralink/rt2x00/rt2x00debug.c |  2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00debug.h |  4 ++--
+ drivers/net/wireless/ralink/rt2x00/rt2x00mmio.h  |  6 +++++
+ drivers/net/wireless/ralink/rt2x00/rt2x00usb.h   | 22 ++++++++++++++++++-
+ drivers/net/wireless/ralink/rt2x00/rt61pci.c     | 17 ++++++++++----
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c     | 17 ++++++++++----
+ 15 files changed, 157 insertions(+), 44 deletions(-)
 
-a16703aaeaed ath10k: fix out of bounds access to local buffer
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+index 19874439ac40..3ba9a1674e1d 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+@@ -164,10 +164,20 @@ static void rt2400pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
++static u8 _rt2400pci_bbp_read(struct rt2x00_dev *rt2x00dev,
++			      const unsigned int word)
++{
++	u8 value;
++
++	rt2400pci_bbp_read(rt2x00dev, word, &value);
++
++	return value;
++}
++
+ static const struct rt2x00debug rt2400pci_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2x00mmio_register_read,
++		.read		= _rt2x00mmio_register_read,
+ 		.write		= rt2x00mmio_register_write,
+ 		.flags		= RT2X00DEBUGFS_OFFSET,
+ 		.word_base	= CSR_REG_BASE,
+@@ -175,21 +185,21 @@ static const struct rt2x00debug rt2400pci_rt2x00debug = {
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+-		.read		= rt2x00_eeprom_read,
++		.read		= _rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
+ 		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+-		.read		= rt2400pci_bbp_read,
++		.read		= _rt2400pci_bbp_read,
+ 		.write		= rt2400pci_bbp_write,
+ 		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= rt2x00_rf_read,
++		.read		= _rt2x00_rf_read,
+ 		.write		= rt2400pci_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+index 791434de8052..d9b061b73e83 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+@@ -164,10 +164,20 @@ static void rt2500pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
++static u8 _rt2500pci_bbp_read(struct rt2x00_dev *rt2x00dev,
++			      const unsigned int word)
++{
++	u8 value;
++
++	rt2500pci_bbp_read(rt2x00dev, word, &value);
++
++	return value;
++}
++
+ static const struct rt2x00debug rt2500pci_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2x00mmio_register_read,
++		.read		= _rt2x00mmio_register_read,
+ 		.write		= rt2x00mmio_register_write,
+ 		.flags		= RT2X00DEBUGFS_OFFSET,
+ 		.word_base	= CSR_REG_BASE,
+@@ -175,21 +185,21 @@ static const struct rt2x00debug rt2500pci_rt2x00debug = {
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+-		.read		= rt2x00_eeprom_read,
++		.read		= _rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
+ 		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+-		.read		= rt2500pci_bbp_read,
++		.read		= _rt2500pci_bbp_read,
+ 		.write		= rt2500pci_bbp_write,
+ 		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= rt2x00_rf_read,
++		.read		= _rt2x00_rf_read,
+ 		.write		= rt2500pci_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+index 0d2670a56c4c..5bd160f732de 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+@@ -216,14 +216,14 @@ static void rt2500usb_rf_write(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-static void _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+-				     const unsigned int offset,
+-				     u32 *value)
++static u32 _rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
++				     const unsigned int offset)
+ {
+ 	u16 tmp;
+ 
+ 	rt2500usb_register_read(rt2x00dev, offset, &tmp);
+-	*value = tmp;
++
++	return tmp;
+ }
+ 
+ static void _rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
+@@ -233,6 +233,16 @@ static void _rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
+ 	rt2500usb_register_write(rt2x00dev, offset, value);
+ }
+ 
++static u8 _rt2500usb_bbp_read(struct rt2x00_dev *rt2x00dev,
++			      const unsigned int word)
++{
++	u8 value;
++
++	rt2500usb_bbp_read(rt2x00dev, word, &value);
++
++	return value;
++}
++
+ static const struct rt2x00debug rt2500usb_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+@@ -244,21 +254,21 @@ static const struct rt2x00debug rt2500usb_rt2x00debug = {
+ 		.word_count	= CSR_REG_SIZE / sizeof(u16),
+ 	},
+ 	.eeprom	= {
+-		.read		= rt2x00_eeprom_read,
++		.read		= _rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
+ 		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+-		.read		= rt2500usb_bbp_read,
++		.read		= _rt2500usb_bbp_read,
+ 		.write		= rt2500usb_bbp_write,
+ 		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= rt2x00_rf_read,
++		.read		= _rt2x00_rf_read,
+ 		.write		= rt2500usb_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index d11c7b210e81..87cfc135e564 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1225,10 +1225,28 @@ void rt2800_clear_beacon(struct queue_entry *entry)
+ EXPORT_SYMBOL_GPL(rt2800_clear_beacon);
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
++static u8 _rt2800_bbp_read(struct rt2x00_dev *rt2x00dev, const unsigned int word)
++{
++	u8 value;
++
++	rt2800_bbp_read(rt2x00dev, word, &value);
++
++	return value;
++}
++
++static u8 _rt2800_rfcsr_read(struct rt2x00_dev *rt2x00dev, const unsigned int word)
++{
++	u8 value;
++
++	rt2800_rfcsr_read(rt2x00dev, word, &value);
++
++	return value;
++}
++
+ const struct rt2x00debug rt2800_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2800_register_read,
++		.read		= _rt2800_register_read,
+ 		.write		= rt2800_register_write,
+ 		.flags		= RT2X00DEBUGFS_OFFSET,
+ 		.word_base	= CSR_REG_BASE,
+@@ -1239,28 +1257,28 @@ const struct rt2x00debug rt2800_rt2x00debug = {
+ 		/* NOTE: The local EEPROM access functions can't
+ 		 * be used here, use the generic versions instead.
+ 		 */
+-		.read		= rt2x00_eeprom_read,
++		.read		= _rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
+ 		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+-		.read		= rt2800_bbp_read,
++		.read		= _rt2800_bbp_read,
+ 		.write		= rt2800_bbp_write,
+ 		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= rt2x00_rf_read,
++		.read		= _rt2x00_rf_read,
+ 		.write		= rt2800_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= RF_SIZE / sizeof(u32),
+ 	},
+ 	.rfcsr	= {
+-		.read		= rt2800_rfcsr_read,
++		.read		= _rt2800_rfcsr_read,
+ 		.write		= rt2800_rfcsr_write,
+ 		.word_base	= RFCSR_BASE,
+ 		.word_size	= sizeof(u8),
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+index f357531d9488..6bed0d5e930e 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+@@ -49,10 +49,10 @@ struct rt2800_drv_data {
+ };
+ 
+ struct rt2800_ops {
+-	void (*register_read)(struct rt2x00_dev *rt2x00dev,
+-			      const unsigned int offset, u32 *value);
+-	void (*register_read_lock)(struct rt2x00_dev *rt2x00dev,
+-				   const unsigned int offset, u32 *value);
++	u32 (*register_read)(struct rt2x00_dev *rt2x00dev,
++			      const unsigned int offset);
++	u32 (*register_read_lock)(struct rt2x00_dev *rt2x00dev,
++				   const unsigned int offset);
+ 	void (*register_write)(struct rt2x00_dev *rt2x00dev,
+ 			       const unsigned int offset, u32 value);
+ 	void (*register_write_lock)(struct rt2x00_dev *rt2x00dev,
+@@ -84,7 +84,7 @@ static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
+ {
+ 	const struct rt2800_ops *rt2800ops = rt2x00dev->ops->drv;
+ 
+-	rt2800ops->register_read(rt2x00dev, offset, value);
++	*value = rt2800ops->register_read(rt2x00dev, offset);
+ }
+ 
+ static inline void rt2800_register_read_lock(struct rt2x00_dev *rt2x00dev,
+@@ -93,7 +93,15 @@ static inline void rt2800_register_read_lock(struct rt2x00_dev *rt2x00dev,
+ {
+ 	const struct rt2800_ops *rt2800ops = rt2x00dev->ops->drv;
+ 
+-	rt2800ops->register_read_lock(rt2x00dev, offset, value);
++	*value = rt2800ops->register_read_lock(rt2x00dev, offset);
++}
++
++static inline u32 _rt2800_register_read(struct rt2x00_dev *rt2x00dev,
++					const unsigned int offset)
++{
++	const struct rt2800_ops *rt2800ops = rt2x00dev->ops->drv;
++
++	return rt2800ops->register_read(rt2x00dev, offset);
+ }
+ 
+ static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800pci.c b/drivers/net/wireless/ralink/rt2x00/rt2800pci.c
+index 0af22573a2eb..98f16312e3f1 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800pci.c
+@@ -325,8 +325,8 @@ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
+ };
+ 
+ static const struct rt2800_ops rt2800pci_rt2800_ops = {
+-	.register_read		= rt2x00mmio_register_read,
+-	.register_read_lock	= rt2x00mmio_register_read, /* same for PCI */
++	.register_read		= _rt2x00mmio_register_read,
++	.register_read_lock	= _rt2x00mmio_register_read, /* same for PCI */
+ 	.register_write		= rt2x00mmio_register_write,
+ 	.register_write_lock	= rt2x00mmio_register_write, /* same for PCI */
+ 	.register_multiread	= rt2x00mmio_register_multiread,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
+index a985a5a7945e..c1eda3798b9b 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
+@@ -164,8 +164,8 @@ static const struct ieee80211_ops rt2800soc_mac80211_ops = {
+ };
+ 
+ static const struct rt2800_ops rt2800soc_rt2800_ops = {
+-	.register_read		= rt2x00mmio_register_read,
+-	.register_read_lock	= rt2x00mmio_register_read, /* same for SoCs */
++	.register_read		= _rt2x00mmio_register_read,
++	.register_read_lock	= _rt2x00mmio_register_read, /* same for SoCs */
+ 	.register_write		= rt2x00mmio_register_write,
+ 	.register_write_lock	= rt2x00mmio_register_write, /* same for SoCs */
+ 	.register_multiread	= rt2x00mmio_register_multiread,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index f11e3f532a84..7fd7e6114c0c 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -802,8 +802,8 @@ static const struct ieee80211_ops rt2800usb_mac80211_ops = {
+ };
+ 
+ static const struct rt2800_ops rt2800usb_rt2800_ops = {
+-	.register_read		= rt2x00usb_register_read,
+-	.register_read_lock	= rt2x00usb_register_read_lock,
++	.register_read		= _rt2x00usb_register_read,
++	.register_read_lock	= _rt2x00usb_register_read_lock,
+ 	.register_write		= rt2x00usb_register_write,
+ 	.register_write_lock	= rt2x00usb_register_write_lock,
+ 	.register_multiread	= rt2x00usb_register_multiread,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 1bc353eafe37..f2ae33bf2ef2 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -1056,6 +1056,13 @@ static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
+ 	*data = rt2x00dev->rf[word - 1];
+ }
+ 
++static inline u32 _rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
++				  const unsigned int word)
++{
++	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
++	return rt2x00dev->rf[word - 1];
++}
++
+ static inline void rt2x00_rf_write(struct rt2x00_dev *rt2x00dev,
+ 				   const unsigned int word, u32 data)
+ {
+@@ -1078,6 +1085,12 @@ static inline void rt2x00_eeprom_read(struct rt2x00_dev *rt2x00dev,
+ 	*data = le16_to_cpu(rt2x00dev->eeprom[word]);
+ }
+ 
++static inline u16 _rt2x00_eeprom_read(struct rt2x00_dev *rt2x00dev,
++				      const unsigned int word)
++{
++	return le16_to_cpu(rt2x00dev->eeprom[word]);
++}
++
+ static inline void rt2x00_eeprom_write(struct rt2x00_dev *rt2x00dev,
+ 				       const unsigned int word, u16 data)
+ {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
+index 964aefdc11f0..4a1bca1b1e26 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
+@@ -460,7 +460,7 @@ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
+ 	if (debug->__name.flags & RT2X00DEBUGFS_OFFSET)		\
+ 		index *= debug->__name.word_size;		\
+ 								\
+-	debug->__name.read(intf->rt2x00dev, index, &value);	\
++	value = debug->__name.read(intf->rt2x00dev, index);	\
+ 								\
+ 	size = sprintf(line, __format, value);			\
+ 								\
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.h b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.h
+index e65712c235bd..a357a0727a0b 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.h
+@@ -38,8 +38,8 @@ enum rt2x00debugfs_entry_flags {
+ 
+ #define RT2X00DEBUGFS_REGISTER_ENTRY(__name, __type)		\
+ struct reg##__name {						\
+-	void (*read)(struct rt2x00_dev *rt2x00dev,		\
+-		     const unsigned int word, __type *data);	\
++	__type (*read)(struct rt2x00_dev *rt2x00dev,		\
++		     const unsigned int word);			\
+ 	void (*write)(struct rt2x00_dev *rt2x00dev,		\
+ 		      const unsigned int word, __type data);	\
+ 								\
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.h b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.h
+index 701c3127efb9..6d7a27ee6444 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.h
+@@ -36,6 +36,12 @@ static inline void rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
+ 	*value = readl(rt2x00dev->csr.base + offset);
+ }
+ 
++static inline u32 _rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
++					   const unsigned int offset)
++{
++	return readl(rt2x00dev->csr.base + offset);
++}
++
+ static inline void rt2x00mmio_register_multiread(struct rt2x00_dev *rt2x00dev,
+ 						 const unsigned int offset,
+ 						 void *value, const u32 length)
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.h b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.h
+index 569363da00a2..4cad1beec791 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.h
+@@ -206,6 +206,16 @@ static inline void rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
+ 	*value = le32_to_cpu(reg);
+ }
+ 
++static inline u32 _rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
++					   const unsigned int offset)
++{
++	__le32 reg = 0;
++	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
++				      USB_VENDOR_REQUEST_IN, offset,
++				      &reg, sizeof(reg));
++	return le32_to_cpu(reg);
++}
++
+ /**
+  * rt2x00usb_register_read_lock - Read 32bit register word
+  * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
+@@ -216,7 +226,7 @@ static inline void rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
+  * through rt2x00usb_vendor_req_buff_lock().
+  */
+ static inline void rt2x00usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
+-						const unsigned int offset,
++					        const unsigned int offset,
+ 						u32 *value)
+ {
+ 	__le32 reg = 0;
+@@ -226,6 +236,16 @@ static inline void rt2x00usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
+ 	*value = le32_to_cpu(reg);
+ }
+ 
++static inline u32 _rt2x00usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
++					        const unsigned int offset)
++{
++	__le32 reg = 0;
++	rt2x00usb_vendor_req_buff_lock(rt2x00dev, USB_MULTI_READ,
++				       USB_VENDOR_REQUEST_IN, offset,
++				       &reg, sizeof(reg), REGISTER_TIMEOUT);
++	return le32_to_cpu(reg);
++}
++
+ /**
+  * rt2x00usb_register_multiread - Read 32bit register words
+  * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+index 973d418b8113..efe8a766b251 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+@@ -202,10 +202,19 @@ static void rt61pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
++static u8 _rt61pci_bbp_read(struct rt2x00_dev *rt2x00dev, const unsigned int word)
++{
++	u8 value;
++
++	rt61pci_bbp_read(rt2x00dev, word, &value);
++
++	return value;
++}
++
+ static const struct rt2x00debug rt61pci_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2x00mmio_register_read,
++		.read		= _rt2x00mmio_register_read,
+ 		.write		= rt2x00mmio_register_write,
+ 		.flags		= RT2X00DEBUGFS_OFFSET,
+ 		.word_base	= CSR_REG_BASE,
+@@ -213,21 +222,21 @@ static const struct rt2x00debug rt61pci_rt2x00debug = {
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+-		.read		= rt2x00_eeprom_read,
++		.read		= _rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
+ 		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+-		.read		= rt61pci_bbp_read,
++		.read		= _rt61pci_bbp_read,
+ 		.write		= rt61pci_bbp_write,
+ 		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= rt2x00_rf_read,
++		.read		= _rt2x00_rf_read,
+ 		.write		= rt61pci_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+index bb8d307a789f..5db174922120 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+@@ -147,10 +147,19 @@ static void rt73usb_rf_write(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
++static u8 _rt73usb_bbp_read(struct rt2x00_dev *rt2x00dev, const unsigned int word)
++{
++	u8 value;
++
++	rt73usb_bbp_read(rt2x00dev, word, &value);
++
++	return value;
++}
++
+ static const struct rt2x00debug rt73usb_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+ 	.csr	= {
+-		.read		= rt2x00usb_register_read,
++		.read		= _rt2x00usb_register_read,
+ 		.write		= rt2x00usb_register_write,
+ 		.flags		= RT2X00DEBUGFS_OFFSET,
+ 		.word_base	= CSR_REG_BASE,
+@@ -158,21 +167,21 @@ static const struct rt2x00debug rt73usb_rt2x00debug = {
+ 		.word_count	= CSR_REG_SIZE / sizeof(u32),
+ 	},
+ 	.eeprom	= {
+-		.read		= rt2x00_eeprom_read,
++		.read		= _rt2x00_eeprom_read,
+ 		.write		= rt2x00_eeprom_write,
+ 		.word_base	= EEPROM_BASE,
+ 		.word_size	= sizeof(u16),
+ 		.word_count	= EEPROM_SIZE / sizeof(u16),
+ 	},
+ 	.bbp	= {
+-		.read		= rt73usb_bbp_read,
++		.read		= _rt73usb_bbp_read,
+ 		.write		= rt73usb_bbp_write,
+ 		.word_base	= BBP_BASE,
+ 		.word_size	= sizeof(u8),
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= rt2x00_rf_read,
++		.read		= _rt2x00_rf_read,
+ 		.write		= rt73usb_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
 -- 
-https://patchwork.kernel.org/patch/9695703/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.0
