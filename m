@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48152 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763160AbdEXIq4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 04:46:56 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: fix REG_USTIME_TSF register definition
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170519150240.GA47825@ns.kevlo.org>
-References: <20170519150240.GA47825@ns.kevlo.org>
-To: Kevin Lo <kevlo@kevlo.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org
-Message-Id: <20170524084655.F2EDA607DE@smtp.codeaurora.org> (sfid-20170524_104708_127602_3F4A4ADC)
-Date: Wed, 24 May 2017 08:46:55 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:40838 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754696AbdEQNai (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 09:30:38 -0400
+Message-ID: <1495027835.2442.13.camel@sipsolutions.net> (sfid-20170517_153104_920423_783570B9)
+Subject: Re: 'iw events' stops receiving events after a while on 4.9 + hacks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bastian Bittorf <bb@npl.de>, Ben Greear <greearb@candelatech.com>
+Cc: netdev <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 17 May 2017 15:30:35 +0200
+In-Reply-To: <20170517100844.GC2849@medion.lan> (sfid-20170517_120840_185521_D3BC3321)
+References: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
+         <20170517100844.GC2849@medion.lan> (sfid-20170517_120840_185521_D3BC3321)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kevin Lo <kevlo@kevlo.org> wrote:
-> The REG_USTIME_TSF (US Time Tuning for TSF) definition of Realtek chips
-> should be 0x55C.
+On Wed, 2017-05-17 at 12:08 +0200, Bastian Bittorf wrote:
+> * Ben Greear <greearb@candelatech.com> [17.05.2017 11:51]:
+> > I have been keeping an 'iw events' program running with a perl
+> > script gathering its
+> > output and post-processing it.  This has been working for several
+> > years on 4.7 and earlier
+> > kernels, but when testing on 4.9 overnight, I notice that 'iw
+> > events' is not showing any input.  'strace' shows
+> > that it is waiting on recvmsg.  If I start a second 'iw events'
+> > then it will get
+> > wifi events as expected.
 > 
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+> me too, also seen on 4.4 - i'am happy for debug ideas.
 
-Larry, is this ok to take?
+I've never seen this.
 
--- 
-https://patchwork.kernel.org/patch/9737421/
+Does it happen when it's very long-running? Or when there are lots of
+events?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Perhaps something in the socket buffer accounting is going wrong, so
+that it's slowly decreasing to 0?
+
+johannes
