@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35304 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751511AbdECHgY (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:35163 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751607AbdEQMxk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 03:36:24 -0400
-From: Xie Qirong <cheerx1994@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Piotr Haber <phaber@broadcom.com>,
-        Xie Qirong <cheerx1994@gmail.com>
-Subject: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
-Date: Wed,  3 May 2017 15:35:55 +0800
-Message-Id: <20170503073555.3922-1-cheerx1994@gmail.com> (sfid-20170503_093835_380450_35868507)
+        Wed, 17 May 2017 08:53:40 -0400
+Date: Wed, 17 May 2017 14:53:35 +0200
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Takashi Iwai <tiwai@suse.de>,
+        AKASHI Takahiro <takahiro.akashi@linaro.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20170517125335.GG10015@pali> (sfid-20170517_145418_596567_6D3DDEF8)
+References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
+ <20170515231339.GF17314@wotan.suse.de>
+ <1495022766.2442.1.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1495022766.2442.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
----
+On Wednesday 17 May 2017 14:06:06 Johannes Berg wrote:
+> On Tue, 2017-05-16 at 01:13 +0200, Luis R. Rodriguez wrote:
+> > > > Now for N900 case there is a similar scenario
+> > > > alhtough it has additional requirement to go to user-space due to
+> > > > need to use a proprietary library to obtain the NVS calibration
+> > > > data. My thought: Why should firmware_class care?
+> > 
+> > Agreed.
+> 
+> In fact, why should the *driver* care either? IOW - why should
+> "request_firmware_prefer_user()" even exist?
 
- setup_timer.cocci suggested the following improvement:
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
- setup_timer function for function on line 384.
+There are default/example NVS data, which are stored in /lib/firmware
+and installed by linux-firmware package. Those example calibration data
+should not be used for real usage, but Pavel told us that on N900 they
+are enough for working WIFI connection. They does not contain valid MAC
+address, so kernel should generate some (random?).
 
- Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
- CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
- CONFIG_BRCMDBG=y
+So kernel driver should get NVS calibration data from userspace (which
+know how where to get or how to prepare them) and in case userspace do
+not have it, then we can try fallback to those example data (as people
+reported us they can be useful instead of non-working WIFI).
 
- Kernel version: next-20170502 (localversion-next is next-20170502)
+And that fallback is working by direct firmware loading from kernel.
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-index 14a70d4..3559fb5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-@@ -380,9 +380,7 @@ int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg)
- 	/* Set up timer for BT  */
- 	btci->timer_on = false;
- 	btci->timeout = BRCMF_BTCOEX_OPPR_WIN_TIME;
--	init_timer(&btci->timer);
--	btci->timer.data = (ulong)btci;
--	btci->timer.function = brcmf_btcoex_timerfunc;
-+	setup_timer(&btci->timer, brcmf_btcoex_timerfunc, (ulong)btci);
- 	btci->cfg = cfg;
- 	btci->saved_regs_part1 = false;
- 	btci->saved_regs_part2 = false;
 -- 
-2.9.3
+Pali Rohár
+pali.rohar@gmail.com
