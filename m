@@ -1,57 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40588 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40632 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753774AbdEQNFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 09:05:02 -0400
-Message-ID: <1495026290.2442.6.camel@sipsolutions.net> (sfid-20170517_150603_280747_7F8782CF)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
+        id S1753967AbdEQNMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 09:12:35 -0400
+Message-ID: <1495026753.2442.7.camel@sipsolutions.net> (sfid-20170517_151249_971326_7F79FBB3)
+Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna
+ chipsets
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
-        Tom Gundersen <teg@jklm.no>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Takashi Iwai <tiwai@suse.de>,
-        AKASHI Takahiro <takahiro.akashi@linaro.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
-Date: Wed, 17 May 2017 15:04:50 +0200
-In-Reply-To: <20170517125335.GG10015@pali> (sfid-20170517_145339_432681_02EC3F26)
-References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
-         <20170515231339.GF17314@wotan.suse.de>
-         <1495022766.2442.1.camel@sipsolutions.net> <20170517125335.GG10015@pali>
-         (sfid-20170517_145339_432681_02EC3F26)
+To: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org
+Cc: Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Wed, 17 May 2017 15:12:33 +0200
+In-Reply-To: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-05-17 at 14:53 +0200, Pali Rohár wrote:
+Good job :)
 
-> > In fact, why should the *driver* care either? IOW - why should
-> > "request_firmware_prefer_user()" even exist?
-> 
-> There are default/example NVS data, which are stored in /lib/firmware
-> and installed by linux-firmware package.
-[...]
+Let's merge this - the tiny fixes for things I found can come later.
 
-Oh, so you're saying you want this to invert the order ... Ok, that
-makes some sense.
+Some (mostly trivial) comments:
 
-I still hope that all other requests will eventually fall back to user
-loading though, I think that's important to system integration in
-general.
+ * I'm surprised you don't support WEP - nice :)
+ * I don't think returning -EFAULT from qtnf_add_virtual_intf is a good
+   idea - perhaps better propagate the error or use -EIO?
+ * the forward declaration of struct bus in pearl/pcie_bus_priv.h seems unnecessary
+ * you might want to use a whitelist in qtnf_set_wiphy_params(), but
+   it's not really important as we should add capability bits for
+   everything that we add
+ * qtnf_mgmt_frame_register()/cfg80211_rx_mgmt() aren't used correctly
+   - since there's filtering further than the frame type/subtype, you
+   need to check the return value of cfg80211_rx_mgmt(). If, for
+   example, userspace only registers for a certain action frame
+   category, you need to still reject the remaining ones yourself. We
+   could extend the API here to give you the whole filter data as well,
+   if that helps. Otherwise you need to handle the return value from
+   cfg80211_rx_mgmt().
+ * The ENOENT handling in qtnf_dump_station() surprises me, especially
+   since there's no checking that this doesn't result in duplicate
+   cfg80211_del_sta() calls due to races - if
+   qtnf_event_handle_sta_deauth() wins to remove it with
+   qtnf_sta_list_del() but qtnf_dump_station() already had it looked
+   up? Seems like the whole handling in that function either needs to
+   be the same as in the event, or just be removed and return -ENOENT
+ * There seems to be little point in dynamically allocating the
+   iface_comb in qtnf_wiphy_register() vs. just embedding it in struct
+   qtnf_wmac or so?
+ * qtnf_rx_frame() is declared but not used?
+ * -D__CHECK_ENDIAN was always wrong, it should be -D__CHECK_ENDIAN__,
+   but it's now also enabled by default so can be removed
+ * I'm not sure there's much point in printing the failure code address
+   (which should be static) in pr_err("skb DMA mapping error: %pad\n",
+   &skb_paddr);
+ * I like the real use of NAPI :)
+ * However, is there any specific reason you're not using
+   napi_gro_receive() rather than netif_receive_skb()? It seems using
+   GRO would help TCP streams, in particular by reducing the number of
+   ACKs
+ * with just a single (PCI-E) transport, I'm not sure I see much point
+   in splitting it into a separate module, which necessitates the
+   EXPORT_SYMBOL_GPL, which do take up a bit of space. But there are
+   only 4, so it doesn't really matter :) One thing we did in iwlwifi
+   was to not export if both are built-in, since nobody else should
+   ever have any reason to access them.
+
+Thanks all!
 
 johannes
