@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40852 "EHLO sipsolutions.net"
+Received: from mout.web.de ([212.227.15.3]:52446 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754181AbdEQNeb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 09:34:31 -0400
-Message-ID: <1495028069.2442.17.camel@sipsolutions.net> (sfid-20170517_153436_034963_0847EC38)
-Subject: Re: nl80211 vendor commands on upstream drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Date: Wed, 17 May 2017 15:34:29 +0200
-In-Reply-To: <87wp9mp4hz.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_155201_855594_38A6052A)
-References: <87wp9mp4hz.fsf@kamboji.qca.qualcomm.com>
-         (sfid-20170512_155201_855594_38A6052A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1750944AbdEQUd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 16:33:26 -0400
+To: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] staging: wilc1000: Delete an error message for a failed
+ memory allocation in Handle_Key()
+Message-ID: <d61db605-523e-5f48-37ca-0748b41705cc@users.sourceforge.net> (sfid-20170517_223348_478493_F22A3B39)
+Date: Wed, 17 May 2017 22:33:14 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-05-12 at 16:51 +0300, Kalle Valo wrote:
-> 
-> But this does not mean that the gates are open for all possible hacks
-> via vendor commands, we still want to have generic nl80211 interface
-> for all normal functionality. Just to give some examples of something
-> which is NOT acceptable:
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Wed, 17 May 2017 22:26:07 +0200
 
-[snip scanning]
+Omit an extra message for a memory allocation failure in this function.
 
-> * power save settings
-> * btcoex settings
+This issue was detected by using the Coccinelle software.
 
-I'm starting to think that these might really be a vendor API for
-anything but the most basic features - there's so much variation here
-now.
+Link: http://events.linuxfoundation.org/sites/events/files/slides/LCJ16-Refactor_Strings-WSang_0.pdf
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-OTOH, much of these shouldn't really be something the user needs to
-twiddle with anyway.
-
-> Comments? Am I forgetting something from the discussion?
-
-I think that's a good summary.
-
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c3a8af081880..17a31bbd3665 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1688,7 +1688,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				netdev_err(vif->ndev, "No buffer send PTK\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+ 			}
+-- 
+2.13.0
