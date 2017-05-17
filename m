@@ -1,149 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35898 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936582AbdEYRZK (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:60775 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754468AbdEQOrv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 13:25:10 -0400
-Received: by mail-wm0-f65.google.com with SMTP id k15so53446965wmh.3
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:25:10 -0700 (PDT)
-From: Marko Stankovic <dartnorris@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Marko Stankovic <dartnorris@gmail.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: 
-Date: Thu, 25 May 2017 19:25:06 +0200
-Message-Id: <20170525172507.14356-1-dartnorris@gmail.com> (sfid-20170525_192518_633702_80A0F10D)
+        Wed, 17 May 2017 10:47:51 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+Subject: [PATCH v2 03/10] rt2x00: convert rt2x00_rf_read return type
+Date: Wed, 17 May 2017 16:46:55 +0200
+Message-Id: <20170517144702.1381136-4-arnd@arndb.de> (sfid-20170517_165810_750555_E1054DBA)
+In-Reply-To: <20170517144702.1381136-1-arnd@arndb.de>
+References: <20170517144702.1381136-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Date: Thu, 25 May 2017 18:44:25 +0200
-Subject: [PATCH 1/2] staging: wilc1000: remove excessive blank lines
+This is a semi-automated conversion to change rt2x00_rf_read()
+to return the register contents instead of passing them by value,
+resulting in much better object code. The majority of the patch
+was done using:
 
-Fix the multiple blank lines issue reported by checkpatch.pl
+sed -i 's:\(\<rt2x00_rf_read\>(.*, .*\), &\(.*\));:\2 = \1);:' \
+	drivers/net/wireless/ralink/rt2x00/rt*
 
-Signed-off-by: Marko Stankovic <dartnorris@gmail.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2400pci.c |  2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2500pci.c |  4 ++--
+ drivers/net/wireless/ralink/rt2x00/rt2500usb.c |  4 ++--
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h    | 11 ++---------
+ drivers/net/wireless/ralink/rt2x00/rt61pci.c   | 10 +++++-----
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c   | 10 +++++-----
+ 7 files changed, 18 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 807aada308e3..98316a45abd1 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -84,7 +84,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
- #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
- #define DEFAULT_LINK_SPEED			72
- 
--
- #define IS_MANAGMEMENT				0x100
- #define IS_MANAGMEMENT_CALLBACK			0x080
- #define IS_MGMT_STATUS_SUCCES			0x040
-@@ -163,7 +162,6 @@ static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
- 	.n_bitrates = ARRAY_SIZE(ieee80211_bitrates),
- };
- 
--
- struct add_key_params {
- 	u8 key_idx;
- 	bool pairwise;
-@@ -281,7 +279,6 @@ static void remove_network_from_shadow(unsigned long arg)
- 	unsigned long now = jiffies;
- 	int i, j;
- 
--
- 	for (i = 0; i < last_scanned_cnt; i++) {
- 		if (time_after(now, last_scanned_shadow[i].time_scan +
- 			       (unsigned long)(SCAN_RESULT_EXPIRE))) {
-@@ -526,7 +523,6 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 
- 			memcpy(priv->au8AssociatedBss, pstrConnectInfo->bssid, ETH_ALEN);
- 
--
- 			for (i = 0; i < last_scanned_cnt; i++) {
- 				if (memcmp(last_scanned_shadow[i].bssid,
- 					   pstrConnectInfo->bssid,
-@@ -626,7 +622,6 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 				return -ENOMEM;
- 			strHiddenNetwork.n_ssids = request->n_ssids;
- 
--
- 			for (i = 0; i < request->n_ssids; i++) {
- 				if (request->ssids[i].ssid_len != 0) {
- 					strHiddenNetwork.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
-@@ -927,8 +922,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 				priv->wilc_ptk[key_index]->seq = NULL;
- 			}
- 
--
--
- 			if (!pairwise) {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
- 					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
-@@ -968,7 +961,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 				else
- 					u8pmode = priv->wilc_groupkey | AES;
- 
--
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					pu8TxMic = params->key + 24;
- 					pu8RxMic = params->key + 16;
-@@ -1153,7 +1145,6 @@ static int get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 
- 	priv = wiphy_priv(wiphy);
- 
--
- 	if (!pairwise) {
- 		key_params.key = priv->wilc_gtk[key_index]->key;
- 		key_params.cipher = priv->wilc_gtk[key_index]->cipher;
-@@ -1298,7 +1289,6 @@ static int set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 
- 	vif = netdev_priv(priv->dev);
- 
--
- 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
- 		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
- 			    ETH_ALEN)) {
-@@ -1511,7 +1501,6 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
- 						}
- 					}
- 
--
- 					if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP) && (wilc_ie))	{
- 						cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size - 7, 0);
- 						return;
-@@ -1533,7 +1522,6 @@ static void WILC_WFI_mgmt_tx_complete(void *priv, int status)
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+index 3ba9a1674e1d..d41832292db2 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+@@ -199,7 +199,7 @@ static const struct rt2x00debug rt2400pci_rt2x00debug = {
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= _rt2x00_rf_read,
++		.read		= rt2x00_rf_read,
+ 		.write		= rt2400pci_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+index d9b061b73e83..232feba0773f 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+@@ -199,7 +199,7 @@ static const struct rt2x00debug rt2500pci_rt2x00debug = {
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= _rt2x00_rf_read,
++		.read		= rt2x00_rf_read,
+ 		.write		= rt2500pci_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+@@ -556,7 +556,7 @@ static void rt2500pci_config_txpower(struct rt2x00_dev *rt2x00dev,
  {
- 	struct p2p_mgmt_data *pv_data = priv;
+ 	u32 rf3;
  
--
- 	kfree(pv_data->buff);
- 	kfree(pv_data);
+-	rt2x00_rf_read(rt2x00dev, 3, &rf3);
++	rf3 = rt2x00_rf_read(rt2x00dev, 3);
+ 	rt2x00_set_field32(&rf3, RF3_TXPOWER, TXPOWER_TO_DEV(txpower));
+ 	rt2500pci_rf_write(rt2x00dev, 3, rf3);
  }
-@@ -1653,7 +1641,6 @@ static int mgmt_tx(struct wiphy *wiphy,
- 		memcpy(mgmt_tx->buff, buf, len);
- 		mgmt_tx->size = len;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+index 5bd160f732de..9cff9ddafb72 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+@@ -268,7 +268,7 @@ static const struct rt2x00debug rt2500usb_rt2x00debug = {
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= _rt2x00_rf_read,
++		.read		= rt2x00_rf_read,
+ 		.write		= rt2500usb_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+@@ -639,7 +639,7 @@ static void rt2500usb_config_txpower(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u32 rf3;
  
--
- 		if (ieee80211_is_probe_resp(mgmt->frame_control)) {
- 			wilc_set_mac_chnl_num(vif, chan->hw_value);
- 			curr_channel = chan->hw_value;
-@@ -1832,7 +1819,6 @@ static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 	if (wilc_enable_ps)
- 		wilc_set_power_mgmt(vif, enabled, timeout);
- 
--
- 	return 0;
+-	rt2x00_rf_read(rt2x00dev, 3, &rf3);
++	rf3 = rt2x00_rf_read(rt2x00dev, 3);
+ 	rt2x00_set_field32(&rf3, RF3_TXPOWER, TXPOWER_TO_DEV(txpower));
+ 	rt2500usb_rf_write(rt2x00dev, 3, rf3);
  }
- 
-@@ -2094,7 +2080,6 @@ static struct wireless_dev *add_virtual_intf(struct wiphy *wiphy,
- 	priv = wiphy_priv(wiphy);
- 	vif = netdev_priv(priv->wdev->netdev);
- 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 9b8c19dcdb2c..fef53d6a888a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1265,7 +1265,7 @@ const struct rt2x00debug rt2800_rt2x00debug = {
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= _rt2x00_rf_read,
++		.read		= rt2x00_rf_read,
+ 		.write		= rt2800_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index f2ae33bf2ef2..36791f7ae2ce 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -1049,15 +1049,8 @@ struct rt2x00_bar_list_entry {
+  * Generic RF access.
+  * The RF is being accessed by word index.
+  */
+-static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
+-				  const unsigned int word, u32 *data)
+-{
+-	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
+-	*data = rt2x00dev->rf[word - 1];
+-}
 -
- 	if (type == NL80211_IFTYPE_MONITOR) {
- 		new_ifc = WILC_WFI_init_mon_interface(name, vif->ndev);
- 		if (new_ifc) {
+-static inline u32 _rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
+-				  const unsigned int word)
++static inline u32 rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
++				 const unsigned int word)
+ {
+ 	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
+ 	return rt2x00dev->rf[word - 1];
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+index efe8a766b251..147d1d2cc0a6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+@@ -236,7 +236,7 @@ static const struct rt2x00debug rt61pci_rt2x00debug = {
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= _rt2x00_rf_read,
++		.read		= rt2x00_rf_read,
+ 		.write		= rt61pci_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+@@ -922,10 +922,10 @@ static void rt61pci_config_txpower(struct rt2x00_dev *rt2x00dev,
+ {
+ 	struct rf_channel rf;
+ 
+-	rt2x00_rf_read(rt2x00dev, 1, &rf.rf1);
+-	rt2x00_rf_read(rt2x00dev, 2, &rf.rf2);
+-	rt2x00_rf_read(rt2x00dev, 3, &rf.rf3);
+-	rt2x00_rf_read(rt2x00dev, 4, &rf.rf4);
++	rf.rf1 = rt2x00_rf_read(rt2x00dev, 1);
++	rf.rf2 = rt2x00_rf_read(rt2x00dev, 2);
++	rf.rf3 = rt2x00_rf_read(rt2x00dev, 3);
++	rf.rf4 = rt2x00_rf_read(rt2x00dev, 4);
+ 
+ 	rt61pci_config_channel(rt2x00dev, &rf, txpower);
+ }
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+index 5db174922120..a36dee1a4f20 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+@@ -181,7 +181,7 @@ static const struct rt2x00debug rt73usb_rt2x00debug = {
+ 		.word_count	= BBP_SIZE / sizeof(u8),
+ 	},
+ 	.rf	= {
+-		.read		= _rt2x00_rf_read,
++		.read		= rt2x00_rf_read,
+ 		.write		= rt73usb_rf_write,
+ 		.word_base	= RF_BASE,
+ 		.word_size	= sizeof(u32),
+@@ -805,10 +805,10 @@ static void rt73usb_config_txpower(struct rt2x00_dev *rt2x00dev,
+ {
+ 	struct rf_channel rf;
+ 
+-	rt2x00_rf_read(rt2x00dev, 1, &rf.rf1);
+-	rt2x00_rf_read(rt2x00dev, 2, &rf.rf2);
+-	rt2x00_rf_read(rt2x00dev, 3, &rf.rf3);
+-	rt2x00_rf_read(rt2x00dev, 4, &rf.rf4);
++	rf.rf1 = rt2x00_rf_read(rt2x00dev, 1);
++	rf.rf2 = rt2x00_rf_read(rt2x00dev, 2);
++	rf.rf3 = rt2x00_rf_read(rt2x00dev, 3);
++	rf.rf4 = rt2x00_rf_read(rt2x00dev, 4);
+ 
+ 	rt73usb_config_channel(rt2x00dev, &rf, txpower);
+ }
 -- 
-2.11.0
+2.9.0
