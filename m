@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37573 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751009AbdEaMwx (ORCPT
+Received: from ipout2-voc2esa.syd1.mail-filtering.com.au ([175.107.169.228]:17760
+        "EHLO o-voc2esa.syd1.mail-filtering.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753034AbdEQKrS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 08:52:53 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Norik Dzhandzhapanyan <norikd@ethertronics.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Per chain RSSI reporting
-Date: Wed, 31 May 2017 12:52:37 +0000
-Message-ID: <87tw41mbnq.fsf@kamboji.qca.qualcomm.com> (sfid-20170531_145256_839626_C1EE2123)
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
-In-Reply-To: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
-        (Norik Dzhandzhapanyan's message of "Fri, 26 May 2017 22:49:45 +0000")
-Content-Type: text/plain; charset="iso-8859-1"
+        Wed, 17 May 2017 06:47:18 -0400
+From: =?UTF-8?Q?Tom_Gaudasi=c5=84ski?= <tomg@records.headdesk.com.au>
+Subject: [PATCH] rt2800usb: Add Epson wireless adapter device-id
+Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com
+To: linux-wireless@vger.kernel.org
+Message-ID: <8e00714b-ab62-15e9-e86a-e0de5009797d@records.headdesk.com.au> (sfid-20170517_124732_436098_053CFA3D)
+Date: Wed, 17 May 2017 20:15:30 +1000
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Norik Dzhandzhapanyan <norikd@ethertronics.com> writes:
+Make Epson WN7512BEP work by adding its device-id to rt2800usb. Device
+contains a Ralink RT3071L, registers as vendor Accton/Arcadyan.
 
-> Add support for per chain RSSI reporting w/smoothing.
->
-> Signed-off-by: Norik Dzhandzhapanyan norikd@ethertronics.com
->
->
-> --- htt_rx.c.orig  2017-05-26 15:26:37.918504255 -0700
-> +++ htt_rx.c        2017-05-26 12:10:33.139809025 -0700
-> @@ -825,14 +825,71 @@ static bool ath10k_htt_rx_h_channel(stru
->               return true;
-> }
+Signed-off-by: Tom Gaudasinski <tomg@records.headdesk.com.au>
 
-The patch formatting is broken and I can't apply this. Please use git
-send-email, more info here:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/submittingpatches
-
-But more importantly:
-
-> The contents of this transmission are Ethertronics Inc. Confidential
-> and may contain proprietary or legally privileged information which
-> may not be disclosed, copied or distributed without the express
-> written consent of Ethertronics Inc. The information is intended to be
-> for the use of the individual or entity named on this transmission. If
-> you are not the intended recipient, be aware that any disclosure,
-> copying, distribution or use of the contents of this information is
-> prohibited. If you have received this transmission in error, please
-> notify us by telephone immediately so that we can arrange for the
-> retrieval of the original documents at no cost to you. Alternatively,
-> notify the sender by replying to this transmission and delete the
-> message without disclosing it. Thank you
-
-I will never apply a patch which has this kind of disclaimer. The
-patches must follow the Developer's Certificate of Origin[1] and not
-have any other disclaimer.
-
-[1] https://www.kernel.org/doc/html/latest/process/submitting-patches.html#=
-sign-your-work-the-developer-s-certificate-of-origin
-
---=20
-Kalle Valo=
+--- linux/drivers/net/wireless/ralink/rt2x00/rt2800usb.c.orig   
+2017-05-17 19:49:44.893895819 +1000
++++ linux/drivers/net/wireless/ralink/rt2x00/rt2800usb.c    2017-05-17
+19:49:32.906111192 +1000
+@@ -1156,6 +1156,8 @@ static struct usb_device_id rt2800usb_de
+     { USB_DEVICE(0x2001, 0x3c17) },
+     /* Panasonic */
+     { USB_DEVICE(0x083a, 0xb511) },
++    /* Accton/Arcadyan/Epson */
++    { USB_DEVICE(0x083a, 0xb512) },
+     /* Philips */
+     { USB_DEVICE(0x0471, 0x20dd) },
+     /* Ralink */
