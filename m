@@ -1,146 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44611 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750805AbdESH6D (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 03:58:03 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V4 2/3] brcmfmac: add mutex to protect pno requests
-Date: Fri, 19 May 2017 08:57:38 +0100
-Message-Id: <1495180659-12406-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170519_095807_599608_D19BC8D4)
-In-Reply-To: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:40710 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751782AbdEQNOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 09:14:30 -0400
+Message-ID: <1495026867.2442.9.camel@sipsolutions.net> (sfid-20170517_151541_511431_706E090D)
+Subject: Re: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "nicolas.dechesne@linaro.org" <nicolas.dechesne@linaro.org>
+Date: Wed, 17 May 2017 15:14:27 +0200
+In-Reply-To: <87fugkrchl.fsf@kamboji.qca.qualcomm.com>
+References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
+         <1493281332.2529.1.camel@sipsolutions.net>     <20170428234247.GQ15143@minitux>
+         <87fugkrchl.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+On Thu, 2017-05-04 at 13:13 +0000, Kalle Valo wrote:
+> 
+> > > This code intentionally checked if TX status was requested, and
+> > > if not then it doesn't go to the effort of building it.
+> > > 
+> > 
+> > What I'm finding puzzling is the fact that the only caller of
+> > ieee80211_led_tx() is ieee80211_tx_status() and it seems like
+> > drivers, such as ath10k, call this for each packet handled - but
+> > I'm likely missing something.
 
-The request references kept in pno are accessed in user-space context
-and in firmware event handler context. As such we need to protect it
-with a lock. As both context allow sleep a mutex seems appropriate.
+Yes, many drivers do call it for each packet, and as such, this
+deficiency was never noted.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+> > > As it is with your patch, it'll go and report the TX status
+> > > without any
+> > > TX status information - which is handled in
+> > > wcn36xx_dxe_tx_ack_ind()
+> > > for those frames needing it.
+> > > 
+> > 
+> > Right, it doesn't sound desired. However, during normal operation
+> > I'm not seeing IEEE80211_TX_CTL_REQ_TX_STATUS being set and as such
+> > ieee80211_led_tx() is never called.
+> 
+> So what's the conclusion? How do we get leds working?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index 5ae0680..81e8549 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -43,6 +43,7 @@
- struct brcmf_pno_info {
- 	int n_reqs;
- 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
-+	struct mutex req_lock;
- };
- 
- #define ifp_to_pno(_ifp)	((_ifp)->drvr->config->pno)
-@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
- 		return -ENOSPC;
- 	}
- 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
-+	mutex_lock(&pi->req_lock);
- 	pi->reqs[pi->n_reqs++] = req;
-+	mutex_unlock(&pi->req_lock);
- 	return 0;
- }
- 
- static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- {
--	int i;
-+	int i, err = 0;
-+
-+	mutex_lock(&pi->req_lock);
- 
- 	/* find request */
- 	for (i = 0; i < pi->n_reqs; i++) {
-@@ -71,7 +76,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 	/* request not found */
- 	if (WARN_ON(i == pi->n_reqs)) {
- 		brcmf_err("reqid not found\n");
--		return -ENOENT;
-+		err = -ENOENT;
-+		goto done;
- 	}
- 
- 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
-@@ -79,14 +85,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 
- 	/* if last we are done */
- 	if (!pi->n_reqs || i == pi->n_reqs)
--		return 0;
-+		goto done;
- 
- 	/* fill the gap with remaining requests */
- 	while (i <= pi->n_reqs - 1) {
- 		pi->reqs[i] = pi->reqs[i + 1];
- 		i++;
- 	}
--	return 0;
-+
-+done:
-+	mutex_unlock(&pi->req_lock);
-+	return err;
- }
- 
- static int brcmf_pno_channel_config(struct brcmf_if *ifp,
-@@ -489,6 +498,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
- 		return -ENOMEM;
- 
- 	cfg->pno = pi;
-+	mutex_init(&pi->req_lock);
- 	return 0;
- }
- 
-@@ -501,6 +511,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
- 	cfg->pno = NULL;
- 
- 	WARN_ON(pi->n_reqs);
-+	mutex_destroy(&pi->req_lock);
- 	kfree(pi);
- }
- 
-@@ -516,11 +527,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
- 
- u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
- {
--	/* bucket appears to be gone */
--	if (bucket >= pi->n_reqs)
--		return 0;
-+	u64 reqid = 0;
-+
-+	mutex_lock(&pi->req_lock);
-+
-+	if (bucket < pi->n_reqs)
-+		reqid = pi->reqs[bucket]->reqid;
- 
--	return pi->reqs[bucket]->reqid;
-+	mutex_unlock(&pi->req_lock);
-+	return reqid;
- }
- 
- u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
-@@ -531,6 +546,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 	u32 bucket_map = 0;
- 	int i, j;
- 
-+	mutex_lock(&pi->req_lock);
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		req = pi->reqs[i];
- 
-@@ -545,5 +561,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 			}
- 		}
- 	}
-+	mutex_unlock(&pi->req_lock);
- 	return bucket_map;
- }
--- 
-1.9.1
+Well, frankly, I never thought the TX LED was a super good idea - but
+it had been supported by the original code IIRC, so never removed. Some
+people like frantic blinking I guess ;-)
+
+But I think the problem also applies to the throughput trigger thing,
+so perhaps we need to stick some LED feedback calls into other places,
+like _noskb() or provide an extra way to do it?
+
+johannes
