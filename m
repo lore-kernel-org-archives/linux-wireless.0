@@ -1,76 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:32954 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932787AbdELJKl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 05:10:41 -0400
-Received: by mail-qk0-f173.google.com with SMTP id y201so42749937qka.0
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 02:10:41 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Xie Qirong <cheerx1994@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20170512073555.12333-1-cheerx1994@gmail.com>
- <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
- <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com>
- <87d1beqwtc.fsf@kamboji.qca.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <036761ff-85a9-6042-57ed-ca3968550737@broadcom.com> (sfid-20170512_111117_966182_70317F57)
-Date: Fri, 12 May 2017 11:10:36 +0200
-MIME-Version: 1.0
-In-Reply-To: <87d1beqwtc.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:39996 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753426AbdEQMGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 08:06:20 -0400
+Message-ID: <1495022766.2442.1.camel@sipsolutions.net> (sfid-20170517_140954_157171_ABD95294)
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Takashi Iwai <tiwai@suse.de>,
+        AKASHI Takahiro <takahiro.akashi@linaro.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
+Date: Wed, 17 May 2017 14:06:06 +0200
+In-Reply-To: <20170515231339.GF17314@wotan.suse.de>
+References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
+         <20170515231339.GF17314@wotan.suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/12/2017 10:54 AM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+On Tue, 2017-05-16 at 01:13 +0200, Luis R. Rodriguez wrote:
+> > > Now for N900 case there is a similar scenario
+> > > alhtough it has additional requirement to go to user-space due to
+> > > need to use a proprietary library to obtain the NVS calibration
+> > > data. My thought: Why should firmware_class care?
 > 
->> On 5/12/2017 10:19 AM, Kalle Valo wrote:
->>> Xie Qirong <cheerx1994@gmail.com> writes:
->>>
->>>> The combination of init_timer and setting up the data and function field
->>>> manually is equivalent to calling setup_timer(). This is an api
->>>> consolidation only and improves readability.
->>>>
->>>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>> Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
->>>> ---
->>>>
->>>>    setup_timer.cocci suggested the following improvement:
->>>>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
->>>>    setup_timer function for function on line 384.
->>>>
->>>>    Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
->>>>    CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
->>>>    CONFIG_BRCMDBG=y
->>>>
->>>>    Kernel version: 4.11.0 (localversion-next is next-20170512)
->>>
->>> How is this different from the first version?
->>>
->>> https://patchwork.kernel.org/patch/9709467/
->>
->> Hi Kalle,
->>
->> This is actually the third version. You are referring to the
->> not-specifically-named "v2" here, but how are you to know ;-)
-> 
-> Exactly :)
-> 
->> This third version is the same as v1 on which I commented to put the
->> coccinelle output in the commit message. So I would still keep v2 if
->> nothing else changed in v3 apart from my Acked-by: tag.
-> 
-> Ok, but I can easily take v3 (ie. this one) so that you get credit ;)
+> Agreed.
 
-If you add the coccinelle output in the commit message, ie. above the 
-'---' that would be great. So for both you have to do additional stuff 
-provided you find it useful to have the coccinelle output. :-p
+In fact, why should the *driver* care either? IOW - why should
+"request_firmware_prefer_user()" even exist?
 
-Regards,
-Arend
+> > > So the idea is that firmware_class provides
+> > > a registry for modules that can produce a certain firmware
+> > > "file". Those
+> > > modules can do whatever is needed. If they need to use umh so be
+> > > it.
+> > > They would only register themselves with firmware_class on
+> > > platforms
+> > > that need them. It would basically be replacing the fallback
+> > > mechanism
+> > > and only be effective on certain platforms.
+> 
+> Sure, so it sounds like the work that Daniel Wagner and Tom Gundersen
+> worked [0] on which provides a firmwared with two modes: best-effort, 
+> and final-mode, would address what you are looking for but without
+> requiring any upstream changes, *and* it also helps solve the rootfs
+> race remote-proc folks had concerns over.
+
+Right.
+
+> The other added gain over this solution is if folks need their own
+> proprietary concoction they can just fork firmwared
+
+Or just reimplement it to the same kernel API, no need to even use the
+same code base.
+
+> Lastly, if we did not want to deal with timeouts for the way the
+> driver data API implements it I think we might be able to do away
+> with them for for async requests if we assume there will be a daemon
+> that spawns in final-mode eventually, and since it *knows* when the
+> rootfs is ready it should be able to do a final lookup, if it returns
+> -ENOENT; then indeed we know we can give up. Now, perhaps how and if
+> we want to deal with timeouts when using the driver data API for the
+> fallback mechanism is worth considering given it does not have a
+> fallback mechanism support yet. If we *add* them it would seem this
+> would also put an implicit race against userspace finishing
+> initialization and running firmwared in final-mode.
+> 
+> Johannes, do you recall the corner cases we spoke about regarding
+> timeouts? Does this match what we spoke about?
+
+I think we have to protect against userspace code crashing, not
+existing, etc. - so I think we do need a timeout anyway.
+
+However, I don't recall any (other) corner cases we might have spoken
+about.
+
+> Note that firmware signing will require an additional file, the
+> detached signature.
+
+Is anything like that happening finally? :)
+
+johannes
+> 
