@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:34614 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758882AbdEVSDm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 14:03:42 -0400
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for
- register accessors
-To: Arnd Bergmann <arnd@arndb.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
+Received: from s3.sipsolutions.net ([5.9.151.49]:40588 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753774AbdEQNFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 May 2017 09:05:02 -0400
+Message-ID: <1495026290.2442.6.camel@sipsolutions.net> (sfid-20170517_150603_280747_7F8782CF)
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-References: <20170517144702.1381136-1-arnd@arndb.de>
-Message-ID: <69171f99-0844-cfe1-7bcb-72d61f56c3c5@gmail.com> (sfid-20170522_200452_973750_50688D60)
-Date: Mon, 22 May 2017 14:03:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170517144702.1381136-1-arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        David Gnedt <david.gnedt@davizone.at>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Takashi Iwai <tiwai@suse.de>,
+        AKASHI Takahiro <takahiro.akashi@linaro.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
+Date: Wed, 17 May 2017 15:04:50 +0200
+In-Reply-To: <20170517125335.GG10015@pali> (sfid-20170517_145339_432681_02EC3F26)
+References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
+         <20170515231339.GF17314@wotan.suse.de>
+         <1495022766.2442.1.camel@sipsolutions.net> <20170517125335.GG10015@pali>
+         (sfid-20170517_145339_432681_02EC3F26)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/17/2017 10:46 AM, Arnd Bergmann wrote:
-> I've managed to split up my long patch into a series of reasonble
-> steps now.
+On Wed, 2017-05-17 at 14:53 +0200, Pali Rohár wrote:
+
+> > In fact, why should the *driver* care either? IOW - why should
+> > "request_firmware_prefer_user()" even exist?
 > 
-> The first two are required to fix a regression from commit 41977e86c984
-> ("rt2x00: add support for MT7620"), the rest are just cleanups to
-> have a consistent state across all the register access functions.
-> 
->       Arnd
+> There are default/example NVS data, which are stored in /lib/firmware
+> and installed by linux-firmware package.
+[...]
 
-Nice work! This is a textbook example of how to do this the right way!
+Oh, so you're saying you want this to invert the order ... Ok, that
+makes some sense.
 
-Reviewed-by: Jes Sorensen <jsorensen@fb.com>
+I still hope that all other requests will eventually fall back to user
+loading though, I think that's important to system integration in
+general.
 
-Jes
+johannes
