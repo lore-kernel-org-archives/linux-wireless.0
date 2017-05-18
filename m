@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54100 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757205AbdELIzB (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:43597 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753094AbdERKcP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 04:55:01 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Xie Qirong <cheerx1994@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
-References: <20170512073555.12333-1-cheerx1994@gmail.com>
-        <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
-        <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com>
-Date: Fri, 12 May 2017 11:54:55 +0300
-In-Reply-To: <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com> (Arend van
-        Spriel's message of "Fri, 12 May 2017 10:36:56 +0200")
-Message-ID: <87d1beqwtc.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_105530_155149_35A932AA)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 18 May 2017 06:32:15 -0400
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com,
+        Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+Subject: [PATCH] brcmfmac: remove setting IBSS mode when stopping AP
+Date: Thu, 18 May 2017 17:22:19 +0800
+Message-Id: <1495099339-7626-1-git-send-email-wright.feng@cypress.com> (sfid-20170518_123218_649881_964028C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
 
-> On 5/12/2017 10:19 AM, Kalle Valo wrote:
->> Xie Qirong <cheerx1994@gmail.com> writes:
->>
->>> The combination of init_timer and setting up the data and function field
->>> manually is equivalent to calling setup_timer(). This is an api
->>> consolidation only and improves readability.
->>>
->>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>> Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
->>> ---
->>>
->>>   setup_timer.cocci suggested the following improvement:
->>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
->>>   setup_timer function for function on line 384.
->>>
->>>   Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
->>>   CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
->>>   CONFIG_BRCMDBG=y
->>>
->>>   Kernel version: 4.11.0 (localversion-next is next-20170512)
->>
->> How is this different from the first version?
->>
->> https://patchwork.kernel.org/patch/9709467/
->
-> Hi Kalle,
->
-> This is actually the third version. You are referring to the
-> not-specifically-named "v2" here, but how are you to know ;-) 
+Setting IBSS mode when stopping AP may affect functionality of INFRA
+mode on another interface. For instance, if user creates and stops
+hostap daemon on virtual interface, then association cannot work on
+primary interface because default BSS has been set to IBSS mode in
+firmware side. The IBSS mode should be set when cfg80211 changes the
+interface.
 
-Exactly :)
+Reviewed-by: Wright Feng <wright.feng@cypress.com>
+Signed-off-by: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-> This third version is the same as v1 on which I commented to put the
-> coccinelle output in the commit message. So I would still keep v2 if
-> nothing else changed in v3 apart from my Acked-by: tag.
-
-Ok, but I can easily take v3 (ie. this one) so that you get credit ;)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 944b83c..ce2a5b6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4658,9 +4658,6 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ 		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 0);
+ 		if (err < 0)
+ 			brcmf_err("setting AP mode failed %d\n", err);
+-		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 0);
+-		if (err < 0)
+-			brcmf_err("setting INFRA mode failed %d\n", err);
+ 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS))
+ 			brcmf_fil_iovar_int_set(ifp, "mbss", 0);
+ 		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_REGULATORY,
 -- 
-Kalle Valo
+2.1.0
