@@ -1,55 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34319 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966040AbdEWHMo (ORCPT
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:35149 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753107AbdERAIt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 03:12:44 -0400
-Received: by mail-pf0-f196.google.com with SMTP id w69so25538786pfk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 May 2017 00:12:43 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v4 2/5] mwifiex: usb: kill urb before free its memory
-Date: Tue, 23 May 2017 07:12:31 +0000
-Message-Id: <1495523554-30753-2-git-send-email-huxinming820@gmail.com> (sfid-20170523_091250_414907_E532A6E8)
-In-Reply-To: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
-References: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
+        Wed, 17 May 2017 20:08:49 -0400
+Received: by mail-qk0-f172.google.com with SMTP id a72so23711054qkj.2
+        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2017 17:08:49 -0700 (PDT)
+Date: Wed, 17 May 2017 17:08:49 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Pali Roh?r <pali.rohar@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Takashi Iwai <tiwai@suse.de>,
+        AKASHI Takahiro <takahiro.akashi@linaro.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Micha?? Kazior <kazikcz@gmail.com>
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20170518000848.GK12920@tuxbook> (sfid-20170518_020855_198922_13400843)
+References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
+ <20170515231339.GF17314@wotan.suse.de>
+ <1495022766.2442.1.camel@sipsolutions.net>
+ <20170517125335.GG10015@pali>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170517125335.GG10015@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Wed 17 May 05:53 PDT 2017, Pali Roh?r wrote:
 
-we have observed host system hang when device firmware crash,
-stack trace show it was an use-after-free case: previous submitted
-urb will be holding in usbcore, and given back to device driver
-when device disconnected, while the urb have been freed in usb
-device disconnect handler. This patch kill the holding urb before
-free its memory.
+> On Wednesday 17 May 2017 14:06:06 Johannes Berg wrote:
+> > On Tue, 2017-05-16 at 01:13 +0200, Luis R. Rodriguez wrote:
+> > > > > Now for N900 case there is a similar scenario
+> > > > > alhtough it has additional requirement to go to user-space due to
+> > > > > need to use a proprietary library to obtain the NVS calibration
+> > > > > data. My thought: Why should firmware_class care?
+> > > 
+> > > Agreed.
+> > 
+> > In fact, why should the *driver* care either? IOW - why should
+> > "request_firmware_prefer_user()" even exist?
+> 
+> There are default/example NVS data, which are stored in /lib/firmware
+> and installed by linux-firmware package. Those example calibration data
+> should not be used for real usage, but Pavel told us that on N900 they
+> are enough for working WIFI connection. They does not contain valid MAC
+> address, so kernel should generate some (random?).
+> 
+> So kernel driver should get NVS calibration data from userspace (which
+> know how where to get or how to prepare them) and in case userspace do
+> not have it, then we can try fallback to those example data (as people
+> reported us they can be useful instead of non-working WIFI).
+> 
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
-v2: replace unnecessary sanity check with right handle of
-    pending urb (Arend)
-v4: same as v2,v3
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 1 +
- 1 file changed, 1 insertion(+)
+We're going to see a similar case with the Qualcomm DB410c WiFi soon,
+where there is default calibration for the chip (wcn3620) but specific
+calibration data for the particular board or product using this chip.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 2f7705c..5a760ec 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -363,6 +363,7 @@ static void mwifiex_usb_free(struct usb_card_rec *card)
- 	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
- 		port = &card->port[i];
- 		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
-+			usb_kill_urb(port->tx_data_list[j].urb);
- 			usb_free_urb(port->tx_data_list[j].urb);
- 			port->tx_data_list[j].urb = NULL;
- 		}
--- 
-1.9.1
+As with your case we expect to have a "generic" calibration file
+integrated in linux-firmware, but providing means to supporting
+device-specific calibration is probably going to be requested shortly.
+
+
+We have however altered the reference design of picking the MAC address
+from the calibration data and have the bootloader pass it via DT - so
+our calibration data doesn't need to be specific to each unit.
+
+Regards,
+Bjorn
