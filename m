@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:34291 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750966AbdEaJPo (ORCPT
+Received: from mail-yb0-f176.google.com ([209.85.213.176]:35329 "EHLO
+        mail-yb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755070AbdERWu1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 05:15:44 -0400
-Date: Wed, 31 May 2017 11:15:41 +0200
-From: Boris Brezillon <boris.brezillon@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org,
-        Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH] bcm47xx: fix build regression
-Message-ID: <20170531111541.0ce9a99d@bbrezillon> (sfid-20170531_111627_380499_4A37CA9F)
-In-Reply-To: <20170530112027.3983554-1-arnd@arndb.de>
-References: <20170530112027.3983554-1-arnd@arndb.de>
+        Thu, 18 May 2017 18:50:27 -0400
+Received: by mail-yb0-f176.google.com with SMTP id p143so14115702yba.2
+        for <linux-wireless@vger.kernel.org>; Thu, 18 May 2017 15:50:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <8780fd64-329f-2a42-4bcd-10abf60976fc@lwfinger.net>
+References: <9b9d08fb-cbcd-5c12-feb8-5434a20cbd94@kpanic.de> <8780fd64-329f-2a42-4bcd-10abf60976fc@lwfinger.net>
+From: Ian W MORRISON <ianwmorrison@gmail.com>
+Date: Fri, 19 May 2017 08:50:26 +1000
+Message-ID: <CAFXWsS85L6tahPX_34smvAU6rRhhkd_EQC3EMU2ev2t3aSpNww@mail.gmail.com> (sfid-20170519_005032_072434_29D09408)
+Subject: Re: crash in r8723bs
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stefan Assmann <sassmann@kpanic.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 30 May 2017 13:20:12 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
+On 19 May 2017 at 05:03, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/17/2017 10:05 AM, Stefan Assmann wrote:
+>>
+>> Hi Larry,
+>>
+>> the rtl8723bs made it into staging, awesome.
+>> I built a kernel to test it but it goes down the drain pretty quickly
+>> on modprobe. Going forward who should I discuss bugs with?
+>>
+>> Here's what's going on atm.
+>>
+>>    Stefan
+>>
 
-> An unknown change in the kernel headers caused a build regression
-> in an MTD partition driver:
-> 
-> In file included from drivers/mtd/bcm47xxpart.c:12:0:
-> include/linux/bcm47xx_nvram.h: In function 'bcm47xx_nvram_init_from_mem':
-> include/linux/bcm47xx_nvram.h:27:10: error: 'ENOTSUPP' undeclared (first use in this function)
-> 
-> Clearly we want to include linux/errno.h here.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> [  125.485622] CPU: 1 PID: 456 Comm: modprobe Tainted: G         C
+>> 4.12.0-rc1+ #1
 
-Acked-by: Boris Brezillon <boris.brezillon@free-electrons.com>
+If the kernel is built from v4.12-rc1 then you need to add
+https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git/commit/?h=staging-linus&id=ca6e8cdbe1865caf7b05483e1a242e72d9bc919f
 
-> ---
->  include/linux/bcm47xx_nvram.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/linux/bcm47xx_nvram.h b/include/linux/bcm47xx_nvram.h
-> index 2793652fbf66..a414a2b53e41 100644
-> --- a/include/linux/bcm47xx_nvram.h
-> +++ b/include/linux/bcm47xx_nvram.h
-> @@ -8,6 +8,7 @@
->  #ifndef __BCM47XX_NVRAM_H
->  #define __BCM47XX_NVRAM_H
->  
-> +#include <linux/errno.h>
->  #include <linux/types.h>
->  #include <linux/kernel.h>
->  #include <linux/vmalloc.h>
+Regards,
+Ian
