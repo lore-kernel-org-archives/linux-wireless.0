@@ -1,61 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f179.google.com ([209.85.161.179]:34324 "EHLO
-        mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750752AbdEUErD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53642 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932292AbdERNi2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 00:47:03 -0400
-Received: by mail-yw0-f179.google.com with SMTP id l14so48364765ywk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 21:47:03 -0700 (PDT)
+        Thu, 18 May 2017 09:38:28 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1855b2ff-3ed0-a2c3-ad27-7971fa92ee98@rempel-privat.de>
-References: <1fdab9d5-d8c6-88dc-38ac-2948e5fa74ec@rempel-privat.de>
- <CAMo8Bf+xbS46Kj4VP_+F2aZPZpOJ2UHV6WdHP_Ku_eaSQwm-7g@mail.gmail.com> <1855b2ff-3ed0-a2c3-ad27-7971fa92ee98@rempel-privat.de>
-From: Max Filippov <jcmvbkbc@gmail.com>
-Date: Sat, 20 May 2017 21:47:02 -0700
-Message-ID: <CAMo8BfLxTU0PVUC+7FMjX9YOkmJ6+PEy09fFvC--HmvFNwyNvw@mail.gmail.com> (sfid-20170521_064714_154866_FC80767B)
-Subject: Re: Search for devices with Xtensa cores
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@qca.qualcomm.com,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: mwifiex: p2p client using same data path as station
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1493202888-20784-1-git-send-email-huxinming820@gmail.com>
+References: <1493202888-20784-1-git-send-email-huxinming820@gmail.com>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Message-Id: <20170518133828.3E16560E7A@smtp.codeaurora.org> (sfid-20170518_153940_097727_AF78EB1C)
+Date: Thu, 18 May 2017 13:38:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 20, 2017 at 4:02 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Am 16.05.2017 um 21:46 schrieb Max Filippov:
->> On Fri, Apr 28, 2017 at 11:23 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->>> this year started with inclusion of open-ath9k-htc-firmware to debian
->>> *main* repository. As first we started to getting advantage of regular
->>> compile tests. See results here:
->>> https://tests.reproducible-builds.org/debian/rb-pkg/unstable/i386/open-ath9k-htc-firmware.html
->>>
->>> Most of the problems which we currently get, are related to gcc xtensa
->>> compiler.
->>> In details: device specific patch set is used to provide our own
->>> gcc/binutils version because Xtensa don't really have defined CPU cores.
->>> As result, upstream compiler developers will never notice if some thing
->>> will brake this patch set.
->>
->> Below are the links to the xtensa-dynconfig repository and xtensa-plugin-env
->> branches in binutils-gdb and gcc repositories. Together it is a draft
->> implementation of dynamically configurable xtensa toolchain.
->> Could you please take a look at it and see if it's useful for you?
->>
->> https://github.com/jcmvbkbc/xtensa-dynconfig
->> https://github.com/jcmvbkbc/binutils-gdb-xtensa/commits/xtensa-plugin-env
->> https://github.com/jcmvbkbc/gcc-xtensa/commits/xtensa-plugin-env
->
-> I didn't tested it jet, but it looks promising. How can i itegrate this
-> two patches?
-> https://github.com/olerem/open-ath9k-htc-firmware/tree/master/local/patches
+Xinming Hu <huxinming820@gmail.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> P2p client act as a station, data will be queued by DA instead
+> of RA. This patch pass the sanity check, so that p2p client share
+> the same data path with infrastruction station mode.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
 
-Apply binutils.patch to the binutils-2.26.1 and then copy
-binutils/bfd/xtensa-modules.c
-and binutils/include/xtensa-config.h into xtensa-dynconfig/config/<config-name>.
-And since the gdb part is missing you'd need to create two empty c source files:
-xtensa-dynconfig/config/<config-name>/gdb/gdb/{xtensa-config.c,xtensa-xtregs.c}
+Patch applied to wireless-drivers-next.git, thanks.
+
+83625a40165a mwifiex: p2p client using same data path as station
 
 -- 
-Thanks.
--- Max
+https://patchwork.kernel.org/patch/9701051/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
