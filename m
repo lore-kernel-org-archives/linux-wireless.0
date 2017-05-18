@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:54330 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751000AbdEaNMW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43108 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756127AbdEROIG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 09:12:22 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4VDA5r1118016
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 09:12:22 -0400
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2asw7bkrs9-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 09:12:21 -0400
-Received: from localhost
-        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-        Wed, 31 May 2017 09:12:20 -0400
-Date: Wed, 31 May 2017 06:12:16 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
-        Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH] bcm47xx: fix build regression
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <20170530112027.3983554-1-arnd@arndb.de>
- <7b6903a2-ce54-44f9-18ed-a14bd32069ce@broadcom.com>
- <CAK8P3a2-kO==gMDm3E6U8CR-zhwmZGztRy7Trcezf8oZxgn01g@mail.gmail.com>
+        Thu, 18 May 2017 10:08:06 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK8P3a2-kO==gMDm3E6U8CR-zhwmZGztRy7Trcezf8oZxgn01g@mail.gmail.com>
-Message-Id: <20170531131216.GJ3956@linux.vnet.ibm.com> (sfid-20170531_151244_714314_DF56A10D)
+Subject: Re: [v3,01/10] rtlwifi: btcoex: 21a 2ant: set tdma with rssi states
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170511190119.23426-2-Larry.Finger@lwfinger.net>
+References: <20170511190119.23426-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170518140801.4BF8860F6B@smtp.codeaurora.org> (sfid-20170518_160838_846673_B5E9B802)
+Date: Thu, 18 May 2017 14:08:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 31, 2017 at 12:21:10PM +0200, Arnd Bergmann wrote:
-> On Wed, May 31, 2017 at 11:43 AM, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
-> > On 5/30/2017 1:20 PM, Arnd Bergmann wrote:
-> >>
-> >> An unknown change in the kernel headers caused a build regression
-> >> in an MTD partition driver:
-> >>
-> >> In file included from drivers/mtd/bcm47xxpart.c:12:0:
-> >> include/linux/bcm47xx_nvram.h: In function 'bcm47xx_nvram_init_from_mem':
-> >> include/linux/bcm47xx_nvram.h:27:10: error: 'ENOTSUPP' undeclared (first
-> >> use in this function)
-> >>
-> >> Clearly we want to include linux/errno.h here.
-> >
-> >
-> > unfortunate that you did not find the commit that caused this build
-> > regression. You could produce preprocessor output when it was working to see
-> > where errno.h got implicitly included and start looking there for git
-> > history.
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > 
-> I did a 'git bisect run make drivers/mtd/bcm47xxpart.o' now, which pointed to
-> 0bc2d534708b ("rcu: Refactor #includes from include/linux/rcupdate.h").
+> if bt rssi is high, adjust the duration of wifi to a longer period to
+> let the wifi transmit under this bt profiling.
 > 
-> That commit seems reasonable, it was just bad luck that it caused this
-> regression. The commit is currently in the rcu/rcu/next branch of tip.git,
-> so Paul could merge the patch there.
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Pkshih <pkshih@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-Apologies for the inconvenience, not sure why 0day test robot didn't
-find this.  Probably because it cannot test each and every driver.  ;-)
+10 patches applied to wireless-drivers-next.git, thanks.
 
-This patch, correct?
+7b5ca74959c3 rtlwifi: btcoex: 21a 2ant: set tdma with rssi states
+d86aa50608e1 rtlwifi: btcoex: 21a 2ant: refine btc8821a2ant_action_hid_a2dp
+be04040108ae rtlwifi: btcoex: 21a 2ant: set wifi standby when halting of entering ips
+4a279c2b73fd rtlwifi: btcoex: 21a 2ant: settings before wifi firmware is ready
+eee87f26203f rtlwifi: btcoex: 21a 2ant: add pnp notidy to avoid LPS/IPS mismatch
+1f88d59e350e rtlwifi: btcoex: 21a 2ant: run mechanism if status changes or auto adjust is set
+728b61067701 rtlwifi: btcoex: 21a 2ant: init wlan when leave ips
+a3b2ba8666b7 rtlwifi: btcoex: 21a 2ant: refine bt info notify to have more profilings
+e7dc32033378 rtlwifi: btcoex: 21a 2ant: fix PTA unstable problem when hw init
+3acd1685d71e rtlwifi: btcoex: 21a 2ant: remove unused antenna detection variables
 
-	https://lkml.org/lkml/2017/5/30/348
+-- 
+https://patchwork.kernel.org/patch/9722763/
 
-							Thanx, Paul
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
