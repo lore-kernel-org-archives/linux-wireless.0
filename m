@@ -1,126 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35539 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756967AbdEUUBW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44786 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932314AbdERPrj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 16:01:22 -0400
-Received: by mail-lf0-f65.google.com with SMTP id 99so3690629lfu.2
-        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:21 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 2/9] ath10k: htt: RX ring config HL support
-Date: Sun, 21 May 2017 21:59:04 +0200
-Message-Id: <1495396751-4805-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220217_172979_F02C77E1)
-In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+        Thu, 18 May 2017 11:47:39 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [V3, 5/9] brcmfmac: add firmware feature detection for gscan feature
+References: <1492776308-15120-6-git-send-email-arend.vanspriel@broadcom.com>
+        <20170518133655.91D0660F60@smtp.codeaurora.org>
+Date: Thu, 18 May 2017 18:47:35 +0300
+In-Reply-To: <20170518133655.91D0660F60@smtp.codeaurora.org> (Kalle Valo's
+        message of "Thu, 18 May 2017 13:36:55 +0000 (UTC)")
+Message-ID: <87h90i5fqg.fsf@purkki.adurom.net> (sfid-20170518_174805_235425_7D81EDC5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Special HTT RX ring config message used by high latency
-devices.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-The main difference between HL and LL is that HL devices
-do not use shared memory between device and host and thus,
-no host paddr's are added to the RX config message.
+> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>> From: Arend van Spriel <arend@broadcom.com>
+>> 
+>> Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
+>> invalid version.
+>> 
+>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>
+> Failed to apply:
+>
+> fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c).
+> error: could not build fake ancestor
+> Applying: brcmfmac: add support multi-scheduled scan
+> Patch failed at 0001 brcmfmac: add support multi-scheduled scan
+> The copy of the patch that failed is found in: .git/rebase-apply/patch
+>
+> 5 patches set to Changes Requested.
+>
+> 9692541 [V3,5/9] brcmfmac: add firmware feature detection for gscan feature
+> 9692537 [V3,6/9] brcmfmac: move scheduled scan wiphy param setting to pno module
+> 9692543 [V3,7/9] brcmfmac: add support multi-scheduled scan
+> 9692535 [V3,8/9] brcmfmac: add mutex to protect pno requests
+> 9692539 [V3,9/9] brcmfmac: add scheduled scan support for specified BSSIDs
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt.c    |  5 +++-
- drivers/net/wireless/ath/ath10k/htt.h    |  1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c | 51 ++++++++++++++++++++++++++++++++
- 3 files changed, 56 insertions(+), 1 deletion(-)
+Actually I made a mistake and forgot to manually remove patches 5 and 6
+from the tree after the conflict (I haven't automated that part yet in
+my script). So these are now applied:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index cd160b1..29ed4af 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -258,7 +258,10 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 	if (status)
- 		return status;
- 
--	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
-+	if (ar->is_high_latency)
-+		status = ath10k_htt_send_rx_ring_cfg_hl(htt);
-+	else
-+		status = ath10k_htt_send_rx_ring_cfg_ll(htt);
- 	if (status) {
- 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
- 			    status);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 6305308..7ffa1d4 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1805,6 +1805,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
- int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
- int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
- int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt);
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 685faac..8d85f82 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -693,6 +693,57 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
- 	return 0;
- }
- 
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	struct sk_buff *skb;
-+	struct htt_cmd *cmd;
-+	struct htt_rx_ring_setup_ring *ring;
-+	const int num_rx_ring = 1;
-+	u16 flags;
-+	int len;
-+	int ret;
-+
-+	/*
-+	 * the HW expects the buffer to be an integral number of 4-byte
-+	 * "words"
-+	 */
-+	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
-+	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
-+
-+	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
-+	    + (sizeof(*ring) * num_rx_ring);
-+	skb = ath10k_htc_alloc_skb(ar, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_put(skb, len);
-+
-+	cmd = (struct htt_cmd *)skb->data;
-+	ring = &cmd->rx_setup.rings[0];
-+
-+	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
-+	cmd->rx_setup.hdr.num_rings = 1;
-+
-+	flags = 0;
-+	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
-+	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
-+	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
-+
-+	memset(ring, 0, sizeof(*ring));
-+	ring->rx_ring_len = __cpu_to_le16(HTT_RX_RING_SIZE_MIN);
-+	ring->rx_ring_bufsize = __cpu_to_le16(HTT_RX_BUF_SIZE);
-+	ring->flags = __cpu_to_le16(flags);
-+
-+	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
-+	if (ret) {
-+		dev_kfree_skb_any(skb);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu)
+9fe929aaace6 brcmfmac: add firmware feature detection for gscan feature
+94ed6ffb7965 brcmfmac: move scheduled scan wiphy param setting to pno module
+
+Please resend patches 7-9 and double check that the tree looks ok :)
+
 -- 
-2.7.4
+Kalle Valo
