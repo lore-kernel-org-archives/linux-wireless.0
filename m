@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48586 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdEKELC (ORCPT
+Received: from ipout2-voc1esa.syd1.mail-filtering.com.au ([175.107.169.225]:57961
+        "EHLO o-voc1esa.syd1.mail-filtering.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754884AbdERJQs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 00:11:02 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Su Kang Yin <paradyse@gmail.com>
-CC: Adrian Chadd <adrian@freebsd.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
- firmware scratch memory.
-Date: Thu, 11 May 2017 04:10:57 +0000
-Message-ID: <877f1ovxrj.fsf@kamboji.qca.qualcomm.com> (sfid-20170511_061107_818451_125952FD)
-References: <20170501214327.5621-1-adrian@freebsd.org>
-        <CAHjFwoAr6Tjh=Zpr_JhEp_-g_0XJ+LDUagsfJh=vqseqzBC1Pw@mail.gmail.com>
-        <87bmr0vyhe.fsf@kamboji.qca.qualcomm.com>
-        <CAHjFwoDexNAqCFhpwShbTVHuQbP+ZbzDw8dHjq-ohO5jfuus6w@mail.gmail.com>
-In-Reply-To: <CAHjFwoDexNAqCFhpwShbTVHuQbP+ZbzDw8dHjq-ohO5jfuus6w@mail.gmail.com>       (Su Kang
- Yin's message of "Thu, 11 May 2017 12:02:40 +0800")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Thu, 18 May 2017 05:16:48 -0400
+From: Tom Gaudasinski <tomg@records.headdesk.com.au>
+To: linux-wireless@vger.kernel.org
+Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+        kvalo@codeaurora.org,
+        Tom Gaudasinski <tomg@records.headdesk.com.au>
+Subject: [PATCH] rt2x00: Add device ID for Epson WN7512BEP
+Date: Thu, 18 May 2017 19:16:27 +1000
+Message-Id: <1495098987-2691-1-git-send-email-tomg@records.headdesk.com.au> (sfid-20170518_111653_839896_084AEF50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Su Kang Yin <paradyse@gmail.com> writes:
+Make Epson WN7512BEP work by adding its device-id to rt2800usb. Device
+contains a Ralink RT3071L, registers as vendor Accton/Arcadyan.
 
-> On 11 May 2017 at 11:55, Kalle Valo wrote:
->> Su Kang Yin writes:
->>
->>> Without this patch QCA9888 is not working. Also I have to update
->>> board2.bin from Kalle's git repo.
->>
->> More details would be good to know, as the behaviour seems to vary quite
->> a lot. What platform are you using, x86, some ARM board or what? And
->> what kernel exactly?
->
-> Kernel 4.9.25 on X86 Intel Atom
->
-> Panic message is something like that:
+Signed-off-by: Tom Gaudasinski <tomg@records.headdesk.com.au>
 
-Thanks, this was very helpful.
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index f11e3f5..771bb76 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -1156,6 +1156,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x2001, 0x3c17) },
+ 	/* Panasonic */
+ 	{ USB_DEVICE(0x083a, 0xb511) },
++	/* Accton/Arcadyan/Epson */
++	{ USB_DEVICE(0x083a, 0xb512) },
+ 	/* Philips */
+ 	{ USB_DEVICE(0x0471, 0x20dd) },
+ 	/* Ralink */
+-- 
+2.7.4
