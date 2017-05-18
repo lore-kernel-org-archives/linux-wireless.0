@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59710 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750703AbdESEuE (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35652 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753107AbdERBjC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 00:50:04 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
-Subject: Re: [PATCH] brcmfmac: remove setting IBSS mode when stopping AP
-References: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
-Date: Fri, 19 May 2017 07:49:58 +0300
-In-Reply-To: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
-        (Wright Feng's message of "Thu, 18 May 2017 17:22:19 +0800")
-Message-ID: <87efvla1s9.fsf@codeaurora.org> (sfid-20170519_065014_119333_899B9D53)
+        Wed, 17 May 2017 21:39:02 -0400
+Subject: Re: [net-realtek-btcoexist] question about identical code for
+ different branches
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Pkshih <pkshih@realtek.com>
+References: <20170517165232.Horde.v4lHW1-r73ZYdz2POOdERBa@gator4166.hostgator.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <14834066-9820-a2cc-9c98-eebb9b89e7fe@lwfinger.net> (sfid-20170518_034021_875730_031310B0)
+Date: Wed, 17 May 2017 20:38:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170517165232.Horde.v4lHW1-r73ZYdz2POOdERBa@gator4166.hostgator.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> writes:
+On 05/17/2017 04:52 PM, Gustavo A. R. Silva wrote:
+> 
+> Hello everybody,
+> 
+> While looking into Coverity ID 1362263 I ran into the following piece of code at 
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1000:
+> 
+> 1000void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num)
+> 1001{
+> 1002        if (BT_COEX_ANT_TYPE_PG == type) {
+> 1003                gl_bt_coexist.board_info.pg_ant_num = ant_num;
+> 1004                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
+> 1005                /* The antenna position:
+> 1006                 * Main (default) or Aux for pgAntNum=2 && btdmAntNum =1.
+> 1007                 * The antenna position should be determined by
+> 1008                 * auto-detect mechanism.
+> 1009                 * The following is assumed to main,
+> 1010                 * and those must be modified
+> 1011                 * if y auto-detect mechanism is ready
+> 1012                 */
+> 1013                if ((gl_bt_coexist.board_info.pg_ant_num == 2) &&
+> 1014                    (gl_bt_coexist.board_info.btdm_ant_num == 1))
+> 1015                        gl_bt_coexist.board_info.btdm_ant_pos =
+> 1016                                                       
+> BTC_ANTENNA_AT_MAIN_PORT;
+> 1017                else
+> 1018                        gl_bt_coexist.board_info.btdm_ant_pos =
+> 1019                                                       
+> BTC_ANTENNA_AT_MAIN_PORT;
+> 1020        } else if (BT_COEX_ANT_TYPE_ANTDIV == type) {
+> 1021                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
+> 1022                gl_bt_coexist.board_info.btdm_ant_pos =
+> 1023                                                       
+> BTC_ANTENNA_AT_MAIN_PORT;
+> 1024        } else if (type == BT_COEX_ANT_TYPE_DETECTED) {
+> 1025                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
+> 1026                if (rtlpriv->cfg->mod_params->ant_sel == 1)
+> 1027                        gl_bt_coexist.board_info.btdm_ant_pos =
+> 1028                                BTC_ANTENNA_AT_AUX_PORT;
+> 1029                else
+> 1030                        gl_bt_coexist.board_info.btdm_ant_pos =
+> 1031                                BTC_ANTENNA_AT_MAIN_PORT;
+> 1032        }
+> 1033}
+> 
+> The issue is that lines of code 1015-1016 and 1018-1019 are identical for 
+> different branches.
+> 
+> My question here is if one of those assignments should be modified, or the 
+> entire _if_ statement replaced and the function refactored?
+> 
+> I'd really appreciate any comment on this.
+> 
+> Thank you!
+> -- 
+> Gustavo A. R. Silva
 
-> From: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
->
-> Setting IBSS mode when stopping AP may affect functionality of INFRA
-> mode on another interface. For instance, if user creates and stops
-> hostap daemon on virtual interface, then association cannot work on
-> primary interface because default BSS has been set to IBSS mode in
-> firmware side. The IBSS mode should be set when cfg80211 changes the
-> interface.
->
-> Reviewed-by: Wright Feng <wright.feng@cypress.com>
-> Signed-off-by: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ---
->  1 file changed, 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index 944b83c..ce2a5b6 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -4658,9 +4658,6 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
->  		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 0);
->  		if (err < 0)
->  			brcmf_err("setting AP mode failed %d\n", err);
-> -		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 0);
-> -		if (err < 0)
-> -			brcmf_err("setting INFRA mode failed %d\n", err);
+Gustavo,
 
-The title talks about setting IBSS mode but the code looks to be about
-setting INFRA mode. Is this correct?
+Thanks for the notification. I will discuss with Realtek as to the proper fix.
 
--- 
-Kalle Valo
+Larry
