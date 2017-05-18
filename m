@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33470 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752320AbdESHVb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38488 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754241AbdERMRL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 03:21:31 -0400
-MIME-Version: 1.0
-In-Reply-To: <87efvlwc48.fsf@kamboji.qca.qualcomm.com>
-References: <20170517144702.1381136-1-arnd@arndb.de> <87r2zl8lvi.fsf@codeaurora.org>
- <CAK8P3a3YGxNBQq3RYucMCCvSyXOD8skF_Db-eba0PcBL4_P8Dg@mail.gmail.com> <87efvlwc48.fsf@kamboji.qca.qualcomm.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 19 May 2017 09:21:30 +0200
-Message-ID: <CAK8P3a39Op7oyLxP5YwRNhP4v=7d8rL1n0ftUswci_0FaOqybg@mail.gmail.com> (sfid-20170519_092247_219592_DFAAAE57)
-Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for
- register accessors
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Thu, 18 May 2017 08:17:11 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
         Stanislaw Gruszka <sgruszka@redhat.com>,
         David Miller <davem@davemloft.net>,
         Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
         Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
         Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+        Roman Yeryomin <roman@advem.lv>
+Subject: Re: [PATCH] rt2x00: remove unneccesary code
+References: <CAKR_QVJBSKw2uCY4RbHZPvbGkMcvnBh+j6F+9t93mG3BakjX3Q@mail.gmail.com>
+        <20170518112720.GE2239@makrotopia.org>
+Date: Thu, 18 May 2017 15:17:02 +0300
+In-Reply-To: <20170518112720.GE2239@makrotopia.org> (Daniel Golle's message of
+        "Thu, 18 May 2017 13:27:20 +0200")
+Message-ID: <874lwixsu9.fsf@kamboji.qca.qualcomm.com> (sfid-20170518_141720_841864_AC2A9102)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 19, 2017 at 9:15 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
->
->> On Fri, May 19, 2017 at 7:18 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Arnd Bergmann <arnd@arndb.de> writes:
->>>
->>>> I've managed to split up my long patch into a series of reasonble
->>>> steps now.
->>>>
->>>> The first two are required to fix a regression from commit 41977e86c984
->>>> ("rt2x00: add support for MT7620"), the rest are just cleanups to
->>>> have a consistent state across all the register access functions.
->>>
->>> Can these all go to 4.13 or would you prefer me to push the first two
->>> 4.12? Or what?
->>
->> I think you can reasonably argue either way: the second patch does
->> fix a real bug that may or may not lead to an exploitable stack overflow
->> when CONFIG_KASAN is enabled, which would be a reason to put it
->> into 4.12. On the other hand, I have another 20 patches for similar
->> (or worse) stack overflow issues with KASAN that I'm hoping to all
->> get into 4.13 and backported into stable kernel later if necessary,
->> so we could treat this one like the others.
->>
->> The only difference between this and the others is that in rt2x00 it
->> is a regression against 4.11, while the others have all been present
->> for a long time.
->
-> Having all of these in 4.12 sounds a bit excessive and splitting the set
-> (the first two into 4.12 and the rest into 4.13) sounds too much work.
-> So I would prefer to queue these to 4.13, if it's ok for everyone?
+(fixing top posting)
 
-Ok, sounds fine. Thanks,
+Daniel Golle <daniel@makrotopia.org> writes:
 
-      Arnd
+> On Thu, May 18, 2017 at 12:42:14PM +0200, Tom Psyborg wrote:
+>> Use chanreg and dccal helpers to reduce the size of ePA code.
+>>=20
+>> Signed-off-by: Tomislav Po=C5=BEega <pozega.tomislav@gmail.com>
+>
+> thank you for that contribution.
+> Code for ePA has not yet been submitted upstream, I wanted to give it
+> some more testing, so it's still a local patch in OpenWrt/LEDE.
+> I'll merge your patch into our local patch-queue and submit it together
+> with the ePA code once it got some more testing.
+>
+> Patchworkers: consider this to be a request to defer this submission.
+
+This patch was sent in HTML format so it didn't get to mailing list and
+hence neither to patchwork.
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes#format_issues
+
+--=20
+Kalle Valo
