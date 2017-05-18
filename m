@@ -1,77 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:34258 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753677AbdEJQuk (ORCPT
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:33370 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754354AbdERFFi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 12:50:40 -0400
-Received: by mail-wr0-f193.google.com with SMTP id 6so185938wrb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 May 2017 09:50:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CALLGbRL8NQi03U60AwEtOq-W0mFOn1uDmc_TXWRJofPqcP6VXg@mail.gmail.com>
-References: <20170510162546.15439-1-adrian@freebsd.org> <CALLGbRL8NQi03U60AwEtOq-W0mFOn1uDmc_TXWRJofPqcP6VXg@mail.gmail.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Wed, 10 May 2017 09:50:38 -0700
-Message-ID: <CAJ-Vmom+3Gecd=rejpQyfuAOkmk3cg8uES7Cvt_h1Pye5vMa2g@mail.gmail.com> (sfid-20170510_185043_883988_68D67B85)
-Subject: Re: [PATCH] ath10k: add configurable debugging.
-To: Steve deRosier <derosier@gmail.com>
+        Thu, 18 May 2017 01:05:38 -0400
+Received: by mail-qk0-f170.google.com with SMTP id y201so27248369qka.0
+        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2017 22:05:38 -0700 (PDT)
+Date: Wed, 17 May 2017 22:05:38 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "nicolas.dechesne@linaro.org" <nicolas.dechesne@linaro.org>
+Subject: Re: [PATCH 1/2] wcn36xx: Pass used skb to ieee80211_tx_status()
+Message-ID: <20170518050538.GL12920@tuxbook> (sfid-20170518_070611_915838_D0D0658F)
+References: <20170426220444.10539-1-bjorn.andersson@linaro.org>
+ <1493281332.2529.1.camel@sipsolutions.net>
+ <20170428234247.GQ15143@minitux>
+ <87fugkrchl.fsf@kamboji.qca.qualcomm.com>
+ <1495026867.2442.9.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495026867.2442.9.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-grr, no. lemme go re-add that and resubmit.
+On Wed 17 May 06:14 PDT 2017, Johannes Berg wrote:
 
-thanks!
+> On Thu, 2017-05-04 at 13:13 +0000, Kalle Valo wrote:
+> > 
+> > > > This code intentionally checked if TX status was requested, and
+> > > > if not then it doesn't go to the effort of building it.
+> > > > 
+> > > 
+> > > What I'm finding puzzling is the fact that the only caller of
+> > > ieee80211_led_tx() is ieee80211_tx_status() and it seems like
+> > > drivers, such as ath10k, call this for each packet handled - but
+> > > I'm likely missing something.
+> 
+> Yes, many drivers do call it for each packet, and as such, this
+> deficiency was never noted.
+> 
+> > > > As it is with your patch, it'll go and report the TX status
+> > > > without any
+> > > > TX status information - which is handled in
+> > > > wcn36xx_dxe_tx_ack_ind()
+> > > > for those frames needing it.
+> > > > 
+> > > 
+> > > Right, it doesn't sound desired. However, during normal operation
+> > > I'm not seeing IEEE80211_TX_CTL_REQ_TX_STATUS being set and as such
+> > > ieee80211_led_tx() is never called.
+> > 
+> > So what's the conclusion? How do we get leds working?
+> 
+> Well, frankly, I never thought the TX LED was a super good idea - but
+> it had been supported by the original code IIRC, so never removed. Some
+> people like frantic blinking I guess ;-)
+> 
+
+It seems very important to a lot of people...
 
 
--a
+But if ieee80211_free_txskb() is the counterpart of
+ieee80211_tx_status() then we should be able to push the
+ieee80211_led_tx() call down into ieee80211_report_used_skb() and handle
+both cases.
 
+The ieee80211_free_txskb() seems to be used in various cases where we
+discard skbs, but perhaps this is not an issue in reality.
 
-On 10 May 2017 at 09:44, Steve deRosier <derosier@gmail.com> wrote:
-> Hi Adrian,
->
-> On Wed, May 10, 2017 at 9:25 AM, Adrian Chadd <adrian@freebsd.org> wrote:
->
->> diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
->> index 257d10985c6e..7bd461927029 100644
->> --- a/drivers/net/wireless/ath/ath10k/debug.h
->> +++ b/drivers/net/wireless/ath/ath10k/debug.h
->> @@ -200,27 +200,43 @@ void ath10k_sta_update_rx_duration(struct ath10k *ar,
->>  #endif /* CONFIG_MAC80211_DEBUGFS */
->>
->>  #ifdef CONFIG_ATH10K_DEBUG
->> -__printf(3, 4) void ath10k_dbg(struct ath10k *ar,
->> +static inline int
->> +_ath10k_do_dbg(struct ath10k *ar, enum ath10k_debug_mask mask)
->> +{
->> +       if (ar->trace_debug_mask & mask)
->> +               return (1);
->> +       if (ar->debug_mask & mask)
->> +               return (1);
->> +       return (0);
->> +}
->> +
->> +void _ath10k_dbg(struct ath10k *ar,
->>                                enum ath10k_debug_mask mask,
->>                                const char *fmt, ...);
->> -void ath10k_dbg_dump(struct ath10k *ar,
->> +
->> +void _ath10k_dbg_dump(struct ath10k *ar,
->>                      enum ath10k_debug_mask mask,
->>                      const char *msg, const char *prefix,
->>                      const void *buf, size_t len);
->> +
->> +#define        ath10k_dbg(ar, mask, ...)                                       \
->> +       do {                                                            \
->> +               if (_ath10k_do_dbg(ar, mask)) {                         \
->> +                       _ath10k_dbg((ar), (mask), __VA_ARGS__);         \
->> +               };                                                      \
->> +       } while (0)
->> +
->
-> Looks to me you dropped the "__printf(3, 4)" safety check. Was that intentional?
->
-> Thanks,
-> - Steve
+> But I think the problem also applies to the throughput trigger thing,
+> so perhaps we need to stick some LED feedback calls into other places,
+> like _noskb() or provide an extra way to do it?
+> 
+
+Looking around it seems that we either have a call to free_txskb() or
+one of the tx_status(); where the _noskb() would need some special
+handling. Are there others or would it be reasonable to add a call in
+this one "special" case?
+
+Regards,
+Bjorn
