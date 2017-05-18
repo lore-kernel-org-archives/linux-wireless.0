@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway23.websitewelcome.com ([192.185.50.107]:47223 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750811AbdE3UnM (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:50198 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932087AbdERMMd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 16:43:12 -0400
-Received: from cm3.websitewelcome.com (unknown [108.167.139.23])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id 5F08D6A583
-        for <linux-wireless@vger.kernel.org>; Tue, 30 May 2017 15:43:09 -0500 (CDT)
-Date: Tue, 30 May 2017 15:43:07 -0500
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] NFC: add NULL checks to avoid potential NULL pointer
- dereference
-Message-ID: <20170530204307.GA3931@embeddedgus> (sfid-20170530_224315_747040_B0109018)
+        Thu, 18 May 2017 08:12:33 -0400
+Date: Thu, 18 May 2017 14:12:17 +0200
+From: Daniel Golle <daniel@makrotopia.org>
+To: Tom Psyborg <pozega.tomislav@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>
+Subject: Re: [PATCH] rt2x00: remove unneccesary code
+Message-ID: <20170518121210.GF2239@makrotopia.org> (sfid-20170518_141302_335750_938B8754)
+References: <CAKR_QVJBSKw2uCY4RbHZPvbGkMcvnBh+j6F+9t93mG3BakjX3Q@mail.gmail.com>
+ <20170518112720.GE2239@makrotopia.org>
+ <CAKR_QVK6RvNvH327RCHbTv=6b9P=a5-pnu4xpKWh7aeJ8sOM3w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAKR_QVK6RvNvH327RCHbTv=6b9P=a5-pnu4xpKWh7aeJ8sOM3w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NULL checks at line 457: if (!link0 || !link1) {, implies that both
-pointers link0 and link1 might be NULL.
-Function nfcsim_link_free() dereference pointers link0 and link1.
-Add NULL checks before calling nfcsim_link_free() to avoid a
-potential NULL pointer dereference.
+Done. See
+https://git.lede-project.org/?p=source.git;a=commit;h=5e5499c612a667837c714fc4a41b7347e334ce14
 
-Addresses-Coverity-ID: 1364857
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
- drivers/nfc/nfcsim.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+I'll merge it into the patch adding support for ePA and then submit the
+already reduced version upstream once it got sufficient testing.
 
-diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
-index a466e79..6e90b54 100644
---- a/drivers/nfc/nfcsim.c
-+++ b/drivers/nfc/nfcsim.c
-@@ -482,8 +482,10 @@ static int __init nfcsim_init(void)
- exit_err:
- 	pr_err("Failed to initialize nfcsim driver (%d)\n", rc);
- 
--	nfcsim_link_free(link0);
--	nfcsim_link_free(link1);
-+	if (link0)
-+		nfcsim_link_free(link0);
-+	if (link1)
-+		nfcsim_link_free(link1);
- 
- 	return rc;
- }
--- 
-2.5.0
+Note that your mailer program destroyed the white-space formatting of
+the patch which I had to fix manually as a consequence of that (tabs
+were replaced by spaces, hence the patch didn't apply). Try to setup
+git-send-email using SMTP directly in order to avoid that in future.
+
+Cheers
+
+Daniel
+
+
+On Thu, May 18, 2017 at 01:32:38PM +0200, Tom Psyborg wrote:
+> Oh, i missed that. It's fine as long as it gets merged in LEDE so it's
+> ready for upstreaming.
+> 
+> On 18 May 2017 at 13:27, Daniel Golle <daniel@makrotopia.org> wrote:
+> 
+> > Hi Tom,
+> >
+> > thank you for that contribution.
+> > Code for ePA has not yet been submitted upstream, I wanted to give it
+> > some more testing, so it's still a local patch in OpenWrt/LEDE.
+> > I'll merge your patch into our local patch-queue and submit it together
+> > with the ePA code once it got some more testing.
+> >
+> > Cheers
+> >
+> > Daniel
+> >
+> > Patchworkers: consider this to be a request to defer this submission.
+> >
+> >
+> > On Thu, May 18, 2017 at 12:42:14PM +0200, Tom Psyborg wrote:
+> > > Use chanreg and dccal helpers to reduce the size of ePA code.
+> > >
+> > > Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+> > >
+> > > ---
+> >
