@@ -1,72 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:34388 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752844AbdECOWv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:32978 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753420AbdESFDk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 10:22:51 -0400
-From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-To: Sebastian Reichel <sre@kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Subject: [PATCHv2 4/4] ARM: dts: omap4-droid4: Add bluetooth
-Date: Wed,  3 May 2017 16:22:26 +0200
-Message-Id: <20170503142226.32380-5-sebastian.reichel@collabora.co.uk> (sfid-20170503_162331_437225_F9D36EFB)
-In-Reply-To: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
-References: <20170503142226.32380-1-sebastian.reichel@collabora.co.uk>
+        Fri, 19 May 2017 01:03:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [V3, 5/9] brcmfmac: add firmware feature detection for gscan feature
+References: <1492776308-15120-6-git-send-email-arend.vanspriel@broadcom.com>
+        <20170518133655.91D0660F60@smtp.codeaurora.org>
+        <87h90i5fqg.fsf@purkki.adurom.net>
+        <fb2b7327-39c6-dc75-e792-e255f8689754@broadcom.com>
+Date: Fri, 19 May 2017 08:03:35 +0300
+In-Reply-To: <fb2b7327-39c6-dc75-e792-e255f8689754@broadcom.com> (Arend Van
+        Spriel's message of "Thu, 18 May 2017 21:34:26 +0200")
+Message-ID: <87y3tt8ml4.fsf@codeaurora.org> (sfid-20170519_070352_673560_36102202)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Droid 4 has WL 1285C connected to the OMAP's UART4 port, which is
-used for Bluetooth and most likely can also be used for controlling
-the FM radio and GPS receivers.
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
----
- arch/arm/boot/dts/omap4-droid4-xt894.dts | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+> On 18-5-2017 17:47, Kalle Valo wrote:
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>> 
+>>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>>> From: Arend van Spriel <arend@broadcom.com>
+>>>>
+>>>> Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
+>>>> invalid version.
+>>>>
+>>>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>>>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>>>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>
+>>> Failed to apply:
+>>>
+>>> fatal: sha1 information is lacking or useless
+>>> (drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c).
+>>> error: could not build fake ancestor
+>>> Applying: brcmfmac: add support multi-scheduled scan
+>>> Patch failed at 0001 brcmfmac: add support multi-scheduled scan
+>>> The copy of the patch that failed is found in: .git/rebase-apply/patch
+>>>
+>>> 5 patches set to Changes Requested.
+>>>
+>>> 9692541 [V3,5/9] brcmfmac: add firmware feature detection for gscan feature
+>>> 9692537 [V3,6/9] brcmfmac: move scheduled scan wiphy param setting to pno module
+>>> 9692543 [V3,7/9] brcmfmac: add support multi-scheduled scan
+>>> 9692535 [V3,8/9] brcmfmac: add mutex to protect pno requests
+>>> 9692539 [V3,9/9] brcmfmac: add scheduled scan support for specified BSSIDs
+>> 
+>> Actually I made a mistake and forgot to manually remove patches 5 and 6
+>> from the tree after the conflict (I haven't automated that part yet in
+>> my script). So these are now applied:
+>> 
+>> 9fe929aaace6 brcmfmac: add firmware feature detection for gscan feature
+>> 94ed6ffb7965 brcmfmac: move scheduled scan wiphy param setting to pno module
+>> 
+>> Please resend patches 7-9 and double check that the tree looks ok :)
+>
+> Will do. These patches were in same series as cfg80211 changes and all
+> based on mac80211-next/master. I already mentioned to you and Johannes
+> in earlier version of the patch series (posted April 7) that this would
+> result in a merge conflict, but I can imagine that info got lost after
+> more than a month.
 
-diff --git a/arch/arm/boot/dts/omap4-droid4-xt894.dts b/arch/arm/boot/dts/omap4-droid4-xt894.dts
-index c09b51d6ccf7..bd7f1cc55371 100644
---- a/arch/arm/boot/dts/omap4-droid4-xt894.dts
-+++ b/arch/arm/boot/dts/omap4-droid4-xt894.dts
-@@ -453,6 +453,15 @@
- 		OMAP4_IOPAD(0x1c8, PIN_INPUT_PULLUP | MUX_MODE7)
- 		>;
- 	};
-+
-+	uart4_pins: pinmux_uart4_pins {
-+		pinctrl-single,pins = <
-+		OMAP4_IOPAD(0x15c, PIN_INPUT | MUX_MODE0)		/* uart4_rx */
-+		OMAP4_IOPAD(0x15e, PIN_OUTPUT | MUX_MODE0)		/* uart4_tx */
-+		OMAP4_IOPAD(0x110, PIN_INPUT_PULLUP | MUX_MODE5)	/* uart4_cts */
-+		OMAP4_IOPAD(0x112, PIN_OUTPUT_PULLUP | MUX_MODE5)	/* uart4_rts */
-+		>;
-+	};
- };
- 
- &omap4_pmx_wkup {
-@@ -469,6 +478,17 @@
- 			       &omap4_pmx_core 0x17c>;
- };
- 
-+&uart4 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&uart4_pins>;
-+
-+	bluetooth {
-+		compatible = "ti,wl1285-st";
-+		enable-gpios = <&gpio6 14 GPIO_ACTIVE_HIGH>; /* gpio 174 */
-+		max-speed = <3686400>;
-+	};
-+};
-+
- &usbhsehci {
- 	phys = <&hsusb1_phy>;
- };
+Ah, I remember now. But yeah, too many emails so I tend to forget so old
+discussions while looking at patches.
+
 -- 
-2.11.0
+Kalle Valo
