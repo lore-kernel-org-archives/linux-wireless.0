@@ -1,64 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58492 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752138AbdEDEfg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 00:35:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Miller <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: new warning at net/wireless/util.c:1236
-References: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com>
-Date: Thu, 04 May 2017 07:35:31 +0300
-In-Reply-To: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com>
-        (Linus Torvalds's message of "Wed, 3 May 2017 19:28:29 -0700")
-Message-ID: <87o9v99r3g.fsf@purkki.adurom.net> (sfid-20170504_063653_925055_DF67F0EE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:37640 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751684AbdESLdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 07:33:40 -0400
+Message-ID: <1495193617.3274.7.camel@sipsolutions.net> (sfid-20170519_133346_979214_640AD6F2)
+Subject: Re: [PATCH 5/7] mac80211: add wide bandwidth channel switch
+ announcement to CSA action frames and mesh beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net
+Date: Fri, 19 May 2017 13:33:37 +0200
+In-Reply-To: <20170516092316.15636-6-sw@simonwunderlich.de> (sfid-20170516_112329_694356_1BF36491)
+References: <20170516092316.15636-1-sw@simonwunderlich.de>
+         <20170516092316.15636-6-sw@simonwunderlich.de>
+         (sfid-20170516_112329_694356_1BF36491)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
+I've applied patches 1-4 now.
 
-> So my Dell XPS 13 seems to have grown a new warning as of the
-> networking merge yesterday.
->
-> Things still work, but when it starts warning, it generates a *lot* of
-> noise (I got 36 of these within about ten minutes).
->
-> I have no idea what triggered it, because when I rebooted (not because
-> of this issue, but just to reboot into a newer kernel) I don't see it
-> again.
->
-> This is all pretty regular wireless - it's intel 8260 wireless in a
-> fairly normal laptop.
->
-> Things still seem to *work* ok, so the only problem here is the overly
-> verbose and useless WARN_ON. It doesn't even print out *which* rate it
-> is warning about, it just does that stupid unconditional WARN_ON()
-> without ever shutting up about it..
->
-> The WARN_ON() seems to be old, but my logs don't seem to have any
-> mention of this until today, so there's something that has changed
-> that now triggers it.
->
-> Ideas?
->
->                   Linus
->
-> ---
->
-> WARNING: CPU: 3 PID: 1138 at net/wireless/util.c:1236
-> cfg80211_calculate_bitrate+0x139/0x170 [cfg80211]
+The subject is a bit long - I was going to change it to
 
-As this is with iwlwifi adding also Luca. There were some rate handling
-changes in iwlwifi, like commit 77e409455f41, but don't know if that
-could cause this.
+    mac80211: mesh: support sending wide bandwidth CSA
+    
+    To support HT and VHT channel switch announcements, both beacons
+    and action frames must include the corresponding IEs.
 
--- 
-Kalle Valo
+but:
+
+> +		   2 + 2 + sizeof(struct
+> ieee80211_wide_bw_chansw_ie) +
+> +		   2 + sizeof(struct ieee80211_sec_chan_offs_ie) +
+
+The "2 + 2" should have a comment - no that I'm even really sure that
+you need the wrapper?
+
+> -		pos = skb_put(skb, 13);
+> -		memset(pos, 0, 13);
+
+Removing that is nice - but why do you do this:
+
+> +		bool have_secondary_chan_offset = false;
+> +		bool have_wide_bandwidth_cs = false;
+> +		int ie_len = 2 + sizeof(struct
+> ieee80211_channel_sw_ie) +
+> +			     2 + sizeof(struct
+> ieee80211_mesh_chansw_params_ie);
+> +
+> +		switch (csa->settings.chandef.width) {
+> +		case NL80211_CHAN_WIDTH_80:
+> +		case NL80211_CHAN_WIDTH_80P80:
+> +		case NL80211_CHAN_WIDTH_160:
+> +			have_wide_bandwidth_cs = true;
+> +			ie_len += 2 + 2 +
+> +				  sizeof(struct
+> ieee80211_wide_bw_chansw_ie);
+> +			break;
+> +		case NL80211_CHAN_WIDTH_40:
+> +			have_secondary_chan_offset = true;
+> +			ie_len += 2 + sizeof(struct
+> ieee80211_sec_chan_offs_ie);
+> +		default:
+> +			break;
+> +		}
+> +		pos = skb_put(skb, ie_len);
+> +		memset(pos, 0, ie_len);
+
+I think having multiple calls to skb_put() would be better.
+
+>  		*pos++ = WLAN_EID_CHANNEL_SWITCH;
+>  		*pos++ = 3;
+>  		*pos++ = 0x0;
+> @@ -760,6 +781,28 @@ ieee80211_mesh_build_beacon(struct
+> ieee80211_if_mesh *ifmsh)
+>  		pos += 2;
+>  		put_unaligned_le16(ifmsh->pre_value, pos);
+>  		pos += 2;
+> +
+> +		if (have_secondary_chan_offset) {
+> +			enum nl80211_channel_type ct;
+
+You can have one here, and re-initialize pos.
+
+> +			*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;
+> /* EID */
+> +			*pos++ = 1;				 
+>    /* len */
+> +			ct = cfg80211_get_chandef_type(&csa-
+> >settings.chandef);
+> +			if (ct == NL80211_CHAN_HT40PLUS)
+> +				*pos++ =
+> IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+> +			else
+> +				*pos++ =
+> IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+> +		}
+> +
+> +		if (have_wide_bandwidth_cs) {
+> +			struct cfg80211_chan_def *chandef;
+
+and likewise here.
+
+That'd also be safer in a way.
+
+johannes
