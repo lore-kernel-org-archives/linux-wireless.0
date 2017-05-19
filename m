@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50123 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756333AbdEMWhL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 May 2017 18:37:11 -0400
-From: Colin King <colin.king@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Joe Perches <joe@perches.com>,
-        Christian Engelmayer <cengelma@gmx.at>,
-        Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8723ae:fix spelling mistake: "Coexistance" -> "Coexistence"
-Date: Sat, 13 May 2017 23:37:02 +0100
-Message-Id: <20170513223702.19748-1-colin.king@canonical.com> (sfid-20170514_003744_568413_A44979AD)
+Received: from mail.toke.dk ([52.28.52.200]:47887 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750766AbdESJiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 05:38:52 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] mac80211: Dynamically set CoDel parameters per station
+References: <20170405161810.30671-1-toke@toke.dk>
+        <20170406093826.16626-1-toke@toke.dk>
+        <1495029987.2442.19.camel@sipsolutions.net>
+Date: Fri, 19 May 2017 11:27:38 +0200
+In-Reply-To: <1495029987.2442.19.camel@sipsolutions.net> (Johannes Berg's
+        message of "Wed, 17 May 2017 16:06:27 +0200")
+Message-ID: <87efvldwmt.fsf@alrua-kau> (sfid-20170519_113856_258643_E31A41E1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Trivial fix to spelling mistake in RT_TRACE text
+> On Thu, 2017-04-06 at 11:38 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> CoDel can be too aggressive if a station sends at a very low rate,
+>> leading reduced throughput. This gets worse the more stations are
+>> present, as each station gets more bursty the longer the round-robin
+>> scheduling between stations takes.
+>>=20
+> [...]
+>
+> I've applied this now (with some minor fixups) - the whole discussion
+> didn't really conclude in anything, and we can just try it.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Okidoki. FWIW, the reason I never got any further was that my
+experiments with other approaches proved somewhat inconclusive. Partly
+because a reorganisation of my testbed has caused the physical
+conditions to change which has caused the original problem to be less
+severe.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index 859c045bd37c..47e5f9003bb0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -2313,7 +2313,7 @@ static void rtl8723e_bt_var_init(struct ieee80211_hw *hw)
- 		rtlpriv->btcoexist.eeprom_bt_radio_shared;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
--		 "BT Coexistance = 0x%x\n",
-+		 "BT Coexistence = 0x%x\n",
- 		 rtlpriv->btcoexist.bt_coexistence);
- 
- 	if (rtlpriv->btcoexist.bt_coexistence) {
--- 
-2.11.0
+So yeah, some wider testing would be good, and I agree that it is low
+risk. I'll revisit this myself at some point after I get my testbed
+rebased on a new kernel and figure out why the physical conditions
+changed... :)
+
+-Toke
