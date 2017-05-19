@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33699 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932948AbdEKTB0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59710 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750703AbdESEuE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 15:01:26 -0400
-Received: by mail-oi0-f67.google.com with SMTP id h4so5535586oib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:01:26 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 00/10] rtlwifi: btcoex: Third set of changes for rtl8821ae 2ant
-Date: Thu, 11 May 2017 14:01:09 -0500
-Message-Id: <20170511190119.23426-1-Larry.Finger@lwfinger.net> (sfid-20170511_210144_577199_D96C89EC)
+        Fri, 19 May 2017 00:50:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wright Feng <wright.feng@cypress.com>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+Subject: Re: [PATCH] brcmfmac: remove setting IBSS mode when stopping AP
+References: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
+Date: Fri, 19 May 2017 07:49:58 +0300
+In-Reply-To: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
+        (Wright Feng's message of "Thu, 18 May 2017 17:22:19 +0800")
+Message-ID: <87efvla1s9.fsf@codeaurora.org> (sfid-20170519_065014_119333_899B9D53)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches are the third set of patches for file
-btcoexist/halbtc8821a2ant.c.
+Wright Feng <wright.feng@cypress.com> writes:
 
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
-v3 - fix one additional instance of BT_AUTO_REPORT_XXXX and a typo in commit message
+> From: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+>
+> Setting IBSS mode when stopping AP may affect functionality of INFRA
+> mode on another interface. For instance, if user creates and stops
+> hostap daemon on virtual interface, then association cannot work on
+> primary interface because default BSS has been set to IBSS mode in
+> firmware side. The IBSS mode should be set when cfg80211 changes the
+> interface.
+>
+> Reviewed-by: Wright Feng <wright.feng@cypress.com>
+> Signed-off-by: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 944b83c..ce2a5b6 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -4658,9 +4658,6 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+>  		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 0);
+>  		if (err < 0)
+>  			brcmf_err("setting AP mode failed %d\n", err);
+> -		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 0);
+> -		if (err < 0)
+> -			brcmf_err("setting INFRA mode failed %d\n", err);
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
-
-Yan-Hsuan Chuang (10):
-  rtlwifi: btcoex: 21a 2ant: set tdma with rssi states
-  rtlwifi: btcoex: 21a 2ant: refine btc8821a2ant_action_hid_a2dp
-  rtlwifi: btcoex: 21a 2ant: set wifi standby when halting of entering
-    ips
-  rtlwifi: btcoex: 21a 2ant: settings before wifi firmware is ready
-  rtlwifi: btcoex: 21a 2ant: add pnp notidy to avoid LPS/IPS mismatch
-  rtlwifi: btcoex: 21a 2ant: run mechanism if status changes or auto
-    adjust is set
-  rtlwifi: btcoex: 21a 2ant: init wlan when leave ips
-  rtlwifi: btcoex: 21a 2ant: refine bt info notify to have more
-    profilings
-  rtlwifi: btcoex: 21a 2ant: fix PTA unstable problem when hw init
-  rtlwifi: btcoex: 21a 2ant: remove unused antenna detection variables
-
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 515 ++++++++++++---------
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  10 +-
- 2 files changed, 301 insertions(+), 224 deletions(-)
+The title talks about setting IBSS mode but the code looks to be about
+setting INFRA mode. Is this correct?
 
 -- 
-2.12.0
+Kalle Valo
