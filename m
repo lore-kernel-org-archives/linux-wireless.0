@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36938 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751329AbdESKVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 06:21:05 -0400
-Message-ID: <1495189263.3274.4.camel@sipsolutions.net> (sfid-20170519_122108_903718_68DB65A1)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Fri, 19 May 2017 12:21:03 +0200
-In-Reply-To: <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com> (sfid-20170518_144810_571489_47A41759)
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1495030794.2442.21.camel@sipsolutions.net>
-         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
-         <1495099355.2553.1.camel@sipsolutions.net>
-         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
-         <1495104012.2553.3.camel@sipsolutions.net>
-         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
-         (sfid-20170518_144810_571489_47A41759)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:60996 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750755AbdESHy4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 03:54:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+Subject: Re: [PATCH] brcmfmac: remove setting IBSS mode when stopping AP
+References: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
+        <87efvla1s9.fsf@codeaurora.org>
+        <2dd93d16-e793-9d71-b36d-ac2592b060ea@broadcom.com>
+Date: Fri, 19 May 2017 10:54:49 +0300
+In-Reply-To: <2dd93d16-e793-9d71-b36d-ac2592b060ea@broadcom.com> (Arend van
+        Spriel's message of "Fri, 19 May 2017 09:49:52 +0200")
+Message-ID: <87a869waba.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_095500_609206_4A018C93)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-05-18 at 14:48 +0200, Arend Van Spriel wrote:
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> True. However, we touched this topic a while ago in generic context,
-> ie. preference for ext_features over supported_commands. Right now
-> wpa_supplicant does not check NEW_KEY support so we can go either
-> way.
+> On 5/19/2017 6:49 AM, Kalle Valo wrote:
+>> Wright Feng <wright.feng@cypress.com> writes:
+>>
+>>> From: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+>>>
+>>> Setting IBSS mode when stopping AP may affect functionality of INFRA
+>>> mode on another interface. For instance, if user creates and stops
+>>> hostap daemon on virtual interface, then association cannot work on
+>>> primary interface because default BSS has been set to IBSS mode in
+>>> firmware side. The IBSS mode should be set when cfg80211 changes the
+>>> interface.
+>>>
+>>> Reviewed-by: Wright Feng <wright.feng@cypress.com>
+>>> Signed-off-by: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+>>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>>> ---
+>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ---
+>>>   1 file changed, 3 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> index 944b83c..ce2a5b6 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> @@ -4658,9 +4658,6 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+>>>   		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 0);
+>>>   		if (err < 0)
+>>>   			brcmf_err("setting AP mode failed %d\n", err);
+>>> -		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 0);
+>>> -		if (err < 0)
+>>> -			brcmf_err("setting INFRA mode failed %d\n", err);
+>>
+>> The title talks about setting IBSS mode but the code looks to be about
+>> setting INFRA mode. Is this correct?
+>
+> Both are correct :-p Have to admit this is confusing. The command
+> SET_INFRA with zero value means "disable INFRA; thus enable IBSS".
 
-Right. That's a separate discussion though - whether we add two flags
-here or check NEW_KEY support doesn't really matter, except that we
-need to decide
+Ah, that IS confusing :)
 
- * if we want to support such an override at all, and
- * if it should be tested at all
-   (perhaps we can just live with that failing entirely?)
+> I would rephrase the commit message indeed explaining what the code
+> currently does, ie.:
+>
+> Upon stopping an AP interface the driver disable INFRA mode
+> effectively setting the interface in IBSS mode. However, this may
+> affect other interfaces running in INFRA mode. For instance, ....
 
-> I have cleaned up the wpa_supplicant patches for the offloads, but
-> waited with submitting them until the kernel side got applied. So
-> depending on what is decided here I can rework it.
+I can fix that during commit. Thanks.
 
-I don't really know. I personally don't think that we need to allow
-both ways, but then I'm coming with a driver that doesn't even support
-the old way.
-
-So you should probably decide yourself if you want to keep this
-fallback option, and how well it should work (be rejected if used on a
-driver that doesn't support it, or just fail later?)
-
-johannes
+-- 
+Kalle Valo
