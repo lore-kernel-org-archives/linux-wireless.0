@@ -1,94 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38449 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757877AbdEXHfD (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35413 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751915AbdESJHC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 03:35:03 -0400
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailout.nyi.internal (Postfix) with ESMTP id E526B20B0A
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:35:02 -0400 (EDT)
-Received: from localhost (124-169-117-216.dyn.iinet.net.au [124.169.117.216])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 330AF2478C
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:35:01 -0400 (EDT)
-Date: Wed, 24 May 2017 17:34:59 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: linux-wireless@vger.kernel.org
-Subject: Re: WPA and WPA2
-Message-ID: <20170524073459.GJ8158@eros> (sfid-20170524_093516_255266_45BAFBC3)
-References: <20170524072750.GI8158@eros>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170524072750.GI8158@eros>
+        Fri, 19 May 2017 05:07:02 -0400
+Received: by mail-pf0-f194.google.com with SMTP id u26so8913921pfd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 02:07:02 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v3 5/6] mwifiex: do not aggregate tcp ack in usb tx aggregation queue
+Date: Fri, 19 May 2017 09:06:44 +0000
+Message-Id: <1495184805-6631-5-git-send-email-huxinming820@gmail.com> (sfid-20170519_110714_798823_6FB4F09D)
+In-Reply-To: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 24, 2017 at 05:27:50PM +1000, Tobin C. Harding wrote:
-> Hi,
-> 
-> I am attempting to rewrite the ks7010 WEXT driver (drivers/staging/ks7010)
-> to use the CFG80211 API.
-> 
-> I am reading 802.11 Wireless Networks - Matthew S. Gast for reference.
-> 
-> I have some confusion regarding WEP/WPA/WPA2/RSN, ciphers, keys and
-> ie's?
-> 
-> As I understand, first there was WEP. Next we got a marketing term WPA
-> which referred to 802.11i (which specified the protocols TKIP and
-> CCMP, and also RSN).
-> 
-> WEP vs WPA
-> ----------
-> 
-> To add to my confusion the ks7010 code seemingly mixes up the use of
-> WEP keys and WPA keys, to set both the WEP and the WPA keys the driver
-> uses the same MIB requests? Yet throughout the code WEP keys and WPA
-> keys are stored in separate structures (and treated differently).
+From: Xinming Hu <huxm@marvell.com>
 
-Oh, I just got why there is only one MIB request type - there are only
-one set of keys used by the target
+Tcp ack should be send as soon to avoid throuput drop during receive tcp
+traffic.
 
-	DOT11_WEP_DEFAULT_KEY_VALUE1	= 0x13020101,
-	DOT11_WEP_DEFAULT_KEY_VALUE2	= 0x13020102,
-	DOT11_WEP_DEFAULT_KEY_VALUE3	= 0x13020103,
-	DOT11_WEP_DEFAULT_KEY_VALUE4	= 0x13020104,
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+v2: same as v1
+v3: avoid to use magic tcp flag (Kalle)
+---
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c |  4 ++++
+ drivers/net/wireless/marvell/mwifiex/decl.h     |  1 +
+ drivers/net/wireless/marvell/mwifiex/main.c     | 26 +++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/main.h     |  1 +
+ drivers/net/wireless/marvell/mwifiex/usb.c      |  6 ++++--
+ 5 files changed, 36 insertions(+), 2 deletions(-)
 
-removing 'WEP' from the defines removes the confusion here :)
-
-> If WPA is enabled are not WEP keys superfluous?
-> 
-> WPA vs WPA2
-> -----------
-> 
-> Were WPA version 1 and WPA version 2 marketing terms or do they differ?
-> 
-> ieee80211.h does not seem to mention WPA2 (and cfg80211.h mentions it
-> once only in some comments) however, from cfg80211.h;
-> 
->  * struct cfg80211_crypto_settings - Crypto settings
->  * @wpa_versions: indicates which, if any, WPA versions are enabled
->  *	(from enum nl80211_wpa_versions)
-> 
-> When using the CFG80211 API we do not need to worry about the WPA/WPA2
-> distinction? Can I drop all the WPA version 1 code from the driver?
-> 
-> A little more information:
-> 
-> The WEXT driver defines ciphers, from looking at ieee80211.h it seems
-> that it uses WLAN_CIPHER_SUITE_XXX for WPA2 and for WPA it uses
-> 
-> #define CIPHER_ID_WPA_NONE    "\x00\x50\xf2\x00"
-> #define CIPHER_ID_WPA_WEP40   "\x00\x50\xf2\x01"
-> #define CIPHER_ID_WPA_TKIP    "\x00\x50\xf2\x02"
-> #define CIPHER_ID_WPA_CCMP    "\x00\x50\xf2\x04"
-> #define CIPHER_ID_WPA_WEP104  "\x00\x50\xf2\x05"
-> 
-> FYI ieee80211.h has
-> 
-> #define WLAN_OUI_MICROSOFT	       0x0050f2
-> 
-> Thanks for taking the time to read this mail, any suggestions most
-> appreciated.
-> 
-> thanks,
-> Tobin.
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+index e8ffb26..cbf3bc2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+@@ -194,6 +194,10 @@
+ 
+ 	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
+ 		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
++
++	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TCP_ACK)
++		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
++
+ 	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
+ 	skb_aggr->priority = skb_src->priority;
+ 	skb_aggr->tstamp = skb_src->tstamp;
+diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
+index 188e4c3..0487420 100644
+--- a/drivers/net/wireless/marvell/mwifiex/decl.h
++++ b/drivers/net/wireless/marvell/mwifiex/decl.h
+@@ -89,6 +89,7 @@
+ #define MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS   BIT(3)
+ #define MWIFIEX_BUF_FLAG_ACTION_TX_STATUS  BIT(4)
+ #define MWIFIEX_BUF_FLAG_AGGR_PKT          BIT(5)
++#define MWIFIEX_BUF_FLAG_TCP_ACK           BIT(6)
+ 
+ #define MWIFIEX_BRIDGED_PKTS_THR_HIGH      1024
+ #define MWIFIEX_BRIDGED_PKTS_THR_LOW        128
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 2c42191..b7d835c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -851,6 +851,30 @@ struct sk_buff *
+ 	return skb;
+ }
+ 
++static bool is_piggyback_tcp_ack(struct sk_buff *skb)
++{
++	struct ethhdr *ethh = NULL;
++	struct iphdr  *iph = NULL;
++	struct tcphdr *tcph = NULL;
++
++	ethh = (struct ethhdr *)skb->data;
++	if (ntohs(ethh->h_proto) != ETH_P_IP)
++		return false;
++
++	iph = (struct iphdr *)((u8 *)ethh + sizeof(struct ethhdr));
++	if (iph->protocol != IPPROTO_TCP)
++		return false;
++
++	tcph = (struct tcphdr *)((u8 *)iph + iph->ihl * 4);
++	/* Piggyback ack without payload*/
++	if (tcp_flag_word(tcph) == TCP_FLAG_ACK &&
++	    ntohs(iph->tot_len) <= (iph->ihl + tcph->doff) * 4) {
++		return true;
++	}
++
++	return false;
++}
++
+ /*
+  * CFG802.11 network device handler for data transmission.
+  */
+@@ -904,6 +928,8 @@ struct sk_buff *
+ 	tx_info->bss_num = priv->bss_num;
+ 	tx_info->bss_type = priv->bss_type;
+ 	tx_info->pkt_len = skb->len;
++	if (is_piggyback_tcp_ack(skb))
++		tx_info->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
+ 
+ 	multicast = is_multicast_ether_addr(skb->data);
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 1f7e6c3..b0010a9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -49,6 +49,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/of_irq.h>
++#include <linux/tcp.h>
+ 
+ #include "decl.h"
+ #include "ioctl.h"
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index f230017..e9c3d43 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -934,6 +934,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
+ 	struct urb_context *context = NULL;
+ 	struct txpd *local_tx_pd =
+ 		(struct txpd *)((u8 *)skb->data + adapter->intf_hdr_len);
++	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+ 	u8 f_send_aggr_buf = 0;
+ 	u8 f_send_cur_buf = 0;
+ 	u8 f_precopy_cur_buf = 0;
+@@ -989,8 +990,9 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
+ 		}
+ 	}
+ 
+-	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET) {
+-		/* Send NULL packet immediately*/
++	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET ||
++	    tx_info->flags & MWIFIEX_BUF_FLAG_TCP_ACK) {
++		/* Send NULL data/TCP ACK packet immediately*/
+ 		if (f_precopy_cur_buf) {
+ 			if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
+ 				f_precopy_cur_buf = 0;
+-- 
+1.9.1
