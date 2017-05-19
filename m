@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50696 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755807AbdERNdt (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33039 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750933AbdESGue (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 09:33:49 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 19 May 2017 02:50:34 -0400
 MIME-Version: 1.0
-Subject: Re: [4/4] mwifiex: pcie: de-duplicate buffer allocation code
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170311013924.73348-5-briannorris@chromium.org>
-References: <20170311013924.73348-5-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20170518133348.54D3A60F5E@smtp.codeaurora.org> (sfid-20170518_153434_532387_33C9265C)
-Date: Thu, 18 May 2017 13:33:48 +0000 (UTC)
+In-Reply-To: <87r2zl8lvi.fsf@codeaurora.org>
+References: <20170517144702.1381136-1-arnd@arndb.de> <87r2zl8lvi.fsf@codeaurora.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 19 May 2017 08:50:33 +0200
+Message-ID: <CAK8P3a3YGxNBQq3RYucMCCvSyXOD8skF_Db-eba0PcBL4_P8Dg@mail.gmail.com> (sfid-20170519_085134_459426_BE64C028)
+Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for
+ register accessors
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> This code was duplicated as part of the PCIe FLR code added to this
-> driver. Let's de-duplicate it to:
-> 
->  * make things easier to read (mwifiex_pcie_free_buffers() now has a
->    corresponding mwifiex_pcie_alloc_buffers())
->  * reduce likelihood of bugs
->  * make error logging equally verbose
->  * save lines of code!
-> 
-> Also drop some of the commentary that isn't really needed.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+On Fri, May 19, 2017 at 7:18 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
+>
+>> I've managed to split up my long patch into a series of reasonble
+>> steps now.
+>>
+>> The first two are required to fix a regression from commit 41977e86c984
+>> ("rt2x00: add support for MT7620"), the rest are just cleanups to
+>> have a consistent state across all the register access functions.
+>
+> Can these all go to 4.13 or would you prefer me to push the first two
+> 4.12? Or what?
 
-Failed to apply:
+I think you can reasonably argue either way: the second patch does
+fix a real bug that may or may not lead to an exploitable stack overflow
+when CONFIG_KASAN is enabled, which would be a reason to put it
+into 4.12. On the other hand, I have another 20 patches for similar
+(or worse) stack overflow issues with KASAN that I'm hoping to all
+get into 4.13 and backported into stable kernel later if necessary,
+so we could treat this one like the others.
 
-fatal: sha1 information is lacking or useless (drivers/net/wireless/marvell/mwifiex/pcie.c).
-error: could not build fake ancestor
-Applying: mwifiex: pcie: de-duplicate buffer allocation code
-Patch failed at 0001 mwifiex: pcie: de-duplicate buffer allocation code
-The copy of the patch that failed is found in: .git/rebase-apply/patch
+The only difference between this and the others is that in rt2x00 it
+is a regression against 4.11, while the others have all been present
+for a long time.
 
-Patch set to Changes Requested.
-
--- 
-https://patchwork.kernel.org/patch/9618309/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+      Arnd
