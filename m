@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55914 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932250AbdEKLq6 (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:48283 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753950AbdESV2k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 07:46:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
+        Fri, 19 May 2017 17:28:40 -0400
+Date: Sat, 20 May 2017 00:25:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH v2 0/4] rtlwifi: btcoex: Remove all references to BT_AUTO_REPORT_ONLY* parameters
-References: <20170504184701.16560-1-Larry.Finger@lwfinger.net>
-Date: Thu, 11 May 2017 14:46:50 +0300
-In-Reply-To: <20170504184701.16560-1-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Thu, 4 May 2017 13:46:57 -0500")
-Message-ID: <87a86jvcnp.fsf@kamboji.qca.qualcomm.com> (sfid-20170511_134742_870865_5CC52451)
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] rtlwifi: btcoex: 23b 1ant: initialize bt_disabled to false
+Message-ID: <20170519212539.cihnvwl7irchxoaj@mwanda> (sfid-20170519_232846_667022_9F05B9CE)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+We only want to disable this if bt_disable_cnt is >= 2.
 
-> The btcoex code uses #if constructs to compile conditional code. There
-> is no way to modify this behavior without editting the source. This
-> logic is converted into regular if statements that interrogate a
-> boolean variable in a structure known to all routines.
+Fixes: f66509e3d7c2 ("rtlwifi: btcoex: Remove 23b 1ant configuration parameter")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Btw, that patch also introduced Sparse warning but I don't know how to
+address it.
 
-Well technically these are still dead code as there's no way to enable
-those. But this is much better than before, now at least we can compile
-test the whole code. So thanks for fixing it.
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c:1432:63: warning: odd constant _Bool cast (2 becomes 1)
 
-> The new form does not provide any mechanism for dynamic changes, but
-> it now is in a form whereby module parameters could be added to select
-> the behavior at module load time. In these patches, a number of
-> routines removed because they were not referenced must be restored.
-
-We should keep the number of module parameters as low as possible. If
-I'm understanding correctly changing the behaviour is needed for testing
-purposes? In that case I suspect that debugfs would be more approriate
-interface to enable these.
-
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index f3704d7db4d5..d563a76f0262 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1438,7 +1438,7 @@ static void halbtc8723b1ant_monitor_bt_enable_disable(struct btc_coexist
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	static u32 bt_disable_cnt;
+-	bool bt_active = true, bt_disabled;
++	bool bt_active = true, bt_disabled = false;
+ 
+ 	if (coex_sta->high_priority_tx == 0 &&
+ 	    coex_sta->high_priority_rx == 0 && coex_sta->low_priority_tx == 0 &&
