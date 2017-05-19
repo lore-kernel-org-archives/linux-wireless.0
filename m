@@ -1,53 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:33427 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1164719AbdEYALm (ORCPT
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:34818 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751228AbdESQmg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 20:11:42 -0400
-Received: by mail-pf0-f174.google.com with SMTP id e193so150313047pfh.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:42 -0700 (PDT)
+        Fri, 19 May 2017 12:42:36 -0400
+Received: by mail-pg0-f44.google.com with SMTP id q125so40564508pgq.2
+        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 09:42:36 -0700 (PDT)
+Date: Fri, 19 May 2017 09:42:33 -0700
 From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 10/14] mwifiex: pcie: stop masking interrupts in FW downloader
-Date: Wed, 24 May 2017 17:11:15 -0700
-Message-Id: <20170525001119.64791-10-briannorris@chromium.org> (sfid-20170525_021436_878044_906A99EC)
-In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
-References: <20170525001119.64791-1-briannorris@chromium.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: Re: [PATCH v3 5/6] mwifiex: do not aggregate tcp ack in usb tx
+ aggregation queue
+Message-ID: <20170519164232.GB125761@google.com> (sfid-20170519_184240_506439_70BF691F)
+References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+ <1495184805-6631-5-git-send-email-huxinming820@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495184805-6631-5-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The upper layers already have disabled our interrupts (haven't called
-->enable_int() yet for probe(), and we call ->disable_int() before
-trying to reset), so this is redundant.
+On Fri, May 19, 2017 at 09:06:44AM +0000, Xinming Hu wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> Tcp ack should be send as soon to avoid throuput drop during receive tcp
+> traffic.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> ---
+> v2: same as v1
+> v3: avoid to use magic tcp flag (Kalle)
+> ---
+>  drivers/net/wireless/marvell/mwifiex/11n_aggr.c |  4 ++++
+>  drivers/net/wireless/marvell/mwifiex/decl.h     |  1 +
+>  drivers/net/wireless/marvell/mwifiex/main.c     | 26 +++++++++++++++++++++++++
+>  drivers/net/wireless/marvell/mwifiex/main.h     |  1 +
+>  drivers/net/wireless/marvell/mwifiex/usb.c      |  6 ++++--
+>  5 files changed, 36 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+> index e8ffb26..cbf3bc2 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+> @@ -194,6 +194,10 @@
+>  
+>  	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
+>  		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
+> +
+> +	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TCP_ACK)
+> +		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
+> +
+>  	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
+>  	skb_aggr->priority = skb_src->priority;
+>  	skb_aggr->tstamp = skb_src->tstamp;
+> diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
+> index 188e4c3..0487420 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/decl.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/decl.h
+> @@ -89,6 +89,7 @@
+>  #define MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS   BIT(3)
+>  #define MWIFIEX_BUF_FLAG_ACTION_TX_STATUS  BIT(4)
+>  #define MWIFIEX_BUF_FLAG_AGGR_PKT          BIT(5)
+> +#define MWIFIEX_BUF_FLAG_TCP_ACK           BIT(6)
+>  
+>  #define MWIFIEX_BRIDGED_PKTS_THR_HIGH      1024
+>  #define MWIFIEX_BRIDGED_PKTS_THR_LOW        128
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+> index 2c42191..b7d835c 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -851,6 +851,30 @@ struct sk_buff *
+>  	return skb;
+>  }
+>  
+> +static bool is_piggyback_tcp_ack(struct sk_buff *skb)
+> +{
+> +	struct ethhdr *ethh = NULL;
+> +	struct iphdr  *iph = NULL;
+> +	struct tcphdr *tcph = NULL;
+> +
+> +	ethh = (struct ethhdr *)skb->data;
+> +	if (ntohs(ethh->h_proto) != ETH_P_IP)
+> +		return false;
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ------
- 1 file changed, 6 deletions(-)
+What about IPv6?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 7d5a4f2a9a22..c86119b05f52 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2113,12 +2113,6 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 		    "info: Downloading FW image (%d bytes)\n",
- 		    firmware_len);
- 
--	if (__mwifiex_pcie_disable_host_int(adapter)) {
--		mwifiex_dbg(adapter, ERROR,
--			    "%s: Disabling interrupts failed.\n", __func__);
--		return -1;
--	}
--
- 	skb = dev_alloc_skb(MWIFIEX_UPLD_SIZE);
- 	if (!skb) {
- 		ret = -ENOMEM;
--- 
-2.13.0.219.gdb65acc882-goog
+Also, what about all the protocols that you're *not* hacking this for?
+Is the latency induced by aggregation really that poor?
+
+I'm not really a networking expert here, but this whole patch smells bad
+to me.
+
+> +
+> +	iph = (struct iphdr *)((u8 *)ethh + sizeof(struct ethhdr));
+> +	if (iph->protocol != IPPROTO_TCP)
+> +		return false;
+> +
+> +	tcph = (struct tcphdr *)((u8 *)iph + iph->ihl * 4);
+> +	/* Piggyback ack without payload*/
+> +	if (tcp_flag_word(tcph) == TCP_FLAG_ACK &&
+> +	    ntohs(iph->tot_len) <= (iph->ihl + tcph->doff) * 4) {
+> +		return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+>  /*
+>   * CFG802.11 network device handler for data transmission.
+>   */
+> @@ -904,6 +928,8 @@ struct sk_buff *
+>  	tx_info->bss_num = priv->bss_num;
+>  	tx_info->bss_type = priv->bss_type;
+>  	tx_info->pkt_len = skb->len;
+> +	if (is_piggyback_tcp_ack(skb))
+> +		tx_info->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
+>  
+>  	multicast = is_multicast_ether_addr(skb->data);
+>  
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+> index 1f7e6c3..b0010a9 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
+> @@ -49,6 +49,7 @@
+>  #include <linux/pm_runtime.h>
+>  #include <linux/slab.h>
+>  #include <linux/of_irq.h>
+> +#include <linux/tcp.h>
+
+I dislike polluting the (driver-global) main.h with #include's that only
+are used in one file. Especially when you talk about seemingly
+layer-violating TCP hacks. Can you move this to main.c instead?
+
+Brian
+
+>  
+>  #include "decl.h"
+>  #include "ioctl.h"
+> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+> index f230017..e9c3d43 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+> @@ -934,6 +934,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
+>  	struct urb_context *context = NULL;
+>  	struct txpd *local_tx_pd =
+>  		(struct txpd *)((u8 *)skb->data + adapter->intf_hdr_len);
+> +	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+>  	u8 f_send_aggr_buf = 0;
+>  	u8 f_send_cur_buf = 0;
+>  	u8 f_precopy_cur_buf = 0;
+> @@ -989,8 +990,9 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
+>  		}
+>  	}
+>  
+> -	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET) {
+> -		/* Send NULL packet immediately*/
+> +	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET ||
+> +	    tx_info->flags & MWIFIEX_BUF_FLAG_TCP_ACK) {
+> +		/* Send NULL data/TCP ACK packet immediately*/
+>  		if (f_precopy_cur_buf) {
+>  			if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
+>  				f_precopy_cur_buf = 0;
+> -- 
+> 1.9.1
+> 
