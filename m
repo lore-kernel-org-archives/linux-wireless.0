@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58160 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751551AbdE3OMJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 10:12:09 -0400
-Message-ID: <1496153526.3327.12.camel@sipsolutions.net> (sfid-20170530_161212_064559_0B6DC357)
-Subject: Re: [PATCH] mac80211: manage RX BA session offload without SKB queue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>,
-        ath10k@lists.infradead.org
-Date: Tue, 30 May 2017 16:12:06 +0200
-In-Reply-To: <20170530141059.28006-1-johannes@sipsolutions.net> (sfid-20170530_161107_071358_D610DE8E)
-References: <20170530141059.28006-1-johannes@sipsolutions.net>
-         (sfid-20170530_161107_071358_D610DE8E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:39638 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750748AbdESFTF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 01:19:05 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for register accessors
+References: <20170517144702.1381136-1-arnd@arndb.de>
+Date: Fri, 19 May 2017 08:18:57 +0300
+In-Reply-To: <20170517144702.1381136-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 17 May 2017 16:46:52 +0200")
+Message-ID: <87r2zl8lvi.fsf@codeaurora.org> (sfid-20170519_071911_324318_0AE03BA4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-05-30 at 16:10 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Instead of using the SKB queue with the fake pkt_type for the
-> offloaded RX BA session management, also handle this with the
-> normal aggregation state machine worker. This also makes the
-> use of this more reliable since it gets rid of the allocation
-> of the fake skb.
-> 
-> Combined with the previous patch, this finally allows us to
-> get rid of the pkt_type hack entirely, so do that as well.
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Previous patch is this:
+> I've managed to split up my long patch into a series of reasonble
+> steps now.
+>
+> The first two are required to fix a regression from commit 41977e86c984
+> ("rt2x00: add support for MT7620"), the rest are just cleanups to
+> have a consistent state across all the register access functions.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git/commit/?id=7a7c0a6438b8e7636d5a22e572892cc234f68297
+Can these all go to 4.13 or would you prefer me to push the first two
+4.12? Or what?
 
-I can't test this (don't have ath10k easily testable), so testing would
-be appreciated.
-
-johannes
+-- 
+Kalle Valo
