@@ -1,47 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60946 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932928AbdELJQp (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:32938 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753856AbdESJHP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 05:16:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Xie Qirong <cheerx1994@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
-References: <20170512073555.12333-1-cheerx1994@gmail.com>
-        <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com>
-        <c5e21126-23e6-8cef-d01b-dc225dab1982@broadcom.com>
-        <87d1beqwtc.fsf@kamboji.qca.qualcomm.com>
-        <036761ff-85a9-6042-57ed-ca3968550737@broadcom.com>
-Date: Fri, 12 May 2017 12:16:38 +0300
-In-Reply-To: <036761ff-85a9-6042-57ed-ca3968550737@broadcom.com> (Arend van
-        Spriel's message of "Fri, 12 May 2017 11:10:36 +0200")
-Message-ID: <878tm2qvt5.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_111709_760941_2C675423)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 19 May 2017 05:07:15 -0400
+Received: by mail-pf0-f195.google.com with SMTP id f27so8915686pfe.0
+        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 02:07:04 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v3 6/6] mwifiex: check next packet length for usb tx aggregation
+Date: Fri, 19 May 2017 09:06:45 +0000
+Message-Id: <1495184805-6631-6-git-send-email-huxinming820@gmail.com> (sfid-20170519_110721_008318_59D6EECA)
+In-Reply-To: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Xinming Hu <huxm@marvell.com>
 
->>> This third version is the same as v1 on which I commented to put the
->>> coccinelle output in the commit message. So I would still keep v2 if
->>> nothing else changed in v3 apart from my Acked-by: tag.
->>
->> Ok, but I can easily take v3 (ie. this one) so that you get credit ;)
->
-> If you add the coccinelle output in the commit message, ie. above the
-> '---' that would be great. So for both you have to do additional stuff
-> provided you find it useful to have the coccinelle output. :-p
+The next packet length will be used by interface driver, to check if the
+next packet still could be aggregated.
 
-Sure, I can add that. Thanks to my patchwork script it's actually pretty
-easy to edit commit logs before it commits them. If only I had time to
-implement a proper GTK interface for the script...
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+v3: same as v1,v2
+---
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 8 ++++----
+ drivers/net/wireless/marvell/mwifiex/txrx.c     | 4 ++--
+ drivers/net/wireless/marvell/mwifiex/wmm.c      | 8 ++++----
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+index cbf3bc2..8041f2d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+@@ -254,15 +254,15 @@
+ 		return 0;
+ 	}
+ 
+-	if (adapter->iface_type == MWIFIEX_USB) {
+-		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
+-						   skb_aggr, NULL);
+-	} else {
+ 		if (skb_src)
+ 			tx_param.next_pkt_len =
+ 					skb_src->len + sizeof(struct txpd);
+ 		else
+ 			tx_param.next_pkt_len = 0;
++	if (adapter->iface_type == MWIFIEX_USB) {
++		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
++						   skb_aggr, &tx_param);
++	} else {
+ 
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+ 						   skb_aggr, &tx_param);
+diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
+index 15e92af..d848933 100644
+--- a/drivers/net/wireless/marvell/mwifiex/txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
+@@ -117,7 +117,7 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 		if (adapter->iface_type == MWIFIEX_USB) {
+ 			ret = adapter->if_ops.host_to_card(adapter,
+ 							   priv->usb_port,
+-							   skb, NULL);
++							   skb, tx_param);
+ 		} else {
+ 			ret = adapter->if_ops.host_to_card(adapter,
+ 							   MWIFIEX_TYPE_DATA,
+@@ -185,7 +185,7 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   priv->usb_port,
+-						   skb, NULL);
++						   skb, tx_param);
+ 	} else {
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   MWIFIEX_TYPE_DATA,
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
+index e4ff3b9..75cdd55 100644
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -1363,13 +1363,13 @@ void mwifiex_rotate_priolists(struct mwifiex_private *priv,
+ 
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
+ 
++	tx_param.next_pkt_len =
++		((skb_next) ? skb_next->len +
++		 sizeof(struct txpd) : 0);
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
+-						   skb, NULL);
++						   skb, &tx_param);
+ 	} else {
+-		tx_param.next_pkt_len =
+-			((skb_next) ? skb_next->len +
+-			 sizeof(struct txpd) : 0);
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+ 						   skb, &tx_param);
+ 	}
 -- 
-Kalle Valo
+1.9.1
