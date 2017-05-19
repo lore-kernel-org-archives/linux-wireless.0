@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37006 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751405AbdEKSfP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 14:35:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [v2 07/11] rsi: Add usb multi-byte read operation
-References: <1494336614-2107-1-git-send-email-amit.karwar@redpinesignals.com>
-        <1494336614-2107-8-git-send-email-amit.karwar@redpinesignals.com>
-Date: Thu, 11 May 2017 21:35:10 +0300
-In-Reply-To: <1494336614-2107-8-git-send-email-amit.karwar@redpinesignals.com>
-        (Amitkumar Karwar's message of "Tue, 9 May 2017 19:00:10 +0530")
-Message-ID: <87bmqzs0m9.fsf@kamboji.qca.qualcomm.com> (sfid-20170511_203519_128484_00D990BF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:36922 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752093AbdESKSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 06:18:17 -0400
+Message-ID: <1495189094.3274.2.camel@sipsolutions.net> (sfid-20170519_121820_383894_369A45B2)
+Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna
+ chipsets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Fri, 19 May 2017 12:18:14 +0200
+In-Reply-To: <20170518200810.pch7tivugqyjmy4d@bars>
+References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+         <1495026753.2442.7.camel@sipsolutions.net>
+         <20170518200810.pch7tivugqyjmy4d@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+Hi,
 
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->
-> USB multibyte read will be used in the new firmware loading method
-> for RS9113 chipset.
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> Thanks for the review ! Fixes will be queued to the upcoming patches
+> with various cleanups as well as new features.
 
-[...]
+Great :)
 
-> +static int rsi_usb_read_register_multiple(struct rsi_hw *adapter, u32 addr,
-> +					  u8 *data, u16 count)
-> +{
-> +	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-> +	u8 *buf;
-> +	u16 transfer;
-> +	int status;
-> +
-> +	if (!addr)
-> +		return -EINVAL;
-> +
-> +	buf = kzalloc(4096, GFP_KERNEL);
-> +	if (!buf)
-> +		return -ENOMEM;
-> +
-> +	while (count) {
-> +		transfer = min_t(u16, count, 4096);
+FWIW, regarding the  qtnf_mgmt_frame_register() and
+cfg80211_rx_mgmt() thing, I think we'll have to discuss how to do this,
+and perhaps you need to think about the firmware API for it.
 
-A minor thing, no need to resend just because of this. But a define for
-4096 would be nice.
+Right now, I don't see that you can pass filters down, but you probably
+also don't want to implement the reject code in the driver? And
+cfg80211 doesn't give you that data right now either... So somewhere I
+expect we'll need to make changes, unless you just copy (e.g. from
+mac80211) the implementation of what happens when cfg80211_rx_mgmt()
+returns false.
 
--- 
-Kalle Valo
+> BTW, speaking about other backends... During previous reviews of this
+> patch we had a question regarding possible support of another
+> previous generation SoC connected to host CPU via RGMII interface. Is
+> there any legitimate (aka 'upstreamable') way to support such
+> wireless cards ?
+
+I'm not really familiar with RGMII, so I can't say how you'd support
+this, sorry.
+
+johannes
