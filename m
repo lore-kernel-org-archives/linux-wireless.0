@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49056 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935385AbdEVPbC (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:36732 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755848AbdESJHF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 11:31:02 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: p54: allocate enough space for ->used_rxkeys
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170506004835.a5awr4v5rba2pmu5@mwanda>
-References: <20170506004835.a5awr4v5rba2pmu5@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20170522153102.20517607A4@smtp.codeaurora.org> (sfid-20170522_173202_695842_1FCF87A6)
-Date: Mon, 22 May 2017 15:31:02 +0000 (UTC)
+        Fri, 19 May 2017 05:07:05 -0400
+Received: by mail-pg0-f68.google.com with SMTP id h64so9105555pge.3
+        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 02:07:00 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v3 2/6] mwifiex: usb: kill urb before free its memory
+Date: Fri, 19 May 2017 09:06:41 +0000
+Message-Id: <1495184805-6631-2-git-send-email-huxinming820@gmail.com> (sfid-20170519_110715_906074_6F3B513B)
+In-Reply-To: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> We have the number of longs, but we should be calculating the number of
-> bytes needed.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
-> index 4ac6764f4897..3076f646c829 100644
-> --- a/drivers/net/wireless/intersil/p54/fwio.c
-> +++ b/drivers/net/wireless/intersil/p54/fwio.c
-> @@ -176,8 +176,9 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
->  		 * keeping a extra list for uploaded keys.
->  		 */
->  
-> -		priv->used_rxkeys = kzalloc(BITS_TO_LONGS(
-> -			priv->rx_keycache_size), GFP_KERNEL);
-> +		priv->used_rxkeys = kcalloc(BITS_TO_LONGS(priv->rx_keycache_size),
-> +					    sizeof(long),
-> +					    GFP_KERNEL);
->  
->  		if (!priv->used_rxkeys)
->  			return -ENOMEM;
+From: Xinming Hu <huxm@marvell.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+we have observed host system hang when device firmware crash,
+stack trace show it was an use-after-free case: previous submitted
+urb will be holding in usbcore, and given back to device driver
+when device disconnected, while the urb have been freed in usb
+device disconnect handler. This patch kill the holding urb before
+free its memory.
 
-c239838fbd6d p54: allocate enough space for ->used_rxkeys
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+---
+v2: replace unnecessary sanity check with right handle of
+    pending urb (Arend)
+v3: same as v2
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 2f7705c..5a760ec 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -363,6 +363,7 @@ static void mwifiex_usb_free(struct usb_card_rec *card)
+ 	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
+ 		port = &card->port[i];
+ 		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
++			usb_kill_urb(port->tx_data_list[j].urb);
+ 			usb_free_urb(port->tx_data_list[j].urb);
+ 			port->tx_data_list[j].urb = NULL;
+ 		}
 -- 
-https://patchwork.kernel.org/patch/9714501/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
