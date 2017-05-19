@@ -1,43 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49546 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752347AbdEVK2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 06:28:13 -0400
-Message-ID: <1495448886.2653.12.camel@sipsolutions.net> (sfid-20170522_122817_047777_810F8D03)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Mon, 22 May 2017 12:28:06 +0200
-In-Reply-To: <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com> (sfid-20170522_121430_760021_DFAC4F08)
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1495030794.2442.21.camel@sipsolutions.net>
-         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
-         <1495099355.2553.1.camel@sipsolutions.net>
-         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
-         <1495104012.2553.3.camel@sipsolutions.net>
-         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
-         <1495189263.3274.4.camel@sipsolutions.net>
-         <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
-         (sfid-20170522_121430_760021_DFAC4F08)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from 220-135-115-6.HINET-IP.hinet.net ([220.135.115.6]:37684 "EHLO
+        ns.kevlo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754402AbdESPNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 11:13:47 -0400
+Date: Fri, 19 May 2017 23:02:40 +0800
+From: Kevin Lo <kevlo@kevlo.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: fix REG_USTIME_TSF register definition
+Message-ID: <20170519150240.GA47825@ns.kevlo.org> (sfid-20170519_171351_096368_8293F98B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-05-22 at 12:14 +0200, Arend van Spriel wrote:
-> 
-> There is a (small) chance of regression with older devices as stated 
-> above and I would like to keep the fallback option for that. Also
-> people  may like to have a choice. I am not so sure about whether
-> NEW_KEY support is enough or a new ext_feature flag is needed. I am
-> inclined to say the NEW_KEY support is sufficient.
+The REG_USTIME_TSF (US Time Tuning for TSF) definition of Realtek chips
+should be 0x55C.
 
-Ok, your call.
+Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+---
 
-Note that this (checking NEW_KEY) only works when you don't have any
-split between AP/client cases. Not sure what's the case for you.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
+index 15400ee6c04b..0c0d64aea651 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
+@@ -248,7 +248,6 @@
+ #define REG_RD_NAV_NXT				0x0544
+ #define REG_NAV_PROT_LEN			0x0546
+ #define REG_BCN_CTRL				0x0550
+-#define REG_USTIME_TSF				0x0551
+ #define REG_MBID_NUM				0x0552
+ #define REG_DUAL_TSF_RST			0x0553
+ #define REG_BCN_INTERVAL			0x0554
+@@ -256,6 +255,7 @@
+ #define REG_DRVERLYINT				0x0558
+ #define REG_BCNDMATIM				0x0559
+ #define REG_ATIMWND					0x055A
++#define REG_USTIME_TSF				0x055C
+ #define REG_BCN_MAX_ERR				0x055D
+ #define REG_RXTSF_OFFSET_CCK		0x055E
+ #define REG_RXTSF_OFFSET_OFDM		0x055F
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
+index 1bb7ed35812d..9e3b58a5d2bb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
+@@ -227,7 +227,6 @@
+ #define REG_RD_NAV_NXT				0x0544
+ #define REG_NAV_PROT_LEN			0x0546
+ #define REG_BCN_CTRL				0x0550
+-#define REG_USTIME_TSF				0x0551
+ #define REG_MBID_NUM				0x0552
+ #define REG_DUAL_TSF_RST			0x0553
+ #define REG_BCN_INTERVAL			0x0554
+@@ -235,6 +234,7 @@
+ #define REG_DRVERLYINT				0x0558
+ #define REG_BCNDMATIM				0x0559
+ #define REG_ATIMWND				0x055A
++#define REG_USTIME_TSF				0x055C
+ #define REG_BCN_MAX_ERR				0x055D
+ #define REG_RXTSF_OFFSET_CCK			0x055E
+ #define REG_RXTSF_OFFSET_OFDM			0x055F
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
+index b354b95936e2..d4c4e76a9244 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
+@@ -255,7 +255,6 @@
+ #define REG_RD_NAV_NXT			0x0544
+ #define REG_NAV_PROT_LEN		0x0546
+ #define REG_BCN_CTRL			0x0550
+-#define REG_USTIME_TSF			0x0551
+ #define REG_MBID_NUM			0x0552
+ #define REG_DUAL_TSF_RST		0x0553
+ #define REG_BCN_INTERVAL		0x0554
+@@ -263,6 +262,7 @@
+ #define REG_DRVERLYINT			0x0558
+ #define REG_BCNDMATIM			0x0559
+ #define REG_ATIMWND			0x055A
++#define REG_USTIME_TSF			0x055C
+ #define REG_BCN_MAX_ERR			0x055D
+ #define REG_RXTSF_OFFSET_CCK		0x055E
+ #define REG_RXTSF_OFFSET_OFDM		0x055F
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
+index 306059f9b9cc..30938cd9fce5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
+@@ -217,7 +217,6 @@
+ #define REG_RD_NAV_NXT				0x0544
+ #define REG_NAV_PROT_LEN			0x0546
+ #define REG_BCN_CTRL				0x0550
+-#define REG_USTIME_TSF				0x0551
+ #define REG_MBID_NUM				0x0552
+ #define REG_DUAL_TSF_RST			0x0553
+ #define REG_BCN_INTERVAL			0x0554
+@@ -225,6 +224,7 @@
+ #define REG_DRVERLYINT				0x0558
+ #define REG_BCNDMATIM				0x0559
+ #define REG_ATIMWND					0x055A
++#define REG_USTIME_TSF				0x055C
+ #define REG_BCN_MAX_ERR				0x055D
+ #define REG_RXTSF_OFFSET_CCK		0x055E
+ #define REG_RXTSF_OFFSET_OFDM		0x055F
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
+index 03581d2a5da0..95c4f8e206c7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
+@@ -261,7 +261,6 @@
+ #define REG_RD_NAV_NXT				0x0544
+ #define REG_NAV_PROT_LEN			0x0546
+ #define REG_BCN_CTRL				0x0550
+-#define REG_USTIME_TSF				0x0551
+ #define REG_MBID_NUM				0x0552
+ #define REG_DUAL_TSF_RST			0x0553
+ #define REG_BCN_INTERVAL			0x0554
+@@ -269,6 +268,7 @@
+ #define REG_DRVERLYINT				0x0558
+ #define REG_BCNDMATIM				0x0559
+ #define REG_ATIMWND				0x055A
++#define REG_USTIME_TSF				0x055C
+ #define REG_BCN_MAX_ERR				0x055D
+ #define REG_RXTSF_OFFSET_CCK			0x055E
+ #define REG_RXTSF_OFFSET_OFDM			0x055F
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+index ed69dbe178ff..db8bc8a2de61 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+@@ -267,7 +267,6 @@
+ #define REG_RD_NAV_NXT				0x0544
+ #define REG_NAV_PROT_LEN			0x0546
+ #define REG_BCN_CTRL				0x0550
+-#define REG_USTIME_TSF				0x0551
+ #define REG_MBID_NUM				0x0552
+ #define REG_DUAL_TSF_RST			0x0553
+ #define REG_BCN_INTERVAL			0x0554
+@@ -275,6 +274,7 @@
+ #define REG_DRVERLYINT				0x0558
+ #define REG_BCNDMATIM				0x0559
+ #define REG_ATIMWND				0x055A
++#define REG_USTIME_TSF				0x055C
+ #define REG_BCN_MAX_ERR				0x055D
+ #define REG_RXTSF_OFFSET_CCK			0x055E
+ #define REG_RXTSF_OFFSET_OFDM			0x055F
