@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43308 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753155AbdEMOzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 May 2017 10:55:06 -0400
-Subject: Re: New brcmfmac errors in 4.12: brcmf_sdio_rxglom: sublen ... not
- multiple of 8
-To: Heiner Kallweit <hkallweit1@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <e8055bc7-eaf4-1ab6-31d1-130d83485980@redhat.com>
- <540e89cd-c222-e81a-5e34-600ae0aa052e@redhat.com>
- <701cc6a7-b66b-8a51-8755-13dd584cbebd@gmail.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <cf896651-18a6-ee07-62a4-437c191ddde4@redhat.com> (sfid-20170513_165513_148324_D39C56B1)
-Date: Sat, 13 May 2017 16:55:02 +0200
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33470 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752320AbdESHVb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 03:21:31 -0400
 MIME-Version: 1.0
-In-Reply-To: <701cc6a7-b66b-8a51-8755-13dd584cbebd@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87efvlwc48.fsf@kamboji.qca.qualcomm.com>
+References: <20170517144702.1381136-1-arnd@arndb.de> <87r2zl8lvi.fsf@codeaurora.org>
+ <CAK8P3a3YGxNBQq3RYucMCCvSyXOD8skF_Db-eba0PcBL4_P8Dg@mail.gmail.com> <87efvlwc48.fsf@kamboji.qca.qualcomm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 19 May 2017 09:21:30 +0200
+Message-ID: <CAK8P3a39Op7oyLxP5YwRNhP4v=7d8rL1n0ftUswci_0FaOqybg@mail.gmail.com> (sfid-20170519_092247_219592_DFAAAE57)
+Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for
+ register accessors
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 13-05-17 15:39, Heiner Kallweit wrote:
-> Am 13.05.2017 um 14:35 schrieb Hans de Goede:
->> <resend with the author of the commit causing this added>
+On Fri, May 19, 2017 at 9:15 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
+>
+>> On Fri, May 19, 2017 at 7:18 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Arnd Bergmann <arnd@arndb.de> writes:
+>>>
+>>>> I've managed to split up my long patch into a series of reasonble
+>>>> steps now.
+>>>>
+>>>> The first two are required to fix a regression from commit 41977e86c984
+>>>> ("rt2x00: add support for MT7620"), the rest are just cleanups to
+>>>> have a consistent state across all the register access functions.
+>>>
+>>> Can these all go to 4.13 or would you prefer me to push the first two
+>>> 4.12? Or what?
 >>
->> Hi,
+>> I think you can reasonably argue either way: the second patch does
+>> fix a real bug that may or may not lead to an exploitable stack overflow
+>> when CONFIG_KASAN is enabled, which would be a reason to put it
+>> into 4.12. On the other hand, I have another 20 patches for similar
+>> (or worse) stack overflow issues with KASAN that I'm hoping to all
+>> get into 4.13 and backported into stable kernel later if necessary,
+>> so we could treat this one like the others.
 >>
->> On 13-05-17 14:19, Hans de Goede wrote:
->>> Hi,
->>>
->>> I've just rebased my personal kernel tree to what will soon be 4.12-rc1
->>> and I'm getting my dmesg log filled with the following errors:
->>>
->>> [   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
->>> [   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
->>> [   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
->>>
-> After a brief look at the code I'm not sure that the check actually checks
-> for an error condition. Apart from the error messages:
-> Do you face issues with the functionality of the driver?
+>> The only difference between this and the others is that in rt2x00 it
+>> is a regression against 4.11, while the others have all been present
+>> for a long time.
+>
+> Having all of these in 4.12 sounds a bit excessive and splitting the set
+> (the first two into 4.12 and the rest into 4.13) sounds too much work.
+> So I would prefer to queue these to 4.13, if it's ok for everyone?
 
-Yes after a while I get -ETIMEOUT errors for any sdio transfers
-to the device. But I'm not sure if this is caused by this commit,
-I think I've seen this once with 4.11 too.
+Ok, sounds fine. Thanks,
 
-I've reverted the commit for now, but I'm fine with instead of
-doing the revert dropping the error check if the brcmfmac developers
-think that is ok. Currently the ETIMEOUT seems to be gone, so
-if dropping the revert causes it to re-appear then we know more.
-
-Regards,
-
-Hans
+      Arnd
