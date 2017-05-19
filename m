@@ -1,94 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:34798 "EHLO
-        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753606AbdEJTGD (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44610 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750734AbdESH6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 15:06:03 -0400
-Received: by mail-io0-f173.google.com with SMTP id k91so7851632ioi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 May 2017 12:06:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1494390797.4564.5.camel@perches.com>
-References: <20170509232334.GA55070@beast> <1494390797.4564.5.camel@perches.com>
-From: Kees Cook <keescook@chromium.org>
-Date: Wed, 10 May 2017 12:06:02 -0700
-Message-ID: <CAGXu5jK_QLYa=L3a2eMEjsDm0JTQn-E2yH1eCdKVSFFHbn25Yw@mail.gmail.com> (sfid-20170510_210635_662102_BC113B54)
-Subject: Re: [PATCH] libertas: Avoid reading past end of buffer
-To: Joe Perches <joe@perches.com>
-Cc: Network Development <netdev@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        libertas-dev@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Daniel Micay <danielmicay@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+        Fri, 19 May 2017 03:58:03 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V4 3/3] brcmfmac: add scheduled scan support for specified BSSIDs
+Date: Fri, 19 May 2017 08:57:39 +0100
+Message-Id: <1495180659-12406-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170519_095808_692383_70CAAF54)
+In-Reply-To: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 9, 2017 at 9:33 PM, Joe Perches <joe@perches.com> wrote:
-> On Tue, 2017-05-09 at 16:23 -0700, Kees Cook wrote:
->> Using memcpy() from a string that is shorter than the length copied means
->> the destination buffer is being filled with arbitrary data from the kernel
->> rodata segment. Instead, use strncpy() which will fill the trailing bytes
->> with zeros. Additionally adjust indentation to keep checkpatch.pl happy.
->>
->> This was found with the future CONFIG_FORTIFY_SOURCE feature.
-> []
->> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-> []
->> @@ -1177,9 +1177,9 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
->>       switch (stringset) {
->>       case ETH_SS_STATS:
->>               for (i = 0; i < MESH_STATS_NUM; i++) {
->> -                     memcpy(s + i * ETH_GSTRING_LEN,
->> -                                     mesh_stat_strings[i],
->> -                                     ETH_GSTRING_LEN);
->> +                     strncpy(s + i * ETH_GSTRING_LEN,
->> +                             mesh_stat_strings[i],
->> +                             ETH_GSTRING_LEN);
->>               }
->
-> The better solution is to declare
-> mesh_stat_strings in in the normal way
->
-> ---
->  drivers/net/wireless/marvell/libertas/mesh.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-> index d0c881dd5846..a535e7f48d2d 100644
-> --- a/drivers/net/wireless/marvell/libertas/mesh.c
-> +++ b/drivers/net/wireless/marvell/libertas/mesh.c
-> @@ -1108,15 +1108,15 @@ void lbs_mesh_set_txpd(struct lbs_private *priv,
->   * Ethtool related
->   */
->
-> -static const char * const mesh_stat_strings[] = {
-> -                       "drop_duplicate_bcast",
-> -                       "drop_ttl_zero",
-> -                       "drop_no_fwd_route",
-> -                       "drop_no_buffers",
-> -                       "fwded_unicast_cnt",
-> -                       "fwded_bcast_cnt",
-> -                       "drop_blind_table",
-> -                       "tx_failed_cnt"
-> +static const char mesh_stat_strings[][ETH_GSTRING_LEN] = {
-> +       "drop_duplicate_bcast",
-> +       "drop_ttl_zero",
-> +       "drop_no_fwd_route",
-> +       "drop_no_buffers",
-> +       "fwded_unicast_cnt",
-> +       "fwded_bcast_cnt",
-> +       "drop_blind_table",
-> +       "tx_failed_cnt",
->  };
->
->  void lbs_mesh_ethtool_get_stats(struct net_device *dev,
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
-Ah yeah! And that simplifies the memcpy too, since it can just do it
-in one go. New patch on the way...
+Add support to handle scheduled scan request containing BSSID in
+the matchsets. The firmware can send event upon finding BSSIDs and
+SSIDs. To get these in one event the bit REPORT_SEPARATELY needed
+to be removed from the flags in brcmf_pno_config().
 
--Kees
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 11 ++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 58 ++++++++++++++++------
+ 2 files changed, 53 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 45aaae8..b857d53 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -806,6 +806,17 @@ struct brcmf_pno_macaddr_le {
+ };
+ 
+ /**
++ * struct brcmf_pno_bssid_le - bssid configuration for PNO scan.
++ *
++ * @bssid: BSS network identifier.
++ * @flags: flags for this BSSID.
++ */
++struct brcmf_pno_bssid_le {
++	u8 bssid[ETH_ALEN];
++	__le16 flags;
++};
++
++/**
+  * struct brcmf_pktcnt_le - packet counters.
+  *
+  * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index 81e8549..9623157 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -120,7 +120,6 @@ static int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
+ 
+ 	/* set extra pno params */
+ 	flags = BIT(BRCMF_PNO_IMMEDIATE_SCAN_BIT) |
+-		BIT(BRCMF_PNO_REPORT_SEPARATELY_BIT) |
+ 		BIT(BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
+ 	pfn_param.repeat = BRCMF_PNO_REPEAT;
+ 	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
+@@ -205,6 +204,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
+ 			      bool active)
+ {
+ 	struct brcmf_pno_net_param_le pfn;
++	int err;
+ 
+ 	pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
+ 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
+@@ -215,7 +215,28 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
+ 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
+ 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
+ 	memcpy(pfn.ssid.SSID, ssid->ssid, ssid->ssid_len);
+-	return brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
++
++	brcmf_dbg(SCAN, "adding ssid=%.32s (active=%d)\n", ssid->ssid, active);
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
++	if (err < 0)
++		brcmf_err("adding failed: err=%d\n", err);
++	return err;
++}
++
++static int brcmf_pno_add_bssid(struct brcmf_if *ifp, const u8 *bssid)
++{
++	struct brcmf_pno_bssid_le bssid_cfg;
++	int err;
++
++	memcpy(bssid_cfg.bssid, bssid, ETH_ALEN);
++	bssid_cfg.flags = 0;
++
++	brcmf_dbg(SCAN, "adding bssid=%pM\n", bssid);
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_add_bssid", &bssid_cfg,
++				       sizeof(bssid_cfg));
++	if (err < 0)
++		brcmf_err("adding failed: err=%d\n", err);
++	return err;
+ }
+ 
+ static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
+@@ -342,29 +363,29 @@ static int brcmf_pno_prep_fwconfig(struct brcmf_pno_info *pi,
+ 	return err;
+ }
+ 
+-static int brcmf_pno_config_ssids(struct brcmf_if *ifp,
+-				  struct brcmf_pno_info *pi)
++static int brcmf_pno_config_networks(struct brcmf_if *ifp,
++				     struct brcmf_pno_info *pi)
+ {
+ 	struct cfg80211_sched_scan_request *r;
+ 	struct cfg80211_match_set *ms;
+ 	bool active;
+-	int i, j, err;
++	int i, j, err = 0;
+ 
+ 	for (i = 0; i < pi->n_reqs; i++) {
+ 		r = pi->reqs[i];
+ 
+ 		for (j = 0; j < r->n_match_sets; j++) {
+ 			ms = &r->match_sets[j];
+-			if (!ms->ssid.ssid_len)
+-				continue;
+-			active = brcmf_is_ssid_active(&ms->ssid, r);
+-			brcmf_dbg(SCAN, "adding %.32s (active=%d)\n",
+-				  ms->ssid.ssid, active);
+-			err = brcmf_pno_add_ssid(ifp, &ms->ssid, active);
+-			if (err < 0) {
+-				brcmf_err("adding failed: err=%d\n", err);
+-				return err;
++			if (ms->ssid.ssid_len) {
++				active = brcmf_is_ssid_active(&ms->ssid, r);
++				err = brcmf_pno_add_ssid(ifp, &ms->ssid,
++							 active);
+ 			}
++			if (!err && is_valid_ether_addr(ms->bssid))
++				err = brcmf_pno_add_bssid(ifp, ms->bssid);
++
++			if (err < 0)
++				return err;
+ 		}
+ 	}
+ 	return 0;
+@@ -428,7 +449,7 @@ static int brcmf_pno_config_sched_scans(struct brcmf_if *ifp)
+ 	if (err < 0)
+ 		goto clean;
+ 
+-	err = brcmf_pno_config_ssids(ifp, pi);
++	err = brcmf_pno_config_networks(ifp, pi);
+ 	if (err < 0)
+ 		goto clean;
+ 
+@@ -555,7 +576,12 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 		for (j = 0; j < req->n_match_sets; j++) {
+ 			ms = &req->match_sets[j];
+ 			if (ms->ssid.ssid_len == ni->SSID_len &&
+-			    !strncmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
++			    !memcmp(ms->ssid.ssid, ni->SSID, ni->SSID_len)) {
++				bucket_map |= BIT(i);
++				break;
++			}
++			if (is_valid_ether_addr(ms->bssid) &&
++			    !memcmp(ms->bssid, ni->bssid, ETH_ALEN)) {
+ 				bucket_map |= BIT(i);
+ 				break;
+ 			}
 -- 
-Kees Cook
-Pixel Security
+1.9.1
