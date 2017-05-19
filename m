@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45140 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751154AbdEBMmy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35722 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751428AbdESHMp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 08:42:54 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 5/9] nl80211: remove description about request from NL80211_CMD_ROAM
-Date: Tue,  2 May 2017 13:42:25 +0100
-Message-Id: <1493728949-10797-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170502_144314_431398_3E6AAB9B)
-In-Reply-To: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 19 May 2017 03:12:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for register accessors
+References: <20170517144702.1381136-1-arnd@arndb.de>
+        <87r2zl8lvi.fsf@codeaurora.org>
+        <CAKR_QVJGxWF8+ZGGn08XiOgpYVGSjwQwqJoP10fY_bjfRg-uzw@mail.gmail.com>
+        <CAK8P3a3Y7rCvmJo062-5G07HGiT6x2MtvVV=dQAVBK0AiX0U_A@mail.gmail.com>
+Date: Fri, 19 May 2017 10:12:36 +0300
+In-Reply-To: <CAK8P3a3Y7rCvmJo062-5G07HGiT6x2MtvVV=dQAVBK0AiX0U_A@mail.gmail.com>
+        (Arnd Bergmann's message of "Fri, 19 May 2017 08:55:21 +0200")
+Message-ID: <87inkxwc9n.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_091432_540099_7C9BA700)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The description of NL80211_CMD_ROAM indicated possibility for a
-request to roam issued by user-space. However, it also states that
-as not being implemented right now. This has been so since commit
-b23aa676ab9d ("cfg80211: connect/disconnect API") added in 2009.
-So it seems safe to assume it will not be added any time soon and
-thus remove it.
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- include/uapi/linux/nl80211.h | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+> On Fri, May 19, 2017 at 8:44 AM, Tom Psyborg <pozega.tomislav@gmail.com> wrote:
+>> warning: 'rt2800_bbp_read' used but never defined
+>>  static u8 rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
+>>            ^
+>> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800lib.h:262:13:
+>> warning: 'rt2800_bbp_write' used but never defined
+>>  static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
+>>              ^
+>>   CC [M]
+>> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800pci.o
+>> In file included from
+>> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800pci.c:43:0:
+>> /home/ubuntu/Music/openwrt/build_dir/target-mipsel_24kc_musl-1.1.16/linux-ramips_mt7620/compat-wireless-2016-05-12/drivers/net/wireless/ralink/rt2x00/rt2800lib.h:259:11:
+>> warning: 'rt2800_bbp_read' declared 'static' but never defined
+>> [-Wunused-function]
+>>  static u8 rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
+>>            ^
+>
+> On which base version did you apply my patches? There may be a conflict
+> against patches that are in your tree but not yet in linux-next, as I don't see
+> the warning and also see no reference to rt2800_bbp_read in rt2800lib.h
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e683144..f6c2cdf 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -546,14 +546,13 @@
-  *	authentication/association or not receiving a response from the AP.
-  *	Non-zero %NL80211_ATTR_STATUS_CODE value is indicated in that case as
-  *	well to remain backwards compatible.
-- * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
-- *	sent as an event when the card/driver roamed by itself.
-- *	When used as an event, and the driver roamed in a network that requires
-- *	802.1X authentication, %NL80211_ATTR_PORT_AUTHORIZED should be set
-- *	if the 802.1X authentication was done by the driver or if roaming was
-- *	done using Fast Transition protocol (in which case 802.1X authentication
-- *	is not needed). If %NL80211_ATTR_PORT_AUTHORIZED is not set, user space
-- *	is responsible for the 802.1X authentication.
-+ * @NL80211_CMD_ROAM: notifcation indicating the card/driver roamed by itself.
-+ *	When the driver roamed in a network that requires 802.1X authentication,
-+ *	%NL80211_ATTR_PORT_AUTHORIZED should be set if the 802.1X authentication
-+ *	was done by the driver or if roaming was done using Fast Transition
-+ *	protocol (in which case 802.1X authentication is not needed). If
-+ *	%NL80211_ATTR_PORT_AUTHORIZED is not set, user space is responsible for
-+ *	the 802.1X authentication.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-  *	userspace that a connection was dropped by the AP or due to other
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
+I did a test build with current wireless-drivers-next and I also don't
+see any warnings.
+
 -- 
-1.9.1
+Kalle Valo
