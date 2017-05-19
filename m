@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:56109 "EHLO mout.web.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36938 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933438AbdEVM7H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 08:59:07 -0400
-Subject: [PATCH 1/2] NFC: digital: Improve a size determination in four
- functions
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Thierry Escande <thierry.escande@collabora.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
-Message-ID: <d8b16bd5-7acf-6ca4-69cb-6f7b2b43c807@users.sourceforge.net> (sfid-20170522_150005_303118_05D99A06)
-Date: Mon, 22 May 2017 14:58:54 +0200
-MIME-Version: 1.0
-In-Reply-To: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+        id S1751329AbdESKVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 06:21:05 -0400
+Message-ID: <1495189263.3274.4.camel@sipsolutions.net> (sfid-20170519_122108_903718_68DB65A1)
+Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
+ offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+Date: Fri, 19 May 2017 12:21:03 +0200
+In-Reply-To: <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com> (sfid-20170518_144810_571489_47A41759)
+References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1495030794.2442.21.camel@sipsolutions.net>
+         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
+         <1495099355.2553.1.camel@sipsolutions.net>
+         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
+         <1495104012.2553.3.camel@sipsolutions.net>
+         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
+         (sfid-20170518_144810_571489_47A41759)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 22 May 2017 14:11:01 +0200
+On Thu, 2017-05-18 at 14:48 +0200, Arend Van Spriel wrote:
 
-Replace the specification of four data structures by pointer dereferences
-as the parameter for the operator "sizeof" to make the corresponding size
-determination a bit safer according to the Linux coding style convention.
+> True. However, we touched this topic a while ago in generic context,
+> ie. preference for ext_features over supported_commands. Right now
+> wpa_supplicant does not check NEW_KEY support so we can go either
+> way.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- net/nfc/digital_core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Right. That's a separate discussion though - whether we add two flags
+here or check NEW_KEY support doesn't really matter, except that we
+need to decide
 
-diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
-index 0fd5518bf252..3baf91f3ef80 100644
---- a/net/nfc/digital_core.c
-+++ b/net/nfc/digital_core.c
-@@ -240,5 +240,5 @@ int digital_send_cmd(struct nfc_digital_dev *ddev, u8 cmd_type,
- {
- 	struct digital_cmd *cmd;
- 
--	cmd = kzalloc(sizeof(struct digital_cmd), GFP_KERNEL);
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	if (!cmd)
-@@ -287,5 +287,5 @@ static int digital_tg_listen_mdaa(struct nfc_digital_dev *ddev, u8 rf_tech)
- {
- 	struct digital_tg_mdaa_params *params;
- 
--	params = kzalloc(sizeof(struct digital_tg_mdaa_params), GFP_KERNEL);
-+	params = kzalloc(sizeof(*params), GFP_KERNEL);
- 	if (!params)
-@@ -706,5 +706,5 @@ static int digital_in_send(struct nfc_dev *nfc_dev, struct nfc_target *target,
- 	struct digital_data_exch *data_exch;
- 	int rc;
- 
--	data_exch = kzalloc(sizeof(struct digital_data_exch), GFP_KERNEL);
-+	data_exch = kzalloc(sizeof(*data_exch), GFP_KERNEL);
- 	if (!data_exch) {
-@@ -764,5 +764,5 @@ struct nfc_digital_dev *nfc_digital_allocate_device(struct nfc_digital_ops *ops,
- 	    !ops->switch_rf || (ops->tg_listen_md && !ops->tg_get_rf_tech))
- 		return NULL;
- 
--	ddev = kzalloc(sizeof(struct nfc_digital_dev), GFP_KERNEL);
-+	ddev = kzalloc(sizeof(*ddev), GFP_KERNEL);
- 	if (!ddev)
--- 
-2.13.0
+ * if we want to support such an override at all, and
+ * if it should be tested at all
+   (perhaps we can just live with that failing entirely?)
+
+> I have cleaned up the wpa_supplicant patches for the offloads, but
+> waited with submitting them until the kernel side got applied. So
+> depending on what is decided here I can rework it.
+
+I don't really know. I personally don't think that we need to allow
+both ways, but then I'm coming with a driver that doesn't even support
+the old way.
+
+So you should probably decide yourself if you want to keep this
+fallback option, and how well it should work (be rejected if used on a
+driver that doesn't support it, or just fail later?)
+
+johannes
