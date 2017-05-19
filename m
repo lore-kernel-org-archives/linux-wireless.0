@@ -1,46 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:59413 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750978AbdESF54 (ORCPT
+Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:43830
+        "EHLO osg.samsung.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932501AbdESB0Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 01:57:56 -0400
-Subject: Re: crash in r8723bs
-To: Ian W MORRISON <ianwmorrison@gmail.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <9b9d08fb-cbcd-5c12-feb8-5434a20cbd94@kpanic.de>
- <8780fd64-329f-2a42-4bcd-10abf60976fc@lwfinger.net>
- <CAFXWsS85L6tahPX_34smvAU6rRhhkd_EQC3EMU2ev2t3aSpNww@mail.gmail.com>
-From: Stefan Assmann <sassmann@kpanic.de>
-Message-ID: <7ea99377-6424-a307-bf95-d370ae6fbbe3@kpanic.de> (sfid-20170519_075816_227788_8165B6AE)
-Date: Fri, 19 May 2017 07:57:50 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAFXWsS85L6tahPX_34smvAU6rRhhkd_EQC3EMU2ev2t3aSpNww@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 18 May 2017 21:26:25 -0400
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>,
+        linux-mtd@lists.infradead.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 08/29] rfkill.txt: standardize document format
+Date: Thu, 18 May 2017 22:25:52 -0300
+Message-Id: <3361dce0e96427ed8fc375ab78371c0a6d0f55cc.1495157082.git.mchehab@s-opensource.com> (sfid-20170519_032724_908185_8C59226A)
+In-Reply-To: <cover.1495157082.git.mchehab@s-opensource.com>
+References: <cover.1495157082.git.mchehab@s-opensource.com>
+In-Reply-To: <cover.1495157082.git.mchehab@s-opensource.com>
+References: <cover.1495157082.git.mchehab@s-opensource.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19.05.2017 00:50, Ian W MORRISON wrote:
-> On 19 May 2017 at 05:03, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 05/17/2017 10:05 AM, Stefan Assmann wrote:
->>>
->>> Hi Larry,
->>>
->>> the rtl8723bs made it into staging, awesome.
->>> I built a kernel to test it but it goes down the drain pretty quickly
->>> on modprobe. Going forward who should I discuss bugs with?
->>>
->>> Here's what's going on atm.
->>>
->>>    Stefan
->>>
-> 
->>> [  125.485622] CPU: 1 PID: 456 Comm: modprobe Tainted: G         C
->>> 4.12.0-rc1+ #1
-> 
-> If the kernel is built from v4.12-rc1 then you need to add
-> https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git/commit/?h=staging-linus&id=ca6e8cdbe1865caf7b05483e1a242e72d9bc919f
+Each text file under Documentation follows a different
+format. Some doesn't even have titles!
 
-Thanks Ian, that works.
+Change its representation to follow the adopted standard,
+using ReST markups for it to be parseable by Sphinx:
 
-  Stefan
+- mark titles;
+- comment contents index;
+- mark literal blocks;
+- adjust identation.
+
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+---
+ Documentation/rfkill.txt | 47 ++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 30 insertions(+), 17 deletions(-)
+
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 8c174063b3f0..d22feccedbd1 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -1,13 +1,17 @@
++===============================
+ rfkill - RF kill switch support
+ ===============================
+ 
+-1. Introduction
+-2. Implementation details
+-3. Kernel API
+-4. Userspace support
++.. CONTENTS
+ 
++  1. Introduction
++  2. Implementation details
++  3. Kernel API
++  4. Userspace support
+ 
+-1. Introduction
++
++Introduction
++============
+ 
+ The rfkill subsystem provides a generic interface to disabling any radio
+ transmitter in the system. When a transmitter is blocked, it shall not
+@@ -21,17 +25,24 @@ aircraft.
+ The rfkill subsystem has a concept of "hard" and "soft" block, which
+ differ little in their meaning (block == transmitters off) but rather in
+ whether they can be changed or not:
+- - hard block: read-only radio block that cannot be overridden by software
+- - soft block: writable radio block (need not be readable) that is set by
+-               the system software.
++
++ - hard block
++	read-only radio block that cannot be overridden by software
++
++ - soft block
++	writable radio block (need not be readable) that is set by
++        the system software.
+ 
+ The rfkill subsystem has two parameters, rfkill.default_state and
+-rfkill.master_switch_mode, which are documented in admin-guide/kernel-parameters.rst.
++rfkill.master_switch_mode, which are documented in
++admin-guide/kernel-parameters.rst.
+ 
+ 
+-2. Implementation details
++Implementation details
++======================
+ 
+ The rfkill subsystem is composed of three main components:
++
+  * the rfkill core,
+  * the deprecated rfkill-input module (an input layer handler, being
+    replaced by userspace policy code) and
+@@ -55,7 +66,8 @@ use the return value of rfkill_set_hw_state() unless the hardware actually
+ keeps track of soft and hard block separately.
+ 
+ 
+-3. Kernel API
++Kernel API
++==========
+ 
+ 
+ Drivers for radio transmitters normally implement an rfkill driver.
+@@ -69,7 +81,7 @@ For some platforms, it is possible that the hardware state changes during
+ suspend/hibernation, in which case it will be necessary to update the rfkill
+ core with the current state is at resume time.
+ 
+-To create an rfkill driver, driver's Kconfig needs to have
++To create an rfkill driver, driver's Kconfig needs to have::
+ 
+ 	depends on RFKILL || !RFKILL
+ 
+@@ -87,7 +99,8 @@ RFKill provides per-switch LED triggers, which can be used to drive LEDs
+ according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
+ 
+ 
+-5. Userspace support
++Userspace support
++=================
+ 
+ The recommended userspace interface to use is /dev/rfkill, which is a misc
+ character device that allows userspace to obtain and set the state of rfkill
+@@ -112,11 +125,11 @@ rfkill core framework.
+ Additionally, each rfkill device is registered in sysfs and emits uevents.
+ 
+ rfkill devices issue uevents (with an action of "change"), with the following
+-environment variables set:
++environment variables set::
+ 
+-RFKILL_NAME
+-RFKILL_STATE
+-RFKILL_TYPE
++	RFKILL_NAME
++	RFKILL_STATE
++	RFKILL_TYPE
+ 
+ The contents of these variables corresponds to the "name", "state" and
+ "type" sysfs files explained above.
+-- 
+2.9.4
