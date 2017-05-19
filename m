@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:33863 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751264AbdEEWin (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35265 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752916AbdESP7n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 18:38:43 -0400
-Received: by mail-pf0-f170.google.com with SMTP id e64so8527265pfd.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 15:38:43 -0700 (PDT)
-Date: Fri, 5 May 2017 15:38:41 -0700
-From: Kees Cook <keescook@chromium.org>
-To: netdev@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>
-Subject: [PATCH] ray_cs: Avoid reading past end of buffer
-Message-ID: <20170505223841.GA20367@beast> (sfid-20170506_003909_610564_7BE71E5B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 19 May 2017 11:59:43 -0400
+Received: by mail-oi0-f66.google.com with SMTP id m17so13044245oik.2
+        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 08:59:42 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 00/10] rtlwifi: btcoex: More updates for 23b 1ant
+Date: Fri, 19 May 2017 10:59:27 -0500
+Message-Id: <20170519155937.17526-1-Larry.Finger@lwfinger.net> (sfid-20170519_175947_010894_3F1CD0E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using memcpy() from a buffer that is shorter than the length copied means
-the destination buffer is being filled with arbitrary data from the kernel
-rodata segment. In this case, the source was made longer, since it did not
-match the destination structure size. Additionally removes a needless cast.
+This set is the second for file halbtc8723b1ant.c.
 
-This was found with the future CONFIG_FORTIFY_SOURCE feature.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-Cc: Daniel Micay <danielmicay@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/ray_cs.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Ping-Ke Shih (10):
+  rtlwifi: btcoex: 23b 1ant: Switch antenna to wifi or BT.
+  rtlwifi: btcoex: 23b 1ant: need these information when scan
+  rtlwifi: btcoex: 23b 1ant: adjust wifi duration for bt a2dp
+  rtlwifi: btcoex: 23b 1ant: add wifi_only argument to init_hwconfig
+  rtlwifi: btcoex: 23b 1ant: Add power_on_setting
+  rtlwifi: btcoex: 23b 1ant: parse more BT information from C2H
+  rtlwifi: btcoex: 23b 1ant: Setup register for BT WHCK test
+  rtlwifi: btcoex: 23b 1ant: Add rf status notification
+  rtlwifi: btcoex: 23b 1ant: fine tune connect notify
+  rtlwifi: btcoex: 23b 1ant: Revise media status notify to fix no scan
+    result issue
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index b94479441b0c..170cd504e8ff 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -247,7 +247,10 @@ static const UCHAR b4_default_startup_parms[] = {
- 	0x04, 0x08,		/* Noise gain, limit offset */
- 	0x28, 0x28,		/* det rssi, med busy offsets */
- 	7,			/* det sync thresh */
--	0, 2, 2			/* test mode, min, max */
-+	0, 2, 2,		/* test mode, min, max */
-+	0,			/* rx/tx delay */
-+	0, 0, 0, 0, 0, 0,	/* current BSS id */
-+	0			/* hop set */
- };
- 
- /*===========================================================================*/
-@@ -597,7 +600,7 @@ static void init_startup_params(ray_dev_t *local)
- 	 *    a_beacon_period = hops    a_beacon_period = KuS
- 	 *//* 64ms = 010000 */
- 	if (local->fw_ver == 0x55) {
--		memcpy((UCHAR *) &local->sparm.b4, b4_default_startup_parms,
-+		memcpy(&local->sparm.b4, b4_default_startup_parms,
- 		       sizeof(struct b4_startup_params));
- 		/* Translate sane kus input values to old build 4/5 format */
- 		/* i = hop time in uS truncated to 3 bytes */
--- 
-2.7.4
-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 1061 ++++++++++++++------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   19 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |    3 +
+ 3 files changed, 798 insertions(+), 285 deletions(-)
 
 -- 
-Kees Cook
-Pixel Security
+2.12.0
