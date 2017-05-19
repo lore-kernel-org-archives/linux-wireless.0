@@ -1,44 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33726 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750761AbdE3ThH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 15:37:07 -0400
-Message-ID: <1496173021.3327.15.camel@sipsolutions.net> (sfid-20170530_213744_067968_344979E2)
-Subject: Re: [net-wireless-orinoco] question about potential null pointer
- dereference
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Tue, 30 May 2017 21:37:01 +0200
-In-Reply-To: <20170530120032.Horde.GHW0X8-B795CdxPjQOfDPa9@gator4166.hostgator.com> (sfid-20170530_190112_685275_C191B893)
-References: <20170530120032.Horde.GHW0X8-B795CdxPjQOfDPa9@gator4166.hostgator.com>
-         (sfid-20170530_190112_685275_C191B893)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63813 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752424AbdESJCT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 05:02:19 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Adrian Chadd <adrian@freebsd.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "simon.wunderlich@openmesh.com" <simon.wunderlich@openmesh.com>
+Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
+ firmware scratch memory.
+Date: Fri, 19 May 2017 09:02:08 +0000
+Message-ID: <8760gxw776.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_110242_113178_37685E15)
+References: <20170501214327.5621-1-adrian@freebsd.org>
+        <2107639.cIofNFgAHq@bentobox>
+In-Reply-To: <2107639.cIofNFgAHq@bentobox> (Sven Eckelmann's message of "Wed,
+        17 May 2017 12:06:01 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Sven Eckelmann <sven.eckelmann@openmesh.com> writes:
 
-> The issue here is that line 56 implies that pointer tfm_michael
-> might be NULL. If this is the case, there is a potential NULL
-> pointer dereference at line 52 once pointer tfm_michael is
-> indirectly dereferenced inside macro SHASH_DESC_ON_STACK().
-> 
-> My question is if there is any chance that pointer tfm_michael
-> might be NULL when calling macro SHASH_DESC_ON_STACK() ?
-> 
-> I'm trying to figure out if this is a false positive or something
-> that needs to be fixed somehow.
+> On Montag, 1. Mai 2017 14:43:27 CEST Adrian Chadd wrote:
+>> This reverts b057886524be060021e3cfad0ba8458c850330cd in 2015
+>> which converted this allocation from dma_map_coherent() to
+>> kzalloc() / dma_map_single().
+>>=20
+>> The current problem manifests when using later model NICs with larger
+>> (>700KiB) scratch spaces in memory.  Although the kzalloc call
+>> succeeds, the software IOMMU TLB code (via dma_map_single()) panics
+>> because it can't find 700KiB of linear physmem bounce buffers for DMA.
+>> Now, this is a bit of a silly failure mode for the dma map API,
+>> but it's what we currently have to play with.
+> [....]
+>>=20
+>> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/wmi.c | 35 ++++++++++------------------=
+-------
+>>  1 file changed, 10 insertions(+), 25 deletions(-)
+>
+> Thanks for investigating this. This partial revert fixes following crash =
+for
+> me with QCA99X0 on amd64 with SWIOMMU:
+>
+>     [    9.167281] DMA: Out of SW-IOMMU space for 689816 bytes at device =
+0000:02:00.0
+>     [    9.174719] Kernel panic - not syncing: DMA: Random memory could b=
+e DMA read
 
-Look, if you're just sending the coverity reports to the list without
-reflecting and researching them, that's not actually useful - we can
-look at them ourselves.
+I recently got a Compex WLE1216V5-20 board and this patch also fixed a
+similar crash for me on my HP x86_64 test laptop:
 
-It took me at most a few minutes to figure this one out, so please just
-do the same, look at the code, and figure out what the right answer is
-here.
+[  840.491019] do_IRQ: 3.82 No irq handler for vector
+[  840.965049] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mod=
+e 0 reset_mode 0
+[  841.094985] ath10k_pci 0000:02:00.0: qca9984/qca9994 hw1.0 target 0x0100=
+0000 chip_id 0x00000000 sub 168c:cafe
+[  841.095096] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1=
+ dfs 1 testmode 1
+[  841.095603] ath10k_pci 0000:02:00.0: firmware ver 10.4-3.4-00082 api 5 f=
+eatures no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast crc32 f301=
+de65
+[  842.518071] ath10k_pci 0000:02:00.0: board_file api 2 bmi_id 0:1 crc32 7=
+51efba1
+[  845.220186] ath10k_pci 0000:02:00.0: swiotlb buffer is full (sz: 1172264=
+ bytes)
+[  845.220478] ath10k_pci 0000:02:00.0: DMA: Out of SW-IOMMU space for 1172=
+264 bytes
+[  845.220506] Kernel panic - not syncing: DMA: Random memory could be DMA =
+accessed#012[  845.220506]=20
+[  845.220532] CPU: 0 PID: 116 Comm: kworker/u16:4 Tainted: G            E =
+  4.11.0-wt-ath+ #336
+[  845.220554] Hardware name: Hewlett-Packard HP ProBook 6540b/1722, BIOS 6=
+8CDD Ver. F.04 01/27/2010
+[  845.220600] Workqueue: ath10k_aux_wq ath10k_wmi_event_service_ready_work=
+ [ath10k_core]
+[  845.220626] Call Trace:
+[  845.220656]  dump_stack+0x85/0xc2
+[  845.220684]  panic+0xda/0x228
+[  845.220719]  swiotlb_full+0x88/0xa0
+[  845.220746]  swiotlb_map_page+0x214/0x280
+[  845.220785]  ath10k_wmi_event_service_ready_work+0x3f2/0x7d0 [ath10k_cor=
+e]
+[  845.220812]  ? swiotlb_map_sg_attrs+0x140/0x140
+[  845.220858]  process_one_work+0x23b/0x7d0
+[  845.221093]  worker_thread+0x4e/0x4a0
+[  845.221126]  kthread+0x117/0x150
+[  845.221149]  ? process_one_work+0x7d0/0x7d0
+[  845.221175]  ? kthread_create_on_node+0x40/0x40
+[  845.221205]  ret_from_fork+0x31/0x40
+[  845.221314] Kernel Offset: 0xb000000 from 0xffffffff81000000 (relocation=
+ range: 0xffffffff80000000-0xffffffffbfffffff)
 
-johannes
+
+--=20
+Kalle Valo=
