@@ -1,640 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45044 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756785AbdEOLqG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36247 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbdESJKo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 07:46:06 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v2 1/5] wil6210: low level RF sector API
-Date: Mon, 15 May 2017 14:45:55 +0300
-Message-Id: <1494848759-3651-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170515_134619_620093_43980D50)
-In-Reply-To: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 19 May 2017 05:10:44 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "nbd@nbd.name" <nbd@nbd.name>
+Subject: Re: [PATCH] [ath10k] go back to using dma_alloc_coherent() for
+ firmware scratch memory.
+Date: Fri, 19 May 2017 09:10:38 +0000
+Message-ID: <871srlw6t0.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_111047_646763_23D01A6C)
+References: <20170501214327.5621-1-adrian@freebsd.org>
+In-Reply-To: <20170501214327.5621-1-adrian@freebsd.org> (Adrian Chadd's
+        message of "Mon, 1 May 2017 14:43:27 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+Adrian Chadd <adrian@freebsd.org> writes:
 
-Added vendor commands for low level control over
-RF sectors. It allows user space a fine-grained control
-over RF characteristics for TX and RX, such as direction
-and gain of TX/RX. Main usages are debugging and diagnostics,
-but also operational use cases.
-API includes getting/setting a specific RF sector
-configuration, as well as getting/setting the selected
-sector which is used to communicate with a station.
+> This reverts b057886524be060021e3cfad0ba8458c850330cd in 2015
+> which converted this allocation from dma_map_coherent() to
+> kzalloc() / dma_map_single().
+>
+> The current problem manifests when using later model NICs with larger
+> (>700KiB) scratch spaces in memory.  Although the kzalloc call
+> succeeds, the software IOMMU TLB code (via dma_map_single()) panics
+> because it can't find 700KiB of linear physmem bounce buffers for DMA.
+> Now, this is a bit of a silly failure mode for the dma map API,
+> but it's what we currently have to play with.
+>
+> In these cases, doing kzalloc() works fine, but the dma_map_single()
+> call fails.
+>
+> After chatting with Linus briefly about this, it indeed should be
+> using dma_alloc_coherent() for doing larger device memory allocation
+> that requires some kind of physical address mapping.
+>
+> You're not supposed to be using kzalloc and dma_map_* calls for
+> large memory regions, and I'm guessing not for long-held mappings
+> either.  Typically dma mappings should be temporary for DMA,
+> not long held like these.
+>
+> Now, since hopefully the major annoying underlying problem has also been
+> addressed (ie, ath10k is no longer tears down all of these allocations
+> and reallocates them every time the vdevs are brought down) fragmentation
+> should stop being such a touchy issue.  If it is though, using
+> dma_alloc_coherent() use gets us access to the CMB APIs too relatively
+> easily and ideally we would be allocating memory early in boot for
+> exactly these reasons.
+>
+> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 573 ++++++++++++++++++++++++++++
- 1 file changed, 573 insertions(+)
+So there are now three positive test results (including mine) so I would
+like to queue this to 4.12 as an important bug fix.
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index fdaa99c..aa9ce30 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -16,6 +16,7 @@
- 
- #include <linux/etherdevice.h>
- #include <linux/moduleparam.h>
-+#include <net/netlink.h>
- #include "wil6210.h"
- #include "wmi.h"
- 
-@@ -41,6 +42,126 @@
- /* channel 4 not supported yet */
- };
- 
-+/* Vendor id to be used in vendor specific command and events
-+ * to user space.
-+ * NOTE: The authoritative place for definition of QCA_NL80211_VENDOR_ID,
-+ * vendor subcmd definitions prefixed with QCA_NL80211_VENDOR_SUBCMD, and
-+ * qca_wlan_vendor_attr is open source file src/common/qca-vendor.h in
-+ * git://w1.fi/srv/git/hostap.git; the values here are just a copy of that
-+ */
-+
-+#define QCA_NL80211_VENDOR_ID	0x001374
-+
-+#define WIL_MAX_RF_SECTORS (128)
-+#define WIL_CID_ALL (0xff)
-+
-+enum qca_wlan_vendor_attr_rf_sector {
-+	QCA_ATTR_MAC_ADDR = 6,
-+	QCA_ATTR_PAD = 13,
-+	QCA_ATTR_TSF = 29,
-+	QCA_ATTR_DMG_RF_SECTOR_INDEX = 30,
-+	QCA_ATTR_DMG_RF_SECTOR_TYPE = 31,
-+	QCA_ATTR_DMG_RF_MODULE_MASK = 32,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG = 33,
-+	QCA_ATTR_DMG_RF_SECTOR_MAX,
-+};
-+
-+enum qca_wlan_vendor_attr_dmg_rf_sector_type {
-+	QCA_ATTR_DMG_RF_SECTOR_TYPE_RX,
-+	QCA_ATTR_DMG_RF_SECTOR_TYPE_TX,
-+	QCA_ATTR_DMG_RF_SECTOR_TYPE_MAX
-+};
-+
-+enum qca_wlan_vendor_attr_dmg_rf_sector_cfg {
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_INVALID = 0,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_MODULE_INDEX,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE0,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE1,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE2,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_HI,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_LO,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_DTYPE_X16,
-+
-+	/* keep last */
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_AFTER_LAST,
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_MAX =
-+	QCA_ATTR_DMG_RF_SECTOR_CFG_AFTER_LAST - 1
-+};
-+
-+static const struct
-+nla_policy wil_rf_sector_policy[QCA_ATTR_DMG_RF_SECTOR_MAX + 1] = {
-+	[QCA_ATTR_MAC_ADDR] = { .len = ETH_ALEN },
-+	[QCA_ATTR_DMG_RF_SECTOR_INDEX] = { .type = NLA_U16 },
-+	[QCA_ATTR_DMG_RF_SECTOR_TYPE] = { .type = NLA_U8 },
-+	[QCA_ATTR_DMG_RF_MODULE_MASK] = { .type = NLA_U32 },
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG] = { .type = NLA_NESTED },
-+};
-+
-+static const struct
-+nla_policy wil_rf_sector_cfg_policy[QCA_ATTR_DMG_RF_SECTOR_CFG_MAX + 1] = {
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG_MODULE_INDEX] = { .type = NLA_U8 },
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE0] = { .type = NLA_U32 },
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE1] = { .type = NLA_U32 },
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE2] = { .type = NLA_U32 },
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_HI] = { .type = NLA_U32 },
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_LO] = { .type = NLA_U32 },
-+	[QCA_ATTR_DMG_RF_SECTOR_CFG_DTYPE_X16] = { .type = NLA_U32 },
-+};
-+
-+enum qca_nl80211_vendor_subcmds {
-+	QCA_NL80211_VENDOR_SUBCMD_DMG_RF_GET_SECTOR_CFG = 139,
-+	QCA_NL80211_VENDOR_SUBCMD_DMG_RF_SET_SECTOR_CFG = 140,
-+	QCA_NL80211_VENDOR_SUBCMD_DMG_RF_GET_SELECTED_SECTOR = 141,
-+	QCA_NL80211_VENDOR_SUBCMD_DMG_RF_SET_SELECTED_SECTOR = 142,
-+};
-+
-+static int wil_rf_sector_get_cfg(struct wiphy *wiphy,
-+				 struct wireless_dev *wdev,
-+				 const void *data, int data_len);
-+static int wil_rf_sector_set_cfg(struct wiphy *wiphy,
-+				 struct wireless_dev *wdev,
-+				 const void *data, int data_len);
-+static int wil_rf_sector_get_selected(struct wiphy *wiphy,
-+				      struct wireless_dev *wdev,
-+				      const void *data, int data_len);
-+static int wil_rf_sector_set_selected(struct wiphy *wiphy,
-+				      struct wireless_dev *wdev,
-+				      const void *data, int data_len);
-+
-+/* vendor specific commands */
-+static const struct wiphy_vendor_command wil_nl80211_vendor_commands[] = {
-+	{
-+		.info.vendor_id = QCA_NL80211_VENDOR_ID,
-+		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_DMG_RF_GET_SECTOR_CFG,
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-+			 WIPHY_VENDOR_CMD_NEED_RUNNING,
-+		.doit = wil_rf_sector_get_cfg
-+	},
-+	{
-+		.info.vendor_id = QCA_NL80211_VENDOR_ID,
-+		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_DMG_RF_SET_SECTOR_CFG,
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-+			 WIPHY_VENDOR_CMD_NEED_RUNNING,
-+		.doit = wil_rf_sector_set_cfg
-+	},
-+	{
-+		.info.vendor_id = QCA_NL80211_VENDOR_ID,
-+		.info.subcmd =
-+			QCA_NL80211_VENDOR_SUBCMD_DMG_RF_GET_SELECTED_SECTOR,
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-+			 WIPHY_VENDOR_CMD_NEED_RUNNING,
-+		.doit = wil_rf_sector_get_selected
-+	},
-+	{
-+		.info.vendor_id = QCA_NL80211_VENDOR_ID,
-+		.info.subcmd =
-+			QCA_NL80211_VENDOR_SUBCMD_DMG_RF_SET_SELECTED_SECTOR,
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-+			 WIPHY_VENDOR_CMD_NEED_RUNNING,
-+		.doit = wil_rf_sector_set_selected
-+	},
-+};
-+
- static struct ieee80211_supported_band wil_band_60ghz = {
- 	.channels = wil_60ghz_channels,
- 	.n_channels = ARRAY_SIZE(wil_60ghz_channels),
-@@ -1637,6 +1758,9 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- 	wiphy->n_cipher_suites = ARRAY_SIZE(wil_cipher_suites);
- 	wiphy->mgmt_stypes = wil_mgmt_stypes;
- 	wiphy->features |= NL80211_FEATURE_SK_TX_STATUS;
-+
-+	wiphy->n_vendor_commands = ARRAY_SIZE(wil_nl80211_vendor_commands);
-+	wiphy->vendor_commands = wil_nl80211_vendor_commands;
- }
- 
- struct wireless_dev *wil_cfg80211_init(struct device *dev)
-@@ -1695,3 +1819,452 @@ void wil_p2p_wdev_free(struct wil6210_priv *wil)
- 		kfree(p2p_wdev);
- 	}
- }
-+
-+static int wil_rf_sector_status_to_rc(u8 status)
-+{
-+	switch (status) {
-+	case WMI_RF_SECTOR_STATUS_SUCCESS:
-+		return 0;
-+	case WMI_RF_SECTOR_STATUS_BAD_PARAMETERS_ERROR:
-+		return -EINVAL;
-+	case WMI_RF_SECTOR_STATUS_BUSY_ERROR:
-+		return -EAGAIN;
-+	case WMI_RF_SECTOR_STATUS_NOT_SUPPORTED_ERROR:
-+		return -EOPNOTSUPP;
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
-+static int wil_rf_sector_get_cfg(struct wiphy *wiphy,
-+				 struct wireless_dev *wdev,
-+				 const void *data, int data_len)
-+{
-+	struct wil6210_priv *wil = wdev_to_wil(wdev);
-+	int rc;
-+	struct nlattr *tb[QCA_ATTR_DMG_RF_SECTOR_MAX + 1];
-+	u16 sector_index;
-+	u8 sector_type;
-+	u32 rf_modules_vec;
-+	struct wmi_get_rf_sector_params_cmd cmd;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_get_rf_sector_params_done_event evt;
-+	} __packed reply;
-+	struct sk_buff *msg;
-+	struct nlattr *nl_cfgs, *nl_cfg;
-+	u32 i;
-+	struct wmi_rf_sector_info *si;
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
-+		return -EOPNOTSUPP;
-+
-+	rc = nla_parse(tb, QCA_ATTR_DMG_RF_SECTOR_MAX, data, data_len,
-+		       wil_rf_sector_policy, NULL);
-+	if (rc) {
-+		wil_err(wil, "Invalid rf sector ATTR\n");
-+		return rc;
-+	}
-+
-+	if (!tb[QCA_ATTR_DMG_RF_SECTOR_INDEX] ||
-+	    !tb[QCA_ATTR_DMG_RF_SECTOR_TYPE] ||
-+	    !tb[QCA_ATTR_DMG_RF_MODULE_MASK]) {
-+		wil_err(wil, "Invalid rf sector spec\n");
-+		return -EINVAL;
-+	}
-+
-+	sector_index = nla_get_u16(
-+		tb[QCA_ATTR_DMG_RF_SECTOR_INDEX]);
-+	if (sector_index >= WIL_MAX_RF_SECTORS) {
-+		wil_err(wil, "Invalid sector index %d\n", sector_index);
-+		return -EINVAL;
-+	}
-+
-+	sector_type = nla_get_u8(tb[QCA_ATTR_DMG_RF_SECTOR_TYPE]);
-+	if (sector_type >= QCA_ATTR_DMG_RF_SECTOR_TYPE_MAX) {
-+		wil_err(wil, "Invalid sector type %d\n", sector_type);
-+		return -EINVAL;
-+	}
-+
-+	rf_modules_vec = nla_get_u32(
-+		tb[QCA_ATTR_DMG_RF_MODULE_MASK]);
-+	if (rf_modules_vec >= BIT(WMI_MAX_RF_MODULES_NUM)) {
-+		wil_err(wil, "Invalid rf module mask 0x%x\n", rf_modules_vec);
-+		return -EINVAL;
-+	}
-+
-+	cmd.sector_idx = cpu_to_le16(sector_index);
-+	cmd.sector_type = sector_type;
-+	cmd.rf_modules_vec = rf_modules_vec & 0xFF;
-+	memset(&reply, 0, sizeof(reply));
-+	rc = wmi_call(wil, WMI_GET_RF_SECTOR_PARAMS_CMDID, &cmd, sizeof(cmd),
-+		      WMI_GET_RF_SECTOR_PARAMS_DONE_EVENTID,
-+		      &reply, sizeof(reply),
-+		      500);
-+	if (rc)
-+		return rc;
-+	if (reply.evt.status) {
-+		wil_err(wil, "get rf sector cfg failed with status %d\n",
-+			reply.evt.status);
-+		return wil_rf_sector_status_to_rc(reply.evt.status);
-+	}
-+
-+	msg = cfg80211_vendor_cmd_alloc_reply_skb(
-+		wiphy, 64 * WMI_MAX_RF_MODULES_NUM);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	if (nla_put_u64_64bit(msg, QCA_ATTR_TSF,
-+			      le64_to_cpu(reply.evt.tsf),
-+			      QCA_ATTR_PAD))
-+		goto nla_put_failure;
-+
-+	nl_cfgs = nla_nest_start(msg, QCA_ATTR_DMG_RF_SECTOR_CFG);
-+	if (!nl_cfgs)
-+		goto nla_put_failure;
-+	for (i = 0; i < WMI_MAX_RF_MODULES_NUM; i++) {
-+		if (!(rf_modules_vec & BIT(i)))
-+			continue;
-+		nl_cfg = nla_nest_start(msg, i);
-+		if (!nl_cfg)
-+			goto nla_put_failure;
-+		si = &reply.evt.sectors_info[i];
-+		if (nla_put_u8(msg, QCA_ATTR_DMG_RF_SECTOR_CFG_MODULE_INDEX,
-+			       i) ||
-+		    nla_put_u32(msg, QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE0,
-+				le32_to_cpu(si->etype0)) ||
-+		    nla_put_u32(msg, QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE1,
-+				le32_to_cpu(si->etype1)) ||
-+		    nla_put_u32(msg, QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE2,
-+				le32_to_cpu(si->etype2)) ||
-+		    nla_put_u32(msg, QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_HI,
-+				le32_to_cpu(si->psh_hi)) ||
-+		    nla_put_u32(msg, QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_LO,
-+				le32_to_cpu(si->psh_lo)) ||
-+		    nla_put_u32(msg, QCA_ATTR_DMG_RF_SECTOR_CFG_DTYPE_X16,
-+				le32_to_cpu(si->dtype_swch_off)))
-+			goto nla_put_failure;
-+		nla_nest_end(msg, nl_cfg);
-+	}
-+
-+	nla_nest_end(msg, nl_cfgs);
-+	rc = cfg80211_vendor_cmd_reply(msg);
-+	return rc;
-+nla_put_failure:
-+	kfree_skb(msg);
-+	return -ENOBUFS;
-+}
-+
-+static int wil_rf_sector_set_cfg(struct wiphy *wiphy,
-+				 struct wireless_dev *wdev,
-+				 const void *data, int data_len)
-+{
-+	struct wil6210_priv *wil = wdev_to_wil(wdev);
-+	int rc, tmp;
-+	struct nlattr *tb[QCA_ATTR_DMG_RF_SECTOR_MAX + 1];
-+	struct nlattr *tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_MAX + 1];
-+	u16 sector_index, rf_module_index;
-+	u8 sector_type;
-+	u32 rf_modules_vec = 0;
-+	struct wmi_set_rf_sector_params_cmd cmd;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_set_rf_sector_params_done_event evt;
-+	} __packed reply;
-+	struct nlattr *nl_cfg;
-+	struct wmi_rf_sector_info *si;
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
-+		return -EOPNOTSUPP;
-+
-+	rc = nla_parse(tb, QCA_ATTR_DMG_RF_SECTOR_MAX, data, data_len,
-+		       wil_rf_sector_policy, NULL);
-+	if (rc) {
-+		wil_err(wil, "Invalid rf sector ATTR\n");
-+		return rc;
-+	}
-+
-+	if (!tb[QCA_ATTR_DMG_RF_SECTOR_INDEX] ||
-+	    !tb[QCA_ATTR_DMG_RF_SECTOR_TYPE] ||
-+	    !tb[QCA_ATTR_DMG_RF_SECTOR_CFG]) {
-+		wil_err(wil, "Invalid rf sector spec\n");
-+		return -EINVAL;
-+	}
-+
-+	sector_index = nla_get_u16(
-+		tb[QCA_ATTR_DMG_RF_SECTOR_INDEX]);
-+	if (sector_index >= WIL_MAX_RF_SECTORS) {
-+		wil_err(wil, "Invalid sector index %d\n", sector_index);
-+		return -EINVAL;
-+	}
-+
-+	sector_type = nla_get_u8(tb[QCA_ATTR_DMG_RF_SECTOR_TYPE]);
-+	if (sector_type >= QCA_ATTR_DMG_RF_SECTOR_TYPE_MAX) {
-+		wil_err(wil, "Invalid sector type %d\n", sector_type);
-+		return -EINVAL;
-+	}
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+
-+	cmd.sector_idx = cpu_to_le16(sector_index);
-+	cmd.sector_type = sector_type;
-+	nla_for_each_nested(nl_cfg, tb[QCA_ATTR_DMG_RF_SECTOR_CFG],
-+			    tmp) {
-+		rc = nla_parse_nested(tb2, QCA_ATTR_DMG_RF_SECTOR_CFG_MAX,
-+				      nl_cfg, wil_rf_sector_cfg_policy,
-+				      NULL);
-+		if (rc) {
-+			wil_err(wil, "invalid sector cfg\n");
-+			return -EINVAL;
-+		}
-+
-+		if (!tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_MODULE_INDEX] ||
-+		    !tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE0] ||
-+		    !tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE1] ||
-+		    !tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE2] ||
-+		    !tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_HI] ||
-+		    !tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_LO] ||
-+		    !tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_DTYPE_X16]) {
-+			wil_err(wil, "missing cfg params\n");
-+			return -EINVAL;
-+		}
-+
-+		rf_module_index = nla_get_u8(
-+			tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_MODULE_INDEX]);
-+		if (rf_module_index >= WMI_MAX_RF_MODULES_NUM) {
-+			wil_err(wil, "invalid RF module index %d\n",
-+				rf_module_index);
-+			return -EINVAL;
-+		}
-+		rf_modules_vec |= BIT(rf_module_index);
-+		si = &cmd.sectors_info[rf_module_index];
-+		si->etype0 = cpu_to_le32(nla_get_u32(
-+			tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE0]));
-+		si->etype1 = cpu_to_le32(nla_get_u32(
-+			tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE1]));
-+		si->etype2 = cpu_to_le32(nla_get_u32(
-+			tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_ETYPE2]));
-+		si->psh_hi = cpu_to_le32(nla_get_u32(
-+			tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_HI]));
-+		si->psh_lo = cpu_to_le32(nla_get_u32(
-+			tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_PSH_LO]));
-+		si->dtype_swch_off = cpu_to_le32(nla_get_u32(
-+			tb2[QCA_ATTR_DMG_RF_SECTOR_CFG_DTYPE_X16]));
-+	}
-+
-+	cmd.rf_modules_vec = rf_modules_vec & 0xFF;
-+	memset(&reply, 0, sizeof(reply));
-+	rc = wmi_call(wil, WMI_SET_RF_SECTOR_PARAMS_CMDID, &cmd, sizeof(cmd),
-+		      WMI_SET_RF_SECTOR_PARAMS_DONE_EVENTID,
-+		      &reply, sizeof(reply),
-+		      500);
-+	if (rc)
-+		return rc;
-+	return wil_rf_sector_status_to_rc(reply.evt.status);
-+}
-+
-+static int wil_rf_sector_get_selected(struct wiphy *wiphy,
-+				      struct wireless_dev *wdev,
-+				      const void *data, int data_len)
-+{
-+	struct wil6210_priv *wil = wdev_to_wil(wdev);
-+	int rc;
-+	struct nlattr *tb[QCA_ATTR_DMG_RF_SECTOR_MAX + 1];
-+	u8 sector_type, mac_addr[ETH_ALEN];
-+	int cid = 0;
-+	struct wmi_get_selected_rf_sector_index_cmd cmd;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_get_selected_rf_sector_index_done_event evt;
-+	} __packed reply;
-+	struct sk_buff *msg;
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
-+		return -EOPNOTSUPP;
-+
-+	rc = nla_parse(tb, QCA_ATTR_DMG_RF_SECTOR_MAX, data, data_len,
-+		       wil_rf_sector_policy, NULL);
-+	if (rc) {
-+		wil_err(wil, "Invalid rf sector ATTR\n");
-+		return rc;
-+	}
-+
-+	if (!tb[QCA_ATTR_DMG_RF_SECTOR_TYPE]) {
-+		wil_err(wil, "Invalid rf sector spec\n");
-+		return -EINVAL;
-+	}
-+	sector_type = nla_get_u8(tb[QCA_ATTR_DMG_RF_SECTOR_TYPE]);
-+	if (sector_type >= QCA_ATTR_DMG_RF_SECTOR_TYPE_MAX) {
-+		wil_err(wil, "Invalid sector type %d\n", sector_type);
-+		return -EINVAL;
-+	}
-+
-+	if (tb[QCA_ATTR_MAC_ADDR]) {
-+		ether_addr_copy(mac_addr, nla_data(tb[QCA_ATTR_MAC_ADDR]));
-+		cid = wil_find_cid(wil, mac_addr);
-+		if (cid < 0) {
-+			wil_err(wil, "invalid MAC address %pM\n", mac_addr);
-+			return -ENOENT;
-+		}
-+	} else {
-+		if (test_bit(wil_status_fwconnected, wil->status)) {
-+			wil_err(wil, "must specify MAC address when connected\n");
-+			return -EINVAL;
-+		}
-+	}
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.cid = (u8)cid;
-+	cmd.sector_type = sector_type;
-+	memset(&reply, 0, sizeof(reply));
-+	rc = wmi_call(wil, WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID,
-+		      &cmd, sizeof(cmd),
-+		      WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID,
-+		      &reply, sizeof(reply),
-+		      500);
-+	if (rc)
-+		return rc;
-+	if (reply.evt.status) {
-+		wil_err(wil, "get rf selected sector cfg failed with status %d\n",
-+			reply.evt.status);
-+		return wil_rf_sector_status_to_rc(reply.evt.status);
-+	}
-+
-+	msg = cfg80211_vendor_cmd_alloc_reply_skb(
-+		wiphy, 64 * WMI_MAX_RF_MODULES_NUM);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	if (nla_put_u64_64bit(msg, QCA_ATTR_TSF,
-+			      le64_to_cpu(reply.evt.tsf),
-+			      QCA_ATTR_PAD) ||
-+	    nla_put_u16(msg, QCA_ATTR_DMG_RF_SECTOR_INDEX,
-+			le16_to_cpu(reply.evt.sector_idx)))
-+		goto nla_put_failure;
-+
-+	rc = cfg80211_vendor_cmd_reply(msg);
-+	return rc;
-+nla_put_failure:
-+	kfree_skb(msg);
-+	return -ENOBUFS;
-+}
-+
-+static int wil_rf_sector_wmi_set_selected(struct wil6210_priv *wil,
-+					  u16 sector_index,
-+					  u8 sector_type, u8 cid)
-+{
-+	struct wmi_set_selected_rf_sector_index_cmd cmd;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_set_selected_rf_sector_index_done_event evt;
-+	} __packed reply;
-+	int rc;
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.sector_idx = cpu_to_le16(sector_index);
-+	cmd.sector_type = sector_type;
-+	cmd.cid = (u8)cid;
-+	memset(&reply, 0, sizeof(reply));
-+	rc = wmi_call(wil, WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID,
-+		      &cmd, sizeof(cmd),
-+		      WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID,
-+		      &reply, sizeof(reply),
-+		      500);
-+	if (rc)
-+		return rc;
-+	return wil_rf_sector_status_to_rc(reply.evt.status);
-+}
-+
-+static int wil_rf_sector_set_selected(struct wiphy *wiphy,
-+				      struct wireless_dev *wdev,
-+				      const void *data, int data_len)
-+{
-+	struct wil6210_priv *wil = wdev_to_wil(wdev);
-+	int rc;
-+	struct nlattr *tb[QCA_ATTR_DMG_RF_SECTOR_MAX + 1];
-+	u16 sector_index;
-+	u8 sector_type, mac_addr[ETH_ALEN], i;
-+	int cid = 0;
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
-+		return -EOPNOTSUPP;
-+
-+	rc = nla_parse(tb, QCA_ATTR_DMG_RF_SECTOR_MAX, data, data_len,
-+		       wil_rf_sector_policy, NULL);
-+	if (rc) {
-+		wil_err(wil, "Invalid rf sector ATTR\n");
-+		return rc;
-+	}
-+
-+	if (!tb[QCA_ATTR_DMG_RF_SECTOR_INDEX] ||
-+	    !tb[QCA_ATTR_DMG_RF_SECTOR_TYPE]) {
-+		wil_err(wil, "Invalid rf sector spec\n");
-+		return -EINVAL;
-+	}
-+
-+	sector_index = nla_get_u16(
-+		tb[QCA_ATTR_DMG_RF_SECTOR_INDEX]);
-+	if (sector_index >= WIL_MAX_RF_SECTORS &&
-+	    sector_index != WMI_INVALID_RF_SECTOR_INDEX) {
-+		wil_err(wil, "Invalid sector index %d\n", sector_index);
-+		return -EINVAL;
-+	}
-+
-+	sector_type = nla_get_u8(tb[QCA_ATTR_DMG_RF_SECTOR_TYPE]);
-+	if (sector_type >= QCA_ATTR_DMG_RF_SECTOR_TYPE_MAX) {
-+		wil_err(wil, "Invalid sector type %d\n", sector_type);
-+		return -EINVAL;
-+	}
-+
-+	if (tb[QCA_ATTR_MAC_ADDR]) {
-+		ether_addr_copy(mac_addr, nla_data(tb[QCA_ATTR_MAC_ADDR]));
-+		if (!is_broadcast_ether_addr(mac_addr)) {
-+			cid = wil_find_cid(wil, mac_addr);
-+			if (cid < 0) {
-+				wil_err(wil, "invalid MAC address %pM\n",
-+					mac_addr);
-+				return -ENOENT;
-+			}
-+		} else {
-+			if (sector_index != WMI_INVALID_RF_SECTOR_INDEX) {
-+				wil_err(wil, "broadcast MAC valid only with unlocking\n");
-+				return -EINVAL;
-+			}
-+			cid = -1;
-+		}
-+	} else {
-+		if (test_bit(wil_status_fwconnected, wil->status)) {
-+			wil_err(wil, "must specify MAC address when connected\n");
-+			return -EINVAL;
-+		}
-+		/* otherwise, using cid=0 for unassociated station */
-+	}
-+
-+	if (cid >= 0) {
-+		rc = wil_rf_sector_wmi_set_selected(wil, sector_index,
-+						    sector_type, cid);
-+	} else {
-+		/* unlock all cids */
-+		rc = wil_rf_sector_wmi_set_selected(
-+			wil, WMI_INVALID_RF_SECTOR_INDEX, sector_type,
-+			WIL_CID_ALL);
-+		if (rc == -EINVAL) {
-+			for (i = 0; i < WIL6210_MAX_CID; i++) {
-+				rc = wil_rf_sector_wmi_set_selected(
-+					wil, WMI_INVALID_RF_SECTOR_INDEX,
-+					sector_type, i);
-+				/* the FW will silently ignore and return
-+				 * success for unused cid, so abort the loop
-+				 * on any other error
-+				 */
-+				if (rc) {
-+					wil_err(wil, "unlock cid %d failed with status %d\n",
-+						i, rc);
-+					break;
-+				}
-+			}
-+		}
-+	}
-+
-+	return rc;
-+}
--- 
-1.9.1
+But I think all of them was with x86 and I'm worried if this patch
+creates problems with other architectures, especially on ARM? In the
+original commit Felix wrote that coherent memory is constrained some
+architectures. I would hate to go ping pong with this and reverting this
+patch soon after, instead I would prefer to find a proper solution which
+works for everyone.
+
+Felix, what do you think? Can someone test this patch on LEDE with the
+most problematic boards?
+
+commit b057886524be060021e3cfad0ba8458c850330cd
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Mon Nov 30 19:32:01 2015 +0100
+
+    ath10k: do not use coherent memory for allocated device memory chunks
+   =20
+    Coherent memory is more expensive to allocate (and constrained on some
+    architectures where it has to be pre-allocated). It is also completely
+    unnecessary, since the host has no reason to even access these allocate=
+d
+    memory spaces
+   =20
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+--=20
+Kalle Valo=
