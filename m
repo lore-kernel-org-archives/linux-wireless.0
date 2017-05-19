@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40788 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753178AbdEQNWn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 09:22:43 -0400
-Message-ID: <1495027350.2442.12.camel@sipsolutions.net> (sfid-20170517_152357_944098_7D476DDB)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
-        Tom Gundersen <teg@jklm.no>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Takashi Iwai <tiwai@suse.de>,
-        AKASHI Takahiro <takahiro.akashi@linaro.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
-Date: Wed, 17 May 2017 15:22:30 +0200
-In-Reply-To: <20170517132131.GH10015@pali> (sfid-20170517_152143_910249_81751B88)
-References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
-         <20170515231339.GF17314@wotan.suse.de>
-         <1495022766.2442.1.camel@sipsolutions.net> <20170517125335.GG10015@pali>
-         <1495026290.2442.6.camel@sipsolutions.net> <20170517132131.GH10015@pali>
-         (sfid-20170517_152143_910249_81751B88)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8289 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750793AbdESJvW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 05:51:22 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add configurable debugging.
+Date: Fri, 19 May 2017 09:51:17 +0000
+Message-ID: <87k25duqct.fsf@kamboji.qca.qualcomm.com> (sfid-20170519_115126_322092_50E9992A)
+References: <20170510211925.17468-1-adrian@freebsd.org>
+In-Reply-To: <20170510211925.17468-1-adrian@freebsd.org> (Adrian Chadd's
+        message of "Wed, 10 May 2017 14:19:25 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-05-17 at 15:21 +0200, Pali Rohár wrote:
-> On Wednesday 17 May 2017 15:04:50 Johannes Berg wrote:
-> > On Wed, 2017-05-17 at 14:53 +0200, Pali Rohár wrote:
-> > 
-> > > > In fact, why should the *driver* care either? IOW - why should
-> > > > "request_firmware_prefer_user()" even exist?
-> > > 
-> > > There are default/example NVS data, which are stored in
-> > > /lib/firmware
-> > > and installed by linux-firmware package.
-> > 
-> > [...]
-> > 
-> > Oh, so you're saying you want this to invert the order ... Ok, that
-> > makes some sense.
-> 
-> Yes! I thought that this fact can be understood from commit message.
-> If not, I can change it, but provide how to improve it.
+Adrian Chadd <adrian@freebsd.org> writes:
 
-It probably can, I was only Cc'ed later :)
+> This adds a few configurable debugging options:
+>
+> * driver debugging and tracing is now configurable per device
+> * driver debugging and tracing is now configurable at runtime
+> * the debugging / tracing is not run at all (besides a mask check)
+>   unless the specific debugging bitmap field is configured.
+>
+> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
 
-Sorry for the noise.
+Oops, I accidentaly replied to the wrong version of the patch. This is a
+perfect example why adding version to the subject is so important:
 
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes#patch_version_missing
+
+But anyway, this is what I wrote in v1:
+
+ath10k-check found some trivial whitespace problems:
+
+drivers/net/wireless/ath/ath10k/debug.h:207: return is not a function,
+parentheses are not required
+drivers/net/wireless/ath/ath10k/debug.h:209: return is not a function,
+parentheses are not required
+drivers/net/wireless/ath/ath10k/debug.h:210: return is not a function,
+parentheses are not required
+drivers/net/wireless/ath/ath10k/debug.h:214: Alignment should match open pa=
+renthesis
+drivers/net/wireless/ath/ath10k/debug.h:218: Alignment should match open pa=
+renthesis
+drivers/net/wireless/ath/ath10k/debug.c:2430: code indent should use
+tabs where possible
+drivers/net/wireless/ath/ath10k/debug.c:2430: please, no spaces at the star=
+t of a line
+drivers/net/wireless/ath/ath10k/debug.c:2431: code indent should use
+tabs where possible
+drivers/net/wireless/ath/ath10k/debug.c:2431: please, no spaces at the star=
+t of a line
+drivers/net/wireless/ath/ath10k/debug.c:2464: code indent should use
+tabs where possible
+drivers/net/wireless/ath/ath10k/debug.c:2464: please, no spaces at the star=
+t of a line
+drivers/net/wireless/ath/ath10k/debug.c:2465: code indent should use
+tabs where possible
+drivers/net/wireless/ath/ath10k/debug.c:2465: please, no spaces at the star=
+t of a line
+drivers/net/wireless/ath/ath10k/debug.c:2493: Please don't use multiple bla=
+nk lines
+drivers/net/wireless/ath/ath10k/debug.c:2525: Symbolic permissions
+'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+drivers/net/wireless/ath/ath10k/debug.c:2527: Symbolic permissions
+'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+drivers/net/wireless/ath/ath10k/debug.c:2620: Alignment should match open p=
+arenthesis
+drivers/net/wireless/ath/ath10k/debug.c:2640: Alignment should match open p=
+arenthesis
+
+I fixed those in the pending branch:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=3Dp=
+ending&id=3Dbd8c3bdce70adc201037b2eb7eda0a83911ef375
+
+I'll look at this more closely later.
+
+--=20
+Kalle Valo=
