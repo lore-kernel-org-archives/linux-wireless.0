@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:52706 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933330AbdERL1o (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17971 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750745AbdESHsb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 07:27:44 -0400
-Date: Thu, 18 May 2017 13:27:20 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Tom Psyborg <pozega.tomislav@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>
-Subject: Re: [PATCH] rt2x00: remove unneccesary code
-Message-ID: <20170518112720.GE2239@makrotopia.org> (sfid-20170518_132811_901293_5B0758F7)
-References: <CAKR_QVJBSKw2uCY4RbHZPvbGkMcvnBh+j6F+9t93mG3BakjX3Q@mail.gmail.com>
+        Fri, 19 May 2017 03:48:31 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAKR_QVJBSKw2uCY4RbHZPvbGkMcvnBh+j6F+9t93mG3BakjX3Q@mail.gmail.com>
+Subject: Re: ath6kl: assure headroom of skbuff is writable in .start_xmit()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1493111408-27692-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <eabfeaed1b2b4873bef7b293e512d847@euamsexm01a.eu.qualcomm.com> (sfid-20170519_094840_872296_F845A1AC)
+Date: Fri, 19 May 2017 09:48:05 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tom,
-
-thank you for that contribution.
-Code for ePA has not yet been submitted upstream, I wanted to give it
-some more testing, so it's still a local patch in OpenWrt/LEDE.
-I'll merge your patch into our local patch-queue and submit it together
-with the ePA code once it got some more testing.
-
-Cheers
-
-Daniel
-
-Patchworkers: consider this to be a request to defer this submission.
-
-
-On Thu, May 18, 2017 at 12:42:14PM +0200, Tom Psyborg wrote:
-> Use chanreg and dccal helpers to reduce the size of ePA code.
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> An issue was found brcmfmac driver in which a skbuff in .start_xmit()
+> callback was actually cloned. So instead of checking for sufficient
+> headroom it should also be writable. Hence use skb_cow_head() to
+> check and expand the headroom appropriately.
 > 
-> Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
-> 
-> ---
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Tested-by: Steve deRosier <derosier@gmail.com>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+1ed760c9aca0 ath6kl: assure headroom of skbuff is writable in .start_xmit()
+
+-- 
+https://patchwork.kernel.org/patch/9697757/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
