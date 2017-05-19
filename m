@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:32861 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756572AbdEKXZB (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38076 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755711AbdESJF4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 19:25:01 -0400
-Received: by mail-oi0-f68.google.com with SMTP id h4so6462829oib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 16:25:01 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/10] rtlwifi: btcoex: 21a 1ant: react to special packet when wifi is not scanning
-Date: Thu, 11 May 2017 18:24:32 -0500
-Message-Id: <20170511232438.23159-5-Larry.Finger@lwfinger.net> (sfid-20170512_012509_174751_D10A9648)
-In-Reply-To: <20170511232438.23159-1-Larry.Finger@lwfinger.net>
-References: <20170511232438.23159-1-Larry.Finger@lwfinger.net>
+        Fri, 19 May 2017 05:05:56 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Xinming Hu <huxinming820@gmail.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: RE: [PATCH v2 5/6] mwifiex: do not aggregate tcp ack in usb tx
+ aggregation queue
+Date: Fri, 19 May 2017 09:05:46 +0000
+Message-ID: <64c6cdbc1ff64deaa42b76ce8ab181cd@SC-EXCH02.marvell.com> (sfid-20170519_110615_011746_0DC7BBBE)
+References: <1493986100-24509-1-git-send-email-huxinming820@gmail.com>
+        <1493986100-24509-5-git-send-email-huxinming820@gmail.com>
+ <87lgpu5j61.fsf@purkki.adurom.net>
+In-Reply-To: <87lgpu5j61.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-
-If wifi is not scanning, there may have some special and important
-packets such as DHCP or EAPOL or ARP packets. Set tdma and coex table to
-take care of them.
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 13d8ac23b17a..f5a4640577c2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -1799,7 +1799,11 @@ static void btc8821a1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_LINK, &link);
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_ROAM, &roam);
- 	if (scan || link || roam) {
--		btc8821a1ant_action_wifi_connected_scan(btcoexist);
-+		if (scan)
-+			btc8821a1ant_action_wifi_connected_scan(btcoexist);
-+		else
-+			btc8821a1ant_act_wifi_conn_sp_pkt(btcoexist);
-+
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], CoexForWifiConnect(), return for wifi is under scan<===\n");
- 		return;
--- 
-2.12.2
+SGkgS2FsbGUsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2FsbGUg
+VmFsbyBbbWFpbHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiAyMDE3xOo11MIxOMjV
+IDIyOjMzDQo+IFRvOiBYaW5taW5nIEh1DQo+IENjOiBMaW51eCBXaXJlbGVzczsgQnJpYW4gTm9y
+cmlzOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsNCj4gWmhpeXVhbiBZYW5n
+OyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7IEdhbmFwYXRoaSBCaGF0DQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0ggdjIgNS82XSBtd2lmaWV4OiBkbyBub3QgYWdncmVnYXRlIHRjcCBhY2sgaW4gdXNiIHR4
+DQo+IGFnZ3JlZ2F0aW9uIHF1ZXVlDQo+IA0KPiBYaW5taW5nIEh1IDxodXhpbm1pbmc4MjBAZ21h
+aWwuY29tPiB3cml0ZXM6DQo+IA0KPiA+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5j
+b20+DQo+ID4NCj4gPiBUY3AgYWNrIHNob3VsZCBiZSBzZW5kIGFzIHNvb24gdG8gYXZvaWQgdGhy
+b3VwdXQgZHJvcCBkdXJpbmcgcmVjZWl2ZQ0KPiA+IHRjcCB0cmFmZmljLg0KPiA+DQo+ID4gU2ln
+bmVkLW9mZi1ieTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2Zm
+LWJ5OiBDYXRoeSBMdW8gPGNsdW9AbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogR2Fu
+YXBhdGhpIEJoYXQgPGdiaGF0QG1hcnZlbGwuY29tPg0KPiANCj4gWy4uLl0NCj4gDQo+ID4gK3N0
+YXRpYyBib29sIGlzX3BpZ2d5YmFja190Y3BfYWNrKHN0cnVjdCBza19idWZmICpza2IpIHsNCj4g
+PiArCXN0cnVjdCBldGhoZHIgKmV0aGggPSBOVUxMOw0KPiA+ICsJc3RydWN0IGlwaGRyICAqaXBo
+ID0gTlVMTDsNCj4gPiArCXN0cnVjdCB0Y3BoZHIgKnRjcGggPSBOVUxMOw0KPiA+ICsNCj4gPiAr
+CWV0aGggPSAoc3RydWN0IGV0aGhkciAqKXNrYi0+ZGF0YTsNCj4gPiArCWlmIChudG9ocyhldGho
+LT5oX3Byb3RvKSAhPSBFVEhfUF9JUCkNCj4gPiArCQlyZXR1cm4gZmFsc2U7DQo+ID4gKw0KPiA+
+ICsJaXBoID0gKHN0cnVjdCBpcGhkciAqKSgodTggKilldGhoICsgc2l6ZW9mKHN0cnVjdCBldGho
+ZHIpKTsNCj4gPiArCWlmIChpcGgtPnByb3RvY29sICE9IElQUFJPVE9fVENQKQ0KPiA+ICsJCXJl
+dHVybiBmYWxzZTsNCj4gPiArDQo+ID4gKwl0Y3BoID0gKHN0cnVjdCB0Y3BoZHIgKikoKHU4ICop
+aXBoICsgaXBoLT5paGwgKiA0KTsNCj4gPiArCS8qIFBpZ2d5YmFjayBhY2sgd2l0aG91dCBwYXls
+b2FkKi8NCj4gPiArCWlmICgqKCh1OCAqKXRjcGggKyAxMykgPT0gMHgxMCAmJg0KPiA+ICsJICAg
+IG50b2hzKGlwaC0+dG90X2xlbikgPD0gKGlwaC0+aWhsICsgdGNwaC0+ZG9mZikgKiA0KSB7DQo+
+ID4gKwkJcmV0dXJuIHRydWU7DQo+ID4gKwl9DQo+IA0KPiBJdCdzIHJhdGhlciB1Z2x5IHRvIHVz
+ZSBtYWdpYyB2YWx1ZXMgKDEzIGFuZCAweDEwKSBsaWtlIHRoYXQuIENhbid0IHlvdSB1c2Ugc29t
+ZQ0KPiBvZiB0aGUgZXhpc3RpbmcgZGVmaW5lcz8gQXQgbGVhc3QgSSBzZWUgVENQX0ZMQUdfQUNL
+IGFuZCBzdHJ1Y3QgdGNwaGRyOjphY2sNCj4gYmVpbmcgYXZhaWxhYmxlLCBzbyB5b3Ugc2hvdWxk
+IGV2ZW4gaGF2ZSBjaG9pc2VzIHdoYXQgdG8gdXNlLg0KPiANCg0KTXkgd3JvbmcuIFdpbGwgcmVz
+ZW5kIFYzIHNlcmlhbHMuDQpUaGFua3MgZm9yIHRoZSByZXZpZXcuDQoNClJlZ2FyZHMsDQpTaW1v
+bg0KPiAtLQ0KPiBLYWxsZSBWYWxvDQo=
