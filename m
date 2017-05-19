@@ -1,142 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:45108 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750934AbdEBMmx (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35851 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755900AbdESP7r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 08:42:53 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Eliad Peller <eliad@wizery.com>,
-        Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-        Eliad Peller <eliadx.peller@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/9] cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
-Date: Tue,  2 May 2017 13:42:21 +0100
-Message-Id: <1493728949-10797-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170502_144311_512299_C6D69498)
-In-Reply-To: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1493728949-10797-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 19 May 2017 11:59:47 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w138so13040627oiw.3
+        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 08:59:47 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 05/10] rtlwifi: btcoex: 23b 1ant: Add power_on_setting
+Date: Fri, 19 May 2017 10:59:32 -0500
+Message-Id: <20170519155937.17526-6-Larry.Finger@lwfinger.net> (sfid-20170519_180005_115275_2AD65E24)
+In-Reply-To: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
+References: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Let drivers advertise support for station-mode 4-way handshake
-offloading with a new NL80211_EXT_FEATURE_4WAY_HANDSHAKE_OFFLOAD_STA
-flag.
+This change is highly related to init_hwconfig that was decomposed into
+two parts for better program flow.
 
-Extend use of NL80211_ATTR_PMK attribute indicating it might be passed
-as part of NL80211_CMD_CONNECT command, and contain the PSK (which is
-the PMK, hence the name.)
-
-The driver/device is assumed to handle the 4-way handshake by
-itself in this case (including key derivations, etc.), instead
-of relying on the supplicant.
-
-This patch is somewhat based on this one (by Vladimir Kondratiev):
-https://patchwork.kernel.org/patch/1309561/.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[arend.vanspriel@broadcom.com rebase dealing with existing ATTR_PMK]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- include/linux/ieee80211.h    |  1 +
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h | 10 ++++++++--
- net/wireless/nl80211.c       |  9 +++++++++
- 4 files changed, 20 insertions(+), 2 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 69 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  1 +
+ 2 files changed, 70 insertions(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 6903335..e97ca3a 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2401,6 +2401,7 @@ enum ieee80211_sa_query_action {
- #define WLAN_MAX_KEY_LEN		32
- 
- #define WLAN_PMKID_LEN			16
-+#define WLAN_PMK_LEN			32
- 
- #define WLAN_OUI_WFA			0x506f9a
- #define WLAN_OUI_TYPE_WFA_P2P		9
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6e90f1a..3a2989d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -649,6 +649,7 @@ struct survey_info {
-  * @wep_keys: static WEP keys, if not NULL points to an array of
-  *	CFG80211_MAX_WEP_KEYS WEP keys
-  * @wep_tx_key: key index (0..3) of the default TX static WEP key
-+ * @psk: PSK (for devices supporting 4-way-handshake offload)
-  */
- struct cfg80211_crypto_settings {
- 	u32 wpa_versions;
-@@ -662,6 +663,7 @@ struct cfg80211_crypto_settings {
- 	bool control_port_no_encrypt;
- 	struct key_params *wep_keys;
- 	int wep_tx_key;
-+	const u8 *psk;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index b8c44b9..b9e6d14 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2080,8 +2080,10 @@ enum nl80211_commands {
-  *	identifying the scope of PMKSAs. This is used with
-  *	@NL80211_CMD_SET_PMKSA and @NL80211_CMD_DEL_PMKSA.
-  *
-- * @NL80211_ATTR_PMK: PMK for the PMKSA identified by %NL80211_ATTR_PMKID.
-- *	This is used with @NL80211_CMD_SET_PMKSA.
-+ * @NL80211_ATTR_PMK: attribute for passing PMK key material. Used with
-+ *	%NL80211_CMD_SET_PMKSA for the PMKSA identified by %NL80211_ATTR_PMKID.
-+ *	For %NL80211_CMD_CONNECT it is used to provide PSK for offloading 4-way
-+ *	handshake for WPA/WPA2-PSK networks.
-  *
-  * @NL80211_ATTR_SCHED_SCAN_MULTI: flag attribute which user-space shall use to
-  *	indicate that it supports multiple active scheduled scan requests.
-@@ -4852,6 +4854,9 @@ enum nl80211_feature_flags {
-  *	RSSI threshold values to monitor rather than exactly one threshold.
-  * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS shared key
-  *	authentication with %NL80211_CMD_CONNECT.
-+ * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK: Device supports doing 4-way
-+ *	handshake with PSK in station mode (PSK is passed as part of the connect
-+ *	and associate commands).
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -4872,6 +4877,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
- 	NL80211_EXT_FEATURE_CQM_RSSI_LIST,
- 	NL80211_EXT_FEATURE_FILS_SK_OFFLOAD,
-+	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 570fc95..d93e3e4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8156,6 +8156,15 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 		memcpy(settings->akm_suites, data, len);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_PMK]) {
-+		if (nla_len(info->attrs[NL80211_ATTR_PMK]) != WLAN_PMK_LEN)
-+			return -EINVAL;
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK))
-+			return -EINVAL;
-+		settings->psk = nla_data(info->attrs[NL80211_ATTR_PMK]);
-+	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 71ce0fe886a3..f565c9e7e17b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -2213,6 +2213,75 @@ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
+ /**************************************************************
+  * extern function start with ex_halbtc8723b1ant_
+  **************************************************************/
++void ex_halbtc8723b1ant_power_on_setting(struct btc_coexist *btcoexist)
++{
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct btc_board_info *board_info = &btcoexist->board_info;
++	u8 u8tmp = 0x0;
++	u16 u16tmp = 0x0;
++	u32 value;
 +
- 	return 0;
- }
++	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++		 "xxxxxxxxxxxxxxxx Execute 8723b 1-Ant PowerOn Setting xxxxxxxxxxxxxxxx!!\n");
++
++	btcoexist->stop_coex_dm = true;
++
++	btcoexist->btc_write_1byte(btcoexist, 0x67, 0x20);
++
++	/* enable BB, REG_SYS_FUNC_EN such that we can write 0x948 correctly. */
++	u16tmp = btcoexist->btc_read_2byte(btcoexist, 0x2);
++	btcoexist->btc_write_2byte(btcoexist, 0x2, u16tmp | BIT0 | BIT1);
++
++	/* set GRAN_BT = 1 */
++	btcoexist->btc_write_1byte(btcoexist, 0x765, 0x18);
++	/* set WLAN_ACT = 0 */
++	btcoexist->btc_write_1byte(btcoexist, 0x76e, 0x4);
++
++	/* S0 or S1 setting and Local register setting(By the setting fw can get
++	 * ant number, S0/S1, ... info)
++	 *
++	 * Local setting bit define
++	 *	BIT0: "0" for no antenna inverse; "1" for antenna inverse
++	 *	BIT1: "0" for internal switch; "1" for external switch
++	 *	BIT2: "0" for one antenna; "1" for two antenna
++	 * NOTE: here default all internal switch and 1-antenna ==> BIT1=0 and
++	 * BIT2 = 0
++	 */
++	if (btcoexist->chip_interface == BTC_INTF_USB) {
++		/* fixed at S0 for USB interface */
++		btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
++
++		u8tmp |= 0x1; /* antenna inverse */
++		btcoexist->btc_write_local_reg_1byte(btcoexist, 0xfe08, u8tmp);
++
++		board_info->btdm_ant_pos = BTC_ANTENNA_AT_AUX_PORT;
++	} else {
++		/* for PCIE and SDIO interface, we check efuse 0xc3[6] */
++		if (board_info->single_ant_path == 0) {
++			/* set to S1 */
++			btcoexist->btc_write_4byte(btcoexist, 0x948, 0x280);
++			board_info->btdm_ant_pos = BTC_ANTENNA_AT_MAIN_PORT;
++			value = 1;
++		} else if (board_info->single_ant_path == 1) {
++			/* set to S0 */
++			btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
++			u8tmp |= 0x1; /* antenna inverse */
++			board_info->btdm_ant_pos = BTC_ANTENNA_AT_AUX_PORT;
++			value = 0;
++		}
++
++		btcoexist->btc_set(btcoexist, BTC_SET_ACT_ANTPOSREGRISTRY_CTRL,
++				   &value);
++
++		if (btcoexist->chip_interface == BTC_INTF_PCI)
++			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x384,
++							     u8tmp);
++		else if (btcoexist->chip_interface == BTC_INTF_SDIO)
++			btcoexist->btc_write_local_reg_1byte(btcoexist, 0x60,
++							     u8tmp);
++	}
++}
++
  
+ void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
+ 				      bool wifi_only)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index aadac2afc900..fd0620ef0987 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -188,6 +188,7 @@ struct coex_sta_8723b_1ant {
+ /*************************************************************************
+  * The following is interface which will notify coex module.
+  *************************************************************************/
++void ex_halbtc8723b1ant_power_on_setting(struct btc_coexist *btcoexist);
+ void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
+ 				      bool wifi_only);
+ void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist);
 -- 
-1.9.1
+2.12.0
