@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33984 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932083AbdEUUBb (ORCPT
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:35188 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750766AbdESHuL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 16:01:31 -0400
-Received: by mail-lf0-f68.google.com with SMTP id q24so3696081lfb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:25 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 1/9] ath10k: high_latency detection
-Date: Sun, 21 May 2017 21:59:03 +0200
-Message-Id: <1495396751-4805-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220202_491988_FECB933B)
-In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 19 May 2017 03:50:11 -0400
+Received: by mail-qk0-f181.google.com with SMTP id a72so54812818qkj.2
+        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 00:50:05 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: remove setting IBSS mode when stopping AP
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wright Feng <wright.feng@cypress.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+References: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
+ <87efvla1s9.fsf@codeaurora.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <2dd93d16-e793-9d71-b36d-ac2592b060ea@broadcom.com> (sfid-20170519_095041_692167_6C6FDB36)
+Date: Fri, 19 May 2017 09:49:52 +0200
+MIME-Version: 1.0
+In-Reply-To: <87efvla1s9.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The setup of high latency chips (USB and SDIO) is
-sometimes different than for chips using low latency
-interfaces.
+On 5/19/2017 6:49 AM, Kalle Valo wrote:
+> Wright Feng <wright.feng@cypress.com> writes:
+> 
+>> From: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+>>
+>> Setting IBSS mode when stopping AP may affect functionality of INFRA
+>> mode on another interface. For instance, if user creates and stops
+>> hostap daemon on virtual interface, then association cannot work on
+>> primary interface because default BSS has been set to IBSS mode in
+>> firmware side. The IBSS mode should be set when cfg80211 changes the
+>> interface.
+>>
+>> Reviewed-by: Wright Feng <wright.feng@cypress.com>
+>> Signed-off-by: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
+>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ---
+>>   1 file changed, 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> index 944b83c..ce2a5b6 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> @@ -4658,9 +4658,6 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+>>   		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 0);
+>>   		if (err < 0)
+>>   			brcmf_err("setting AP mode failed %d\n", err);
+>> -		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 0);
+>> -		if (err < 0)
+>> -			brcmf_err("setting INFRA mode failed %d\n", err);
+> 
+> The title talks about setting IBSS mode but the code looks to be about
+> setting INFRA mode. Is this correct?
 
-The bus type is used to determine if the interface is
-a high latency interface.
+Both are correct :-p Have to admit this is confusing. The command 
+SET_INFRA with zero value means "disable INFRA; thus enable IBSS".
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
- 2 files changed, 8 insertions(+)
+I would rephrase the commit message indeed explaining what the code 
+currently does, ie.:
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 46ce263..627954e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2445,6 +2445,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 	ar->hw_rev = hw_rev;
- 	ar->hif.ops = hif_ops;
- 	ar->hif.bus = bus;
-+	ar->is_high_latency = ath10k_is_high_latency(bus);
- 
- 	switch (hw_rev) {
- 	case ATH10K_HW_QCA988X:
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 1efe0a1..90069b8 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -789,6 +789,8 @@ struct ath10k {
- 
- 	bool p2p;
- 
-+	bool is_high_latency;
-+
- 	struct {
- 		enum ath10k_bus bus;
- 		const struct ath10k_hif_ops *ops;
-@@ -1008,6 +1010,11 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
- 	return false;
- }
- 
-+static inline bool ath10k_is_high_latency(enum ath10k_bus bus)
-+{
-+	return ((bus == ATH10K_BUS_SDIO) || (bus == ATH10K_BUS_USB));
-+}
-+
- struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 				  enum ath10k_bus bus,
- 				  enum ath10k_hw_rev hw_rev,
--- 
-2.7.4
+Upon stopping an AP interface the driver disable INFRA mode effectively 
+setting the interface in IBSS mode. However, this may affect other 
+interfaces running in INFRA mode. For instance, ....
+
+Regards,
+Arend
