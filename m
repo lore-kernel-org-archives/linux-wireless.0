@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59628 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751619AbdEFPuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 6 May 2017 11:50:22 -0400
-Message-ID: <1494085819.19292.5.camel@redhat.com> (sfid-20170506_175025_994651_EA718BCF)
-Subject: Re: mwifiex won't connect to WPA2 anymore
-From: Dan Williams <dcbw@redhat.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 06 May 2017 10:50:19 -0500
-In-Reply-To: <87mvaq4bsg.fsf@free.fr>
-References: <87wpa3kxgi.fsf@free.fr> <87tw51y91z.fsf@free.fr>
-         <1493844237.5647.9.camel@redhat.com> <87a86sfh2e.fsf@free.fr>
-         <1493948347.26081.1.camel@redhat.com> <87mvaq4bsg.fsf@free.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:46640 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751871AbdESGBh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 02:01:37 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] mwifiex: pcie: de-duplicate buffer allocation code
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170518163447.29496-1-briannorris@chromium.org>
+References: <20170518163447.29496-1-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Message-Id: <20170519060136.CA44A60EC7@smtp.codeaurora.org> (sfid-20170519_080149_166324_E6E2212E)
+Date: Fri, 19 May 2017 06:01:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-05-06 at 10:41 +0200, Julien Cubizolles wrote:
-> Dan Williams <dcbw@redhat.com> writes:
+Brian Norris <briannorris@chromium.org> wrote:
+> This code was duplicated as part of the PCIe FLR code added to this
+> driver. Let's de-duplicate it to:
 > 
+>  * make things easier to read (mwifiex_pcie_free_buffers() now has a
+>    corresponding mwifiex_pcie_alloc_buffers())
+>  * reduce likelihood of bugs
+>  * make error logging equally verbose
+>  * save lines of code!
 > 
-> > Just to test, could you add:
-> > 
-> > auth_alg=OPEN
-> > key_mgmt=WPA-PSK
-> > scan_ssid=1
-> > 
-> > to the block and retry with the supplicant?  I don't know why those
-> > would make a difference but they might.
+> Also drop some of the commentary that isn't really needed.
 > 
-> They don't: wpa_supplicant still connects with these settings.
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-Ok, at this point the only thing I can think of is the MAC
-randomization that NM has.  Please see:
+Patch applied to wireless-drivers-next.git, thanks.
 
-https://blogs.gnome.org/thaller/2016/08/26/mac-address-spoofing-in-networkmanager-1-4-0/
+d41bf5c1c0ed mwifiex: pcie: de-duplicate buffer allocation code
 
-and look at the section "Randomization during Wi-Fi scanning" where it
-says:
+-- 
+https://patchwork.kernel.org/patch/9734777/
 
-----
-This default behavior can be disabled with a global configuration
-option in NetworkManager.conf:
-
-[device]
-wifi.scan-rand-mac-address=no
-----
-
-if you set that, and restart NetworkManager, does that magically make
-things work?
-
-Dan
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
