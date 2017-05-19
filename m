@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37906 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750991AbdEOHNC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 03:13:02 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Eric Schultz <eschultz@prplfoundation.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: Participation in common kernel API recommendation?
-References: <3ae60be2-63b5-1409-8b6c-f0a363c7968b@prplfoundation.org>
-        <42258cf0-ed93-4d18-8114-012d1d227532@broadcom.com>
-Date: Mon, 15 May 2017 10:12:57 +0300
-In-Reply-To: <42258cf0-ed93-4d18-8114-012d1d227532@broadcom.com> (Arend Van
-        Spriel's message of "Sat, 13 May 2017 13:40:13 +0200")
-Message-ID: <874lwm7fuu.fsf@purkki.adurom.net> (sfid-20170515_091306_274913_8D3FC856)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:36914 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752078AbdESKPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 06:15:35 -0400
+Message-ID: <1495188901.3274.0.camel@sipsolutions.net> (sfid-20170519_121539_361081_BE4FCE9E)
+Subject: Re: [PATCH 08/29] rfkill.txt: standardize document format
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>,
+        linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Fri, 19 May 2017 12:15:01 +0200
+In-Reply-To: <3361dce0e96427ed8fc375ab78371c0a6d0f55cc.1495157082.git.mchehab@s-opensource.com>
+References: <cover.1495157082.git.mchehab@s-opensource.com>
+         <3361dce0e96427ed8fc375ab78371c0a6d0f55cc.1495157082.git.mchehab@s-opensource.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+On Thu, 2017-05-18 at 22:25 -0300, Mauro Carvalho Chehab wrote:
+> 
+> +.. CONTENTS
+>  
+> +  1. Introduction
+> +  2. Implementation details
+> +  3. Kernel API
+> +  4. Userspace support
 
->> Would any members be interested in spending a one hour meeting with the
->> subcommittee to give some feedback on the recommendation? If so, please
->> let me know.
->
-> Just throwing a wild idea at you. In the spirit of how the community
-> works why not post it (on refer to some public link) on the mailing list
-> for review to get the feedback.
+Why not let this be auto-generated?
 
-Indeed. Much more time efficient and no need to have a call in some odd
-time of the day.
+.. contents::
+   :depth: 1
 
--- 
-Kalle Valo
+should work, no?
+
+johannes
