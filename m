@@ -1,92 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20334 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934647AbdEVPRz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 11:17:55 -0400
-From: Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>, "nbd@nbd.name" <nbd@nbd.name>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] ath10k : Fix channel survey dump
-Date: Mon, 22 May 2017 15:17:50 +0000
-Message-ID: <bf174d49b9be4b3697601f6bef7394d8@APSANEXR01F.ap.qualcomm.com> (sfid-20170522_171759_836527_29DCE1F5)
-References: <1493217698-22451-1-git-send-email-c_vnaral@qti.qualcomm.com>
-        <40f2b7a2-7276-6de6-afc6-407348c92e70@nbd.name>
- <87wp9durwe.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87wp9durwe.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:37902 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750793AbdESLrj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 May 2017 07:47:39 -0400
+Message-ID: <1495194457.3274.10.camel@sipsolutions.net> (sfid-20170519_134742_408859_3D882175)
+Subject: Re: [PATCHv4 1/2] cfg80211: Add support to enable or disable btcoex
+ and set btcoex_priority
+From: Johannes Berg <johannes@sipsolutions.net>
+To: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, tamizhchelvam@codeaurora.org
+Date: Fri, 19 May 2017 13:47:37 +0200
+In-Reply-To: <1491905730-16392-2-git-send-email-c_traja@qti.qualcomm.com>
+References: <1491905730-16392-1-git-send-email-c_traja@qti.qualcomm.com>
+         <1491905730-16392-2-git-send-email-c_traja@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
------Original Message-----
-From: Kalle Valo=20
-Sent: Friday, May 19, 2017 2:48 PM
-To: nbd@nbd.name
-Cc: Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>; ath10k@lists.inf=
-radead.org; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k : Fix channel survey dump
+Sorry for the long delay.
 
-Felix Fietkau <nbd@nbd.name> writes:
+> +/**
+> + * enum nl80211_btcoex_priority - btcoex priority supported frame
+> types and
+> + *	its bitmap values.
+> + * @NL80211_BTCOEX_SUPPORTS_BE_PREF - wlan Best effort frame takes
+> more
 
-> On 2017-04-26 16:41, Venkateswara Rao Naralasetty wrote:
->> Channel active/busy time are showing incorrect (less than previous or=20
->> sometimes zero) for successive survey dump command.
->>=20
->> example:
->> Survey data from wlan0
->>         frequency:                      5180 MHz [in use]
->>         channel active time:            54995 ms
->>         channel busy time:              432 ms
->>         channel receive time:           0 ms
->>         channel transmit time:          59 ms
->> Survey data from wlan0
->>         frequency:                      5180 MHz [in use]
->>         channel active time:            32592 ms
->>         channel busy time:              254 ms
->>         channel receive time:           0 ms
->>         channel transmit time:          0 ms
->>=20
->> This patch fix this issue by assigning 'wmi_bss_survey_req_type'
->> as 'WMI_BSS_SURVEY_REQ_TYPE_READ'.
->>=20
->> Firmware ver 10.4-3.4-00082
->> Hardware QCA4019
->>=20
->> Signed-off-by: Venkateswara Rao Naralasetty=20
->> <c_vnaral@qti.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c=20
->> b/drivers/net/wireless/ath/ath10k/mac.c
->> index 9977829..87a9b55 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -6621,7 +6621,7 @@ static void ath10k_reconfig_complete(struct ieee80=
-211_hw *hw,
->>  				  struct ieee80211_channel *channel)  {
->>  	int ret;
->> -	enum wmi_bss_survey_req_type type =3D WMI_BSS_SURVEY_REQ_TYPE_READ_CLE=
-AR;
->> +	enum wmi_bss_survey_req_type type =3D WMI_BSS_SURVEY_REQ_TYPE_READ;
->
-> Does the firmware read the registers directly, or does it accumulate=20
-> the results in a way that can't overflow? If you don't clear the=20
-> counters on reset, the overflow will be problematic for the=20
-> current-channel stats. I think a better approach would be to use=20
-> READ_CLEAR for in-use channels and store the sum inside the driver.
+You should drop the _SUPPORTS part from these names, it's not just for
+that now.
 
-Venkateswara, any comments?
+> + */
+> +
+> +enum nl80211_btcoex_priority {
 
---
-Kalle Valo
+There's an extra blank line here.
 
-Sorry for the delayed response I held up with some other work. Currently I =
-am working with firmware team to address your comments.
+> +	NL80211_BTCOEX_SUPPORTS_BE_PREF		= 1 << 0,
+> +	NL80211_BTCOEX_SUPPORTS_BK_PREF		= 1 << 1,
+> +	NL80211_BTCOEX_SUPPORTS_VI_PREF		= 1 << 2,
+> +	NL80211_BTCOEX_SUPPORTS_VO_PREF		= 1 << 3,
+> +	NL80211_BTCOEX_SUPPORTS_BEACON_PREF	= 1 << 4,
+> +	NL80211_BTCOEX_SUPPORTS_MGMT_PREF	= 1 << 5,
+> +	NL80211_BTCOEX_SUPPORTS_MAX_PREF	= (1 << 6) - 1,
 
---
-Venkatesh.
+I'd prefer to formulate this as
+
+ NL80211_BTCOEX_PREF_MASK = (NL80211_BTCOEX_SUPPORTS_BE_PREF |
+			     ...)
+
+and then later use
+
+if (value & ~NL80211_BTCOEX_PREF_MASK)
+	return -EINVAL;
+
+The way it is now isn't really all that obvious IMHO.
+
+> +	u8 val = 0;
+> +	u32 btcoex_priority = 0;
+
+No need to initialize those values.
+
++	if (!rdev->ops->set_btcoex)
+> +		return -ENOTSUPP;
+> +
+> +	if (!(info->attrs[NL80211_ATTR_BTCOEX_OP]))
+> +		goto set_btcoex;
+
+Don't really need those extra parentheses.
+
+> +	if (info->attrs[NL80211_ATTR_BTCOEX_OP])
+> +		val = nla_get_u8(info-
+> >attrs[NL80211_ATTR_BTCOEX_OP]);
+
+Ok, actually, here you do need to initialize val but it makes no sense
+- why is this even a U8 attribute rather than a FLAG?
+
+So there are two ways you can play this:
+
+1) either you make it a U8 attribute as you have, and allow *not
+changing* it, by making val default to -1 and documenting in the
+cfg80211 API that -1 means no changes. This would allow userspace to
+set the BT coex priority parameters without changing whether or not BT
+coex is turned on or off entirely, but the drivers would have to be
+storing the priority values all the time etc. This seems somewhat error
+prone.
+
+- or -
+
+2) You simply disallow changing the BT coex priority parameters by
+themselves, i.e. allow only setting those if the FLAG attribute for
+enabling BT coex is also present. IMHO this is less error prone.
+
+The way it is now makes no sense - you could set the BT coex parameters
+and leave out the BTCOEX_OP attribute entirely, but then if you leave
+it out that would mean it actually gets disabled and the new priority
+values don't take any effect.
+
+I strongly suggest you go for option 2) unless you can provide a really
+good reason for option 1). If you do go for 2) you should rename the
+BTCOEX_OP to BTCOEX_ENABLE and make it a flag.
+
+> +	if (val > 1)
+> +		return -EINVAL;
+> +
+> +	if (info->attrs[NL80211_ATTR_BTCOEX_PRIORITY]) {
+> +		if (!wiphy_ext_feature_isset(wiphy,
+> +					NL80211_EXT_FEATURE_BTCOEX_P
+> RIORITY))
+> +			return -EOPNOTSUPP;
+> +
+> +		btcoex_priority =
+> +		nla_get_u32(info-
+> >attrs[NL80211_ATTR_BTCOEX_PRIORITY]);
+> +
+> +		if (btcoex_priority >
+> NL80211_BTCOEX_SUPPORTS_MAX_PREF)
+> +			return -E2BIG;
+> +	}
+
+-EINVAL, even if that's not nice, but E2BIG means "argument list too
+long" which really isn't the right thing here.
+
+johannes
