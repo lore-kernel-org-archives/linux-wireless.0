@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:58869 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752153AbdEIH3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 03:29:15 -0400
-Subject: [PATCH 3/3] ath9k: Adjust a null pointer check in three functions
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
-Message-ID: <6c3d87e0-d758-6f9b-4b1f-156d890b788d@users.sourceforge.net> (sfid-20170509_093017_137889_779F5E65)
-Date: Tue, 9 May 2017 09:29:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36179 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756264AbdETUeC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 May 2017 16:34:02 -0400
+Received: by mail-lf0-f68.google.com with SMTP id h4so2393485lfj.3
+        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 13:34:01 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 2/3] ath10k: different fw file names for usb
+Date: Sat, 20 May 2017 22:33:29 +0200
+Message-Id: <1495312410-9937-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170520_223413_022397_507645B0)
+In-Reply-To: <1495312410-9937-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1495312410-9937-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 8 May 2017 22:17:13 +0200
+USB firmware will be named in the same way as SDIO files,
+i.e, the bus type will be added to the firmware file name.
 
-The script "checkpatch.pl" pointed information out like the following.
-
-Comparison to NULL could be written "!buf"
-
-Thus adjust this expression.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 0d215598193c..5f2c1d8e8e70 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -161,7 +161,7 @@ static ssize_t read_file_ani(struct file *file, char __user *user_buf,
- 	};
- 
- 	buf = kzalloc(size, GFP_KERNEL);
--	if (buf == NULL)
-+	if (!buf)
- 		return -ENOMEM;
- 
- 	len += scnprintf(buf + len, size - len, "%15s: %s\n", "ANI",
-@@ -315,7 +315,7 @@ static ssize_t read_file_antenna_diversity(struct file *file,
- 	};
- 
- 	buf = kzalloc(size, GFP_KERNEL);
--	if (buf == NULL)
-+	if (!buf)
- 		return -ENOMEM;
- 
- 	if (!(pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)) {
-@@ -1008,7 +1008,7 @@ static ssize_t read_file_btcoex(struct file *file, char __user *user_buf,
- 	size_t retval;
- 
- 	buf = kzalloc(size, GFP_KERNEL);
--	if (buf == NULL)
-+	if (!buf)
- 		return -ENOMEM;
- 
- 	if (!sc->sc_ah->common.btcoex_enabled) {
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index eea111d..46ce263 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1412,6 +1412,7 @@ static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
+ {
+ 	switch (ar->hif.bus) {
+ 	case ATH10K_BUS_SDIO:
++	case ATH10K_BUS_USB:
+ 		scnprintf(fw_name, fw_name_len, "%s-%s-%d.bin",
+ 			  ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
+ 			  fw_api);
 -- 
-2.12.2
+2.7.4
