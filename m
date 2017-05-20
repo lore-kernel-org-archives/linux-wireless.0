@@ -1,60 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:53806 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760026AbdEVQ7V (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34002 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932301AbdETPtQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 12:59:21 -0400
-Subject: Re: [PATCH] cfg80211: Be able to set bss expire time at config stage.
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Dan Williams <dcbw@redhat.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        helmut.schaa@googlemail.com
-References: <20170522160946.2057-1-enric.balletbo@collabora.com>
- <1495470111.25557.9.camel@redhat.com>
- <1495470254.26008.3.camel@sipsolutions.net>
-From: Enric Balletbo i Serra <enric.balletbo@collabora.com>
-Message-ID: <aad376ad-ebe2-ec3a-15c9-187f63594083@collabora.com> (sfid-20170522_190004_395360_E3FABF87)
-Date: Mon, 22 May 2017 18:59:16 +0200
-MIME-Version: 1.0
-In-Reply-To: <1495470254.26008.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Sat, 20 May 2017 11:49:16 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w10so16697481oif.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:16 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 04/10] rtlwifi: btcoex: 23b 1ant: remove verbose log from periodic function
+Date: Sat, 20 May 2017 10:49:01 -0500
+Message-Id: <20170520154907.15590-5-Larry.Finger@lwfinger.net> (sfid-20170520_174930_493033_7433E935)
+In-Reply-To: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
+References: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-On 22/05/17 18:24, Johannes Berg wrote:
-> 
->> Couldn't userspace just look at NL80211_BSS_SEEN_MS_AGO to filter and
->> create its own list?  Given that the kernel provides the information
->> userspace needs to figure out the age of a particular BSS, it doesn't
->> seem like there needs to be a kernel tunable for this.  Userspace can
->> already avoid stale results.
-> 
-> Yeah, I agree. It can also ask for a flush, so that old results are
-> gone by the time the next scan returns. We don't have a flush operation
-> without requesting a new scan, but I guess that could be added.
-> 
+Simplify the debug trace log.
 
-Ok, guess I understand what you're saying. Thanks for pointing me in the right
-direction.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 33 ----------------------
+ 1 file changed, 33 deletions(-)
 
->> Also, different runtime situations might want different result ages,
->> which wouldn't be possible if the kernel had a hardcoded maximum. 
->> Furthermore, different userspace apps might be reading the same scan
->> list, and they might have different ideas about staleness.
->>
->> Or perhaps I misunderstand the problem, which could well be the case.
-> 
-> No, I think this is perfectly right - userspace should be able to deal
-> with this given the tools we gave it, or if not, we should probably
-> just give it more tools instead of hardcoding the kernel configuration.
-> 
-> This value really just kinda needed to be an upper bound so that we
-> don't start expiring entries while we're still scanning.
-> 
-> johannes
-> 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index e92ede844e3b..0b9d405e72eb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -2377,11 +2377,6 @@ void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
+ 			 "\r\n ==========================================");
+ 	}
+ 
+-	if (!board_info->bt_exist) {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n BT not exists !!!");
+-		return;
+-	}
+-
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = %d/ %d/ %d",
+ 		 "Ant PG Num/ Ant Mech/ Ant Pos:",
+ 		 board_info->pg_ant_num, board_info->btdm_ant_num,
+@@ -3336,38 +3331,10 @@ void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+-	struct btc_board_info *board_info = &btcoexist->board_info;
+-	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+-	static u8 dis_ver_info_cnt;
+-	u32 fw_ver = 0, bt_patch_ver = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], ==========================Periodical===========================\n");
+ 
+-	if (dis_ver_info_cnt <= 5) {
+-		dis_ver_info_cnt += 1;
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], Ant PG Num/ Ant Mech/ Ant Pos = %d/ %d/ %d\n",
+-			 board_info->pg_ant_num, board_info->btdm_ant_num,
+-			 board_info->btdm_ant_pos);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], BT stack/ hci ext ver = %s / %d\n",
+-			 stack_info->profile_notified ? "Yes" : "No",
+-			 stack_info->hci_version);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_BT_PATCH_VER,
+-				   &bt_patch_ver);
+-		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], CoexVer/ FwVer/ PatchVer = %d_%x/ 0x%x/ 0x%x(%d)\n",
+-			 glcoex_ver_date_8723b_1ant,
+-			 glcoex_ver_8723b_1ant, fw_ver,
+-			 bt_patch_ver, bt_patch_ver);
+-		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], ****************************************************************\n");
+-	}
+-
+ 	if (!btcoexist->auto_report_1ant) {
+ 		halbtc8723b1ant_query_bt_info(btcoexist);
+ 		halbtc8723b1ant_monitor_bt_enable_disable(btcoexist);
+-- 
+2.12.0
