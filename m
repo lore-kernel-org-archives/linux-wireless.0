@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33952 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932276AbdETPtM (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34016 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932292AbdETPtU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 May 2017 11:49:12 -0400
-Received: by mail-oi0-f66.google.com with SMTP id w10so16697212oif.1
-        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:12 -0700 (PDT)
+        Sat, 20 May 2017 11:49:20 -0400
+Received: by mail-oi0-f67.google.com with SMTP id w10so16697639oif.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:20 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 00/10] rtlwifi: btcoex: More fixes for halbtc8723b1ant.c
-Date: Sat, 20 May 2017 10:48:57 -0500
-Message-Id: <20170520154907.15590-1-Larry.Finger@lwfinger.net> (sfid-20170520_174917_299762_33DAEE18)
+Subject: [PATCH 09/10] rtlwifi: btcoex: 23b 1ant: fine tune for bt_sco_hid busy
+Date: Sat, 20 May 2017 10:49:06 -0500
+Message-Id: <20170520154907.15590-10-Larry.Finger@lwfinger.net> (sfid-20170520_174940_839554_21357713)
+In-Reply-To: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
+References: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set is the third for file halbtc8723b1ant.c.
+From: Ping-Ke Shih <pkshih@realtek.com>
+
+Fine tune the parameters in case of act_bt_sco_hid_only_busy.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by:: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
 Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-Ping-Ke Shih (9):
-  rtlwifi: btcoex: 23b 1ant: Special packets statistic in notification
-  rtlwifi: btcoex: 23b 1ant: define wifi in high priority task.
-  rtlwifi: btcoex: 23b 1ant: check more cases when bt is queing
-  rtlwifi: btcoex: 23b 1ant: remove verbose log from periodic function
-  rtlwifi: btcoex: 23b 1ant: Add coex_table_type to log
-  rtlwifi: btcoex: 23b 1ant: coex table fine tune
-  rtlwifi: btcoex: 23b 1ant: fine tune for wifi connected
-  rtlwifi: btcoex: 23b 1ant: fine tune for wifi not connected
-  rtlwifi: btcoex: 23b 1ant: fine tune for bt_sco_hid busy
-
-Yan-Hsuan Chuang (1):
-  rtlwifi: btcoex: 23b 1ant: turn off ps and tdma mechanism when
-    concurrent mode
-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 446 ++++++++++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   6 +
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  19 +
- 3 files changed, 333 insertions(+), 138 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index d938c8a4b180..5d780d8d7bbf 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1843,7 +1843,7 @@ static void btc8723b1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
+ 	/* tdma and coex table */
+ 	if (bt_link_info->sco_exist) {
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 5);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 5);
+ 	} else {
+ 		/* HID */
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 6);
 -- 
 2.12.0
