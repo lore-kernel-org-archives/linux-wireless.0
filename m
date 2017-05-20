@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-11.163.com ([220.181.12.11]:43788 "EHLO m12-11.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751029AbdEaK13 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 06:27:29 -0400
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] b43legacy: Fix a sleep-in-atomic bug in b43legacy_attr_interfmode_store
-Date: Wed, 31 May 2017 18:29:07 +0800
-Message-Id: <1496226547-5921-1-git-send-email-baijiaju1990@163.com> (sfid-20170531_122807_434033_1B771F37)
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36177 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756234AbdETUeB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 May 2017 16:34:01 -0400
+Received: by mail-lf0-f67.google.com with SMTP id h4so2393475lfj.3
+        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 13:33:59 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 1/3] ath10k: various usb related definitions
+Date: Sat, 20 May 2017 22:33:28 +0200
+Message-Id: <1495312410-9937-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170520_223412_431530_C4031B79)
+In-Reply-To: <1495312410-9937-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1495312410-9937-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver may sleep under a spin lock, and the function call path is:
-b43legacy_attr_interfmode_store (acquire the lock by spin_lock_irqsave)
-  b43legacy_radio_set_interference_mitigation
-    b43legacy_radio_interference_mitigation_disable
-      b43legacy_calc_nrssi_slope
-        b43legacy_synth_pu_workaround
-          might_sleep and msleep --> may sleep
+Definitions for USB based chipsets
 
-Fixing it may be complex, and a possible way is to remove 
-spin_lock_irqsave and spin_lock_irqrestore in 
-b43legacy_attr_interfmode_store, and the code has been protected by
-mutex_lock and mutex_unlock.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/broadcom/b43legacy/sysfs.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h  | 3 +++
+ drivers/net/wireless/ath/ath10k/debug.h | 2 ++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/b43legacy/sysfs.c b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
-index 2a1da15..9ede143 100644
---- a/drivers/net/wireless/broadcom/b43legacy/sysfs.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
-@@ -137,14 +137,12 @@ static ssize_t b43legacy_attr_interfmode_store(struct device *dev,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 8fc08a5..1efe0a1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -92,6 +92,7 @@ enum ath10k_bus {
+ 	ATH10K_BUS_PCI,
+ 	ATH10K_BUS_AHB,
+ 	ATH10K_BUS_SDIO,
++	ATH10K_BUS_USB,
+ };
+ 
+ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+@@ -103,6 +104,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+ 		return "ahb";
+ 	case ATH10K_BUS_SDIO:
+ 		return "sdio";
++	case ATH10K_BUS_USB:
++		return "usb";
  	}
  
- 	mutex_lock(&wldev->wl->mutex);
--	spin_lock_irqsave(&wldev->wl->irq_lock, flags);
+ 	return "unknown";
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 257d109..548ad54 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -40,6 +40,8 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_AHB		= 0x00008000,
+ 	ATH10K_DBG_SDIO		= 0x00010000,
+ 	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
++	ATH10K_DBG_USB		= 0x00040000,
++	ATH10K_DBG_USB_BULK	= 0x00080000,
+ 	ATH10K_DBG_ANY		= 0xffffffff,
+ };
  
- 	err = b43legacy_radio_set_interference_mitigation(wldev, mode);
- 	if (err)
- 		b43legacyerr(wldev->wl, "Interference Mitigation not "
- 		       "supported by device\n");
- 	mmiowb();
--	spin_unlock_irqrestore(&wldev->wl->irq_lock, flags);
- 	mutex_unlock(&wldev->wl->mutex);
- 
- 	return err ? err : count;
 -- 
-1.7.9.5
+2.7.4
