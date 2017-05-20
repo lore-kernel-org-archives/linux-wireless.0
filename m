@@ -1,70 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:32950 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750820AbdEASrg (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33099 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932324AbdETPtU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2017 14:47:36 -0400
-Received: by mail-pg0-f50.google.com with SMTP id y4so43307990pge.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 May 2017 11:47:36 -0700 (PDT)
-Date: Mon, 1 May 2017 11:47:33 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: linux-kernel@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] mwifiex: initiate card-specific work atomically
-Message-ID: <20170501184732.GA53046@google.com> (sfid-20170501_204940_999320_2E9F00F6)
-References: <20170501184549.52896-1-briannorris@chromium.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170501184549.52896-1-briannorris@chromium.org>
+        Sat, 20 May 2017 11:49:20 -0400
+Received: by mail-oi0-f65.google.com with SMTP id h4so16702563oib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:19 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 08/10] rtlwifi: btcoex: 23b 1ant: fine tune for wifi not connected
+Date: Sat, 20 May 2017 10:49:05 -0500
+Message-Id: <20170520154907.15590-9-Larry.Finger@lwfinger.net> (sfid-20170520_174939_877713_FE63C744)
+In-Reply-To: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
+References: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 01, 2017 at 11:45:48AM -0700, Brian Norris wrote:
-> The non-atomic test + set is a little awkward here, and it technically
-> means we might double-schedule work unnecessarily. AFAICT, this is not
-> really a problem, since the extra "work" will be a no-op (the flag(s)
-> will be cleared by then), but it's still an anti-pattern.
-> 
-> Rewrite this to use the atomic test_and_set_bit() helper instead.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
-> new in v2
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 13 +++++++++----
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 16 +++++-----------
->  2 files changed, 14 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index ac62bce50e96..8e7d6f41a952 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -2837,12 +2837,17 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
->  {
->  	struct pcie_service_card *card = adapter->card;
->  
-> -	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
-> -		return;
-> +	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-> +			      &card->work_flags))
-> +		schedule_work(&card->work);
-> +}
->  
-> -	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
-> +static void mwifiex_pcie_card_reset(struct mwifiex_adapter *adapter)
-> +{
-> +	struct pcie_service_card *card = adapter->card;
->  
-> -	schedule_work(&card->work);
-> +	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
-> +		schedule_work(&card->work);
->  }
->  
->  static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Ooops, mis-split on patch 1 vs. 2. This won't be bisectable! Sorry,
-please ignore! Will send v3 soon.
+Fine tune the parameters in cases of scan, assoc and auth when wifi isn't
+connected.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 37 ++++++++++++++--------
+ 1 file changed, 23 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 80522b91847c..d938c8a4b180 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1914,7 +1914,9 @@ static void btc8723b1ant_action_wifi_not_conn(struct btc_coexist *btcoexist)
+ 					 0x0, 0x0);
+ 
+ 	/* tdma and coex table */
+-	halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
++	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA, NORMAL_EXEC,
++				     false, false);
+ 	halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
+ }
+ 
+@@ -1928,16 +1930,16 @@ btc8723b1ant_action_wifi_not_conn_scan(struct btc_coexist *btcoexist)
+ 
+ 	/* tdma and coex table */
+ 	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
+-		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
++		if (bt_link_info->a2dp_exist) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-						true, 22);
++						true, 32);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+-							     NORMAL_EXEC, 1);
+-		} else if (bt_link_info->pan_only) {
++							     NORMAL_EXEC, 4);
++		} else if (bt_link_info->a2dp_exist) {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+-						true, 20);
++						true, 22);
+ 			halbtc8723b1ant_coex_table_with_type(btcoexist,
+-							     NORMAL_EXEC, 2);
++							     NORMAL_EXEC, 4);
+ 		} else {
+ 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+ 						true, 20);
+@@ -1950,6 +1952,8 @@ btc8723b1ant_action_wifi_not_conn_scan(struct btc_coexist *btcoexist)
+ 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
+ 	} else {
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
++					     NORMAL_EXEC, false, false);
+ 		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
+ 	}
+ }
+@@ -1962,14 +1966,19 @@ btc8723b1ant_act_wifi_not_conn_asso_auth(struct btc_coexist *btcoexist)
+ 	halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
+ 					 0x0, 0x0);
+ 
+-	if ((BT_8723B_1ANT_BT_STATUS_CONNECTED_IDLE == coex_dm->bt_status) ||
+-	    (bt_link_info->sco_exist) || (bt_link_info->hid_only) ||
+-	    (bt_link_info->a2dp_only) || (bt_link_info->pan_only)) {
+-		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
+-	} else {
++	/* tdma and coex table */
++	if ((bt_link_info->sco_exist) || (bt_link_info->hid_exist) ||
++	    (bt_link_info->a2dp_exist)) {
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 4);
++	} else if (bt_link_info->pan_exist) {
+ 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
+-		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 4);
++	} else {
++		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
++		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
++					     NORMAL_EXEC, false, false);
++		halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 2);
+ 	}
+ }
+ 
+-- 
+2.12.0
