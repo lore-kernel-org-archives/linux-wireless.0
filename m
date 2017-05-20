@@ -1,142 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50303 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S965061AbdEWHIW (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33984 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932292AbdETPtO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 03:08:22 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: RE: [EXT] Re: [PATCH v3 5/6] mwifiex: do not aggregate tcp ack in usb
- tx aggregation queue
-Date: Tue, 23 May 2017 07:08:12 +0000
-Message-ID: <0f8ab8755daa4fd19242fdaa4abddc5f@SC-EXCH02.marvell.com> (sfid-20170523_090848_157264_BC92AA58)
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
- <1495184805-6631-5-git-send-email-huxinming820@gmail.com>
- <20170519164232.GB125761@google.com>
-In-Reply-To: <20170519164232.GB125761@google.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+        Sat, 20 May 2017 11:49:14 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w10so16697350oif.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:14 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 02/10] rtlwifi: btcoex: 23b 1ant: define wifi in high priority task.
+Date: Sat, 20 May 2017 10:48:59 -0500
+Message-Id: <20170520154907.15590-3-Larry.Finger@lwfinger.net> (sfid-20170520_174922_419712_56214324)
+In-Reply-To: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
+References: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
-Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOo1
-1MIyMMjVIDA6NDMNCj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxs
-ZSBWYWxvOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNvbTsgWmhpeXVhbg0KPiBZ
-YW5nOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7IEdhbmFwYXRoaSBCaGF0DQo+IFN1YmplY3Q6IFtF
-WFRdIFJlOiBbUEFUQ0ggdjMgNS82XSBtd2lmaWV4OiBkbyBub3QgYWdncmVnYXRlIHRjcCBhY2sg
-aW4gdXNiIHR4DQo+IGFnZ3JlZ2F0aW9uIHF1ZXVlDQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiAN
-Cj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQ0KPiBPbiBGcmksIE1heSAxOSwgMjAxNyBhdCAwOTowNjo0NEFNICsw
-MDAwLCBYaW5taW5nIEh1IHdyb3RlOg0KPiA+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVs
-bC5jb20+DQo+ID4NCj4gPiBUY3AgYWNrIHNob3VsZCBiZSBzZW5kIGFzIHNvb24gdG8gYXZvaWQg
-dGhyb3VwdXQgZHJvcCBkdXJpbmcgcmVjZWl2ZQ0KPiA+IHRjcCB0cmFmZmljLg0KPiA+DQo+ID4g
-U2lnbmVkLW9mZi1ieTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQt
-b2ZmLWJ5OiBDYXRoeSBMdW8gPGNsdW9AbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTog
-R2FuYXBhdGhpIEJoYXQgPGdiaGF0QG1hcnZlbGwuY29tPg0KPiA+IC0tLQ0KPiA+IHYyOiBzYW1l
-IGFzIHYxDQo+ID4gdjM6IGF2b2lkIHRvIHVzZSBtYWdpYyB0Y3AgZmxhZyAoS2FsbGUpDQo+ID4g
-LS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC8xMW5fYWdnci5j
-IHwgIDQgKysrKw0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvZGVj
-bC5oICAgICB8ICAxICsNCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4
-L21haW4uYyAgICAgfCAyNg0KPiArKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gIGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmggICAgIHwgIDEgKw0KPiA+ICBk
-cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvdXNiLmMgICAgICB8ICA2ICsrKyst
-LQ0KPiA+ICA1IGZpbGVzIGNoYW5nZWQsIDM2IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0p
-DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lm
-aWV4LzExbl9hZ2dyLmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmll
-eC8xMW5fYWdnci5jDQo+ID4gaW5kZXggZThmZmIyNi4uY2JmM2JjMiAxMDA2NDQNCj4gPiAtLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvMTFuX2FnZ3IuYw0KPiA+ICsr
-KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC8xMW5fYWdnci5jDQo+ID4g
-QEAgLTE5NCw2ICsxOTQsMTAgQEANCj4gPg0KPiA+ICAJaWYgKHR4X2luZm9fc3JjLT5mbGFncyAm
-IE1XSUZJRVhfQlVGX0ZMQUdfVERMU19QS1QpDQo+ID4gIAkJdHhfaW5mb19hZ2dyLT5mbGFncyB8
-PSBNV0lGSUVYX0JVRl9GTEFHX1RETFNfUEtUOw0KPiA+ICsNCj4gPiArCWlmICh0eF9pbmZvX3Ny
-Yy0+ZmxhZ3MgJiBNV0lGSUVYX0JVRl9GTEFHX1RDUF9BQ0spDQo+ID4gKwkJdHhfaW5mb19hZ2dy
-LT5mbGFncyB8PSBNV0lGSUVYX0JVRl9GTEFHX1RDUF9BQ0s7DQo+ID4gKw0KPiA+ICAJdHhfaW5m
-b19hZ2dyLT5mbGFncyB8PSBNV0lGSUVYX0JVRl9GTEFHX0FHR1JfUEtUOw0KPiA+ICAJc2tiX2Fn
-Z3ItPnByaW9yaXR5ID0gc2tiX3NyYy0+cHJpb3JpdHk7DQo+ID4gIAlza2JfYWdnci0+dHN0YW1w
-ID0gc2tiX3NyYy0+dHN0YW1wOw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tYXJ2ZWxsL213aWZpZXgvZGVjbC5oDQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2
-ZWxsL213aWZpZXgvZGVjbC5oDQo+ID4gaW5kZXggMTg4ZTRjMy4uMDQ4NzQyMCAxMDA2NDQNCj4g
-PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvZGVjbC5oDQo+ID4g
-KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2RlY2wuaA0KPiA+IEBA
-IC04OSw2ICs4OSw3IEBADQo+ID4gICNkZWZpbmUgTVdJRklFWF9CVUZfRkxBR19FQVBPTF9UWF9T
-VEFUVVMgICBCSVQoMykNCj4gPiAgI2RlZmluZSBNV0lGSUVYX0JVRl9GTEFHX0FDVElPTl9UWF9T
-VEFUVVMgIEJJVCg0KQ0KPiA+ICAjZGVmaW5lIE1XSUZJRVhfQlVGX0ZMQUdfQUdHUl9QS1QgICAg
-ICAgICAgQklUKDUpDQo+ID4gKyNkZWZpbmUgTVdJRklFWF9CVUZfRkxBR19UQ1BfQUNLICAgICAg
-ICAgICBCSVQoNikNCj4gPg0KPiA+ICAjZGVmaW5lIE1XSUZJRVhfQlJJREdFRF9QS1RTX1RIUl9I
-SUdIICAgICAgMTAyNA0KPiA+ICAjZGVmaW5lIE1XSUZJRVhfQlJJREdFRF9QS1RTX1RIUl9MT1cg
-ICAgICAgIDEyOA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
-L213aWZpZXgvbWFpbi5jDQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZp
-ZXgvbWFpbi5jDQo+ID4gaW5kZXggMmM0MjE5MS4uYjdkODM1YyAxMDA2NDQNCj4gPiAtLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uYw0KPiA+IEBAIC04NTEsNiAr
-ODUxLDMwIEBAIHN0cnVjdCBza19idWZmICoNCj4gPiAgCXJldHVybiBza2I7DQo+ID4gIH0NCj4g
-Pg0KPiA+ICtzdGF0aWMgYm9vbCBpc19waWdneWJhY2tfdGNwX2FjayhzdHJ1Y3Qgc2tfYnVmZiAq
-c2tiKSB7DQo+ID4gKwlzdHJ1Y3QgZXRoaGRyICpldGhoID0gTlVMTDsNCj4gPiArCXN0cnVjdCBp
-cGhkciAgKmlwaCA9IE5VTEw7DQo+ID4gKwlzdHJ1Y3QgdGNwaGRyICp0Y3BoID0gTlVMTDsNCj4g
-PiArDQo+ID4gKwlldGhoID0gKHN0cnVjdCBldGhoZHIgKilza2ItPmRhdGE7DQo+ID4gKwlpZiAo
-bnRvaHMoZXRoaC0+aF9wcm90bykgIT0gRVRIX1BfSVApDQo+ID4gKwkJcmV0dXJuIGZhbHNlOw0K
-PiANCj4gV2hhdCBhYm91dCBJUHY2Pw0KPiANCj4gQWxzbywgd2hhdCBhYm91dCBhbGwgdGhlIHBy
-b3RvY29scyB0aGF0IHlvdSdyZSAqbm90KiBoYWNraW5nIHRoaXMgZm9yPw0KPiBJcyB0aGUgbGF0
-ZW5jeSBpbmR1Y2VkIGJ5IGFnZ3JlZ2F0aW9uIHJlYWxseSB0aGF0IHBvb3I/DQo+IA0KPiBJJ20g
-bm90IHJlYWxseSBhIG5ldHdvcmtpbmcgZXhwZXJ0IGhlcmUsIGJ1dCB0aGlzIHdob2xlIHBhdGNo
-IHNtZWxscyBiYWQgdG8gbWUuDQo+IA0KDQpXZSBkaWRuJ3Qgb2JzZXJ2ZSB0aHJvdWdocHV0IGRy
-b3AgZHVlIHRvIGFjayBibG9jayB5ZXQuLg0KSXQgd2FzIGNvbnNpZGVyZWQgdG8gYmUgYW4gb3B0
-aW9uYWwgZW5oYW5jZS4NCkxldCdzIGRyb3AgaXQgaW4gdGhpcyBwYXRjaCBzZXJpYWxzLg0KDQpS
-ZWdhcmRzLA0KU2ltb24NCj4gPiArDQo+ID4gKwlpcGggPSAoc3RydWN0IGlwaGRyICopKCh1OCAq
-KWV0aGggKyBzaXplb2Yoc3RydWN0IGV0aGhkcikpOw0KPiA+ICsJaWYgKGlwaC0+cHJvdG9jb2wg
-IT0gSVBQUk9UT19UQ1ApDQo+ID4gKwkJcmV0dXJuIGZhbHNlOw0KPiA+ICsNCj4gPiArCXRjcGgg
-PSAoc3RydWN0IHRjcGhkciAqKSgodTggKilpcGggKyBpcGgtPmlobCAqIDQpOw0KPiA+ICsJLyog
-UGlnZ3liYWNrIGFjayB3aXRob3V0IHBheWxvYWQqLw0KPiA+ICsJaWYgKHRjcF9mbGFnX3dvcmQo
-dGNwaCkgPT0gVENQX0ZMQUdfQUNLICYmDQo+ID4gKwkgICAgbnRvaHMoaXBoLT50b3RfbGVuKSA8
-PSAoaXBoLT5paGwgKyB0Y3BoLT5kb2ZmKSAqIDQpIHsNCj4gPiArCQlyZXR1cm4gdHJ1ZTsNCj4g
-PiArCX0NCj4gPiArDQo+ID4gKwlyZXR1cm4gZmFsc2U7DQo+ID4gK30NCj4gPiArDQo+ID4gIC8q
-DQo+ID4gICAqIENGRzgwMi4xMSBuZXR3b3JrIGRldmljZSBoYW5kbGVyIGZvciBkYXRhIHRyYW5z
-bWlzc2lvbi4NCj4gPiAgICovDQo+ID4gQEAgLTkwNCw2ICs5MjgsOCBAQCBzdHJ1Y3Qgc2tfYnVm
-ZiAqDQo+ID4gIAl0eF9pbmZvLT5ic3NfbnVtID0gcHJpdi0+YnNzX251bTsNCj4gPiAgCXR4X2lu
-Zm8tPmJzc190eXBlID0gcHJpdi0+YnNzX3R5cGU7DQo+ID4gIAl0eF9pbmZvLT5wa3RfbGVuID0g
-c2tiLT5sZW47DQo+ID4gKwlpZiAoaXNfcGlnZ3liYWNrX3RjcF9hY2soc2tiKSkNCj4gPiArCQl0
-eF9pbmZvLT5mbGFncyB8PSBNV0lGSUVYX0JVRl9GTEFHX1RDUF9BQ0s7DQo+ID4NCj4gPiAgCW11
-bHRpY2FzdCA9IGlzX211bHRpY2FzdF9ldGhlcl9hZGRyKHNrYi0+ZGF0YSk7DQo+ID4NCj4gPiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uaA0K
-PiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uaA0KPiA+IGlu
-ZGV4IDFmN2U2YzMuLmIwMDEwYTkgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWFydmVsbC9td2lmaWV4L21haW4uaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L21hcnZlbGwvbXdpZmlleC9tYWluLmgNCj4gPiBAQCAtNDksNiArNDksNyBAQA0KPiA+ICAjaW5j
-bHVkZSA8bGludXgvcG1fcnVudGltZS5oPg0KPiA+ICAjaW5jbHVkZSA8bGludXgvc2xhYi5oPg0K
-PiA+ICAjaW5jbHVkZSA8bGludXgvb2ZfaXJxLmg+DQo+ID4gKyNpbmNsdWRlIDxsaW51eC90Y3Au
-aD4NCj4gDQo+IEkgZGlzbGlrZSBwb2xsdXRpbmcgdGhlIChkcml2ZXItZ2xvYmFsKSBtYWluLmgg
-d2l0aCAjaW5jbHVkZSdzIHRoYXQgb25seSBhcmUgdXNlZA0KPiBpbiBvbmUgZmlsZS4gRXNwZWNp
-YWxseSB3aGVuIHlvdSB0YWxrIGFib3V0IHNlZW1pbmdseSBsYXllci12aW9sYXRpbmcgVENQIGhh
-Y2tzLg0KPiBDYW4geW91IG1vdmUgdGhpcyB0byBtYWluLmMgaW5zdGVhZD8NCj4gDQo+IEJyaWFu
-DQo+IA0KPiA+DQo+ID4gICNpbmNsdWRlICJkZWNsLmgiDQo+ID4gICNpbmNsdWRlICJpb2N0bC5o
-Ig0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgv
-dXNiLmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC91c2IuYw0K
-PiA+IGluZGV4IGYyMzAwMTcuLmU5YzNkNDMgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3VzYi5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbWFydmVsbC9td2lmaWV4L3VzYi5jDQo+ID4gQEAgLTkzNCw2ICs5MzQsNyBAQCBzdGF0
-aWMgaW50IG13aWZpZXhfdXNiX2FnZ3JfdHhfZGF0YShzdHJ1Y3QNCj4gbXdpZmlleF9hZGFwdGVy
-ICphZGFwdGVyLCB1OCBlcCwNCj4gPiAgCXN0cnVjdCB1cmJfY29udGV4dCAqY29udGV4dCA9IE5V
-TEw7DQo+ID4gIAlzdHJ1Y3QgdHhwZCAqbG9jYWxfdHhfcGQgPQ0KPiA+ICAJCShzdHJ1Y3QgdHhw
-ZCAqKSgodTggKilza2ItPmRhdGEgKyBhZGFwdGVyLT5pbnRmX2hkcl9sZW4pOw0KPiA+ICsJc3Ry
-dWN0IG13aWZpZXhfdHhpbmZvICp0eF9pbmZvID0gTVdJRklFWF9TS0JfVFhDQihza2IpOw0KPiA+
-ICAJdTggZl9zZW5kX2FnZ3JfYnVmID0gMDsNCj4gPiAgCXU4IGZfc2VuZF9jdXJfYnVmID0gMDsN
-Cj4gPiAgCXU4IGZfcHJlY29weV9jdXJfYnVmID0gMDsNCj4gPiBAQCAtOTg5LDggKzk5MCw5IEBA
-IHN0YXRpYyBpbnQgbXdpZmlleF91c2JfYWdncl90eF9kYXRhKHN0cnVjdA0KPiBtd2lmaWV4X2Fk
-YXB0ZXIgKmFkYXB0ZXIsIHU4IGVwLA0KPiA+ICAJCX0NCj4gPiAgCX0NCj4gPg0KPiA+IC0JaWYg
-KGxvY2FsX3R4X3BkLT5mbGFncyAmIE1XSUZJRVhfVHhQRF9QT1dFUl9NR01UX05VTExfUEFDS0VU
-KSB7DQo+ID4gLQkJLyogU2VuZCBOVUxMIHBhY2tldCBpbW1lZGlhdGVseSovDQo+ID4gKwlpZiAo
-bG9jYWxfdHhfcGQtPmZsYWdzICYgTVdJRklFWF9UeFBEX1BPV0VSX01HTVRfTlVMTF9QQUNLRVQg
-fHwNCj4gPiArCSAgICB0eF9pbmZvLT5mbGFncyAmIE1XSUZJRVhfQlVGX0ZMQUdfVENQX0FDSykg
-ew0KPiA+ICsJCS8qIFNlbmQgTlVMTCBkYXRhL1RDUCBBQ0sgcGFja2V0IGltbWVkaWF0ZWx5Ki8N
-Cj4gPiAgCQlpZiAoZl9wcmVjb3B5X2N1cl9idWYpIHsNCj4gPiAgCQkJaWYgKHNrYl9xdWV1ZV9l
-bXB0eSgmcG9ydC0+dHhfYWdnci5hZ2dyX2xpc3QpKSB7DQo+ID4gIAkJCQlmX3ByZWNvcHlfY3Vy
-X2J1ZiA9IDA7DQo+ID4gLS0NCj4gPiAxLjkuMQ0KPiA+DQo=
+From: Ping-Ke Shih <pkshih@realtek.com>
+
+Add the definition of wifi in high priority task for bt inquiry.
+According to driver's notifications, btc will knows whether wifi is in high
+priority tasks or not.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c  | 15 +++++++++++++++
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h  |  1 +
+ 2 files changed, 16 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 188e248b2265..185046227d15 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -2662,6 +2662,7 @@ void ex_halbtc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ 		return;
+ 
+ 	if (type == BTC_SCAN_START) {
++		coex_sta->wifi_is_high_pri_task = true;
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], SCAN START notify\n");
+ 		/* Force antenna setup for no scan result issue */
+@@ -2676,6 +2677,7 @@ void ex_halbtc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ 			 "[BTCoex], 0x948=0x%x, 0x765=0x%x, 0x67=0x%x\n",
+ 			 u32tmp, u8tmpa, u8tmpb);
+ 	} else {
++		coex_sta->wifi_is_high_pri_task = false;
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], SCAN FINISH notify\n");
+ 
+@@ -2748,6 +2750,8 @@ void ex_halbtc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ 		return;
+ 
+ 	if (type == BTC_ASSOCIATE_START) {
++		coex_sta->wifi_is_high_pri_task = true;
++
+ 		/* Force antenna setup for no scan result issue */
+ 		halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
+ 		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
+@@ -2756,6 +2760,7 @@ void ex_halbtc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ 			 "[BTCoex], CONNECT START notify\n");
+ 		coex_dm->arp_cnt = 0;
+ 	} else {
++		coex_sta->wifi_is_high_pri_task = false;
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], CONNECT FINISH notify\n");
+ 	}
+@@ -2906,11 +2911,21 @@ void ex_halbtc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 				 "[BTCoex], ARP Packet Count = %d\n",
+ 				 coex_dm->arp_cnt);
++
++			if ((coex_dm->arp_cnt >= 10) && (!under_4way))
++				/* if APR PKT > 10 after connect, do not go to
++				 * ActionWifiConnectedSpecificPacket(btcoexist)
++				 */
++				coex_sta->wifi_is_high_pri_task = false;
++			else
++				coex_sta->wifi_is_high_pri_task = true;
+ 		} else {
++			coex_sta->wifi_is_high_pri_task = true;
+ 			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 				 "[BTCoex], special Packet DHCP or EAPOL notify\n");
+ 		}
+ 	} else {
++		coex_sta->wifi_is_high_pri_task = false;
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], special Packet [Type = %d] notify\n",
+ 			 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 8df1036e36f1..b71d4b40ab6c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -166,6 +166,7 @@ struct coex_sta_8723b_1ant {
+ 	bool bt_whck_test;
+ 	bool c2h_bt_inquiry_page;
+ 	bool c2h_bt_remote_name_req;
++	bool wifi_is_high_pri_task;
+ 	u8 bt_retry_cnt;
+ 	u8 bt_info_ext;
+ 	u8 scan_ap_num;
+-- 
+2.12.0
