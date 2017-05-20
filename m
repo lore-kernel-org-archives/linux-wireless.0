@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38972 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932348AbdEWMnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 08:43:02 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-05-23
-Date: Tue, 23 May 2017 14:42:55 +0200
-Message-Id: <20170523124256.23463-1-johannes@sipsolutions.net> (sfid-20170523_144315_662161_0B7A215F)
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35062 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754052AbdETPBZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 May 2017 11:01:25 -0400
+Subject: Re: [PATCH] rtlwifi: btcoex: 23b 1ant: fix
+ halbtc8723b1ant_action_wifi_only()
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <20170520053343.gwdinyn447bwpia2@mwanda>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <643aa5f9-5634-d910-e10f-51523e464b50@lwfinger.net> (sfid-20170520_170131_461304_46A2B695)
+Date: Sat, 20 May 2017 10:01:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170520053343.gwdinyn447bwpia2@mwanda>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 05/20/2017 12:33 AM, Dan Carpenter wrote:
+> The parameters are in the wrong order when we call
+> halbtc8723b1ant_set_ant_path() so it's equivalent of calling:
+> 
+> 	halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_WIFI, false, true);
+> 
+> Fixes: f66509e3d7c2 ("rtlwifi: btcoex: Remove 23b 1ant configuration parameter")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I have just two fixes here, one of the scheduled scan issue that
-Sander Eikelenboom found, and the other properly makes mesh more
-strictly check its extension headers.
+Now I know why I did not see the Sparse error. This problem was fixed in 
+https://patchwork.kernel.org/patch/9737583/, which is waiting to be merged. Once 
+that one is merged, this patch will no longer apply.
 
-Please pull and let me know if there's any problem.
+NACK.
 
-Thanks,
-johannes
-
-
-
-The following changes since commit 29cee56c0be46ad01e78af104a06223c65ee0c67:
-
-  Merge tag 'mac80211-for-davem-2017-05-08' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2017-05-08 16:02:23 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-05-23
-
-for you to fetch changes up to 1b57b6210f4e52904393be97c62122aae69bc8aa:
-
-  cfg80211: make cfg80211_sched_scan_results() work from atomic context (2017-05-23 14:36:46 +0200)
-
-----------------------------------------------------------------
-Just two fixes this time:
- * fix the scheduled scan "BUG: scheduling while atomic"
- * check mesh address extension flags more strictly
-
-----------------------------------------------------------------
-Arend Van Spriel (1):
-      cfg80211: make cfg80211_sched_scan_results() work from atomic context
-
-Rajkumar Manoharan (1):
-      mac80211: strictly check mesh address extension mode
-
- net/mac80211/rx.c   |  3 ++-
- net/wireless/scan.c |  8 ++++----
- net/wireless/util.c | 10 ++++++----
- 3 files changed, 12 insertions(+), 9 deletions(-)
+Larry
