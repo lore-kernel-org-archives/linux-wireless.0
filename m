@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:34629 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935795AbdEXQ6Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 12:58:25 -0400
-Received: by mail-io0-f178.google.com with SMTP id k91so121550650ioi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 09:58:25 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:46833 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750937AbdEUOTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 May 2017 10:19:42 -0400
+Subject: Re: [PATCH 1/1] dt-binding: net: wireless: fix node name in the
+ BCM43xx example
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: robh+dt@kernel.org, kvalo@codeaurora.org, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+References: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
+ <20170515201356.26384-2-martin.blumenstingl@googlemail.com>
+ <8155d0f1-aed3-fc47-4524-635067f9ee7b@broadcom.com>
+ <CAFBinCBeijYMJ+hTajCA-2D7S1aH6E2mc_gm-2cAqKt87XVNkg@mail.gmail.com>
+From: =?UTF-8?Q?Andreas_F=c3=a4rber?= <afaerber@suse.de>
+Message-ID: <11675313-d92f-e562-0fd5-21339b5aa599@suse.de> (sfid-20170521_161953_199065_9CD106EC)
+Date: Sun, 21 May 2017 16:19:39 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170524102620.13806-1-mjurczyk@google.com>
-References: <20170524102620.13806-1-mjurczyk@google.com>
-From: Kees Cook <keescook@google.com>
-Date: Wed, 24 May 2017 09:58:23 -0700
-Message-ID: <CAGXu5jJRXhJSC34vSc19mPQ9Wetf92daar71He0OXDUebXu0bA@mail.gmail.com> (sfid-20170524_185909_375593_5233ADEE)
-Subject: Re: [PATCH] nfc: Fix the sockaddr length sanitization in llcp_sock_connect
-To: Mateusz Jurczyk <mjurczyk@google.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "security@kernel.org" <security@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAFBinCBeijYMJ+hTajCA-2D7S1aH6E2mc_gm-2cAqKt87XVNkg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 24, 2017 at 3:26 AM, Mateusz Jurczyk <mjurczyk@google.com> wrote:
-> Fix the sockaddr length verification in the connect() handler of NFC/LLCP
-> sockets, to compare against the size of the actual structure expected on
-> input (sockaddr_nfc_llcp) instead of its shorter version (sockaddr_nfc).
->
-> Both structures are defined in include/uapi/linux/nfc.h. The fields
-> specific to the _llcp extended struct are as follows:
->
->    276          __u8 dsap; /* Destination SAP, if known */
->    277          __u8 ssap; /* Source SAP to be bound to */
->    278          char service_name[NFC_LLCP_MAX_SERVICE_NAME]; /* Service name URI */;
->    279          size_t service_name_len;
->
-> If the caller doesn't provide a sufficiently long sockaddr buffer, these
-> fields remain uninitialized (and they currently originate from the stack
-> frame of the top-level sys_connect handler). They are then copied by
-> llcp_sock_connect() into internal storage (nfc_llcp_sock structure), and
-> could be subsequently read back through the user-mode getsockname()
-> function (handled by llcp_sock_getname()). This would result in the
-> disclosure of up to ~70 uninitialized bytes from the kernel stack to
-> user-mode clients capable of creating AFC_NFC sockets.
->
-> Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
+Hi,
 
-Acked-by: Kees Cook <keescook@chromium.org>
+Am 16.05.2017 um 21:56 schrieb Martin Blumenstingl:
+> On Tue, May 16, 2017 at 12:05 AM, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 15-5-2017 22:13, Martin Blumenstingl wrote:
+>>> The example in the BCM43xx documentation uses "brcmf" as node name.
+>>> However, wireless devices should be named "wifi" instead. Fix this to
+>>
+>> Since when is that a rule. I never got the memo and the DTC did not ever
+>> complain to me about the naming.
 
--Kees
+How do you expect it to? Maintain a blacklist of every device model
+someone might use, including all typo variations?
 
-> ---
->  net/nfc/llcp_sock.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
-> index 2ffb18e73df6..d0d12bea65cb 100644
-> --- a/net/nfc/llcp_sock.c
-> +++ b/net/nfc/llcp_sock.c
-> @@ -662,8 +662,7 @@ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
->
->         pr_debug("sock %p sk %p flags 0x%x\n", sock, sk, flags);
->
-> -       if (!addr || len < sizeof(struct sockaddr_nfc) ||
-> -           addr->sa_family != AF_NFC)
-> +       if (!addr || len < sizeof(*addr) || addr->sa_family != AF_NFC)
->                 return -EINVAL;
->
->         if (addr->service_name_len == 0 && addr->dsap == 0)
-> --
-> 2.13.0.219.gdb65acc882-goog
->
+> That being said I do not really care
+>> and I suppose it is for the sake of consistency only.
+> I'm not sure if it's actually a rule or (as you already noted) just
+> for consistency. back when I added devicetree support to ath9k Rob
+> pointed out that the node should be named "wifi" (instead of "ath9k"),
+> see [0]
 
+The general rule is that the node name should be the type of the device,
+not duplicate its compatible string.
 
+For consistency Rob was asking we use "wifi" as node name.
+
+Regards,
+Andreas
 
 -- 
-Kees Cook
-Pixel Security
+SUSE Linux GmbH, Maxfeldstr. 5, 90409 Nürnberg, Germany
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
