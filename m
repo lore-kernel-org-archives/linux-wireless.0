@@ -1,255 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36477 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932319AbdETPtT (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34013 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757011AbdEUUB1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 May 2017 11:49:19 -0400
-Received: by mail-oi0-f67.google.com with SMTP id w138so16686345oiw.3
-        for <linux-wireless@vger.kernel.org>; Sat, 20 May 2017 08:49:18 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 07/10] rtlwifi: btcoex: 23b 1ant: fine tune for wifi connected
-Date: Sat, 20 May 2017 10:49:04 -0500
-Message-Id: <20170520154907.15590-8-Larry.Finger@lwfinger.net> (sfid-20170520_174927_053911_122D8DA9)
-In-Reply-To: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
-References: <20170520154907.15590-1-Larry.Finger@lwfinger.net>
+        Sun, 21 May 2017 16:01:27 -0400
+Received: by mail-lf0-f65.google.com with SMTP id q24so3696339lfb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:27 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 8/9] ath10k: add QCA9377 usb hw_param item
+Date: Sun, 21 May 2017 21:59:10 +0200
+Message-Id: <1495396751-4805-9-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220201_957983_96C93F13)
+In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hardware parameters for QCA9377 usb devices.
 
-Fine tune the parameters in cases of bt_acl_busy and scan when wifi is
-connected.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 114 ++++++++++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   2 +
- 2 files changed, 79 insertions(+), 37 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  1 +
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 9c4feb89144d..80522b91847c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1869,9 +1869,9 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
- 	} else if (bt_link_info->a2dp_only) { /* A2DP */
- 		if (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						false, 8);
-+						true, 32);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 2);
-+							     NORMAL_EXEC, 4);
- 			coex_dm->auto_tdma_adjust = false;
- 		} else {
- 			btc8723b1ant_tdma_dur_adj_for_acl(btcoexist,
-@@ -1880,28 +1880,29 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
- 							     NORMAL_EXEC, 1);
- 			coex_dm->auto_tdma_adjust = true;
- 		}
--	} else if (bt_link_info->hid_exist &&
--		bt_link_info->a2dp_exist) { /* HID + A2DP */
-+	} else if (((bt_link_info->a2dp_exist) && (bt_link_info->pan_exist)) ||
-+		   (bt_link_info->hid_exist && bt_link_info->a2dp_exist &&
-+		    bt_link_info->pan_exist)) {
-+		/* A2DP + PAN(OPP,FTP), HID + A2DP + PAN(OPP,FTP) */
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+		coex_dm->auto_tdma_adjust = false;
-+	} else if (bt_link_info->hid_exist && bt_link_info->a2dp_exist) {
-+		/* HID + A2DP */
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,	true, 14);
- 		coex_dm->auto_tdma_adjust = false;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index da5377f..edf9943 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -299,6 +299,29 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.spectral_bin_discard = 0,
+ 	},
+ 	{
++		.id = QCA9377_HW_1_1_DEV_VERSION,
++		.dev_id = QCA9377_1_0_DEVICE_ID,
++		.name = "qca9377 hw1.1 usb",
++		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
++		.uart_pin = 6,
++		.otp_exe_param = 0,
++		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
++		.cal_data_len = 8124,
++		.fw = {
++			.dir = QCA9377_HW_1_0_FW_DIR,
++			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_USB,
++			.board_size = QCA9377_BOARD_DATA_SZ,
++			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
++		},
++		.hw_ops = &qca988x_ops,
++		.decap_align_bytes = 4,
++		.max_num_peers = TARGET_QCA9377_HL_NUM_PEERS,
++		.is_high_latency = true,
++		.bus = ATH10K_BUS_USB,
++		.start_once = true,
++	},
++	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+ 		.dev_id = 0,
+ 		.name = "qca4019 hw1.0",
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index f733e73..cc3d0eb 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -127,6 +127,7 @@ enum qca9377_chip_id_rev {
+ /* QCA9377 1.0 definitions */
+ #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
+ #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
++#define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
+ #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
  
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 6);
--	 /* PAN(OPP,FTP), HID + PAN(OPP,FTP) */
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
- 	} else if (bt_link_info->pan_only ||
--		   (bt_link_info->hid_exist && bt_link_info->pan_exist)) {
-+			(bt_link_info->hid_exist && bt_link_info->pan_exist)) {
-+		/* PAN(OPP,FTP), HID + PAN(OPP,FTP) */
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 3);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 6);
--		coex_dm->auto_tdma_adjust = false;
--	 /* A2DP + PAN(OPP,FTP), HID + A2DP + PAN(OPP,FTP) */
--	} else if ((bt_link_info->a2dp_exist && bt_link_info->pan_exist) ||
--		   (bt_link_info->hid_exist && bt_link_info->a2dp_exist &&
--		    bt_link_info->pan_exist)) {
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
- 		coex_dm->auto_tdma_adjust = false;
- 	} else {
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 11);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+		/* BT no-profile busy (0x9) */
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 33);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
- 		coex_dm->auto_tdma_adjust = false;
- 	}
- }
-@@ -1981,21 +1982,22 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
- 
- 	/* tdma and coex table */
- 	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
--		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
-+		if (bt_link_info->a2dp_exist) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						true, 22);
-+						true, 32);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 1);
--		} else if (bt_link_info->pan_only) {
-+							     NORMAL_EXEC, 4);
-+		} else if (bt_link_info->a2dp_exist &&
-+			   bt_link_info->pan_exist) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						true, 20);
-+						true, 22);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 2);
-+							     NORMAL_EXEC, 4);
- 		} else {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 						true, 20);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 1);
-+							     NORMAL_EXEC, 4);
- 		}
- 	} else if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
- 		   coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
-@@ -2003,6 +2005,8 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
- 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
- 	} else {
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
-+					     NORMAL_EXEC, false, false);
- 		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
- 	}
- }
-@@ -2010,23 +2014,34 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
- static void halbtc8723b1ant_action_wifi_connected_special_packet(
- 						struct btc_coexist *btcoexist)
- {
--	bool hs_connecting = false;
- 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
-+	bool wifi_busy = false;
- 
--	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_CONNECTING, &hs_connecting);
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
-+
-+	/* no special packet process for both WiFi and BT very busy */
-+	if ((wifi_busy) &&
-+	    ((bt_link_info->pan_exist) || (coex_sta->num_of_profile >= 2)))
-+		return;
- 
- 	halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
- 					 0x0, 0x0);
- 
- 	/* tdma and coex table */
--	if ((BT_8723B_1ANT_BT_STATUS_CONNECTED_IDLE == coex_dm->bt_status) ||
--	    (bt_link_info->sco_exist) || (bt_link_info->hid_only) ||
--	    (bt_link_info->a2dp_only) || (bt_link_info->pan_only)) {
--		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 7);
--	} else {
-+	if ((bt_link_info->sco_exist) || (bt_link_info->hid_exist)) {
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 5);
-+	} else if (bt_link_info->a2dp_exist) {
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 32);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+	} else if (bt_link_info->pan_exist) {
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
--		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 4);
-+	} else {
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
-+		halbtc8723b1ant_set_ant_path(btcoexist, BTC_ANT_PATH_PTA,
-+					     NORMAL_EXEC, false, false);
-+		halbtc8723b1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
- 	}
- }
- 
-@@ -2071,10 +2086,29 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 	if (!ap_enable &&
- 	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY &&
- 	    !btcoexist->bt_link_info.hid_only) {
--		if (!wifi_busy && btcoexist->bt_link_info.a2dp_only)
--			halbtc8723b1ant_power_save_state(btcoexist,
-+		if (btcoexist->bt_link_info.a2dp_only) {
-+			if (!wifi_busy) {
-+				halbtc8723b1ant_power_save_state(btcoexist,
- 							 BTC_PS_WIFI_NATIVE,
- 							 0x0, 0x0);
-+			} else { /* busy */
-+				if (coex_sta->scan_ap_num >=
-+				    BT_8723B_1ANT_WIFI_NOISY_THRESH)
-+					/* no force LPS, no PS-TDMA,
-+					 * use pure TDMA
-+					 */
-+					halbtc8723b1ant_power_save_state(
-+						btcoexist, BTC_PS_WIFI_NATIVE,
-+						0x0, 0x0);
-+				else
-+					halbtc8723b1ant_power_save_state(
-+						btcoexist, BTC_PS_LPS_ON, 0x50,
-+						0x4);
-+			}
-+		} else if ((!coex_sta->pan_exist) && (!coex_sta->a2dp_exist) &&
-+			   (!coex_sta->hid_exist))
-+			halbtc8723b1ant_power_save_state(
-+				btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
- 		else
- 			halbtc8723b1ant_power_save_state(btcoexist,
- 							 BTC_PS_LPS_ON,
-@@ -2098,6 +2132,9 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 		} else {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 						false, 8);
-+			halbtc8723b1ant_set_ant_path(btcoexist,
-+						     BTC_ANT_PATH_PTA,
-+						     NORMAL_EXEC, false, false);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
- 							     NORMAL_EXEC, 2);
- 		}
-@@ -2114,9 +2151,12 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 				    BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
- 		} else {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
--						false, 8);
-+						true, 32);
-+			halbtc8723b1ant_set_ant_path(btcoexist,
-+						     BTC_ANT_PATH_PTA,
-+						     NORMAL_EXEC, false, false);
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
--							     NORMAL_EXEC, 2);
-+							     NORMAL_EXEC, 4);
- 		}
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 3385a649d6c7..506961a1ca56 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -39,6 +39,8 @@
- 
- #define	BTC_RSSI_COEX_THRESH_TOL_8723B_1ANT		2
- 
-+#define BT_8723B_1ANT_WIFI_NOISY_THRESH			50
-+
- enum _BT_INFO_SRC_8723B_1ANT {
- 	BT_INFO_SRC_8723B_1ANT_WIFI_FW			= 0x0,
- 	BT_INFO_SRC_8723B_1ANT_BT_RSP			= 0x1,
+ /* QCA4019 1.0 definitions */
 -- 
-2.12.0
+2.7.4
