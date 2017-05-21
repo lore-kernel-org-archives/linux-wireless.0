@@ -1,52 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:32969 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753244AbdEQOs4 (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34009 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932173AbdEUUBm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 10:48:56 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAKR_QVKYpcficnx5G5NdLKh7xa9S18udYQNXDQ=LmfG=Qeapbg@mail.gmail.com>
-References: <20170515134711.2770374-1-arnd@arndb.de> <20170515142520.GA13996@redhat.com>
- <20170515.103951.2305484593464882104.davem@davemloft.net> <20170516115511.GA4230@redhat.com>
- <0ce21c48-1d2c-3035-3c6e-52c7debf86d5@gmail.com> <CAK8P3a18opkvCyoNmYhR6M7XXEq8f__hMZH1A6w8UFP7qbmQWw@mail.gmail.com>
- <0080a870-2d15-9b60-b7fb-8847d3c8aa8a@gmail.com> <CAKR_QVKYpcficnx5G5NdLKh7xa9S18udYQNXDQ=LmfG=Qeapbg@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 17 May 2017 16:48:49 +0200
-Message-ID: <CAK8P3a2Ni_zizij1tupmfJcg4mLHDFv5aVJvPHhJ5k4P8y=ECg@mail.gmail.com> (sfid-20170517_165110_476132_5C1AADCD)
-Subject: Re: [PATCH] rt2x00: improve calling conventions for register accessors
-To: Tom Psyborg <pozega.tomislav@gmail.com>
-Cc: Jes Sorensen <jes.sorensen@gmail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        David Miller <davem@davemloft.net>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Roman Yeryomin <roman@advem.lv>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 21 May 2017 16:01:42 -0400
+Received: by mail-lf0-f67.google.com with SMTP id q24so3696320lfb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:36 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 7/9] ath10k: dma fixes for high latency devices
+Date: Sun, 21 May 2017 21:59:09 +0200
+Message-Id: <1495396751-4805-8-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220204_704952_5D9736BA)
+In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 17, 2017 at 2:17 PM, Tom Psyborg <pozega.tomislav@gmail.com> wrote:
->
->
-> On 16 May 2017 at 16:31, Jes Sorensen <jes.sorensen@gmail.com> wrote:
->>
->>
->> True - if the automatic conversion works without automatic intervention, I
->> am less worried about it. Personally I would still focus on converting one
->> function at a time to reduce the impact of each patch.
->>
-> give me a single patch with all changes to try
+Several DMA related functions (such as the dma_map_xxx functions)
+are not used with high latency devices and don't need to be invoked
+in this case.
 
-I've sent a series of 10 patches now that does it all one (or two in some cases)
-function at a time. The combined patch is a little too large to send
-on the mailing
-list.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c    | 13 ++++++++-----
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  3 ++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +++
+ drivers/net/wireless/ath/ath10k/txrx.c   |  5 +++--
+ 4 files changed, 16 insertions(+), 8 deletions(-)
 
-     Arnd
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index e5c80f5..232740c 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -137,11 +137,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 	ath10k_htc_prepare_tx_skb(ep, skb);
+ 
+ 	skb_cb->eid = eid;
+-	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
+-	ret = dma_mapping_error(dev, skb_cb->paddr);
+-	if (ret) {
+-		ret = -EIO;
+-		goto err_credits;
++	if (!ar->is_high_latency) {
++		skb_cb->paddr = dma_map_single(dev, skb->data, skb->len,
++					       DMA_TO_DEVICE);
++		ret = dma_mapping_error(dev, skb_cb->paddr);
++		if (ret) {
++			ret = -EIO;
++			goto err_credits;
++		}
+ 	}
+ 
+ 	sg_item.transfer_id = ep->eid;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 31654bd..e1cb754 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2484,7 +2484,8 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
+-		ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
++		if (!ar->is_high_latency)
++			ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_SEC_IND: {
+ 		struct ath10k *ar = htt->ar;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index e3b820d..27bbc3e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -409,6 +409,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
+ 	if (htt->tx_mem_allocated)
+ 		return 0;
+ 
++	if (ar->is_high_latency)
++		return 0;
++
+ 	ret = ath10k_htt_tx_alloc_buf(htt);
+ 	if (ret)
+ 		goto free_idr_pending_tx;
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index d4986f6..fae143e 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -90,11 +90,12 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+ 	ath10k_htt_tx_dec_pending(htt);
+-	if (htt->num_pending_tx == 0)
++	if (!ar->is_high_latency && (htt->num_pending_tx == 0))
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
+-	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
++	if (!ar->is_high_latency)
++		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+ 	ath10k_report_offchan_tx(htt->ar, msdu);
+ 
+-- 
+2.7.4
