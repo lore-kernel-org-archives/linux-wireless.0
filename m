@@ -1,80 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:35720 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934172AbdEOTDM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 15:03:12 -0400
-Date: Mon, 15 May 2017 21:02:36 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: David Miller <davem@davemloft.net>
-Cc: arnd@arndb.de, sgruszka@redhat.com, helmut.schaa@googlemail.com,
-        kvalo@codeaurora.org, dev@kresin.me, johannes.berg@intel.com,
-        pozega.tomislav@gmail.com, vasilugin@yandex.ru, roman@advem.lv,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: improve calling conventions for register
- accessors
-Message-ID: <20170515190235.GA1740@makrotopia.org> (sfid-20170515_210316_152034_066CA427)
-References: <20170515134711.2770374-1-arnd@arndb.de>
- <20170515142520.GA13996@redhat.com>
- <CAK8P3a1xYah7_4=DAcN+M83noUQyLZ9hV=WWD0Q79sQrFsoroA@mail.gmail.com>
- <20170515.104052.1376354562934671974.davem@davemloft.net>
+Received: from mx2.suse.de ([195.135.220.15]:48406 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756510AbdEUOyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 May 2017 10:54:05 -0400
+Subject: Re: [PATCH 1/1] dt-binding: net: wireless: fix node name in the
+ BCM43xx example
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        kvalo@codeaurora.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        Chen-Yu Tsai <wens@csie.org>, Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <kernel@pengutronix.de>,
+        Fabio Estevam <fabio.estevam@nxp.com>
+References: <20170515201356.26384-1-martin.blumenstingl@googlemail.com>
+ <20170515201356.26384-2-martin.blumenstingl@googlemail.com>
+From: =?UTF-8?Q?Andreas_F=c3=a4rber?= <afaerber@suse.de>
+Message-ID: <e0b336e6-538e-eeea-0ed4-33460dbef7e0@suse.de> (sfid-20170521_165418_530223_145F1409)
+Date: Sun, 21 May 2017 16:54:01 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515.104052.1376354562934671974.davem@davemloft.net>
+In-Reply-To: <20170515201356.26384-2-martin.blumenstingl@googlemail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 15, 2017 at 10:40:52AM -0400, David Miller wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> Date: Mon, 15 May 2017 16:36:45 +0200
+Am 15.05.2017 um 22:13 schrieb Martin Blumenstingl:
+> The example in the BCM43xx documentation uses "brcmf" as node name.
+
+No, it doesn't, it uses "bcrmf".
+
+This typo has spread to all ARM device trees:
+
+$ git grep bcrmf -- arch/arm/boot/dts/
+arch/arm/boot/dts/imx6sx-nitrogen6sx.dts:       brcmf: bcrmf@1 {
+arch/arm/boot/dts/imx6ul-opos6ul.dtsi:  brcmf: bcrmf@1 {
+arch/arm/boot/dts/sun6i-a31s-sinovoip-bpi-m2.dts:       brcmf: bcrmf@1 {
+arch/arm/boot/dts/sun7i-a20-bananapi-m1-plus.dts:       brcmf: bcrmf@1 {
+arch/arm/boot/dts/sun7i-a20-bananapro.dts:      brcmf: bcrmf@1 {
+arch/arm/boot/dts/sun7i-a20-cubietruck.dts:     brcmf: bcrmf@1 {
+arch/arm/boot/dts/sun7i-a20-i12-tvbox.dts:      brcmf: bcrmf@1 {
+arch/arm/boot/dts/sun7i-a20-wits-pro-a20-dkt.dts:       brcmf: bcrmf@1 {
+arch/arm/boot/dts/sun8i-h3-bananapi-m2-plus.dts:        brcmf: bcrmf@1 {
+
+For arch/arm64/boot/dts/amlogic/* I've already fixed it, originally by
+changing to "brcmf", in a second step "wifi" was requested.
+
+> However, wireless devices should be named "wifi" instead. Fix this to
+> make sure that .dts authors can simply use the documentation as
+> reference (or simply copy the node from the documentation and then
+> adjust only the board specific bits).
 > 
-> > On Mon, May 15, 2017 at 4:28 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> >> On Mon, May 15, 2017 at 03:46:55PM +0200, Arnd Bergmann wrote:
-> >>> With CONFIG_KASAN enabled and gcc-7, we get a warning about rather high
-> >>> stack usage (with a private patch set I have to turn on this warning,
-> >>> which I intend to get into the next kernel release):
-> >>>
-> >>> wireless/ralink/rt2x00/rt2800lib.c: In function 'rt2800_bw_filter_calibration':
-> >>> wireless/ralink/rt2x00/rt2800lib.c:7990:1: error: the frame size of 2144 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
-> >>>
-> >>> The problem is that KASAN inserts a redzone around each local variable that
-> >>> gets passed by reference, and the newly added function has a lot of them.
-> >>> We can easily avoid that here by changing the calling convention to have
-> >>> the output as the return value of the function. This should also results in
-> >>> smaller object code, saving around 4KB in .text with KASAN, or 2KB without
-> >>> KASAN.
-> >>>
-> >>> Fixes: 41977e86c984 ("rt2x00: add support for MT7620")
-> >>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> >>> ---
-> >>>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 319 +++++++++++++------------
-> >>>  1 file changed, 164 insertions(+), 155 deletions(-)
-> >>
-> >> We have read(, &val) calling convention since forever in rt2x00 and that
-> >> was never a problem. I dislike to change that now to make some tools
-> >> happy, I think problem should be fixed in the tools instead.
-> > 
-> > How about adding 'depends on !KASAN' in Kconfig instead?
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> ---
+>  Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Please let's not go down that route and make such facilities less
-> useful due to decreased coverage.
+> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> index 5dbf169cd81c..590f622188de 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> @@ -31,7 +31,7 @@ mmc3: mmc@01c12000 {
+>  	non-removable;
+>  	status = "okay";
+>  
+> -	brcmf: bcrmf@1 {
+> +	brcmf: wifi@1 {
+>  		reg = <1>;
+>  		compatible = "brcm,bcm4329-fmac";
+>  		interrupt-parent = <&pio>;
 
-Being the one to blame for submitting the patch adding most of the
-problem's footprint: Arnd's change looks good to me and I believe it
-should be merged.
-This is the type of feedback I was hoping for when submitting all the
-long-forgotten and rotting patches from OpenWrt's mac80211 driver
-patches! Thanks to Arnd for your efforts!
+Thanks for fixing this at its source.
 
-Consider this as
-Acked-by: Daniel Golle <daniel@makrotopia.org>
-for Arnd's original patch (and for NOT adding 'depends on !KASAN')
+Hopefully the maintainers in CC can make sure that at least it doesn't
+spread further into new DTs.
 
-Cheers
+Regards,
+Andreas
 
-
-Daniel
-
-> 
-> Thanks.
+-- 
+SUSE Linux GmbH, Maxfeldstr. 5, 90409 Nürnberg, Germany
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
