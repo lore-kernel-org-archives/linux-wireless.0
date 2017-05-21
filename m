@@ -1,82 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:48754 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750930AbdE3N34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 09:29:56 -0400
-Subject: Re: [PATCH] Per chain RSSI reporting
-To: Ben Greear <greearb@candelatech.com>,
-        Norik Dzhandzhapanyan <norikd@ethertronics.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
- <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
- <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
- <8e314337-a1f0-5ed4-aa90-3f1a0e2d09fc@ethertronics.com>
- <50e245a7-60ad-39f1-920e-e8edf5d9a5ab@candelatech.com>
- <SN1PR08MB13736CC61B1D00ED2968CF5CB0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <82088c50-f800-9d5c-8ccf-879f4b425e66@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Matthias May <matthias.may@neratec.com>
-Message-ID: <2bc35b78-97b4-bdd8-d8dd-6ec59fa9dbd0@neratec.com> (sfid-20170530_153000_121201_304E5313)
-Date: Tue, 30 May 2017 15:23:05 +0200
-MIME-Version: 1.0
-In-Reply-To: <82088c50-f800-9d5c-8ccf-879f4b425e66@candelatech.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35539 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756967AbdEUUBW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 May 2017 16:01:22 -0400
+Received: by mail-lf0-f65.google.com with SMTP id 99so3690629lfu.2
+        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:21 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 2/9] ath10k: htt: RX ring config HL support
+Date: Sun, 21 May 2017 21:59:04 +0200
+Message-Id: <1495396751-4805-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220217_172979_F02C77E1)
+In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27/05/17 23:49, Ben Greear wrote:
-> On 05/27/2017 02:41 PM, Norik Dzhandzhapanyan wrote:
->> Yes ~6dB
-> 
-> If a packet is sent on 1 chain with ath10k firmware (9880 hardware, specifically, but probably
-> others as well), it will be around 6db higher on that particular chain
-> than if the rate-control sends it on all three chains.
-> 
-> Are you measuring on a single chain, or on all of the chains at once and adding
-> the power?
-> 
-> I think we would need more detailed reporting using a good third-party device before
-> smoothing and RSSI.
-> 
-> Thanks,
-> Ben
-> 
->>
+Special HTT RX ring config message used by high latency
+devices.
 
-Also noteworthy is that if you measure in a cabled environment and add the signal from multiple chains with a combiner
-you will probably measure the power wrong.
-The reason for this is that the cyclic shift diversity doesn't work well in a 2 dimensional environment (cable) compared
-to the 3 dimensional environment (air).
+The main difference between HL and LL is that HL devices
+do not use shared memory between device and host and thus,
+no host paddr's are added to the RX config message.
 
-BR
-Matthias
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c    |  5 +++-
+ drivers/net/wireless/ath/ath10k/htt.h    |  1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 51 ++++++++++++++++++++++++++++++++
+ 3 files changed, 56 insertions(+), 1 deletion(-)
 
->>
->> From: Ben Greear
->> Sent: Saturday, May 27, 2:38 PM
->> Subject: Re: [PATCH] Per chain RSSI reporting
->> To: Norik Dzhandzhapanyan, Adrian Chadd
->> Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
->>
->>
->> On 05/27/2017 12:25 PM, Norik Dzhandzhapanyan wrote: > We see this inconsistent/incorrect reporting in our RF chamber.
->> How different are the values, and did you sniff with a third-party device to see if it sees the same spikes in RSSI?
->> Thanks, Ben > > Norik > > On 05/27/2017 09:39 AM, Adrian Chadd wrote: >> On 27 May 2017 at 09:07, Ben Greear wrote:
->> >>> At low encoding rates, especially if it switches to a single-chain encoding, >>> maybe the on-air signal really is
->> stronger? >>> >>> Have you verified in some other manner than the signals reported by ath10k >>> are >>> wrong? >>
->> Hiya, >> >> So yeah, multipath, higher TX rates == weaker TX signal, TPC, etc are >> all interesting to know about at
->> the receiver. it's hard to separate >> that out from the noise sometimes, but in some controlled deployments >> its
->> really obvious. >> >> >> >> -adrian >> >> > > > The contents of this transmission are Ethertronics Inc. Confidential
->> and may contain proprietary or legally privileged
->> information which may not be disclosed, copied or distributed without the express written consent of Ethertronics Inc.
->> The information is intended to be for the use of the individual or entity named on this transmission. If you are not
->> the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information
->> is prohibited. If you have received this transmission in error, please notify us by telephone immediately so that we
->> can arrange for the retrieval of the original documents at no cost to you. Alternatively, notify the sender by
->> replying to this transmission and delete the message without disclosing it. Thank you > -- Ben Greear Candela
->> Technologies Inc http://www.candelatech.com
->>
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index cd160b1..29ed4af 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -258,7 +258,10 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 	if (status)
+ 		return status;
+ 
+-	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
++	if (ar->is_high_latency)
++		status = ath10k_htt_send_rx_ring_cfg_hl(htt);
++	else
++		status = ath10k_htt_send_rx_ring_cfg_ll(htt);
+ 	if (status) {
+ 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
+ 			    status);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 6305308..7ffa1d4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1805,6 +1805,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
+ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
+ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
++int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 685faac..8d85f82 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -693,6 +693,57 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ 	return 0;
+ }
+ 
++int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	struct sk_buff *skb;
++	struct htt_cmd *cmd;
++	struct htt_rx_ring_setup_ring *ring;
++	const int num_rx_ring = 1;
++	u16 flags;
++	int len;
++	int ret;
++
++	/*
++	 * the HW expects the buffer to be an integral number of 4-byte
++	 * "words"
++	 */
++	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
++	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
++
++	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
++	    + (sizeof(*ring) * num_rx_ring);
++	skb = ath10k_htc_alloc_skb(ar, len);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, len);
++
++	cmd = (struct htt_cmd *)skb->data;
++	ring = &cmd->rx_setup.rings[0];
++
++	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
++	cmd->rx_setup.hdr.num_rings = 1;
++
++	flags = 0;
++	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
++	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
++	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
++
++	memset(ring, 0, sizeof(*ring));
++	ring->rx_ring_len = __cpu_to_le16(HTT_RX_RING_SIZE_MIN);
++	ring->rx_ring_bufsize = __cpu_to_le16(HTT_RX_BUF_SIZE);
++	ring->flags = __cpu_to_le16(flags);
++
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	if (ret) {
++		dev_kfree_skb_any(skb);
++		return ret;
++	}
++
++	return 0;
++}
++
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu)
+-- 
+2.7.4
