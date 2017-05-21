@@ -1,133 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35700 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752916AbdEPX55 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 19:57:57 -0400
-Date: Wed, 17 May 2017 01:57:52 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
-        Tom Gundersen <teg@jklm.no>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Takashi Iwai <tiwai@suse.de>,
-        AKASHI Takahiro <takahiro.akashi@linaro.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170516235752.GM17314@wotan.suse.de> (sfid-20170517_015833_746615_00964DE3)
-References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
- <20170515231339.GF17314@wotan.suse.de>
- <0c43c825-df2a-b427-4b67-f17fd644667f@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <0c43c825-df2a-b427-4b67-f17fd644667f@broadcom.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33984 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932083AbdEUUBb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 May 2017 16:01:31 -0400
+Received: by mail-lf0-f68.google.com with SMTP id q24so3696081lfb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:25 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 1/9] ath10k: high_latency detection
+Date: Sun, 21 May 2017 21:59:03 +0200
+Message-Id: <1495396751-4805-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220202_491988_FECB933B)
+In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 16, 2017 at 10:41:08AM +0200, Arend Van Spriel wrote:
-> On 16-5-2017 1:13, Luis R. Rodriguez wrote:
-> > On Fri, May 12, 2017 at 11:02:26PM +0200, Arend Van Spriel wrote:
-> >> try again.. replacing email address from Michał
-> >> On 12-5-2017 22:55, Arend Van Spriel wrote:
-> >>> Let me explain the idea to refresh your memory (and mine). It started
-> >>> when we were working on adding driver support for OpenWrt in brcmfmac.
-> >>> The driver requests for firmware calibration data, but on routers it is
-> >>> stored in flash. So after failing on the firmware request we now call a
-> >>> platform specific API. That was my itch, but it was not bad enough to go
-> >>> and scratch. Now for N900 case there is a similar scenario alhtough it
-> >>> has additional requirement to go to user-space due to need to use a
-> >>> proprietary library to obtain the NVS calibration data. My thought: Why
-> >>> should firmware_class care?
-> > 
-> > Agreed.
-> > 
-> >>> So the idea is that firmware_class provides
-> >>> a registry for modules that can produce a certain firmware "file". Those
-> >>> modules can do whatever is needed. If they need to use umh so be it.
-> >>> They would only register themselves with firmware_class on platforms
-> >>> that need them. It would basically be replacing the fallback mechanism
-> >>> and only be effective on certain platforms.
-> > 
-> > Sure, so it sounds like the work that Daniel Wagner and Tom Gundersen worked
-> > [0] on which provides a firmwared with two modes: best-effort, and final-mode,
-> > would address what you are looking for but without requiring any upstream
-> > changes, *and* it also helps solve the rootfs race remote-proc folks had
-> > concerns over.
-> > 
-> > The other added gain over this solution is if folks need their own proprietary
-> > concoction they can just fork firmwared and have that do whatever it needs
-> > for the specific device on the specific rootfs. That is, firmwared can be the
-> > upstream solution if folks need it, but if folks need something custom they can
-> > just mimic the implementation: best-effort, and and final-mode.
-> > 
-> > Yet another added gain over this solution we can do *not* support the
-> > custom fallback mechanism as its not needed, the udev event should suffice
-> > to let userspace do what it needs.
-> > 
-> > Lastly, if we did not want to deal with timeouts for the way the driver data
-> > API implements it I think we might be able to do away with them for for async
-> > requests if we assume there will be a daemon that spawns in final-mode eventually,
-> > and since it *knows* when the rootfs is ready it should be able to do a final
-> > lookup, if it returns -ENOENT; then indeed we know we can give up. Now, perhaps
-> > how and if we want to deal with timeouts when using the driver data API for
-> > the fallback mechanism is worth considering given it does not have a fallback
-> > mechanism support yet. If we *add* them it would seem this would also put an
-> > implicit race against userspace finishing initialization and running firmwared
-> > in final-mode.
-> 
-> Just to be clear. When you are saying "rootfs" in this story, you mean
-> any (mounted) file-system which may hold the firmware. At least that was
-> one of the arguments. In kernel space we can not know how the system is
-> setup in terms of mount points, let alone on which mounted file-system
-> the firmware resides.
+The setup of high latency chips (USB and SDIO) is
+sometimes different than for chips using low latency
+interfaces.
 
-Right, wherever the hell that thing is on, which could be on a crypic fuse
-drive waiting for some bits to be decrypted from Elon Musk on a spaceship on his
-way to Mars, and only userspace knows how to decrypt this thing through some
-evil proprietary thing, way way after a full bootup.
+The bus type is used to determine if the interface is
+a high latency interface.
 
-> > Johannes, do you recall the corner cases we spoke about regarding timeouts?
-> > Does this match what we spoke about?
-> > 
-> >>> Let me know if this idea is still of interest and I will rebase what I
-> >>> have for an RFC round.
-> > 
-> > Since no upstream delta is needed for firmwared I'd like to first encourage
-> > evaluating the above. While distributions don't carry it yet that may be seen as
-> > an issue but since what we are looking for are corner cases, only folks needing
-> > to deploy a specific solution would need it or a custom proprietary solution.
-> 
-> Ok. I will go try and run firmwared in OpenWrt on a router platform.
-> Have to steal one from a colleague :-p Will study firmwared.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-The finale-mode is the trick.
-
-> > [0] https://github.com/teg/firmwared.git
-> > 
-> > PS.
-> > 
-> > Note that firmware signing will require an additional file, the detached
-> > signature. The driver data API does not currently support the fallback
-> > mechanism so we would not have to worry about that yet but once we add
-> > fallback support we'd need to consider this.
-> 
-> Do you have references to the firmware signing design. Is the idea to
-> have one signature and all "firmware files" need to be signed with it?
-
-Nope, I'm afraid a lot has been discussed so best we can do is wait.
-
- Luis
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 46ce263..627954e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2445,6 +2445,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 	ar->hw_rev = hw_rev;
+ 	ar->hif.ops = hif_ops;
+ 	ar->hif.bus = bus;
++	ar->is_high_latency = ath10k_is_high_latency(bus);
+ 
+ 	switch (hw_rev) {
+ 	case ATH10K_HW_QCA988X:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1efe0a1..90069b8 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -789,6 +789,8 @@ struct ath10k {
+ 
+ 	bool p2p;
+ 
++	bool is_high_latency;
++
+ 	struct {
+ 		enum ath10k_bus bus;
+ 		const struct ath10k_hif_ops *ops;
+@@ -1008,6 +1010,11 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
+ 	return false;
+ }
+ 
++static inline bool ath10k_is_high_latency(enum ath10k_bus bus)
++{
++	return ((bus == ATH10K_BUS_SDIO) || (bus == ATH10K_BUS_USB));
++}
++
+ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 				  enum ath10k_bus bus,
+ 				  enum ath10k_hw_rev hw_rev,
+-- 
+2.7.4
