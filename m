@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40660 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750784AbdEPRMj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27504 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751132AbdEUUHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 13:12:39 -0400
-To: netdev <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: 'iw events' stops receiving events after a while on 4.9 + hacks
-Message-ID: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com> (sfid-20170516_191242_840791_C3E856EE)
-Date: Tue, 16 May 2017 10:12:37 -0700
+        Sun, 21 May 2017 16:07:43 -0400
+From: Maya Haim <merez@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        qca_merez <qca_merez@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        wil6210 <wil6210@qca.qualcomm.com>,
+        qca_liord <qca_liord@qca.qualcomm.com>
+Subject: RE: [PATCH v2 4/5] wil6210: add option to ignore OTA regulatory hints
+Date: Sun, 21 May 2017 20:07:32 +0000
+Message-ID: <71d0595982f24c12b519fa67ea6f0ad8@euamsexm01a.eu.qualcomm.com> (sfid-20170521_220747_319519_EC61FDF5)
+References: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
+        <1494848759-3651-5-git-send-email-qca_merez@qca.qualcomm.com>
+ <8737c1a1h6.fsf@qca.qualcomm.com>
+In-Reply-To: <8737c1a1h6.fsf@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have been keeping an 'iw events' program running with a perl script gathering its
-output and post-processing it.  This has been working for several years on 4.7 and earlier
-kernels, but when testing on 4.9 overnight, I notice that 'iw events' is not showing any input.  'strace' shows
-that it is waiting on recvmsg.  If I start a second 'iw events' then it will get
-wifi events as expected.
+kvalo@qca.qualcomm.com wrote:
+>=20
+> I wonder should something like this be in cfg80211? Because I doubt
+> wil6210 is the only driver having this problem.
 
-Are there any known issues in this area?
+We will check that and share our conclusions.
+Can you please drop this patch for now and apply the rest of the patches
+(if there are no additional comments)?
+
+>=20
+> --
+> Kalle Valo
 
 Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Maya
