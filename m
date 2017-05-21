@@ -1,79 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:36918 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbdE0QHf (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:36043 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756979AbdEUUBY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 May 2017 12:07:35 -0400
-Subject: Re: [PATCH] Per chain RSSI reporting
-To: Norik Dzhandzhapanyan <norikd@ethertronics.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
- <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com> (sfid-20170527_180741_064976_5C2B86C3)
-Date: Sat, 27 May 2017 09:07:32 -0700
-MIME-Version: 1.0
-In-Reply-To: <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sun, 21 May 2017 16:01:24 -0400
+Received: by mail-lf0-f66.google.com with SMTP id h4so3696051lfj.3
+        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 13:01:23 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 4/9] ath10k: add start_once support
+Date: Sun, 21 May 2017 21:59:06 +0200
+Message-Id: <1495396751-4805-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20170521_220218_272360_896EB43D)
+In-Reply-To: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1495396751-4805-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At low encoding rates, especially if it switches to a single-chain encoding,
-maybe the on-air signal really is stronger?
+Add possibility to configure the driver to only start target once.
+This can reduce startup time of SDIO devices significantly since
+loading the firmware can take a substantial amount of time.
 
-Have you verified in some other manner than the signals reported by ath10k are
-wrong?
+The patch is also necessary for high latency devices in general
+since it does not seem to be possible to rerun the BMI phase
+(fw upload) without power-cycling the device.
 
-Thanks,
-Ben
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 19 +++++++++++++++----
+ drivers/net/wireless/ath/ath10k/core.h |  2 ++
+ drivers/net/wireless/ath/ath10k/hw.h   |  6 ++++++
+ 3 files changed, 23 insertions(+), 4 deletions(-)
 
-
-On 05/26/2017 07:09 PM, Norik Dzhandzhapanyan wrote:
-> Hi Adrian,
->
-> Inserting the smoothing function here is motivated by what we see as 'spikes' in rssi data under weak rssi conditions.  Figured its best to get rid of the 'bogus' data as close to the source as possible. Also to minimize the impact on the changes.
->
-> I believe the averaging  that happens at higher levels is based on EWMA macros in net/mac80211/sta_info.c which not wifi card/chipset specific. Didn't want to touch that since other cards seem to not have this spikey behavior. And, it doesnt seem to have an effect on the ath10k data anyway (iw reports the exact same values for both).
->
-> I wonder if it would be acceptable to pass a module load time parameter which would indicate an average factor with 0 (as default) to indicate no averaging?
->
-> Another option would be to add the chain_signal_avg field to the ieee80211_tx_status struct in mac80211.h to expose the average value up the stack this way? I haven't looked too deep on what this entails though and I didn't want to risk impacting anything else.
->
-> So yes.. I am OK with the per-chain RSSI changes first.
->
-> Norik
->
->
-> From: adrian.chadd@gmail.com <adrian.chadd@gmail.com> on behalf of Adrian Chadd <adrian@freebsd.org>
-> Sent: Friday, May 26, 2017 6:12 PM
-> To: Norik Dzhandzhapanyan
-> Cc: ath10k@lists.infradead.org; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] Per chain RSSI reporting
->
-> [snip]
->
-> hiya,
->
-> I have something local that I've been meaning to push up to do this,
-> but with no smoothing. Ideally (!) smoothing is done optionally in
-> mac80211.
->
-> What do you think about just committing the per-chain RSSI stuff to
-> mac80211 so it shows up right now, and then we figure out how to
-> express the smoothing in mac80211 or further up the layers?
->
-> (We care about packet-to-packet RSSI values for "reasons" - mostly
-> bring-up and board validation, but also for runtime link checks.)
->
->
-> -adrian
->
-> The contents of this transmission are Ethertronics Inc. Confidential and may contain proprietary or legally privileged information which may not be disclosed, copied or distributed without the express written consent of Ethertronics Inc. The information is intended to be for the use of the individual or entity named on this transmission. If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited. If you have received this transmission in error, please notify us by telephone immediately so that we can arrange for the retrieval of the original documents at no cost to you. Alternatively, notify the sender by replying to this transmission and delete the message without disclosing it. Thank you
->
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 0c46004..54bf396 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1956,6 +1956,9 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	int status;
+ 	u32 val;
+ 
++	if (ar->is_started && ar->hw_params.start_once)
++		return 0;
++
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+ 	clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
+@@ -2175,6 +2178,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	if (status)
+ 		goto err_hif_stop;
+ 
++	ar->is_started = true;
+ 	return 0;
+ 
+ err_hif_stop:
+@@ -2227,6 +2231,7 @@ void ath10k_core_stop(struct ath10k *ar)
+ 	ath10k_htt_tx_stop(&ar->htt);
+ 	ath10k_htt_rx_free(&ar->htt);
+ 	ath10k_wmi_detach(ar);
++	ar->is_started = false;
+ }
+ EXPORT_SYMBOL(ath10k_core_stop);
+ 
+@@ -2329,12 +2334,18 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_unlock;
+ 	}
+ 
+-	ath10k_debug_print_boot_info(ar);
+-	ath10k_core_stop(ar);
++	/* Leave target running if hw_params.start_once is set */
++	if (ar->hw_params.start_once) {
++		mutex_unlock(&ar->conf_mutex);
++	} else {
++		ath10k_debug_print_boot_info(ar);
++		ath10k_core_stop(ar);
+ 
+-	mutex_unlock(&ar->conf_mutex);
++		mutex_unlock(&ar->conf_mutex);
++
++		ath10k_hif_power_down(ar);
++	}
+ 
+-	ath10k_hif_power_down(ar);
+ 	return 0;
+ 
+ err_unlock:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index cdac923..0e75441 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -784,6 +784,8 @@ struct ath10k {
+ 
+ 	bool is_high_latency;
+ 
++	bool is_started;
++
+ 	struct {
+ 		enum ath10k_bus bus;
+ 		const struct ath10k_hif_ops *ops;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 160377aa..f733e73 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -473,6 +473,12 @@ struct ath10k_hw_params {
+ 	bool is_high_latency;
+ 
+ 	enum ath10k_bus bus;
++
++	/* Specifies whether or not the device should be started once.
++	 * If set, the device will be started once by the early fw probe
++	 * and it will not be terminated afterwards.
++	 */
++	bool start_once;
+ };
+ 
+ struct htt_rx_desc;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
