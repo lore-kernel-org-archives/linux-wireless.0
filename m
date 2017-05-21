@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57478 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750952AbdE3NXK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 09:23:10 -0400
-Message-ID: <1496150587.3327.11.camel@sipsolutions.net> (sfid-20170530_152317_055924_7FFFC4AA)
-Subject: Re: [PATCH 1/2] Documentation/sphinx: kerneldoc: add
- "unused-functions"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jani Nikula <jani.nikula@linux.intel.com>,
-        linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org
-Date: Tue, 30 May 2017 15:23:07 +0200
-In-Reply-To: <8737do3a7i.fsf@intel.com>
-References: <20170331071632.6209-1-johannes@sipsolutions.net>
-         <878tnl38ur.fsf@intel.com> <1491249573.4714.3.camel@sipsolutions.net>
-         <8737do3a7i.fsf@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bl2nam02on0084.outbound.protection.outlook.com ([104.47.38.84]:16248
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751474AbdEURIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 May 2017 13:08:30 -0400
+Date: Sun, 21 May 2017 20:08:15 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna
+ chipsets
+Message-ID: <20170521170814.d7ljne2pgopymxud@bars> (sfid-20170521_190835_220130_9C814910)
+References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+ <1495026753.2442.7.camel@sipsolutions.net>
+ <20170518200810.pch7tivugqyjmy4d@bars>
+ <1495189094.3274.2.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495189094.3274.2.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-04-04 at 10:26 +0300, Jani Nikula wrote:
+On Fri, May 19, 2017 at 12:18:14PM +0200, Johannes Berg wrote:
+
+> FWIW, regarding the  qtnf_mgmt_frame_register() and
+> cfg80211_rx_mgmt() thing, I think we'll have to discuss how to do this,
+> and perhaps you need to think about the firmware API for it.
 > 
-> > Interesting, TBH I never even considered this. How would I even run
-> > it that way? Presumably "make htmldocs" doesn't do this?
-> 
-> Try 'make SPHINXOPTS=-j8 htmldocs'.
+> Right now, I don't see that you can pass filters down, but you probably
+> also don't want to implement the reject code in the driver? And
+> cfg80211 doesn't give you that data right now either... So somewhere I
+> expect we'll need to make changes, unless you just copy (e.g. from
+> mac80211) the implementation of what happens when cfg80211_rx_mgmt()
+> returns false.
 
-Yep, makes sense.
+Thanks for pointing at mac80211 reject code. In our specific case
+it looks like the issue can be fixed with help of the following
+building blocks:
+- properly set NL80211_RXMGMT_FLAG_ANSWERED flag, since quite a few
+  mgmt frame types are completely handled by firmware
+- reply to action frames rejected by userspace tools
+  in the same way as it is done by mac80211
 
-> > Sphinx documentation (http://www.sphinx-doc.org/en/stable/extdev/) says
-> > this:
-> > 
-> >     The setup() function can return a dictionary. This is treated by
-> >     Sphinx as metadata of the extension. Metadata keys currently
-> >     recognized are:
-> >     [...]
-> >     'parallel_read_safe': a boolean that specifies if parallel reading
-> >     of source files can be used when the extension is loaded. It
-> >     defaults to False, i.e. you have to explicitly specify your
-> >     extension to be parallel-read-safe after checking that it is.
-> > 
-> >     We do set this right now, so I guess it'd only be guaranteed to work
-> >     right within a single rst file, and then I should perhaps consider not
-> >     making this state global but somehow linking it to the rst file being
-> >     processed?
-> 
-> Perhaps, but does that defeat the purpose then?
+Adding reject code seems to be straightforward. Adding NL80211_RXMGMT_FLAG_ANSWERED
+flag to firmware is a more involved task. But it can be done gradually, from
+simple usecases to the complicated ones. Besides, IIUC the support of this flag
+by userspace tools is still a work in progress. E.g., hostapd is not yet using it,
+so we keep using 'send_probe_response = 0' config option.
 
-Yeah, it kinda does. For my original use case in cfg80211 we only have
-a single file, but even in mac80211 we already use more than one.
+In the long run the idea of passing mgmt frame filters to drivers looks
+appealing. It will be up to driver whether to use filters (e.g. pass them
+to firmware for early processing) or not to use them (essentially leaving
+it for cfg80211 subsystem). I did a quick search through other users of
+cfg80211_rx_mgmt among wireless drivers. It turns out that none of them is
+checking its return value. So there may be other potential
+users of this feature :)
 
-Not sure what to do then - I guess we just can't do that, unless we
-prevent using this with parallelization, which seems awkward.
+Does it make sense if I post an RFC patch modifying current interface
+of mgmt_frame_register in cfg80211_ops to collect feedback ?
 
-johannes
+Regards,
+Sergey
