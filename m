@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:38699 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030368AbdEXK03 (ORCPT
+Received: from mail-io0-f177.google.com ([209.85.223.177]:33085 "EHLO
+        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756551AbdEUPnh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 06:26:29 -0400
-Received: by mail-wm0-f51.google.com with SMTP id e127so68284768wmg.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:26:28 -0700 (PDT)
-From: Mateusz Jurczyk <mjurczyk@google.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, security@kernel.org
-Subject: [PATCH] nfc: Fix the sockaddr length sanitization in llcp_sock_connect
-Date: Wed, 24 May 2017 12:26:20 +0200
-Message-Id: <20170524102620.13806-1-mjurczyk@google.com> (sfid-20170524_122720_261954_6731D31A)
+        Sun, 21 May 2017 11:43:37 -0400
+Received: by mail-io0-f177.google.com with SMTP id p24so69167868ioi.0
+        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2017 08:43:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <a2beca1e-5dfc-5962-cf4b-c39668b6968e@candelatech.com>
+References: <CABPxzY+mQ-G6PTsQV9_WVgju4bmQHwxKKW070j7v6=DDgZop4Q@mail.gmail.com>
+ <b830b657-3f73-de7f-d61c-1565dc14c2ef@candelatech.com> <CABPxzY+Y3Jcxw9UitytgrFS1H53pT7mCvVSbFM0qoj74x4gdFg@mail.gmail.com>
+ <CABPxzY+bnfV-z=J=Tz7HH_8PQ1kW-XDpDhEZnqQK6DV_mGfaDg@mail.gmail.com> <a2beca1e-5dfc-5962-cf4b-c39668b6968e@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sun, 21 May 2017 21:13:16 +0530
+Message-ID: <CABPxzYJJ5qXix7OYVFq3K+w+SukA9fqPuQt-w8ULAZkgt9uppQ@mail.gmail.com> (sfid-20170521_174503_987722_AFBA0F9B)
+Subject: Re: ath10k: controlling TX aggregation
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the sockaddr length verification in the connect() handler of NFC/LLCP
-sockets, to compare against the size of the actual structure expected on
-input (sockaddr_nfc_llcp) instead of its shorter version (sockaddr_nfc).
-
-Both structures are defined in include/uapi/linux/nfc.h. The fields
-specific to the _llcp extended struct are as follows:
-
-   276		__u8 dsap; /* Destination SAP, if known */
-   277		__u8 ssap; /* Source SAP to be bound to */
-   278		char service_name[NFC_LLCP_MAX_SERVICE_NAME]; /* Service name URI */;
-   279		size_t service_name_len;
-
-If the caller doesn't provide a sufficiently long sockaddr buffer, these
-fields remain uninitialized (and they currently originate from the stack
-frame of the top-level sys_connect handler). They are then copied by
-llcp_sock_connect() into internal storage (nfc_llcp_sock structure), and
-could be subsequently read back through the user-mode getsockname()
-function (handled by llcp_sock_getname()). This would result in the
-disclosure of up to ~70 uninitialized bytes from the kernel stack to
-user-mode clients capable of creating AFC_NFC sockets.
-
-Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
----
- net/nfc/llcp_sock.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
-index 2ffb18e73df6..d0d12bea65cb 100644
---- a/net/nfc/llcp_sock.c
-+++ b/net/nfc/llcp_sock.c
-@@ -662,8 +662,7 @@ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
- 
- 	pr_debug("sock %p sk %p flags 0x%x\n", sock, sk, flags);
- 
--	if (!addr || len < sizeof(struct sockaddr_nfc) ||
--	    addr->sa_family != AF_NFC)
-+	if (!addr || len < sizeof(*addr) || addr->sa_family != AF_NFC)
- 		return -EINVAL;
- 
- 	if (addr->service_name_len == 0 && addr->dsap == 0)
--- 
-2.13.0.219.gdb65acc882-goog
+On Sun, May 21, 2017 at 8:36 PM, Ben Greear <greearb@candelatech.com> wrote:
+>
+>
+> On 05/20/2017 09:21 AM, Krishna Chaitanya wrote:
+>>
+>> On Mon, May 15, 2017 at 3:02 PM, Krishna Chaitanya
+>> <chaitanya.mgit@gmail.com> wrote:
+>>>
+>>> On Fri, May 12, 2017 at 8:15 PM, Ben Greear <greearb@candelatech.com>
+>>> wrote:
+>>>>
+>>>> What chipset, and what firmware version?
+>>>>
+>>>> Thanks,
+>>>> Ben
+>>>
+>>>
+>>> Hi Ben,
+>>>
+>>> I have missed your response. PFB details.
+>>>
+>>>  chip: QCA986x/988x PCIe
+>>>  FW ver: 10.2.4.70.54 api 5
+>>>  kernel: 4.11.0-rc+7 (wireless-drivers-next)
+>>>
+>> Ben,
+>>
+>> any clues?
+>
+>
+> I haven't tried that test yet, and use a different
+> firmware version.  I did recently work on allowing larger
+> AMSDU aggregates and have that working in my CT firmware and
+> driver.
+ok, so at least its suppose to work.
