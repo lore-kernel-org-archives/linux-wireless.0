@@ -1,98 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:36807 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758435AbdEOV0n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 17:26:43 -0400
-Received: by mail-pg0-f49.google.com with SMTP id x64so46532763pgd.3
-        for <linux-wireless@vger.kernel.org>; Mon, 15 May 2017 14:26:43 -0700 (PDT)
-Date: Mon, 15 May 2017 14:26:40 -0700
-From: Kees Cook <keescook@chromium.org>
-To: netdev@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, Joe Perches <joe@perches.com>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3] libertas: Avoid reading past end of buffer
-Message-ID: <20170515212640.GA45443@beast> (sfid-20170515_232718_870861_7D0A3177)
+Received: from mail.kernel.org ([198.145.29.99]:46966 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965138AbdEVQub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 May 2017 12:50:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170522162114.w4pw25pcecsm6lhi@earth>
+References: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk>
+ <8737bx5jgr.fsf@purkki.adurom.net> <20170522.103010.1779800840743690143.davem@davemloft.net>
+ <87wp99t0hj.fsf@kamboji.qca.qualcomm.com> <20170522152112.634mnsv65lryrmkp@earth>
+ <CAL_JsqL91sruKNaWmVEqT+L_OCh5xFkkGY07mBBUmqkKHc5fQw@mail.gmail.com> <20170522162114.w4pw25pcecsm6lhi@earth>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Mon, 22 May 2017 11:50:04 -0500
+Message-ID: <CAL_JsqLJ1F-2So4fSeVwR7RsUZZwMLv7HcnzHdKrOUGCU2F8+w@mail.gmail.com> (sfid-20170522_185258_905724_4991E1FF)
+Subject: Re: [PATCHv4] wlcore: add wl1285 compatible
+To: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        David Miller <davem@davemloft.net>,
+        Tony Lindgren <tony@atomide.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using memcpy() from a string that is shorter than the length copied means
-the destination buffer is being filled with arbitrary data from the kernel
-rodata segment. Instead, redefine the stat strings to be ETH_GSTRING_LEN
-sizes, like other drivers. This lets us use a single memcpy that does not
-leak rodata contents. Additionally adjust indentation to keep checkpatch.pl
-happy.
+On Mon, May 22, 2017 at 11:21 AM, Sebastian Reichel
+<sebastian.reichel@collabora.co.uk> wrote:
+> Hi,
+>
+> On Mon, May 22, 2017 at 11:11:49AM -0500, Rob Herring wrote:
+>> On Mon, May 22, 2017 at 10:21 AM, Sebastian Reichel
+>> <sebastian.reichel@collabora.co.uk> wrote:
+>> > Hi,
+>> >
+>> > On Mon, May 22, 2017 at 05:44:24PM +0300, Kalle Valo wrote:
+>> >> David Miller <davem@davemloft.net> writes:
+>> >> > From: Kalle Valo <kvalo@codeaurora.org>
+>> >> > Date: Mon, 22 May 2017 12:28:20 +0300
+>> >> >
+>> >> >> Sebastian Reichel <sebastian.reichel@collabora.co.uk> writes:
+>> >> >>
+>> >> >>> Motorola Droid 4 uses a WL1285C. With differences between the
+>> >> >>> chips not being public let's add explicit binding for wl1285
+>> >> >>> instead of relying on wl1283 being very similar.
+>> >> >>>
+>> >> >>> Reviewed-by: Rob Herring <robh@kernel.org>
+>> >> >>> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+>> >> >>> Acked-by: Tony Lindgren <tony@atomide.com>
+>> >> >>> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+>> >> >>> ---
+>> >> >>> Hi Dave,
+>> >> >>>
+>> >> >>> I previously send this in two patches, but its hard to apply without
+>> >> >>> requiring multiple kernel releases (the driver must be updated before
+>> >> >>> the DTS change). Since the actual change is not very complex Marcel
+>> >> >>> Holtmann & Tony Lindgren suggested, that I send this directly to you
+>> >> >>> in a single patch for inclusion into 4.12. This also means, that the
+>> >> >>> remaining series can be queued normally for 4.13.
+>> >> >>
+>> >> >> I noticed that Dave set this patch to Awaiting Upstream state on his
+>> >> >> patchwork:
+>> >> >>
+>> >> >> https://patchwork.ozlabs.org/patch/759042/
+>> >> >>
+>> >> >> Which makes me suspect that he is waiting me to apply this (as I
+>> >> >> normally apply wlcore patches). Dave, should I actually take this patch?
+>> >> >> What do you prefer?
+>> >> >
+>> >> > Anything that touches wireless drivers I defer to you, yes.
+>> >>
+>> >> Thanks, I'll take it then. Not sure why Sebastian was suggested to
+>> >> submit this patch via your tree in the first place.
+>> >>
+>> >> https://patchwork.kernel.org/patch/9713645/
+>> >
+>> > Thanks. The idea was to get into early 4.12-rc to avoid merge
+>> > conflicts in the droid 4 *.dts during 4.13 cycle. This strategy
+>> > obviously failed :)
+>>
+>> First, I'm not sure why you combined everything. A maintainer can just
+>> as easily take a series as a single patch and we prefer binding doc,
+>> dts and driver changes all separate.
+>>
+>> Second, the dts changes could go thru arm-soc and the driver change
+>> thru netdev. The binding doc can be thru either. There's no bisecting
+>> dependency and things shouldn't break. It just won't all work until
+>> you have both branches.
+>
+> This is only true for new devices. WLAN for droid4 works at the
+> moment using incorrect compatible string. If *.dts is updated and
+> driver is not yet updated WLAN does not work. IMHO that is a
+> bisecting dependency.
 
-This was found with the future CONFIG_FORTIFY_SOURCE feature.
+True. That's also breaking compatibility if a new kernel doesn't work
+with an old DT. Is it just a compatible string change? If so, then
+just keep the old string as a fallback.
 
-Cc: Daniel Micay <danielmicay@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-v3:
-- drop needless "*"; joe
-- fix entry/exit in separate patch
-v2:
-- use ETH_GSTRING_LEN; joe
----
- drivers/net/wireless/marvell/libertas/mesh.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-index d0c881dd5846..2229fb448189 100644
---- a/drivers/net/wireless/marvell/libertas/mesh.c
-+++ b/drivers/net/wireless/marvell/libertas/mesh.c
-@@ -1108,15 +1108,15 @@ void lbs_mesh_set_txpd(struct lbs_private *priv,
-  * Ethtool related
-  */
- 
--static const char * const mesh_stat_strings[] = {
--			"drop_duplicate_bcast",
--			"drop_ttl_zero",
--			"drop_no_fwd_route",
--			"drop_no_buffers",
--			"fwded_unicast_cnt",
--			"fwded_bcast_cnt",
--			"drop_blind_table",
--			"tx_failed_cnt"
-+static const char mesh_stat_strings[MESH_STATS_NUM][ETH_GSTRING_LEN] = {
-+	"drop_duplicate_bcast",
-+	"drop_ttl_zero",
-+	"drop_no_fwd_route",
-+	"drop_no_buffers",
-+	"fwded_unicast_cnt",
-+	"fwded_bcast_cnt",
-+	"drop_blind_table",
-+	"tx_failed_cnt"
- };
- 
- void lbs_mesh_ethtool_get_stats(struct net_device *dev,
-@@ -1170,17 +1170,11 @@ int lbs_mesh_ethtool_get_sset_count(struct net_device *dev, int sset)
- void lbs_mesh_ethtool_get_strings(struct net_device *dev,
- 	uint32_t stringset, uint8_t *s)
- {
--	int i;
--
- 	lbs_deb_enter(LBS_DEB_ETHTOOL);
- 
- 	switch (stringset) {
- 	case ETH_SS_STATS:
--		for (i = 0; i < MESH_STATS_NUM; i++) {
--			memcpy(s + i * ETH_GSTRING_LEN,
--					mesh_stat_strings[i],
--					ETH_GSTRING_LEN);
--		}
-+		memcpy(s, mesh_stat_strings, sizeof(mesh_stat_strings));
- 		break;
- 	}
- 	lbs_deb_enter(LBS_DEB_ETHTOOL);
--- 
-2.7.4
-
-
--- 
-Kees Cook
-Pixel Security
+Rob
