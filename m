@@ -1,143 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36319 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757852AbdELUzl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 16:55:41 -0400
-Received: by mail-wm0-f46.google.com with SMTP id u65so31229826wmu.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2017 13:55:40 -0700 (PDT)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
- <20161226163559.GB27087@amd> <20170103175924.GC13946@wotan.suse.de>
- <936bf348-58ac-882c-a433-83f209862deb@broadcom.com>
- <20170504022805.GV28800@wotan.suse.de>
-Cc: Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
-        Tom Gundersen <teg@jklm.no>,
-        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Takashi Iwai <tiwai@suse.de>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d1db072a-7953-f12d-dc03-cc52bea578cc@broadcom.com> (sfid-20170512_225611_392525_A514EEC3)
-Date: Fri, 12 May 2017 22:55:37 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170504022805.GV28800@wotan.suse.de>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:52604 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758956AbdEVQYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 May 2017 12:24:19 -0400
+Message-ID: <1495470254.26008.3.camel@sipsolutions.net> (sfid-20170522_182453_453041_B8ECDF61)
+Subject: Re: [PATCH] cfg80211: Be able to set bss expire time at config
+ stage.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>,
+        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        helmut.schaa@googlemail.com
+Date: Mon, 22 May 2017 18:24:14 +0200
+In-Reply-To: <1495470111.25557.9.camel@redhat.com>
+References: <20170522160946.2057-1-enric.balletbo@collabora.com>
+         <1495470111.25557.9.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4-5-2017 4:28, Luis R. Rodriguez wrote:
-> On Wed, May 03, 2017 at 09:02:20PM +0200, Arend Van Spriel wrote:
->> On 3-1-2017 18:59, Luis R. Rodriguez wrote:
->>> On Mon, Dec 26, 2016 at 05:35:59PM +0100, Pavel Machek wrote:
->>>>
->>>> Right question is "should we solve it without user-space help"?
->>>>
->>>> Answer is no, too. Way too complex. Yes, it would be nice if hardware
->>>> was designed in such a way that getting calibration data from kernel
->>>> is easy, and if you design hardware, please design it like that. But
->>>> N900 is not designed like that and getting the calibration through
->>>> userspace looks like only reasonable solution.
->>>
->>> Arend seems to have a better alternative in mind possible for other
->>> devices which *can* probably pull of doing this easily and nicely,
->>> given the nasty history of the usermode helper crap we should not
->>> in any way discourage such efforts.
->>>
->>> Arend -- please look at the firmware cache, it not a hash but a hash
->>> table for an O(1) lookups would be a welcomed change, then it could
->>> be repurposed for what you describe, I think the only difference is
->>> you'd perhaps want a custom driver hook to fetch the calibration data
->>> so the driver does whatever it needs.
->>
->> Hi Luis,
->>
->> I let my idea catch dust on the shelf for a while. 
-> 
-> :) BTW did you get to check out Daniel Wagner and Tom Gundersen's firmware work
-> [0] ? This can provide a proper clear fallback mechanism which *also* helps
-> address the race between "critical mount points ready" problem we had discussed
-> long ago. IIRC it did this by having two modes of operation a best effort-mode
-> and a final-mode. The final-mode would only be used once all the real rootfs is
-> ready. Userspace decides when to kick / signal firmwared to switch to final-mode
-> as only userspace will know for sure when that is ready. The best-effort mode
-> would be used in initramfs. There is also no need for a "custom fallback", the
-> uevent fallback mechanism can be relied upon alone. Custom tools can just fork
-> off and do something similar to firmward then in terms of architecture. This is
-> a form of fallback mechanism I think I'd be happy to see enabled on the new
-> driver data API. But of course, I recall also liking what you had in mind as well
-> so would be happy to see more alternatives! The cleaner the better !
-> 
-> [0] https://github.com/teg/firmwared
-> 
->> Actually had a couple
->> of patches ready, but did get around testing them. So I wanted to rebase
->> them on your linux-next tree. I bumped into the umh lock thing and was
->> wondering why direct filesystem access was under that lock as well.
-> 
-> Indeed, it was an odd thing.
-> 
->> In your tree I noticed a fix for that. 
-> 
-> Yup!
-> 
-> It took a lot of git archeology to reach a sound approach forward which makes
-> me feel comfortable without regressing the kernel, this should not regress
-> the kernel.
-> 
->> The more reason to base my work on
->> top of your firmware_class changes. Now my question is what is the best
->> branch to choose, because you have a "few" in that repo to choose from ;-)
-> 
-> I have a series of topical changes, and I rebase onto the latest linux-next
-> regularly before posting patches, if 0-day finds issues, I dish out a next
-> try2 or tryX iteration until all issues are fixed. So in this case you'd
-> just go for the latest driver-data-$(next_date) and if there is a try
-> postfix use the latest tryX.
-> 
-> In this case 20170501-driver-data-try2, this is based on linux-next tag
-> next-20170501. If you have issues booting on that next tag though you
-> could instead try the v4.11-rc8-driver-data-try3 branch based on v4.11-rc8.
-> But naturally patches ultimately should be based on the latest linux-next
-> tag for actual submission.
-> 
-> PS. after my changes the fallback mechanism can easily be shoved into its
-> own file, not sure if that helps with how clean of a solution your work
-> will be.
 
-Let me explain the idea to refresh your memory (and mine). It started
-when we were working on adding driver support for OpenWrt in brcmfmac.
-The driver requests for firmware calibration data, but on routers it is
-stored in flash. So after failing on the firmware request we now call a
-platform specific API. That was my itch, but it was not bad enough to go
-and scratch. Now for N900 case there is a similar scenario alhtough it
-has additional requirement to go to user-space due to need to use a
-proprietary library to obtain the NVS calibration data. My thought: Why
-should firmware_class care? So the idea is that firmware_class provides
-a registry for modules that can produce a certain firmware "file". Those
-modules can do whatever is needed. If they need to use umh so be it.
-They would only register themselves with firmware_class on platforms
-that need them. It would basically be replacing the fallback mechanism
-and only be effective on certain platforms.
+> Couldn't userspace just look at NL80211_BSS_SEEN_MS_AGO to filter and
+> create its own list?  Given that the kernel provides the information
+> userspace needs to figure out the age of a particular BSS, it doesn't
+> seem like there needs to be a kernel tunable for this.  Userspace can
+> already avoid stale results.
 
-Let me know if this idea is still of interest and I will rebase what I
-have for an RFC round.
+Yeah, I agree. It can also ask for a flush, so that old results are
+gone by the time the next scan returns. We don't have a flush operation
+without requesting a new scan, but I guess that could be added.
 
-Regards,
-Arend
+> Also, different runtime situations might want different result ages,
+> which wouldn't be possible if the kernel had a hardcoded maximum. 
+> Furthermore, different userspace apps might be reading the same scan
+> list, and they might have different ideas about staleness.
+> 
+> Or perhaps I misunderstand the problem, which could well be the case.
+
+No, I think this is perfectly right - userspace should be able to deal
+with this given the tools we gave it, or if not, we should probably
+just give it more tools instead of hardcoding the kernel configuration.
+
+This value really just kinda needed to be an upper bound so that we
+don't start expiring entries while we're still scanning.
+
+johannes
