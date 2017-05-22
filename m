@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:36393 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751060AbdEaJnk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 05:43:40 -0400
-Received: by mail-qk0-f174.google.com with SMTP id u75so7251616qka.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 02:43:40 -0700 (PDT)
-Subject: Re: [PATCH] bcm47xx: fix build regression
-To: Arnd Bergmann <arnd@arndb.de>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Brian Norris <computersforpeace@gmail.com>,
-        linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mips@linux-mips.org
-References: <20170530112027.3983554-1-arnd@arndb.de>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <7b6903a2-ce54-44f9-18ed-a14bd32069ce@broadcom.com> (sfid-20170531_114421_219447_7616D6D0)
-Date: Wed, 31 May 2017 11:43:36 +0200
+Received: from mout.web.de ([212.227.15.4]:53260 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753402AbdEVNAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 May 2017 09:00:38 -0400
+Subject: [PATCH 2/2] NFC: digital: Delete an error message for a failed memory
+ allocation in digital_in_send()
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Thierry Escande <thierry.escande@collabora.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
+Message-ID: <94b99b09-8f6f-3532-0738-b2edba96dd26@users.sourceforge.net> (sfid-20170522_150123_939627_D70184BB)
+Date: Mon, 22 May 2017 15:00:17 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170530112027.3983554-1-arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/30/2017 1:20 PM, Arnd Bergmann wrote:
-> An unknown change in the kernel headers caused a build regression
-> in an MTD partition driver:
-> 
-> In file included from drivers/mtd/bcm47xxpart.c:12:0:
-> include/linux/bcm47xx_nvram.h: In function 'bcm47xx_nvram_init_from_mem':
-> include/linux/bcm47xx_nvram.h:27:10: error: 'ENOTSUPP' undeclared (first use in this function)
-> 
-> Clearly we want to include linux/errno.h here.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 22 May 2017 14:24:24 +0200
 
-unfortunate that you did not find the commit that caused this build 
-regression. You could produce preprocessor output when it was working to 
-see where errno.h got implicitly included and start looking there for 
-git history.
+Omit an extra message for a memory allocation failure in this function.
 
-Regards,
-Arend
+This issue was detected by using the Coccinelle software.
 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->   include/linux/bcm47xx_nvram.h | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/linux/bcm47xx_nvram.h b/include/linux/bcm47xx_nvram.h
-> index 2793652fbf66..a414a2b53e41 100644
-> --- a/include/linux/bcm47xx_nvram.h
-> +++ b/include/linux/bcm47xx_nvram.h
-> @@ -8,6 +8,7 @@
->   #ifndef __BCM47XX_NVRAM_H
->   #define __BCM47XX_NVRAM_H
->   
-> +#include <linux/errno.h>
->   #include <linux/types.h>
->   #include <linux/kernel.h>
->   #include <linux/vmalloc.h>
-> 
+Link: http://events.linuxfoundation.org/sites/events/files/slides/LCJ16-Refactor_Strings-WSang_0.pdf
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ net/nfc/digital_core.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
+index 3baf91f3ef80..8e02a3e1b319 100644
+--- a/net/nfc/digital_core.c
++++ b/net/nfc/digital_core.c
+@@ -710,7 +710,5 @@ static int digital_in_send(struct nfc_dev *nfc_dev, struct nfc_target *target,
+-	if (!data_exch) {
+-		pr_err("Failed to allocate data_exch struct\n");
++	if (!data_exch)
+ 		return -ENOMEM;
+-	}
+ 
+ 	data_exch->cb = cb;
+ 	data_exch->cb_context = cb_context;
+-- 
+2.13.0
