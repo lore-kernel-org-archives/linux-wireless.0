@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:56038 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752345AbdEDPW6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44928 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934647AbdEVP06 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 11:22:58 -0400
-Date: Thu, 04 May 2017 11:22:57 -0400 (EDT)
-Message-Id: <20170504.112257.1601480484804301664.davem@davemloft.net> (sfid-20170504_172442_349294_EA2D4D3F)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: make RATE_INFO_BW_20 the default
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1493911002.18881.0.camel@sipsolutions.net>
-References: <20170504064230.22058-1-johannes@sipsolutions.net>
-        <20170504.111333.814726752020791317.davem@davemloft.net>
-        <1493911002.18881.0.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 22 May 2017 11:26:58 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCHv4] wlcore: add wl1285 compatible
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk>
+References: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk>
+To: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Message-Id: <20170522152657.9C00E60B7D@smtp.codeaurora.org> (sfid-20170522_172734_364395_55EAA884)
+Date: Mon, 22 May 2017 15:26:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 04 May 2017 17:16:42 +0200
-
-> On Thu, 2017-05-04 at 11:13 -0400, David Miller wrote:
->> 
->> Johannes, would you like me to merge this in via my tree directly?
+Sebastian Reichel <sebastian.reichel@collabora.co.uk> wrote:
+> Motorola Droid 4 uses a WL1285C. With differences between the
+> chips not being public let's add explicit binding for wl1285
+> instead of relying on wl1283 being very similar.
 > 
-> I figured I'd give Linus to a chance to try or even apply it, but I
-> have no objection to you applying it either. I don't have anything else
->   yet right now, and sending a pull request for just a single patch
-> would be quite pointless.
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> Acked-by: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
 
-Ok, let's give Linus a chance to test the patch.
+A note to patchwork: this is for 4.12
+
+-- 
+https://patchwork.kernel.org/patch/9713645/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
