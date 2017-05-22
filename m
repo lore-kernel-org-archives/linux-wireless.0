@@ -1,133 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18796 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756867AbdEOLqO (ORCPT
+Received: from mail-yb0-f177.google.com ([209.85.213.177]:34575 "EHLO
+        mail-yb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934362AbdEVVje (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 May 2017 07:46:14 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 5/5] wil6210: support devices with different PCIe bar size
-Date: Mon, 15 May 2017 14:45:59 +0300
-Message-Id: <1494848759-3651-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170515_134621_334467_7BCABC8C)
-In-Reply-To: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1494848759-3651-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Mon, 22 May 2017 17:39:34 -0400
+Received: by mail-yb0-f177.google.com with SMTP id 132so33704147ybq.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 May 2017 14:39:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <ab713116-ab12-5f87-1ecf-cae2e0d68b93@suse.de>
+References: <ab713116-ab12-5f87-1ecf-cae2e0d68b93@suse.de>
+From: Franky Lin <franky.lin@broadcom.com>
+Date: Mon, 22 May 2017 14:39:13 -0700
+Message-ID: <CA+8PC_c1YYMif-+2wY8zVMDJ3zthj2LcraDJqEyDObj=C4MqWw@mail.gmail.com> (sfid-20170522_234046_787515_153CB3FD)
+Subject: Re: brcmfmac firmware issue on NanoPi K2
+To: =?UTF-8?Q?Andreas_F=C3=A4rber?= <afaerber@suse.de>
+Cc: linux-wireless@vger.kernel.org,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>, netdev@vger.kernel.org,
+        technicalsupport <techsupport@friendlyarm.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-amlogic <linux-amlogic@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wil6210 devices can have different PCIe bar size, hence get the
-bar size from PCIe device instead of using a constant bar size.
+Hi Andreas,
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+On Sun, May 21, 2017 at 9:20 AM, Andreas F=C3=A4rber <afaerber@suse.de> wro=
+te:
+> Hello,
+>
+> The NanoPi K2 has an Ampak AP6212 SDIO module. brcmfmac driver loads
+> brcmfmac43430-sdio.bin.
+>
+> When using the firmware file from linux-firmware.git that openSUSE ships
+> I get the following errors on 4.11.0 and next-20170519:
+>
+> [ 2103.618716] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> [ 2104.668746] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> [ 2105.678677] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+>
+> If I overwrite /lib/firmware/brcm/bcm43430-sdio.bin with
+> fw_bcm43438a0.bin from FriendlyARM's Android repository it suddenly works=
+:
+>
+> [  +0.157738] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =3D wl0:
+> Jun  6 2014 14:50:39 version 7.10.226.49 (r) FWID 01-8962686a
+> [  +0.160108] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code
+> (0x30 0x30)
+>
+> I recall using the linux-firmware.git brcmfmac43430-sdio.bin file
+> successfully on the Raspberry Pi 3 with a downstream (Leap 42.2) kernel.
+>
+> I've tested both nvram_ap6212.txt and nvram_ap6212a.txt, the latter has
+> the following diff to nvram.txt:
+>
+> --- nvram_ap6212.txt    2017-05-21 04:24:40.372113426 +0200
+> +++ nvram_ap6212a.txt   2017-05-21 04:24:49.852116599 +0200
+> @@ -1,4 +1,4 @@
+> -#AP6212_NVRAM_V1.0_20140603
+> +#AP6212_NVRAM_V1.0.1_20160606
+>  # 2.4 GHz, 20 MHz BW mode
+>
+>  # The following parameter values are just placeholders, need to be updat=
+ed.
+> @@ -51,4 +51,4 @@
+>  muxenab=3D0x10
+>  # CLDO PWM voltage settings - 0x4 - 1.1 volt
+>  #cldo_pwm=3D0x4
+> -
+> +glitch_based_crsmin=3D1
+>
+> https://github.com/friendlyarm/android_hardware_amlogic_wifi/tree/l-amlog=
+ic-gx-sync/bcm_ampak/config/6212
+>
+> * Does the linux-firmware.git brcmfmac43430-sdio.bin need a fix for AP621=
+2?
+> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.g=
+it/tree/brcm
+>
+> * Does the brcmfmac driver need to distinguish revisions in sdio.c as
+> done for 43241, plus a separate firmware file?
+>         BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
+
+It seems we are dealing with different revisions of 43430. The
+firmware file you pointed to is for 43430a0 and raspberry pi 3 is
+using 43430a1. So yes brcmfmac needs to load different firmware and
+nvram for them just like 43241.
+
+Could you please help try the attached patch? I don't have the
+hardware to test it. Please rename the 43438 firmware and nvram to
+brcmfmac43430a0-sdio.bin/txt.
+
+Thanks,
+Franky
+
 ---
- drivers/net/wireless/ath/wil6210/ioctl.c    |  4 ++--
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 17 ++++++++++-------
- drivers/net/wireless/ath/wil6210/wil6210.h  |  4 +++-
- drivers/net/wireless/ath/wil6210/wmi.c      |  4 ++--
- 4 files changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/ioctl.c b/drivers/net/wireless/ath/wil6210/ioctl.c
-index 6303800..1c49ad8 100644
---- a/drivers/net/wireless/ath/wil6210/ioctl.c
-+++ b/drivers/net/wireless/ath/wil6210/ioctl.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2014,2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -46,7 +46,7 @@ static void __iomem *wil_ioc_addr(struct wil6210_priv *wil, uint32_t addr,
- 	}
- 
- 	off = a - wil->csr;
--	if (size >= WIL6210_MEM_SIZE - off) {
-+	if (size >= wil->bar_size - off) {
- 		wil_err(wil, "Requested block does not fit into memory: "
- 			"off = 0x%08x size = 0x%08x\n", off, size);
- 		return NULL;
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 33bd85c..bf9f265 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -200,16 +200,18 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		.ramdump = wil_platform_rop_ramdump,
- 		.fw_recovery = wil_platform_rop_fw_recovery,
- 	};
-+	u32 bar_size = pci_resource_len(pdev, 0);
- 
- 	/* check HW */
- 	dev_info(&pdev->dev, WIL_NAME
--		 " device found [%04x:%04x] (rev %x)\n",
--		 (int)pdev->vendor, (int)pdev->device, (int)pdev->revision);
--
--	if (pci_resource_len(pdev, 0) != WIL6210_MEM_SIZE) {
--		dev_err(&pdev->dev, "Not " WIL_NAME "? "
--			"BAR0 size is %lu while expecting %lu\n",
--			(ulong)pci_resource_len(pdev, 0), WIL6210_MEM_SIZE);
-+		 " device found [%04x:%04x] (rev %x) bar size 0x%x\n",
-+		 (int)pdev->vendor, (int)pdev->device, (int)pdev->revision,
-+		 bar_size);
-+
-+	if ((bar_size < WIL6210_MIN_MEM_SIZE) ||
-+	    (bar_size > WIL6210_MAX_MEM_SIZE)) {
-+		dev_err(&pdev->dev, "Unexpected BAR0 size 0x%x\n",
-+			bar_size);
- 		return -ENODEV;
- 	}
- 
-@@ -222,6 +224,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	wil->pdev = pdev;
- 	pci_set_drvdata(pdev, wil);
-+	wil->bar_size = bar_size;
- 	/* rollback to if_free */
- 
- 	wil->platform_handle =
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index fe942ba..ca532c7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -58,7 +58,8 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
- 	return (x >> b0) & ((1 << (b1 - b0 + 1)) - 1);
- }
- 
--#define WIL6210_MEM_SIZE (2*1024*1024UL)
-+#define WIL6210_MIN_MEM_SIZE (2 * 1024 * 1024UL)
-+#define WIL6210_MAX_MEM_SIZE (4 * 1024 * 1024UL)
- 
- #define WIL_TX_Q_LEN_DEFAULT		(4000)
- #define WIL_RX_RING_SIZE_ORDER_DEFAULT	(10)
-@@ -599,6 +600,7 @@ struct blink_on_off_time {
- 
- struct wil6210_priv {
- 	struct pci_dev *pdev;
-+	u32 bar_size;
- 	struct wireless_dev *wdev;
- 	void __iomem *csr;
- 	DECLARE_BITMAP(status, wil_status_last);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 814c356..93902cb 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -157,7 +157,7 @@ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
- 		return NULL;
- 
- 	off = HOSTADDR(ptr);
--	if (off > WIL6210_MEM_SIZE - 4)
-+	if (off > wil->bar_size - 4)
- 		return NULL;
- 
- 	return wil->csr + off;
-@@ -177,7 +177,7 @@ void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr)
- 		return NULL;
- 
- 	off = HOSTADDR(ptr);
--	if (off > WIL6210_MEM_SIZE - 4)
-+	if (off > wil->bar_size - 4)
- 		return NULL;
- 
- 	return wil->csr + off;
--- 
-1.9.1
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index a999f95..1b12ccb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -608,6 +608,7 @@ BRCMF_FW_NVRAM_DEF(43340,
+"brcmfmac43340-sdio.bin", "brcmfmac43340-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(4335, "brcmfmac4335-sdio.bin", "brcmfmac4335-sdio.txt")=
+;
+ BRCMF_FW_NVRAM_DEF(43362, "brcmfmac43362-sdio.bin", "brcmfmac43362-sdio.tx=
+t");
+ BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt")=
+;
++BRCMF_FW_NVRAM_DEF(43430A0, "brcmfmac43430a0-sdio.bin",
+"brcmfmac43430a0-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(43430, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.tx=
+t");
+ BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.tx=
+t");
+ BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt")=
+;
+@@ -626,7 +627,8 @@ static struct brcmf_firmware_mapping
+brcmf_sdio_fwnames[] =3D {
+  BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
+  BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
+  BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+- BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
++ BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
++ BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430),
+  BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
+  BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+  BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356)
