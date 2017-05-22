@@ -1,99 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35400 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750794AbdEASpy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2017 14:45:54 -0400
-Received: by mail-pf0-f173.google.com with SMTP id v14so77891218pfd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 01 May 2017 11:45:54 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 1/2] mwifiex: initiate card-specific work atomically
-Date: Mon,  1 May 2017 11:45:48 -0700
-Message-Id: <20170501184549.52896-1-briannorris@chromium.org> (sfid-20170501_204625_931517_13475008)
+Received: from mout.web.de ([212.227.15.14]:56109 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933438AbdEVM7H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 May 2017 08:59:07 -0400
+Subject: [PATCH 1/2] NFC: digital: Improve a size determination in four
+ functions
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Thierry Escande <thierry.escande@collabora.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
+Message-ID: <d8b16bd5-7acf-6ca4-69cb-6f7b2b43c807@users.sourceforge.net> (sfid-20170522_150005_303118_05D99A06)
+Date: Mon, 22 May 2017 14:58:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The non-atomic test + set is a little awkward here, and it technically
-means we might double-schedule work unnecessarily. AFAICT, this is not
-really a problem, since the extra "work" will be a no-op (the flag(s)
-will be cleared by then), but it's still an anti-pattern.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 22 May 2017 14:11:01 +0200
 
-Rewrite this to use the atomic test_and_set_bit() helper instead.
+Replace the specification of four data structures by pointer dereferences
+as the parameter for the operator "sizeof" to make the corresponding size
+determination a bit safer according to the Linux coding style convention.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
-new in v2
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 13 +++++++++----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 16 +++++-----------
- 2 files changed, 14 insertions(+), 15 deletions(-)
+ net/nfc/digital_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ac62bce50e96..8e7d6f41a952 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2837,12 +2837,17 @@ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
+diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
+index 0fd5518bf252..3baf91f3ef80 100644
+--- a/net/nfc/digital_core.c
++++ b/net/nfc/digital_core.c
+@@ -240,5 +240,5 @@ int digital_send_cmd(struct nfc_digital_dev *ddev, u8 cmd_type,
  {
- 	struct pcie_service_card *card = adapter->card;
+ 	struct digital_cmd *cmd;
  
--	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
--		return;
-+	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-+			      &card->work_flags))
-+		schedule_work(&card->work);
-+}
- 
--	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
-+static void mwifiex_pcie_card_reset(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
- 
--	schedule_work(&card->work);
-+	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
-+		schedule_work(&card->work);
- }
- 
- static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 0af1c6733c92..d38d31bb9b79 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2533,12 +2533,8 @@ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
+-	cmd = kzalloc(sizeof(struct digital_cmd), GFP_KERNEL);
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+ 	if (!cmd)
+@@ -287,5 +287,5 @@ static int digital_tg_listen_mdaa(struct nfc_digital_dev *ddev, u8 rf_tech)
  {
- 	struct sdio_mmc_card *card = adapter->card;
+ 	struct digital_tg_mdaa_params *params;
  
--	if (test_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
--		return;
--
--	set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
--
--	schedule_work(&card->work);
-+	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags))
-+		schedule_work(&card->work);
- }
+-	params = kzalloc(sizeof(struct digital_tg_mdaa_params), GFP_KERNEL);
++	params = kzalloc(sizeof(*params), GFP_KERNEL);
+ 	if (!params)
+@@ -706,5 +706,5 @@ static int digital_in_send(struct nfc_dev *nfc_dev, struct nfc_target *target,
+ 	struct digital_data_exch *data_exch;
+ 	int rc;
  
- /* This function dumps FW information */
-@@ -2546,11 +2542,9 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
- {
- 	struct sdio_mmc_card *card = adapter->card;
+-	data_exch = kzalloc(sizeof(struct digital_data_exch), GFP_KERNEL);
++	data_exch = kzalloc(sizeof(*data_exch), GFP_KERNEL);
+ 	if (!data_exch) {
+@@ -764,5 +764,5 @@ struct nfc_digital_dev *nfc_digital_allocate_device(struct nfc_digital_ops *ops,
+ 	    !ops->switch_rf || (ops->tg_listen_md && !ops->tg_get_rf_tech))
+ 		return NULL;
  
--	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags))
--		return;
--
--	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
--	schedule_work(&card->work);
-+	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
-+			      &card->work_flags))
-+		schedule_work(&card->work);
- }
- 
- /* Function to dump SDIO function registers and SDIO scratch registers in case
+-	ddev = kzalloc(sizeof(struct nfc_digital_dev), GFP_KERNEL);
++	ddev = kzalloc(sizeof(*ddev), GFP_KERNEL);
+ 	if (!ddev)
 -- 
-2.13.0.rc0.306.g87b477812d-goog
+2.13.0
