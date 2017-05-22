@@ -1,53 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:23822 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932087AbdEDGGX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 02:06:23 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: new warning at net/wireless/util.c:1236
-Date: Thu, 4 May 2017 06:06:18 +0000
-Message-ID: <1493877978.14233.85.camel@intel.com> (sfid-20170504_080629_073268_67BD16E6)
-References: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com>
-         <87o9v99r3g.fsf@purkki.adurom.net>
-In-Reply-To: <87o9v99r3g.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:53590 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760430AbdEVQJ6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 May 2017 12:09:58 -0400
+From: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        helmut.schaa@googlemail.com
+Subject: [PATCH] cfg80211: Be able to set bss expire time at config stage.
+Date: Mon, 22 May 2017 18:09:46 +0200
+Message-Id: <20170522160946.2057-1-enric.balletbo@collabora.com> (sfid-20170522_181009_157017_39676666)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE3LTA1LTA0IGF0IDA3OjM1ICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBM
-aW51cyBUb3J2YWxkcyA8dG9ydmFsZHNAbGludXgtZm91bmRhdGlvbi5vcmc+IHdyaXRlczoNCj4g
-DQo+ID4gU28gbXkgRGVsbCBYUFMgMTMgc2VlbXMgdG8gaGF2ZSBncm93biBhIG5ldyB3YXJuaW5n
-IGFzIG9mIHRoZQ0KPiA+IG5ldHdvcmtpbmcgbWVyZ2UgeWVzdGVyZGF5Lg0KPiA+IA0KPiA+IFRo
-aW5ncyBzdGlsbCB3b3JrLCBidXQgd2hlbiBpdCBzdGFydHMgd2FybmluZywgaXQgZ2VuZXJhdGVz
-IGEgKmxvdCogb2YNCj4gPiBub2lzZSAoSSBnb3QgMzYgb2YgdGhlc2Ugd2l0aGluIGFib3V0IHRl
-biBtaW51dGVzKS4NCj4gPiANCj4gPiBJIGhhdmUgbm8gaWRlYSB3aGF0IHRyaWdnZXJlZCBpdCwg
-YmVjYXVzZSB3aGVuIEkgcmVib290ZWQgKG5vdCBiZWNhdXNlDQo+ID4gb2YgdGhpcyBpc3N1ZSwg
-YnV0IGp1c3QgdG8gcmVib290IGludG8gYSBuZXdlciBrZXJuZWwpIEkgZG9uJ3Qgc2VlIGl0DQo+
-ID4gYWdhaW4uDQo+ID4gDQo+ID4gVGhpcyBpcyBhbGwgcHJldHR5IHJlZ3VsYXIgd2lyZWxlc3Mg
-LSBpdCdzIGludGVsIDgyNjAgd2lyZWxlc3MgaW4gYQ0KPiA+IGZhaXJseSBub3JtYWwgbGFwdG9w
-Lg0KPiA+IA0KPiA+IFRoaW5ncyBzdGlsbCBzZWVtIHRvICp3b3JrKiBvaywgc28gdGhlIG9ubHkg
-cHJvYmxlbSBoZXJlIGlzIHRoZSBvdmVybHkNCj4gPiB2ZXJib3NlIGFuZCB1c2VsZXNzIFdBUk5f
-T04uIEl0IGRvZXNuJ3QgZXZlbiBwcmludCBvdXQgKndoaWNoKiByYXRlIGl0DQo+ID4gaXMgd2Fy
-bmluZyBhYm91dCwgaXQganVzdCBkb2VzIHRoYXQgc3R1cGlkIHVuY29uZGl0aW9uYWwgV0FSTl9P
-TigpDQo+ID4gd2l0aG91dCBldmVyIHNodXR0aW5nIHVwIGFib3V0IGl0Li4NCj4gPiANCj4gPiBU
-aGUgV0FSTl9PTigpIHNlZW1zIHRvIGJlIG9sZCwgYnV0IG15IGxvZ3MgZG9uJ3Qgc2VlbSB0byBo
-YXZlIGFueQ0KPiA+IG1lbnRpb24gb2YgdGhpcyB1bnRpbCB0b2RheSwgc28gdGhlcmUncyBzb21l
-dGhpbmcgdGhhdCBoYXMgY2hhbmdlZA0KPiA+IHRoYXQgbm93IHRyaWdnZXJzIGl0Lg0KPiA+IA0K
-PiA+IElkZWFzPw0KPiA+IA0KPiA+ICAgICAgICAgICAgICAgICAgIExpbnVzDQo+ID4gDQo+ID4g
-LS0tDQo+ID4gDQo+ID4gV0FSTklORzogQ1BVOiAzIFBJRDogMTEzOCBhdCBuZXQvd2lyZWxlc3Mv
-dXRpbC5jOjEyMzYNCj4gPiBjZmc4MDIxMV9jYWxjdWxhdGVfYml0cmF0ZSsweDEzOS8weDE3MCBb
-Y2ZnODAyMTFdDQo+IA0KPiBBcyB0aGlzIGlzIHdpdGggaXdsd2lmaSBhZGRpbmcgYWxzbyBMdWNh
-LiBUaGVyZSB3ZXJlIHNvbWUgcmF0ZSBoYW5kbGluZw0KPiBjaGFuZ2VzIGluIGl3bHdpZmksIGxp
-a2UgY29tbWl0IDc3ZTQwOTQ1NWY0MSwgYnV0IGRvbid0IGtub3cgaWYgdGhhdA0KPiBjb3VsZCBj
-YXVzZSB0aGlzLg0KDQpUaGFua3MgS2FsbGUuICBJIGRvbid0IHNlZSBhbnl0aGluZyBpbiB0aGUg
-aXdsd2lmaSBkcml2ZXIgdGhhdCBjb3VsZCBiZQ0KY2F1c2luZyB0aGlzLiAgSm9oYW5uZXMgc3Vz
-cGVjdHMgc29tZSBSWCByYXRlIGNoYW5nZXMgaGUgbWFkZSBpbg0KbWFjODAyMTEuLi4NCg0KLS0N
-Ckx1Y2Eu
+The IEEE80211_SCAN_RESULT_EXPIRE value was modified several times in the
+past. Initially was set at 10 seconds (2a51931192), then increased at 15
+seconds (09f97e0fc4) and finally to 30 seconds (f9616e0f88) to cover the
+use case when a station is having heavy uplink traffic. On some devices,
+like Chromebooks, this value is decreased to 7 seconds to avoid stall
+results, and other devices prefer set to 15 seconds.
+
+This simple patch tries to make the selection of this value a bit more
+flexible by being able to set the expire time at config stage. Most users
+can leave the default value set as 30 seconds, others can modify the value
+at config stage if they want lower or bigger values.
+
+Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+---
+ net/wireless/Kconfig | 11 +++++++++++
+ net/wireless/core.c  |  2 ++
+ net/wireless/core.h  |  1 +
+ net/wireless/scan.c  |  6 ++----
+ 4 files changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 6c60612..2a54e28 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -29,6 +29,17 @@ config CFG80211
+ 
+ 	  When built as a module it will be called cfg80211.
+ 
++config CFG80211_SCAN_RESULT_EXPIRE
++	int "Scan completion time" if CFG80211
++	default 30
++	---help---
++	  This value is the time in seconds the mac80211 scan method needs
++	  to finish. An expiration time to 30 seconds should be sufficient
++	  for most cases but for some other cases we might be interested in
++	  tweak this value.
++
++	  If unsure, leave the default of 30.
++
+ config NL80211_TESTMODE
+ 	bool "nl80211 testmode command"
+ 	depends on CFG80211
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 83ea164..2a5742c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -499,6 +499,8 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+ 
+ 	init_waitqueue_head(&rdev->dev_wait);
+ 
++	rdev->scan_result_expire = CONFIG_CFG80211_SCAN_RESULT_EXPIRE;
++
+ 	/*
+ 	 * Initialize wiphy parameters to IEEE 802.11 MIB default values.
+ 	 * Fragmentation and RTS threshold are disabled by default with the
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 6e809325..6a8a164 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -72,6 +72,7 @@ struct cfg80211_registered_device {
+ 	struct rb_root bss_tree;
+ 	u32 bss_generation;
+ 	u32 bss_entries;
++	unsigned int scan_result_expire;
+ 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
+ 	struct sk_buff *scan_msg;
+ 	struct list_head sched_scan_req_list;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 14d5f0c..f0b55a9 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -70,8 +70,6 @@ module_param(bss_entries_limit, int, 0644);
+ MODULE_PARM_DESC(bss_entries_limit,
+                  "limit to number of scan BSS entries (per wiphy, default 1000)");
+ 
+-#define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+-
+ static void bss_free(struct cfg80211_internal_bss *bss)
+ {
+ 	struct cfg80211_bss_ies *ies;
+@@ -476,7 +474,7 @@ void cfg80211_bss_age(struct cfg80211_registered_device *rdev,
+ 
+ void cfg80211_bss_expire(struct cfg80211_registered_device *rdev)
+ {
+-	__cfg80211_bss_expire(rdev, jiffies - IEEE80211_SCAN_RESULT_EXPIRE);
++	__cfg80211_bss_expire(rdev, jiffies - rdev->scan_result_expire);
+ }
+ 
+ const u8 *cfg80211_find_ie_match(u8 eid, const u8 *ies, int len,
+@@ -737,7 +735,7 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ 		if (!is_valid_ether_addr(bss->pub.bssid))
+ 			continue;
+ 		/* Don't get expired BSS structs */
+-		if (time_after(now, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE) &&
++		if (time_after(now, bss->ts + rdev->scan_result_expire) &&
+ 		    !atomic_read(&bss->hold))
+ 			continue;
+ 		if (is_bss(&bss->pub, bssid, ssid, ssid_len)) {
+-- 
+2.9.3
