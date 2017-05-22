@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39620 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752729AbdEEMvV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45492 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757923AbdEVJ2a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 08:51:21 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 22 May 2017 05:28:30 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "David S. Miller" <davem@davemloft.net>,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Cc: Sebastian Reichel <sre@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCHv4] wlcore: add wl1285 compatible
+References: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk>
+Date: Mon, 22 May 2017 12:28:20 +0300
+In-Reply-To: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk>
+        (Sebastian Reichel's message of "Fri, 5 May 2017 16:15:53 +0200")
+Message-ID: <8737bx5jgr.fsf@purkki.adurom.net> (sfid-20170522_112901_222697_903E08B5)
 MIME-Version: 1.0
-Subject: Re: ath10k: merge extended peer info data with existing peers info
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20161217174634.4531-1-chunkeey@googlemail.com>
-References: <20161217174634.4531-1-chunkeey@googlemail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@codeaurora.org>
-Message-ID: <02c99a9342f546488356517e56bc7a4c@eusanexr01a.eu.qualcomm.com> (sfid-20170505_145128_914980_A20716CE)
-Date: Fri, 5 May 2017 05:51:16 -0700
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> wrote:
-> The 10.4 firmware adds extended peer information to the
-> firmware's statistics payload. This additional info is
-> stored as a separate data field. During review of
-> "ath10k: add accounting for the extended peer statistics" [0]
-> 
-> Mohammed Shafi Shajakhan commented that the extended peer statistics
-> lists are of little use:"... there is not much use in appending
-> the extended peer stats (which gets periodically updated) to the
-> linked list '&ar->debug.fw_stats.peers_extd)' and should we get
-> rid of the below (and the required cleanup as well)
-> 
-> list_splice_tail_init(&stats.peers_extd,
->                 &ar->debug.fw_stats.peers_extd);
-> 
-> since rx_duration is getting updated periodically to the per sta
-> information."
-> 
-> This patch replaces the extended peers list with a lookup and
-> puts the retrieved data (rx_duration) into the existing
-> ath10k_fw_stats_peer entry that was created earlier.
-> 
-> [0] <https://lkml.kernel.org/r/992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
-> Cc: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Sebastian Reichel <sebastian.reichel@collabora.co.uk> writes:
 
-The discussion with this bug was quite hard to follow, so what is the
-conclusion from this? The patch still applies using three way merge but there
-are compilation errors:
+> Motorola Droid 4 uses a WL1285C. With differences between the
+> chips not being public let's add explicit binding for wl1285
+> instead of relying on wl1283 being very similar.
+>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> Acked-by: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+> ---
+> Hi Dave,
+>
+> I previously send this in two patches, but its hard to apply without
+> requiring multiple kernel releases (the driver must be updated before
+> the DTS change). Since the actual change is not very complex Marcel
+> Holtmann & Tony Lindgren suggested, that I send this directly to you
+> in a single patch for inclusion into 4.12. This also means, that the
+> remaining series can be queued normally for 4.13.
 
-drivers/net/wireless/ath/ath10k/debug.c: In function 'ath10k_debug_fw_stats_process':
-drivers/net/wireless/ath/ath10k/debug.c:388:4: error: implicit declaration of function 'ath10k_fw_extd_stats_peers_free' [-Werror=implicit-function-declaration]
-drivers/net/wireless/ath/ath10k/debug.c:388:55: error: 'struct ath10k_fw_stats' has no member named 'peers_extd'
-drivers/net/wireless/ath/ath10k/debug.c:400:32: error: 'struct ath10k_fw_stats' has no member named 'peers_extd'
-drivers/net/wireless/ath/ath10k/debug.c:401:31: error: 'struct ath10k_fw_stats' has no member named 'peers_extd'
+I noticed that Dave set this patch to Awaiting Upstream state on his
+patchwork:
 
-I admit that I didn't look this patch very carefully, but I'm not really seeing
-how this patch makes things better? wmi.c gets more complicated and a new
-ifdef is added. We have tried hard to keep all ar->debug access in debug.c,
-this way there's no need to sprinkle ifdefs in the code.
+https://patchwork.ozlabs.org/patch/759042/
+
+Which makes me suspect that he is waiting me to apply this (as I
+normally apply wlcore patches). Dave, should I actually take this patch?
+What do you prefer?
+
+There's a small change to arm directory but I don't see that as a
+problem as Tony acked it:
+
+ Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt | 1 +
+ arch/arm/boot/dts/omap4-droid4-xt894.dts                     | 2 +-
+ drivers/net/wireless/ti/wlcore/sdio.c                        | 1 +
+ drivers/net/wireless/ti/wlcore/spi.c                         | 1 +
+ 4 files changed, 4 insertions(+), 1 deletion(-)
 
 -- 
-https://patchwork.kernel.org/patch/9479079/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
