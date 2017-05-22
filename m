@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33896 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750999AbdEGWDS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38278 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934647AbdEVPQu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 May 2017 18:03:18 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH 2/3] staging: rtl8192e: fix 2 byte alignment of register BSSIR.
-Date: Sun,  7 May 2017 20:03:52 +0100
-Message-Id: <20170507190353.3195-2-tvboxspy@gmail.com> (sfid-20170508_000622_348468_7703F019)
-In-Reply-To: <20170507190353.3195-1-tvboxspy@gmail.com>
-References: <20170507190353.3195-1-tvboxspy@gmail.com>
+        Mon, 22 May 2017 11:16:50 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [V4,1/3] brcmfmac: add support multi-scheduled scan
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170522151649.B5F1060AC8@smtp.codeaurora.org> (sfid-20170522_171654_821593_8756AB5A)
+Date: Mon, 22 May 2017 15:16:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BSSID has two byte alignment on PCI ioremap correct the write
-by swapping to 16 bits first.
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> 
+> This change adds support for multi-scheduled scan in the driver. It
+> currently relies on g-scan support in firmware and will set struct
+> wiphy::max_sched_scan_reqs accordingly. This is limited to 16 concurrent
+> requests.
+> 
+> The firmware currently has a limit of 64 channels that can be configured
+> for all requests in total regardless whether there are duplicates. So if
+> a request uses 35 channels there are 29 channels left for another request.
+> When user-space does not specify any channels cfg80211 will add all
+> channels defined by the wiphy instance to the request, which makes
+> reaching the limit rather easy for dual-band devices.
+> 
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-This fixes a problem that the device associates fail because
-the filter is not set correctly.
+I see new warnings:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c: In function ‘brcmf_pno_config_sched_scans’:
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:166:6: warning: ‘mac_mask’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+  u8 *mac_mask;
+      ^
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:183:2: warning: ‘mac_addr’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+  memcpy(pfn_mac.mac, mac_addr, ETH_ALEN);
+  ^
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:165:6: note: ‘mac_addr’ was declared here
+  u8 *mac_addr;
+      ^
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index a23628f390c9..e03d0a3a6dcc 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -97,8 +97,9 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
- 
- 	switch (variable) {
- 	case HW_VAR_BSSID:
--		rtl92e_writel(dev, BSSIDR, ((u32 *)(val))[0]);
--		rtl92e_writew(dev, BSSIDR+2, ((u16 *)(val+2))[0]);
-+		/* BSSIDR 2 byte alignment */
-+		rtl92e_writew(dev, BSSIDR, *(u16 *)val);
-+		rtl92e_writel(dev, BSSIDR + 2, *(u32 *)(val + 2));
- 		break;
- 
- 	case HW_VAR_MEDIA_STATUS:
-@@ -961,8 +962,8 @@ static void _rtl92e_net_update(struct net_device *dev)
- 	rtl92e_config_rate(dev, &rate_config);
- 	priv->dot11CurrentPreambleMode = PREAMBLE_AUTO;
- 	 priv->basic_rate = rate_config &= 0x15f;
--	rtl92e_writel(dev, BSSIDR, ((u32 *)net->bssid)[0]);
--	rtl92e_writew(dev, BSSIDR+4, ((u16 *)net->bssid)[2]);
-+	rtl92e_writew(dev, BSSIDR, *(u16 *)net->bssid);
-+	rtl92e_writel(dev, BSSIDR + 2, *(u32 *)(net->bssid + 2));
- 
- 	if (priv->rtllib->iw_mode == IW_MODE_ADHOC) {
- 		rtl92e_writew(dev, ATIMWND, 2);
+3 patches set to Changes Requested.
+
+9736151 [V4,1/3] brcmfmac: add support multi-scheduled scan
+9736147 [V4,2/3] brcmfmac: add mutex to protect pno requests
+9736149 [V4,3/3] brcmfmac: add scheduled scan support for specified BSSIDs
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9736151/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
