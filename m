@@ -1,110 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:32938 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753856AbdESJHP (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35228 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751979AbdEVJ1U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 05:07:15 -0400
-Received: by mail-pf0-f195.google.com with SMTP id f27so8915686pfe.0
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 02:07:04 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v3 6/6] mwifiex: check next packet length for usb tx aggregation
-Date: Fri, 19 May 2017 09:06:45 +0000
-Message-Id: <1495184805-6631-6-git-send-email-huxinming820@gmail.com> (sfid-20170519_110721_008318_59D6EECA)
-In-Reply-To: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+        Mon, 22 May 2017 05:27:20 -0400
+Received: by mail-pf0-f176.google.com with SMTP id n23so76790611pfb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 22 May 2017 02:27:20 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: Add association id to station response
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kirill Obukhov <kirill.obukhov@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+References: <CAP3TkT3VE6FWBXm0K4=-pWLrmsCk4a7wuqc24KdcgYNBRQRyoA@mail.gmail.com>
+ <1495433875.2653.4.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <308d64da-0806-e80b-14c9-cfa6f65c4064@broadcom.com> (sfid-20170522_112835_019020_7659A5AE)
+Date: Mon, 22 May 2017 11:27:01 +0200
+MIME-Version: 1.0
+In-Reply-To: <1495433875.2653.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 5/22/2017 8:17 AM, Johannes Berg wrote:
+> Hi Kirill,
+> 
+> First of all, please read
+> 
+> https://www.kernel.org/doc/html/latest/process/submitting-patches.html
+> 
+> particularly
+> 
+> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin
+> 
+> is important
+> 
+> On Sun, 2017-05-21 at 11:45 +0300, Kirill Obukhov wrote:
+>> There are unique association id attribute must be passed in station
+>> add request.
 
-The next packet length will be used by interface driver, to check if the
-next packet still could be aggregated.
+This sentence is a bit quirky. It is sort of clear what is meant, but 
+maybe rephrase:
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v3: same as v1,v2
----
- drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 8 ++++----
- drivers/net/wireless/marvell/mwifiex/txrx.c     | 4 ++--
- drivers/net/wireless/marvell/mwifiex/wmm.c      | 8 ++++----
- 3 files changed, 10 insertions(+), 10 deletions(-)
+When adding a station user-space using CMD_NEW_STATION user-space needs 
+to provide a unique association ID. However, we have no way...
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-index cbf3bc2..8041f2d 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-@@ -254,15 +254,15 @@
- 		return 0;
- 	}
- 
--	if (adapter->iface_type == MWIFIEX_USB) {
--		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
--						   skb_aggr, NULL);
--	} else {
- 		if (skb_src)
- 			tx_param.next_pkt_len =
- 					skb_src->len + sizeof(struct txpd);
- 		else
- 			tx_param.next_pkt_len = 0;
-+	if (adapter->iface_type == MWIFIEX_USB) {
-+		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
-+						   skb_aggr, &tx_param);
-+	} else {
- 
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
- 						   skb_aggr, &tx_param);
-diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
-index 15e92af..d848933 100644
---- a/drivers/net/wireless/marvell/mwifiex/txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
-@@ -117,7 +117,7 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
- 		if (adapter->iface_type == MWIFIEX_USB) {
- 			ret = adapter->if_ops.host_to_card(adapter,
- 							   priv->usb_port,
--							   skb, NULL);
-+							   skb, tx_param);
- 		} else {
- 			ret = adapter->if_ops.host_to_card(adapter,
- 							   MWIFIEX_TYPE_DATA,
-@@ -185,7 +185,7 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
- 	if (adapter->iface_type == MWIFIEX_USB) {
- 		ret = adapter->if_ops.host_to_card(adapter,
- 						   priv->usb_port,
--						   skb, NULL);
-+						   skb, tx_param);
- 	} else {
- 		ret = adapter->if_ops.host_to_card(adapter,
- 						   MWIFIEX_TYPE_DATA,
-diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
-index e4ff3b9..75cdd55 100644
---- a/drivers/net/wireless/marvell/mwifiex/wmm.c
-+++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
-@@ -1363,13 +1363,13 @@ void mwifiex_rotate_priolists(struct mwifiex_private *priv,
- 
- 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
- 
-+	tx_param.next_pkt_len =
-+		((skb_next) ? skb_next->len +
-+		 sizeof(struct txpd) : 0);
- 	if (adapter->iface_type == MWIFIEX_USB) {
- 		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
--						   skb, NULL);
-+						   skb, &tx_param);
- 	} else {
--		tx_param.next_pkt_len =
--			((skb_next) ? skb_next->len +
--			 sizeof(struct txpd) : 0);
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
- 						   skb, &tx_param);
- 	}
--- 
-1.9.1
+>> But we have no way to retrieve ids already in use. To solve issue
+>> association id attribute added to station response.
+
+It would also be nice to give an example when you want to add a new 
+station (maybe it is just me being curious ;-) ).
+
+Regards,
+Arend
+
+> 
+> This sound fine.
+> 
+> However, it'd be good to mention that you're also adding it to
+> mac80211, or preferably even split the patch into two, one to add the
+> feature and one to make use of it in mac80211.
+> 
+> Once you do that, you'll quite likely also notice that with just the
+> first of the patches, the thing is broken and always reports a 0 AID.
+> 
+>>          if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
+>>              nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr) ||
+>> +           nla_put_u16(msg, NL80211_ATTR_STA_AID, sinfo->aid) ||
+> 
+> That's because you need to make this conditional on the right filled
+> flag.
+> 
+> johannes
+> 
