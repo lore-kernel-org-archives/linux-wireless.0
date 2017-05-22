@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34029 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751166AbdEOC1M (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:34614 "EHLO
+        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758882AbdEVSDm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 May 2017 22:27:12 -0400
-From: linzhang <xiaolou4617@gmail.com>
-To: marcel@holtmann.org, gustavo@padovan.org, johan.hedberg@gmail.com,
-        davem@davemloft.net
-Cc: dmitry.tarnyagin@lockless.no, sameo@linux.intel.com,
-        nhorman@tuxdriver.com, linux-bluetooth@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linzhang <xiaolou4617@gmail.com>
-Subject: [PATCH] net: socket: mark socket protocol handler structs as const
-Date: Mon, 15 May 2017 10:26:47 +0800
-Message-Id: <1494815207-9378-1-git-send-email-xiaolou4617@gmail.com> (sfid-20170515_042742_168390_6C9C684B)
+        Mon, 22 May 2017 14:03:42 -0400
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH v2 00/10] rt2x00: rt2x00: improve calling conventions for
+ register accessors
+To: Arnd Bergmann <arnd@arndb.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+References: <20170517144702.1381136-1-arnd@arndb.de>
+Message-ID: <69171f99-0844-cfe1-7bcb-72d61f56c3c5@gmail.com> (sfid-20170522_200452_973750_50688D60)
+Date: Mon, 22 May 2017 14:03:39 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170517144702.1381136-1-arnd@arndb.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: linzhang <xiaolou4617@gmail.com>
----
- net/bluetooth/af_bluetooth.c | 2 +-
- net/caif/caif_socket.c       | 2 +-
- net/kcm/kcmsock.c            | 2 +-
- net/nfc/af_nfc.c             | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+On 05/17/2017 10:46 AM, Arnd Bergmann wrote:
+> I've managed to split up my long patch into a series of reasonble
+> steps now.
+> 
+> The first two are required to fix a regression from commit 41977e86c984
+> ("rt2x00: add support for MT7620"), the rest are just cleanups to
+> have a consistent state across all the register access functions.
+> 
+>       Arnd
 
-diff --git a/net/bluetooth/af_bluetooth.c b/net/bluetooth/af_bluetooth.c
-index 42d0997..8a8f77a 100644
---- a/net/bluetooth/af_bluetooth.c
-+++ b/net/bluetooth/af_bluetooth.c
-@@ -733,7 +733,7 @@ void bt_procfs_cleanup(struct net *net, const char *name)
- EXPORT_SYMBOL(bt_procfs_init);
- EXPORT_SYMBOL(bt_procfs_cleanup);
- 
--static struct net_proto_family bt_sock_family_ops = {
-+static const struct net_proto_family bt_sock_family_ops = {
- 	.owner	= THIS_MODULE,
- 	.family	= PF_BLUETOOTH,
- 	.create	= bt_sock_create,
-diff --git a/net/caif/caif_socket.c b/net/caif/caif_socket.c
-index adcad34..4674d17 100644
---- a/net/caif/caif_socket.c
-+++ b/net/caif/caif_socket.c
-@@ -1099,7 +1099,7 @@ static int caif_create(struct net *net, struct socket *sock, int protocol,
- }
- 
- 
--static struct net_proto_family caif_family_ops = {
-+static const struct net_proto_family caif_family_ops = {
- 	.family = PF_CAIF,
- 	.create = caif_create,
- 	.owner = THIS_MODULE,
-diff --git a/net/kcm/kcmsock.c b/net/kcm/kcmsock.c
-index deca20f..da49191 100644
---- a/net/kcm/kcmsock.c
-+++ b/net/kcm/kcmsock.c
-@@ -1985,7 +1985,7 @@ static int kcm_create(struct net *net, struct socket *sock,
- 	return 0;
- }
- 
--static struct net_proto_family kcm_family_ops = {
-+static const struct net_proto_family kcm_family_ops = {
- 	.family = PF_KCM,
- 	.create = kcm_create,
- 	.owner  = THIS_MODULE,
-diff --git a/net/nfc/af_nfc.c b/net/nfc/af_nfc.c
-index 54e40fa..d3e594e 100644
---- a/net/nfc/af_nfc.c
-+++ b/net/nfc/af_nfc.c
-@@ -48,7 +48,7 @@ static int nfc_sock_create(struct net *net, struct socket *sock, int proto,
- 	return rc;
- }
- 
--static struct net_proto_family nfc_sock_family_ops = {
-+static const struct net_proto_family nfc_sock_family_ops = {
- 	.owner  = THIS_MODULE,
- 	.family = PF_NFC,
- 	.create = nfc_sock_create,
--- 
-1.8.3.1
+Nice work! This is a textbook example of how to do this the right way!
+
+Reviewed-by: Jes Sorensen <jsorensen@fb.com>
+
+Jes
