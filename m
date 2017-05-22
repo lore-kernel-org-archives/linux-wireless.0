@@ -1,30 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56122 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45776 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751363AbdEDPQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 11:16:50 -0400
-Message-ID: <1493911002.18881.0.camel@sipsolutions.net> (sfid-20170504_171738_856396_B885836F)
-Subject: Re: [PATCH] cfg80211: make RATE_INFO_BW_20 the default
+        id S1751425AbdEVGLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 May 2017 02:11:21 -0400
+Message-ID: <1495433473.2653.0.camel@sipsolutions.net> (sfid-20170522_081126_473016_C746D1D1)
+Subject: Re: [PATCH] ath10k : Fix channel survey dump
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
-        netdev@vger.kernel.org
-Date: Thu, 04 May 2017 17:16:42 +0200
-In-Reply-To: <20170504.111333.814726752020791317.davem@davemloft.net>
-References: <20170504064230.22058-1-johannes@sipsolutions.net>
-         <20170504.111333.814726752020791317.davem@davemloft.net>
+To: Adrian Chadd <adrian@freebsd.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "nbd@nbd.name" <nbd@nbd.name>,
+        Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 22 May 2017 08:11:13 +0200
+In-Reply-To: <CAJ-Vmok6UXVpYfK5c_tDnFGN1uLfx+sGp0W2zFppB=TYtax72g@mail.gmail.com> (sfid-20170519_173300_356433_4FB5D671)
+References: <1493217698-22451-1-git-send-email-c_vnaral@qti.qualcomm.com>
+         <40f2b7a2-7276-6de6-afc6-407348c92e70@nbd.name>
+         <87wp9durwe.fsf@kamboji.qca.qualcomm.com>
+         <CAJ-Vmok6UXVpYfK5c_tDnFGN1uLfx+sGp0W2zFppB=TYtax72g@mail.gmail.com>
+         (sfid-20170519_173300_356433_4FB5D671)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-05-04 at 11:13 -0400, David Miller wrote:
+On Fri, 2017-05-19 at 08:32 -0700, Adrian Chadd wrote:
 > 
-> Johannes, would you like me to merge this in via my tree directly?
+> I just bumped into this at work. I'm thinking of teaching mac80211
+> about optionally summing things so each driver doesn't need another
+> per-channel array.
+> 
 
-I figured I'd give Linus to a chance to try or even apply it, but I
-have no objection to you applying it either. I don't have anything else
-  yet right now, and sending a pull request for just a single patch
-would be quite pointless.
+We could possibly even do that in cfg80211, I guess.
 
 johannes
