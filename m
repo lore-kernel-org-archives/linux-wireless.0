@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50274 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751530AbdEDGmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 02:42:04 -0400
-Message-ID: <1493880117.3521.1.camel@sipsolutions.net> (sfid-20170504_084229_890952_65F2B167)
-Subject: Re: new warning at net/wireless/util.c:1236
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-        David Miller <davem@davemloft.net>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Thu, 04 May 2017 08:41:57 +0200
-In-Reply-To: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com> (sfid-20170504_042831_013058_9FF7CF3D)
-References: <CA+55aFxyp5gpUZEYHXLwyhbK6DMWf4RoVykGxq9FPtO=j4yJsw@mail.gmail.com>
-         (sfid-20170504_042831_013058_9FF7CF3D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.deux.jabatus.fr ([109.234.163.37]:38157 "EHLO
+        mail.deux.jabatus.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751631AbdEVFBh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 May 2017 01:01:37 -0400
+From: Michael Mera <dev@michaelmera.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Marcin Rokicki <marcin.rokicki@gmail.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix out of bounds access to local buffer
+In-Reply-To: <87d1b9v044.fsf@qca.qualcomm.com>
+References: <20170424053902.1644-1-dev@michaelmera.com> <CAN6Sofawy9BmFaVgNw=gt=9VwLqNFdCQ2fa3DApvJTVCJpjoqg@mail.gmail.com> <87inludzh6.fsf@michaelmera.com> <87d1b9v044.fsf@qca.qualcomm.com>
+Date: Mon, 22 May 2017 14:01:15 +0900
+Message-ID: <87wp99eb8k.fsf@michaelmera.com> (sfid-20170522_070213_648931_2F5DBC96)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-> Things still work, but when it starts warning, it generates a *lot*
-> of noise (I got 36 of these within about ten minutes).
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
+> I added a link to the corresponding ath10k page. BTW, it's a wiki so
+> everyone are free to improve the instructions on their own.
 
-Yeah, that's kinda dumb - I just sent a patch to make that just warn
-once and actually report the configuration.
+As it was my first contribution, I didn't feel like editing things
+without some sort of approval first. I will try to be more audacious
+next time.
 
-> I have no idea what triggered it, because when I rebooted (not
-> because of this issue, but just to reboot into a newer kernel) I
-> don't see it again.
-
-That's odd. Perhaps you connected to a different wireless network on
-the next boot? I'm pretty sure I found the cause for this, and will
-send out a patch in a minute, but that wouldn't go away with a
-different kernel.
-
-johannes
+Thank you very much,
+Michael Mera
