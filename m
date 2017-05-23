@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5324 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751330AbdESHz1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 03:55:27 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: wil6210: use memdup_user
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <b5b672573585b51a3acb37231f38db45f5873f60.1493781695.git.geliangtang@gmail.com>
-References: <b5b672573585b51a3acb37231f38db45f5873f60.1493781695.git.geliangtang@gmail.com>
-To: Geliang Tang <geliangtang@gmail.com>
-CC: Maya Erez <qca_merez@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Geliang Tang <geliangtang@gmail.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Message-ID: <40e20134d5f74a06947c24f58893ce0f@euamsexm01a.eu.qualcomm.com> (sfid-20170519_095603_393940_A2E36377)
-Date: Fri, 19 May 2017 09:55:11 +0200
+Received: from s3.sipsolutions.net ([5.9.151.49]:34250 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966237AbdEWHWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 May 2017 03:22:36 -0400
+Message-ID: <1495524153.2464.2.camel@sipsolutions.net> (sfid-20170523_092254_882502_A847A7B6)
+Subject: Re: 4.12-RC2 BUG: scheduling while atomic: irq/47-iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Sander Eikelenboom <linux@eikelenboom.it>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org
+Date: Tue, 23 May 2017 09:22:33 +0200
+In-Reply-To: <09ddb018-7093-2e2a-c84b-148889f7f06d@broadcom.com> (sfid-20170523_091928_491554_FD588B32)
+References: <a54f3f4f-2365-2154-ad18-82e4cd572aac@eikelenboom.it>
+         <1495450628.2653.14.camel@sipsolutions.net>
+         <764a929c-ce8a-c859-a49e-2f20cb05ae44@broadcom.com>
+         <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com>
+         <1495487095.26008.7.camel@sipsolutions.net>
+         <09ddb018-7093-2e2a-c84b-148889f7f06d@broadcom.com>
+         (sfid-20170523_091928_491554_FD588B32)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geliang Tang <geliangtang@gmail.com> wrote:
-> Use memdup_user() helper instead of open-coding to simplify the code.
+On Tue, 2017-05-23 at 09:19 +0200, Arend Van Spriel wrote:
 > 
-> Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+> > 	WARN_ON_ONCE(!rcu_read_lock_held() && !lockdep_rtnl_is_held());
+> 
+> Thought about something like this after sending the email. So there
+> are two call sites. One for scheduled scan results notification and
+> one in scheduled scan stop scenario. So for the latter it is not
+> needed to use the rcu_read_lock() as it should have RTNL lock hence
+> the two checks above?
 
-Patch applied to ath-next branch of ath.git, thanks.
+Right. The latter can't even really use rcu_read_lock() since it also
+wants to modify the list, and that's not sufficient protection for
+modifying.
 
-9a49290919e1 wil6210: use memdup_user
+Thanks!
 
--- 
-https://patchwork.kernel.org/patch/9715009/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
