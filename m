@@ -1,229 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34681 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756358AbdESP7s (ORCPT
+Received: from smtprelay.synopsys.com ([198.182.60.111]:51501 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934714AbdEWR01 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 11:59:48 -0400
-Received: by mail-oi0-f68.google.com with SMTP id w10so13050352oif.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 08:59:48 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 06/10] rtlwifi: btcoex: 23b 1ant: parse more BT information from C2H
-Date: Fri, 19 May 2017 10:59:33 -0500
-Message-Id: <20170519155937.17526-7-Larry.Finger@lwfinger.net> (sfid-20170519_180002_775019_249DCD30)
-In-Reply-To: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
-References: <20170519155937.17526-1-Larry.Finger@lwfinger.net>
+        Tue, 23 May 2017 13:26:27 -0400
+From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+To: "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "prameela.j04cs@gmail.com" <prameela.j04cs@gmail.com>,
+        "linux-snps-arc@lists.infradead.org"
+        <linux-snps-arc@lists.infradead.org>
+Subject: Re: git repo with Redpine changes
+Date: Tue, 23 May 2017 17:26:22 +0000
+Message-ID: <1495560381.22203.29.camel@synopsys.com> (sfid-20170523_192631_866421_B65B21EE)
+References: <1495008675.2606.72.camel@synopsys.com>
+         <CAEhWJFkVe1C9jtxH9zeeMeJiAs86sJGOKSoqMku0qRqNAQujxg@mail.gmail.com>
+In-Reply-To: <CAEhWJFkVe1C9jtxH9zeeMeJiAs86sJGOKSoqMku0qRqNAQujxg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
-
-BT FW provide more BT status as clues, thus we also display them in
-coex log to help debug in field.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 98 +++++++++++++++++++---
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  5 ++
- 2 files changed, 91 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index f565c9e7e17b..9509bf4a4635 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -2887,12 +2887,48 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 		coex_sta->bt_retry_cnt = /* [3:0] */
- 			coex_sta->bt_info_c2h[rsp_source][2] & 0xf;
- 
-+		if (coex_sta->bt_retry_cnt >= 1)
-+			coex_sta->pop_event_cnt++;
-+
-+		if (coex_sta->bt_info_c2h[rsp_source][2] & 0x20)
-+			coex_sta->c2h_bt_remote_name_req = true;
-+		else
-+			coex_sta->c2h_bt_remote_name_req = false;
-+
- 		coex_sta->bt_rssi =
--			coex_sta->bt_info_c2h[rsp_source][3] * 2 + 10;
-+			coex_sta->bt_info_c2h[rsp_source][3] * 2 - 90;
- 
- 		coex_sta->bt_info_ext =
- 			coex_sta->bt_info_c2h[rsp_source][4];
- 
-+		if (coex_sta->bt_info_c2h[rsp_source][1] == 0x49) {
-+			coex_sta->a2dp_bit_pool =
-+				coex_sta->bt_info_c2h[rsp_source][6];
-+		} else {
-+			coex_sta->a2dp_bit_pool = 0;
-+		}
-+
-+		coex_sta->bt_tx_rx_mask =
-+			(coex_sta->bt_info_c2h[rsp_source][2] & 0x40);
-+		btcoexist->btc_set(btcoexist, BTC_SET_BL_BT_TX_RX_MASK,
-+				   &coex_sta->bt_tx_rx_mask);
-+
-+		if (!coex_sta->bt_tx_rx_mask) {
-+			/* BT into is responded by BT FW and BT RF REG
-+			 * 0x3C != 0x15 => Need to switch BT TRx Mask
-+			 */
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], Switch BT TRx Mask since BT RF REG 0x3C != 0x15\n");
-+			btcoexist->btc_set_bt_reg(btcoexist, BTC_BT_REG_RF,
-+						  0x3c, 0x15);
-+
-+			/* BT TRx Mask lock 0x2c[0], 0x30[0] = 0 */
-+			btcoexist->btc_set_bt_reg(btcoexist, BTC_BT_REG_RF,
-+						  0x2c, 0x7c44);
-+			btcoexist->btc_set_bt_reg(btcoexist, BTC_BT_REG_RF,
-+						  0x30, 0x7c44);
-+		}
-+
- 		/* Here we need to resend some wifi info to BT
- 		 * because bt is reset and loss of the info.
- 		 */
-@@ -2938,6 +2974,8 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 	else
- 		coex_sta->c2h_bt_inquiry_page = false;
- 
-+	coex_sta->num_of_profile = 0;
-+
- 	/* set link exist status */
- 	if (!(bt_info & BT_INFO_8723B_1ANT_B_CONNECTION)) {
- 		coex_sta->bt_link_exist = false;
-@@ -2950,22 +2988,43 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 	} else {
- 		/* connection exists */
- 		coex_sta->bt_link_exist = true;
--		if (bt_info & BT_INFO_8723B_1ANT_B_FTP)
-+		if (bt_info & BT_INFO_8723B_1ANT_B_FTP) {
- 			coex_sta->pan_exist = true;
--		else
-+			coex_sta->num_of_profile++;
-+		} else {
- 			coex_sta->pan_exist = false;
--		if (bt_info & BT_INFO_8723B_1ANT_B_A2DP)
-+		}
-+		if (bt_info & BT_INFO_8723B_1ANT_B_A2DP) {
- 			coex_sta->a2dp_exist = true;
--		else
-+			coex_sta->num_of_profile++;
-+		} else {
- 			coex_sta->a2dp_exist = false;
--		if (bt_info & BT_INFO_8723B_1ANT_B_HID)
-+		}
-+		if (bt_info & BT_INFO_8723B_1ANT_B_HID) {
- 			coex_sta->hid_exist = true;
--		else
-+			coex_sta->num_of_profile++;
-+		} else {
- 			coex_sta->hid_exist = false;
--		if (bt_info & BT_INFO_8723B_1ANT_B_SCO_ESCO)
-+		}
-+		if (bt_info & BT_INFO_8723B_1ANT_B_SCO_ESCO) {
- 			coex_sta->sco_exist = true;
--		else
-+			coex_sta->num_of_profile++;
-+		} else {
- 			coex_sta->sco_exist = false;
-+		}
-+
-+		if ((!coex_sta->hid_exist) &&
-+		    (!coex_sta->c2h_bt_inquiry_page) &&
-+		    (!coex_sta->sco_exist)) {
-+			if (coex_sta->high_priority_tx +
-+				    coex_sta->high_priority_rx >=
-+			    160) {
-+				coex_sta->hid_exist = true;
-+				coex_sta->wrong_profile_notification++;
-+				coex_sta->num_of_profile++;
-+				bt_info = bt_info | 0x28;
-+			}
-+		}
- 
- 		/* Add Hi-Pri Tx/Rx counter to avoid false detection */
- 		if (((coex_sta->hid_exist) || (coex_sta->sco_exist)) &&
-@@ -2974,11 +3033,27 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 		    (!coex_sta->c2h_bt_inquiry_page))
- 			coex_sta->bt_hi_pri_link_exist = true;
- 
-+		if ((bt_info & BT_INFO_8723B_1ANT_B_ACL_BUSY) &&
-+		    (coex_sta->num_of_profile == 0)) {
-+			if (coex_sta->low_priority_tx +
-+				    coex_sta->low_priority_rx >=
-+			    160) {
-+				coex_sta->pan_exist = true;
-+				coex_sta->num_of_profile++;
-+				coex_sta->wrong_profile_notification++;
-+				bt_info = bt_info | 0x88;
-+			}
-+		}
- 	}
- 
- 	halbtc8723b1ant_update_bt_link_info(btcoexist);
- 
--	if (!(bt_info&BT_INFO_8723B_1ANT_B_CONNECTION)) {
-+	/* mask profile bit for connect-ilde identification
-+	 * ( for CSR case: A2DP idle --> 0x41)
-+	 */
-+	bt_info = bt_info & 0x1f;
-+
-+	if (!(bt_info & BT_INFO_8723B_1ANT_B_CONNECTION)) {
- 		coex_dm->bt_status = BT_8723B_1ANT_BT_STATUS_NON_CONNECTED_IDLE;
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], BtInfoNotify(), BT Non-Connected idle!\n");
-@@ -3000,8 +3075,7 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], BtInfoNotify(), BT ACL busy!!!\n");
- 	} else {
--		coex_dm->bt_status =
--			BT_8723B_1ANT_BT_STATUS_MAX;
-+		coex_dm->bt_status = BT_8723B_1ANT_BT_STATUS_MAX;
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], BtInfoNotify(), BT Non-Defined state!!\n");
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index fd0620ef0987..1cac98e3cc85 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -146,6 +146,7 @@ struct coex_sta_8723b_1ant {
- 	bool hid_exist;
- 	bool pan_exist;
- 	bool bt_hi_pri_link_exist;
-+	u8 num_of_profile;
- 
- 	bool under_lps;
- 	bool under_ips;
-@@ -157,10 +158,12 @@ struct coex_sta_8723b_1ant {
- 	u8 bt_rssi;
- 	u8 pre_bt_rssi_state;
- 	u8 pre_wifi_rssi_state[4];
-+	bool bt_tx_rx_mask;
- 	bool c2h_bt_info_req_sent;
- 	u8 bt_info_c2h[BT_INFO_SRC_8723B_1ANT_MAX][10];
- 	u32 bt_info_c2h_cnt[BT_INFO_SRC_8723B_1ANT_MAX];
- 	bool c2h_bt_inquiry_page;
-+	bool c2h_bt_remote_name_req;
- 	u8 bt_retry_cnt;
- 	u8 bt_info_ext;
- 	u8 scan_ap_num;
-@@ -181,6 +184,8 @@ struct coex_sta_8723b_1ant {
- 	bool cck_lock;
- 	bool pre_ccklock;
- 
-+	u32 wrong_profile_notification;
-+
- 	u8 a2dp_bit_pool;
- 	u8 cut_version;
- };
--- 
-2.12.0
+SGkgQW1pdCENCg0KT24gVHVlLCAyMDE3LTA1LTIzIGF0IDE3OjAwICswNTMwLCBhbWl0IGthcndh
+ciB3cm90ZToNCj4gT24gV2VkLCBNYXkgMTcsIDIwMTcgYXQgMTo0MSBQTSwgQWxleGV5IEJyb2Rr
+aW4NCj4gPEFsZXhleS5Ccm9ka2luQHN5bm9wc3lzLmNvbT4gd3JvdGU6DQo+ID4gDQo+ID4gSGVs
+bG8gQW1pdGt1bWFyLCBQcmFtZWVsYSwNCj4gPiANCj4gPiBJIHdhcyBsdWNreSBlbm91Z2ggdG8g
+Z2V0IGhvbGQgb2YgUlM5MTEzIEV2YWx1YXRpb24gS2l0IGFuZCBub3cgSSdtIHRyeWluZw0KPiA+
+IHRvIGdldCBpdCB3b3JraW5nIHdpdGggbXkgYm9hcmQgdmlhIFVTQiBhbmQgU0RJTyBpbnRlcmZh
+Y2VzIGJ1dCBzZWVpbmcgaXNzdWVzIGhlcmUgYW5kIHRoZXJlOg0KPiA+IMKgMSkgSW4gY2FzZSBv
+ZiBTRElPIEkgc2VlIHRoaXMgb24gaW50ZXJmYWNlIHVwIHdpdGggdmFuaWxsYSA0LjExLjEga2Vy
+bmVsOg0KPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tPjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0K
+PiA+ICMgaWZjb25maWcgd2xhbjAgdXANCj4gPiByc2lfOTF4OiBTZW5kaW5nIFJYIGZpbHRlciBm
+cmFtZQ0KPiA+IHJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9jZXNzb3I6IFF1ZXVlIG51bWJlciA9
+IDQNCj4gPiByc2lfOTF4OiByc2lfc2Rpb19ob3N0X2ludGZfd3JpdGVfcGt0OiBTdWNjZXNzZnVs
+bHkgd3JpdHRlbiBvbnRvIGNhcmQNCj4gPiByc2lfOTF4OiByc2lfc2V0X3ZhcF9jYXBhYmlsaXRp
+ZXM6IFNlbmRpbmcgVkFQIGNhcGFiaWxpdGllcyBmcmFtZQ0KPiA+IHJzaV85MXg6IHJzaV9tYWM4
+MDIxMV9jb25mX3R4OiBDb25mIHF1ZXVlIDAsIGFpZnM6IDIsIGN3bWluOiAxNSBjd21heDogMTAy
+MywgdHhvcDogMA0KPiA+IHJzaV85MXg6IHJzaV9tYWM4MDIxMV9jb25mX3R4OiBDb25mIHF1ZXVl
+IDEsIGFpZnM6IDIsIGN3bWluOiAxNSBjd21heDogMTAyMywgdHhvcDogMA0KPiA+IHJzaV85MXg6
+IHJzaV9tYWM4MDIxMV9jb25mX3R4OiBDb25mIHF1ZXVlIDIsIGFpZnM6IDIsIGN3bWluOiAxNSBj
+d21heDogMTAyMywgdHhvcDogMA0KPiA+ICMgcnNpXzkxeDogcnNpX21hYzgwMjExX2NvbmZfdHg6
+IENvbmYgcXVldWUgMywgYWlmczogMiwgY3dtaW46IDE1IGN3bWF4OiAxMDIzLCB0eG9wOiAwDQo+
+ID4gcnNpXzkxeDogcnNpX2NoYW5uZWxfY2hhbmdlOiBTZXQgY2hhbm5lbDogMjQxMiBNSHogdHlw
+ZTogNDE2IGNoYW5uZWxfbm8gMQ0KPiA+IHJzaV85MXg6IHJzaV9zZXRfY2hhbm5lbDogU2VuZGlu
+ZyBzY2FuIHJlcSBmcmFtZQ0KPiA+IHJzaV85MXg6IHJzaV9tYWM4MDIxMV9jb25maWc6IENvbmZp
+Z3VyaW5nIFBvd2VyDQo+ID4gcnNpXzkxeDogcnNpX2NvbmZpZ19wb3dlcjogU2V0IHR4IHBvd2Vy
+OiAyMCBkQk0NCj4gPiByc2lfOTF4OiByc2lfc2VuZF9yYWRpb19wYXJhbXNfdXBkYXRlOiBTZW5k
+aW5nIFJhZGlvIFBhcmFtcyB1cGRhdGUgZnJhbWUNCj4gPiByc2lfOTF4OiByc2lfY29yZV9xb3Nf
+cHJvY2Vzc29yOiBRdWV1ZSBudW1iZXIgPSA0DQo+ID4gcnNpXzkxeDogcnNpX2ludGVycnVwdF9o
+YW5kbGVyOiBJbnRyX3N0YXR1cyA9IDggOCA0DQo+ID4gcnNpXzkxeDogUGt0IHBlbmRpbmcgaW50
+ZXJydXB0DQo+ID4gcnNpXzkxeDogcnNpX21nbXRfcGt0X3JlY3Y6IE1zZyBMZW46IDAsIE1zZyBU
+eXBlOsKgwqDCoMKgMQ0KPiA+IHJzaV85MXg6IHJzaV9oYW5kbGVfdGFfY29uZmlybV90eXBlOiBJ
+bnZhbGlkIFRBIGNvbmZpcm0gcGt0IHJlY2VpdmVkDQo+ID4gcnNpXzkxeDogcnNpX3NkaW9faG9z
+dF9pbnRmX3dyaXRlX3BrdDogU3VjY2Vzc2Z1bGx5IHdyaXR0ZW4gb250byBjYXJkDQo+ID4gcnNp
+XzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogUXVldWUgbnVtYmVyID0gNA0KPiA+IHJzaV85
+MXg6IHJzaV9zZGlvX2hvc3RfaW50Zl93cml0ZV9wa3Q6IFN1Y2Nlc3NmdWxseSB3cml0dGVuIG9u
+dG8gY2FyZA0KPiA+IHJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9jZXNzb3I6IFF1ZXVlIG51bWJl
+ciA9IDQNCj4gPiByc2lfOTF4OiByc2lfaW50ZXJydXB0X2hhbmRsZXI6IEludHJfc3RhdHVzID0g
+OCA4IDQNCj4gPiByc2lfOTF4OiBQa3QgcGVuZGluZyBpbnRlcnJ1cHQNCj4gPiByc2lfOTF4OiBy
+c2lfbWdtdF9wa3RfcmVjdjogTXNnIExlbjogMCwgTXNnIFR5cGU6wqDCoMKgwqAxDQo+ID4gcnNp
+XzkxeDogcnNpX2hhbmRsZV90YV9jb25maXJtX3R5cGU6IEludmFsaWQgVEEgY29uZmlybSBwa3Qg
+cmVjZWl2ZWQNCj4gPiByc2lfOTF4OiByc2lfaW50ZXJydXB0X2hhbmRsZXI6IEludHJfc3RhdHVz
+ID0gOCA4IDQNCj4gPiByc2lfOTF4OiBQa3QgcGVuZGluZyBpbnRlcnJ1cHQNCj4gPiByc2lfOTF4
+OiByc2lfbWdtdF9wa3RfcmVjdjogTXNnIExlbjogMzIxLCBNc2cgVHlwZTrCoMKgwqDCoDINCj4g
+PiByc2lfOTF4OiByc2lfc2Rpb19ob3N0X2ludGZfd3JpdGVfcGt0OiBTdWNjZXNzZnVsbHkgd3Jp
+dHRlbiBvbnRvIGNhcmQNCj4gPiByc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBRdWV1
+ZSBudW1iZXIgPSAyNTUNCj4gPiByc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBObyBN
+b3JlIFBrdA0KPiA+IHJzaV85MXg6IHJzaV9pbnRlcnJ1cHRfaGFuZGxlcjogSW50cl9zdGF0dXMg
+PSBjIDggNA0KPiA+IHJzaV85MXg6IFBrdCBwZW5kaW5nIGludGVycnVwdA0KPiA+IHJzaV85MXg6
+IHJzaV9tZ210X3BrdF9yZWN2OiBNc2cgTGVuOiAyOTksIE1zZyBUeXBlOsKgwqDCoMKgMg0KPiA+
+IHJzaV85MXg6IHJzaV9pbnRlcnJ1cHRfaGFuZGxlcjogPT0+IEZJUk1XQVJFIEFzc2VydCA8PT0N
+Cg0KQW55IGhpbnQgb24gd2hhdCdzIHdyb25nIGhlcmU/DQoNCk5vdGUgZmlybXdhcmUgd2FzIHN1
+Y2Nlc3NmdWxseSBsb2FkZWQgb24gcHJvYmUgYSBiaXQgZWFybGllci4NCkFuZCBoZXJlIEkgdXNl
+ZCBhIGZpcm13YXJlIGJsb2IgZnJvbSBsaW51eC1maXJtd2FyZSBnaXQgcmVwbywNCmh0dHBzOi8v
+Z2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2Zpcm13YXJlL2xpbnV4LWZp
+cm13YXJlLmdpdC90cmVlL3JzaV85MXguZncNCg0KPiA+IHJzaV85MXg6IHJzaV9pbnRlcnJ1cHRf
+aGFuZGxlcjogRmlybXdhcmUgU3RhdHVzIGlzIDB4NjUNCj4gPiByc2lfOTF4OiByc2lfY29yZV9x
+b3NfcHJvY2Vzc29yOiBRdWV1ZSBudW1iZXIgPSAyNTUNCj4gPiByc2lfOTF4OiByc2lfY29yZV9x
+b3NfcHJvY2Vzc29yOiBObyBNb3JlIFBrdA0KPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tPjgt
+LS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+IA0KPiA+IGFuZCB5b3UgcmVjZW50IHBhdGNoIHNlcmll
+cyBmb3IgbndlIGZpcm13YXJlIGxvYWRpbmcgSSBzZWUgc29tZXRoaW5nIGEgYml0DQo+ID4gZGlm
+ZmVyZW50Og0KPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tPjgtLS0tLS0tLS0tLS0tLS0tLS0t
+LQ0KPiA+IG1tY19ob3N0IG1tYzA6IEJ1cyBzcGVlZCAoc2xvdCAwKSA9IDUwMDAwMDAwSHogKHNs
+b3QgcmVxIDI1MDAwMDAwSHosIGFjdHVhbCAyNTAwMDAwMEhaIGRpdiA9IDEpDQo+ID4gbW1jMDog
+bmV3IFNESU8gY2FyZCBhdCBhZGRyZXNzIGZmZmQNCj4gPiByc2lfOTF4OiByc2lfcHJvYmU6IElu
+aXQgZnVuY3Rpb24gY2FsbGVkDQo+ID4gcnNpXzkxeDogcnNpX2luaXRfc2Rpb19pbnRlcmZhY2U6
+IEVuYWJsZWQgdGhlIGludGVyZmFjZQ0KPiA+IG1tY19ob3N0IG1tYzA6IEJ1cyBzcGVlZCAoc2xv
+dCAwKSA9IDUwMDAwMDAwSHogKHNsb3QgcmVxIDUwMDAwMDAwSHosIGFjdHVhbCA1MDAwMDAwMEha
+IGRpdiA9IDApDQo+ID4gcnNpXzkxeDogcnNpX3NldGJsb2NrbGVuZ3RoOiBTZXR0aW5nIHRoZSBi
+bG9jayBsZW5ndGgNCj4gPiByc2lfOTF4OiByc2lfc2V0YmxvY2tsZW5ndGg6IE9wZXJhdGlvbmFs
+IGJsayBsZW5ndGggaXMgMjU2DQo+ID4gcnNpXzkxeDogcnNpX2luaXRfc2Rpb19pbnRlcmZhY2U6
+IFNldHVwIGNhcmQgc3VjY2VzZnVsbHkNCj4gPiByc2lfOTF4OiByc2lfaW5pdF9zZGlvX3NsYXZl
+X3JlZ3M6IEluaXRpYWx6aW5nIFNESU8gcmVhZCBzdGFydCBsZXZlbA0KPiA+IHJzaV85MXg6IHJz
+aV9pbml0X3NkaW9fc2xhdmVfcmVnczogSW5pdGlhbHppbmcgRklGTyBjdHJsIHJlZ2lzdGVycw0K
+PiA+IHJzaV85MXg6IHJzaV9zZGlvX21hc3Rlcl9hY2Nlc3NfbXN3b3JkOiBNQVNURVJfQUNDRVNT
+X01TQllURToweDUNCj4gPiByc2lfOTF4OiByc2lfc2Rpb19tYXN0ZXJfYWNjZXNzX21zd29yZDpN
+QVNURVJfQUNDRVNTX0xTQllURToweDQxDQo+ID4gcnNpXzkxeDogcnNpX3NkaW9fcmVhZF9yZWdp
+c3Rlcl9tdWx0aXBsZTogU3luY2ggQ21kNTMgcmVhZCBmYWlsZWQNCj4gDQo+IExvb2tzIGxpa2Ug
+c2Rpb19yZWFkc2IoKSBmYWlsZWQgZm9yIHNvbWUgcmVhc29uIG9uIHlvdXIgcGxhdGZvcm0uDQo+
+IFdlIGV4cGVjdCBmaXJtd2FyZSBsb2FkaW5nIHRvIGJlIHN1Y2Nlc3NmdWwgd2l0aCByZWNlbnQg
+cGF0Y2ggc2VyaWVzLg0KDQpIbSwgdGhhdCdzIGludGVyZXN0aW5nIHdoeSBzdHVmZiB1c2VkIHRv
+IHdvcmsgYmVmb3JlIHRoYXQgcGF0Y2ggc2VyaWVzLg0KQXQgbGVhc3QgYXMgeW91IG1pZ2h0IHNl
+ZSBmcm9tIGFib3ZlIEkgZ290IG11Y2ggZnVydGhlciB3aXRoIHZhbmlsbGEgNC4xMSBrZXJuZWwu
+DQoNCkJUVyB3aGVyZSBtYXkgSSBmaW5kIG5ldyBmaXJtd2FyZSBibG9iIHdoaWNoIGlzIG1lbnRp
+b25lZCBpbiBvbiBvZiB0aGUgcGF0Y2hlcyAoInJzOTExM193bGFuX3FzcGkucnBzIik/DQoNCj4g
+PiByc2lfOTF4OiByc2lfc2Rpb19tYXN0ZXJfcmVnX3JlYWQ6IEFIQiByZWdpc3RlciByZWFkIGZh
+aWxlZA0KPiA+IHJzaV85MXg6IHJzaV9sb2FkX2Zpcm13YXJlOiBSRUdPVVQgcmVhZCBmYWlsZWQN
+Cj4gPiByc2lfOTF4OiByc2lfaGFsX2RldmljZV9pbml0OiBGYWlsZWQgdG8gbG9hZCBUQSBpbnN0
+cnVjdGlvbnMNCj4gPiByc2lfOTF4OiByc2lfcHJvYmU6IEZhaWxlZCBpbiBkZXZpY2UgaW5pdA0K
+PiA+IHJzaV85MXg6IHJzaV85MXhfZGVpbml0OiBQZXJmb3JtaW5nIGRlaW5pdCBvcyBvcHMNCj4g
+PiByc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBRdWV1ZSBudW1iZXIgPSAyNTUNCj4g
+PiByc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBObyBNb3JlIFBrdA0KPiA+IHJzaV85
+MXg6IHJzaV9wcm9iZTogRmFpbGVkIGluIHByb2JlLi4uRXhpdGluZw0KPiA+IFJTSS1TRElPIFdM
+QU46IHByb2JlIG9mIG1tYzA6ZmZmZDoxIGZhaWxlZCB3aXRoIGVycm9yIDENCj4gPiAtLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gPiANCj4gPiDCoDIpIElu
+IGNhc2Ugb2YgVVNCIEkganVzdCBzZWU6DQo+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0+OC0t
+LS0tLS0tLS0tLS0tLS0tLS0tDQo+ID4gdXNiIDEtMTogbmV3IGhpZ2gtc3BlZWQgVVNCIGRldmlj
+ZSBudW1iZXIgNiB1c2luZyBlaGNpLXBsYXRmb3JtDQo+ID4gdXNiIDEtMTogY29uZmlnIDEgaW50
+ZXJmYWNlIDAgYWx0c2V0dGluZyAwIGVuZHBvaW50IDB4ODMgaGFzIGFuIGludmFsaWQgYkludGVy
+dmFsIDI1NSwgY2hhbmdpbmcgdG8gMTENCj4gPiB1c2IgMS0xOiBOZXcgVVNCIGRldmljZSBmb3Vu
+ZCwgaWRWZW5kb3I9MTYxOCwgaWRQcm9kdWN0PTkxMTMNCj4gPiB1c2IgMS0xOiBOZXcgVVNCIGRl
+dmljZSBzdHJpbmdzOiBNZnI9MSwgUHJvZHVjdD0yLCBTZXJpYWxOdW1iZXI9MA0KPiA+IHVzYiAx
+LTE6IFByb2R1Y3Q6IFdpcmVsZXNzIFVTQi1DREMgTmV0d29yayBNb2R1bGUNCj4gPiB1c2IgMS0x
+OiBNYW51ZmFjdHVyZXI6IFJlZHBpbmUgU2lnbmFscywgSW5jLg0KPiA+IGNkY19hY20gMS0xOjEu
+MDogdHR5QUNNMDogVVNCIEFDTSBkZXZpY2UNCj4gPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44
+LS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gPiANCj4gPiBJIG5vdGljZWQgdGhhdCB0aGVyZSdyZSBx
+dWl0ZSBzb21lIHBhdGNoZXMgZmxvYXRpbmcgb24gbGludXgtd2lyZWxlc3MgbWFpbGluZyBsaXN0
+IHdoaWNoDQo+ID4gd2VyZSBub3QgeWV0IG1lcmdlZCBpbiB1cHN0cmVhbSBrZXJuZWwgKGV2ZW4g
+aW4gbGludXgtbmV4dCBvciB3aXJlbGVzcy10ZXN0aW5nKS4NCj4gPiANCj4gPiBTbyBhdCB0aGlz
+IHBvaW50IEknbSBub3QgcmVhbGx5IHN1cmUgd2hhdCBjb3VsZCBiZSBhIHNhZmUgYmFzZWxpbmUg
+Zm9yIG15IGV4cGVyaW1lbnRzOg0KPiA+IMKgLSBpZiBleGlzdGluZyB2YW5pbGxhIHNheSA0LjEx
+IGtlcm5lbCBpcyBnb29kIGVub3VnaCBhbmQgdGhpbmdzIHRoYXQgZG9lc24ndCB3b3JrIGFyZSBj
+YXVzZWQNCj4gPiDCoMKgwqBieSBvdGhlciBwcm9ibGVtcyBub3QgcmVsYXRlZCB0byBSZWRwaW5l
+IG1vZHVsZSAodGhhdCB3b3VsZCBiZSBzdHJhbmdlIGJlY2F1c2UgYm90aCBVU0IgYWJkIFNELWNh
+cmQNCj4gPiDCoMKgwqBzbG90IGFyZSBwcm92ZW4gdG8gd29yayBwcmV0dHkgd2VsbCB3aXRoIG90
+aGVyIGRldmljZXMpDQo+ID4gwqAtIGlmIEkgbmVlZCBhbiBhcmJpdHJhcnkgc2V0IG9mIHBhdGNo
+ZXMgdG8gZ2V0IHRoaW5ncyB1cCBhbmQgcnVubmluZyBldGMNCj4gPiANCj4gPiBUaGF0IHNhaWQg
+aWYgdGhlcmUncyBhIHB1YmxpYyBnaXQgcmVwbyB3aGljaCBjb250YWlucyBldmVyeXRoaW5nIHJl
+cXVpcmVkIGZvciBSZWRwaW5lIG1vZHVsZSB0bw0KPiA+IHdvcmsgW3ByZWZlcmFibHkgYmFzZWQg
+b24gdGhlIGxhdGVzdCBrZXJuZWwgc291cmNlc10gSSdkIGxpa2UgdG8gZ2V0IGEgcmVmZXJlbmNl
+IHRvIGl0Lg0KPiA+IA0KPiA+IEFueSBoaW50cyBoZXJlIGFyZSBtdWNoIGFwcHJlY2lhdGVkLg0K
+PiANCj4gV2UgZG9uJ3QgaGF2ZSBhIHB1YmxpYyBnaXQgcmVwbyBtYWludGFpbmVkLiBXZSBoYXZl
+IDIgcGF0Y2hzZXRzIHJlYWR5DQo+IGZvciBzdWJtaXNzaW9uLiBXZSBhcmUgd29ya2luZyBvbiBj
+b2RlIGNsZWFudXAgZm9yIG90aGVyIHBlbmRpbmcNCj4gY2hhbmdlcy4gSSB3b3VsZCBzdWdnZXN0
+IHlvdSB0byB3YWl0IHRpbGwgdGhlc2UgcGF0Y2hlcyBhcmUgcG9zdGVkLg0KDQpPaywgd2lsbCBk
+by4gQnV0IHBsZWFzZSBhZGQgbWUgaW4gQ2MgbGlzdCBpbiB5b3VyIHVwY29taW5nIHBhdGNoZXMg
+YXMgSSdtIHZlcnkgaW50ZXJlc3RlZA0KaW4gZ2V0dGluZyBSZWRwaW5lIG1vZHVsZSB3b3JraW5n
+IG9uIG91ciBuZXcgYm9hcmQgYW5kIHdpbGwgYmUgaGFwcHkgdG8gcmV2aWV3IHRoZW0gYXMgd2Vs
+bCBhcyB0ZXN0IG9uDQpteSBwbGF0Zm9ybS4NCg0KQlRXIEknbSB3b25kZXJpbmcgd2hhdCBwbGF0
+Zm9ybSB5b3UgdXNlIGZvciBkZXZlbG9wbWVudCBhcyBhIGhvc3Q/DQpJJ20gd29uZGVyaW5nIGlm
+IHRoZSByZWFzb24gZm9yIG15IGZhaWx1cmUgbWVudGlvbmVkIGFib3ZlIG1pZ2h0IGJlIGluIGRp
+ZmZlcmVudA0KaG9zdCBDUFUgYXJjaGl0ZWN0dXJlIG9yIFNELWNhcmQgY29udHJvbGxlciB2ZW5k
+b3Igb3Igc2V0dGluZ3MuDQoNCi1BbGV4ZXk=
