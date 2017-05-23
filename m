@@ -1,76 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f41.google.com ([74.125.83.41]:35913 "EHLO
-        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751055AbdESQ27 (ORCPT
+Received: from server.eikelenboom.it ([91.121.65.215]:56044 "EHLO
+        server.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935105AbdEWST0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 12:28:59 -0400
-Received: by mail-pg0-f41.google.com with SMTP id x64so40382500pgd.3
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 09:28:58 -0700 (PDT)
-Date: Fri, 19 May 2017 09:28:55 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [PATCH v3 6/6] mwifiex: check next packet length for usb tx
- aggregation
-Message-ID: <20170519162854.GA125761@google.com> (sfid-20170519_182902_798477_147E223D)
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
- <1495184805-6631-6-git-send-email-huxinming820@gmail.com>
+        Tue, 23 May 2017 14:19:26 -0400
+Subject: Re: 4.12-RC2 BUG: scheduling while atomic: irq/47-iwlwifi
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org
+References: <a54f3f4f-2365-2154-ad18-82e4cd572aac@eikelenboom.it>
+ <1495450628.2653.14.camel@sipsolutions.net>
+ <764a929c-ce8a-c859-a49e-2f20cb05ae44@broadcom.com>
+ <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com>
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <e8b61883-1f23-c94c-1740-b121aae70a2c@eikelenboom.it> (sfid-20170523_201940_660258_90C87563)
+Date: Tue, 23 May 2017 19:51:12 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495184805-6631-6-git-send-email-huxinming820@gmail.com>
+In-Reply-To: <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 19, 2017 at 09:06:45AM +0000, Xinming Hu wrote:
-> From: Xinming Hu <huxm@marvell.com>
+On 22/05/17 23:02, Arend Van Spriel wrote:
 > 
-> The next packet length will be used by interface driver, to check if the
-> next packet still could be aggregated.
 > 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> On 22-5-2017 14:09, Arend van Spriel wrote:
+>> On 5/22/2017 12:57 PM, Johannes Berg wrote:
+>>> On Mon, 2017-05-22 at 12:36 +0200, Sander Eikelenboom wrote:
+>>>> Hi,
+>>>>
+>>>> I encountered this splat with 4.12-RC2.
+>>>
+>>> Ugh, yeah, I should've seen that in the review.
+>>>
+>>> Arend, please take a look at this. cfg80211_sched_scan_results() cannot
+>>> sleep, so you can't rtnl_lock() in there. Looks like you can just rely
+>>> on RCU though?
+>>
+>> I see. I think you are right on RCU. Don't have the code in front of me
+>> now, but I think the lookup has an ASSERT_RTNL. Will look into it after
+>> my monday meeting :-p
+> 
+> I realized I have a laptop lying around with intel 3160 wifi chip and
+> tried to reproduce the issue. Did not run into the splat running
+> 4.12-rc1 from wireless-drivers-next repo. I did not get the email from
+> Sander so I don't know any details.
+> 
+> Here is what I changed based on the info Johannes provided. Can you
+> please check if this get rid of the splat and let me know.
+
+Hi Arend,
+
+I ran your patch today, so far no issues.
+
+--
+Sander
+
+
+> Regards,
+> Arend
 > ---
-> v3: same as v1,v2
-> ---
->  drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 8 ++++----
->  drivers/net/wireless/marvell/mwifiex/txrx.c     | 4 ++--
->  drivers/net/wireless/marvell/mwifiex/wmm.c      | 8 ++++----
->  3 files changed, 10 insertions(+), 10 deletions(-)
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 14d5f0c..04833bb 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -322,9 +322,7 @@ static void cfg80211_del_sched_scan_req(struct
+> cfg80211_regi
+>  {
+>         struct cfg80211_sched_scan_request *pos;
 > 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> index cbf3bc2..8041f2d 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> @@ -254,15 +254,15 @@
->  		return 0;
->  	}
->  
-> -	if (adapter->iface_type == MWIFIEX_USB) {
-> -		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
-> -						   skb_aggr, NULL);
-> -	} else {
->  		if (skb_src)
->  			tx_param.next_pkt_len =
->  					skb_src->len + sizeof(struct txpd);
->  		else
->  			tx_param.next_pkt_len = 0;
-
-The above if/else is now improperly indented.
-
-> +	if (adapter->iface_type == MWIFIEX_USB) {
-> +		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
-> +						   skb_aggr, &tx_param);
-> +	} else {
->  
->  		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
->  						   skb_aggr, &tx_param);
-
-[...]
-
-Brian
+> -       ASSERT_RTNL();
+> -
+> -       list_for_each_entry(pos, &rdev->sched_scan_req_list, list) {
+> +       list_for_each_entry_rcu(pos, &rdev->sched_scan_req_list, list) {
+>                 if (pos->reqid == reqid)
+>                         return pos;
+>         }
+> @@ -398,13 +396,13 @@ void cfg80211_sched_scan_results(struct wiphy
+> *wiphy, u64
+>         trace_cfg80211_sched_scan_results(wiphy, reqid);
+>         /* ignore if we're not scanning */
+> 
+> -       rtnl_lock();
+> +       rcu_read_lock();
+>         request = cfg80211_find_sched_scan_req(rdev, reqid);
+>         if (request) {
+>                 request->report_results = true;
+>                 queue_work(cfg80211_wq, &rdev->sched_scan_res_wk);
+>         }
+> -       rtnl_unlock();
+> +       rcu_read_unlock();
+>  }
+>  EXPORT_SYMBOL(cfg80211_sched_scan_results);
+> 
+> 
