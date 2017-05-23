@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deux.jabatus.fr ([109.234.163.37]:38157 "EHLO
-        mail.deux.jabatus.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751631AbdEVFBh (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61217 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750846AbdEWP3D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 01:01:37 -0400
-From: Michael Mera <dev@michaelmera.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Marcin Rokicki <marcin.rokicki@gmail.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix out of bounds access to local buffer
-In-Reply-To: <87d1b9v044.fsf@qca.qualcomm.com>
-References: <20170424053902.1644-1-dev@michaelmera.com> <CAN6Sofawy9BmFaVgNw=gt=9VwLqNFdCQ2fa3DApvJTVCJpjoqg@mail.gmail.com> <87inludzh6.fsf@michaelmera.com> <87d1b9v044.fsf@qca.qualcomm.com>
-Date: Mon, 22 May 2017 14:01:15 +0900
-Message-ID: <87wp99eb8k.fsf@michaelmera.com> (sfid-20170522_070213_648931_2F5DBC96)
+        Tue, 23 May 2017 11:29:03 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: ath10k: Fix reported HT MCS rates with NSS > 1
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170511090930.18205-1-sven.eckelmann@openmesh.com>
+References: <20170511090930.18205-1-sven.eckelmann@openmesh.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+CC: <ath10k@lists.infradead.org>, <akolli@qti.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Message-ID: <0a29ec25ec374a12adbc222af9a7dda1@euamsexm01a.eu.qualcomm.com> (sfid-20170523_172911_795449_3C26164A)
+Date: Tue, 23 May 2017 17:28:55 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
+> The QCA4019 firmware 10.4-3.2.1-00050 reports only HT MCS rates between
+> 0-9. But 802.11n MCS rates can be larger than that. For example a 2x2
+> device can send with up to MCS 15.
+> 
+> The firmware encodes the higher MCS rates using the NSS field. The actual
+> calculation is not documented by QCA but it seems like the NSS field can be
+> mapped for HT rates to following MCS offsets:
+> 
+>  * NSS 1: 0
+>  * NSS 2: 8
+>  * NSS 3: 16
+>  * NSS 4: 24
+> 
+> This offset therefore has to be added for HT rates before they are stored
+> in the rate_info struct.
+> 
+> Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
+> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> I added a link to the corresponding ath10k page. BTW, it's a wiki so
-> everyone are free to improve the instructions on their own.
+Patch applied to ath-next branch of ath.git, thanks.
 
-As it was my first contribution, I didn't feel like editing things
-without some sort of approval first. I will try to be more audacious
-next time.
+c1dd8016ae02 ath10k: fix reported HT MCS rates with NSS > 1
 
-Thank you very much,
-Michael Mera
+-- 
+https://patchwork.kernel.org/patch/9721111/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
