@@ -1,143 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44276 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967839AbdEXQoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 12:44:03 -0400
-Message-ID: <1495644240.12939.3.camel@redhat.com> (sfid-20170524_184417_597726_14DB4F2B)
-Subject: Re: WPA and WPA2
-From: Dan Williams <dcbw@redhat.com>
-To: "Tobin C. Harding" <me@tobin.cc>, linux-wireless@vger.kernel.org
-Date: Wed, 24 May 2017 11:44:00 -0500
-In-Reply-To: <20170524073459.GJ8158@eros>
-References: <20170524072750.GI8158@eros> <20170524073459.GJ8158@eros>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36553 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758942AbdEWHMv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 May 2017 03:12:51 -0400
+Received: by mail-pf0-f194.google.com with SMTP id n23so25531232pfb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 23 May 2017 00:12:51 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v4 5/5] mwifiex: check next packet length for usb tx aggregation
+Date: Tue, 23 May 2017 07:12:34 +0000
+Message-Id: <1495523554-30753-5-git-send-email-huxinming820@gmail.com> (sfid-20170523_091300_237355_EEAFAF39)
+In-Reply-To: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
+References: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-05-24 at 17:34 +1000, Tobin C. Harding wrote:
-> On Wed, May 24, 2017 at 05:27:50PM +1000, Tobin C. Harding wrote:
-> > Hi,
-> > 
-> > I am attempting to rewrite the ks7010 WEXT driver
-> > (drivers/staging/ks7010)
-> > to use the CFG80211 API.
-> > 
-> > I am reading 802.11 Wireless Networks - Matthew S. Gast for
-> > reference.
-> > 
-> > I have some confusion regarding WEP/WPA/WPA2/RSN, ciphers, keys and
-> > ie's?
-> > 
-> > As I understand, first there was WEP. Next we got a marketing term
-> > WPA
-> > which referred to 802.11i (which specified the protocols TKIP and
-> > CCMP, and also RSN).
-> > 
-> > WEP vs WPA
-> > ----------
-> > 
-> > To add to my confusion the ks7010 code seemingly mixes up the use
-> > of
-> > WEP keys and WPA keys, to set both the WEP and the WPA keys the
-> > driver
-> > uses the same MIB requests? Yet throughout the code WEP keys and
-> > WPA
-> > keys are stored in separate structures (and treated differently).
-> 
-> Oh, I just got why there is only one MIB request type - there are
-> only
-> one set of keys used by the target
-> 
-> 	DOT11_WEP_DEFAULT_KEY_VALUE1	= 0x13020101,
-> 	DOT11_WEP_DEFAULT_KEY_VALUE2	= 0x13020102,
-> 	DOT11_WEP_DEFAULT_KEY_VALUE3	= 0x13020103,
-> 	DOT11_WEP_DEFAULT_KEY_VALUE4	= 0x13020104,
-> 
-> removing 'WEP' from the defines removes the confusion here :)
+From: Xinming Hu <huxm@marvell.com>
 
-I could be entirely wrong, but it looks like the driver really just
-defines 4 "keys" which can be used for anything.
+The next packet length will be used by interface driver, to check if the
+next packet still could be aggregated.
 
-For WEP, they are the 4 WEP key indexes.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+v3: same as v1,v2
+v4: correct if/else indent(Brain)
+---
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 12 ++++++------
+ drivers/net/wireless/marvell/mwifiex/txrx.c     |  4 ++--
+ drivers/net/wireless/marvell/mwifiex/wmm.c      |  8 ++++----
+ 3 files changed, 12 insertions(+), 12 deletions(-)
 
-For RSN, they are 1 = PMK, 2 = GMK, 3 = GMK2, 4 seems unused.
-
-Because WEXT is pretty convoluted, I woudn't necessarily try to
-translate what eg ks_wlan_set_encode_ext() is doing directly to
-cfg80211, but to understand how the firmware interface works and then
-just write the cfg80211 code to the firmware interface.
-
-Basically, you have the following modes:
-
-a) open, no encryption
-b) WEP encryption (4 possible WEP keys, each either 40 or 104 bits)
-c) WPA/RSN (PMK and GMK are computed by wpa_supplicant and supplied to
-you, just need to send to firmware)
-
-most of the stuff about IW_ENCODE_ALG_* is useless for cfg80211, you
-just take the values that you get from userspace (eg, wpa_supplicant)
-for the key and the type of key and just tell the firmware to use
-those.
-
-The driver also has odd stuff like SME_WEP_FLAG_REQUEST that really
-just maps to DOT11_PRIVACY_INVOKED, so that's going to be a bit
-confusing for you too since that's used not just for WEP but also for
-WPA/RSN.
-
-So anyway, it's going to be an interesting ride for you, but I think
-you'll be pleasantly surprised at how much awful code you can actually
-remove.
-
-And to answer Johannes, this firmware looks much more fullmac than
-softmac; BSS selection seems left up to the firmware.  You just send it
-a "connect with these parameters" command (HIF_INFRA_SET_REQ) including
-channels, SSID, BSSID, mode, etc and it does everything.
-
-So Tobin, I think that means this driver should probably implement the
-"connect" call like fullmac drivers do.  One existing example of that
-is the 'brcmfmac' driver, eg brcmf_cfg80211_connect().
-
-Dan
-
-> > If WPA is enabled are not WEP keys superfluous?
-> > 
-> > WPA vs WPA2
-> > -----------
-> > 
-> > Were WPA version 1 and WPA version 2 marketing terms or do they
-> > differ?
-> > 
-> > ieee80211.h does not seem to mention WPA2 (and cfg80211.h mentions
-> > it
-> > once only in some comments) however, from cfg80211.h;
-> > 
-> >  * struct cfg80211_crypto_settings - Crypto settings
-> >  * @wpa_versions: indicates which, if any, WPA versions are enabled
-> >  *	(from enum nl80211_wpa_versions)
-> > 
-> > When using the CFG80211 API we do not need to worry about the
-> > WPA/WPA2
-> > distinction? Can I drop all the WPA version 1 code from the driver?
-> > 
-> > A little more information:
-> > 
-> > The WEXT driver defines ciphers, from looking at ieee80211.h it
-> > seems
-> > that it uses WLAN_CIPHER_SUITE_XXX for WPA2 and for WPA it uses
-> > 
-> > #define CIPHER_ID_WPA_NONE    "\x00\x50\xf2\x00"
-> > #define CIPHER_ID_WPA_WEP40   "\x00\x50\xf2\x01"
-> > #define CIPHER_ID_WPA_TKIP    "\x00\x50\xf2\x02"
-> > #define CIPHER_ID_WPA_CCMP    "\x00\x50\xf2\x04"
-> > #define CIPHER_ID_WPA_WEP104  "\x00\x50\xf2\x05"
-> > 
-> > FYI ieee80211.h has
-> > 
-> > #define WLAN_OUI_MICROSOFT	       0x0050f2
-> > 
-> > Thanks for taking the time to read this mail, any suggestions most
-> > appreciated.
-> > 
-> > thanks,
-> > Tobin.
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+index e8ffb26..53e6752 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+@@ -250,15 +250,15 @@
+ 		return 0;
+ 	}
+ 
++	if (skb_src)
++		tx_param.next_pkt_len = skb_src->len + sizeof(struct txpd);
++	else
++		tx_param.next_pkt_len = 0;
++
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
+-						   skb_aggr, NULL);
++						   skb_aggr, &tx_param);
+ 	} else {
+-		if (skb_src)
+-			tx_param.next_pkt_len =
+-					skb_src->len + sizeof(struct txpd);
+-		else
+-			tx_param.next_pkt_len = 0;
+ 
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+ 						   skb_aggr, &tx_param);
+diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
+index 15e92af..d848933 100644
+--- a/drivers/net/wireless/marvell/mwifiex/txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
+@@ -117,7 +117,7 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 		if (adapter->iface_type == MWIFIEX_USB) {
+ 			ret = adapter->if_ops.host_to_card(adapter,
+ 							   priv->usb_port,
+-							   skb, NULL);
++							   skb, tx_param);
+ 		} else {
+ 			ret = adapter->if_ops.host_to_card(adapter,
+ 							   MWIFIEX_TYPE_DATA,
+@@ -185,7 +185,7 @@ static int mwifiex_host_to_card(struct mwifiex_adapter *adapter,
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   priv->usb_port,
+-						   skb, NULL);
++						   skb, tx_param);
+ 	} else {
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   MWIFIEX_TYPE_DATA,
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
+index e4ff3b9..75cdd55 100644
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -1363,13 +1363,13 @@ void mwifiex_rotate_priolists(struct mwifiex_private *priv,
+ 
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
+ 
++	tx_param.next_pkt_len =
++		((skb_next) ? skb_next->len +
++		 sizeof(struct txpd) : 0);
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		ret = adapter->if_ops.host_to_card(adapter, priv->usb_port,
+-						   skb, NULL);
++						   skb, &tx_param);
+ 	} else {
+-		tx_param.next_pkt_len =
+-			((skb_next) ? skb_next->len +
+-			 sizeof(struct txpd) : 0);
+ 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+ 						   skb, &tx_param);
+ 	}
+-- 
+1.9.1
