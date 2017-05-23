@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56372 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750892AbdEHMTC (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:37919 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762061AbdEWHT3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2017 08:19:02 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, plroskin@gmail.com, linuxwifi@intel.com,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  8 May 2017 15:18:49 +0300
-Message-Id: <20170508121849.14842-1-luca@coelho.fi> (sfid-20170508_141905_944207_608BCF5A)
-Subject: [PATCH] iwlwifi: fix merge damage in iwl_req_fw_callback()
+        Tue, 23 May 2017 03:19:29 -0400
+Received: by mail-wm0-f46.google.com with SMTP id e127so15181378wmg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 May 2017 00:19:28 -0700 (PDT)
+Subject: Re: 4.12-RC2 BUG: scheduling while atomic: irq/47-iwlwifi
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Sander Eikelenboom <linux@eikelenboom.it>
+References: <a54f3f4f-2365-2154-ad18-82e4cd572aac@eikelenboom.it>
+ <1495450628.2653.14.camel@sipsolutions.net>
+ <764a929c-ce8a-c859-a49e-2f20cb05ae44@broadcom.com>
+ <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com>
+ <1495487095.26008.7.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <09ddb018-7093-2e2a-c84b-148889f7f06d@broadcom.com> (sfid-20170523_091958_986476_0AEB523C)
+Date: Tue, 23 May 2017 09:19:26 +0200
+MIME-Version: 1.0
+In-Reply-To: <1495487095.26008.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 22-5-2017 23:04, Johannes Berg wrote:
+> Hi Arend,
+> 
+> Sorry, I forgot that the original message wasn't Cc'ed to the wireless
+> list, only netdev.
 
-A merge damage happened when applying commit 06a1e85e66ba ("iwlwifi:
-remove module loading failure message") from our internal tree to
-iwlwifi-next.git.  Fix it.
+That explains. Not subscribed to that.
 
-Fixes: 06a1e85e66ba ("iwlwifi: remove module loading failure message")
-Reported-by: Pavel Roskin <plroskin@gmail.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+>> +++ b/net/wireless/scan.c
+>> @@ -322,9 +322,7 @@ static void cfg80211_del_sched_scan_req(struct
+>> cfg80211_regi
+>>  {
+>>         struct cfg80211_sched_scan_request *pos;
+>>
+>> -       ASSERT_RTNL();
+>> -
+>> -       list_for_each_entry(pos, &rdev->sched_scan_req_list, list) {
+>> +       list_for_each_entry_rcu(pos, &rdev->sched_scan_req_list,
+>> list) {
+> 
+> [snip]
+> 
+> This looks fine, but perhaps in the above we should have some kind of
+> locking assertion, e.g.
+> 
+> 	WARN_ON_ONCE(!rcu_read_lock_held() && !lockdep_rtnl_is_held());
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 5cfacb0bca84..5087ca3c848d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1493,15 +1493,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	 * else from proceeding if the module fails to load
- 	 * or hangs loading.
- 	 */
--	if (load_module) {
-+	if (load_module)
- 		request_module("%s", op->name);
--#ifdef CONFIG_IWLWIFI_OPMODE_MODULAR
--		if (err)
--			IWL_ERR(drv,
--				"failed to load module %s (error %d), is dynamic loading enabled?\n",
--				op->name, err);
--#endif
--	}
- 	goto free;
- 
-  try_again:
--- 
-2.11.0
+Thought about something like this after sending the email. So there are
+two call sites. One for scheduled scan results notification and one in
+scheduled scan stop scenario. So for the latter it is not needed to use
+the rcu_read_lock() as it should have RTNL lock hence the two checks above?
+
+Will create a formal patch.
+
+Regards,
+Arend
