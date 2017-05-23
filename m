@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46820 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39028 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750762AbdEBHdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 May 2017 03:33:44 -0400
+        id S1758820AbdEWMnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 May 2017 08:43:33 -0400
+Message-ID: <1495543411.2464.5.camel@sipsolutions.net> (sfid-20170523_144446_839369_E48B4EC0)
+Subject: Re: [PATCH] cfg80211: make cfg80211_sched_scan_results() work from
+ atomic context
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: fix multi scheduled scan kernel-doc
-Date: Tue,  2 May 2017 09:33:40 +0200
-Message-Id: <20170502073340.13002-1-johannes@sipsolutions.net> (sfid-20170502_093400_048733_D5093CF6)
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 23 May 2017 14:43:31 +0200
+In-Reply-To: <1495529887-14542-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1495529887-14542-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2017-05-23 at 09:58 +0100, Arend van Spriel wrote:
+> Drivers should be able to call cfg80211_sched_scan_results() from
+> atomic
+> context. However, with the introduction of multiple scheduled scan
+> feature
+> this requirement was not taken into account resulting in regression
+> shown
+> below.
 
-Replace @results_wk with @report_results, which was missed
-in an earlier patch between revisions thereof.
+Applied, thanks.
 
-Fixes: b34939b98369 ("cfg80211: add request id to cfg80211_sched_scan_*() api")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I did strip out the Modules linked in: ... garbage though :)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6e90f1a4950f..561989142f34 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1666,7 +1666,7 @@ struct cfg80211_bss_select_adjust {
-  * 	(others are filtered out).
-  *	If ommited, all results are passed.
-  * @n_match_sets: number of match sets
-- * @results_wk: worker for processing results notification.
-+ * @report_results: indicates that results were reported for this request
-  * @wiphy: the wiphy this was for
-  * @dev: the interface
-  * @scan_start: start time of the scheduled scan
--- 
-2.11.0
+johannes
