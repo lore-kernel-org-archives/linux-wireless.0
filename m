@@ -1,62 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:32906 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933574AbdEKTHN (ORCPT
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:56820 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030763AbdEWS3q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 15:07:13 -0400
-Received: by mail-oi0-f45.google.com with SMTP id w10so41838078oif.0
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2017 12:07:13 -0700 (PDT)
-Subject: Re: [PATCH v2 06/10] rtlwifi: btcoex: 21a 2ant: run mechanism if
- status changes or auto adjust is set
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
- <20170505161712.8685-7-Larry.Finger@lwfinger.net>
- <8760h7vcbm.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <d4b1749f-aa16-3bc0-7169-12e457c8453b@lwfinger.net> (sfid-20170511_210716_587194_6196E433)
-Date: Thu, 11 May 2017 14:07:11 -0500
+        Tue, 23 May 2017 14:29:46 -0400
+Date: Tue, 23 May 2017 20:29:41 +0200
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Rob Herring <robh+dt@kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        David Miller <davem@davemloft.net>,
+        Tony Lindgren <tony@atomide.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCHv4] wlcore: add wl1285 compatible
+Message-ID: <20170523182941.abristnic2o2uiyi@earth> (sfid-20170523_203109_613300_6509D27B)
+References: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk>
+ <8737bx5jgr.fsf@purkki.adurom.net>
+ <20170522.103010.1779800840743690143.davem@davemloft.net>
+ <87wp99t0hj.fsf@kamboji.qca.qualcomm.com>
+ <20170522152112.634mnsv65lryrmkp@earth>
+ <CAL_JsqL91sruKNaWmVEqT+L_OCh5xFkkGY07mBBUmqkKHc5fQw@mail.gmail.com>
+ <20170522162114.w4pw25pcecsm6lhi@earth>
+ <CAL_JsqLJ1F-2So4fSeVwR7RsUZZwMLv7HcnzHdKrOUGCU2F8+w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <8760h7vcbm.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="lf5tzu75bfsjxpve"
+In-Reply-To: <CAL_JsqLJ1F-2So4fSeVwR7RsUZZwMLv7HcnzHdKrOUGCU2F8+w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2017 06:54 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
->>
->> The driver will periodically ask the coex, and the coex only runs the
->> mechanism when the status was changed or the auto adjust is set.
->>
->> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Pkshih <pkshih@realtek.com>
->> Cc: Birming Chiu <birming@realtek.com>
->> Cc: Shaofu <shaofu@realtek.com>
->> Cc: Steven Ting <steventing@realtek.com>
->
+
+--lf5tzu75bfsjxpve
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+On Mon, May 22, 2017 at 11:50:04AM -0500, Rob Herring wrote:
 > [...]
->
->> +#ifdef BT_AUTO_REPORT_ONLY_8821A_2ANT
->>  	btc8821a2ant_query_bt_info(btcoexist);
->> +#else
->>  	btc8821a2ant_monitor_bt_ctr(btcoexist);
->>  	btc8821a2ant_monitor_wifi_ctr(btcoexist);
->> +
->> +	if (btc8821a2ant_is_wifi_status_changed(btcoexist) ||
->> +	    coex_dm->auto_tdma_adjust)
->> +		btc8821a2ant_run_coexist_mechanism(btcoexist);
->> +#endif
->
-> Isn't this adding dead code again?
+> >> >> Thanks, I'll take it then. Not sure why Sebastian was suggested to
+> >> >> submit this patch via your tree in the first place.
+> >> >>
+> >> >> https://patchwork.kernel.org/patch/9713645/
+> >> >
+> >> > Thanks. The idea was to get into early 4.12-rc to avoid merge
+> >> > conflicts in the droid 4 *.dts during 4.13 cycle. This strategy
+> >> > obviously failed :)
+> >>
+> >> First, I'm not sure why you combined everything. A maintainer can just
+> >> as easily take a series as a single patch and we prefer binding doc,
+> >> dts and driver changes all separate.
+> >>
+> >> Second, the dts changes could go thru arm-soc and the driver change
+> >> thru netdev. The binding doc can be thru either. There's no bisecting
+> >> dependency and things shouldn't break. It just won't all work until
+> >> you have both branches.
+> >
+> > This is only true for new devices. WLAN for droid4 works at the
+> > moment using incorrect compatible string. If *.dts is updated and
+> > driver is not yet updated WLAN does not work. IMHO that is a
+> > bisecting dependency.
+>=20
+> True. That's also breaking compatibility if a new kernel doesn't work
+> with an old DT.
 
-Yes it is. V3 just submitted. The typos in patch 8 have also been fixed.
+This way around works. It's the other way around, that does not work
+(new DT with old kernel).
 
-Thanks,
+> Is it just a compatible string change? If so, then just keep the
+> old string as a fallback.
 
-Larry
+That should work.
+
+-- Sebastian
+
+--lf5tzu75bfsjxpve
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlkkf5IACgkQ2O7X88g7
++poTAA//Z6U35mqgoF8/6rsezcFzrkocAerO7+eP15HDHZ3Y5KIbGjeU0Q38Pw8Q
+VUMIKFuMBbiDHiUMubFuBSHnxml6vq056866ykgqpzH9/OoRVNzuixUU66c9u96/
+nxeyWunVBy5gtUKogIQVwJsn27f2zYT3+TQqg8gXs+WAz8M9cbI9LeakMNjIvQ4l
+yn5Ri96dgxiE7Y7m0MqxzlO80S2BK6RkLMYkjqfNXUXw0rFArdmUilQhKN4cjEXh
+mYXgRoQ2WvoaV64zthIcxWGe7Y/enNZEsjhOp54Je7d3WuYeihOH/sWViRo2TdwR
+9B0SIGeJTRr+9Xytnkw5btF7vCGlm6Ls2J9cFVyTXkedWW7NWxWiFz1QbldkceHG
+PPMbs8NbNncrKFjxJB02+mfr8oqDlTi6pPLQlTTYOFO3e6w5YgrDt9059w3T0EDP
+yZM6sHPR0ZqoxhPvHJw66JMc13T/VVH0GTzmhmMfs0GeeTuCQNJyEIBoB+wSD9IO
+uPVrhvLbRlMuNbhj83jzdua1QCo6Epp8QJbMzYTE2i42HvKgPaDp8qvzKc8GqApj
+DgYuXqIi6oidTToIi6TZPMbL5RYiWOwyg9qlreU2iD3EENlWyEydz6oS3f2qi8We
+44fAckBNcv9+grATzYz21IvrhL80ZQffdEXW0cVcm09C6DiBgm4=
+=iayZ
+-----END PGP SIGNATURE-----
+
+--lf5tzu75bfsjxpve--
