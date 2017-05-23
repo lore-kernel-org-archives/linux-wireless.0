@@ -1,63 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:34100 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750898AbdEaUUv (ORCPT
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:56775 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030409AbdEWSHo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 16:20:51 -0400
-Received: by mail-qt0-f180.google.com with SMTP id c13so21533841qtc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 13:20:51 -0700 (PDT)
-Subject: Re: [PATCH] ath10k: add configurable debugging.
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Adrian Chadd <adrian@freebsd.org>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20170510211925.17468-1-adrian@freebsd.org>
- <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com> (sfid-20170531_222055_071580_FD6D8237)
-Date: Wed, 31 May 2017 22:20:45 +0200
-MIME-Version: 1.0
-In-Reply-To: <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+        Tue, 23 May 2017 14:07:44 -0400
+From: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Christian Daudt <csd@broadcom.com>
+Subject: [PATCH] brcmfmac: Fix kernel oops on resume when request firmware fails.
+Date: Tue, 23 May 2017 20:07:33 +0200
+Message-Id: <20170523180733.26276-1-enric.balletbo@collabora.com> (sfid-20170523_200959_377243_7FEC9BA8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31-05-17 14:16, Kalle Valo wrote:
-> Adrian Chadd <adrian@freebsd.org> writes:
-> 
->> This adds a few configurable debugging options:
->>
->> * driver debugging and tracing is now configurable per device
->> * driver debugging and tracing is now configurable at runtime
->> * the debugging / tracing is not run at all (besides a mask check)
->>   unless the specific debugging bitmap field is configured.
->>
->> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
-> 
-> [...]
-> 
->> --- a/drivers/net/wireless/ath/ath10k/core.c
->> +++ b/drivers/net/wireless/ath/ath10k/core.c
->> @@ -2444,6 +2444,8 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
->>  	ar->hw_rev = hw_rev;
->>  	ar->hif.ops = hif_ops;
->>  	ar->hif.bus = bus;
->> +	ar->debug_mask = ath10k_debug_mask;
->> +	ar->trace_debug_mask = ath10k_debug_mask;
-> 
-> Until now tracing has been always enabled, irrespective what debug_mask
-> has contained. Now you are changing that and by default log messages are
-> not delivered through tracing until user enables them. So I think to
-> keep the old behaviour trace_debug_mask should be ATH10K_DBG_ANY
-> (0xffffffff) by default and the user can modify the mask per device via
-> the debugfs file.
-> 
-> But is it really needed to be able to filter trace messages? debug_mask
-> I understand, but not sure about trace_debug_mask.
+When request firmware fails, brcmf_ops_sdio_remove is being called and
+brcmf_bus freed. In such circumstancies if you do a suspend/resume cycle
+the kernel hangs on resume due a NULL pointer dereference in resume
+function.
 
-FWIW, in brcmfmac I decided not to filter trace messages. The overhead
-is relatively small and if needed you can pass filter expressions with
-trace-cmd record.
+Steps to reproduce the problem:
+ - modprobe brcmfmac without the firmware
+     brcmfmac mmc1:0001:1: Direct firmware load for brcm/brcmfmac4354-sdio.bin
+     failed with error -2
+ - do a suspend/resume cycle (echo mem > /sys/power/state)
 
-Regards,
-Arend
+Protect against the NULL pointer derefence by checking if dev_get_drvdata
+returned a valid pointer.
+
+Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+---
+I'm not sure about if this is the correct way to fix this but at least it
+prevents the kernel to hang. From one side I'm not sure why suspend/resume
+functions are called in such case and why the device is not removed from
+the bus, from the other side I saw, that others drivers only unregisters
+from sdio when the driver is removed so I supose this is the normal behavior.
+
+Cheers,
+ Enric
+
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 9b970dc..aa0e7c2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -1274,14 +1274,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ static int brcmf_ops_sdio_resume(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct sdio_func *func = container_of(dev, struct sdio_func, dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
+ 	if (func->num != SDIO_FUNC_2)
+ 		return 0;
+ 
+-	brcmf_sdiod_freezer_off(sdiodev);
++	if (!bus_if)
++		return 0;
++
++	brcmf_sdiod_freezer_off(bus_if->bus_priv.sdio);
+ 	return 0;
+ }
+ 
+@@ -1319,4 +1321,3 @@ void brcmf_sdio_exit(void)
+ 
+ 	sdio_unregister_driver(&brcmf_sdmmc_driver);
+ }
+-
+-- 
+2.9.3
