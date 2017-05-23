@@ -1,90 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35926 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750952AbdEaVcz (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10094 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031016AbdEWPbL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 17:32:55 -0400
-Received: by mail-wm0-f65.google.com with SMTP id k15so6647851wmh.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 14:32:55 -0700 (PDT)
+        Tue, 23 May 2017 11:31:11 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <fa553ad3-773b-966f-c54f-c09617e85b89@broadcom.com>
-References: <20170510211925.17468-1-adrian@freebsd.org> <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
- <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com> <CAJ-Vmom0SpsrTWK8-rdZk3AKW_JGcFLGeQzfVbvX81UBKw=REg@mail.gmail.com>
- <fa553ad3-773b-966f-c54f-c09617e85b89@broadcom.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Wed, 31 May 2017 14:32:53 -0700
-Message-ID: <CAJ-VmonVvMdHo35+Hu-2RhkQWWjqocpQ06-zNDKEULnQ-4EvyA@mail.gmail.com> (sfid-20170531_233259_640499_3D131EA8)
-Subject: Re: [PATCH] ath10k: add configurable debugging.
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [v2,1/5] wil6210: low level RF sector API
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1494848759-3651-2-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1494848759-3651-2-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Lior David <qca_liord@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <d6b67da8fc144432827932025637f632@euamsexm01a.eu.qualcomm.com> (sfid-20170523_173120_805935_4F1666F8)
+Date: Tue, 23 May 2017 17:31:03 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 May 2017 at 14:28, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
-> On 31-05-17 22:23, Adrian Chadd wrote:
->> On 31 May 2017 at 13:20, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
->>> On 31-05-17 14:16, Kalle Valo wrote:
->>>> Adrian Chadd <adrian@freebsd.org> writes:
->>>>
->>>>> This adds a few configurable debugging options:
->>>>>
->>>>> * driver debugging and tracing is now configurable per device
->>>>> * driver debugging and tracing is now configurable at runtime
->>>>> * the debugging / tracing is not run at all (besides a mask check)
->>>>>   unless the specific debugging bitmap field is configured.
->>>>>
->>>>> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
->>>>
->>>> [...]
->>>>
->>>>> --- a/drivers/net/wireless/ath/ath10k/core.c
->>>>> +++ b/drivers/net/wireless/ath/ath10k/core.c
->>>>> @@ -2444,6 +2444,8 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
->>>>>      ar->hw_rev = hw_rev;
->>>>>      ar->hif.ops = hif_ops;
->>>>>      ar->hif.bus = bus;
->>>>> +    ar->debug_mask = ath10k_debug_mask;
->>>>> +    ar->trace_debug_mask = ath10k_debug_mask;
->>>>
->>>> Until now tracing has been always enabled, irrespective what debug_mask
->>>> has contained. Now you are changing that and by default log messages are
->>>> not delivered through tracing until user enables them. So I think to
->>>> keep the old behaviour trace_debug_mask should be ATH10K_DBG_ANY
->>>> (0xffffffff) by default and the user can modify the mask per device via
->>>> the debugfs file.
->>>>
->>>> But is it really needed to be able to filter trace messages? debug_mask
->>>> I understand, but not sure about trace_debug_mask.
->>>
->>> FWIW, in brcmfmac I decided not to filter trace messages. The overhead
->>> is relatively small and if needed you can pass filter expressions with
->>> trace-cmd record.
->>
->> The reason for configuring it via a mask is that:
->>
->> * the previous behaviour is "always call debug(), conditionally print,
->> always pass to trace"
->>
->> This meant that function arguments were evaluated even if things
->> weren't being printed.
->>
->> So to avoid that in the default case, there are now two masks. If I
->> have one mask then I can only trace what is being printed, which is
->> not desired. I'd like to be able to have no overhead when doing no
->> debugging, a little overhead when doing tracing (and only the items
->> being traced), and then printing when I want to print.
->
-> Well, it is up to you. Have to clariy though that if you are not
-> actually recording a trace there is (almost) no overhead. We have
-> Kconfig to compile tracing code in and I see no performance impact with
-> tracing code. Only when doing tracing you will get little overhead.
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+> From: Lior David <qca_liord@qca.qualcomm.com>
+> 
+> Added vendor commands for low level control over
+> RF sectors. It allows user space a fine-grained control
+> over RF characteristics for TX and RX, such as direction
+> and gain of TX/RX. Main usages are debugging and diagnostics,
+> but also operational use cases.
+> API includes getting/setting a specific RF sector
+> configuration, as well as getting/setting the selected
+> sector which is used to communicate with a station.
+> 
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-The tracing mask is only there to avoid calling debug() all the time
-for events that aren't being debugged. That definitely has a cost.
+4 patches applied to ath-next branch of ath.git, thanks.
 
+0216a895946f wil6210: low level RF sector API
+1c3964540425 wil6210: add option to load FTM FW
+646d402d9f8f wil6210: Improve AP stop handling
+d86d47164b22 wil6210: support devices with different PCIe bar size
 
+-- 
+https://patchwork.kernel.org/patch/9726747/
 
--adrian
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
