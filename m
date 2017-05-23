@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38760 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750713AbdELITP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 04:19:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Xie Qirong <cheerx1994@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
-References: <20170512073555.12333-1-cheerx1994@gmail.com>
-Date: Fri, 12 May 2017 11:19:06 +0300
-In-Reply-To: <20170512073555.12333-1-cheerx1994@gmail.com> (Xie Qirong's
-        message of "Fri, 12 May 2017 15:35:55 +0800")
-Message-ID: <87tw4qqyh1.fsf@kamboji.qca.qualcomm.com> (sfid-20170512_101952_841647_28E6ADC8)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38972 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932348AbdEWMnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 May 2017 08:43:02 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-05-23
+Date: Tue, 23 May 2017 14:42:55 +0200
+Message-Id: <20170523124256.23463-1-johannes@sipsolutions.net> (sfid-20170523_144315_662161_0B7A215F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xie Qirong <cheerx1994@gmail.com> writes:
+Hi Dave,
 
-> The combination of init_timer and setting up the data and function field
-> manually is equivalent to calling setup_timer(). This is an api
-> consolidation only and improves readability.
->
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
-> ---
->
->  setup_timer.cocci suggested the following improvement:
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
->  setup_timer function for function on line 384.
->
->  Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
->  CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
->  CONFIG_BRCMDBG=y
->
->  Kernel version: 4.11.0 (localversion-next is next-20170512)
+I have just two fixes here, one of the scheduled scan issue that
+Sander Eikelenboom found, and the other properly makes mesh more
+strictly check its extension headers.
 
-How is this different from the first version?
+Please pull and let me know if there's any problem.
 
-https://patchwork.kernel.org/patch/9709467/
+Thanks,
+johannes
 
-Always add patch version "[PATCH v2]" and a changelog. I added a section
-"Frequent problems" to the wiki to mention about these common problems:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+The following changes since commit 29cee56c0be46ad01e78af104a06223c65ee0c67:
 
--- 
-Kalle Valo
+  Merge tag 'mac80211-for-davem-2017-05-08' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2017-05-08 16:02:23 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-05-23
+
+for you to fetch changes up to 1b57b6210f4e52904393be97c62122aae69bc8aa:
+
+  cfg80211: make cfg80211_sched_scan_results() work from atomic context (2017-05-23 14:36:46 +0200)
+
+----------------------------------------------------------------
+Just two fixes this time:
+ * fix the scheduled scan "BUG: scheduling while atomic"
+ * check mesh address extension flags more strictly
+
+----------------------------------------------------------------
+Arend Van Spriel (1):
+      cfg80211: make cfg80211_sched_scan_results() work from atomic context
+
+Rajkumar Manoharan (1):
+      mac80211: strictly check mesh address extension mode
+
+ net/mac80211/rx.c   |  3 ++-
+ net/wireless/scan.c |  8 ++++----
+ net/wireless/util.c | 10 ++++++----
+ 3 files changed, 12 insertions(+), 9 deletions(-)
