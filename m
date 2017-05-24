@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f49.google.com ([209.85.213.49]:36304 "EHLO
-        mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752592AbdEPT5H (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59016 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1759059AbdEXIZt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 15:57:07 -0400
-Received: by mail-vk0-f49.google.com with SMTP id p85so51153005vkd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 12:57:06 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: mike@hellotwist.com
-In-Reply-To: <1494579146.32348.3.camel@sipsolutions.net>
-References: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
- <20170510122458.GA4796@w1.fi> <CAKXXJEymJXEp70bUMuNCxDAA1CLCOJN4DjnPBkf5oh6Nqn7JQA@mail.gmail.com>
- <1494579146.32348.3.camel@sipsolutions.net>
-From: Michael Skeffington <mike@astro.ai>
-Date: Tue, 16 May 2017 15:57:05 -0400
-Message-ID: <CAKXXJEwTWEeBP3gS6nnAxrhim1XbHGjiWZRmAGnDZdizD=1nzw@mail.gmail.com> (sfid-20170516_215728_378584_E0A55824)
-Subject: Re: [PATCH] mac80211: Validate michael MIC before attempting packet decode.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+        Wed, 24 May 2017 04:25:49 -0400
+Message-ID: <1495614342.24885.69.camel@coelho.fi> (sfid-20170524_102651_479210_8877FAE8)
+From: Luca Coelho <luca@coelho.fi>
+To: sedat.dilek@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Date: Wed, 24 May 2017 11:25:42 +0300
+In-Reply-To: <CA+icZUUO72+epsLDFmXWpRWQV7_vkR0LVyqitoZ1XLEbxr+ATw@mail.gmail.com>
+References: <CA+icZUU3TwPOnABirE+0kT1tjr=fWLXPJFeCprsCSvXmqiiC+A@mail.gmail.com>
+         <1495612648.24885.62.camel@coelho.fi>
+         <CA+icZUUO72+epsLDFmXWpRWQV7_vkR0LVyqitoZ1XLEbxr+ATw@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [Linux-4.9.28] iwlwifi 6230 AGN: Microcode SW error detected
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+On Wed, 2017-05-24 at 10:15 +0200, Sedat Dilek wrote:
+> On Wed, May 24, 2017 at 9:57 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > On Wed, 2017-05-24 at 09:41 +0200, Sedat Dilek wrote:
+> > > Hi,
+> > 
+> > Hi Sedat,
+> > 
+> > 
+> > > I am seeing the below/following in my logs today.
+> > > My AP is a Lenovo Moto-Z with LTE support.
+> > > 
+> > > Can you comment on this?
+> > > Is this a "buggy" firmware and a new firmware around?
+> > 
+> > Looks like a buggy firmware, but unfortunately we don't have a newer
+> > firmware with a fix for this.
+> > 
+> > 
+> > > My kernel-config and full dmesg are attached.
+> > > 
+> > > If you need further informations, please let me know.
+> > > 
+> > > Hope this helps.
+> > > 
+> > > Regards,
+> > > - Sedat -
+> > > 
+> > > P.S.: Excerpts from my dmesg-log.
+> > > 
+> > > [   16.708016] iwlwifi 0000:01:00.0: Detected Intel(R) Centrino(R)
+> > > Advanced-N 6230 AGN, REV=0xB0
+> > 
+> > This is a really old NIC (6+ years old) and unfortunately we can't
+> > provide firmware fixes for it anymore.
+> > 
+> > Hopefully the recovery flow in the driver recovers the connectivity and
+> > everything continues working fine.
+> > 
+> 
+> Thanks for the fast reply.
+> 
+> Intel was(?) a good choice is my conclusion after getting no more
+> replies/fixes for my SandyBridge-GPU from intel-gfx guys.
+> This Samsung Ultrabook is 5 years young.
+> I can understand that fixing a 6 years old NIC is not your prio #1.
+> 
+> As an example, there is no vulkan support for my GPU, so it's time for a change?
+> 
+> No glue if other hardware vendors have better support.
 
-Thank you for that.  I need to make a quick hack to send an invalid
-MIC packet from another device to test the countermeasures.  Should I
-submit a new patch with this change when I've completed testing or are
-you already prepared to do so?
+We still do our best effort to fix driver bugs for these old NICs, but
+unfortunately fixing the FW is a much more complicated issue and there's
+nothing we can do. :(
 
-Michael
+Regarding the GPU stuff, I really can't comment, since I don't know much
+about it.
 
-On Fri, May 12, 2017 at 4:52 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Here's the driver code from rt2500usb (but it's similar in the others):
->
->                 rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
->                 if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
->                         rxdesc->flags |= RX_FLAG_DECRYPTED;
->                 else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
->                         rxdesc->flags |= RX_FLAG_MMIC_ERROR;
->
-> I think if you just change it to be
->
-> [...]
->                 else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
->                         rxdesc->flags |= RX_FLAG_MMIC_ERROR |
->                                          RX_FLAG_DECRYPTED;
->
-> things will start working. This is arguably correct since to be able to
-> check the MMIC, the frame has to have been decrypted (properly) before.
->
-> johannes
+--
+Cheers,
+Luca.
