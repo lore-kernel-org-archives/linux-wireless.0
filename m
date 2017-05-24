@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55168 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752269AbdEPJXd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:58998 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965442AbdEXH5c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 05:23:33 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH 0/7] extend mac80211 mesh DFS and CSA functionality
-Date: Tue, 16 May 2017 11:23:09 +0200
-Message-Id: <20170516092316.15636-1-sw@simonwunderlich.de> (sfid-20170516_112815_628375_A14C32EF)
+        Wed, 24 May 2017 03:57:32 -0400
+Message-ID: <1495612648.24885.62.camel@coelho.fi> (sfid-20170524_095811_709208_A6C130D5)
+From: Luca Coelho <luca@coelho.fi>
+To: sedat.dilek@gmail.com, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Date: Wed, 24 May 2017 10:57:28 +0300
+In-Reply-To: <CA+icZUU3TwPOnABirE+0kT1tjr=fWLXPJFeCprsCSvXmqiiC+A@mail.gmail.com>
+References: <CA+icZUU3TwPOnABirE+0kT1tjr=fWLXPJFeCprsCSvXmqiiC+A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [Linux-4.9.28] iwlwifi 6230 AGN: Microcode SW error detected
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds DFS and CSA functionality:
+On Wed, 2017-05-24 at 09:41 +0200, Sedat Dilek wrote:
+> Hi,
 
- * Mesh CSA is handled similary to IBSS, that means CSA will mark
-   channels as unusable, and require userspace to handle actual
-   radar signals
- * Add VHT processing for CSA in mesh mode, and some small cleanups
+Hi Sedat,
 
-We have been working on this feature set for quite some time internally,
-and I believe it is time to propose it for inclusion. I'll handle
-any change requests to this patchset. :)
 
+> I am seeing the below/following in my logs today.
+> My AP is a Lenovo Moto-Z with LTE support.
+> 
+> Can you comment on this?
+> Is this a "buggy" firmware and a new firmware around?
+
+Looks like a buggy firmware, but unfortunately we don't have a newer
+firmware with a fix for this.
+
+
+> My kernel-config and full dmesg are attached.
+> 
+> If you need further informations, please let me know.
+> 
+> Hope this helps.
+> 
+> Regards,
+> - Sedat -
+> 
+> P.S.: Excerpts from my dmesg-log.
+> 
+> [   16.708016] iwlwifi 0000:01:00.0: Detected Intel(R) Centrino(R)
+> Advanced-N 6230 AGN, REV=0xB0
+
+This is a really old NIC (6+ years old) and unfortunately we can't
+provide firmware fixes for it anymore.
+
+Hopefully the recovery flow in the driver recovers the connectivity and
+everything continues working fine.
+
+
+--
 Cheers,
-     Simon
-
-Benjamin Berg (4):
-  mac80211: Mark channel as unusable if a regulatory MESH CSA is
-    received
-  wireless: Only join DFS channels in mesh mode if userspace flags
-    support
-  wireless: Require HANDLE_DFS flag to switch channel for non-AP mode
-  mac80211: Allow following CSA to DFS channels if userspace handles it
-
-Simon Wunderlich (3):
-  mac80211: add wide bandwidth channel switch announcement to CSA action
-    frames and mesh beacons
-  mac80211: enable VHT for mesh channel processing
-  mac80211: mark as action frame when parsing IEs of CSA action frames
-
- include/net/cfg80211.h     |  4 +++
- net/mac80211/cfg.c         |  1 +
- net/mac80211/ieee80211_i.h |  5 +++
- net/mac80211/mesh.c        | 89 ++++++++++++++++++++++++++++++++++++++++++----
- net/mac80211/spectmgmt.c   |  5 +++
- net/mac80211/util.c        | 40 +++++++++++++++++++++
- net/wireless/mesh.c        |  8 +++++
- net/wireless/nl80211.c     | 17 ++++++++-
- 8 files changed, 161 insertions(+), 8 deletions(-)
-
--- 
-2.11.0
+Luca.
