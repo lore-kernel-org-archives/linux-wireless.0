@@ -1,108 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:39497 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbdEEOQE (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38239 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1031593AbdEXWnu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 10:16:04 -0400
-From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Sebastian Reichel <sre@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Subject: [PATCHv4] wlcore: add wl1285 compatible
-Date: Fri,  5 May 2017 16:15:53 +0200
-Message-Id: <20170505141553.2605-1-sebastian.reichel@collabora.co.uk> (sfid-20170505_161659_608546_CD8B5C1F)
+        Wed, 24 May 2017 18:43:50 -0400
+Date: Thu, 25 May 2017 08:43:46 +1000
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: WPA and WPA2
+Message-ID: <20170524224346.GD2319@eros> (sfid-20170525_004354_631141_07E1FC0B)
+References: <20170524072750.GI8158@eros>
+ <20170524073459.GJ8158@eros>
+ <1495644240.12939.3.camel@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495644240.12939.3.camel@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Motorola Droid 4 uses a WL1285C. With differences between the
-chips not being public let's add explicit binding for wl1285
-instead of relying on wl1283 being very similar.
+On Wed, May 24, 2017 at 11:44:00AM -0500, Dan Williams wrote:
+> On Wed, 2017-05-24 at 17:34 +1000, Tobin C. Harding wrote:
+> > On Wed, May 24, 2017 at 05:27:50PM +1000, Tobin C. Harding wrote:
+> > > Hi,
+> > > 
+> > > I am attempting to rewrite the ks7010 WEXT driver
+> > > (drivers/staging/ks7010)
+> > > to use the CFG80211 API.
+> > > 
+> > > I am reading 802.11 Wireless Networks - Matthew S. Gast for
+> > > reference.
+> > > 
+> > > I have some confusion regarding WEP/WPA/WPA2/RSN, ciphers, keys and
+> > > ie's?
+> > > 
+> > > As I understand, first there was WEP. Next we got a marketing term
+> > > WPA
+> > > which referred to 802.11i (which specified the protocols TKIP and
+> > > CCMP, and also RSN).
+> > > 
+> > > WEP vs WPA
+> > > ----------
+> > > 
+> > > To add to my confusion the ks7010 code seemingly mixes up the use
+> > > of
+> > > WEP keys and WPA keys, to set both the WEP and the WPA keys the
+> > > driver
+> > > uses the same MIB requests? Yet throughout the code WEP keys and
+> > > WPA
+> > > keys are stored in separate structures (and treated differently).
+> > 
+> > Oh, I just got why there is only one MIB request type - there are
+> > only
+> > one set of keys used by the target
+> > 
+> > 	DOT11_WEP_DEFAULT_KEY_VALUE1	= 0x13020101,
+> > 	DOT11_WEP_DEFAULT_KEY_VALUE2	= 0x13020102,
+> > 	DOT11_WEP_DEFAULT_KEY_VALUE3	= 0x13020103,
+> > 	DOT11_WEP_DEFAULT_KEY_VALUE4	= 0x13020104,
+> > 
+> > removing 'WEP' from the defines removes the confusion here :)
+> 
+> I could be entirely wrong, but it looks like the driver really just
+> defines 4 "keys" which can be used for anything.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-Acked-by: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
----
-Hi Dave,
+Thank you very much for taking the time to look at the driver, I
+really appreciate it.
 
-I previously send this in two patches, but its hard to apply without
-requiring multiple kernel releases (the driver must be updated before
-the DTS change). Since the actual change is not very complex Marcel
-Holtmann & Tony Lindgren suggested, that I send this directly to you
-in a single patch for inclusion into 4.12. This also means, that the
-remaining series can be queued normally for 4.13.
+> For WEP, they are the 4 WEP key indexes.
+> 
+> For RSN, they are 1 = PMK, 2 = GMK, 3 = GMK2, 4 seems unused.
+> 
+> Because WEXT is pretty convoluted, I woudn't necessarily try to
+> translate what eg ks_wlan_set_encode_ext() is doing directly to
+> cfg80211, but to understand how the firmware interface works and then
+> just write the cfg80211 code to the firmware interface.
 
-Changes since PATCHv3:
- - add netdev@vger.kernel.org to cc
- - add Acked-By from Tony & Kalle
-Changes since PATCHv2:
- - merge patch for DTS and driver
- - add Acked-By from Rob
-Changes since PATCHv1:
- - patches did not exist in patchv1
+That's a good idea.
 
--- Sebastian
----
- Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt | 1 +
- arch/arm/boot/dts/omap4-droid4-xt894.dts                     | 2 +-
- drivers/net/wireless/ti/wlcore/sdio.c                        | 1 +
- drivers/net/wireless/ti/wlcore/spi.c                         | 1 +
- 4 files changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-index 2a3d90de18ee..7b2cbb14113e 100644
---- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-@@ -10,6 +10,7 @@ Required properties:
-     * "ti,wl1273"
-     * "ti,wl1281"
-     * "ti,wl1283"
-+    * "ti,wl1285"
-     * "ti,wl1801"
-     * "ti,wl1805"
-     * "ti,wl1807"
-diff --git a/arch/arm/boot/dts/omap4-droid4-xt894.dts b/arch/arm/boot/dts/omap4-droid4-xt894.dts
-index 89eb607f4a9e..c09b51d6ccf7 100644
---- a/arch/arm/boot/dts/omap4-droid4-xt894.dts
-+++ b/arch/arm/boot/dts/omap4-droid4-xt894.dts
-@@ -301,7 +301,7 @@
- 	#address-cells = <1>;
- 	#size-cells = <0>;
- 	wlcore: wlcore@2 {
--		compatible = "ti,wl1283";
-+		compatible = "ti,wl1285";
- 		reg = <2>;
- 		interrupt-parent = <&gpio4>;
- 		interrupts = <4 IRQ_TYPE_LEVEL_HIGH>; /* gpio100 */
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 287023ef4a78..2fb38717346f 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -237,6 +237,7 @@ static const struct of_device_id wlcore_sdio_of_match_table[] = {
- 	{ .compatible = "ti,wl1273", .data = &wl127x_data },
- 	{ .compatible = "ti,wl1281", .data = &wl128x_data },
- 	{ .compatible = "ti,wl1283", .data = &wl128x_data },
-+	{ .compatible = "ti,wl1285", .data = &wl128x_data },
- 	{ .compatible = "ti,wl1801", .data = &wl18xx_data },
- 	{ .compatible = "ti,wl1805", .data = &wl18xx_data },
- 	{ .compatible = "ti,wl1807", .data = &wl18xx_data },
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index f949ad2bd898..1f5d9ebb0925 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -433,6 +433,7 @@ static const struct of_device_id wlcore_spi_of_match_table[] = {
- 	{ .compatible = "ti,wl1273", .data = &wl127x_data},
- 	{ .compatible = "ti,wl1281", .data = &wl128x_data},
- 	{ .compatible = "ti,wl1283", .data = &wl128x_data},
-+	{ .compatible = "ti,wl1285", .data = &wl128x_data},
- 	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
--- 
-2.11.0
+thanks,
+Tobin.
