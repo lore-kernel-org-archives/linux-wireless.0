@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41220 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752083AbdEQOT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 10:19:57 -0400
-Message-ID: <1495030794.2442.21.camel@sipsolutions.net> (sfid-20170517_162011_655063_1E3D63C9)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 17 May 2017 16:19:54 +0200
-In-Reply-To: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-by2nam01on0041.outbound.protection.outlook.com ([104.47.34.41]:61632
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1763947AbdEXLIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 07:08:24 -0400
+Date: Wed, 24 May 2017 14:08:11 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna
+ chipsets
+Message-ID: <20170524110810.lbnb7nbarl46t52g@bars> (sfid-20170524_130955_691970_965C693B)
+References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+ <1495026753.2442.7.camel@sipsolutions.net>
+ <20170518200810.pch7tivugqyjmy4d@bars>
+ <1495189094.3274.2.camel@sipsolutions.net>
+ <20170521170814.d7ljne2pgopymxud@bars>
+ <1495434501.2653.7.camel@sipsolutions.net>
+ <20170522210445.bj3zlyc4stjmojf5@bars>
+ <1495609897.2665.4.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495609897.2665.4.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> > IIRC the idea was to use 'send_probe_response' for now and then to
+> > implement the use of NL80211_RXMGMT_FLAG_ANSWERED flag in hostapd, at
+> > least for probe requests for the start. But it definitely doesn't
+> > make sense if you plan to get rid of this flag in the long run.
+> 
+> No no! I'm not saying let's get rid of it if you need it - I was saying
+> we could get rid of it since it doesn't appear to be used. I think this
+> is fine for your case, in fact you should probably already set it and
+> then go and teach hostapd about it.
 
-I think this looks really good. One thing though:
+Good. Then I will move forward and attempt to teach hostapd about it.
 
-> Another change is the
-> addition of the flag ATTR_WANT_1X_4WAY_HS that user-space has to pass
-> in CONNECT request. Some drivers may need to be aware before the PMK
-> is programmed through SET_PMK request.
-
-I wonder how we really should do this, and if this is good enough.
-
-There might be drivers that simply don't support the non-offloaded
-case, so they assume you always have the newer wpa_s. That would seem
-to be a legitimate decision, since the compatibility with that might
-not make much sense for a completely new driver, and it might be a lot
-of work to support TK operations.
-
-We should therefore probably set the expectation that wpa_s - if it's
-new enough - always uses the offloaded functionality and always sets
-the WANT_1X. Then this is even better with such drivers, since they can
-immediately reject the connect() command if want_1x isn't set.
-
-Thoughts?
-
-johannes
+Regards,
+Sergey
