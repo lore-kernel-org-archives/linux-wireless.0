@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61722 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752597AbdEIMV7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42888 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1035560AbdEXNm6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 08:21:59 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net: wireless: ath: ath9k: remove unnecessary code
-Date: Tue, 9 May 2017 12:21:54 +0000
-Message-ID: <87shkez0da.fsf@kamboji.qca.qualcomm.com> (sfid-20170509_142234_890138_359A6E6B)
-References: <20170509034814.GA18034@embeddedgus>
-        <87efvy1d07.fsf@kamboji.qca.qualcomm.com>
-        <20170509070158.Horde.dYleVB-aK1cNNyQpdVsVMNp@gator4166.hostgator.com>
-In-Reply-To: <20170509070158.Horde.dYleVB-aK1cNNyQpdVsVMNp@gator4166.hostgator.com>
-        (Gustavo A. R. Silva's message of "Tue, 9 May 2017 07:01:58 -0500")
-Content-Type: text/plain; charset="iso-8859-1"
+        Wed, 24 May 2017 09:42:58 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: wlcore: fix 64K page support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170511115307.3060650-1-arnd@arndb.de>
+References: <20170511115307.3060650-1-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org,
+        "Reizer, Eyal" <eyalr@ti.com>, Tony Lindgren <tony@atomide.com>,
+        Wei Yongjun <weiyj.lk@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20170524134257.AB8C361155@smtp.codeaurora.org> (sfid-20170524_154340_366185_33656DB2)
+Date: Wed, 24 May 2017 13:42:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
+Arnd Bergmann <arnd@arndb.de> wrote:
+> In the stable linux-3.16 branch, I ran into a warning in the
+> wlcore driver:
+> 
+> drivers/net/wireless/ti/wlcore/spi.c: In function 'wl12xx_spi_raw_write':
+> drivers/net/wireless/ti/wlcore/spi.c:315:1: error: the frame size of 12848 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
+> 
+> Newer kernels no longer show the warning, but the bug is still there,
+> as the allocation is based on the CPU page size rather than the
+> actual capabilities of the hardware.
+> 
+> This replaces the PAGE_SIZE macro with the SZ_4K macro, i.e. 4096 bytes
+> per buffer.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-> Hi Kalle,
->
-> Quoting Kalle Valo <kvalo@qca.qualcomm.com>:
->
->> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
->>
->>> The name of an array used by itself will always return the array's addr=
-ess.
->>> So this test will always evaluate as true.
->>>
->>> Addresses-Coverity-ID: 1364903
->>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
->>> ---
->>>  drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c
->>> b/drivers/net/wireless/ath/ath9k/eeprom.c
->>> index fb80ec8..5c3bc28 100644
->>> --- a/drivers/net/wireless/ath/ath9k/eeprom.c
->>> +++ b/drivers/net/wireless/ath/ath9k/eeprom.c
->>> @@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32
->>> off, u16 *data)
->>>
->>>  	if (ah->eeprom_blob)
->>>  		ret =3D ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
->>> -	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
->>> +	else if (pdata && !pdata->use_eeprom)
->>>  		ret =3D ath9k_hw_nvram_read_pdata(pdata, off, data);
->>>  	else
->>>  		ret =3D common->bus_ops->eeprom_read(common, off, data);
->>
->> The patch may very well be valid (didn't check yet) but the commit log
->> is gibberish for me.
->>
->
-> Let me correct that and I'll send the patch again.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Thanks.
+4a4274bf2dbb wlcore: fix 64K page support
 
-Also no need to have that long "net: wireless: ath:" prefix, "ath9k: "
-or "ath10k: " is enough.
+-- 
+https://patchwork.kernel.org/patch/9721269/
 
---=20
-Kalle Valo=
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
