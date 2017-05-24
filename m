@@ -1,79 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0189.hostedemail.com ([216.40.44.189]:40654 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751555AbdEJEdY (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52673 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1031593AbdEXWkS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 00:33:24 -0400
-Message-ID: <1494390797.4564.5.camel@perches.com> (sfid-20170510_063419_652299_30F65FBD)
-Subject: Re: [PATCH] libertas: Avoid reading past end of buffer
-From: Joe Perches <joe@perches.com>
-To: Kees Cook <keescook@chromium.org>, netdev@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>
-Date: Tue, 09 May 2017 21:33:17 -0700
-In-Reply-To: <20170509232334.GA55070@beast>
-References: <20170509232334.GA55070@beast>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Wed, 24 May 2017 18:40:18 -0400
+Date: Thu, 25 May 2017 08:40:14 +1000
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: WPA and WPA2
+Message-ID: <20170524224014.GC2319@eros> (sfid-20170525_004022_592800_3A18AC91)
+References: <20170524072750.GI8158@eros>
+ <20170524073459.GJ8158@eros>
+ <1495644240.12939.3.camel@redhat.com>
+ <1495649200.20833.1.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495649200.20833.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-05-09 at 16:23 -0700, Kees Cook wrote:
-> Using memcpy() from a string that is shorter than the length copied means
-> the destination buffer is being filled with arbitrary data from the kernel
-> rodata segment. Instead, use strncpy() which will fill the trailing bytes
-> with zeros. Additionally adjust indentation to keep checkpatch.pl happy.
+On Wed, May 24, 2017 at 08:06:40PM +0200, Johannes Berg wrote:
+> Just a small correction:
 > 
-> This was found with the future CONFIG_FORTIFY_SOURCE feature.
-[]
-> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-[]
-> @@ -1177,9 +1177,9 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
->  	switch (stringset) {
->  	case ETH_SS_STATS:
->  		for (i = 0; i < MESH_STATS_NUM; i++) {
-> -			memcpy(s + i * ETH_GSTRING_LEN,
-> -					mesh_stat_strings[i],
-> -					ETH_GSTRING_LEN);
-> +			strncpy(s + i * ETH_GSTRING_LEN,
-> +				mesh_stat_strings[i],
-> +				ETH_GSTRING_LEN);
->  		}
+> On Wed, 2017-05-24 at 11:44 -0500, Dan Williams wrote:
+> > 
+> > For RSN, they are 1 = PMK, 2 = GMK, 3 = GMK2, 4 seems unused.
+> 
+> PTK and GTK, and in theory you could have more than two GTKs but that's
+> not usually done.
 
-The better solution is to declare
-mesh_stat_strings in in the normal way
+Excuse my ignorance but why do you say PTK and GTK here? Who generates
+the transient keys, hardware, firmware or software? Is this device
+specific or is there a *normal* way?
 
----
- drivers/net/wireless/marvell/libertas/mesh.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+>From the nomenclature in the WEXT driver I thought the driver supplied the
+master keys to the firmware and transient keys were generated at the
+firmware layer or lower.
 
-diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-index d0c881dd5846..a535e7f48d2d 100644
---- a/drivers/net/wireless/marvell/libertas/mesh.c
-+++ b/drivers/net/wireless/marvell/libertas/mesh.c
-@@ -1108,15 +1108,15 @@ void lbs_mesh_set_txpd(struct lbs_private *priv,
-  * Ethtool related
-  */
- 
--static const char * const mesh_stat_strings[] = {
--			"drop_duplicate_bcast",
--			"drop_ttl_zero",
--			"drop_no_fwd_route",
--			"drop_no_buffers",
--			"fwded_unicast_cnt",
--			"fwded_bcast_cnt",
--			"drop_blind_table",
--			"tx_failed_cnt"
-+static const char mesh_stat_strings[][ETH_GSTRING_LEN] = {
-+	"drop_duplicate_bcast",
-+	"drop_ttl_zero",
-+	"drop_no_fwd_route",
-+	"drop_no_buffers",
-+	"fwded_unicast_cnt",
-+	"fwded_bcast_cnt",
-+	"drop_blind_table",
-+	"tx_failed_cnt",
- };
- 
- void lbs_mesh_ethtool_get_stats(struct net_device *dev,
+thanks,
+Tobin.
