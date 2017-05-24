@@ -1,71 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:46147 "EHLO
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38449 "EHLO
         out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S941893AbdEYFLj (ORCPT
+        by vger.kernel.org with ESMTP id S1757877AbdEXHfD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 01:11:39 -0400
-Date: Thu, 25 May 2017 15:11:35 +1000
+        Wed, 24 May 2017 03:35:03 -0400
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailout.nyi.internal (Postfix) with ESMTP id E526B20B0A
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:35:02 -0400 (EDT)
+Received: from localhost (124-169-117-216.dyn.iinet.net.au [124.169.117.216])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 330AF2478C
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:35:01 -0400 (EDT)
+Date: Wed, 24 May 2017 17:34:59 +1000
 From: "Tobin C. Harding" <me@tobin.cc>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
-Subject: drivers/staging/ks7010 hardware test
-Message-ID: <20170525051135.GA18753@eros> (sfid-20170525_071144_337171_06F6AFE5)
+To: linux-wireless@vger.kernel.org
+Subject: Re: WPA and WPA2
+Message-ID: <20170524073459.GJ8158@eros> (sfid-20170524_093516_255266_45BAFBC3)
+References: <20170524072750.GI8158@eros>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="3V7upXqbjpZ4EhLz"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170524072750.GI8158@eros>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 24, 2017 at 05:27:50PM +1000, Tobin C. Harding wrote:
+> Hi,
+> 
+> I am attempting to rewrite the ks7010 WEXT driver (drivers/staging/ks7010)
+> to use the CFG80211 API.
+> 
+> I am reading 802.11 Wireless Networks - Matthew S. Gast for reference.
+> 
+> I have some confusion regarding WEP/WPA/WPA2/RSN, ciphers, keys and
+> ie's?
+> 
+> As I understand, first there was WEP. Next we got a marketing term WPA
+> which referred to 802.11i (which specified the protocols TKIP and
+> CCMP, and also RSN).
+> 
+> WEP vs WPA
+> ----------
+> 
+> To add to my confusion the ks7010 code seemingly mixes up the use of
+> WEP keys and WPA keys, to set both the WEP and the WPA keys the driver
+> uses the same MIB requests? Yet throughout the code WEP keys and WPA
+> keys are stored in separate structures (and treated differently).
 
---3V7upXqbjpZ4EhLz
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Oh, I just got why there is only one MIB request type - there are only
+one set of keys used by the target
 
-Hi Wolfram,
+	DOT11_WEP_DEFAULT_KEY_VALUE1	= 0x13020101,
+	DOT11_WEP_DEFAULT_KEY_VALUE2	= 0x13020102,
+	DOT11_WEP_DEFAULT_KEY_VALUE3	= 0x13020103,
+	DOT11_WEP_DEFAULT_KEY_VALUE4	= 0x13020104,
 
-I began testing the card you sent today. I'm getting a firmware load
-error like you mentioned.
+removing 'WEP' from the defines removes the confusion here :)
 
-I checked out code from when you originally merged into staging,
-however I built the module in a 4.9 kernel.
-
-To help me track down the issue could you please tell me what testing
-you managed to do successfully in the past, and if you can,
-approximately the date you were doing the tests or the git commit of
-the code you tested.
-
-Thanks. Oh, also could you please indicate your level of interest my
-continued efforts. I don't want to send you copious emails if you
-would rather me not.
-
-For anyone on the lists reading this, the hardware is
-
-Spectec SDW-823 microSD (SDIO) Wi-Fi card
-
-The error code is -EILSEQ (Illegal byte sequence). It is returned by
-sdio_memcpy_fromio(). I do not know what it signifies?
-
-thanks,
-Tobin.
-
---3V7upXqbjpZ4EhLz
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCgAGBQJZJmd8AAoJEEC/nkwmnWYHZXkP/jnjwSabxF6U0u8vXEv27LZH
-apdD2AWz4y682Ki7OERtaSZS0xz7K4v0EF7NnvrwowZ8tfGpM3gpwM30Nt10wh7m
-9wLQs05tQjlTQdjI1pmcOTulSZH2c4/YjInoxIe0wxD7yGlxi8YLwQ+ZNzjPk6te
-/kH2FBpfnRGxjcQXAv3P2mJgdTx/aZ7GdzmTK32N0iwIHdvj5qfwnzCy3kGxJaPY
-1LawWcoaNjbQ+mfZM30ORH5Z7l2IMKBAbhbZTWMWdonfxk1ESOIjUJT0PEbQyBm/
-jmN9jeo3ltubcUsXsNDMllHguR5YNNEH/pi1jN8dW7yqQQSQhgvK0vgEejdYK1Tp
-UFu20Jy7VYHQJxM+ZR83F6hQOaGwmXQwaD/dq1flLrBS7zPSXWAm/n9cFOrAKkmu
-CMBaH7I1rwEoXrRnw4xR8IJQAeWhtKafHn1GlJGEUTaAID0wQoicF/EuCjqxjd1e
-945HAzBbIS2o90ceB9lRVLOycdkPHBpjBo/H4mKC4RLszLZL3pkEqPCYWGcN/88z
-AnvJuftvD99CYGVbreiDHiE563UjxdMEZm0KDQyGncicvWtiOjZDAXQ2GKDYNmq2
-DQXXoEtRbqOeLMU6kg4H9GK7p5NEnWS7YI9jZMYVjDcP8m1aNye7DjePDjWPZYXO
-psgwAe/ZMMynqWgry/Q8
-=S+2K
------END PGP SIGNATURE-----
-
---3V7upXqbjpZ4EhLz--
+> If WPA is enabled are not WEP keys superfluous?
+> 
+> WPA vs WPA2
+> -----------
+> 
+> Were WPA version 1 and WPA version 2 marketing terms or do they differ?
+> 
+> ieee80211.h does not seem to mention WPA2 (and cfg80211.h mentions it
+> once only in some comments) however, from cfg80211.h;
+> 
+>  * struct cfg80211_crypto_settings - Crypto settings
+>  * @wpa_versions: indicates which, if any, WPA versions are enabled
+>  *	(from enum nl80211_wpa_versions)
+> 
+> When using the CFG80211 API we do not need to worry about the WPA/WPA2
+> distinction? Can I drop all the WPA version 1 code from the driver?
+> 
+> A little more information:
+> 
+> The WEXT driver defines ciphers, from looking at ieee80211.h it seems
+> that it uses WLAN_CIPHER_SUITE_XXX for WPA2 and for WPA it uses
+> 
+> #define CIPHER_ID_WPA_NONE    "\x00\x50\xf2\x00"
+> #define CIPHER_ID_WPA_WEP40   "\x00\x50\xf2\x01"
+> #define CIPHER_ID_WPA_TKIP    "\x00\x50\xf2\x02"
+> #define CIPHER_ID_WPA_CCMP    "\x00\x50\xf2\x04"
+> #define CIPHER_ID_WPA_WEP104  "\x00\x50\xf2\x05"
+> 
+> FYI ieee80211.h has
+> 
+> #define WLAN_OUI_MICROSOFT	       0x0050f2
+> 
+> Thanks for taking the time to read this mail, any suggestions most
+> appreciated.
+> 
+> thanks,
+> Tobin.
