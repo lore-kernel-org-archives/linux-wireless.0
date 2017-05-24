@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f174.google.com ([209.85.217.174]:33352 "EHLO
-        mail-ua0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751947AbdEISQc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48152 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763160AbdEXIq4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 14:16:32 -0400
-Received: by mail-ua0-f174.google.com with SMTP id e28so9651367uah.0
-        for <linux-wireless@vger.kernel.org>; Tue, 09 May 2017 11:16:32 -0700 (PDT)
+        Wed, 24 May 2017 04:46:56 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Reply-To: mike@hellotwist.com
-From: Michael Skeffington <mike@astro.ai>
-Date: Tue, 9 May 2017 14:16:31 -0400
-Message-ID: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com> (sfid-20170509_201636_052277_C75F492F)
-Subject: [PATCH] mac80211: Validate michael MIC before attempting packet decode.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: rtlwifi: fix REG_USTIME_TSF register definition
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170519150240.GA47825@ns.kevlo.org>
+References: <20170519150240.GA47825@ns.kevlo.org>
+To: Kevin Lo <kevlo@kevlo.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Message-Id: <20170524084655.F2EDA607DE@smtp.codeaurora.org> (sfid-20170524_104708_127602_3F4A4ADC)
+Date: Wed, 24 May 2017 08:46:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to allow wpa_supplicant to correctly identify a perceived WPA TKIP key
-recovery attack the michael MIC must be checked before the packet decode is
-attempted.  A packet with an invalid MIC will always fail a decrypt check which
-previously was being checked first.  Therefore the MIC failure bit of
-status flags
-describing the error would remain unset.
+Kevin Lo <kevlo@kevlo.org> wrote:
+> The REG_USTIME_TSF (US Time Tuning for TSF) definition of Realtek chips
+> should be 0x55C.
+> 
+> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
 
-Signed-off-by: Michael Skeffington <mike@hellotwist.com>
+Larry, is this ok to take?
 
----
+-- 
+https://patchwork.kernel.org/patch/9737421/
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index bc08185..71f1a56 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3176,9 +3176,10 @@ static void ieee80211_rx_handlers(struct
-ieee80211_rx_data *rx,
-                CALL_RXH(ieee80211_rx_h_check_more_data)
-                CALL_RXH(ieee80211_rx_h_uapsd_and_pspoll)
-                CALL_RXH(ieee80211_rx_h_sta_process)
-+               /* must be before decrypt so MIC failures are reported
-to netlink */
-+               CALL_RXH(ieee80211_rx_h_michael_mic_verify)
-                CALL_RXH(ieee80211_rx_h_decrypt)
-                CALL_RXH(ieee80211_rx_h_defragment)
--               CALL_RXH(ieee80211_rx_h_michael_mic_verify)
-                /* must be after MMIC verify so header is counted in MPDU mic */
- #ifdef CONFIG_MAC80211_MESH
-                if (ieee80211_vif_is_mesh(&rx->sdata->vif))
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
