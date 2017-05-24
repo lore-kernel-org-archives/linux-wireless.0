@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34250 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966237AbdEWHWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 May 2017 03:22:36 -0400
-Message-ID: <1495524153.2464.2.camel@sipsolutions.net> (sfid-20170523_092254_882502_A847A7B6)
-Subject: Re: 4.12-RC2 BUG: scheduling while atomic: irq/47-iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Sander Eikelenboom <linux@eikelenboom.it>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org
-Date: Tue, 23 May 2017 09:22:33 +0200
-In-Reply-To: <09ddb018-7093-2e2a-c84b-148889f7f06d@broadcom.com> (sfid-20170523_091928_491554_FD588B32)
-References: <a54f3f4f-2365-2154-ad18-82e4cd572aac@eikelenboom.it>
-         <1495450628.2653.14.camel@sipsolutions.net>
-         <764a929c-ce8a-c859-a49e-2f20cb05ae44@broadcom.com>
-         <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com>
-         <1495487095.26008.7.camel@sipsolutions.net>
-         <09ddb018-7093-2e2a-c84b-148889f7f06d@broadcom.com>
-         (sfid-20170523_091928_491554_FD588B32)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:58394 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933175AbdEXIgt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 04:36:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: Re: [PATCH v4 1/5] mwifiex: use variable interface header length
+References: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
+Date: Wed, 24 May 2017 11:36:26 +0300
+In-Reply-To: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
+        (Xinming Hu's message of "Tue, 23 May 2017 07:12:30 +0000")
+Message-ID: <8737buslbp.fsf@kamboji.qca.qualcomm.com> (sfid-20170524_103847_086424_60F1BC1E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-05-23 at 09:19 +0200, Arend Van Spriel wrote:
-> 
-> > 	WARN_ON_ONCE(!rcu_read_lock_held() && !lockdep_rtnl_is_held());
-> 
-> Thought about something like this after sending the email. So there
-> are two call sites. One for scheduled scan results notification and
-> one in scheduled scan stop scenario. So for the latter it is not
-> needed to use the rcu_read_lock() as it should have RTNL lock hence
-> the two checks above?
+Xinming Hu <huxinming820@gmail.com> writes:
 
-Right. The latter can't even really use rcu_read_lock() since it also
-wants to modify the list, and that's not sufficient protection for
-modifying.
+> From: Xinming Hu <huxm@marvell.com>
+>
+> Usb tx aggregation feature will utilize 4-bytes bus interface header,
+> otherwise it will be set to zero in default case.
+>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> ---
+> Drop 5/6 patch in v3
+> v4: same as v1,v2,v3
 
-Thanks!
+BTW, I would prefer that you don't use my qualcomm.com address when
+submitting patches. Using codeaurora.org or not CCing me at all (as I
+take all patches from patchwork anyway) is much better for me.
 
-johannes
+-- 
+Kalle Valo
