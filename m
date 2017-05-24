@@ -1,31 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56912 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752694AbdEZK5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 06:57:54 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH resend 0/1] brcmfmac: p2p and normal ap access are not always possible at the same time
-Date: Fri, 26 May 2017 12:57:46 +0200
-Message-Id: <20170526105747.16874-1-hdegoede@redhat.com> (sfid-20170526_125809_454141_84636141)
+Received: from smtp.codeaurora.org ([198.145.29.96]:44196 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759865AbdEXNnw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 09:43:52 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] iwlegacy: warn when enabling power save
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1494840506-16485-1-git-send-email-sgruszka@redhat.com>
+References: <1494840506-16485-1-git-send-email-sgruszka@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Message-Id: <20170524134352.1A49B61272@smtp.codeaurora.org> (sfid-20170524_154408_477322_E6030F04)
+Date: Wed, 24 May 2017 13:43:51 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> iwlegacy firmware can crash when power save is configured. PS was
+> allowed in "dbdac2b iwlegacy: properly enable power saving" with belive
+> that user who enable PS is aware of that and can relate firmware crahes
+> with PS. However some distributions seems to enable PS without user
+> intervention, so warn about that.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-This is a resend of a patch which I send a while ago, back then there
-was some discussion to come up with a better fix, but that has not lead
-to anything and the driver is still periodically spamming the logs.
+Patch applied to wireless-drivers-next.git, thanks.
 
-As such I would like to move forward with this patch for now, which
-makes no functional changes other then changing the messages in question
-into debug messages when the error is -EBUSY.
+438f3d13da5e iwlegacy: warn when enabling power save
 
-Regards,
+-- 
+https://patchwork.kernel.org/patch/9726579/
 
-Hans
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
