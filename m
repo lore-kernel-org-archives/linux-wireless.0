@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43660 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750746AbdE0Vt6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 May 2017 17:49:58 -0400
-Subject: Re: [PATCH] Per chain RSSI reporting
-To: Norik Dzhandzhapanyan <norikd@ethertronics.com>,
-        Adrian Chadd <adrian@freebsd.org>
-References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
- <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
- <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
- <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
- <8e314337-a1f0-5ed4-aa90-3f1a0e2d09fc@ethertronics.com>
- <50e245a7-60ad-39f1-920e-e8edf5d9a5ab@candelatech.com>
- <SN1PR08MB13736CC61B1D00ED2968CF5CB0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <82088c50-f800-9d5c-8ccf-879f4b425e66@candelatech.com> (sfid-20170527_235001_694933_9B1685BD)
-Date: Sat, 27 May 2017 14:49:56 -0700
-MIME-Version: 1.0
-In-Reply-To: <SN1PR08MB13736CC61B1D00ED2968CF5CB0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:51608 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1761153AbdEXKrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 06:47:25 -0400
+Message-ID: <1495622843.2665.11.camel@sipsolutions.net> (sfid-20170524_124952_880917_A096E05C)
+Subject: Re: WPA and WPA2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Tobin C. Harding" <me@tobin.cc>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 24 May 2017 12:47:23 +0200
+In-Reply-To: <20170524101309.GA2319@eros>
+References: <20170524072750.GI8158@eros>
+         <1495611651.2665.9.camel@sipsolutions.net> <20170524101309.GA2319@eros>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/27/2017 02:41 PM, Norik Dzhandzhapanyan wrote:
-> Yes ~6dB
+On Wed, 2017-05-24 at 20:13 +1000, Tobin C. Harding wrote:
 
-If a packet is sent on 1 chain with ath10k firmware (9880 hardware, specifically, but probably
-others as well), it will be around 6db higher on that particular chain
-than if the rate-control sends it on all three chains.
+> For this driver I think it matters. It is not a soft MAC driver, but
+> it is not a Full MAC either. The firmware was released in 2009, I
+> don't imagine it is getting any updates. The WEXT driver adds/checks
+> the TKIP Michael MIC in software.
 
-Are you measuring on a single chain, or on all of the chains at once and adding
-the power?
+Right. It might matter, but it depends - does the device actually
+select the BSS (AP) to connect to?
 
-I think we would need more detailed reporting using a good third-party device before
-smoothing and RSSI.
+It only really matters if it selects the BSS, or tries to roam, or
+builds the association request IEs itself. If it doesn't do any of
+those, and just takes the IEs from wpa_supplicant, it will not matter -
+then it would only matter what key cipher you configure.
 
-Thanks,
-Ben
+> Perhaps for the initial cfg80211 implementation we could simply
+> support RSN only (i.e either WPA2 or no security)?
 
->
->
-> From: Ben Greear
-> Sent: Saturday, May 27, 2:38 PM
-> Subject: Re: [PATCH] Per chain RSSI reporting
-> To: Norik Dzhandzhapanyan, Adrian Chadd
-> Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
->
->
-> On 05/27/2017 12:25 PM, Norik Dzhandzhapanyan wrote: > We see this inconsistent/incorrect reporting in our RF chamber. How different are the values, and did you sniff with a third-party device to see if it sees the same spikes in RSSI? Thanks, Ben > > Norik > > On 05/27/2017 09:39 AM, Adrian Chadd wrote: >> On 27 May 2017 at 09:07, Ben Greear wrote: >>> At low encoding rates, especially if it switches to a single-chain encoding, >>> maybe the on-air signal really is stronger? >>> >>> Have you verified in some other manner than the signals reported by ath10k >>> are >>> wrong? >> Hiya, >> >> So yeah, multipath, higher TX rates == weaker TX signal, TPC, etc are >> all interesting to know about at the receiver. it's hard to separate >> that out from the noise sometimes, but in some controlled deployments >> its really obvious. >> >> >> >> -adrian >> >> > > > The contents of this transmission are Ethertronics Inc. Confidential and may contain proprietary or legally privileged
-> information which may not be disclosed, copied or distributed without the express written consent of Ethertronics Inc. The information is intended to be for the use of the individual or entity named on this transmission. If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited. If you have received this transmission in error, please notify us by telephone immediately so that we can arrange for the retrieval of the original documents at no cost to you. Alternatively, notify the sender by replying to this transmission and delete the message without disclosing it. Thank you > -- Ben Greear Candela Technologies Inc http://www.candelatech.com
->
+I'm not sure how much that buys you, but sure, doing things step by
+step isn't a bad idea in general :)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> > Does this driver actually work with standard wpa_supplicant?
+> 
+> I'm not sure, I got hardware in the mail a couple of days ago but
+> have not tested it yet. The current driver may be broken thanks to my
+> refactoring efforts of late. I believe it was tested and functional
+> when it was first brought into staging. I do not know to what depth
+> it was tested.
+
+I think you should try this first, and try to get some kind of logging
+out to see what's going on with the firmware. Perhaps even put
+tracepoints like iwlwifi has (iwlwifi_dev_hcmd) to see what
+communication goes on with the device...
+
+If it does work with the standard supplicant with wext, then I believe
+it has to be using the IEs from there, and then the whole WPA/WPA2
+thing shouldn't matter.
+
+johannes
