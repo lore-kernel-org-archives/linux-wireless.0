@@ -1,46 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44557 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1947055AbdEZG5B (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 02:57:01 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [PATCH v4 1/5] mwifiex: use variable interface header length
-Date: Fri, 26 May 2017 06:56:53 +0000
-Message-ID: <855803f571094956a1aecb0a44f619df@SC-EXCH02.marvell.com> (sfid-20170526_085832_418372_3A7B345E)
-References: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
- <8737buslbp.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8737buslbp.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:49804 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966711AbdEXHkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 03:40:53 -0400
+Message-ID: <1495611651.2665.9.camel@sipsolutions.net> (sfid-20170524_094058_864437_CC6D436D)
+Subject: Re: WPA and WPA2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Tobin C. Harding" <me@tobin.cc>, linux-wireless@vger.kernel.org
+Date: Wed, 24 May 2017 09:40:51 +0200
+In-Reply-To: <20170524072750.GI8158@eros> (sfid-20170524_092758_235291_603981F2)
+References: <20170524072750.GI8158@eros>
+         (sfid-20170524_092758_235291_603981F2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEthbGxlIFZhbG8gW21haWx0
-bzprdmFsb0Bjb2RlYXVyb3JhLm9yZ10NCj4gU2VudDogMjAxN8TqNdTCMjTI1SAxNjozNg0KPiBU
-bzogWGlubWluZyBIdQ0KPiBDYzogTGludXggV2lyZWxlc3M7IEJyaWFuIE5vcnJpczsgRG1pdHJ5
-IFRvcm9raG92OyByYWphdGphQGdvb2dsZS5jb207DQo+IFpoaXl1YW4gWWFuZzsgQ2F0aHkgTHVv
-OyBYaW5taW5nIEh1OyBHYW5hcGF0aGkgQmhhdA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY0IDEv
-NV0gbXdpZmlleDogdXNlIHZhcmlhYmxlIGludGVyZmFjZSBoZWFkZXIgbGVuZ3RoDQo+IA0KPiBY
-aW5taW5nIEh1IDxodXhpbm1pbmc4MjBAZ21haWwuY29tPiB3cml0ZXM6DQo+IA0KPiA+IEZyb206
-IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4NCj4gPiBVc2IgdHggYWdncmVnYXRp
-b24gZmVhdHVyZSB3aWxsIHV0aWxpemUgNC1ieXRlcyBidXMgaW50ZXJmYWNlIGhlYWRlciwNCj4g
-PiBvdGhlcndpc2UgaXQgd2lsbCBiZSBzZXQgdG8gemVybyBpbiBkZWZhdWx0IGNhc2UuDQo+ID4N
-Cj4gPiBTaWduZWQtb2ZmLWJ5OiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+IFNp
-Z25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2Zm
-LWJ5OiBHYW5hcGF0aGkgQmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+DQo+ID4gLS0tDQo+ID4gRHJv
-cCA1LzYgcGF0Y2ggaW4gdjMNCj4gPiB2NDogc2FtZSBhcyB2MSx2Mix2Mw0KPiANCj4gQlRXLCBJ
-IHdvdWxkIHByZWZlciB0aGF0IHlvdSBkb24ndCB1c2UgbXkgcXVhbGNvbW0uY29tIGFkZHJlc3Mg
-d2hlbg0KPiBzdWJtaXR0aW5nIHBhdGNoZXMuIFVzaW5nIGNvZGVhdXJvcmEub3JnIG9yIG5vdCBD
-Q2luZyBtZSBhdCBhbGwgKGFzIEkgdGFrZSBhbGwNCj4gcGF0Y2hlcyBmcm9tIHBhdGNod29yayBh
-bnl3YXkpIGlzIG11Y2ggYmV0dGVyIGZvciBtZS4NCj4gDQpPaywgS2FsbGUuDQoNClJlZ2FyZHMs
-DQpTaW1vbg0KPiAtLQ0KPiBLYWxsZSBWYWxvDQo=
+On Wed, 2017-05-24 at 17:27 +1000, Tobin C. Harding wrote:
+
+> I am attempting to rewrite the ks7010 WEXT driver
+> (drivers/staging/ks7010) to use the CFG80211 API.
+
+Heh, I wasn't even aware of this driver yet.
+
+> As I understand, first there was WEP. 
+
+Correct.
+
+> Next we got a marketing term WPA which referred to 802.11i (which
+> specified the protocols TKIP and CCMP, and also RSN).
+
+No, technically WPA referred to a *draft* version of 802.11i, and used
+(only?) TKIP - where WPA2 is equivalent to RSN, the published version
+of 802.11i (now long rolled into the spec, of course), but WPA2 also
+preferred CCMP and only used TKIP for compatibility, IIRC.
+
+> WEP vs WPA
+> ----------
+> 
+> To add to my confusion the ks7010 code seemingly mixes up the use of
+> WEP keys and WPA keys, to set both the WEP and the WPA keys the
+> driver uses the same MIB requests? Yet throughout the code WEP keys
+> and WPA keys are stored in separate structures (and treated
+> differently).
+> 
+> If WPA is enabled are not WEP keys superfluous?
+
+Well, you can't really have both at the same time, but you can (and
+probably should) support both.
+
+> WPA vs WPA2
+> -----------
+> 
+> Were WPA version 1 and WPA version 2 marketing terms or do they
+> differ?
+
+See above. But at the level you're looking at, it's probably not really
+all that relevant. To some extent, WPA1 is TKIP and WPA2 is CCMP, but
+you don't really care since you just get keys with a cipher suite
+identifier attached to them.
+
+> ieee80211.h does not seem to mention WPA2 (and cfg80211.h mentions it
+> once only in some comments) however, from cfg80211.h;
+> 
+>  * struct cfg80211_crypto_settings - Crypto settings
+>  * @wpa_versions: indicates which, if any, WPA versions are enabled
+>  *	(from enum nl80211_wpa_versions)
+> 
+> When using the CFG80211 API we do not need to worry about the
+> WPA/WPA2 distinction? 
+
+This is only relevant for full-MAC devices, I think it's mostly used
+for selecting the BSS?
+
+> Can I drop all the WPA version 1 code from the driver?
+> 
+> A little more information:
+> 
+> The WEXT driver defines ciphers, from looking at ieee80211.h it seems
+> that it uses WLAN_CIPHER_SUITE_XXX for WPA2 and for WPA it uses
+> 
+> #define CIPHER_ID_WPA_NONE    "\x00\x50\xf2\x00"
+> #define CIPHER_ID_WPA_WEP40   "\x00\x50\xf2\x01"
+> #define CIPHER_ID_WPA_TKIP    "\x00\x50\xf2\x02"
+> #define CIPHER_ID_WPA_CCMP    "\x00\x50\xf2\x04"
+> #define CIPHER_ID_WPA_WEP104  "\x00\x50\xf2\x05"
+
+That's ... strange. The standard identifiers are
+
+WLAN_CIPHER_SUITE_*, which are 00-0F-AC:n (with the same values for n
+as above).
+
+If the firmware wants them with MS OUI, then you'd probably have to
+translate them.
+
+
+
+All this wext code there looks really strange though.
+
+Does this driver actually work with standard wpa_supplicant?
+
+johannes
