@@ -1,89 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34810 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbdEEQRa (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40293 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751871AbdEXH1y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 12:17:30 -0400
-Received: by mail-io0-f196.google.com with SMTP id 12so2446403iol.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:30 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 10/10] rtlwifi: btcoex: 21a 2ant: remove unused antenna detection variables
-Date: Fri,  5 May 2017 11:17:12 -0500
-Message-Id: <20170505161712.8685-11-Larry.Finger@lwfinger.net> (sfid-20170505_181917_706282_C8AA91D6)
-In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
-References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+        Wed, 24 May 2017 03:27:54 -0400
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailout.nyi.internal (Postfix) with ESMTP id 51DF220719
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:27:53 -0400 (EDT)
+Received: from localhost (124-169-117-216.dyn.iinet.net.au [124.169.117.216])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 99277241E0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:27:52 -0400 (EDT)
+Date: Wed, 24 May 2017 17:27:50 +1000
+From: "Tobin C. Harding" <me@tobin.cc>
+To: linux-wireless@vger.kernel.org
+Subject: WPA and WPA2
+Message-ID: <20170524072750.GI8158@eros> (sfid-20170524_092758_235291_603981F2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi,
 
-PSD and LNA are for antenna detection, but we do not use them for 8821A.
-Remove them and the corresponding display messages.
+I am attempting to rewrite the ks7010 WEXT driver (drivers/staging/ks7010)
+to use the CFG80211 API.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
----
- .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 13 -------------
- .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  4 ----
- 2 files changed, 17 deletions(-)
+I am reading 802.11 Wireless Networks - Matthew S. Gast for reference.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index e61016f660a8..3b4c892fc233 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3747,14 +3747,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
- 		    ((BTC_WIFI_TRAFFIC_TX == wifi_traffic_dir) ?
- 		     "uplink" : "downlink")));
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--		 "\r\n %-35s = [%s/ %d/ %d] ", "BT [status/ rssi/ retryCnt]",
--		   ((coex_sta->c2h_bt_inquiry_page) ? ("inquiry/page scan") :
--		    ((BT_8821A_2ANT_BT_STATUS_IDLE == coex_dm->bt_status)
--		     ? "idle" : ((BT_8821A_2ANT_BT_STATUS_CON_IDLE ==
--		     coex_dm->bt_status) ? "connected-idle" : "busy"))),
--		    coex_sta->bt_rssi, coex_sta->bt_retry_cnt);
--
- 	if (stack_info->profile_notified) {
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
- 			 "\r\n %-35s = %d / %d / %d / %d", "SCO/HID/PAN/A2DP",
-@@ -3790,11 +3782,6 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist)
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s",
- 		 "============[Sw mechanism]============");
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--		 "\r\n %-35s = %d/ %d/ %d/ %d ",
--		 "SM1[ShRf/ LpRA/ LimDig/ btLna]",
--		 coex_dm->cur_rf_rx_lpf_shrink, coex_dm->cur_low_penalty_ra,
--		 coex_dm->limited_dig, coex_dm->cur_bt_lna_constrain);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
- 		 "\r\n %-35s = %d/ %d/ %d(0x%x) ",
- 		 "SM2[AgcT/ AdcB/ SwDacSwing(lvl)]",
- 		 coex_dm->cur_agc_table_en, coex_dm->cur_adc_back_off,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-index 74edfd75875a..a1603e2d44e3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-@@ -79,10 +79,6 @@ struct coex_dm_8821a_2ant {
- 	/* fw mechanism */
- 	bool		pre_dec_bt_pwr_lvl;
- 	bool		cur_dec_bt_pwr_lvl;
--	bool		pre_bt_lna_constrain;
--	bool		cur_bt_lna_constrain;
--	u8		pre_bt_psd_mode;
--	u8		cur_bt_psd_mode;
- 	u8		pre_fw_dac_swing_lvl;
- 	u8		cur_fw_dac_swing_lvl;
- 	bool		cur_ignore_wlan_act;
--- 
-2.12.2
+I have some confusion regarding WEP/WPA/WPA2/RSN, ciphers, keys and
+ie's?
+
+As I understand, first there was WEP. Next we got a marketing term WPA
+which referred to 802.11i (which specified the protocols TKIP and
+CCMP, and also RSN).
+
+WEP vs WPA
+----------
+
+To add to my confusion the ks7010 code seemingly mixes up the use of
+WEP keys and WPA keys, to set both the WEP and the WPA keys the driver
+uses the same MIB requests? Yet throughout the code WEP keys and WPA
+keys are stored in separate structures (and treated differently).
+
+If WPA is enabled are not WEP keys superfluous?
+
+WPA vs WPA2
+-----------
+
+Were WPA version 1 and WPA version 2 marketing terms or do they differ?
+
+ieee80211.h does not seem to mention WPA2 (and cfg80211.h mentions it
+once only in some comments) however, from cfg80211.h;
+
+ * struct cfg80211_crypto_settings - Crypto settings
+ * @wpa_versions: indicates which, if any, WPA versions are enabled
+ *	(from enum nl80211_wpa_versions)
+
+When using the CFG80211 API we do not need to worry about the WPA/WPA2
+distinction? Can I drop all the WPA version 1 code from the driver?
+
+A little more information:
+
+The WEXT driver defines ciphers, from looking at ieee80211.h it seems
+that it uses WLAN_CIPHER_SUITE_XXX for WPA2 and for WPA it uses
+
+#define CIPHER_ID_WPA_NONE    "\x00\x50\xf2\x00"
+#define CIPHER_ID_WPA_WEP40   "\x00\x50\xf2\x01"
+#define CIPHER_ID_WPA_TKIP    "\x00\x50\xf2\x02"
+#define CIPHER_ID_WPA_CCMP    "\x00\x50\xf2\x04"
+#define CIPHER_ID_WPA_WEP104  "\x00\x50\xf2\x05"
+
+FYI ieee80211.h has
+
+#define WLAN_OUI_MICROSOFT	       0x0050f2
+
+Thanks for taking the time to read this mail, any suggestions most
+appreciated.
+
+thanks,
+Tobin.
