@@ -1,27 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:33142 "EHLO
-        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750749AbdEAWzN (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:37469 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763408AbdEXKmb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2017 18:55:13 -0400
-Received: by mail-io0-f171.google.com with SMTP id o22so3952598iod.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 May 2017 15:55:12 -0700 (PDT)
-MIME-Version: 1.0
-From: Luis Pablo Gallo <luispablo.gallo@gmail.com>
-Date: Mon, 1 May 2017 19:54:31 -0300
-Message-ID: <CAE1PcnGwDVd6BcSMMUwhz4PmaAGyK_NpBYQ8pLz6+rZrQVcCgA@mail.gmail.com> (sfid-20170502_005659_011993_EA438F53)
-Subject: Ubuntu (kernel 4.4) + Intel 7265N = cannot pair bluetooth
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Wed, 24 May 2017 06:42:31 -0400
+Received: by mail-wm0-f52.google.com with SMTP id d127so63105825wmf.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 03:42:30 -0700 (PDT)
+From: Mateusz Jurczyk <mjurczyk@google.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, security@kernel.org
+Subject: [PATCH] nfc: Ensure presence of required attributes in the activate_target netlink handler
+Date: Wed, 24 May 2017 12:42:26 +0200
+Message-Id: <20170524104226.14841-1-mjurczyk@google.com> (sfid-20170524_124354_594408_E5ECD255)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a notebook with Ubuntu installed, and an Intel 7265N driver for
-WiFi and bluetooth. I cannot pair any device to it. Ubuntu finds the
-devices, but doesn't get their name, and doesn't allow me to pair them
-either.
-Is there a fix for this? Should it be working?
-Thanks!
+Check that the NFC_ATTR_TARGET_INDEX and NFC_ATTR_PROTOCOLS attributes (in
+addition to NFC_ATTR_DEVICE_INDEX) are provided by the netlink client
+prior to accessing them. This prevents potential unhandled NULL pointer
+dereference exceptions which can be triggered by malicious user-mode
+programs, if they omit one or both of these attributes.
 
---
-Luis Pablo
+Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
+---
+ net/nfc/netlink.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 6b0850e63e09..b251fb936a27 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -907,7 +907,9 @@ static int nfc_genl_activate_target(struct sk_buff *skb, struct genl_info *info)
+ 	u32 device_idx, target_idx, protocol;
+ 	int rc;
+ 
+-	if (!info->attrs[NFC_ATTR_DEVICE_INDEX])
++	if (!info->attrs[NFC_ATTR_DEVICE_INDEX] ||
++	    !info->attrs[NFC_ATTR_TARGET_INDEX] ||
++	    !info->attrs[NFC_ATTR_PROTOCOLS])
+ 		return -EINVAL;
+ 
+ 	device_idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
+-- 
+2.13.0.219.gdb65acc882-goog
