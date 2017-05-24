@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60108 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46844 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1947941AbdEZP0C (ORCPT
+        with ESMTP id S1758733AbdEXNqm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 11:26:02 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: amit karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [v3 10/11] rsi: Add new firmware loading method
-References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
-        <1494928877-27168-11-git-send-email-amit.karwar@redpinesignals.com>
-        <87bmqi4q2u.fsf@purkki.adurom.net>
-        <CAEhWJFnaG4xC71CL_ayYEyGg0HMNoyHK7aE9gcGAmsako8Q9Tw@mail.gmail.com>
-Date: Fri, 26 May 2017 18:25:41 +0300
-In-Reply-To: <CAEhWJFnaG4xC71CL_ayYEyGg0HMNoyHK7aE9gcGAmsako8Q9Tw@mail.gmail.com>
-        (amit karwar's message of "Fri, 26 May 2017 20:40:11 +0530")
-Message-ID: <87inknprm2.fsf@kamboji.qca.qualcomm.com> (sfid-20170526_172613_927144_551A8DE9)
+        Wed, 24 May 2017 09:46:42 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2,
+ 01/10] rt2x00: change function pointers for register accessors
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170517144702.1381136-2-arnd@arndb.de>
+References: <20170517144702.1381136-2-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        David Miller <davem@davemloft.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Roman Yeryomin <roman@advem.lv>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jes.sorensen@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>
+Message-Id: <20170524134641.96A31611D2@smtp.codeaurora.org> (sfid-20170524_154715_387701_2B9A666C)
+Date: Wed, 24 May 2017 13:46:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-amit karwar <amitkarwar@gmail.com> writes:
+Arnd Bergmann <arnd@arndb.de> wrote:
+> This prepares the driver for changing all the 'read' register accessors
+> to return the value instead of passing it by reference. Since a lot
+> of them are used in callbacks, this takes care of the callbacks first,
+> adding a couple of helpers that will be removed again one at a time.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-> On Wed, May 24, 2017 at 1:57 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->>
->>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>>
->>> The older firmware loading method has been deprecated and not in use
->>> for any chipets. New method is introduced which works based on soft
->>> boot loader. In this method, complete RAM image and FLASH image are
->>> present in the flash. Before loading the functional firmware, host
->>> issues boot loader commands to verify whether firmware to load is
->>> different from the current functional firmware. If not, firmware
->>> upgrade progresses and boot loader will switch to the new functional
->>> firmware.
->>>
->>> "rs9113_wlan_qspi.rps" is the firmware filename used in this patch.
->>
->> I don't know if you saw the discussion with the wil6210 firmware, but
->> the linux-firmware maintainers prefer to have a subdirectory for
->> firmware files. I'm planning to apply this series now, but you can send
->> a followup patch ASAP which changes the rsi driver to use a subdirectory
->> for the firmware files?
->
-> I have just sent a follow up patch.
+10 patches applied to wireless-drivers-next.git, thanks.
 
-Thanks, I saw that. Will apply it shortly.
+6b81745e36e3 rt2x00: change function pointers for register accessors
+16d571bb0fe6 rt2x00: convert rt2800_rfcsr_read return type
+aea8baa10ac5 rt2x00: convert rt2x00_rf_read return type
+3954b4e30609 rt2x00: convert rt2x00mmio_register_read return type
+48bde9c96972 rt2x00: convert rt2x00usb_register_read return type
+eebd68e7824b rt2x00: convert rt2800_register_read return type
+5fbbe378890f rt2x00: convert rt2*_bbp_read return type
+38651683aa98 rt2x00: convert rt2x00_eeprom_read return type
+5c6a25855cbd rt2x00: convert rt2800_eeprom_read return type
+b9b238726716 rt2x00: convert rt2x00_desc_read return type
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9731331/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
