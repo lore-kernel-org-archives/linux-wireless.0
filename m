@@ -1,58 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35650 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751900AbdELJd0 (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:34629 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935795AbdEXQ6Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 05:33:26 -0400
-From: Xie Qirong <cheerx1994@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Xie Qirong <cheerx1994@gmail.com>
-Subject: [PATCH v4] brcmfmac: btcoex: replace init_timer with setup_timer
-Date: Fri, 12 May 2017 17:32:59 +0800
-Message-Id: <20170512093259.28479-1-cheerx1994@gmail.com> (sfid-20170512_113526_675787_03B10AEB)
+        Wed, 24 May 2017 12:58:25 -0400
+Received: by mail-io0-f178.google.com with SMTP id k91so121550650ioi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 09:58:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170524102620.13806-1-mjurczyk@google.com>
+References: <20170524102620.13806-1-mjurczyk@google.com>
+From: Kees Cook <keescook@google.com>
+Date: Wed, 24 May 2017 09:58:23 -0700
+Message-ID: <CAGXu5jJRXhJSC34vSc19mPQ9Wetf92daar71He0OXDUebXu0bA@mail.gmail.com> (sfid-20170524_185909_375593_5233ADEE)
+Subject: Re: [PATCH] nfc: Fix the sockaddr length sanitization in llcp_sock_connect
+To: Mateusz Jurczyk <mjurczyk@google.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "security@kernel.org" <security@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-setup_timer.cocci suggested the following improvement:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
-setup_timer function for function on line 384.
+On Wed, May 24, 2017 at 3:26 AM, Mateusz Jurczyk <mjurczyk@google.com> wrote:
+> Fix the sockaddr length verification in the connect() handler of NFC/LLCP
+> sockets, to compare against the size of the actual structure expected on
+> input (sockaddr_nfc_llcp) instead of its shorter version (sockaddr_nfc).
+>
+> Both structures are defined in include/uapi/linux/nfc.h. The fields
+> specific to the _llcp extended struct are as follows:
+>
+>    276          __u8 dsap; /* Destination SAP, if known */
+>    277          __u8 ssap; /* Source SAP to be bound to */
+>    278          char service_name[NFC_LLCP_MAX_SERVICE_NAME]; /* Service name URI */;
+>    279          size_t service_name_len;
+>
+> If the caller doesn't provide a sufficiently long sockaddr buffer, these
+> fields remain uninitialized (and they currently originate from the stack
+> frame of the top-level sys_connect handler). They are then copied by
+> llcp_sock_connect() into internal storage (nfc_llcp_sock structure), and
+> could be subsequently read back through the user-mode getsockname()
+> function (handled by llcp_sock_getname()). This would result in the
+> disclosure of up to ~70 uninitialized bytes from the kernel stack to
+> user-mode clients capable of creating AFC_NFC sockets.
+>
+> Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
----
+Acked-by: Kees Cook <keescook@chromium.org>
 
- The combination of init_timer and setting up the data and function field
- manually is equivalent to calling setup_timer(). This is an api
- consolidation only and improves readability.
+-Kees
 
- Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
- CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
- CONFIG_BRCMDBG=y
+> ---
+>  net/nfc/llcp_sock.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
+> index 2ffb18e73df6..d0d12bea65cb 100644
+> --- a/net/nfc/llcp_sock.c
+> +++ b/net/nfc/llcp_sock.c
+> @@ -662,8 +662,7 @@ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
+>
+>         pr_debug("sock %p sk %p flags 0x%x\n", sock, sk, flags);
+>
+> -       if (!addr || len < sizeof(struct sockaddr_nfc) ||
+> -           addr->sa_family != AF_NFC)
+> +       if (!addr || len < sizeof(*addr) || addr->sa_family != AF_NFC)
+>                 return -EINVAL;
+>
+>         if (addr->service_name_len == 0 && addr->dsap == 0)
+> --
+> 2.13.0.219.gdb65acc882-goog
+>
 
- Kernel version: 4.11.0 (localversion-next is next-20170512)
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-index 14a70d4b4e86..3559fb5b8fb0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-@@ -380,9 +380,7 @@ int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg)
- 	/* Set up timer for BT  */
- 	btci->timer_on = false;
- 	btci->timeout = BRCMF_BTCOEX_OPPR_WIN_TIME;
--	init_timer(&btci->timer);
--	btci->timer.data = (ulong)btci;
--	btci->timer.function = brcmf_btcoex_timerfunc;
-+	setup_timer(&btci->timer, brcmf_btcoex_timerfunc, (ulong)btci);
- 	btci->cfg = cfg;
- 	btci->saved_regs_part1 = false;
- 	btci->saved_regs_part2 = false;
 -- 
-2.12.2
+Kees Cook
+Pixel Security
