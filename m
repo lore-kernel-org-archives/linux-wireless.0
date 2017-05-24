@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:35221 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751272AbdECKmY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 06:42:24 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake offload
-Date: Wed,  3 May 2017 11:42:05 +0100
-Message-Id: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170503_124322_170839_ECCC4F69)
+Received: from s3.sipsolutions.net ([5.9.151.49]:49444 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S938530AbdEXHLj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 03:11:39 -0400
+Message-ID: <1495609897.2665.4.camel@sipsolutions.net> (sfid-20170524_091244_123048_86C0DD32)
+Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna
+ chipsets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Wed, 24 May 2017 09:11:37 +0200
+In-Reply-To: <20170522210445.bj3zlyc4stjmojf5@bars>
+References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
+         <1495026753.2442.7.camel@sipsolutions.net>
+         <20170518200810.pch7tivugqyjmy4d@bars>
+         <1495189094.3274.2.camel@sipsolutions.net>
+         <20170521170814.d7ljne2pgopymxud@bars>
+         <1495434501.2653.7.camel@sipsolutions.net>
+         <20170522210445.bj3zlyc4stjmojf5@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series add support for offloading the PTK/GTK handshakes for
-WPA/WPA2-Personal and 802.1X in nl80211. The nl80211 patches have been
-posted as RFC. Compared to that RFC this series also adds a new flag
-ATTR_PORT_AUTHORIZED used in both CONNECT and ROAM notifications to
-indicate the driver has completed the offloads successfully and the
-encryption keys for the connection are applied. Another change is the
-addition of the flag ATTR_WANT_1X_4WAY_HS that user-space has to pass
-in CONNECT request. Some drivers may need to be aware before the PMK
-is programmed through SET_PMK request.
 
-This series also comes with driver implementation in brcmfmac although
-it does not use the authorized flag in the ROAM event (yet).
+> Hostapd registers for acton frames and probe requests. In our case
+> probe responses are sent by firmware. However hostapd needs to look
+> at them anyway in certain usecases. Bug hostapd doesn't try to
+> respond to probe requests when option 'send_probe_response = 0' is
+> set in hostapd config.
 
-The series applies to the master branch of the mac80211-next repository.
+Yeah, but this shouldn't really have to be configured, that's awkward.
 
-V2:
- - changed patch 2/9 addressing comments from Johannes.
+> IIRC the idea was to use 'send_probe_response' for now and then to
+> implement the use of NL80211_RXMGMT_FLAG_ANSWERED flag in hostapd, at
+> least for probe requests for the start. But it definitely doesn't
+> make sense if you plan to get rid of this flag in the long run.
 
-Arend van Spriel (6):
-  nl80211: add authorized flag to CONNECT event
-  nl80211: remove desciption about request from NL80211_CMD_ROAM
-  brcmfmac: support 4-way handshake offloading for WPA/WPA2-PSK
-  brcmfmac: support 4-way handshake offloading for 802.1X
-  brcmfmac: switch to using cfg80211_connect_done()
-  brcmfmac: provide port authorized state in CONNECT event
+No no! I'm not saying let's get rid of it if you need it - I was saying
+we could get rid of it since it doesn't appear to be used. I think this
+is fine for your case, in fact you should probably already set it and
+then go and teach hostapd about it.
 
-Avraham Stern (2):
-  cfg80211: support 4-way handshake offloading for 802.1X
-  nl80211: add authorized flag to ROAM event
-
-Eliad Peller (1):
-  cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 159 +++++++++++++++++++--
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  15 +-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   1 +
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    |  30 ++++
- .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |   1 +
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  16 +++
- include/linux/ieee80211.h                          |   4 +
- include/net/cfg80211.h                             |  41 ++++++
- include/uapi/linux/nl80211.h                       |  50 ++++++-
- net/wireless/core.c                                |   5 +
- net/wireless/nl80211.c                             | 120 +++++++++++++++-
- net/wireless/rdev-ops.h                            |  25 ++++
- net/wireless/sme.c                                 |   2 +
- net/wireless/trace.h                               |  60 ++++++++
- 15 files changed, 510 insertions(+), 23 deletions(-)
-
--- 
-1.9.1
+johannes
