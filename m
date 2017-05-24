@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0047.outbound.protection.outlook.com ([104.47.33.47]:62112
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S968988AbdEYN4j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 09:56:39 -0400
-Date: Thu, 25 May 2017 16:56:24 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][net-next] qtnfmac: remove duplicated assignment to mac
-Message-ID: <20170525135624.z723srd7evhml5e3@bars> (sfid-20170525_155715_931614_FF57CAAD)
-References: <20170525134503.12106-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170525134503.12106-1-colin.king@canonical.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56268 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932941AbdEXSGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 14:06:45 -0400
+Message-ID: <1495649200.20833.1.camel@sipsolutions.net> (sfid-20170524_200649_061750_A0F642A2)
+Subject: Re: WPA and WPA2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>, "Tobin C. Harding" <me@tobin.cc>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 24 May 2017 20:06:40 +0200
+In-Reply-To: <1495644240.12939.3.camel@redhat.com> (sfid-20170524_184417_597726_14DB4F2B)
+References: <20170524072750.GI8158@eros> <20170524073459.GJ8158@eros>
+         <1495644240.12939.3.camel@redhat.com>
+         (sfid-20170524_184417_597726_14DB4F2B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> mac is being assigned twice, remove redundant 2nd assignment.
-> 
-> Detected by CoverityScan, CID#1437554 ("Incorrect expression")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-> index fc0ce2c09097..e3c090008125 100644
-> --- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-> +++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-> @@ -922,7 +922,7 @@ void qtnf_netdev_updown(struct net_device *ndev, bool up)
->  void qtnf_virtual_intf_cleanup(struct net_device *ndev)
->  {
->         struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
-> -       struct qtnf_wmac *mac = mac = wiphy_priv(vif->wdev.wiphy);
-> +       struct qtnf_wmac *mac = wiphy_priv(vif->wdev.wiphy);
+Just a small correction:
 
-Thanks !
+On Wed, 2017-05-24 at 11:44 -0500, Dan Williams wrote:
+> 
+> For RSN, they are 1 = PMK, 2 = GMK, 3 = GMK2, 4 seems unused.
 
-Acked-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+PTK and GTK, and in theory you could have more than two GTKs but that's
+not usually done.
+
+> Because WEXT is pretty convoluted, I woudn't necessarily try to
+> translate what eg ks_wlan_set_encode_ext() is doing directly to
+> cfg80211, but to understand how the firmware interface works and then
+> just write the cfg80211 code to the firmware interface.
+> 
+> Basically, you have the following modes:
+> 
+> a) open, no encryption
+> b) WEP encryption (4 possible WEP keys, each either 40 or 104 bits)
+> c) WPA/RSN (PMK and GMK are computed by wpa_supplicant and supplied
+> to you, just need to send to firmware)
+
+Again, PTK/GTK :)
+
+> And to answer Johannes, this firmware looks much more fullmac than
+> softmac; BSS selection seems left up to the firmware.  You just send
+> it a "connect with these parameters" command (HIF_INFRA_SET_REQ)
+> including channels, SSID, BSSID, mode, etc and it does everything.
+
+Yeah. Makes sense then.
+
+johannes
