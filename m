@@ -1,239 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:35003 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755871AbdEDSrJ (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:59322 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S942821AbdEYRBT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 14:47:09 -0400
-Received: by mail-io0-f195.google.com with SMTP id v34so5689315iov.2
-        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2017 11:47:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 2/4] rtlwifi: btcoex: Remove 23b 1ant configuration parameter
-Date: Thu,  4 May 2017 13:46:59 -0500
-Message-Id: <20170504184701.16560-3-Larry.Finger@lwfinger.net> (sfid-20170504_204717_973942_63CB820B)
-In-Reply-To: <20170504184701.16560-1-Larry.Finger@lwfinger.net>
-References: <20170504184701.16560-1-Larry.Finger@lwfinger.net>
+        Thu, 25 May 2017 13:01:19 -0400
+Date: Thu, 25 May 2017 13:01:17 -0400 (EDT)
+Message-Id: <20170525.130117.551364108206528221.davem@davemloft.net> (sfid-20170525_190133_361061_0EBFD6D5)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        johannes.berg@intel.com
+Subject: Re: [RFC] skbuff: introduce skb_put_zero()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170524070747.18573-1-johannes@sipsolutions.net>
+References: <20170524070747.18573-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In file halbtc8723b1ant.c, there are directives that depend on an
-undocumented configuration parameter BT_AUTO_REPORT_ONLY_8723B_1ANT
-that cannot be set from Kconfig. This parameter is replaced by a
-boolean in the main structure used by all routines. It still cannot
-be changed dynamically, but it is easier to document.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 24 May 2017 09:07:47 +0200
 
-The following routines are restored:
-halbtc8723b1ant_bt_auto_report()
-halbtc8723b1ant_set_bt_auto_report()
-halbtc8723b1ant_action_wifi_only()
-halbtc8723b1ant_monitor_bt_enable_disable()
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> This pattern was introduced a number of times in mac80211 just now,
+> and since it's present in a number of other places it makes sense
+> to add a little helper for it.
+> 
+> The transformations of all code were done with the following spatch:
+> 
+> @@
+> identifier p;
+> expression len;
+> expression skb;
+> @@
+> -p = skb_put(skb, len);
+> -memset(p, 0, len);
+> +p = skb_put_zero(skb, len);
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> NB: the patch won't apply to net-next because a few of the mac80211
+>     users don't exist there yet
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - Some earlier patches were missed in v1.
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 122 +++++++++++++++++----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +-
- 2 files changed, 102 insertions(+), 23 deletions(-)
+Acked-by: David S. Miller <davem@davemloft.net>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 2003c8c51dcc..f23c9e3fbda1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -333,6 +333,35 @@ static void halbtc8723b1ant_update_bt_link_info(struct btc_coexist *btcoexist)
- 		bt_link_info->hid_only = false;
- }
- 
-+static void halbtc8723b1ant_set_bt_auto_report(struct btc_coexist *btcoexist,
-+					       bool enable_auto_report)
-+{
-+	u8 h2c_parameter[1] = {0};
-+
-+	h2c_parameter[0] = 0;
-+
-+	if (enable_auto_report)
-+		h2c_parameter[0] |= BIT(0);
-+
-+	btcoexist->btc_fill_h2c(btcoexist, 0x68, 1, h2c_parameter);
-+}
-+
-+static void halbtc8723b1ant_bt_auto_report(struct btc_coexist *btcoexist,
-+					   bool force_exec,
-+					   bool enable_auto_report)
-+{
-+	coex_dm->cur_bt_auto_report = enable_auto_report;
-+
-+	if (!force_exec) {
-+		if (coex_dm->pre_bt_auto_report == coex_dm->cur_bt_auto_report)
-+			return;
-+	}
-+	halbtc8723b1ant_set_bt_auto_report(btcoexist,
-+					   coex_dm->cur_bt_auto_report);
-+
-+	coex_dm->pre_bt_auto_report = coex_dm->cur_bt_auto_report;
-+}
-+
- static void btc8723b1ant_set_sw_pen_tx_rate_adapt(struct btc_coexist *btcoexist,
- 						  bool low_penalty_ra)
- {
-@@ -1099,6 +1128,57 @@ static void halbtc8723b1ant_power_save_state(struct btc_coexist *btcoexist,
- 	}
- }
- 
-+static void halbtc8723b1ant_action_wifi_only(struct btc_coexist *btcoexist)
-+{
-+	halbtc8723b1ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
-+	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 8);
-+	halbtc8723b1ant_set_ant_path(btcoexist, false, false, BTC_ANT_PATH_PTA);
-+}
-+
-+/* check if BT is disabled */
-+static void halbtc8723b1ant_monitor_bt_enable_disable(struct btc_coexist
-+						      *btcoexist)
-+{
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	static u32 bt_disable_cnt;
-+	bool bt_active = true, bt_disabled;
-+
-+	if (coex_sta->high_priority_tx == 0 &&
-+	    coex_sta->high_priority_rx == 0 && coex_sta->low_priority_tx == 0 &&
-+	    coex_sta->low_priority_rx == 0)
-+		bt_active = false;
-+	if (coex_sta->high_priority_tx == 0xffff &&
-+	    coex_sta->high_priority_rx == 0xffff &&
-+	    coex_sta->low_priority_tx == 0xffff &&
-+	    coex_sta->low_priority_rx == 0xffff)
-+		bt_active = false;
-+	if (bt_active) {
-+		bt_disable_cnt = 0;
-+		bt_disabled = false;
-+	} else {
-+		bt_disable_cnt++;
-+		if (bt_disable_cnt >= 2)
-+			bt_disabled = true;
-+	}
-+	if (coex_sta->bt_disabled != bt_disabled) {
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], BT is from %s to %s!!\n",
-+			 (coex_sta->bt_disabled ? "disabled" : "enabled"),
-+			 (bt_disabled ? "disabled" : "enabled"));
-+
-+		coex_sta->bt_disabled = bt_disabled;
-+		btcoexist->btc_set(btcoexist, BTC_SET_BL_BT_DISABLE,
-+				   &bt_disabled);
-+		if (bt_disabled) {
-+			halbtc8723b1ant_action_wifi_only(btcoexist);
-+			btcoexist->btc_set(btcoexist, BTC_SET_ACT_LEAVE_LPS,
-+					   NULL);
-+			btcoexist->btc_set(btcoexist, BTC_SET_ACT_NORMAL_LPS,
-+					   NULL);
-+		}
-+	}
-+}
-+
- /*****************************************************
-  *
-  *	Non-Software Coex Mechanism start
-@@ -1638,6 +1718,7 @@ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
- void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist)
- {
- 	halbtc8723b1ant_init_hw_config(btcoexist, true);
-+	btcoexist->auto_report_1ant = true;
- }
- 
- void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
-@@ -1926,9 +2007,8 @@ void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n %-35s = %d/ %d",
- 		 "0x774(low-pri rx/tx)", coex_sta->low_priority_rx,
- 		 coex_sta->low_priority_tx);
--#if (BT_AUTO_REPORT_ONLY_8723B_1ANT == 1)
--	halbtc8723b1ant_monitor_bt_ctr(btcoexist);
--#endif
-+	if (btcoexist->auto_report_1ant)
-+		halbtc8723b1ant_monitor_bt_ctr(btcoexist);
- 	btcoexist->btc_disp_dbg_msg(btcoexist, BTC_DBG_DISP_COEX_STATISTICS);
- }
- 
-@@ -2247,14 +2327,15 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 		} else {
- 			/* BT already NOT ignore Wlan active, do nothing here.*/
- 		}
--#if (BT_AUTO_REPORT_ONLY_8723B_1ANT == 0)
--		if (coex_sta->bt_info_ext & BIT4) {
--			/* BT auto report already enabled, do nothing */
--		} else {
--			halbtc8723b1ant_bt_auto_report(btcoexist, FORCE_EXEC,
--						       true);
-+		if (!btcoexist->auto_report_1ant) {
-+			if (coex_sta->bt_info_ext & BIT4) {
-+				/* BT auto report already enabled, do nothing */
-+			} else {
-+				halbtc8723b1ant_bt_auto_report(btcoexist,
-+							       FORCE_EXEC,
-+							       true);
-+			}
- 		}
--#endif
- 	}
- 
- 	/* check BIT2 first ==> check if bt is under inquiry or page scan */
-@@ -2425,16 +2506,15 @@ void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
- 			 "[BTCoex], ****************************************************************\n");
- 	}
- 
--#if (BT_AUTO_REPORT_ONLY_8723B_1ANT == 0)
--	halbtc8723b1ant_query_bt_info(btcoexist);
--	halbtc8723b1ant_monitor_bt_ctr(btcoexist);
--	halbtc8723b1ant_monitor_bt_enable_disable(btcoexist);
--#else
--	if (btc8723b1ant_is_wifi_status_changed(btcoexist) ||
--	    coex_dm->auto_tdma_adjust) {
--		halbtc8723b1ant_run_coexist_mechanism(btcoexist);
-+	if (!btcoexist->auto_report_1ant) {
-+		halbtc8723b1ant_query_bt_info(btcoexist);
-+		halbtc8723b1ant_monitor_bt_ctr(btcoexist);
-+		halbtc8723b1ant_monitor_bt_enable_disable(btcoexist);
-+	} else {
-+		if (btc8723b1ant_is_wifi_status_changed(btcoexist) ||
-+		    coex_dm->auto_tdma_adjust) {
-+			halbtc8723b1ant_run_coexist_mechanism(btcoexist);
-+		}
-+		coex_sta->special_pkt_period_cnt++;
- 	}
--
--	coex_sta->special_pkt_period_cnt++;
--#endif
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 75f8094b7a34..7e91901122c3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -25,8 +25,6 @@
- /**********************************************************************
-  * The following is for 8723B 1ANT BT Co-exist definition
-  **********************************************************************/
--#define	BT_AUTO_REPORT_ONLY_8723B_1ANT			1
--
- #define	BT_INFO_8723B_1ANT_B_FTP			BIT7
- #define	BT_INFO_8723B_1ANT_B_A2DP			BIT6
- #define	BT_INFO_8723B_1ANT_B_HID			BIT5
-@@ -138,6 +136,7 @@ struct coex_dm_8723b_1ant {
- };
- 
- struct coex_sta_8723b_1ant {
-+	bool bt_disabled;
- 	bool bt_link_exist;
- 	bool sco_exist;
- 	bool a2dp_exist;
--- 
-2.12.2
+No objections, feel free to push this in via your mac80211 tree.
