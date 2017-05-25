@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55126 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932957AbdEVVE6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 17:04:58 -0400
-Message-ID: <1495487095.26008.7.camel@sipsolutions.net> (sfid-20170522_230602_645383_E62D40B0)
-Subject: Re: 4.12-RC2 BUG: scheduling while atomic: irq/47-iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Sander Eikelenboom <linux@eikelenboom.it>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org
-Date: Mon, 22 May 2017 23:04:55 +0200
-In-Reply-To: <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com> (sfid-20170522_230239_411441_5084F34F)
-References: <a54f3f4f-2365-2154-ad18-82e4cd572aac@eikelenboom.it>
-         <1495450628.2653.14.camel@sipsolutions.net>
-         <764a929c-ce8a-c859-a49e-2f20cb05ae44@broadcom.com>
-         <532c257e-52a0-18c1-1afe-04d37c28e072@broadcom.com>
-         (sfid-20170522_230239_411441_5084F34F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:35185 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1164717AbdEYALm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 20:11:42 -0400
+Received: by mail-pf0-f177.google.com with SMTP id n23so150181971pfb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:41 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 09/14] mwifiex: pcie: remove redundant synchronize_irq()
+Date: Wed, 24 May 2017 17:11:14 -0700
+Message-Id: <20170525001119.64791-9-briannorris@chromium.org> (sfid-20170525_021432_692869_B3F8129B)
+In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
+References: <20170525001119.64791-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+free_irq() already calls synchronize_irq() in a non-racy manner. Calling
+synchronize_irq() here is redundant.
 
-Sorry, I forgot that the original message wasn't Cc'ed to the wireless
-list, only netdev.
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-> +++ b/net/wireless/scan.c
-> @@ -322,9 +322,7 @@ static void cfg80211_del_sched_scan_req(struct
-> cfg80211_regi
->  {
->         struct cfg80211_sched_scan_request *pos;
-> 
-> -       ASSERT_RTNL();
-> -
-> -       list_for_each_entry(pos, &rdev->sched_scan_req_list, list) {
-> +       list_for_each_entry_rcu(pos, &rdev->sched_scan_req_list,
-> list) {
-
-[snip]
-
-This looks fine, but perhaps in the above we should have some kind of
-locking assertion, e.g.
-
-	WARN_ON_ONCE(!rcu_read_lock_held() && !lockdep_rtnl_is_held());
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 3d5c29d79609..7d5a4f2a9a22 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -3209,9 +3209,6 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ 
+ 	if (card->msix_enable) {
+ 		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+-			synchronize_irq(card->msix_entries[i].vector);
+-
+-		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+ 			free_irq(card->msix_entries[i].vector,
+ 				 &card->msix_ctx[i]);
+ 
+-- 
+2.13.0.219.gdb65acc882-goog
