@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f172.google.com ([209.85.216.172]:32818 "EHLO
-        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbdEPJmb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 05:42:31 -0400
-Date: Tue, 16 May 2017 11:42:29 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Johan Hovold <johan@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/8] NFC: fix device allocation and nfcmrvl crashes
-Message-ID: <20170516094229.GN3657@localhost> (sfid-20170516_114237_185627_401A9D5A)
-References: <20170330101542.15384-1-johan@kernel.org>
- <20170426224238.GB3717@zurbaran.ger.intel.com>
+Received: from mail-bn3nam01on0047.outbound.protection.outlook.com ([104.47.33.47]:62112
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S968988AbdEYN4j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 May 2017 09:56:39 -0400
+Date: Thu, 25 May 2017 16:56:24 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH][net-next] qtnfmac: remove duplicated assignment to mac
+Message-ID: <20170525135624.z723srd7evhml5e3@bars> (sfid-20170525_155715_931614_FF57CAAD)
+References: <20170525134503.12106-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170426224238.GB3717@zurbaran.ger.intel.com>
+In-Reply-To: <20170525134503.12106-1-colin.king@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
-
-On Thu, Apr 27, 2017 at 12:42:38AM +0200, Samuel Ortiz wrote:
-> Hi Johan,
+> mac is being assigned twice, remove redundant 2nd assignment.
 > 
-> On Thu, Mar 30, 2017 at 12:15:34PM +0200, Johan Hovold wrote:
-> > This started out with the observation that the nfcmrvl_uart driver
-> > unconditionally dereferenced the tty class device despite the fact that
-> > not every tty has an associated struct device (Unix98 ptys). Some
-> > further changes were needed in the common nfcmrvl code to fully address
-> > this, some of which also incidentally fixed a few related bugs (e.g.
-> > resource leaks in error paths).
-> > 
-> > While fixing this I stumbled over a regression in NFC core that lead to
-> > broken registration error paths and misnamed workqueues.
-> > 
-> > Note that this has only been tested by configuring the n_hci line
-> > discipline for different ttys without any actual NFC hardware connected.
-> > 
-> > Johan
-> > 
-> > 
-> > Changes in v2
-> >  - fix typo in commit message (1/8)
-> >  - release reset gpio in error paths (3/8)
-> >  - fix description of patch impact (3/8)
-> >  - allow gpio 0 to be used for reset signalling (8/8, new)
-> > 
-> > 
-> > Johan Hovold (8):
-> >   NFC: fix broken device allocation
-> >   NFC: nfcmrvl_uart: add missing tty-device sanity check
-> >   NFC: nfcmrvl: do not use device-managed resources
-> >   NFC: nfcmrvl: use nfc-device for firmware download
-> >   NFC: nfcmrvl: fix firmware-management initialisation
-> >   NFC: nfcmrvl_uart: fix device-node leak during probe
-> >   NFC: nfcmrvl_usb: use interface as phy device
-> >   NFC: nfcmrvl: allow gpio 0 for reset signalling
-> Applied, thanks.
+> Detected by CoverityScan, CID#1437554 ("Incorrect expression")
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+> index fc0ce2c09097..e3c090008125 100644
+> --- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+> +++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+> @@ -922,7 +922,7 @@ void qtnf_netdev_updown(struct net_device *ndev, bool up)
+>  void qtnf_virtual_intf_cleanup(struct net_device *ndev)
+>  {
+>         struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
+> -       struct qtnf_wmac *mac = mac = wiphy_priv(vif->wdev.wiphy);
+> +       struct qtnf_wmac *mac = wiphy_priv(vif->wdev.wiphy);
 
-These never made it into net-next and 4.12-rc1, so will you be sending
-them on as fixes for 4.12-rc instead?
+Thanks !
 
-Thanks,
-Johan
+Acked-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
