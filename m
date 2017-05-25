@@ -1,85 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35652 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753107AbdERBjC (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43001 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756251AbdEYKvM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 21:39:02 -0400
-Subject: Re: [net-realtek-btcoexist] question about identical code for
- different branches
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Pkshih <pkshih@realtek.com>
-References: <20170517165232.Horde.v4lHW1-r73ZYdz2POOdERBa@gator4166.hostgator.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <14834066-9820-a2cc-9c98-eebb9b89e7fe@lwfinger.net> (sfid-20170518_034021_875730_031310B0)
-Date: Wed, 17 May 2017 20:38:58 -0500
+        Thu, 25 May 2017 06:51:12 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Add BMI parameters to fix calibration from DT/pre-cal
+Date: Thu, 25 May 2017 16:21:23 +0530
+Message-ID: <1495709483-29793-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20170525_125115_804337_9B1E94EE)
 MIME-Version: 1.0
-In-Reply-To: <20170517165232.Horde.v4lHW1-r73ZYdz2POOdERBa@gator4166.hostgator.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/17/2017 04:52 PM, Gustavo A. R. Silva wrote:
-> 
-> Hello everybody,
-> 
-> While looking into Coverity ID 1362263 I ran into the following piece of code at 
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1000:
-> 
-> 1000void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num)
-> 1001{
-> 1002        if (BT_COEX_ANT_TYPE_PG == type) {
-> 1003                gl_bt_coexist.board_info.pg_ant_num = ant_num;
-> 1004                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-> 1005                /* The antenna position:
-> 1006                 * Main (default) or Aux for pgAntNum=2 && btdmAntNum =1.
-> 1007                 * The antenna position should be determined by
-> 1008                 * auto-detect mechanism.
-> 1009                 * The following is assumed to main,
-> 1010                 * and those must be modified
-> 1011                 * if y auto-detect mechanism is ready
-> 1012                 */
-> 1013                if ((gl_bt_coexist.board_info.pg_ant_num == 2) &&
-> 1014                    (gl_bt_coexist.board_info.btdm_ant_num == 1))
-> 1015                        gl_bt_coexist.board_info.btdm_ant_pos =
-> 1016                                                       
-> BTC_ANTENNA_AT_MAIN_PORT;
-> 1017                else
-> 1018                        gl_bt_coexist.board_info.btdm_ant_pos =
-> 1019                                                       
-> BTC_ANTENNA_AT_MAIN_PORT;
-> 1020        } else if (BT_COEX_ANT_TYPE_ANTDIV == type) {
-> 1021                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-> 1022                gl_bt_coexist.board_info.btdm_ant_pos =
-> 1023                                                       
-> BTC_ANTENNA_AT_MAIN_PORT;
-> 1024        } else if (type == BT_COEX_ANT_TYPE_DETECTED) {
-> 1025                gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-> 1026                if (rtlpriv->cfg->mod_params->ant_sel == 1)
-> 1027                        gl_bt_coexist.board_info.btdm_ant_pos =
-> 1028                                BTC_ANTENNA_AT_AUX_PORT;
-> 1029                else
-> 1030                        gl_bt_coexist.board_info.btdm_ant_pos =
-> 1031                                BTC_ANTENNA_AT_MAIN_PORT;
-> 1032        }
-> 1033}
-> 
-> The issue is that lines of code 1015-1016 and 1018-1019 are identical for 
-> different branches.
-> 
-> My question here is if one of those assignments should be modified, or the 
-> entire _if_ statement replaced and the function refactored?
-> 
-> I'd really appreciate any comment on this.
-> 
-> Thank you!
-> -- 
-> Gustavo A. R. Silva
+From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-Gustavo,
+QCA99X0, QCA9888, QCA9984 supports calibration data in
+either OTP or DT/pre-cal file. Current ath10k supports
+Calibration data from OTP only.
 
-Thanks for the notification. I will discuss with Realtek as to the proper fix.
+If caldata is loaded from DT/pre-cal file, fetching board id
+and applying calibration parameters like tx power gets failed.
 
-Larry
+error log:
+[   15.733663] ath10k_pci 0000:01:00.0: failed to fetch board file: -2
+[   15.741474] ath10k_pci 0000:01:00.0: could not probe fw (-2)
+
+This patch adds calibration data support from DT/pre-cal
+file.  Below parameters are used to get board id and
+applying calibration parameters from cal data.
+
+		EEPROM[OTP]	FLASH[DT/pre-cal file]
+Cal param	0x700		0x10000
+Board id	0x10		0x8000
+
+Tested on QCA9888 with pre-cal file.
+
+Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/bmi.h  |    2 ++
+ drivers/net/wireless/ath/ath10k/core.c |   16 +++++++++++++---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
+index 0342073ed397..9834f351807e 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.h
++++ b/drivers/net/wireless/ath/ath10k/bmi.h
+@@ -83,6 +83,8 @@ enum bmi_cmd_id {
+ #define BMI_NVRAM_SEG_NAME_SZ 16
+ 
+ #define BMI_PARAM_GET_EEPROM_BOARD_ID 0x10
++#define BMI_PARAM_GET_FLASH_BOARD_ID 0x8000
++#define BMI_PARAM_FLASH_SECTION_ALL 0x10000
+ 
+ #define ATH10K_BMI_BOARD_ID_FROM_OTP_MASK   0x7c00
+ #define ATH10K_BMI_BOARD_ID_FROM_OTP_LSB    10
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index eea111d704c5..fb859a0c197a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -691,7 +691,7 @@ static int ath10k_core_get_board_id_from_otp(struct ath10k *ar)
+ {
+ 	u32 result, address;
+ 	u8 board_id, chip_id;
+-	int ret;
++	int ret, bmi_board_id_param;
+ 
+ 	address = ar->hw_params.patch_load_addr;
+ 
+@@ -715,8 +715,13 @@ static int ath10k_core_get_board_id_from_otp(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	ret = ath10k_bmi_execute(ar, address, BMI_PARAM_GET_EEPROM_BOARD_ID,
+-				 &result);
++	if (ar->cal_mode == ATH10K_PRE_CAL_MODE_DT ||
++	    ar->cal_mode == ATH10K_PRE_CAL_MODE_FILE)
++		bmi_board_id_param = BMI_PARAM_GET_FLASH_BOARD_ID;
++	else
++		bmi_board_id_param = BMI_PARAM_GET_EEPROM_BOARD_ID;
++
++	ret = ath10k_bmi_execute(ar, address, bmi_board_id_param, &result);
+ 	if (ret) {
+ 		ath10k_err(ar, "could not execute otp for board id check: %d\n",
+ 			   ret);
+@@ -845,6 +850,11 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
++	/* As of now pre-cal is valid for 10_4 variants */
++	if (ar->cal_mode == ATH10K_PRE_CAL_MODE_DT ||
++	    ar->cal_mode == ATH10K_PRE_CAL_MODE_FILE)
++		bmi_otp_exe_param = BMI_PARAM_FLASH_SECTION_ALL;
++
+ 	ret = ath10k_bmi_execute(ar, address, bmi_otp_exe_param, &result);
+ 	if (ret) {
+ 		ath10k_err(ar, "could not execute otp (%d)\n", ret);
+-- 
+1.7.9.5
