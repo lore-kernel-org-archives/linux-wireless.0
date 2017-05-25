@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34591 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932376AbdEKR6A (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33432 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1164693AbdEYALn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 13:58:00 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH v2 1/4] staging: rtl8192e: rtl92e_fill_tx_desc fix write to mapped out memory.
-Date: Thu, 11 May 2017 18:57:43 +0100
-Message-Id: <20170511175746.12378-1-tvboxspy@gmail.com> (sfid-20170511_195805_439638_2F7FC1EB)
+        Wed, 24 May 2017 20:11:43 -0400
+Received: by mail-pf0-f172.google.com with SMTP id e193so150313259pfh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:43 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 11/14] mwifiex: utilize netif_tx_{wake,stop}_all_queues()
+Date: Wed, 24 May 2017 17:11:16 -0700
+Message-Id: <20170525001119.64791-11-briannorris@chromium.org> (sfid-20170525_021436_318556_90C9EDA0)
+In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
+References: <20170525001119.64791-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver attempts to alter memory that is mapped to PCI device.
+We're open-coding these. Just use the helpers.
 
-This is because tx_fwinfo_8190pci points to skb->data
-
-Move the pci_map_single to when completed buffer is ready to be mapped with
-psdec is empty to drop on mapping error.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
-v2 - Fix typo in subject header. 
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/init.c | 20 ++------------------
+ 1 file changed, 2 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index 4723a0bd5067..a23628f390c9 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -1182,8 +1182,7 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
- 			  struct cb_desc *cb_desc, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 80bdf1c5f77f..d3b8ca402d08 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -332,17 +332,9 @@ void mwifiex_wake_up_net_dev_queue(struct net_device *netdev,
+ 					struct mwifiex_adapter *adapter)
  {
- 	struct r8192_priv *priv = rtllib_priv(dev);
--	dma_addr_t mapping = pci_map_single(priv->pdev, skb->data, skb->len,
--			 PCI_DMA_TODEVICE);
-+	dma_addr_t mapping;
- 	struct tx_fwinfo_8190pci *pTxFwInfo;
+ 	unsigned long dev_queue_flags;
+-	unsigned int i;
  
- 	pTxFwInfo = (struct tx_fwinfo_8190pci *)skb->data;
-@@ -1194,8 +1193,6 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
- 	pTxFwInfo->Short = _rtl92e_query_is_short(pTxFwInfo->TxHT,
- 						  pTxFwInfo->TxRate, cb_desc);
+ 	spin_lock_irqsave(&adapter->queue_lock, dev_queue_flags);
+-
+-	for (i = 0; i < netdev->num_tx_queues; i++) {
+-		struct netdev_queue *txq = netdev_get_tx_queue(netdev, i);
+-
+-		if (netif_tx_queue_stopped(txq))
+-			netif_tx_wake_queue(txq);
+-	}
+-
++	netif_tx_wake_all_queues(netdev);
+ 	spin_unlock_irqrestore(&adapter->queue_lock, dev_queue_flags);
+ }
  
--	if (pci_dma_mapping_error(priv->pdev, mapping))
--		netdev_err(dev, "%s(): DMA Mapping error\n", __func__);
- 	if (cb_desc->bAMPDUEnable) {
- 		pTxFwInfo->AllowAggregation = 1;
- 		pTxFwInfo->RxMF = cb_desc->ampdu_factor;
-@@ -1230,6 +1227,14 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
- 	}
+@@ -353,17 +345,9 @@ void mwifiex_stop_net_dev_queue(struct net_device *netdev,
+ 					struct mwifiex_adapter *adapter)
+ {
+ 	unsigned long dev_queue_flags;
+-	unsigned int i;
  
- 	memset((u8 *)pdesc, 0, 12);
-+
-+	mapping = pci_map_single(priv->pdev, skb->data, skb->len,
-+				 PCI_DMA_TODEVICE);
-+	if (pci_dma_mapping_error(priv->pdev, mapping)) {
-+		netdev_err(dev, "%s(): DMA Mapping error\n", __func__);
-+		return;
-+	}
-+
- 	pdesc->LINIP = 0;
- 	pdesc->CmdInit = 1;
- 	pdesc->Offset = sizeof(struct tx_fwinfo_8190pci) + 8;
+ 	spin_lock_irqsave(&adapter->queue_lock, dev_queue_flags);
+-
+-	for (i = 0; i < netdev->num_tx_queues; i++) {
+-		struct netdev_queue *txq = netdev_get_tx_queue(netdev, i);
+-
+-		if (!netif_tx_queue_stopped(txq))
+-			netif_tx_stop_queue(txq);
+-	}
+-
++	netif_tx_stop_all_queues(netdev);
+ 	spin_unlock_irqrestore(&adapter->queue_lock, dev_queue_flags);
+ }
+ 
 -- 
-2.11.0
+2.13.0.219.gdb65acc882-goog
