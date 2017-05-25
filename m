@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41678 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934647AbdEVPV5 (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35139 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764354AbdEYRsU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 11:21:57 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: remove setting IBSS mode when stopping AP
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
-References: <1495099339-7626-1-git-send-email-wright.feng@cypress.com>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com,
-        Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
-Message-Id: <20170522152156.6446960B75@smtp.codeaurora.org> (sfid-20170522_172234_297866_83FAF461)
-Date: Mon, 22 May 2017 15:21:56 +0000 (UTC)
+        Thu, 25 May 2017 13:48:20 -0400
+Received: by mail-oi0-f65.google.com with SMTP id m17so38647117oik.2
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:48:19 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 0/7] rtlwifi: btcoex: Final round of fixes
+Date: Thu, 25 May 2017 12:48:07 -0500
+Message-Id: <20170525174814.25005-1-Larry.Finger@lwfinger.net> (sfid-20170525_194901_724075_BE6EB6F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> wrote:
-> From: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
-> 
-> Upon stopping an AP interface the driver disable INFRA mode effectively 
-> setting the interface in IBSS mode. However, this may affect other 
-> interfaces running in INFRA mode. For instance, if user creates and stops
-> hostap daemon on virtual interface, then association cannot work on
-> primary interface because default BSS has been set to IBSS mode in
-> firmware side. The IBSS mode should be set when cfg80211 changes the
-> interface.
-> 
-> Reviewed-by: Wright Feng <wright.feng@cypress.com>
-> Signed-off-by: Chi-hsien Lin <Chi-Hsien.Lin@cypress.com>
-> [kvalo@codeaurora.org: rephased commit log based on discussion]
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+These 7 patches finish this round of fixes for the various components
+of btcoex.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-9029679f66d9 brcmfmac: remove setting IBSS mode when stopping AP
+Larry Finger (3):
+  rtlwifi: btcoex: Fix Sparse messages for undeclared symbols
+  rtlwifi: btcoex: Fix logic error in 21a 1ant
+  rtlwifi: btcoex: Fix another edit mistake in 21a 1ant
+
+Yan-Hsuan Chuang (4):
+  rtlwifi: btcoex: update new btcoex version
+  rtlwifi: btcoex: fix compiler warnings for unused functions
+  rtlwifi: btcoex: bind bt to the adapter when initialization
+  rtlwifi: btcoex: 92e: rename function that was missing to be
+    consistent
+
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  22 +
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |  32 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  53 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  41 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |   1 +
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  62 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  38 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  26 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 764 +++++++++++++++------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  43 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  36 +-
+ 14 files changed, 747 insertions(+), 379 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/9733205/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
