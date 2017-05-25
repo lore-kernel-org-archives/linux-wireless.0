@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55646 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754754AbdERNlo (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33427 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1164719AbdEYALm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 09:41:44 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: wlcore: use memdup_user
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <69124563157776eb4187fa35b0161dc8675ebeaf.1493781907.git.geliangtang@gmail.com>
-References: <69124563157776eb4187fa35b0161dc8675ebeaf.1493781907.git.geliangtang@gmail.com>
-To: Geliang Tang <geliangtang@gmail.com>
-Cc: Colin Ian King <colin.king@canonical.com>,
-        Geliang Tang <geliangtang@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20170518134144.2AE9260F5C@smtp.codeaurora.org> (sfid-20170518_154249_877763_9330EA35)
-Date: Thu, 18 May 2017 13:41:44 +0000 (UTC)
+        Wed, 24 May 2017 20:11:42 -0400
+Received: by mail-pf0-f174.google.com with SMTP id e193so150313047pfh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:42 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 10/14] mwifiex: pcie: stop masking interrupts in FW downloader
+Date: Wed, 24 May 2017 17:11:15 -0700
+Message-Id: <20170525001119.64791-10-briannorris@chromium.org> (sfid-20170525_021436_878044_906A99EC)
+In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
+References: <20170525001119.64791-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geliang Tang <geliangtang@gmail.com> wrote:
-> Use memdup_user() helper instead of open-coding to simplify the code.
-> 
-> Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+The upper layers already have disabled our interrupts (haven't called
+->enable_int() yet for probe(), and we call ->disable_int() before
+trying to reset), so this is redundant.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-6a01d48d47c8 wlcore: use memdup_user
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 7d5a4f2a9a22..c86119b05f52 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2113,12 +2113,6 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 		    "info: Downloading FW image (%d bytes)\n",
+ 		    firmware_len);
+ 
+-	if (__mwifiex_pcie_disable_host_int(adapter)) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "%s: Disabling interrupts failed.\n", __func__);
+-		return -1;
+-	}
+-
+ 	skb = dev_alloc_skb(MWIFIEX_UPLD_SIZE);
+ 	if (!skb) {
+ 		ret = -ENOMEM;
 -- 
-https://patchwork.kernel.org/patch/9715005/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.0.219.gdb65acc882-goog
