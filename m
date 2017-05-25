@@ -1,80 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38683 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932090AbdEDJMt (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34600 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S970030AbdEYRsY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2017 05:12:49 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>, Cathy Luo <cluo@marvell.com>
-Subject: RE: Re: [PATCH 2/6] mwifiex: usb: urb->context sanity check in
- complete handler
-Date: Thu, 4 May 2017 09:12:33 +0000
-Message-ID: <75f211ce26f441a0949b8e688c82d90d@SC-EXCH02.marvell.com> (sfid-20170504_111515_456663_D65B5A57)
-References: <1493812123-12053-1-git-send-email-huxinming820@gmail.com>
- <1493812123-12053-2-git-send-email-huxinming820@gmail.com>
- <af056a38-7fc7-0bb5-d43c-41fa6cc10df9@broadcom.com>
-In-Reply-To: <af056a38-7fc7-0bb5-d43c-41fa6cc10df9@broadcom.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+        Thu, 25 May 2017 13:48:24 -0400
+Received: by mail-oi0-f67.google.com with SMTP id w10so38657929oif.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:48:24 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 5/7] rtlwifi: btcoex: Fix Sparse messages for undeclared symbols
+Date: Thu, 25 May 2017 12:48:12 -0500
+Message-Id: <20170525174814.25005-6-Larry.Finger@lwfinger.net> (sfid-20170525_194902_431880_B93AA782)
+In-Reply-To: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
+References: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQXJlbmQgVmFuIFNw
-cmllbCBbbWFpbHRvOmFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb21dDQo+IFNlbnQ6IDIwMTfE
-6jXUwjTI1SAyOjUyDQo+IFRvOiBYaW5taW5nIEh1OyBMaW51eCBXaXJlbGVzcw0KPiBDYzogS2Fs
-bGUgVmFsbzsgQnJpYW4gTm9ycmlzOyBEbWl0cnkgVG9yb2tob3Y7IHJhamF0amFAZ29vZ2xlLmNv
-bTsgWmhpeXVhbg0KPiBZYW5nOyBDYXRoeSBMdW87IFhpbm1pbmcgSHUNCj4gU3ViamVjdDogW0VY
-VF0gUmU6IFtQQVRDSCAyLzZdIG13aWZpZXg6IHVzYjogdXJiLT5jb250ZXh0IHNhbml0eSBjaGVj
-ayBpbg0KPiBjb21wbGV0ZSBoYW5kbGVyDQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiANCj4gLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQ0KPiBPbiAzLTUtMjAxNyAxMzo0OCwgWGlubWluZyBIdSB3cm90ZToNCj4gPiBG
-cm9tOiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+DQo+ID4gdXJiL2NvbnRleHQg
-bWlnaHQgYmUgZnJlZWQgaW4gY29ybmVsIGNhc2UsIGFkZCBzYW5pdHkgY2hlY2sgdG8gYXZvaWQN
-Cj4gPiB1c2UtYWZ0ZXItZnJlZS4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUg
-PGh1eG1AbWFydmVsbC5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21h
-cnZlbGwvbXdpZmlleC91c2IuYyB8IDEwICsrKysrKysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQs
-IDEwIGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9tYXJ2ZWxsL213aWZpZXgvdXNiLmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21h
-cnZlbGwvbXdpZmlleC91c2IuYw0KPiA+IGluZGV4IDJmNzcwNWMuLmVlNWY0ODggMTAwNjQ0DQo+
-ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3VzYi5jDQo+ID4g
-KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3VzYi5jDQo+ID4gQEAg
-LTE2OSw2ICsxNjksMTEgQEAgc3RhdGljIHZvaWQgbXdpZmlleF91c2JfcnhfY29tcGxldGUoc3Ry
-dWN0IHVyYg0KPiAqdXJiKQ0KPiA+ICAJaW50IHJlY3ZfbGVuZ3RoID0gdXJiLT5hY3R1YWxfbGVu
-Z3RoOw0KPiA+ICAJaW50IHNpemUsIHN0YXR1czsNCj4gPg0KPiA+ICsJaWYgKCF1cmIgfHwgIXVy
-Yi0+Y29udGV4dCkgew0KPiA+ICsJCXByX2VycigiVVJCIG9yIFVSQiBjb250ZXh0IGlzIG5vdCB2
-YWxpZCBpbiBVU0IgUnggY29tcGxldGVcbiIpOw0KPiA+ICsJCXJldHVybjsNCj4gPiArCX0NCj4g
-DQo+IFNvbWV0aGluZyBpcyByZWFsbHkgb2ZmIGlmIHlvdSBuZWVkICF1cmIgaGVyZS4gRnVydGhl
-cm1vcmUsIHlvdSBhcmUgYWxyZWFkeQ0KPiBpbml0aWFsaXppbmcgc3RhY2sgdmFyaWFibGVzIHVz
-aW5nIGZpZWxkcyBpbnNpZGUgdGhlIHVyYiBiZWZvcmUgdGhpcyBjaGVjayBjYXVzaW5nIGENCj4g
-bnVsbC1kZXJlZiBzbyBpdCBpcyBib2d1cyBhbnl3YXkuIFRoZSBjb21wbGV0aW9uIGZ1bmN0aW9u
-IGlzIGEgbWVtYmVyIGluIHN0cnVjdA0KPiB1cmIuIElmIHlvdXIgZHJpdmVyIGhhcyBhIGxpc3Qg
-b2YgdGhlc2UgdXJiJ3Mgc29tZXdoZXJlIGFuZCB0aGV5IGFyZSBmcmVlIGluDQo+IHBhcmFsbGVs
-IHRoZW4geW91ciBkZXNpZ24gaXMgd3JvbmcgYW5kIHRoaXMgZG9lcyBub3Qgc29sdmUgdGhlIHVz
-ZS1hZnRlci1mcmVlLg0KPiBUaGUgdXJiIGhlcmUgd2lsbCBub3QgYmUgTlVMTCBhbmQgc3RpbGwg
-cG9pbnRzIHRvIHRoZSBvbGQgbWVtb3J5IGxvY2F0aW9uIGFzIGl0DQo+IHdhcyBoYW5kZWQgdG8g
-dGhlIHVzYiBzdWJzeXN0ZW0uIFRoYXQgcGllY2Ugb2YgbWVtb3J5IG1pZ2h0IGFscmVhZHkgYmVl
-bg0KPiBoYW5kZWQgb3V0IHRvIHNvbWUgb3RoZXIgcGllY2Ugb2YgdGhlIGtlcm5lbCBtYWtpbmcg
-YW55IGFjY2VzcyB0byBpdCBpbnZhbGlkDQo+IGFuZCBwb3RlbnRpYWxseSBjcmFzaGluZyB0aGUg
-a2VybmVsLg0KPiANCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3LiBUaGUgY29ybmVsIGNhc2UgaGFw
-cGVucyB3aGVuIGRldmljZSBmaXJtd2FyZSBjcmFzaCwNCnByZXZpb3VzIHN1Ym1pdHRlZCB1cmIg
-d2lsbCBiZSBob2xkaW5nIGluIHVzYmNvcmUsIGFuZCBnaXZlbiBiYWNrIHRvIGRldmljZSBkcml2
-ZXINCndoZW4gZGV2aWNlIGRpc2Nvbm5lY3RlZC4gV2UgYWN0dWFsbHkgbmVlZCBraWxsIHRoZSBo
-b2xkaW5nIHVyYiBiZWZvcmUgZnJlZSBpdHMgbWVtb3J5Lg0KDQotLS0gYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvdXNiLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L21hcnZlbGwvbXdpZmlleC91c2IuYw0KQEAgLTM3Myw2ICszNzMsNyBAQCBzdGF0aWMgdm9pZCBt
-d2lmaWV4X3VzYl9mcmVlKHN0cnVjdCB1c2JfY2FyZF9yZWMgKmNhcmQpDQogICAgICAgIGZvciAo
-aSA9IDA7IGkgPCBNV0lGSUVYX1RYX0RBVEFfUE9SVDsgaSsrKSB7DQogICAgICAgICAgICAgICAg
-cG9ydCA9ICZjYXJkLT5wb3J0W2ldOw0KICAgICAgICAgICAgICAgIGZvciAoaiA9IDA7IGogPCBN
-V0lGSUVYX1RYX0RBVEFfVVJCOyBqKyspIHsNCisgICAgICAgICAgICAgICAgICAgICAgIHVzYl9r
-aWxsX3VyYihwb3J0LT50eF9kYXRhX2xpc3Rbal0udXJiKTsNCiAgICAgICAgICAgICAgICAgICAg
-ICAgIHVzYl9mcmVlX3VyYihwb3J0LT50eF9kYXRhX2xpc3Rbal0udXJiKTsNCiAgICAgICAgICAg
-ICAgICAgICAgICAgIHBvcnQtPnR4X2RhdGFfbGlzdFtqXS51cmIgPSBOVUxMOw0KICAgICAgICAg
-ICAgICAgIH0NCg0KV2lsbCB1cGdyYWRlIHRoaXMgZml4IGluIFYyLg0KDQpSZWdhcmRzLA0KU2lt
-bw0KDQo+IFJlZ2FyZHMsDQo+IEFyZW5kDQo=
+A number of functions can be set to static.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  1 +
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  1 +
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |  1 +
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 84 ++--------------------
+ 4 files changed, 8 insertions(+), 79 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 03998d2e9eb8..6bc42d5b9207 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1442,6 +1442,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 	coex_dm->pre_ps_tdma = coex_dm->cur_ps_tdma;
+ }
+ 
++static
+ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				       u8 wifi_status)
+ {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 31965f0ef69d..014df3f8020f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -833,6 +833,7 @@ static void btc8723b2ant_set_sw_fulltime_dac_swing(struct btc_coexist *btcoex,
+ 		btc8723b2ant_set_dac_swing_reg(btcoex, 0x18);
+ }
+ 
++static
+ void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
+ 			    bool force_exec, bool dac_swing_on,
+ 			    u32 dac_swing_lvl)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index c27488f77573..4c7df8860f4d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -1517,6 +1517,7 @@ static void btc8821a2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ 	btc8821a2ant_sw_mechanism2(btcoexist, false, false, false, 0x18);
+ }
+ 
++static
+ void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index f00d6e6ab69b..4d3e9b920d69 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -24,6 +24,7 @@
+  ******************************************************************************/
+ 
+ #include "halbt_precomp.h"
++#include "rtl_btc.h"
+ 
+ /***********************************************
+  *		Global variables
+@@ -37,19 +38,6 @@ u32 btc_dbg_type[BTC_MSG_MAX];
+  *		Debug related function
+  ***************************************************/
+ 
+-const char *const gl_btc_wifi_bw_string[] = {
+-	"11bg",
+-	"HT20",
+-	"HT40",
+-	"HT80",
+-	"HT160"
+-};
+-
+-const char *const gl_btc_wifi_freq_string[] = {
+-	"2.4G",
+-	"5G"
+-};
+-
+ static bool halbtc_is_bt_coexist_available(struct btc_coexist *btcoexist)
+ {
+ 	if (!btcoexist->binded || NULL == btcoexist->adapter)
+@@ -313,7 +301,7 @@ static u32 halbtc_get_bt_patch_version(struct btc_coexist *btcoexist)
+ 	return 0;
+ }
+ 
+-u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
++static u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+ {
+ 	/* return value:
+ 	 * [31:16] => connected port number
+@@ -671,6 +659,7 @@ static void halbtc_write_4byte(void *bt_context, u32 reg_addr, u32 data)
+ 	rtl_write_dword(rtlpriv, reg_addr, data);
+ }
+ 
++static
+ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+@@ -684,22 +673,6 @@ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+ 		rtl_write_byte(rtlpriv, reg_addr, data);
+ }
+ 
+-void halbtc_set_macreg(void *btc_context, u32 reg_addr, u32 bit_mask, u32 data)
+-{
+-	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-
+-	rtl_set_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask, data);
+-}
+-
+-u32 halbtc_get_macreg(void *btc_context, u32 reg_addr, u32 bit_mask)
+-{
+-	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-
+-	return rtl_get_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask);
+-}
+-
+ static void halbtc_set_bbreg(void *bt_context, u32 reg_addr, u32 bit_mask,
+ 			     u32 data)
+ {
+@@ -745,6 +718,7 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
+ 					cmd_len, cmd_buf);
+ }
+ 
++static
+ void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+@@ -776,7 +750,7 @@ void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
+ 	}
+ }
+ 
+-bool halbtc_under_ips(struct btc_coexist *btcoexist)
++static bool halbtc_under_ips(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
+@@ -884,34 +858,6 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
+ 	return true;
+ }
+ 
+-void exhalbtc_power_on_setting(struct btc_coexist *btcoexist)
+-{
+-	if (!halbtc_is_bt_coexist_available(btcoexist))
+-		return;
+-
+-	btcoexist->statistics.cnt_power_on++;
+-
+-	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
+-		if (btcoexist->board_info.btdm_ant_num == 2)
+-			ex_btc8723b2ant_power_on_setting(btcoexist);
+-		else if (btcoexist->board_info.btdm_ant_num == 1)
+-			ex_btc8723b1ant_power_on_setting(btcoexist);
+-	}
+-}
+-
+-void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
+-{
+-	if (!halbtc_is_bt_coexist_available(btcoexist))
+-		return;
+-
+-	btcoexist->statistics.cnt_pre_load_firmware++;
+-
+-	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
+-		if (btcoexist->board_info.btdm_ant_num == 2)
+-			ex_btc8723b2ant_pre_load_firmware(btcoexist);
+-	}
+-}
+-
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist)
+ {
+ 	bool wifi_only = true;
+@@ -1214,19 +1160,6 @@ void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist,
+ 	halbtc_normal_low_power(btcoexist);
+ }
+ 
+-void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
+-{
+-	if (!halbtc_is_bt_coexist_available(btcoexist))
+-		return;
+-
+-	if (IS_HARDWARE_TYPE_8821(btcoexist->adapter)) {
+-	} else if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
+-		if (btcoexist->board_info.btdm_ant_num == 1)
+-			ex_btc8723b1ant_rf_status_notify(btcoexist, type);
+-	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+-	}
+-}
+-
+ void exhalbtc_stack_operation_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	u8 stack_op_type;
+@@ -1362,13 +1295,6 @@ void exhalbtc_dbg_control(struct btc_coexist *btcoexist,
+ 	halbtc_normal_low_power(btcoexist);
+ }
+ 
+-void exhalbtc_antenna_detection(struct btc_coexist *btcoexist, u32 cent_freq,
+-				u32 offset, u32 span, u32 seconds)
+-{
+-	if (!halbtc_is_bt_coexist_available(btcoexist))
+-		return;
+-}
+-
+ void exhalbtc_stack_update_profile_info(void)
+ {
+ }
+-- 
+2.12.0
