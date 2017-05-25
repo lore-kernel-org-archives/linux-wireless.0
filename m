@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59492 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751507AbdEJJdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 05:33:00 -0400
-Date: Wed, 10 May 2017 11:31:17 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Marek =?utf-8?Q?Floria=C5=84czyk?= <marek.florianczyk@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Cubieboard2 + hostapd + 100 wireless devices
-Message-ID: <20170510093113.GA9584@redhat.com> (sfid-20170510_113304_341154_0386E5EB)
-References: <1946348.9jam7OIK4C@franki>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1946348.9jam7OIK4C@franki>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35292 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936582AbdEYRZ5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 May 2017 13:25:57 -0400
+Received: by mail-wm0-f67.google.com with SMTP id g15so35030542wmc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:25:56 -0700 (PDT)
+From: Marko Stankovic <dartnorris@gmail.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Marko Stankovic <dartnorris@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: 
+Date: Thu, 25 May 2017 19:25:07 +0200
+Message-Id: <20170525172507.14356-2-dartnorris@gmail.com> (sfid-20170525_192652_495740_B69F1572)
+In-Reply-To: <20170525172507.14356-1-dartnorris@gmail.com>
+References: <20170525172507.14356-1-dartnorris@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 07, 2017 at 02:19:25PM +0200, Marek Floriańczyk wrote:
-> Hello all,
-> 
-> I need to set up such a configuration:
-> Cubieboard2 with Debian Jessie, Hostapd 2.6 as an AP, usb wifi dongle + 100 
-> devices with NodeMCU module:
-> http://www.electrodragon.com/product/esp-12f-esp8266-wifi-board/
-> 
-> I'm using usb wifi dongle based on Ralink RT5370 Wireless Adapter,
-> after I have switched hostapd network mode to "b" it works quite well (tested 
-> with 70 devices). Only text commands are going to be send from server to 
-> devices, so I don't need high speed, I need reliability.
-> 
-> Has someone any experience with such a setup ?
-> Would one recommend different wifi dongle (maybe more powerful), with different 
-> chipset?
+Subject: [PATCH 2/2] staging: wilc1000: add missing blank line after struct
+ declaration
 
-If RT5370 works for you I would stick with it. RTxxx chips with rt2800
-driver are capable to support up to 190 stations with HW encryption and
-11n aggregation (something that you are not interested). Theoretically
-more stations can be added and those should fallback to software
-encryption and frame aggregation will not be done, but I'm not sure if
-anyone test that.
+Fix a missing blank line issue reported by checkpatch.pl
 
-I'm also not sure if many people test 11b, perhaps 11g would be better
-choice. BTW, what kernel version are you using (I'm curious if 11b
-still works on latest kernels) ?
+Signed-off-by: Marko Stankovic <dartnorris@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Stanislaw
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 98316a45abd1..cae9c8ff80d8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -167,6 +167,7 @@ struct add_key_params {
+ 	bool pairwise;
+ 	u8 *mac_addr;
+ };
++
+ static struct add_key_params g_add_gtk_key_params;
+ static struct wilc_wfi_key g_key_gtk_params;
+ static struct add_key_params g_add_ptk_key_params;
+-- 
+2.11.0
