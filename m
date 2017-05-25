@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36437 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764862AbdEYRs0 (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34219 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1424777AbdEYR2z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 13:48:26 -0400
-Received: by mail-oi0-f65.google.com with SMTP id w138so38629262oiw.3
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:48:26 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 6/7] rtlwifi: btcoex: Fix logic error in 21a 1ant
-Date: Thu, 25 May 2017 12:48:13 -0500
-Message-Id: <20170525174814.25005-7-Larry.Finger@lwfinger.net> (sfid-20170525_194904_131805_0724B8B0)
-In-Reply-To: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
-References: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
+        Thu, 25 May 2017 13:28:55 -0400
+Received: by mail-wm0-f65.google.com with SMTP id d127so54574111wmf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:28:55 -0700 (PDT)
+From: Marko Stankovic <dartnorris@gmail.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Marko Stankovic <dartnorris@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 2/2] staging: wilc1000: add missing blank line after struct declaration
+Date: Thu, 25 May 2017 19:28:31 +0200
+Message-Id: <20170525172831.14596-2-dartnorris@gmail.com> (sfid-20170525_192956_703699_B5003D8B)
+In-Reply-To: <20170525172831.14596-1-dartnorris@gmail.com>
+References: <20170525172831.14596-1-dartnorris@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An edit mistake introduced a logic error.
+Fix a missing blank line issue reported by checkpatch.pl
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Marko Stankovic <dartnorris@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 2740129a86cd..30364966b938 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -1613,7 +1613,7 @@ static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
- 			btc8821a1ant_coex_table_with_type(btcoexist,
- 							  NORMAL_EXEC, 1);
- 			coex_dm->auto_tdma_adjust = false;
--		} else if ((bt_rssi_state != BTC_RSSI_STATE_HIGH) &&
-+		} else if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
- 			   (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
- 			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 14);
- 			btc8821a1ant_coex_table_with_type(btcoexist,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 98316a45abd1..cae9c8ff80d8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -167,6 +167,7 @@ struct add_key_params {
+ 	bool pairwise;
+ 	u8 *mac_addr;
+ };
++
+ static struct add_key_params g_add_gtk_key_params;
+ static struct wilc_wfi_key g_key_gtk_params;
+ static struct add_key_params g_add_ptk_key_params;
 -- 
-2.12.0
+2.11.0
