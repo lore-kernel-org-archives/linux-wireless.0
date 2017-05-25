@@ -1,35 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64914 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751597AbdENHVI (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36123 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1164691AbdEYALg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 May 2017 03:21:08 -0400
-From: qca_merez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        qca_merez <qca_merez@qca.qualcomm.com>
-CC: qca_liord <qca_liord@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        wil6210 <wil6210@qca.qualcomm.com>,
-        qca_merez <qca_merez@qca.qualcomm.com>
-Subject: RE: [7/7] wil6210: low level RF sector API
-Date: Sun, 14 May 2017 07:21:03 +0000
-Message-ID: <1906fc2d14b7496ca17a8c44ef85ae8a@euamsexm01a.eu.qualcomm.com> (sfid-20170514_092113_796558_4FF76D2E)
-References: <1477720287-17606-8-git-send-email-qca_merez@qca.qualcomm.com>
- <d1c2f4300d4843239e5339b0fa6a2e2f@euamsexm01a.eu.qualcomm.com>
-In-Reply-To: <d1c2f4300d4843239e5339b0fa6a2e2f@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Wed, 24 May 2017 20:11:36 -0400
+Received: by mail-pf0-f172.google.com with SMTP id m17so150173898pfg.3
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:36 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 02/14] mwifiex: reunite copy-and-pasted remove/reset code
+Date: Wed, 24 May 2017 17:11:07 -0700
+Message-Id: <20170525001119.64791-2-briannorris@chromium.org> (sfid-20170525_021527_278331_07A40074)
+In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
+References: <20170525001119.64791-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-S2FsbGUgVmFsbyA8a3ZhbG9AcWNhLnF1YWxjb21tLmNvbT4gd3JvdGU6DQo+IFNvcnJ5IGZvciB0
-YWtpbmcgc28gbG9uZyB0byBnZXQgYmFjayB0byB0aGlzLiBJIHdhcyBzdGlsbCBhYmxlIHRvDQo+
-IGFwcGx5IHRoZSBwYXRjaCB0byBteSBwZW5kaW5nIGJyYW5jaCwgb25seSB0aGUgbmxhX3BhcnNl
-KCkgaW50ZXJmYWNlDQo+IGhhZCBjaGFuZ2VkIGJ1dCB0aGF0IHdhcyBhIHNpbXBsZSBmaXg6DQo+
-IA0KPiBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9rdmFs
-by9hdGguZ2l0L2NvbW1pdC8/aD1wZW5kaW5nJmlkPWQzMWRmMmRjYzUzZTQ5MDFkNGMyNmRlNDVm
-NDg3N2ZiZDg3ODMxMjQNCj4gDQo+IEJ1dCB3aGVuIEkgc3RhcnRlZCB0byBsb29rIHRoaXMgbW9y
-ZSBjbG9zZWx5IEkgZG9uJ3Qgc2VlDQo+IHdpcGh5LT52ZW5kb3JfY29tbWFuZHMgc2V0IGFueXdo
-ZXJlLCBkaWQgeW91IGZvcmdvdCB0byBzZXQgdGhhdD8NCg0KWW91IGFyZSByaWdodCwgaXQgd2Fz
-IG1pc3Rha2VubHkgcmVtb3ZlZCBpbiB0aGUgdXBzdHJlYW0gcHJvY2Vzcy4gDQpJIHdpbGwgc2Vu
-ZCBhIG5ldyBwYXRjaHNldCB3aXRoIHRoZSBmaXguDQoNClRoYW5rcywNCk1heWENCg==
+When PCIe FLR code was added, it explicitly copy-and-pasted much of
+mwifiex_remove_card() into mwifiex_shutdown_sw(). This is unnecessary,
+as almost all of the code should be reused.
+
+Let's reunite what we can for now.
+
+The only functional changes for now:
+
+ * call netif_device_detach() in the remove() code path -- this wasn't
+   done before, but it really should be a no-op, when the device is
+   getting totally unregistered soon anyway
+
+ * call the ->down_dev() driver callback only after we've finished all
+   SW teardown -- this should have no significant effect, since the only
+   user (pcie.c) does very minimal work there, and it doesn't matter
+   that we reorder this
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 104 ++++++++--------------------
+ 1 file changed, 28 insertions(+), 76 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index dd87b9ff64c3..a1e98e36c1ce 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1348,26 +1348,12 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+ 	mwifiex_main_process(adapter);
+ }
+ 
+-/*
+- * This function gets called during PCIe function level reset. Required
+- * code is extracted from mwifiex_remove_card()
+- */
+-int
+-mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
++/* Common teardown code used for both device removal and reset */
++static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
+ {
+ 	struct mwifiex_private *priv;
+ 	int i;
+ 
+-	if (!adapter)
+-		goto exit_return;
+-
+-	wait_for_completion(adapter->fw_done);
+-	/* Caller should ensure we aren't suspending while this happens */
+-	reinit_completion(adapter->fw_done);
+-
+-	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+-	mwifiex_deauthenticate(priv, NULL);
+-
+ 	/* We can no longer handle interrupts once we start doing the teardown
+ 	 * below.
+ 	 */
+@@ -1389,12 +1375,9 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
+ 	}
+ 
+ 	mwifiex_dbg(adapter, CMD, "cmd: calling mwifiex_shutdown_drv...\n");
+-
+ 	mwifiex_shutdown_drv(adapter);
+-	if (adapter->if_ops.down_dev)
+-		adapter->if_ops.down_dev(adapter);
+-
+ 	mwifiex_dbg(adapter, CMD, "cmd: mwifiex_shutdown_drv done\n");
++
+ 	if (atomic_read(&adapter->rx_pending) ||
+ 	    atomic_read(&adapter->tx_pending) ||
+ 	    atomic_read(&adapter->cmd_pending)) {
+@@ -1417,9 +1400,30 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
+ 		rtnl_unlock();
+ 	}
+ 	vfree(adapter->chan_stats);
++}
++
++/*
++ * This function gets called during PCIe function level reset.
++ */
++int mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
++{
++	struct mwifiex_private *priv;
++
++	if (!adapter)
++		return 0;
++
++	wait_for_completion(adapter->fw_done);
++	/* Caller should ensure we aren't suspending while this happens */
++	reinit_completion(adapter->fw_done);
++
++	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	mwifiex_deauthenticate(priv, NULL);
++
++	mwifiex_uninit_sw(adapter);
++
++	if (adapter->if_ops.down_dev)
++		adapter->if_ops.down_dev(adapter);
+ 
+-	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
+-exit_return:
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_shutdown_sw);
+@@ -1672,61 +1676,10 @@ EXPORT_SYMBOL_GPL(mwifiex_add_card);
+  */
+ int mwifiex_remove_card(struct mwifiex_adapter *adapter)
+ {
+-	struct mwifiex_private *priv = NULL;
+-	int i;
+-
+ 	if (!adapter)
+-		goto exit_remove;
+-
+-	/* We can no longer handle interrupts once we start doing the teardown
+-	 * below. */
+-	if (adapter->if_ops.disable_int)
+-		adapter->if_ops.disable_int(adapter);
+-
+-	adapter->surprise_removed = true;
+-
+-	mwifiex_terminate_workqueue(adapter);
+-
+-	/* Stop data */
+-	for (i = 0; i < adapter->priv_num; i++) {
+-		priv = adapter->priv[i];
+-		if (priv && priv->netdev) {
+-			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+-			if (netif_carrier_ok(priv->netdev))
+-				netif_carrier_off(priv->netdev);
+-		}
+-	}
+-
+-	mwifiex_dbg(adapter, CMD,
+-		    "cmd: calling mwifiex_shutdown_drv...\n");
+-
+-	mwifiex_shutdown_drv(adapter);
+-	mwifiex_dbg(adapter, CMD,
+-		    "cmd: mwifiex_shutdown_drv done\n");
+-	if (atomic_read(&adapter->rx_pending) ||
+-	    atomic_read(&adapter->tx_pending) ||
+-	    atomic_read(&adapter->cmd_pending)) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "rx_pending=%d, tx_pending=%d,\t"
+-			    "cmd_pending=%d\n",
+-			    atomic_read(&adapter->rx_pending),
+-			    atomic_read(&adapter->tx_pending),
+-			    atomic_read(&adapter->cmd_pending));
+-	}
+-
+-	for (i = 0; i < adapter->priv_num; i++) {
+-		priv = adapter->priv[i];
+-
+-		if (!priv)
+-			continue;
++		return 0;
+ 
+-		rtnl_lock();
+-		if (priv->netdev &&
+-		    priv->wdev.iftype != NL80211_IFTYPE_UNSPECIFIED)
+-			mwifiex_del_virtual_intf(adapter->wiphy, &priv->wdev);
+-		rtnl_unlock();
+-	}
+-	vfree(adapter->chan_stats);
++	mwifiex_uninit_sw(adapter);
+ 
+ 	wiphy_unregister(adapter->wiphy);
+ 	wiphy_free(adapter->wiphy);
+@@ -1744,7 +1697,6 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter)
+ 		    "info: free adapter\n");
+ 	mwifiex_free_adapter(adapter);
+ 
+-exit_remove:
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_remove_card);
+-- 
+2.13.0.219.gdb65acc882-goog
