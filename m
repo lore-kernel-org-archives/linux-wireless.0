@@ -1,63 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:52911 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752559AbdEIH07 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 03:26:59 -0400
-Subject: [PATCH 1/3] ath9k: Reduce function calls for sequence output in
- read_file_dma()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
-Message-ID: <2bae9fbe-a5a7-f2bb-0769-0d035738650c@users.sourceforge.net> (sfid-20170509_092743_468913_24ED442C)
-Date: Tue, 9 May 2017 09:26:49 +0200
-MIME-Version: 1.0
-In-Reply-To: <03575993-754d-924c-9736-2a8d19e98fa5@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:35148 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1164690AbdEYALg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 May 2017 20:11:36 -0400
+Received: by mail-pf0-f173.google.com with SMTP id n23so150180144pfb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:35 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 01/14] mwifiex: pcie: properly synchronize, disable interrupts in driver callbacks
+Date: Wed, 24 May 2017 17:11:06 -0700
+Message-Id: <20170525001119.64791-1-briannorris@chromium.org> (sfid-20170525_021528_466661_A3160C1D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 8 May 2017 21:55:09 +0200
+It seems that the implicit assumption of the mwifiex
+{enable,disable}_int() callbacks is that after ->disable_int(), all
+interrupt handling should be complete (synchronized) and not fire again
+until after ->enable_int(). Also, interrupts should not be serviced
+until after the first ->enable_int().
 
-Some data were put into a sequence by separate function calls.
-Print the same data with two function calls less.
+However, the PCIe driver does none of this. First, the existing
+interrupt mask programming appears to only have an effect for legacy
+interrupts. It doesn't actually prevent MSI/MSI-X interrupts. Second,
+even when it might mask interrupts, we're doing nothing to ensure that
+pending IRQs have finished processing; they could be already in-flight
+when a CPU masks them.
 
-This issue was detected by using the Coccinelle software.
+Another quirk of this driver's design is the use of a racy
+"surprise_removed" check in mwifiex_pcie_interrupt(). This appears to
+act like a racy poor-man's version of masking our interrupts -- it
+allows us to short-circuit the ISR if it fires when we're not prepared
+to handle more work.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+We can resolve this all by:
+(a) disabling our IRQs after requesting them
+(b) call {enable,disable}_irq() in the {enable,disable}_int() callbacks
+(c) remove the racy '->surprise_removed' hack from
+    mwifiex_pcie_interrupt()
+(d) document the effect (or lack thereof) of PCIE_HOST_INT_MASK, to
+    clarify and possibly prevent future misuse
+
+Along the way, I decided to use underscores to prefix the driver-private
+forms of "disabling interrupts" (instead of the awkward "_noerr" suffix
+used already), partly to discourage their use.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/ath/ath9k/debug.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 70 ++++++++++++++++++++---------
+ 1 file changed, 49 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 2e64977a8ab6..981b38a1e352 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -427,9 +427,7 @@ static int read_file_dma(struct seq_file *file, void *data)
- 		seq_printf(file, "%d: %08x ", i, val[i]);
- 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 394224d6c219..ea75315bf19d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -505,12 +505,10 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
+ }
  
--	seq_puts(file, "\n\n");
--	seq_puts(file, "Num QCU: chain_st fsp_ok fsp_st DCU: chain_st\n");
--
-+	seq_puts(file, "\n\nNum QCU: chain_st fsp_ok fsp_st DCU: chain_st\n");
- 	for (i = 0; i < ATH9K_NUM_QUEUES; i++, qcuOffset += 4, dcuOffset += 5) {
- 		if (i == 8) {
- 			qcuOffset = 0;
-@@ -448,9 +446,8 @@ static int read_file_dma(struct seq_file *file, void *data)
- 			   (*dcuBase & (0x1f << dcuOffset)) >> dcuOffset);
- 	}
+ /*
+- * This function disables the host interrupt.
+- *
+- * The host interrupt mask is read, the disable bit is reset and
+- * written back to the card host interrupt mask register.
++ * This function masks the host interrupt. Effective only for legacy PCI
++ * interrupts.
+  */
+-static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
++static int __mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
+ {
+ 	if (mwifiex_pcie_ok_to_access_hw(adapter)) {
+ 		if (mwifiex_write_reg(adapter, PCIE_HOST_INT_MASK,
+@@ -525,18 +523,30 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
+ 	return 0;
+ }
  
--	seq_puts(file, "\n");
+-static void mwifiex_pcie_disable_host_int_noerr(struct mwifiex_adapter *adapter)
++/*
++ * Disable interrupts, synchronizing with any outstanding interrupts.
++ */
++static void mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
+ {
+-	WARN_ON(mwifiex_pcie_disable_host_int(adapter));
++	struct pcie_service_card *card = adapter->card;
++	int i;
++
++	WARN_ON(__mwifiex_pcie_disable_host_int(adapter));
++
++	if (card->msix_enable) {
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++) {
++			disable_irq(card->msix_entries[i].vector);
++		}
++	} else {
++		disable_irq(card->dev->irq);
++	}
+ }
+ 
+ /*
+- * This function enables the host interrupt.
+- *
+- * The host interrupt enable mask is written to the card
+- * host interrupt mask register.
++ * This function unmasks the host interrupt. Effective only for legacy PCI
++ * interrupts.
+  */
+-static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
++static int __mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
+ {
+ 	if (mwifiex_pcie_ok_to_access_hw(adapter)) {
+ 		/* Simply write the mask to the register */
+@@ -551,6 +561,26 @@ static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
+ 	return 0;
+ }
+ 
++static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++	int i, ret;
++
++	ret = __mwifiex_pcie_enable_host_int(adapter);
++	if (ret)
++		return ret;
++
++	if (card->msix_enable) {
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++) {
++			enable_irq(card->msix_entries[i].vector);
++		}
++	} else {
++		enable_irq(card->dev->irq);
++	}
++
++	return 0;
++}
++
+ /*
+  * This function initializes TX buffer ring descriptors
+  */
+@@ -1738,7 +1768,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 			while (reg->sleep_cookie && (count++ < 10) &&
+ 			       mwifiex_pcie_ok_to_access_hw(adapter))
+ 				usleep_range(50, 60);
+-			mwifiex_pcie_enable_host_int(adapter);
++			__mwifiex_pcie_enable_host_int(adapter);
+ 			mwifiex_process_sleep_confirm_resp(adapter, skb->data,
+ 							   skb->len);
+ 		} else {
+@@ -2081,7 +2111,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 		    "info: Downloading FW image (%d bytes)\n",
+ 		    firmware_len);
+ 
+-	if (mwifiex_pcie_disable_host_int(adapter)) {
++	if (__mwifiex_pcie_disable_host_int(adapter)) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "%s: Disabling interrupts failed.\n", __func__);
+ 		return -1;
+@@ -2335,8 +2365,7 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
+ 		if ((pcie_ireg == 0xFFFFFFFF) || !pcie_ireg)
+ 			return;
+ 
 -
--	seq_printf(file, "qcu_stitch state:   %2x    qcu_fetch state:        %2x\n",
-+	seq_printf(file,
-+		   "\nqcu_stitch state:   %2x    qcu_fetch state:        %2x\n",
- 		   (val[3] & 0x003c0000) >> 18, (val[3] & 0x03c00000) >> 22);
- 	seq_printf(file, "qcu_complete state: %2x    dcu_complete state:     %2x\n",
- 		   (val[3] & 0x1c000000) >> 26, (val[6] & 0x3));
+-		mwifiex_pcie_disable_host_int(adapter);
++		__mwifiex_pcie_disable_host_int(adapter);
+ 
+ 		/* Clear the pending interrupts */
+ 		if (mwifiex_write_reg(adapter, PCIE_HOST_INT_STATUS,
+@@ -2387,9 +2416,6 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+ 	}
+ 	adapter = card->adapter;
+ 
+-	if (adapter->surprise_removed)
+-		goto exit;
+-
+ 	if (card->msix_enable)
+ 		mwifiex_interrupt_status(adapter, ctx->msg_id);
+ 	else
+@@ -2494,7 +2520,7 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ 		    "info: cmd_sent=%d data_sent=%d\n",
+ 		    adapter->cmd_sent, adapter->data_sent);
+ 	if (!card->msi_enable && adapter->ps_state != PS_STATE_SLEEP)
+-		mwifiex_pcie_enable_host_int(adapter);
++		__mwifiex_pcie_enable_host_int(adapter);
+ 
+ 	return 0;
+ }
+@@ -3055,6 +3081,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+ 						  &card->msix_ctx[i]);
+ 				if (ret)
+ 					break;
++				disable_irq(card->msix_entries[i].vector);
+ 			}
+ 
+ 			if (ret) {
+@@ -3087,6 +3114,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+ 		pr_err("request_irq failed: ret=%d\n", ret);
+ 		return -1;
+ 	}
++	disable_irq(pdev->irq);
+ 
+ 	return 0;
+ }
+@@ -3244,7 +3272,7 @@ static struct mwifiex_if_ops pcie_ops = {
+ 	.register_dev =			mwifiex_register_dev,
+ 	.unregister_dev =		mwifiex_unregister_dev,
+ 	.enable_int =			mwifiex_pcie_enable_host_int,
+-	.disable_int =			mwifiex_pcie_disable_host_int_noerr,
++	.disable_int =			mwifiex_pcie_disable_host_int,
+ 	.process_int_status =		mwifiex_process_int_status,
+ 	.host_to_card =			mwifiex_pcie_host_to_card,
+ 	.wakeup =			mwifiex_pm_wakeup_card,
 -- 
-2.12.2
+2.13.0.219.gdb65acc882-goog
