@@ -1,111 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49008 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751056AbdEaPdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 11:33:00 -0400
-Date: Wed, 31 May 2017 17:32:15 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Jia-Ju Bai <baijiaju1990@163.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
- b43legacy_op_bss_info_changed
-Message-ID: <20170531173107.25eeda48@wiggum> (sfid-20170531_173327_277910_5A17D46F)
-In-Reply-To: <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
-References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com>
- <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/bJgH0wfHcTj06dYHMXr80o9"; protocol="application/pgp-signature"
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:32975 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936582AbdEYR2q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 May 2017 13:28:46 -0400
+Received: by mail-wm0-f68.google.com with SMTP id b84so38850756wmh.0
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:28:45 -0700 (PDT)
+From: Marko Stankovic <dartnorris@gmail.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Marko Stankovic <dartnorris@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 1/2] staging: wilc1000: remove excessive blank lines
+Date: Thu, 25 May 2017 19:28:30 +0200
+Message-Id: <20170525172831.14596-1-dartnorris@gmail.com> (sfid-20170525_192850_331195_26CBC098)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/bJgH0wfHcTj06dYHMXr80o9
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Fix the multiple blank lines issue reported by checkpatch.pl
 
-On Wed, 31 May 2017 13:26:43 +0300
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Signed-off-by: Marko Stankovic <dartnorris@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-> Jia-Ju Bai <baijiaju1990@163.com> writes:
->=20
-> > The driver may sleep under a spin lock, and the function call path is:
-> > b43legacy_op_bss_info_changed (acquire the lock by spin_lock_irqsave)
-> >   b43legacy_synchronize_irq
-> >     synchronize_irq --> may sleep
-> >
-> > To fix it, the lock is released before b43legacy_synchronize_irq, and t=
-he=20
-> > lock is acquired again after this function.
-> >
-> > Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> > ---
-> >  drivers/net/wireless/broadcom/b43legacy/main.c |    2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/n=
-et/wireless/broadcom/b43legacy/main.c
-> > index f1e3dad..31ead21 100644
-> > --- a/drivers/net/wireless/broadcom/b43legacy/main.c
-> > +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-> > @@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(struct =
-ieee80211_hw *hw,
-> >  	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
-> > =20
-> >  	if (changed & BSS_CHANGED_BSSID) {
-> > +		spin_unlock_irqrestore(&wl->irq_lock, flags);
-> >  		b43legacy_synchronize_irq(dev);
-> > +		spin_lock_irqsave(&wl->irq_lock, flags); =20
->=20
-> To me this looks like a fragile workaround and not a real fix. You can
-> easily add new race conditions with releasing the lock like this.
->=20
-
-
-I think releasing the lock possibly is fine. It certainly is better than
-sleeping with a lock held.
-We disabled the device interrupts just before this line.
-
-However I think the synchronize_irq should be outside of the
-conditional right after the write to B43legacy_MMIO_GEN_IRQ_MASK. (So
-two lines above)
-I don't think it makes sense to only synchronize if BSS_CHANGED_BSSID
-is set.
-
-
-On the other hand b43 does not have this irq-disabling foobar anymore.
-So somebody must have removed it. Maybe you can find the commit that
-removed this stuff from b43 and port it to b43legacy?
-
-
-So I would vote for moving the synchronize_irq up outside of the
-conditional and put the unlock/lock sequence around it.
-And as a second patch on top of that try to remove this stuff
-altogether like b43 did.
-
---=20
-Michael
-
---Sig_/bJgH0wfHcTj06dYHMXr80o9
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlku4f8ACgkQ9TK+HZCN
-iw64Kw/+N0S9zSacevNX4mgwvqPGIDwN7o8izrkRy/kxsRiTvbUvi9yZj0ffI/9V
-pHNNWY/ib1OdV0upbDxW0Rqq5V2OnS5/6hQHNvKKEv+RB70kbpq0sTZi/jLqLedT
-NM/YqKO/OACjAbT1jx0YlZzeKQkfp5lvd1avL1wwVkFcjSFVAJ/9TnR/4cOWst2R
-G2zT5SveEAMpOhxlYN/4SA1vpszdW9CzQqBwviVzDA18uRAisrLY+pvIUfRKaj0e
-GuWpeBC2uFy99ovaaLBk7teEcnRMrqDCgaZOCUsm7ilfkcPxmUPrzBC6aJhGwkRk
-ge5DyyC98Nn5fY+o6ExUd7a7Cfcug990gjSx1TkJxTGujHP/FSJbZ+glstueQ9Yl
-BAuUEfI7r/W+J6eid3u+T+bYZrY1E5Mc8DrNOR9u8+pmm8Hjp4nucTdZJ436SYW3
-3PpC+WhsyGtlPl7sOHLdv98itsGMB2qU2T2loi9+4LfxCrJrTpzEgt07lusCWje5
-01Oh6ilj6kBXL93633/ynLab2rt0zFnvx9Y/2OSRofSxIe9p6b1fcsmmiJNra7WV
-3c1ExJphTV0u+UTZpn5fVAYGT8mt6bMjbAdmnbW8iQIsc86BEmIbAf63yUC4rwSU
-PYggfb7vC69BZjHZsizfo070RqCu5b8t4F/8KtVAVEGv1SBMlb4=
-=0/6l
------END PGP SIGNATURE-----
-
---Sig_/bJgH0wfHcTj06dYHMXr80o9--
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 807aada308e3..98316a45abd1 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -84,7 +84,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+ #define DEFAULT_LINK_SPEED			72
+ 
+-
+ #define IS_MANAGMEMENT				0x100
+ #define IS_MANAGMEMENT_CALLBACK			0x080
+ #define IS_MGMT_STATUS_SUCCES			0x040
+@@ -163,7 +162,6 @@ static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
+ 	.n_bitrates = ARRAY_SIZE(ieee80211_bitrates),
+ };
+ 
+-
+ struct add_key_params {
+ 	u8 key_idx;
+ 	bool pairwise;
+@@ -281,7 +279,6 @@ static void remove_network_from_shadow(unsigned long arg)
+ 	unsigned long now = jiffies;
+ 	int i, j;
+ 
+-
+ 	for (i = 0; i < last_scanned_cnt; i++) {
+ 		if (time_after(now, last_scanned_shadow[i].time_scan +
+ 			       (unsigned long)(SCAN_RESULT_EXPIRE))) {
+@@ -526,7 +523,6 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 
+ 			memcpy(priv->au8AssociatedBss, pstrConnectInfo->bssid, ETH_ALEN);
+ 
+-
+ 			for (i = 0; i < last_scanned_cnt; i++) {
+ 				if (memcmp(last_scanned_shadow[i].bssid,
+ 					   pstrConnectInfo->bssid,
+@@ -626,7 +622,6 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 				return -ENOMEM;
+ 			strHiddenNetwork.n_ssids = request->n_ssids;
+ 
+-
+ 			for (i = 0; i < request->n_ssids; i++) {
+ 				if (request->ssids[i].ssid_len != 0) {
+ 					strHiddenNetwork.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
+@@ -927,8 +922,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 				priv->wilc_ptk[key_index]->seq = NULL;
+ 			}
+ 
+-
+-
+ 			if (!pairwise) {
+ 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+ 					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
+@@ -968,7 +961,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 				else
+ 					u8pmode = priv->wilc_groupkey | AES;
+ 
+-
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+ 					pu8TxMic = params->key + 24;
+ 					pu8RxMic = params->key + 16;
+@@ -1153,7 +1145,6 @@ static int get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 
+ 	priv = wiphy_priv(wiphy);
+ 
+-
+ 	if (!pairwise) {
+ 		key_params.key = priv->wilc_gtk[key_index]->key;
+ 		key_params.cipher = priv->wilc_gtk[key_index]->cipher;
+@@ -1298,7 +1289,6 @@ static int set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 
+ 	vif = netdev_priv(priv->dev);
+ 
+-
+ 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
+ 		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
+ 			    ETH_ALEN)) {
+@@ -1511,7 +1501,6 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
+ 						}
+ 					}
+ 
+-
+ 					if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP) && (wilc_ie))	{
+ 						cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size - 7, 0);
+ 						return;
+@@ -1533,7 +1522,6 @@ static void WILC_WFI_mgmt_tx_complete(void *priv, int status)
+ {
+ 	struct p2p_mgmt_data *pv_data = priv;
+ 
+-
+ 	kfree(pv_data->buff);
+ 	kfree(pv_data);
+ }
+@@ -1653,7 +1641,6 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 		memcpy(mgmt_tx->buff, buf, len);
+ 		mgmt_tx->size = len;
+ 
+-
+ 		if (ieee80211_is_probe_resp(mgmt->frame_control)) {
+ 			wilc_set_mac_chnl_num(vif, chan->hw_value);
+ 			curr_channel = chan->hw_value;
+@@ -1832,7 +1819,6 @@ static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	if (wilc_enable_ps)
+ 		wilc_set_power_mgmt(vif, enabled, timeout);
+ 
+-
+ 	return 0;
+ }
+ 
+@@ -2094,7 +2080,6 @@ static struct wireless_dev *add_virtual_intf(struct wiphy *wiphy,
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(priv->wdev->netdev);
+ 
+-
+ 	if (type == NL80211_IFTYPE_MONITOR) {
+ 		new_ifc = WILC_WFI_init_mon_interface(name, vif->ndev);
+ 		if (new_ifc) {
+-- 
+2.11.0
