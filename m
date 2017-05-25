@@ -1,61 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50988 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753819AbdERKkP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 06:40:15 -0400
-Message-ID: <1495104012.2553.3.camel@sipsolutions.net> (sfid-20170518_124018_755415_EC83D7AC)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Thu, 18 May 2017 12:40:12 +0200
-In-Reply-To: <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com> (sfid-20170518_122908_051835_AC8F2BE6)
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1495030794.2442.21.camel@sipsolutions.net>
-         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
-         <1495099355.2553.1.camel@sipsolutions.net>
-         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
-         (sfid-20170518_122908_051835_AC8F2BE6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34583 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S970082AbdEYRsW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 May 2017 13:48:22 -0400
+Received: by mail-oi0-f66.google.com with SMTP id w10so38657780oif.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:48:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 2/7] rtlwifi: btcoex: fix compiler warnings for unused functions
+Date: Thu, 25 May 2017 12:48:09 -0500
+Message-Id: <20170525174814.25005-3-Larry.Finger@lwfinger.net> (sfid-20170525_194905_292743_39714FD0)
+In-Reply-To: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
+References: <20170525174814.25005-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-05-18 at 12:29 +0200, Arend Van Spriel wrote:
-> On 18-5-2017 11:22, Johannes Berg wrote:
-> > On Thu, 2017-05-18 at 10:18 +0200, Arend Van Spriel wrote:
-> > > 
-> > > > We should therefore probably set the expectation that wpa_s -
-> > > > if
-> > > > it's new enough - always uses the offloaded functionality and
-> > > > always sets the WANT_1X. Then this is even better with such
-> > > > drivers, since they can immediately reject the connect()
-> > > > command if
-> > > > want_1x isn't set.
-> 
-> Getting back at this. With "always" you mean for every connect()
-> regardless whether it is using 1X or PSK?
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-No, I just meant it would never use the non-offloaded functionality for
-1X, as long as wpa_s was new enough to support it.
+Delete unused is_wifi_status_changed for 21a 1 ant
 
-The same consideration kinda applies to (non-)offloaded 4-way-HS for
-PSK though I guess, with some drivers (devices) not able to not offload
-it.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 33 ----------------------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |  2 +-
+ 2 files changed, 1 insertion(+), 34 deletions(-)
 
-> You mean adding a nl80211 command in which user-space can indicate
-> what features it supports? Do you want to use the same feature bits
-> on both sides to easily determine the combined feature set?
-> ext_feature does not really have much overlapping so not sure if it
-> adds value.
-
-No, I meant that we have NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X
-today, but then we might need also
-NL80211_EXT_FEATURE_HOST_4WAY_HANDSHAKE_STA_1X.
-
-Come to think of it though, I guess the fact that the NEW_KEY command
-isn't support would already indicate that.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 4efac5fe9982..2740129a86cd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -426,39 +426,6 @@ static void btc8821a1ant_query_bt_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
+ }
+ 
+-bool btc8821a1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+-{
+-	static bool pre_wifi_busy = true;
+-	static bool pre_under_4way = true;
+-	static bool pre_bt_hs_on = true;
+-	bool wifi_busy = false, under_4way = false, bt_hs_on = false;
+-	bool wifi_connected = false;
+-
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+-			   &wifi_connected);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_4_WAY_PROGRESS,
+-			   &under_4way);
+-
+-	if (wifi_connected) {
+-		if (wifi_busy != pre_wifi_busy) {
+-			pre_wifi_busy = wifi_busy;
+-			return true;
+-		}
+-		if (under_4way != pre_under_4way) {
+-			pre_under_4way = under_4way;
+-			return true;
+-		}
+-		if (bt_hs_on != pre_bt_hs_on) {
+-			pre_bt_hs_on = bt_hs_on;
+-			return true;
+-		}
+-	}
+-
+-	return false;
+-}
+-
+ static void btc8821a1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+ 	struct btc_bt_link_info	*bt_link_info = &btcoexist->bt_link_info;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 41943c34edff..c27488f77573 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -359,7 +359,7 @@ static void btc8821a2ant_query_bt_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
+ }
+ 
+-bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
++static bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ {
+ 	static bool pre_wifi_busy = true;
+ 	static bool pre_under_4way = true;
+-- 
+2.12.0
