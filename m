@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipout1-voc1esa.cbr1.mail-filtering.com.au ([117.55.234.241]:52853
-        "EHLO o-voc1esa.cbr1.mail-filtering.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754677AbdERJWh (ORCPT
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:34802 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764497AbdEZPKM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 05:22:37 -0400
-Subject: Re: [PATCH] rt2800usb: Add Epson wireless adapter device-id
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <8e00714b-ab62-15e9-e86a-e0de5009797d@records.headdesk.com.au>
- <87shk267jc.fsf@purkki.adurom.net>
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        helmut.schaa@googlemail.com
-From: =?UTF-8?Q?Tom_Gaudasi=c5=84ski?= <tomg@records.headdesk.com.au>
-Message-ID: <8177522a-e1c0-353a-8ce7-d7506415b6d7@records.headdesk.com.au> (sfid-20170518_112250_788661_8CE3B986)
-Date: Thu, 18 May 2017 18:46:14 +1000
+        Fri, 26 May 2017 11:10:12 -0400
+Received: by mail-qt0-f180.google.com with SMTP id c13so10519045qtc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2017 08:10:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87shk267jc.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87bmqi4q2u.fsf@purkki.adurom.net>
+References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
+ <1494928877-27168-11-git-send-email-amit.karwar@redpinesignals.com> <87bmqi4q2u.fsf@purkki.adurom.net>
+From: amit karwar <amitkarwar@gmail.com>
+Date: Fri, 26 May 2017 20:40:11 +0530
+Message-ID: <CAEhWJFnaG4xC71CL_ayYEyGg0HMNoyHK7aE9gcGAmsako8Q9Tw@mail.gmail.com> (sfid-20170526_171017_496879_2465E219)
+Subject: Re: [v3 10/11] rsi: Add new firmware loading method
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is it advisable to re-submit with the noted corrections fixed?
-
-
-On 18/05/17 15:47, Kalle Valo wrote:
-> Tom Gaudasiński <tomg@records.headdesk.com.au> writes:
+On Wed, May 24, 2017 at 1:57 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
 >
->> Make Epson WN7512BEP work by adding its device-id to rt2800usb. Device
->> contains a Ralink RT3071L, registers as vendor Accton/Arcadyan.
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 >>
->> Signed-off-by: Tom Gaudasinski <tomg@records.headdesk.com.au>
-> The prefix should be "rt2x00:".
+>> The older firmware loading method has been deprecated and not in use
+>> for any chipets. New method is introduced which works based on soft
+>> boot loader. In this method, complete RAM image and FLASH image are
+>> present in the flash. Before loading the functional firmware, host
+>> issues boot loader commands to verify whether firmware to load is
+>> different from the current functional firmware. If not, firmware
+>> upgrade progresses and boot loader will switch to the new functional
+>> firmware.
+>>
+>> "rs9113_wlan_qspi.rps" is the firmware filename used in this patch.
 >
->> --- linux/drivers/net/wireless/ralink/rt2x00/rt2800usb.c.orig   
->> 2017-05-17 19:49:44.893895819 +1000
->> +++ linux/drivers/net/wireless/ralink/rt2x00/rt2800usb.c    2017-05-17
->> 19:49:32.906111192 +1000
->> @@ -1156,6 +1156,8 @@ static struct usb_device_id rt2800usb_de
->>      { USB_DEVICE(0x2001, 0x3c17) },
->>      /* Panasonic */
->>      { USB_DEVICE(0x083a, 0xb511) },
->> +    /* Accton/Arcadyan/Epson */
->> +    { USB_DEVICE(0x083a, 0xb512) },
-> The patch looks to be corrupted, didn't it test it though. Better use
-> 'git send-email' to submit patches.
+> I don't know if you saw the discussion with the wil6210 firmware, but
+> the linux-firmware maintainers prefer to have a subdirectory for
+> firmware files. I'm planning to apply this series now, but you can send
+> a followup patch ASAP which changes the rsi driver to use a subdirectory
+> for the firmware files?
+
+I have just sent a follow up patch.
+
+> Normally these kind of breaks in user space interface are not allowed,
+> and instead the requirement is that the driver has a transition period
+> from the old firmware interface to the new one. But I'm making an
+> exception here as, to my knowledge, the upstream rsi driver is not that
+> widely used and I want to get the driver development going on again.
 >
+
+Right. Driver is not currently much used.
+Thanks for accepting the changes.
+
+Regards,
+Amitkumar Karwar
