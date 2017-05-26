@@ -1,116 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:27166
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1948805AbdEZWtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 18:49:47 -0400
-From: Norik Dzhandzhapanyan <norikd@ethertronics.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] Per chain RSSI reporting
-Date: Fri, 26 May 2017 22:49:45 +0000
-Message-ID: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com> (sfid-20170527_034507_975851_E91C90C7)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36707 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754152AbdEZSmC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 May 2017 14:42:02 -0400
+Received: by mail-oi0-f65.google.com with SMTP id w138so2982597oiw.3
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2017 11:42:02 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 7/7] rtlwifi: btcoex: Fix another edit mistake in 21a 1ant
+Date: Fri, 26 May 2017 13:41:47 -0500
+Message-Id: <20170526184147.31239-8-Larry.Finger@lwfinger.net> (sfid-20170526_204335_842669_CE84ED57)
+In-Reply-To: <20170526184147.31239-1-Larry.Finger@lwfinger.net>
+References: <20170526184147.31239-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for per chain RSSI reporting w/smoothing.
+In routine btc8821a1ant_action_wifi_multi_port(), an edit that removed
+several lines was missed.
 
-Signed-off-by: Norik Dzhandzhapanyan norikd@ethertronics.com
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - no changes
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 27 ----------------------
+ 1 file changed, 27 deletions(-)
 
-
---- htt_rx.c.orig  2017-05-26 15:26:37.918504255 -0700
-+++ htt_rx.c        2017-05-26 12:10:33.139809025 -0700
-@@ -825,14 +825,71 @@ static bool ath10k_htt_rx_h_channel(stru
-              return true;
-}
-
-+/*
-+ * Signal data is somewhat glitchy. We smooth it out here with
-+ * a 16 point moving average by storing samples in a buffer.
-+ * As new samples come in, remove the oldest and add the newest
-+ * to the running sum.  Avoids changes/impact to other generic averaging.
-+ */
-+
-+/* Moving average buffer */
-+#define MA_SAMPLES (16)
-+
-+struct ma_buffer
-+{
-+             int count;
-+             int head;
-+             int tail;
-+             int sum;
-+             int samps[MA_SAMPLES];
-+};
-+
-+struct ma_buffer ma_buffers[IEEE80211_MAX_CHAINS] =3D {{ 0 }};
-+
-+static int ath_cb_moving_average(struct ma_buffer *mb, int8_t samp)
-+{
-+             if (mb->count < MA_SAMPLES) {
-+                            mb->count++;
-+                            mb->sum +=3D samp;
-+                            mb->tail =3D 0;
-+             } else {
-+                            int oldest =3D mb->samps[mb->tail];
-+                            mb->tail =3D (mb->head =3D=3D MA_SAMPLES - 1) =
-? 0 : mb->head + 1;
-+                            mb->sum =3D mb->sum - oldest + samp;
-+             }
-+
-+             mb->samps[mb->head] =3D samp;
-+             mb->head =3D (mb->head =3D=3D MA_SAMPLES - 1) ? 0 : mb->head =
-+ 1;
-+
-+             return (mb->sum / mb->count);
-+}
-+
-static void ath10k_htt_rx_h_signal(struct ath10k *ar,
-                                                              struct ieee80=
-211_rx_status *status,
-                                                              struct htt_rx=
-_desc *rxd)
-{
--              /* FIXME: Get real NF */
--              status->signal =3D ATH10K_DEFAULT_NOISE_FLOOR +
--                                            rxd->ppdu_start.rssi_comb;
--              status->flag &=3D ~RX_FLAG_NO_SIGNAL_VAL;
-+    int i;
-+
-+    for(i=3D0;i<IEEE80211_MAX_CHAINS;i++)
-+    {
-+        status->chains &=3D ~BIT(i);
-+
-+        if (rxd->ppdu_start.rssi_chains[i].pri20_mhz !=3D 0x80)
-+        {
-+            int8_t rssi =3D ATH10K_DEFAULT_NOISE_FLOOR +
-+                rxd->ppdu_start.rssi_chains[i].pri20_mhz;
-+
-+            status->chains |=3D BIT(i);
-+
-+            /* Compute the moving average of rssi */
-+                                status->chain_signal[i] =3D ath_cb_moving_=
-average(&ma_buffers[i], rssi);
-+        }
-+    }
-+
-+    /* FIXME: Get real NF */
-+    status->signal =3D ATH10K_DEFAULT_NOISE_FLOOR +
-+        rxd->ppdu_start.rssi_comb;
-+    status->flag &=3D ~RX_FLAG_NO_SIGNAL_VAL;
-}
-
- static void ath10k_htt_rx_h_mactime(struct ath10k *ar,
-The contents of this transmission are Ethertronics Inc. Confidential and ma=
-y contain proprietary or legally privileged information which may not be di=
-sclosed, copied or distributed without the express written consent of Ether=
-tronics Inc. The information is intended to be for the use of the individua=
-l or entity named on this transmission. If you are not the intended recipie=
-nt, be aware that any disclosure, copying, distribution or use of the conte=
-nts of this information is prohibited. If you have received this transmissi=
-on in error, please notify us by telephone immediately so that we can arran=
-ge for the retrieval of the original documents at no cost to you. Alternati=
-vely, notify the sender by replying to this transmission and delete the mes=
-sage without disclosing it. Thank you
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 30364966b938..6a1d0dece485 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -44,8 +44,6 @@ static struct coex_dm_8821a_1ant glcoex_dm_8821a_1ant;
+ static struct coex_dm_8821a_1ant *coex_dm = &glcoex_dm_8821a_1ant;
+ static struct coex_sta_8821a_1ant glcoex_sta_8821a_1ant;
+ static struct coex_sta_8821a_1ant *coex_sta = &glcoex_sta_8821a_1ant;
+-static void btc8821a1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
+-						  u8 wifi_status);
+ 
+ static const char *const glbt_info_src_8821a_1ant[] = {
+ 	  "BT Info[wifi fw]",
+@@ -1472,35 +1470,10 @@ static void btc8821a1ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ static
+ void btc8821a1ant_action_wifi_multi_port(struct btc_coexist *btcoexist)
+ {
+-	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+-
+ 	btc8821a1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
+-	/* tdma and coex table */
+-	if (coex_dm->bt_status == BT_8821A_1ANT_BT_STATUS_ACL_BUSY) {
+-		if (bt_link_info->a2dp_exist) {
+-			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 14);
+-			btc8821a1ant_coex_table_with_type(btcoexist,
+-							  NORMAL_EXEC, 1);
+-		} else if (bt_link_info->a2dp_exist &&
+-			   bt_link_info->pan_exist) {
+-			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
+-			btc8821a1ant_coex_table_with_type(btcoexist,
+-							  NORMAL_EXEC, 4);
+-		} else {
+-			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 20);
+-			btc8821a1ant_coex_table_with_type(btcoexist,
+-							  NORMAL_EXEC, 4);
+-		}
+-	} else if ((coex_dm->bt_status == BT_8821A_1ANT_BT_STATUS_SCO_BUSY) ||
+-		   (BT_8821A_1ANT_BT_STATUS_ACL_SCO_BUSY ==
+-		    coex_dm->bt_status)) {
+-		btc8821a1ant_act_bt_sco_hid_only_busy(btcoexist,
+-				BT_8821A_1ANT_WIFI_STATUS_CONNECTED_SCAN);
+-	} else {
+ 		btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, false, 8);
+ 		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 2);
+ 	}
+-}
+ 
+ static
+ void btc8821a1ant_action_wifi_not_connected_asso_auth(
+-- 
+2.12.0
