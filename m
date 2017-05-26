@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f53.google.com ([209.85.214.53]:34067 "EHLO
-        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdE1UZZ (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35483 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754119AbdEZSlz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 May 2017 16:25:25 -0400
-Received: by mail-it0-f53.google.com with SMTP id a10so5937810itg.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 May 2017 13:25:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <531d6bb5-e864-111a-b976-8664b6f68e80@broadcom.com>
-References: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
- <531d6bb5-e864-111a-b976-8664b6f68e80@broadcom.com>
-From: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>
-Date: Sun, 28 May 2017 22:25:23 +0200
-Message-ID: <CAOf5uw=fnr=A0cb9nCzjk1HKj4VcQtnxHXCuSdKDKmhcfJbZqA@mail.gmail.com> (sfid-20170528_222530_443523_DB846C46)
-Subject: Re: Probelm on (brcmfmac: use pre-allocated scatter-gather table for txglomming)
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 26 May 2017 14:41:55 -0400
+Received: by mail-oi0-f65.google.com with SMTP id v80so2985665oie.2
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2017 11:41:55 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH v2 0/7] rtlwifi: btcoex: Final round of fixes
+Date: Fri, 26 May 2017 13:41:40 -0500
+Message-Id: <20170526184147.31239-1-Larry.Finger@lwfinger.net> (sfid-20170526_204331_218718_C4471FD4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend
+These 7 patches finish this round of fixes for the various components
+of btcoex.
 
-On Sun, May 28, 2017 at 9:37 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 11-03-16 16:23, Michael Trimarchi wrote:
->> Hi
->>
->> I have a kernel panic on the brcmf_sdiod_sgtable_alloc just because
->> the function is called before brcmf_sdio_probe.
->>
->> I think that
->>  nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
->>                       sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
->>
->> drvr is null. Can you explain how it can work or do you have already a
->> fix for this?
->
-> It sounds familiar so what kernel version are you seeing this.
->
+In v2 of these patches, two problems noted by the kbuild test robot are
+corrected.
 
-This should be already sort out 1 year ago ;)
+Larry
 
-Regards
-Michael
+Larry Finger (4):
+  rtlwifi: btcoex: Remove duplicate test in if statement
+  rtlwifi: btcoex: Fix Sparse messages for undeclared symbols
+  rtlwifi: btcoex: Fix logic error in 21a 1ant
+  rtlwifi: btcoex: Fix another edit mistake in 21a 1ant
 
-> Regards,
-> Arend
+Yan-Hsuan Chuang (3):
+  rtlwifi: btcoex: update new btcoex version
+  rtlwifi: btcoex: fix compiler warnings for unused functions
+  rtlwifi: btcoex: bind bt to the adapter when initialization
 
-
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  22 +
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |  32 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  55 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  41 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |   1 +
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |  62 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  38 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  26 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 764 +++++++++++++++------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  43 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  36 +-
+ 14 files changed, 748 insertions(+), 380 deletions(-)
 
 -- 
-| Michael Nazzareno Trimarchi                     Amarula Solutions BV |
-| COO  -  Founder                                      Cruquiuskade 47 |
-| +31(0)851119172                                 Amsterdam 1018 AM NL |
-|                  [`as] http://www.amarulasolutions.com               |
+2.12.0
