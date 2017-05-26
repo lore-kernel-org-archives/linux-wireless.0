@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36757 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755723AbdELHgF (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44557 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1947055AbdEZG5B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 03:36:05 -0400
-From: Xie Qirong <cheerx1994@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Xie Qirong <cheerx1994@gmail.com>
-Subject: [PATCH] brcmfmac: btcoex: replace init_timer with setup_timer
-Date: Fri, 12 May 2017 15:35:55 +0800
-Message-Id: <20170512073555.12333-1-cheerx1994@gmail.com> (sfid-20170512_093629_010927_1C84A4A3)
+        Fri, 26 May 2017 02:57:01 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Xinming Hu <huxinming820@gmail.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: Re: [PATCH v4 1/5] mwifiex: use variable interface header length
+Date: Fri, 26 May 2017 06:56:53 +0000
+Message-ID: <855803f571094956a1aecb0a44f619df@SC-EXCH02.marvell.com> (sfid-20170526_085832_418372_3A7B345E)
+References: <1495523554-30753-1-git-send-email-huxinming820@gmail.com>
+ <8737buslbp.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <8737buslbp.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The combination of init_timer and setting up the data and function field
-manually is equivalent to calling setup_timer(). This is an api
-consolidation only and improves readability.
-
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Xie Qirong <cheerx1994@gmail.com>
----
-
- setup_timer.cocci suggested the following improvement:
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c:383:1-11: Use
- setup_timer function for function on line 384.
-
- Patch was compile checked with: x86_64_defconfig + CONFIG_BRCMFMAC=y +
- CONFIG_BRCMFMAC_USB=y + CONFIG_BRCMFMAC_PCIE=y + CONFIG_BRCM_TRACING=y +
- CONFIG_BRCMDBG=y
-
- Kernel version: 4.11.0 (localversion-next is next-20170512)
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-index 14a70d4b4e86..3559fb5b8fb0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-@@ -380,9 +380,7 @@ int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg)
- 	/* Set up timer for BT  */
- 	btci->timer_on = false;
- 	btci->timeout = BRCMF_BTCOEX_OPPR_WIN_TIME;
--	init_timer(&btci->timer);
--	btci->timer.data = (ulong)btci;
--	btci->timer.function = brcmf_btcoex_timerfunc;
-+	setup_timer(&btci->timer, brcmf_btcoex_timerfunc, (ulong)btci);
- 	btci->cfg = cfg;
- 	btci->saved_regs_part1 = false;
- 	btci->saved_regs_part2 = false;
--- 
-2.12.2
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEthbGxlIFZhbG8gW21haWx0
+bzprdmFsb0Bjb2RlYXVyb3JhLm9yZ10NCj4gU2VudDogMjAxN8TqNdTCMjTI1SAxNjozNg0KPiBU
+bzogWGlubWluZyBIdQ0KPiBDYzogTGludXggV2lyZWxlc3M7IEJyaWFuIE5vcnJpczsgRG1pdHJ5
+IFRvcm9raG92OyByYWphdGphQGdvb2dsZS5jb207DQo+IFpoaXl1YW4gWWFuZzsgQ2F0aHkgTHVv
+OyBYaW5taW5nIEh1OyBHYW5hcGF0aGkgQmhhdA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY0IDEv
+NV0gbXdpZmlleDogdXNlIHZhcmlhYmxlIGludGVyZmFjZSBoZWFkZXIgbGVuZ3RoDQo+IA0KPiBY
+aW5taW5nIEh1IDxodXhpbm1pbmc4MjBAZ21haWwuY29tPiB3cml0ZXM6DQo+IA0KPiA+IEZyb206
+IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4NCj4gPiBVc2IgdHggYWdncmVnYXRp
+b24gZmVhdHVyZSB3aWxsIHV0aWxpemUgNC1ieXRlcyBidXMgaW50ZXJmYWNlIGhlYWRlciwNCj4g
+PiBvdGhlcndpc2UgaXQgd2lsbCBiZSBzZXQgdG8gemVybyBpbiBkZWZhdWx0IGNhc2UuDQo+ID4N
+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+IFNp
+Z25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2Zm
+LWJ5OiBHYW5hcGF0aGkgQmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+DQo+ID4gLS0tDQo+ID4gRHJv
+cCA1LzYgcGF0Y2ggaW4gdjMNCj4gPiB2NDogc2FtZSBhcyB2MSx2Mix2Mw0KPiANCj4gQlRXLCBJ
+IHdvdWxkIHByZWZlciB0aGF0IHlvdSBkb24ndCB1c2UgbXkgcXVhbGNvbW0uY29tIGFkZHJlc3Mg
+d2hlbg0KPiBzdWJtaXR0aW5nIHBhdGNoZXMuIFVzaW5nIGNvZGVhdXJvcmEub3JnIG9yIG5vdCBD
+Q2luZyBtZSBhdCBhbGwgKGFzIEkgdGFrZSBhbGwNCj4gcGF0Y2hlcyBmcm9tIHBhdGNod29yayBh
+bnl3YXkpIGlzIG11Y2ggYmV0dGVyIGZvciBtZS4NCj4gDQpPaywgS2FsbGUuDQoNClJlZ2FyZHMs
+DQpTaW1vbg0KPiAtLQ0KPiBLYWxsZSBWYWxvDQo=
