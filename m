@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway21.websitewelcome.com ([192.185.45.155]:27461 "EHLO
-        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751368AbdEIMAn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 08:00:43 -0400
-Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
-        by gateway21.websitewelcome.com (Postfix) with ESMTP id B26A8400DABE5
-        for <linux-wireless@vger.kernel.org>; Tue,  9 May 2017 07:00:40 -0500 (CDT)
-Date: Tue, 09 May 2017 07:00:40 -0500
-Message-ID: <20170509070040.Horde.6Ij5mVFBAtwRRwxv1IUZfj_@gator4166.hostgator.com> (sfid-20170509_140047_284322_18A39A14)
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH] net: wireless: ath: ath10k: remove unnecessary code
-References: <20170509042159.GA19727@embeddedgus>
- <87lgq6387s.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87lgq6387s.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:41126 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935988AbdEZLC6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 May 2017 07:02:58 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH 4.12 REGRESSION fix] brcmfmac: Use ALIGNMENT rather then hardcoded "4" for bus:txglomalign
+Date: Fri, 26 May 2017 13:02:55 +0200
+Message-Id: <20170526110255.21342-1-hdegoede@redhat.com> (sfid-20170526_130304_010370_C89E38A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
-Quoting Kalle Valo <kvalo@qca.qualcomm.com>:
+This fixes the following errors showing up in dmesg:
 
-> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
->
->> The name of an array used by itself will always return the array's address.
->> So these tests will always evaluate as false and therefore the _return_
->> will never be executed.
->>
->> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
->
-> I don't understand the commit log, especially what does "The name of an
-> array used by itself" mean?
->
+[   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
+[   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
+[   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
 
-Let me correct that and I'll send the patch again.
+Fixes: 6e84ab604bde ("properly align buffers ... with 64 bit DMA")
+Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
---
-Gustavo A. R. Silva
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index fc64b8913aa6..e03450059b06 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3422,7 +3422,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 		/* otherwise, set txglomalign */
+ 		value = sdiodev->settings->bus.sdio.sd_sgentry_align;
+ 		/* SDIO ADMA requires at least 32 bit alignment */
+-		value = max_t(u32, value, 4);
++		value = max_t(u32, value, ALIGNMENT);
+ 		err = brcmf_iovar_data_set(dev, "bus:txglomalign", &value,
+ 					   sizeof(u32));
+ 	}
+-- 
+2.13.0
