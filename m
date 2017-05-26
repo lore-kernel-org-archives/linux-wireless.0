@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45302 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754347AbdEROOk (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33502 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1948603AbdEZSmB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 10:14:40 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: fix spelling mistake: "Pairwiase" -> "Pairwise"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170503225543.10296-1-colin.king@canonical.com>
-References: <20170503225543.10296-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Joe Perches <joe@perches.com>,
+        Fri, 26 May 2017 14:42:01 -0400
+Received: by mail-oi0-f65.google.com with SMTP id h4so2993362oib.0
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2017 11:42:01 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Message-Id: <20170518141439.6909C60F68@smtp.codeaurora.org> (sfid-20170518_161448_120174_D23A661B)
-Date: Thu, 18 May 2017 14:14:39 +0000 (UTC)
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 6/7] rtlwifi: btcoex: Fix logic error in 21a 1ant
+Date: Fri, 26 May 2017 13:41:46 -0500
+Message-Id: <20170526184147.31239-7-Larry.Finger@lwfinger.net> (sfid-20170526_204335_297885_8844D2F4)
+In-Reply-To: <20170526184147.31239-1-Larry.Finger@lwfinger.net>
+References: <20170526184147.31239-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> trivial fixes to spelling mistakes in RT_TRACE messages.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+An edit mistake introduced a logic error.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-6b9e6f62552e rtlwifi: fix spelling mistake: "Pairwiase" -> "Pairwise"
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 2740129a86cd..30364966b938 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -1613,7 +1613,7 @@ static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
+ 			btc8821a1ant_coex_table_with_type(btcoexist,
+ 							  NORMAL_EXEC, 1);
+ 			coex_dm->auto_tdma_adjust = false;
+-		} else if ((bt_rssi_state != BTC_RSSI_STATE_HIGH) &&
++		} else if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+ 			   (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+ 			btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 14);
+ 			btc8821a1ant_coex_table_with_type(btcoexist,
 -- 
-https://patchwork.kernel.org/patch/9710495/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
