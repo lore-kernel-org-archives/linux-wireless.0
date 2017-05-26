@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36613 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752038AbdEPKCk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 06:02:40 -0400
-Received: by mail-pg0-f65.google.com with SMTP id h64so16095640pge.3
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 03:02:40 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43108 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967435AbdEZLSz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 May 2017 07:18:55 -0400
+Subject: Re: [PATCH 4.12 REGRESSION fix] brcmfmac: Use ALIGNMENT rather then
+ hardcoded "4" for bus:txglomalign
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v3 00/11] Firmware loading changes
-Date: Tue, 16 May 2017 15:31:06 +0530
-Message-Id: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170516_120246_131549_BD7FFFB4)
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <20170526110255.21342-1-hdegoede@redhat.com>
+ <87d1avrhrg.fsf@kamboji.qca.qualcomm.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <619191d3-8ed3-b2a5-e8db-330d7b610b2d@redhat.com> (sfid-20170526_132058_674663_75B9179E)
+Date: Fri, 26 May 2017 13:18:52 +0200
+MIME-Version: 1.0
+In-Reply-To: <87d1avrhrg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series includes firmware loading enhancements for
-Redpine 9113 chipset. The older method is not being used by any
-Redpine chipset. There is no firmware image submitted to upstream
-yet. We will submit 9113's firmware image once these changes are
-accepted.
+Hi,
 
-Amitkumar Karwar (1):
-  rsi: define RSI_USB_BUF_SIZE macro
+On 26-05-17 13:15, Kalle Valo wrote:
+> Hans de Goede <hdegoede@redhat.com> writes:
+> 
+>> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
-Prameela Rani Garnepudi (10):
-  rsi: Rename file rsi_91x_pkt.c to rsi_91x_hal.c
-  rsi: Changes to sdio reads and writes
-  rsi: Changes in USB read and write operations
-  rsi: use macros in USB specific code
-  rsi: Handle usb multi-byte write failure case properly
-  rsi: Add usb multi-byte read operation
-  rsi: Add host interface operations as separate structure.
-  rsi: Add new host interface operations
-  rsi: Add new firmware loading method
-  rsi: Remove old firmware loading method
+Ah I see I set the Author to Arend when I added this to my
+tree a while back, that is fine as he did all the work
+for this one. I was under the impression Arend would submit
+this himself, but since I did not see a submission yet
+I decided to go ahead and submit this.
 
- drivers/net/wireless/rsi/Makefile           |   2 +-
- drivers/net/wireless/rsi/rsi_91x_hal.c      | 740 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_pkt.c      | 215 --------
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 211 +++++++-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 190 +------
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 166 ++++++-
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 125 -----
- drivers/net/wireless/rsi/rsi_common.h       |   3 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  81 +++
- drivers/net/wireless/rsi/rsi_main.h         |  36 +-
- drivers/net/wireless/rsi/rsi_sdio.h         |   6 +-
- drivers/net/wireless/rsi/rsi_usb.h          |   5 +-
- 12 files changed, 1205 insertions(+), 575 deletions(-)
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_hal.c
- delete mode 100644 drivers/net/wireless/rsi/rsi_91x_pkt.c
- create mode 100644 drivers/net/wireless/rsi/rsi_hal.h
+>> This fixes the following errors showing up in dmesg:
+>>
+>> [   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
+>> [   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
+>> [   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
+>>
+>> Fixes: 6e84ab604bde ("properly align buffers ... with 64 bit DMA")
+>> Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> 
+> I'll queue this to 4.12.
 
--- 
-2.7.4
+Thank you, given that Arend is set as the Author you can add my:
+
+Tested-by: Hans de Goede <hdegoede@redhat.com>
+
+And maybe drop the Suggested-by: Arend van Spriel ?
+
+Regards,
+
+Hans
