@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:52327 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751503AbdEaITL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48972 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1035659AbdEZOyI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 04:19:11 -0400
-Date: Wed, 31 May 2017 10:18:36 +0200
-From: Bastian Bittorf <bb@npl.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-        netdev <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 'iw events' stops receiving events after a while on 4.9 + hacks
-Message-ID: <20170531081836.GC2849@medion.lan> (sfid-20170531_101923_565848_B229A53E)
-References: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
- <20170517100844.GC2849@medion.lan>
- <1495027835.2442.13.camel@sipsolutions.net>
- <fa96dfad-8d1b-c48f-df3b-3df0d548a5c6@candelatech.com>
- <1496150322.3327.9.camel@sipsolutions.net>
+        Fri, 26 May 2017 10:54:08 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH 4.12 REGRESSION fix] brcmfmac: Use ALIGNMENT rather then hardcoded "4" for bus:txglomalign
+References: <20170526110255.21342-1-hdegoede@redhat.com>
+        <87d1avrhrg.fsf@kamboji.qca.qualcomm.com>
+        <619191d3-8ed3-b2a5-e8db-330d7b610b2d@redhat.com>
+        <a3926467-4991-dba0-46e9-8397f25ff92d@broadcom.com>
+Date: Fri, 26 May 2017 17:53:39 +0300
+In-Reply-To: <a3926467-4991-dba0-46e9-8397f25ff92d@broadcom.com> (Arend van
+        Spriel's message of "Fri, 26 May 2017 13:35:36 +0200")
+Message-ID: <874lw7r7nw.fsf@kamboji.qca.qualcomm.com> (sfid-20170526_165442_800395_BFF768A5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496150322.3327.9.camel@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Johannes Berg <johannes@sipsolutions.net> [31.05.2017 10:09]:
-> > Is there any way to dump out the socket information if we reproduce
-> > the problem?
-> 
-> I have no idea, sorry.
-> 
-> If you or Bastian can tell me how to reproduce the problem, I can try
-> to investigate it.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-there was an interesting fix regarding the shell-builtin 'read' in
-busybox[1]. I will retest again and report if this changes anything.
+>>>> Fixes: 6e84ab604bde ("properly align buffers ... with 64 bit DMA")
+>>>> Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>
+>>> I'll queue this to 4.12.
+>> 
+>> Thank you, given that Arend is set as the Author you can add my:
+>> 
+>> Tested-by: Hans de Goede <hdegoede@redhat.com>
+>> 
+>> And maybe drop the Suggested-by: Arend van Spriel ?
 
-bye, bastian
+Sure, I can add that.
 
-PS: @ben: are you also using 'iw event | while read -r LINE ...'?
+> Seems to me you need my Signed-off-by: as I do not see that in this patch.
 
-[1]
-https://git.busybox.net/busybox/commit/?id=f5470419404d643070db99d058405b714695b817
+Yes, that is needed if you are the author. If you reply to this message
+I can add that.
+
+-- 
+Kalle Valo
