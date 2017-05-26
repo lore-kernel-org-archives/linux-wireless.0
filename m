@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42168 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752602AbdEXNj0 (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35499 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1948599AbdEZSl6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 09:39:26 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v3,01/11] rsi: Rename file rsi_91x_pkt.c to rsi_91x_hal.c
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1494928877-27168-2-git-send-email-amit.karwar@redpinesignals.com>
-References: <1494928877-27168-2-git-send-email-amit.karwar@redpinesignals.com>
-To: amit karwar <amitkarwar@gmail.com>
+        Fri, 26 May 2017 14:41:58 -0400
+Received: by mail-oi0-f66.google.com with SMTP id v80so2985877oie.2
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2017 11:41:58 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Message-Id: <20170524133925.EA18060953@smtp.codeaurora.org> (sfid-20170524_154007_001028_904DB58E)
-Date: Wed, 24 May 2017 13:39:25 +0000 (UTC)
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 3/7] rtlwifi: btcoex: bind bt to the adapter when initialization
+Date: Fri, 26 May 2017 13:41:43 -0500
+Message-Id: <20170526184147.31239-4-Larry.Finger@lwfinger.net> (sfid-20170526_204334_658770_24157A6A)
+In-Reply-To: <20170526184147.31239-1-Larry.Finger@lwfinger.net>
+References: <20170526184147.31239-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-amit karwar <amitkarwar@gmail.com> wrote:
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> 
-> The file rsi_91x_hal.c is going to contain device specific code i.e new
-> firmware loading method for RS9113 chipset. As the file rsi_91x_pkt.c
-> contains code to prepare device specific descriptors for transmit packet,
-> this file is renamed to rsi_91x_hal.c which is more relevant as per it's
-> functionality.
-> 
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-11 patches applied to wireless-drivers-next.git, thanks.
+the bt need the information of the adapter, hook it on the callback for
+bt to operate and get properly initialized
 
-d7af6bb7e527 rsi: Rename file rsi_91x_pkt.c to rsi_91x_hal.c
-897d341dee4f rsi: Changes to sdio reads and writes
-7bdead7ae944 rsi: define RSI_USB_BUF_SIZE macro
-2fbbe5179ebe rsi: Changes in USB read and write operations
-4b1fc881173e rsi: use macros in USB specific code
-ea3336ac0094 rsi: Handle usb multi-byte write failure case properly
-88fa51e1b33c rsi: Add usb multi-byte read operation
-a2ce952c8e09 rsi: Add host interface operations as separate structure.
-b97e9b94ad75 rsi: Add new host interface operations
-b78e91bcfb33 rsi: Add new firmware loading method
-5578b1ffdc30 rsi: Remove old firmware loading method
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 1 +
+ 2 files changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 32cbbd0595ed..21d39973feab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -600,6 +600,7 @@ bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
+ extern struct btc_coexist gl_bt_coexist;
+ 
+ bool exhalbtc_initlize_variables(void);
++bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 3ab0cfe26513..7d4a94efe260 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -50,6 +50,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
+ {
+ 	exhalbtc_initlize_variables();
++	exhalbtc_bind_bt_coex_withadapter(rtlpriv);
+ }
+ 
+ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
 -- 
-https://patchwork.kernel.org/patch/9728767/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.0
