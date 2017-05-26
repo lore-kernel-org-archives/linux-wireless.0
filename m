@@ -1,47 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59974 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756392AbdELOpv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 10:45:51 -0400
-Subject: Re: ath10k: controlling TX aggregation
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-References: <CABPxzY+mQ-G6PTsQV9_WVgju4bmQHwxKKW070j7v6=DDgZop4Q@mail.gmail.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <b830b657-3f73-de7f-d61c-1565dc14c2ef@candelatech.com> (sfid-20170512_164554_157131_8C8D8481)
-Date: Fri, 12 May 2017 07:45:49 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:56944 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753148AbdEZK5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 May 2017 06:57:54 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH resend] brcmfmac: p2p and normal ap access are not always possible at the same time
+Date: Fri, 26 May 2017 12:57:47 +0200
+Message-Id: <20170526105747.16874-2-hdegoede@redhat.com> (sfid-20170526_125808_915080_D76B9F62)
+In-Reply-To: <20170526105747.16874-1-hdegoede@redhat.com>
+References: <20170526105747.16874-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CABPxzY+mQ-G6PTsQV9_WVgju4bmQHwxKKW070j7v6=DDgZop4Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What chipset, and what firmware version?
+The firmware responding with -EBUSY when trying to add an extra virtual-if
+is a normal thing, do not print an error for this.
 
-Thanks,
-Ben
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 ++++++++++----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5 ++++-
+ 2 files changed, 14 insertions(+), 5 deletions(-)
 
-On 05/12/2017 07:43 AM, Krishna Chaitanya wrote:
-> Hi,
->
-> I am doing some comparative tests, wanted to configure common
-> settings btw all STA's. wanted to limit agg_size to 24 in ath10k with
-> the below command.
->
-> echo "3 24" > /sys/kernel/debug/ieee80211/phy0/ath10k/htt_max_amsdu_ampdu
->
-> The ADDBA request still has 64 and when i run iperf it is aggregating 64 frames.
->
-> Except for 1 no number takes effect. If i configure 1 there is no ADDBA exchange
-> initiated by ath10k.
->
-> Is this expected? Can we control the aggregation size through driver?
->
-> latest wireless-drivers-next and linux-firmware git is used.
->
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index cd1d6730eab7..dae88f3d041d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -684,11 +684,17 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	if (IS_ERR(wdev))
+-		brcmf_err("add iface %s type %d failed: err=%d\n",
+-			  name, type, (int)PTR_ERR(wdev));
+-	else
++	if (IS_ERR(wdev)) {
++		err = PTR_ERR(wdev);
++		if (err != -EBUSY)
++			brcmf_err("add iface %s type %d failed: err=%d\n",
++				  name, type, err);
++		else
++			brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
++				  name, type, err);
++	} else {
+ 		brcmf_cfg80211_update_proto_addr_mode(wdev);
++	}
+ 
+ 	return wdev;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index aa299c47bfa2..1bb296ffb46f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2090,7 +2090,10 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+ 	/* Initialize P2P Discovery in the firmware */
+ 	err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
+ 	if (err < 0) {
+-		brcmf_err("set p2p_disc error\n");
++		if (err != -EBUSY)
++			brcmf_err("set p2p_disc error\n");
++		else
++			brcmf_dbg(INFO, "set p2p_disc error\n");
+ 		brcmf_fweh_p2pdev_setup(pri_ifp, false);
+ 		brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
+ 		goto fail;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.13.0
