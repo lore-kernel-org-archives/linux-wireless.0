@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway34.websitewelcome.com ([192.185.148.194]:46928 "EHLO
-        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753357AbdEINEh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60108 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1947941AbdEZP0C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 09:04:37 -0400
-Received: from cm4.websitewelcome.com (unknown [108.167.139.16])
-        by gateway34.websitewelcome.com (Postfix) with ESMTP id 6E7E617EA
-        for <linux-wireless@vger.kernel.org>; Tue,  9 May 2017 08:04:34 -0500 (CDT)
-Date: Tue, 9 May 2017 08:04:30 -0500
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH v2] ath9k: remove unnecessary code
-Message-ID: <20170509130430.GA22190@embeddedgus> (sfid-20170509_150508_909669_3F179888)
+        Fri, 26 May 2017 11:26:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: amit karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: Re: [v3 10/11] rsi: Add new firmware loading method
+References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
+        <1494928877-27168-11-git-send-email-amit.karwar@redpinesignals.com>
+        <87bmqi4q2u.fsf@purkki.adurom.net>
+        <CAEhWJFnaG4xC71CL_ayYEyGg0HMNoyHK7aE9gcGAmsako8Q9Tw@mail.gmail.com>
+Date: Fri, 26 May 2017 18:25:41 +0300
+In-Reply-To: <CAEhWJFnaG4xC71CL_ayYEyGg0HMNoyHK7aE9gcGAmsako8Q9Tw@mail.gmail.com>
+        (amit karwar's message of "Fri, 26 May 2017 20:40:11 +0530")
+Message-ID: <87inknprm2.fsf@kamboji.qca.qualcomm.com> (sfid-20170526_172613_927144_551A8DE9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The array field eeprom_data in struct th9k_platform_data
-is a fixed size array so it can never be NULL.
+amit karwar <amitkarwar@gmail.com> writes:
 
-Addresses-Coverity-ID: 1364903
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
-Changes in v2:
- Rephrase commit log.
+> On Wed, May 24, 2017 at 1:57 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>>
+>>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>>
+>>> The older firmware loading method has been deprecated and not in use
+>>> for any chipets. New method is introduced which works based on soft
+>>> boot loader. In this method, complete RAM image and FLASH image are
+>>> present in the flash. Before loading the functional firmware, host
+>>> issues boot loader commands to verify whether firmware to load is
+>>> different from the current functional firmware. If not, firmware
+>>> upgrade progresses and boot loader will switch to the new functional
+>>> firmware.
+>>>
+>>> "rs9113_wlan_qspi.rps" is the firmware filename used in this patch.
+>>
+>> I don't know if you saw the discussion with the wil6210 firmware, but
+>> the linux-firmware maintainers prefer to have a subdirectory for
+>> firmware files. I'm planning to apply this series now, but you can send
+>> a followup patch ASAP which changes the rsi driver to use a subdirectory
+>> for the firmware files?
+>
+> I have just sent a follow up patch.
 
- drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks, I saw that. Will apply it shortly.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index fb80ec8..5c3bc28 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
- 
- 	if (ah->eeprom_blob)
- 		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
--	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
-+	else if (pdata && !pdata->use_eeprom)
- 		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
- 	else
- 		ret = common->bus_ops->eeprom_read(common, off, data);
 -- 
-2.5.0
+Kalle Valo
