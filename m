@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [195.159.176.226] ([195.159.176.226]:45370 "EHLO
-        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1754030AbdECUdx (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:41104 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761186AbdEZO6F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 16:33:53 -0400
-Received: from list by blaine.gmane.org with local (Exim 4.84_2)
-        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
-        id 1d60y0-0002Px-N2
-        for linux-wireless@vger.kernel.org; Wed, 03 May 2017 22:33:44 +0200
-To: linux-wireless@vger.kernel.org
-From: Julien Cubizolles <j.cubizolles@free.fr>
-Subject: Re: mwifiex won't connect to WPA2 anymore
-Date: Wed, 03 May 2017 22:33:44 +0200
-Message-ID: <87tw51y91z.fsf@free.fr> (sfid-20170503_223357_040334_10E977E2)
-References: <87wpa3kxgi.fsf@free.fr>
+        Fri, 26 May 2017 10:58:05 -0400
+Date: Fri, 26 May 2017 10:58:03 -0400 (EDT)
+Message-Id: <20170526.105803.2151646617349245343.davem@davemloft.net> (sfid-20170526_165831_972642_E1A5138A)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [RFC] skbuff: introduce skb_put_zero()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1495781929.2572.0.camel@sipsolutions.net>
+References: <20170524070747.18573-1-johannes@sipsolutions.net>
+        <20170525.130117.551364108206528221.davem@davemloft.net>
+        <1495781929.2572.0.camel@sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julien Cubizolles <j.cubizolles@free.fr> writes:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 26 May 2017 08:58:49 +0200
 
-> I can't connect anymore to my home wifi since upgrading my machine from
-> Ubuntu 16.10 to Ubuntu 17.04.
+> On Thu, 2017-05-25 at 13:01 -0400, David Miller wrote:
+>> From: Johannes Berg <johannes@sipsolutions.net>
+>> Date: Wed, 24 May 2017 09:07:47 +0200
+>> 
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> > 
+>> > This pattern was introduced a number of times in mac80211 just now,
+>> > and since it's present in a number of other places it makes sense
+>> > to add a little helper for it.
+>> > 
+>> > The transformations of all code were done with the following
+>> spatch:
+> [...]
+>> > NB: the patch won't apply to net-next because a few of the mac80211
+>> >     users don't exist there yet
+>> 
+>> Acked-by: David S. Miller <davem@davemloft.net>
+>> 
+>> No objections, feel free to push this in via your mac80211 tree.
+> 
+> Do you think I should include the conversions in other drivers, or
+> would you prefer to get those as a separate patch later?
 
-It turns out that the problem lies with NetworkManager, I managed to get
-the wifi working with wpa_supplicant.
-
-Julien.
+Probably better to keep that as a separate patch.
