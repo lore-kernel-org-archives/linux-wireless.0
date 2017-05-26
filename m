@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:35243 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751766AbdECKmZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 06:42:25 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 5/9] nl80211: remove desciption about request from NL80211_CMD_ROAM
-Date: Wed,  3 May 2017 11:42:10 +0100
-Message-Id: <1493808134-4074-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170503_124323_428659_F89EBC20)
-In-Reply-To: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51992 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S937517AbdEZIcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 May 2017 04:32:21 -0400
+Message-ID: <1495787536.2572.2.camel@sipsolutions.net> (sfid-20170526_105937_009910_80CF0895)
+Subject: Re: WPA and WPA2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Tobin C. Harding" <me@tobin.cc>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Date: Fri, 26 May 2017 10:32:16 +0200
+In-Reply-To: <20170524224014.GC2319@eros>
+References: <20170524072750.GI8158@eros> <20170524073459.GJ8158@eros>
+         <1495644240.12939.3.camel@redhat.com>
+         <1495649200.20833.1.camel@sipsolutions.net> <20170524224014.GC2319@eros>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The description of NL80211_CMD_ROAM indicated possibility for a
-request to roam issued by user-space. However, it also states that
-as not being implemented right now. This has been so since commit
-b23aa676ab9d ("cfg80211: connect/disconnect API") added in 2009.
-So it seems safe to assume it will not be added any time soon and
-thus remove it.
+On Thu, 2017-05-25 at 08:40 +1000, Tobin C. Harding wrote:
+> On Wed, May 24, 2017 at 08:06:40PM +0200, Johannes Berg wrote:
+> > Just a small correction:
+> > 
+> > On Wed, 2017-05-24 at 11:44 -0500, Dan Williams wrote:
+> > > 
+> > > For RSN, they are 1 = PMK, 2 = GMK, 3 = GMK2, 4 seems unused.
+> > 
+> > PTK and GTK, and in theory you could have more than two GTKs but
+> > that's
+> > not usually done.
+> 
+> Excuse my ignorance but why do you say PTK and GTK here?
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- include/uapi/linux/nl80211.h | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+Well, you said that it was doing TKIP MMIC in software, so you need the
+TK to do that :) It seemed unlikely to be received from the firmware.
+Also, I know that Dan meant PTK/GTK - a "GMK" doesn't exist at all.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1eaa340..47053c8 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -546,14 +546,13 @@
-  *	authentication/association or not receiving a response from the AP.
-  *	Non-zero %NL80211_ATTR_STATUS_CODE value is indicated in that case as
-  *	well to remain backwards compatible.
-- * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
-- *	sent as an event when the card/driver roamed by itself.
-- *	When used as an event, and the driver roamed in a network that requires
-- *	802.1X authentication, %NL80211_ATTR_PORT_AUTHORIZED should be set
-- *	if the 802.1X authentication was done by the driver or if roaming was
-- *	done using Fast Transition protocol (in which case 802.1X authentication
-- *	is not needed). If %NL80211_ATTR_PORT_AUTHORIZED is not set, user space
-- *	is responsible for the 802.1X authentication.
-+ * @NL80211_CMD_ROAM: notifcation indicating the card/driver roamed by itself.
-+ *	When the driver roamed in a network that requires 802.1X authentication,
-+ *	%NL80211_ATTR_PORT_AUTHORIZED should be set if the 802.1X authentication
-+ *	was done by the driver or if roaming was done using Fast Transition
-+ *	protocol (in which case 802.1X authentication is not needed). If
-+ *	%NL80211_ATTR_PORT_AUTHORIZED is not set, user space is responsible for
-+ *	the 802.1X authentication.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-  *	userspace that a connection was dropped by the AP or due to other
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
--- 
-1.9.1
+> Who generates the transient keys, hardware, firmware or software? Is
+> this device specific or is there a *normal* way?
+
+Dan explained this well.
+
+> From the nomenclature in the WEXT driver I thought the driver
+> supplied the master keys to the firmware and transient keys were
+> generated at the firmware layer or lower.
+
+Seems unlikely, but it seems also very based on WEP which didn't have a
+concept of "master" and "transient" keys.
+
+johannes
