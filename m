@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34380 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60890 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757664AbdEVJJL (ORCPT
+        with ESMTP id S1753457AbdEZLIe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 05:09:11 -0400
+        Fri, 26 May 2017 07:08:34 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna chipsets
-References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
-        <1495026753.2442.7.camel@sipsolutions.net>
-Date: Mon, 22 May 2017 12:09:06 +0300
-In-Reply-To: <1495026753.2442.7.camel@sipsolutions.net> (Johannes Berg's
-        message of "Wed, 17 May 2017 15:12:33 +0200")
-Message-ID: <87d1b15kct.fsf@purkki.adurom.net> (sfid-20170522_110921_994201_F7F08733)
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH resend 0/1] brcmfmac: p2p and normal ap access are not always possible at the same time
+References: <20170526105747.16874-1-hdegoede@redhat.com>
+Date: Fri, 26 May 2017 14:08:12 +0300
+In-Reply-To: <20170526105747.16874-1-hdegoede@redhat.com> (Hans de Goede's
+        message of "Fri, 26 May 2017 12:57:46 +0200")
+Message-ID: <87h907ri3n.fsf@kamboji.qca.qualcomm.com> (sfid-20170526_130841_698243_40FADD08)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hans de Goede <hdegoede@redhat.com> writes:
 
-> Good job :)
+> This is a resend of a patch which I send a while ago, back then there
+> was some discussion to come up with a better fix, but that has not lead
+> to anything and the driver is still periodically spamming the logs.
 >
-> Let's merge this - the tiny fixes for things I found can come later.
+> As such I would like to move forward with this patch for now, which
+> makes no functional changes other then changing the messages in question
+> into debug messages when the error is -EBUSY.
 
-Thanks for the review. I'm going to commit this "soon", just need to go
-through older patches first.
+Link to the old discussion:
+
+https://patchwork.kernel.org/patch/9594385/
 
 -- 
 Kalle Valo
