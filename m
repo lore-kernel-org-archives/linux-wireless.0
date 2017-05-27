@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33850 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754971AbdELIwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 May 2017 04:52:30 -0400
-Message-ID: <1494579146.32348.3.camel@sipsolutions.net> (sfid-20170512_105236_948453_C6E3F45B)
-Subject: Re: [PATCH] mac80211: Validate michael MIC before attempting packet
- decode.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mike@hellotwist.com, Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 May 2017 10:52:26 +0200
-In-Reply-To: <CAKXXJEymJXEp70bUMuNCxDAA1CLCOJN4DjnPBkf5oh6Nqn7JQA@mail.gmail.com> (sfid-20170511_222236_614264_021DE9B1)
-References: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
-         <20170510122458.GA4796@w1.fi>
-         <CAKXXJEymJXEp70bUMuNCxDAA1CLCOJN4DjnPBkf5oh6Nqn7JQA@mail.gmail.com>
-         (sfid-20170511_222236_614264_021DE9B1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:43414 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbdE0Vic (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 May 2017 17:38:32 -0400
+Subject: Re: [PATCH] Per chain RSSI reporting
+To: Norik Dzhandzhapanyan <norikd@ethertronics.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
+ <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
+ <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
+ <8e314337-a1f0-5ed4-aa90-3f1a0e2d09fc@ethertronics.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <50e245a7-60ad-39f1-920e-e8edf5d9a5ab@candelatech.com> (sfid-20170527_233842_005502_85498DF9)
+Date: Sat, 27 May 2017 14:38:30 -0700
+MIME-Version: 1.0
+In-Reply-To: <8e314337-a1f0-5ed4-aa90-3f1a0e2d09fc@ethertronics.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-05-11 at 16:22 -0400, Michael Skeffington wrote:
-> I am using an rt5350 SoC using the rt2x00 driver.  We were doing
-> WiFi-alliance certification testing on our device and the it wasn't
-> issuing countermeasures appropriately.
-> 
-> Your assumption is correct.  I had overlooked that devices using this
-> driver have hardware decoding and the driver sets RX_FLAG_MMIC_ERROR.
-> In retrospect, the change I proposed is totally broken.
-> 
-> I'm running through the failure case again so I can identify where in
-> the rx_decrypt function it falls through.  It seems odd that it would
-> drop the packet in rx_decrypt given that it doesn't actually do any
-> decryption.  I suspect thats related to the underlying bug.
+On 05/27/2017 12:25 PM, Norik Dzhandzhapanyan wrote:
+> We see this inconsistent/incorrect reporting in our RF chamber.
 
-Here's the driver code from rt2500usb (but it's similar in the others):
+How different are the values, and did you sniff with a third-party device
+to see if it sees the same spikes in RSSI?
 
-                rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
-                if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
-                        rxdesc->flags |= RX_FLAG_DECRYPTED;
-                else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
-                        rxdesc->flags |= RX_FLAG_MMIC_ERROR;
+Thanks,
+Ben
 
-I think if you just change it to be
+>
+> Norik
+>
+> On 05/27/2017 09:39 AM, Adrian Chadd wrote:
+>> On 27 May 2017 at 09:07, Ben Greear <greearb@candelatech.com> wrote:
+>>> At low encoding rates, especially if it switches to a single-chain encoding,
+>>> maybe the on-air signal really is stronger?
+>>>
+>>> Have you verified in some other manner than the signals reported by ath10k
+>>> are
+>>> wrong?
+>> Hiya,
+>>
+>> So yeah, multipath, higher TX rates == weaker TX signal, TPC, etc are
+>> all interesting to know about at the receiver. it's hard to separate
+>> that out from the noise sometimes, but in some controlled deployments
+>> its really obvious.
+>>
+>>
+>>
+>> -adrian
+>>
+>>
+>
+>
+> The contents of this transmission are Ethertronics Inc. Confidential and may contain proprietary or legally privileged information which may not be disclosed, copied or distributed without the express written consent of Ethertronics Inc. The information is intended to be for the use of the individual or entity named on this transmission. If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited. If you have received this transmission in error, please notify us by telephone immediately so that we can arrange for the retrieval of the original documents at no cost to you. Alternatively, notify the sender by replying to this transmission and delete the message without disclosing it. Thank you
+>
 
-[...]
-                else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
-                        rxdesc->flags |= RX_FLAG_MMIC_ERROR |
-					 RX_FLAG_DECRYPTED;
-
-things will start working. This is arguably correct since to be able to
-check the MMIC, the frame has to have been decrypted (properly) before.
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
