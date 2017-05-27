@@ -1,174 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:34818 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751228AbdESQmg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 12:42:36 -0400
-Received: by mail-pg0-f44.google.com with SMTP id q125so40564508pgq.2
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 09:42:36 -0700 (PDT)
-Date: Fri, 19 May 2017 09:42:33 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [PATCH v3 5/6] mwifiex: do not aggregate tcp ack in usb tx
- aggregation queue
-Message-ID: <20170519164232.GB125761@google.com> (sfid-20170519_184240_506439_70BF691F)
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
- <1495184805-6631-5-git-send-email-huxinming820@gmail.com>
+Received: from mail-dm3nam03on0052.outbound.protection.outlook.com ([104.47.41.52]:23168
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750893AbdE0Ta5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 May 2017 15:30:57 -0400
+Subject: Re: [PATCH] Per chain RSSI reporting
+To: Michael Ney <neym@vorklift.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: Ben Greear <greearb@candelatech.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
+ <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
+ <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
+ <4A8583B3-FFB2-4BDE-8041-9478CAD9EF73@vorklift.com>
+From: Norik Dzhandzhapanyan <norikd@ethertronics.com>
+Message-ID: <98efa255-b481-ce11-69d5-f2d141d44c2b@ethertronics.com> (sfid-20170527_213112_382297_73EC601B)
+Date: Sat, 27 May 2017 12:30:48 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495184805-6631-5-git-send-email-huxinming820@gmail.com>
+In-Reply-To: <4A8583B3-FFB2-4BDE-8041-9478CAD9EF73@vorklift.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 19, 2017 at 09:06:44AM +0000, Xinming Hu wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> Tcp ack should be send as soon to avoid throuput drop during receive tcp
-> traffic.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> ---
-> v2: same as v1
-> v3: avoid to use magic tcp flag (Kalle)
-> ---
->  drivers/net/wireless/marvell/mwifiex/11n_aggr.c |  4 ++++
->  drivers/net/wireless/marvell/mwifiex/decl.h     |  1 +
->  drivers/net/wireless/marvell/mwifiex/main.c     | 26 +++++++++++++++++++++++++
->  drivers/net/wireless/marvell/mwifiex/main.h     |  1 +
->  drivers/net/wireless/marvell/mwifiex/usb.c      |  6 ++++--
->  5 files changed, 36 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> index e8ffb26..cbf3bc2 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> @@ -194,6 +194,10 @@
->  
->  	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
->  		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
-> +
-> +	if (tx_info_src->flags & MWIFIEX_BUF_FLAG_TCP_ACK)
-> +		tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
-> +
->  	tx_info_aggr->flags |= MWIFIEX_BUF_FLAG_AGGR_PKT;
->  	skb_aggr->priority = skb_src->priority;
->  	skb_aggr->tstamp = skb_src->tstamp;
-> diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
-> index 188e4c3..0487420 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/decl.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/decl.h
-> @@ -89,6 +89,7 @@
->  #define MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS   BIT(3)
->  #define MWIFIEX_BUF_FLAG_ACTION_TX_STATUS  BIT(4)
->  #define MWIFIEX_BUF_FLAG_AGGR_PKT          BIT(5)
-> +#define MWIFIEX_BUF_FLAG_TCP_ACK           BIT(6)
->  
->  #define MWIFIEX_BRIDGED_PKTS_THR_HIGH      1024
->  #define MWIFIEX_BRIDGED_PKTS_THR_LOW        128
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-> index 2c42191..b7d835c 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> @@ -851,6 +851,30 @@ struct sk_buff *
->  	return skb;
->  }
->  
-> +static bool is_piggyback_tcp_ack(struct sk_buff *skb)
-> +{
-> +	struct ethhdr *ethh = NULL;
-> +	struct iphdr  *iph = NULL;
-> +	struct tcphdr *tcph = NULL;
-> +
-> +	ethh = (struct ethhdr *)skb->data;
-> +	if (ntohs(ethh->h_proto) != ETH_P_IP)
-> +		return false;
+Is there an enhanced or conflicting patch pending?
 
-What about IPv6?
 
-Also, what about all the protocols that you're *not* hacking this for?
-Is the latency induced by aggregation really that poor?
+On 05/27/2017 10:56 AM, Michael Ney wrote:
+> The submitted code also doesn't appear to handle RSSI per-peer which woul=
+d be needed for any use when configured as an access point.
+>
+>> On May 27, 2017, at 12:39 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>>
+>> On 27 May 2017 at 09:07, Ben Greear <greearb@candelatech.com> wrote:
+>>> At low encoding rates, especially if it switches to a single-chain enco=
+ding,
+>>> maybe the on-air signal really is stronger?
+>>>
+>>> Have you verified in some other manner than the signals reported by ath=
+10k
+>>> are
+>>> wrong?
+>> Hiya,
+>>
+>> So yeah, multipath, higher TX rates =3D=3D weaker TX signal, TPC, etc ar=
+e
+>> all interesting to know about at the receiver. it's hard to separate
+>> that out from the noise sometimes, but in some controlled deployments
+>> its really obvious.
+>>
+>>
+>>
+>> -adrian
+>>
+>> _______________________________________________
+>> ath10k mailing list
+>> ath10k@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/ath10k
 
-I'm not really a networking expert here, but this whole patch smells bad
-to me.
-
-> +
-> +	iph = (struct iphdr *)((u8 *)ethh + sizeof(struct ethhdr));
-> +	if (iph->protocol != IPPROTO_TCP)
-> +		return false;
-> +
-> +	tcph = (struct tcphdr *)((u8 *)iph + iph->ihl * 4);
-> +	/* Piggyback ack without payload*/
-> +	if (tcp_flag_word(tcph) == TCP_FLAG_ACK &&
-> +	    ntohs(iph->tot_len) <= (iph->ihl + tcph->doff) * 4) {
-> +		return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
->  /*
->   * CFG802.11 network device handler for data transmission.
->   */
-> @@ -904,6 +928,8 @@ struct sk_buff *
->  	tx_info->bss_num = priv->bss_num;
->  	tx_info->bss_type = priv->bss_type;
->  	tx_info->pkt_len = skb->len;
-> +	if (is_piggyback_tcp_ack(skb))
-> +		tx_info->flags |= MWIFIEX_BUF_FLAG_TCP_ACK;
->  
->  	multicast = is_multicast_ether_addr(skb->data);
->  
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> index 1f7e6c3..b0010a9 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> @@ -49,6 +49,7 @@
->  #include <linux/pm_runtime.h>
->  #include <linux/slab.h>
->  #include <linux/of_irq.h>
-> +#include <linux/tcp.h>
-
-I dislike polluting the (driver-global) main.h with #include's that only
-are used in one file. Especially when you talk about seemingly
-layer-violating TCP hacks. Can you move this to main.c instead?
-
-Brian
-
->  
->  #include "decl.h"
->  #include "ioctl.h"
-> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-> index f230017..e9c3d43 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-> @@ -934,6 +934,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
->  	struct urb_context *context = NULL;
->  	struct txpd *local_tx_pd =
->  		(struct txpd *)((u8 *)skb->data + adapter->intf_hdr_len);
-> +	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
->  	u8 f_send_aggr_buf = 0;
->  	u8 f_send_cur_buf = 0;
->  	u8 f_precopy_cur_buf = 0;
-> @@ -989,8 +990,9 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
->  		}
->  	}
->  
-> -	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET) {
-> -		/* Send NULL packet immediately*/
-> +	if (local_tx_pd->flags & MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET ||
-> +	    tx_info->flags & MWIFIEX_BUF_FLAG_TCP_ACK) {
-> +		/* Send NULL data/TCP ACK packet immediately*/
->  		if (f_precopy_cur_buf) {
->  			if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
->  				f_precopy_cur_buf = 0;
-> -- 
-> 1.9.1
-> 
+The contents of this transmission are Ethertronics Inc. Confidential and ma=
+y contain proprietary or legally privileged information which may not be di=
+sclosed, copied or distributed without the express written consent of Ether=
+tronics Inc. The information is intended to be for the use of the individua=
+l or entity named on this transmission. If you are not the intended recipie=
+nt, be aware that any disclosure, copying, distribution or use of the conte=
+nts of this information is prohibited. If you have received this transmissi=
+on in error, please notify us by telephone immediately so that we can arran=
+ge for the retrieval of the original documents at no cost to you. Alternati=
+vely, notify the sender by replying to this transmission and delete the mes=
+sage without disclosing it. Thank you
