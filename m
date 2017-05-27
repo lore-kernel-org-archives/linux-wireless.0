@@ -1,201 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:36123 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1164691AbdEYALg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 20:11:36 -0400
-Received: by mail-pf0-f172.google.com with SMTP id m17so150173898pfg.3
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:36 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 02/14] mwifiex: reunite copy-and-pasted remove/reset code
-Date: Wed, 24 May 2017 17:11:07 -0700
-Message-Id: <20170525001119.64791-2-briannorris@chromium.org> (sfid-20170525_021527_278331_07A40074)
-In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
-References: <20170525001119.64791-1-briannorris@chromium.org>
+Received: from mail1.g8.pair.com ([66.39.4.88]:51370 "EHLO mail1.g8.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750764AbdE0WKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 May 2017 18:10:33 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] Per chain RSSI reporting
+From: Michael Ney <neym@vorklift.com>
+In-Reply-To: <98efa255-b481-ce11-69d5-f2d141d44c2b@ethertronics.com>
+Date: Sat, 27 May 2017 18:10:31 -0400
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Ben Greear <greearb@candelatech.com>,
+        Adrian Chadd <adrian@freebsd.org>
+Message-Id: <0B35E5A1-7A94-43EC-87BC-A8402098E3C5@vorklift.com> (sfid-20170528_001037_517339_720BB13C)
+References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
+ <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
+ <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
+ <4A8583B3-FFB2-4BDE-8041-9478CAD9EF73@vorklift.com>
+ <98efa255-b481-ce11-69d5-f2d141d44c2b@ethertronics.com>
+To: Norik Dzhandzhapanyan <norikd@ethertronics.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When PCIe FLR code was added, it explicitly copy-and-pasted much of
-mwifiex_remove_card() into mwifiex_shutdown_sw(). This is unnecessary,
-as almost all of the code should be reused.
+What I'm referring to is the real world case of an access point communicating with multiple stations.
 
-Let's reunite what we can for now.
+Take for example. an AP that has four stations attached to it with different average RSSIs:
 
-The only functional changes for now:
+ - Station 1: -45
+ - Station 2: -70
+ - Station 3: -50
+ - Station 4: -30
 
- * call netif_device_detach() in the remove() code path -- this wasn't
-   done before, but it really should be a no-op, when the device is
-   getting totally unregistered soon anyway
+Now for argument's sake let us assume that all four stations are transmitting at equal amounts and for every 16 frames transmitted each station sends 4 frames. 
 
- * call the ->down_dev() driver callback only after we've finished all
-   SW teardown -- this should have no significant effect, since the only
-   user (pcie.c) does very minimal work there, and it doesn't matter
-   that we reorder this
+Since the moving average you are proposing averages all frames received by the driver, that works out to a moving average that will always be around -48.75 for this example.  For station 2, this will result in a 21.25 error from its actual average RSSI.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/main.c | 104 ++++++++--------------------
- 1 file changed, 28 insertions(+), 76 deletions(-)
+This example also doesn't take into account other frames that aren't from stations that are processed through to the driver, such as Beacon frames, which even will affect managed mode and not just Access Points. The only way an average RSSI could be calculated accurately is that for every unique MAC address identified a structure has to be created to store the moving average RSSI data for that peer. This becomes extremely bulky memory-wise. Alternatively, it could be implemented such that it only applies to managed mode and only when the peer identified is the currently connected BSSID.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index dd87b9ff64c3..a1e98e36c1ce 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1348,26 +1348,12 @@ static void mwifiex_main_work_queue(struct work_struct *work)
- 	mwifiex_main_process(adapter);
- }
- 
--/*
-- * This function gets called during PCIe function level reset. Required
-- * code is extracted from mwifiex_remove_card()
-- */
--int
--mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
-+/* Common teardown code used for both device removal and reset */
-+static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
- {
- 	struct mwifiex_private *priv;
- 	int i;
- 
--	if (!adapter)
--		goto exit_return;
--
--	wait_for_completion(adapter->fw_done);
--	/* Caller should ensure we aren't suspending while this happens */
--	reinit_completion(adapter->fw_done);
--
--	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
--	mwifiex_deauthenticate(priv, NULL);
--
- 	/* We can no longer handle interrupts once we start doing the teardown
- 	 * below.
- 	 */
-@@ -1389,12 +1375,9 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
- 	}
- 
- 	mwifiex_dbg(adapter, CMD, "cmd: calling mwifiex_shutdown_drv...\n");
--
- 	mwifiex_shutdown_drv(adapter);
--	if (adapter->if_ops.down_dev)
--		adapter->if_ops.down_dev(adapter);
--
- 	mwifiex_dbg(adapter, CMD, "cmd: mwifiex_shutdown_drv done\n");
-+
- 	if (atomic_read(&adapter->rx_pending) ||
- 	    atomic_read(&adapter->tx_pending) ||
- 	    atomic_read(&adapter->cmd_pending)) {
-@@ -1417,9 +1400,30 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
- 		rtnl_unlock();
- 	}
- 	vfree(adapter->chan_stats);
-+}
-+
-+/*
-+ * This function gets called during PCIe function level reset.
-+ */
-+int mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
-+{
-+	struct mwifiex_private *priv;
-+
-+	if (!adapter)
-+		return 0;
-+
-+	wait_for_completion(adapter->fw_done);
-+	/* Caller should ensure we aren't suspending while this happens */
-+	reinit_completion(adapter->fw_done);
-+
-+	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-+	mwifiex_deauthenticate(priv, NULL);
-+
-+	mwifiex_uninit_sw(adapter);
-+
-+	if (adapter->if_ops.down_dev)
-+		adapter->if_ops.down_dev(adapter);
- 
--	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
--exit_return:
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mwifiex_shutdown_sw);
-@@ -1672,61 +1676,10 @@ EXPORT_SYMBOL_GPL(mwifiex_add_card);
-  */
- int mwifiex_remove_card(struct mwifiex_adapter *adapter)
- {
--	struct mwifiex_private *priv = NULL;
--	int i;
--
- 	if (!adapter)
--		goto exit_remove;
--
--	/* We can no longer handle interrupts once we start doing the teardown
--	 * below. */
--	if (adapter->if_ops.disable_int)
--		adapter->if_ops.disable_int(adapter);
--
--	adapter->surprise_removed = true;
--
--	mwifiex_terminate_workqueue(adapter);
--
--	/* Stop data */
--	for (i = 0; i < adapter->priv_num; i++) {
--		priv = adapter->priv[i];
--		if (priv && priv->netdev) {
--			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
--			if (netif_carrier_ok(priv->netdev))
--				netif_carrier_off(priv->netdev);
--		}
--	}
--
--	mwifiex_dbg(adapter, CMD,
--		    "cmd: calling mwifiex_shutdown_drv...\n");
--
--	mwifiex_shutdown_drv(adapter);
--	mwifiex_dbg(adapter, CMD,
--		    "cmd: mwifiex_shutdown_drv done\n");
--	if (atomic_read(&adapter->rx_pending) ||
--	    atomic_read(&adapter->tx_pending) ||
--	    atomic_read(&adapter->cmd_pending)) {
--		mwifiex_dbg(adapter, ERROR,
--			    "rx_pending=%d, tx_pending=%d,\t"
--			    "cmd_pending=%d\n",
--			    atomic_read(&adapter->rx_pending),
--			    atomic_read(&adapter->tx_pending),
--			    atomic_read(&adapter->cmd_pending));
--	}
--
--	for (i = 0; i < adapter->priv_num; i++) {
--		priv = adapter->priv[i];
--
--		if (!priv)
--			continue;
-+		return 0;
- 
--		rtnl_lock();
--		if (priv->netdev &&
--		    priv->wdev.iftype != NL80211_IFTYPE_UNSPECIFIED)
--			mwifiex_del_virtual_intf(adapter->wiphy, &priv->wdev);
--		rtnl_unlock();
--	}
--	vfree(adapter->chan_stats);
-+	mwifiex_uninit_sw(adapter);
- 
- 	wiphy_unregister(adapter->wiphy);
- 	wiphy_free(adapter->wiphy);
-@@ -1744,7 +1697,6 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter)
- 		    "info: free adapter\n");
- 	mwifiex_free_adapter(adapter);
- 
--exit_remove:
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mwifiex_remove_card);
--- 
-2.13.0.219.gdb65acc882-goog
+
+> On May 27, 2017, at 3:30 PM, Norik Dzhandzhapanyan <norikd@ethertronics.com> wrote:
+> 
+> Is there an enhanced or conflicting patch pending?
+> 
+> 
+> On 05/27/2017 10:56 AM, Michael Ney wrote:
+>> The submitted code also doesn't appear to handle RSSI per-peer which would be needed for any use when configured as an access point.
+>> 
+>>> On May 27, 2017, at 12:39 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>>> 
+>>> On 27 May 2017 at 09:07, Ben Greear <greearb@candelatech.com> wrote:
+>>>> At low encoding rates, especially if it switches to a single-chain encoding,
+>>>> maybe the on-air signal really is stronger?
+>>>> 
+>>>> Have you verified in some other manner than the signals reported by ath10k
+>>>> are
+>>>> wrong?
+>>> Hiya,
+>>> 
+>>> So yeah, multipath, higher TX rates == weaker TX signal, TPC, etc are
+>>> all interesting to know about at the receiver. it's hard to separate
+>>> that out from the noise sometimes, but in some controlled deployments
+>>> its really obvious.
+>>> 
+>>> 
+>>> 
+>>> -adrian
+>>> 
+>>> _______________________________________________
+>>> ath10k mailing list
+>>> ath10k@lists.infradead.org
+>>> http://lists.infradead.org/mailman/listinfo/ath10k
+> 
+> The contents of this transmission are Ethertronics Inc. Confidential and may contain proprietary or legally privileged information which may not be disclosed, copied or distributed without the express written consent of Ethertronics Inc. The information is intended to be for the use of the individual or entity named on this transmission. If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited. If you have received this transmission in error, please notify us by telephone immediately so that we can arrange for the retrieval of the original documents at no cost to you. Alternatively, notify the sender by replying to this transmission and delete the message without disclosing it. Thank you
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
