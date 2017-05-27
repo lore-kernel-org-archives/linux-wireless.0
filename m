@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2313 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750755AbdESHwg (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36918 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750732AbdE0QHf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 03:52:36 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sat, 27 May 2017 12:07:35 -0400
+Subject: Re: [PATCH] Per chain RSSI reporting
+To: Norik Dzhandzhapanyan <norikd@ethertronics.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
+ <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com> (sfid-20170527_180741_064976_5C2B86C3)
+Date: Sat, 27 May 2017 09:07:32 -0700
 MIME-Version: 1.0
-Subject: Re: ath5k: fix memory leak on buf on failed eeprom read
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170503142600.32609-1-colin.king@canonical.com>
-References: <20170503142600.32609-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-CC: Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R . Rodriguez" <mcgrof@do-not-panic.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>, <netdev@vger.kernel.org>
-Message-ID: <31364cad256e4b409906f66efd7dd6d0@euamsexm01a.eu.qualcomm.com> (sfid-20170519_095241_730820_3D987AD3)
-Date: Fri, 19 May 2017 09:52:27 +0200
+In-Reply-To: <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The AR5K_EEPROM_READ macro returns with -EIO if a read error
-> occurs causing a memory leak on the allocated buffer buf. Fix
-> this by explicitly calling ath5k_hw_nvram_read and exiting on
-> the via the freebuf label that performs the necessary free'ing
-> of buf when a read error occurs.
-> 
-> Detected by CoverityScan, CID#1248782 ("Resource Leak")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+At low encoding rates, especially if it switches to a single-chain encoding,
+maybe the on-air signal really is stronger?
 
-Patch applied to ath-next branch of ath.git, thanks.
+Have you verified in some other manner than the signals reported by ath10k are
+wrong?
 
-8fed6823e06e ath5k: fix memory leak on buf on failed eeprom read
+Thanks,
+Ben
+
+
+On 05/26/2017 07:09 PM, Norik Dzhandzhapanyan wrote:
+> Hi Adrian,
+>
+> Inserting the smoothing function here is motivated by what we see as 'spikes' in rssi data under weak rssi conditions.  Figured its best to get rid of the 'bogus' data as close to the source as possible. Also to minimize the impact on the changes.
+>
+> I believe the averaging  that happens at higher levels is based on EWMA macros in net/mac80211/sta_info.c which not wifi card/chipset specific. Didn't want to touch that since other cards seem to not have this spikey behavior. And, it doesnt seem to have an effect on the ath10k data anyway (iw reports the exact same values for both).
+>
+> I wonder if it would be acceptable to pass a module load time parameter which would indicate an average factor with 0 (as default) to indicate no averaging?
+>
+> Another option would be to add the chain_signal_avg field to the ieee80211_tx_status struct in mac80211.h to expose the average value up the stack this way? I haven't looked too deep on what this entails though and I didn't want to risk impacting anything else.
+>
+> So yes.. I am OK with the per-chain RSSI changes first.
+>
+> Norik
+>
+>
+> From: adrian.chadd@gmail.com <adrian.chadd@gmail.com> on behalf of Adrian Chadd <adrian@freebsd.org>
+> Sent: Friday, May 26, 2017 6:12 PM
+> To: Norik Dzhandzhapanyan
+> Cc: ath10k@lists.infradead.org; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] Per chain RSSI reporting
+>
+> [snip]
+>
+> hiya,
+>
+> I have something local that I've been meaning to push up to do this,
+> but with no smoothing. Ideally (!) smoothing is done optionally in
+> mac80211.
+>
+> What do you think about just committing the per-chain RSSI stuff to
+> mac80211 so it shows up right now, and then we figure out how to
+> express the smoothing in mac80211 or further up the layers?
+>
+> (We care about packet-to-packet RSSI values for "reasons" - mostly
+> bring-up and board validation, but also for runtime link checks.)
+>
+>
+> -adrian
+>
+> The contents of this transmission are Ethertronics Inc. Confidential and may contain proprietary or legally privileged information which may not be disclosed, copied or distributed without the express written consent of Ethertronics Inc. The information is intended to be for the use of the individual or entity named on this transmission. If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited. If you have received this transmission in error, please notify us by telephone immediately so that we can arrange for the retrieval of the original documents at no cost to you. Alternatively, notify the sender by replying to this transmission and delete the message without disclosing it. Thank you
+>
 
 -- 
-https://patchwork.kernel.org/patch/9709935/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
