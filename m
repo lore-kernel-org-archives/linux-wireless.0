@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52056 "EHLO sipsolutions.net"
+Received: from mail1.g8.pair.com ([66.39.4.88]:33033 "EHLO mail1.g8.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750898AbdE3HSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 May 2017 03:18:35 -0400
-Message-ID: <1496128708.3327.0.camel@sipsolutions.net> (sfid-20170530_091857_297653_294C871C)
-Subject: Re: [PATCH v2] mac80211: Invoke TX LED in more code paths
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: "open list:MAC80211" <linux-wireless@vger.kernel.org>,
-        "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org
-Date: Tue, 30 May 2017 09:18:28 +0200
-In-Reply-To: <20170527215927.7726-1-bjorn.andersson@linaro.org> (sfid-20170527_235932_534835_9EAE8FC2)
-References: <20170527215927.7726-1-bjorn.andersson@linaro.org>
-         (sfid-20170527_235932_534835_9EAE8FC2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1750727AbdE0SGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 May 2017 14:06:17 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] Per chain RSSI reporting
+From: Michael Ney <neym@vorklift.com>
+In-Reply-To: <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
+Date: Sat, 27 May 2017 13:56:54 -0400
+Cc: Ben Greear <greearb@candelatech.com>,
+        Norik Dzhandzhapanyan <norikd@ethertronics.com>,
+        Adrian Chadd <adrian@freebsd.org>
+Message-Id: <4A8583B3-FFB2-4BDE-8041-9478CAD9EF73@vorklift.com> (sfid-20170527_200627_301094_7227850E)
+References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
+ <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
+ <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-05-27 at 14:59 -0700, Bjorn Andersson wrote:
-> ieee80211_tx_status() is only one of the possible ways a driver can
-> report a handled packet, some drivers call this for every packet
-> while
-> others calls it rarely or never.
+The submitted code also doesn't appear to handle RSSI per-peer which would be needed for any use when configured as an access point.
+
+> On May 27, 2017, at 12:39 PM, Adrian Chadd <adrian@freebsd.org> wrote:
 > 
-> In order to invoke the TX LED in the non-status reporting cases this
-> patch pushes the call to ieee80211_led_tx() into
-> ieee80211_report_used_skb(), which is shared between the various code
-> paths.
-
-Applied.
-
-johannes
+> On 27 May 2017 at 09:07, Ben Greear <greearb@candelatech.com> wrote:
+>> At low encoding rates, especially if it switches to a single-chain encoding,
+>> maybe the on-air signal really is stronger?
+>> 
+>> Have you verified in some other manner than the signals reported by ath10k
+>> are
+>> wrong?
+> 
+> Hiya,
+> 
+> So yeah, multipath, higher TX rates == weaker TX signal, TPC, etc are
+> all interesting to know about at the receiver. it's hard to separate
+> that out from the noise sometimes, but in some controlled deployments
+> its really obvious.
+> 
+> 
+> 
+> -adrian
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
