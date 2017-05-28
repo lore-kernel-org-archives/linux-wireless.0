@@ -1,72 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52568 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753278AbdEVQTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 12:19:18 -0400
-Message-ID: <1495469954.26008.1.camel@sipsolutions.net> (sfid-20170522_182014_038071_64240E1B)
-Subject: Re: [PATCH] cfg80211: Be able to set bss expire time at config
- stage.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        helmut.schaa@googlemail.com
-Date: Mon, 22 May 2017 18:19:14 +0200
-In-Reply-To: <20170522160946.2057-1-enric.balletbo@collabora.com>
-References: <20170522160946.2057-1-enric.balletbo@collabora.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:33348 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750802AbdE1TiB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 28 May 2017 15:38:01 -0400
+Received: by mail-qk0-f176.google.com with SMTP id y201so36277476qka.0
+        for <linux-wireless@vger.kernel.org>; Sun, 28 May 2017 12:38:01 -0700 (PDT)
+Subject: Re: Probelm on (brcmfmac: use pre-allocated scatter-gather table for
+ txglomming)
+To: Michael Trimarchi <michael@amarulasolutions.com>,
+        Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+References: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <531d6bb5-e864-111a-b976-8664b6f68e80@broadcom.com> (sfid-20170528_213805_573684_9C22C51D)
+Date: Sun, 28 May 2017 21:37:56 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-05-22 at 18:09 +0200, Enric Balletbo i Serra wrote:
-> The IEEE80211_SCAN_RESULT_EXPIRE value was modified several times in
-> the
-> past. Initially was set at 10 seconds (2a51931192), then increased at
-> 15
-> seconds (09f97e0fc4) and finally to 30 seconds (f9616e0f88) to cover
-> the
-> use case when a station is having heavy uplink traffic. On some
-> devices,
-> like Chromebooks, this value is decreased to 7 seconds to avoid stall
-> results, and other devices prefer set to 15 seconds.
+On 11-03-16 16:23, Michael Trimarchi wrote:
+> Hi
 > 
-> This simple patch tries to make the selection of this value a bit
-> more
-> flexible by being able to set the expire time at config stage. Most
-> users
-> can leave the default value set as 30 seconds, others can modify the
-> value
-> at config stage if they want lower or bigger values.
+> I have a kernel panic on the brcmf_sdiod_sgtable_alloc just because
+> the function is called before brcmf_sdio_probe.
+> 
+> I think that
+>  nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
+>                       sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
+> 
+> drvr is null. Can you explain how it can work or do you have already a
+> fix for this?
 
-I'm not really all that convinced that we really need this - userspace
-should just be using the flush thing more often, and then it doesn't
-really matter.
+It sounds familiar so what kernel version are you seeing this.
 
-However, maybe that doesn't really matter all that much.
-
-But,
-
-> +config CFG80211_SCAN_RESULT_EXPIRE
-> +	int "Scan completion time" if CFG80211
-
-That should have "if CFG80211 && EXPERT" or something like that - no
-need to prompt everyone for it.
-
-> +	rdev->scan_result_expire =
-> CONFIG_CFG80211_SCAN_RESULT_EXPIRE;
-
-This is completely pointless - no need to go through runtime like that.
-
-> -#define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
-
-You can just use CONFIG_CFG80211_SCAN_RESULT_EXPIRE * HZ here.
-
-> +	__cfg80211_bss_expire(rdev, jiffies - rdev-
-> >scan_result_expire);
-
-You also completely messed this up because it now depends on HZ.
-
-johannes
+Regards,
+Arend
