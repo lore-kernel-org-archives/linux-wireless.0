@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:33217 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933327AbdEKR6C (ORCPT
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:32858 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750864AbdE2WiO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2017 13:58:02 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH v2 2/4] staging: rtl8192e: fix 2 byte alignment of register BSSIDR.
-Date: Thu, 11 May 2017 18:57:44 +0100
-Message-Id: <20170511175746.12378-2-tvboxspy@gmail.com> (sfid-20170511_195815_221826_659F5B4F)
-In-Reply-To: <20170511175746.12378-1-tvboxspy@gmail.com>
-References: <20170511175746.12378-1-tvboxspy@gmail.com>
+        Mon, 29 May 2017 18:38:14 -0400
+Received: by mail-qt0-f181.google.com with SMTP id t26so58306687qtg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 29 May 2017 15:38:14 -0700 (PDT)
+MIME-Version: 1.0
+From: Sritam <sritam2@gmail.com>
+Date: Tue, 30 May 2017 00:38:13 +0200
+Message-ID: <CAKWpU2dvQ9Wp9XSFx7nFuYmrjJe8JABD31cOPiuS8j+swTiA4w@mail.gmail.com> (sfid-20170530_004034_803891_F99679C9)
+Subject: 802.1X/EAP authentication for 802.11s MESH networks
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BSSIDR has two byte alignment on PCI ioremap correct the write
-by swapping to 16 bits first.
+Dear Sir/Madam,
 
-This fixes a problem that the device associates fail because
-the filter is not set correctly.
+I am interested in formation of secured 802.11s MESH networks. I am
+able to form it using authentication mechanism SAE(simultaneous
+authentication of equals) and open80211s stack as per the procedure
+given in: https://github.com/o11s/open80211s/wiki/HOWTO
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org>
----
-v2 - Fix name of register in commit message.
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+As per 802.11s specification, 802.1X/EAP can also be used for secure
+authentication of MESH networks. But there is not much online help for
+that.
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index a23628f390c9..e03d0a3a6dcc 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -97,8 +97,9 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
- 
- 	switch (variable) {
- 	case HW_VAR_BSSID:
--		rtl92e_writel(dev, BSSIDR, ((u32 *)(val))[0]);
--		rtl92e_writew(dev, BSSIDR+2, ((u16 *)(val+2))[0]);
-+		/* BSSIDR 2 byte alignment */
-+		rtl92e_writew(dev, BSSIDR, *(u16 *)val);
-+		rtl92e_writel(dev, BSSIDR + 2, *(u32 *)(val + 2));
- 		break;
- 
- 	case HW_VAR_MEDIA_STATUS:
-@@ -961,8 +962,8 @@ static void _rtl92e_net_update(struct net_device *dev)
- 	rtl92e_config_rate(dev, &rate_config);
- 	priv->dot11CurrentPreambleMode = PREAMBLE_AUTO;
- 	 priv->basic_rate = rate_config &= 0x15f;
--	rtl92e_writel(dev, BSSIDR, ((u32 *)net->bssid)[0]);
--	rtl92e_writew(dev, BSSIDR+4, ((u16 *)net->bssid)[2]);
-+	rtl92e_writew(dev, BSSIDR, *(u16 *)net->bssid);
-+	rtl92e_writel(dev, BSSIDR + 2, *(u32 *)(net->bssid + 2));
- 
- 	if (priv->rtllib->iw_mode == IW_MODE_ADHOC) {
- 		rtl92e_writew(dev, ATIMWND, 2);
+I need help and support for this purpose. I need to implement a
+secured 802.11s MESH network by using 802.1X/EAP as the secure
+authentication mechanism.
+
+Please help me in providing resources/links which I can read and
+implement my requirement.
+Please guide me and show me the path on how to implement it.
+
 -- 
-2.11.0
+Thanks and Regards,
+Sritam Paltasingh.
