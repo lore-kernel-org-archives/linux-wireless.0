@@ -1,119 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34801 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750911AbdEEQR3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 May 2017 12:17:29 -0400
-Received: by mail-io0-f196.google.com with SMTP id 12so2446298iol.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 May 2017 09:17:29 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 09/10] rtlwifi: btcoex: 21a 2ant: fix PTA unstable problem when hw init
-Date: Fri,  5 May 2017 11:17:11 -0500
-Message-Id: <20170505161712.8685-10-Larry.Finger@lwfinger.net> (sfid-20170505_181917_139175_A02FB767)
-In-Reply-To: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
-References: <20170505161712.8685-1-Larry.Finger@lwfinger.net>
+Received: from mail.neratec.com ([46.140.151.2]:48754 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750930AbdE3N34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 May 2017 09:29:56 -0400
+Subject: Re: [PATCH] Per chain RSSI reporting
+To: Ben Greear <greearb@candelatech.com>,
+        Norik Dzhandzhapanyan <norikd@ethertronics.com>,
+        Adrian Chadd <adrian@freebsd.org>
+References: <SN1PR08MB1373BF583E9CE2AA6A0F6381B0FC0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <CAJ-VmomiKOgV4pJWNKdOCzsUJZYEixvP4p5bQ9X1FBqAGk_o0w@mail.gmail.com>
+ <SN1PR08MB137316C4132262145C58CEA3B0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <21095854-07c7-7586-6a6e-e60c11932b84@candelatech.com>
+ <CAJ-Vmonp72WpT_aUVo_To+k676Ra8S165efPOyXRvvk=_W0YEQ@mail.gmail.com>
+ <8e314337-a1f0-5ed4-aa90-3f1a0e2d09fc@ethertronics.com>
+ <50e245a7-60ad-39f1-920e-e8edf5d9a5ab@candelatech.com>
+ <SN1PR08MB13736CC61B1D00ED2968CF5CB0FD0@SN1PR08MB1373.namprd08.prod.outlook.com>
+ <82088c50-f800-9d5c-8ccf-879f4b425e66@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Matthias May <matthias.may@neratec.com>
+Message-ID: <2bc35b78-97b4-bdd8-d8dd-6ec59fa9dbd0@neratec.com> (sfid-20170530_153000_121201_304E5313)
+Date: Tue, 30 May 2017 15:23:05 +0200
+MIME-Version: 1.0
+In-Reply-To: <82088c50-f800-9d5c-8ccf-879f4b425e66@candelatech.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On 27/05/17 23:49, Ben Greear wrote:
+> On 05/27/2017 02:41 PM, Norik Dzhandzhapanyan wrote:
+>> Yes ~6dB
+> 
+> If a packet is sent on 1 chain with ath10k firmware (9880 hardware, specifically, but probably
+> others as well), it will be around 6db higher on that particular chain
+> than if the rate-control sends it on all three chains.
+> 
+> Are you measuring on a single chain, or on all of the chains at once and adding
+> the power?
+> 
+> I think we would need more detailed reporting using a good third-party device before
+> smoothing and RSSI.
+> 
+> Thanks,
+> Ben
+> 
+>>
 
-In the hardware initialisation stage, the PTA circuits may be unstable,
-so we reset it after 6 secs to fix the problem.
+Also noteworthy is that if you measure in a cabled environment and add the signal from multiple chains with a combiner
+you will probably measure the power wrong.
+The reason for this is that the cyclic shift diversity doesn't work well in a 2 dimensional environment (cable) compared
+to the 3 dimensional environment (air).
 
-dis_ver_info_cnt is used to indicate the time after init, and we can set
-PTA according to it.
+BR
+Matthias
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - resubmit after removal of BT_AUTO_REPORT_XXXX symbols.
----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 38 +++++++---------------
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  2 ++
- 2 files changed, 14 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 1307099a02f3..e61016f660a8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -3598,6 +3598,7 @@ void ex_btc8821a2ant_init_hwconfig(struct btc_coexist *btcoexist)
- 
- 	/* Antenna config */
- 	btc8821a2ant_set_ant_path(btcoexist, BTC_ANT_WIFI_AT_MAIN, true, false);
-+	coex_sta->dis_ver_info_cnt = 0;
- 
- 	/* PTA parameter */
- 	btc8821a2ant_coex_table_with_type(btcoexist, FORCE_EXEC, 0);
-@@ -4245,36 +4246,21 @@ void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
--	static u8 dis_ver_info_cnt;
--	struct btc_board_info *board_info = &btcoexist->board_info;
--	struct btc_stack_info *stack_info = &btcoexist->stack_info;
--	u32 fw_ver = 0, bt_patch_ver = 0;
- 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], ==========================Periodical===========================\n");
- 
--	if (dis_ver_info_cnt <= 5) {
--		dis_ver_info_cnt += 1;
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], ****************************************************************\n");
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], Ant PG Num/ Ant Mech/ Ant Pos = %d/ %d/ %d\n",
--			 board_info->pg_ant_num,
--			 board_info->btdm_ant_num,
--			 board_info->btdm_ant_pos);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], BT stack/ hci ext ver = %s / %d\n",
--			 stack_info->profile_notified ? "Yes" : "No",
--			 stack_info->hci_version);
--		btcoexist->btc_get(btcoexist, BTC_GET_U4_BT_PATCH_VER,
--				   &bt_patch_ver);
--		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_FW_VER, &fw_ver);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], CoexVer/ FwVer/ PatchVer = %d_%x/ 0x%x/ 0x%x(%d)\n",
--			 glcoex_ver_date_8821a_2ant, glcoex_ver_8821a_2ant,
--			 fw_ver, bt_patch_ver, bt_patch_ver);
--		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], ****************************************************************\n");
-+	if (coex_sta->dis_ver_info_cnt <= 5) {
-+		coex_sta->dis_ver_info_cnt += 1;
-+		if (coex_sta->dis_ver_info_cnt == 3) {
-+			/* Antenna config to set 0x765 = 0x0 (GNT_BT control by
-+			 * PTA) after initial
-+			 */
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], Set GNT_BT control by PTA\n");
-+			btc8821a2ant_set_ant_path(btcoexist,
-+					BTC_ANT_WIFI_AT_MAIN, false, false);
-+		}
- 	}
- 
- #ifdef BT_AUTO_REPORT_ONLY_8821A_2ANT
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-index d268f424249f..74edfd75875a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-@@ -168,6 +168,8 @@ struct coex_sta_8821a_2ant {
- 
- 	u8	coex_table_type;
- 	bool	force_lps_on;
-+
-+	u8	dis_ver_info_cnt;
- };
- 
- /*===========================================
--- 
-2.12.2
+>>
+>> From: Ben Greear
+>> Sent: Saturday, May 27, 2:38 PM
+>> Subject: Re: [PATCH] Per chain RSSI reporting
+>> To: Norik Dzhandzhapanyan, Adrian Chadd
+>> Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+>>
+>>
+>> On 05/27/2017 12:25 PM, Norik Dzhandzhapanyan wrote: > We see this inconsistent/incorrect reporting in our RF chamber.
+>> How different are the values, and did you sniff with a third-party device to see if it sees the same spikes in RSSI?
+>> Thanks, Ben > > Norik > > On 05/27/2017 09:39 AM, Adrian Chadd wrote: >> On 27 May 2017 at 09:07, Ben Greear wrote:
+>> >>> At low encoding rates, especially if it switches to a single-chain encoding, >>> maybe the on-air signal really is
+>> stronger? >>> >>> Have you verified in some other manner than the signals reported by ath10k >>> are >>> wrong? >>
+>> Hiya, >> >> So yeah, multipath, higher TX rates == weaker TX signal, TPC, etc are >> all interesting to know about at
+>> the receiver. it's hard to separate >> that out from the noise sometimes, but in some controlled deployments >> its
+>> really obvious. >> >> >> >> -adrian >> >> > > > The contents of this transmission are Ethertronics Inc. Confidential
+>> and may contain proprietary or legally privileged
+>> information which may not be disclosed, copied or distributed without the express written consent of Ethertronics Inc.
+>> The information is intended to be for the use of the individual or entity named on this transmission. If you are not
+>> the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information
+>> is prohibited. If you have received this transmission in error, please notify us by telephone immediately so that we
+>> can arrange for the retrieval of the original documents at no cost to you. Alternatively, notify the sender by
+>> replying to this transmission and delete the message without disclosing it. Thank you > -- Ben Greear Candela
+>> Technologies Inc http://www.candelatech.com
+>>
+> 
