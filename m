@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:51274 "EHLO
-        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752511AbdEJMaX (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:51463 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751489AbdE3LU7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2017 08:30:23 -0400
-Date: Wed, 10 May 2017 15:24:58 +0300
-From: Jouni Malinen <j@w1.fi>
-To: mike@hellotwist.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Validate michael MIC before attempting packet
- decode.
-Message-ID: <20170510122458.GA4796@w1.fi> (sfid-20170510_143026_821027_254071E1)
-References: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKXXJEzWfNrQxquCzA5dkD5=xCXWyeAC+_yBT35N1oDk-H_Buw@mail.gmail.com>
+        Tue, 30 May 2017 07:20:59 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Brian Norris <computersforpeace@gmail.com>,
+        linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] bcm47xx: fix build regression
+Date: Tue, 30 May 2017 13:20:12 +0200
+Message-Id: <20170530112027.3983554-1-arnd@arndb.de> (sfid-20170530_132104_494343_5F6B356B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 09, 2017 at 02:16:31PM -0400, Michael Skeffington wrote:
-> In order to allow wpa_supplicant to correctly identify a perceived WPA TKIP key
-> recovery attack the michael MIC must be checked before the packet decode is
-> attempted.  A packet with an invalid MIC will always fail a decrypt check which
-> previously was being checked first.  Therefore the MIC failure bit of
-> status flags
-> describing the error would remain unset.
+An unknown change in the kernel headers caused a build regression
+in an MTD partition driver:
 
-Which driver and WLAN hardware are you using? Michael MIC is encrypted,
-so to be able to check that, the frame will obviously need to be
-decrypted first. If that WEP decryption fails, this frame needs to be
-dropped without indicating Michael MIC failure. WEP part here is
-completely independent of Michael MIC.
+In file included from drivers/mtd/bcm47xxpart.c:12:0:
+include/linux/bcm47xx_nvram.h: In function 'bcm47xx_nvram_init_from_mem':
+include/linux/bcm47xx_nvram.h:27:10: error: 'ENOTSUPP' undeclared (first use in this function)
 
-It is possible that there is a driver that handles these steps in
-hardware/firmware and if so, that driver may have a bug if you do not
-see Michael MIC failures reported correctly. Anyway, as Johannes pointed
-out, this part in mac80211 is in the correct sequence and that cannot be
-changed since it would completely break TKIP for more or less all
-software-based cases.
+Clearly we want to include linux/errno.h here.
 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ include/linux/bcm47xx_nvram.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/linux/bcm47xx_nvram.h b/include/linux/bcm47xx_nvram.h
+index 2793652fbf66..a414a2b53e41 100644
+--- a/include/linux/bcm47xx_nvram.h
++++ b/include/linux/bcm47xx_nvram.h
+@@ -8,6 +8,7 @@
+ #ifndef __BCM47XX_NVRAM_H
+ #define __BCM47XX_NVRAM_H
+ 
++#include <linux/errno.h>
+ #include <linux/types.h>
+ #include <linux/kernel.h>
+ #include <linux/vmalloc.h>
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.9.0
