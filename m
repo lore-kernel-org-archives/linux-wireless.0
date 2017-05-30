@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway24.websitewelcome.com ([192.185.51.228]:26352 "EHLO
-        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752049AbdEIM07 (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37520 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751412AbdE3MgK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 May 2017 08:26:59 -0400
-Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
-        by gateway24.websitewelcome.com (Postfix) with ESMTP id 31747485B
-        for <linux-wireless@vger.kernel.org>; Tue,  9 May 2017 07:01:59 -0500 (CDT)
-Date: Tue, 09 May 2017 07:01:58 -0500
-Message-ID: <20170509070158.Horde.dYleVB-aK1cNNyQpdVsVMNp@gator4166.hostgator.com> (sfid-20170509_142702_466051_9B63FA1E)
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: ath: ath9k: remove unnecessary code
-References: <20170509034814.GA18034@embeddedgus>
- <87efvy1d07.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87efvy1d07.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-MIME-Version: 1.0
+        Tue, 30 May 2017 08:36:10 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [RFT 3/3] brcmfmac: unbind all devices upon failure in firmware callback
+Date: Tue, 30 May 2017 13:35:54 +0100
+Message-Id: <1496147754-2303-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170530_143620_972142_EF6DFEF2)
+In-Reply-To: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+In brcmf_sdio_firmware_callback() we need to unbind the driver from
+both sdio_func devices.
 
-Quoting Kalle Valo <kvalo@qca.qualcomm.com>:
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> "Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
->
->> The name of an array used by itself will always return the array's address.
->> So this test will always evaluate as true.
->>
->> Addresses-Coverity-ID: 1364903
->> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/eeprom.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c  
->> b/drivers/net/wireless/ath/ath9k/eeprom.c
->> index fb80ec8..5c3bc28 100644
->> --- a/drivers/net/wireless/ath/ath9k/eeprom.c
->> +++ b/drivers/net/wireless/ath/ath9k/eeprom.c
->> @@ -143,7 +143,7 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32  
->> off, u16 *data)
->>
->>  	if (ah->eeprom_blob)
->>  		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
->> -	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
->> +	else if (pdata && !pdata->use_eeprom)
->>  		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
->>  	else
->>  		ret = common->bus_ops->eeprom_read(common, off, data);
->
-> The patch may very well be valid (didn't check yet) but the commit log
-> is gibberish for me.
->
-
-Let me correct that and I'll send the patch again.
-
-Thanks!
---
-Gustavo A. R. Silva
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 270c0ad..a5b27a4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3988,14 +3988,14 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	u8 saveclk;
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
++	bus_if = dev_get_drvdata(dev);
++	sdiodev = bus_if->bus_priv.sdio;
+ 	if (err)
+ 		goto fail;
+ 
+-	bus_if = dev_get_drvdata(dev);
+ 	if (!bus_if->drvr)
+ 		return;
+ 
+-	sdiodev = bus_if->bus_priv.sdio;
+ 	bus = sdiodev->bus;
+ 
+ 	/* try to download image and nvram to the dongle */
+@@ -4084,6 +4084,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
+ 	device_release_driver(dev);
++	device_release_driver(&sdiodev->func[1]->dev);
+ }
+ 
+ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+-- 
+1.9.1
