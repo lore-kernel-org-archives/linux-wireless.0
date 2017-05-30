@@ -1,72 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f48.google.com ([209.85.214.48]:34816 "EHLO
-        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756144AbdERQaS (ORCPT
+Received: from gateway21.websitewelcome.com ([192.185.45.36]:20838 "EHLO
+        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751025AbdE3RAg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2017 12:30:18 -0400
-Received: by mail-it0-f48.google.com with SMTP id c15so103480829ith.0
-        for <linux-wireless@vger.kernel.org>; Thu, 18 May 2017 09:30:17 -0700 (PDT)
-Date: Thu, 18 May 2017 09:30:08 -0700
-From: Brian Norris <briannorris@chromium.org>
+        Tue, 30 May 2017 13:00:36 -0400
+Received: from cm2.websitewelcome.com (cm2.websitewelcome.com [192.185.178.13])
+        by gateway21.websitewelcome.com (Postfix) with ESMTP id AF28E400DF8F5
+        for <linux-wireless@vger.kernel.org>; Tue, 30 May 2017 12:00:33 -0500 (CDT)
+Date: Tue, 30 May 2017 12:00:32 -0500
+Message-ID: <20170530120032.Horde.GHW0X8-B795CdxPjQOfDPa9@gator4166.hostgator.com> (sfid-20170530_190112_685275_C191B893)
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>
-Subject: Re: [4/4] mwifiex: pcie: de-duplicate buffer allocation code
-Message-ID: <20170518163007.GA117009@google.com> (sfid-20170518_183141_781844_DAD9071E)
-References: <20170311013924.73348-5-briannorris@chromium.org>
- <20170518133348.6C5C660F63@smtp.codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [net-wireless-orinoco] question about potential null pointer
+ dereference
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170518133348.6C5C660F63@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 18, 2017 at 01:33:48PM +0000, Kalle Valo wrote:
-> Brian Norris <briannorris@chromium.org> wrote:
-> > This code was duplicated as part of the PCIe FLR code added to this
-> > driver. Let's de-duplicate it to:
-> > 
-> >  * make things easier to read (mwifiex_pcie_free_buffers() now has a
-> >    corresponding mwifiex_pcie_alloc_buffers())
-> >  * reduce likelihood of bugs
-> >  * make error logging equally verbose
-> >  * save lines of code!
-> > 
-> > Also drop some of the commentary that isn't really needed.
-> > 
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> 
-> Failed to apply:
-> 
-> fatal: sha1 information is lacking or useless (drivers/net/wireless/marvell/mwifiex/pcie.c).
-> error: could not build fake ancestor
-> Applying: mwifiex: pcie: de-duplicate buffer allocation code
-> Patch failed at 0001 mwifiex: pcie: de-duplicate buffer allocation code
-> The copy of the patch that failed is found in: .git/rebase-apply/patch
 
-Hmm, well it still applies for me, but it does require a 3-way merge...
-and I guess I have local history (because the 3 previous patches *used*
-to be together...):
+Hello everybody,
 
-$ pwclient git-am -p linux-wireless 9618309
-Applying patch #9618309 using u'git am'
-Description: [4/4] mwifiex: pcie: de-duplicate buffer allocation code
-Applying: mwifiex: pcie: de-duplicate buffer allocation code
-Using index info to reconstruct a base tree...
-M	drivers/net/wireless/marvell/mwifiex/pcie.c
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/net/wireless/marvell/mwifiex/pcie.c
+While looking into Coverity ID 1357460 I ran into the following piece  
+of code at drivers/net/wireless/intersil/orinoco/mic.c:48
 
-Anyway, I'll resend.
+48int orinoco_mic(struct crypto_shash *tfm_michael, u8 *key,
+49                u8 *da, u8 *sa, u8 priority,
+50                u8 *data, size_t data_len, u8 *mic)
+51{
+52        SHASH_DESC_ON_STACK(desc, tfm_michael);
+53        u8 hdr[ETH_HLEN + 2]; /* size of header + padding */
+54        int err;
+55
+56        if (tfm_michael == NULL) {
+57                printk(KERN_WARNING "orinoco_mic: tfm_michael == NULL\n");
+58                return -1;
+59        }
+60
+61        /* Copy header into buffer. We need the padding on the end zeroed */
+62        memcpy(&hdr[0], da, ETH_ALEN);
+63        memcpy(&hdr[ETH_ALEN], sa, ETH_ALEN);
+64        hdr[ETH_ALEN * 2] = priority;
+65        hdr[ETH_ALEN * 2 + 1] = 0;
+66        hdr[ETH_ALEN * 2 + 2] = 0;
+67        hdr[ETH_ALEN * 2 + 3] = 0;
+68
+69        desc->tfm = tfm_michael;
+70        desc->flags = 0;
+71
+72        err = crypto_shash_setkey(tfm_michael, key, MIC_KEYLEN);
+73        if (err)
+74                return err;
+75
+76        err = crypto_shash_init(desc);
+77        if (err)
+78                return err;
+79
+80        err = crypto_shash_update(desc, hdr, sizeof(hdr));
+81        if (err)
+82                return err;
+83
+84        err = crypto_shash_update(desc, data, data_len);
+85        if (err)
+86                return err;
+87
+88        err = crypto_shash_final(desc, mic);
+89        shash_desc_zero(desc);
+90
+91        return err;
+92}
 
-Brian
+The issue here is that line 56 implies that pointer tfm_michael might  
+be NULL. If this is the case, there is a potential NULL pointer  
+dereference at line 52 once pointer tfm_michael is indirectly  
+dereferenced inside macro SHASH_DESC_ON_STACK().
 
-> Patch set to Changes Requested.
+My question is if there is any chance that pointer tfm_michael might  
+be NULL when calling macro SHASH_DESC_ON_STACK() ?
 
+I'm trying to figure out if this is a false positive or something that  
+needs to be fixed somehow.
 
-> https://patchwork.kernel.org/patch/9618309/
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-> 
+I'd really appreciate any comment on this.
+
+Thank you!
+--
+Gustavo A. R. Silva
