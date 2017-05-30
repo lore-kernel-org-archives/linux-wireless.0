@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43108 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57436 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967435AbdEZLSz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2017 07:18:55 -0400
-Subject: Re: [PATCH 4.12 REGRESSION fix] brcmfmac: Use ALIGNMENT rather then
- hardcoded "4" for bus:txglomalign
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20170526110255.21342-1-hdegoede@redhat.com>
- <87d1avrhrg.fsf@kamboji.qca.qualcomm.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <619191d3-8ed3-b2a5-e8db-330d7b610b2d@redhat.com> (sfid-20170526_132058_674663_75B9179E)
-Date: Fri, 26 May 2017 13:18:52 +0200
-MIME-Version: 1.0
-In-Reply-To: <87d1avrhrg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1751037AbdE3NSp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 May 2017 09:18:45 -0400
+Message-ID: <1496150322.3327.9.camel@sipsolutions.net> (sfid-20170530_151856_892178_3B5E3770)
+Subject: Re: 'iw events' stops receiving events after a while on 4.9 + hacks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>, Bastian Bittorf <bb@npl.de>
+Cc: netdev <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 30 May 2017 15:18:42 +0200
+In-Reply-To: <fa96dfad-8d1b-c48f-df3b-3df0d548a5c6@candelatech.com>
+References: <d82d191e-8ede-68c6-c9e0-c381dc874d36@candelatech.com>
+         <20170517100844.GC2849@medion.lan>
+         <1495027835.2442.13.camel@sipsolutions.net>
+         <fa96dfad-8d1b-c48f-df3b-3df0d548a5c6@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 26-05-17 13:15, Kalle Valo wrote:
-> Hans de Goede <hdegoede@redhat.com> writes:
+On Wed, 2017-05-17 at 08:22 -0700, Ben Greear wrote:
 > 
->> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-
-Ah I see I set the Author to Arend when I added this to my
-tree a while back, that is fine as he did all the work
-for this one. I was under the impression Arend would submit
-this himself, but since I did not see a submission yet
-I decided to go ahead and submit this.
-
->> This fixes the following errors showing up in dmesg:
->>
->> [   32.528271] brcmfmac: brcmf_sdio_rxglom: sublen 524 not multiple of 8
->> [   32.528296] brcmfmac: brcmf_sdio_rxglom: sublen 84 not multiple of 8
->> [   33.063241] brcmfmac: brcmf_sdio_rxglom: sublen 1492 not multiple of 8
->>
->> Fixes: 6e84ab604bde ("properly align buffers ... with 64 bit DMA")
->> Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> I saw it exactly once so far, and it happened overnight,
+> but we have not been doing a lot of work with the 4.9 kernel until
+> recently.
 > 
-> I'll queue this to 4.12.
+> I don't think there were many messages on this system, and certainly
+> others have run much longer on systems that should be generating many
+> more events without trouble.
 
-Thank you, given that Arend is set as the Author you can add my:
+Ok.
 
-Tested-by: Hans de Goede <hdegoede@redhat.com>
+> Is there any way to dump out the socket information if we reproduce
+> the problem?
 
-And maybe drop the Suggested-by: Arend van Spriel ?
+I have no idea, sorry.
 
-Regards,
+If you or Bastian can tell me how to reproduce the problem, I can try
+to investigate it.
 
-Hans
+johannes
