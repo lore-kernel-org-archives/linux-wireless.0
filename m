@@ -1,78 +1,293 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:33436 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751494AbdECTCZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 May 2017 15:02:25 -0400
-Received: by mail-wm0-f44.google.com with SMTP id n198so24545555wmg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 03 May 2017 12:02:24 -0700 (PDT)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
-        Tom Gundersen <teg@jklm.no>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
- <20161226163559.GB27087@amd> <20170103175924.GC13946@wotan.suse.de>
-Cc: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Takashi Iwai <tiwai@suse.de>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <936bf348-58ac-882c-a433-83f209862deb@broadcom.com> (sfid-20170503_210249_579497_DC9A7274)
-Date: Wed, 3 May 2017 21:02:20 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170103175924.GC13946@wotan.suse.de>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:58562 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751525AbdE3Oet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 May 2017 10:34:49 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Micha=C5=82=20Kazior?= <kazikcz@gmail.com>,
+        ath10k@lists.infradead.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] mac80211: manage RX BA session offload without SKB queue
+Date: Tue, 30 May 2017 16:34:46 +0200
+Message-Id: <20170530143446.29534-1-johannes@sipsolutions.net> (sfid-20170530_163452_502816_FABC3EFD)
+In-Reply-To: <20170530141059.28006-1-johannes@sipsolutions.net>
+References: <20170530141059.28006-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+Instead of using the SKB queue with the fake pkt_type for the
+offloaded RX BA session management, also handle this with the
+normal aggregation state machine worker. This also makes the
+use of this more reliable since it gets rid of the allocation
+of the fake skb.
 
-On 3-1-2017 18:59, Luis R. Rodriguez wrote:
-> On Mon, Dec 26, 2016 at 05:35:59PM +0100, Pavel Machek wrote:
->>
->> Right question is "should we solve it without user-space help"?
->>
->> Answer is no, too. Way too complex. Yes, it would be nice if hardware
->> was designed in such a way that getting calibration data from kernel
->> is easy, and if you design hardware, please design it like that. But
->> N900 is not designed like that and getting the calibration through
->> userspace looks like only reasonable solution.
-> 
-> Arend seems to have a better alternative in mind possible for other
-> devices which *can* probably pull of doing this easily and nicely,
-> given the nasty history of the usermode helper crap we should not
-> in any way discourage such efforts.
-> 
-> Arend -- please look at the firmware cache, it not a hash but a hash
-> table for an O(1) lookups would be a welcomed change, then it could
-> be repurposed for what you describe, I think the only difference is
-> you'd perhaps want a custom driver hook to fetch the calibration data
-> so the driver does whatever it needs.
+Combined with the previous patch, this finally allows us to
+get rid of the pkt_type hack entirely, so do that as well.
 
-Hi Luis,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h     | 21 +++++++++++++++++----
+ net/mac80211/agg-rx.c      | 47 ++++++++++++----------------------------------
+ net/mac80211/ht.c          | 12 ++++++++++++
+ net/mac80211/ieee80211_i.h | 11 -----------
+ net/mac80211/iface.c       | 25 ++----------------------
+ net/mac80211/rx.c          |  4 ----
+ net/mac80211/sta_info.h    |  3 +++
+ 7 files changed, 46 insertions(+), 77 deletions(-)
 
-I let my idea catch dust on the shelf for a while. Actually had a couple
-of patches ready, but did get around testing them. So I wanted to rebase
-them on your linux-next tree. I bumped into the umh lock thing and was
-wondering why direct filesystem access was under that lock as well. In
-your tree I noticed a fix for that. The more reason to base my work on
-top of your firmware_class changes. Now my question is what is the best
-branch to choose, because you have a "few" in that repo to choose from ;-)
-
-Regards,
-Arend
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e01daff1e255..b2b5419467cc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5452,6 +5452,9 @@ void ieee80211_mark_rx_ba_filtered_frames(struct ieee80211_sta *pubsta, u8 tid,
+  */
+ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
+ 
++void ieee80211_manage_rx_ba_offl(struct ieee80211_vif *vif, const u8 *addr,
++				 unsigned int bit);
++
+ /**
+  * ieee80211_start_rx_ba_session_offl - start a Rx BA session
+  *
+@@ -5466,8 +5469,13 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
+  * @addr: station mac address
+  * @tid: the rx tid
+  */
+-void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
+-					const u8 *addr, u16 tid);
++static inline void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
++						      const u8 *addr, u16 tid)
++{
++	if (WARN_ON(tid >= IEEE80211_NUM_TIDS))
++		return;
++	ieee80211_manage_rx_ba_offl(vif, addr, tid);
++}
+ 
+ /**
+  * ieee80211_stop_rx_ba_session_offl - stop a Rx BA session
+@@ -5483,8 +5491,13 @@ void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
+  * @addr: station mac address
+  * @tid: the rx tid
+  */
+-void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
+-				       const u8 *addr, u16 tid);
++static inline void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
++						     const u8 *addr, u16 tid)
++{
++	if (WARN_ON(tid >= IEEE80211_NUM_TIDS))
++		return;
++	ieee80211_manage_rx_ba_offl(vif, addr, tid + IEEE80211_NUM_TIDS);
++}
+ 
+ /* Rate control API */
+ 
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 1b7a4daf283c..3a0282188ad6 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -449,44 +449,21 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 					buf_size, true, false);
+ }
+ 
+-void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
+-					const u8 *addr, u16 tid)
++void ieee80211_manage_rx_ba_offl(struct ieee80211_vif *vif,
++				 const u8 *addr, unsigned int bit)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_rx_agg *rx_agg;
+-	struct sk_buff *skb = dev_alloc_skb(0);
+-
+-	if (unlikely(!skb))
+-		return;
+-
+-	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
+-	memcpy(&rx_agg->addr, addr, ETH_ALEN);
+-	rx_agg->tid = tid;
+-
+-	skb->pkt_type = IEEE80211_SDATA_QUEUE_RX_AGG_START;
+-	skb_queue_tail(&sdata->skb_queue, skb);
+-	ieee80211_queue_work(&local->hw, &sdata->work);
+-}
+-EXPORT_SYMBOL(ieee80211_start_rx_ba_session_offl);
+-
+-void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
+-				       const u8 *addr, u16 tid)
+-{
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_rx_agg *rx_agg;
+-	struct sk_buff *skb = dev_alloc_skb(0);
+-
+-	if (unlikely(!skb))
+-		return;
++	struct sta_info *sta;
+ 
+-	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
+-	memcpy(&rx_agg->addr, addr, ETH_ALEN);
+-	rx_agg->tid = tid;
++	rcu_read_lock();
++	sta = sta_info_get_bss(sdata, addr);
++	if (!sta)
++		goto unlock;
+ 
+-	skb->pkt_type = IEEE80211_SDATA_QUEUE_RX_AGG_STOP;
+-	skb_queue_tail(&sdata->skb_queue, skb);
+-	ieee80211_queue_work(&local->hw, &sdata->work);
++	set_bit(bit, sta->ampdu_mlme.tid_rx_manage_offl);
++	ieee80211_queue_work(&local->hw, &sta->ampdu_mlme.work);
++ unlock:
++	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL(ieee80211_stop_rx_ba_session_offl);
++EXPORT_SYMBOL(ieee80211_manage_rx_ba_offl);
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 6ca5442b1e03..9e71226c2d25 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -331,6 +331,18 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 				sta, tid, WLAN_BACK_RECIPIENT,
+ 				WLAN_REASON_UNSPECIFIED, true);
+ 
++		if (test_and_clear_bit(tid,
++				       sta->ampdu_mlme.tid_rx_manage_offl))
++			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
++							IEEE80211_MAX_AMPDU_BUF,
++							false, true);
++
++		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
++				       sta->ampdu_mlme.tid_rx_manage_offl))
++			___ieee80211_stop_rx_ba_session(
++				sta, tid, WLAN_BACK_RECIPIENT,
++				0, false);
++
+ 		spin_lock_bh(&sta->lock);
+ 
+ 		tid_tx = sta->ampdu_mlme.tid_start_tx[tid];
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f24f1d7b8937..392fbab73c04 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1031,17 +1031,6 @@ ieee80211_vif_get_shift(struct ieee80211_vif *vif)
+ 	return shift;
+ }
+ 
+-struct ieee80211_rx_agg {
+-	u8 addr[ETH_ALEN];
+-	u16 tid;
+-};
+-
+-enum sdata_queue_type {
+-	IEEE80211_SDATA_QUEUE_TYPE_FRAME	= 0,
+-	IEEE80211_SDATA_QUEUE_RX_AGG_START	= 3,
+-	IEEE80211_SDATA_QUEUE_RX_AGG_STOP	= 4,
+-};
+-
+ enum {
+ 	IEEE80211_RX_MSG	= 1,
+ 	IEEE80211_TX_STATUS_MSG	= 2,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 8fae1a72e6a7..6ac0a0198d19 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1237,7 +1237,6 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+-	struct ieee80211_rx_agg *rx_agg;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+@@ -1252,28 +1251,8 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+ 		struct ieee80211_mgmt *mgmt = (void *)skb->data;
+ 
+-		if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
+-			rx_agg = (void *)&skb->cb;
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, rx_agg->addr);
+-			if (sta)
+-				__ieee80211_start_rx_ba_session(sta,
+-						0, 0, 0, 1, rx_agg->tid,
+-						IEEE80211_MAX_AMPDU_BUF,
+-						false, true);
+-			mutex_unlock(&local->sta_mtx);
+-		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
+-			rx_agg = (void *)&skb->cb;
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, rx_agg->addr);
+-			if (sta)
+-				__ieee80211_stop_rx_ba_session(sta,
+-							rx_agg->tid,
+-							WLAN_BACK_RECIPIENT, 0,
+-							false);
+-			mutex_unlock(&local->sta_mtx);
+-		} else if (ieee80211_is_action(mgmt->frame_control) &&
+-			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
++		if (ieee80211_is_action(mgmt->frame_control) &&
++		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
+ 
+ 			mutex_lock(&local->sta_mtx);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 35f4c7d7a500..a6509af148dd 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -237,7 +237,6 @@ static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
+ 	if (!skb)
+ 		return;
+ 
+-	skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+ 	skb_queue_tail(&sdata->skb_queue, skb);
+ 	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ }
+@@ -1217,7 +1216,6 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
+ 	/* if this mpdu is fragmented - terminate rx aggregation session */
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
+ 	if (sc & IEEE80211_SCTL_FRAG) {
+-		skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+ 		skb_queue_tail(&rx->sdata->skb_queue, skb);
+ 		ieee80211_queue_work(&local->hw, &rx->sdata->work);
+ 		return;
+@@ -3099,7 +3097,6 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 	return RX_QUEUED;
+ 
+  queue:
+-	rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+ 	skb_queue_tail(&sdata->skb_queue, rx->skb);
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ 	if (rx->sta)
+@@ -3245,7 +3242,6 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 	}
+ 
+ 	/* queue up frame and kick off work to process it */
+-	rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+ 	skb_queue_tail(&sdata->skb_queue, rx->skb);
+ 	ieee80211_queue_work(&rx->local->hw, &sdata->work);
+ 	if (rx->sta)
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index cde89c6d0386..3acbdfa9f649 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -233,6 +233,8 @@ struct tid_ampdu_rx {
+  *	RX timer expired until the work for it runs
+  * @tid_rx_stop_requested:  bitmap indicating which BA sessions per TID the
+  *	driver requested to close until the work for it runs
++ * @tid_rx_manage_offl: bitmap indicating which BA sessions were requested
++ *	to be treated as started/stopped due to offloading
+  * @agg_session_valid: bitmap indicating which TID has a rx BA session open on
+  * @unexpected_agg: bitmap indicating which TID already sent a delBA due to
+  *	unexpected aggregation related frames outside a session
+@@ -250,6 +252,7 @@ struct sta_ampdu_mlme {
+ 	u8 tid_rx_token[IEEE80211_NUM_TIDS];
+ 	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long tid_rx_stop_requested[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
++	unsigned long tid_rx_manage_offl[BITS_TO_LONGS(2 * IEEE80211_NUM_TIDS)];
+ 	unsigned long agg_session_valid[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long unexpected_agg[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	/* tx */
+-- 
+2.11.0
