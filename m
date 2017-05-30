@@ -1,64 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:34399 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1164694AbdEYALx (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37518 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751224AbdE3MgK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 20:11:53 -0400
-Received: by mail-pf0-f172.google.com with SMTP id 9so150117475pfj.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2017 17:11:53 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 06/14] mwifiex: don't short-circuit netdev notifiers on interface deletion
-Date: Wed, 24 May 2017 17:11:11 -0700
-Message-Id: <20170525001119.64791-6-briannorris@chromium.org> (sfid-20170525_021434_411505_8E46FCE4)
-In-Reply-To: <20170525001119.64791-1-briannorris@chromium.org>
-References: <20170525001119.64791-1-briannorris@chromium.org>
+        Tue, 30 May 2017 08:36:10 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [RFT 2/3] brcmfmac: use firmware callback upon failure to load
+Date: Tue, 30 May 2017 13:35:53 +0100
+Message-Id: <1496147754-2303-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170530_143613_339816_6FBABDAF)
+In-Reply-To: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we leave the delete interface function, there are still netdev
-hooks that might try to process the device. We're short-circuiting some
-of that by changing the interface type and clearing ieee80211_ptr. This
-means we skip NETDEV_UNREGISTER_FINAL in cfg80211. Fortunately, that is
-currently a no-op.
+When firmware loading failed the code used to unbind the device provided
+by the calling code. However, for the sdio driver two devices are bound
+and both need to be released upon failure. The callback has been extended
+with parameter to pass error code so add that in this commit upon firmware
+loading failure.
 
-We don't need most of the cleanup here anyway:
-
- * the connection state will get (un)set as part of the disconnect
-   process (which cfg80211 already initiates for us)
- * the interface type doesn't actually need to be cleared at all (it'll
-   trigger a WARN_ON() in cfg80211 if we do)
- * the iee80211_ptr isn't really "ours" to clear anyway
-
-So stop resetting those 3 things.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ----
- 1 file changed, 4 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 27 +++++++++++-----------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 025bc06a19d6..c3a25b7f2b48 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3129,11 +3129,7 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		priv->dfs_chan_sw_workqueue = NULL;
- 	}
- 	/* Clear the priv in adapter */
--	priv->netdev->ieee80211_ptr = NULL;
- 	priv->netdev = NULL;
--	priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
--
--	priv->media_connected = false;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index ae61a24..d231042 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -484,39 +484,38 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+ 	release_firmware(fwctx->code);
+-	device_release_driver(fwctx->dev);
++	fwctx->done(fwctx->dev, -ENOENT, NULL, NULL, 0);
+ 	kfree(fwctx);
+ }
  
- 	switch (priv->bss_mode) {
- 	case NL80211_IFTYPE_UNSPECIFIED:
+ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
+-	int ret;
++	int ret = 0;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
+-	if (!fw)
++	if (!fw) {
++		ret = -ENOENT;
+ 		goto fail;
+-
+-	/* only requested code so done here */
+-	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM)) {
+-		fwctx->done(fwctx->dev, 0, fw, NULL, 0);
+-		kfree(fwctx);
+-		return;
+ 	}
++	/* only requested code so done here */
++	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM))
++		goto done;
++
+ 	fwctx->code = fw;
+ 	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+ 				      fwctx->dev, GFP_KERNEL, fwctx,
+ 				      brcmf_fw_request_nvram_done);
+ 
+-	if (!ret)
+-		return;
+-
+-	brcmf_fw_request_nvram_done(NULL, fwctx);
++	/* pass NULL to nvram callback for bcm47xx fallback */
++	if (ret)
++		brcmf_fw_request_nvram_done(NULL, fwctx);
+ 	return;
+ 
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+-	device_release_driver(fwctx->dev);
++done:
++	fwctx->done(fwctx->dev, ret, fw, NULL, 0);
+ 	kfree(fwctx);
+ }
+ 
 -- 
-2.13.0.219.gdb65acc882-goog
+1.9.1
