@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45938 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58160 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752133AbdEVGR5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 May 2017 02:17:57 -0400
-Message-ID: <1495433875.2653.4.camel@sipsolutions.net> (sfid-20170522_081940_683323_97770089)
-Subject: Re: [PATCH] nl80211: Add association id to station response
+        id S1751551AbdE3OMJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 May 2017 10:12:09 -0400
+Message-ID: <1496153526.3327.12.camel@sipsolutions.net> (sfid-20170530_161212_064559_0B6DC357)
+Subject: Re: [PATCH] mac80211: manage RX BA session offload without SKB queue
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kirill Obukhov <kirill.obukhov@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 22 May 2017 08:17:55 +0200
-In-Reply-To: <CAP3TkT3VE6FWBXm0K4=-pWLrmsCk4a7wuqc24KdcgYNBRQRyoA@mail.gmail.com> (sfid-20170521_104507_802538_58DA290C)
-References: <CAP3TkT3VE6FWBXm0K4=-pWLrmsCk4a7wuqc24KdcgYNBRQRyoA@mail.gmail.com>
-         (sfid-20170521_104507_802538_58DA290C)
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>,
+        ath10k@lists.infradead.org
+Date: Tue, 30 May 2017 16:12:06 +0200
+In-Reply-To: <20170530141059.28006-1-johannes@sipsolutions.net> (sfid-20170530_161107_071358_D610DE8E)
+References: <20170530141059.28006-1-johannes@sipsolutions.net>
+         (sfid-20170530_161107_071358_D610DE8E)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kirill,
+On Tue, 2017-05-30 at 16:10 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Instead of using the SKB queue with the fake pkt_type for the
+> offloaded RX BA session management, also handle this with the
+> normal aggregation state machine worker. This also makes the
+> use of this more reliable since it gets rid of the allocation
+> of the fake skb.
+> 
+> Combined with the previous patch, this finally allows us to
+> get rid of the pkt_type hack entirely, so do that as well.
 
-First of all, please read
+Previous patch is this:
 
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html
+https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git/commit/?id=7a7c0a6438b8e7636d5a22e572892cc234f68297
 
-particularly
-
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin
-
-is important
-
-On Sun, 2017-05-21 at 11:45 +0300, Kirill Obukhov wrote:
-> There are unique association id attribute must be passed in station
-> add request.
-> But we have no way to retrieve ids already in use. To solve issue
-> association id attribute added to station response.
-
-This sound fine.
-
-However, it'd be good to mention that you're also adding it to
-mac80211, or preferably even split the patch into two, one to add the
-feature and one to make use of it in mac80211.
-
-Once you do that, you'll quite likely also notice that with just the
-first of the patches, the thing is broken and always reports a 0 AID.
-
->         if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
->             nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr) ||
-> +           nla_put_u16(msg, NL80211_ATTR_STA_AID, sinfo->aid) ||
-
-That's because you need to make this conditional on the right filled
-flag.
+I can't test this (don't have ath10k easily testable), so testing would
+be appreciated.
 
 johannes
