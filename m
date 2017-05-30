@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35292 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936582AbdEYRZ5 (ORCPT
+Received: from gateway23.websitewelcome.com ([192.185.50.107]:47223 "EHLO
+        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750811AbdE3UnM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 13:25:57 -0400
-Received: by mail-wm0-f67.google.com with SMTP id g15so35030542wmc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2017 10:25:56 -0700 (PDT)
-From: Marko Stankovic <dartnorris@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Marko Stankovic <dartnorris@gmail.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: 
-Date: Thu, 25 May 2017 19:25:07 +0200
-Message-Id: <20170525172507.14356-2-dartnorris@gmail.com> (sfid-20170525_192652_495740_B69F1572)
-In-Reply-To: <20170525172507.14356-1-dartnorris@gmail.com>
-References: <20170525172507.14356-1-dartnorris@gmail.com>
+        Tue, 30 May 2017 16:43:12 -0400
+Received: from cm3.websitewelcome.com (unknown [108.167.139.23])
+        by gateway23.websitewelcome.com (Postfix) with ESMTP id 5F08D6A583
+        for <linux-wireless@vger.kernel.org>; Tue, 30 May 2017 15:43:09 -0500 (CDT)
+Date: Tue, 30 May 2017 15:43:07 -0500
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] NFC: add NULL checks to avoid potential NULL pointer
+ dereference
+Message-ID: <20170530204307.GA3931@embeddedgus> (sfid-20170530_224315_747040_B0109018)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Subject: [PATCH 2/2] staging: wilc1000: add missing blank line after struct
- declaration
+NULL checks at line 457: if (!link0 || !link1) {, implies that both
+pointers link0 and link1 might be NULL.
+Function nfcsim_link_free() dereference pointers link0 and link1.
+Add NULL checks before calling nfcsim_link_free() to avoid a
+potential NULL pointer dereference.
 
-Fix a missing blank line issue reported by checkpatch.pl
-
-Signed-off-by: Marko Stankovic <dartnorris@gmail.com>
+Addresses-Coverity-ID: 1364857
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/nfc/nfcsim.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 98316a45abd1..cae9c8ff80d8 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -167,6 +167,7 @@ struct add_key_params {
- 	bool pairwise;
- 	u8 *mac_addr;
- };
-+
- static struct add_key_params g_add_gtk_key_params;
- static struct wilc_wfi_key g_key_gtk_params;
- static struct add_key_params g_add_ptk_key_params;
+diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
+index a466e79..6e90b54 100644
+--- a/drivers/nfc/nfcsim.c
++++ b/drivers/nfc/nfcsim.c
+@@ -482,8 +482,10 @@ static int __init nfcsim_init(void)
+ exit_err:
+ 	pr_err("Failed to initialize nfcsim driver (%d)\n", rc);
+ 
+-	nfcsim_link_free(link0);
+-	nfcsim_link_free(link1);
++	if (link0)
++		nfcsim_link_free(link0);
++	if (link1)
++		nfcsim_link_free(link1);
+ 
+ 	return rc;
+ }
 -- 
-2.11.0
+2.5.0
