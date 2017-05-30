@@ -1,105 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55174 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752274AbdEPJXd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33376 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751032AbdE3MBv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 05:23:33 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, benjamin@sipsolutions.net,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH 1/7] mac80211: Mark channel as unusable if a regulatory MESH CSA is received
-Date: Tue, 16 May 2017 11:23:10 +0200
-Message-Id: <20170516092316.15636-2-sw@simonwunderlich.de> (sfid-20170516_112815_050541_574397D9)
-In-Reply-To: <20170516092316.15636-1-sw@simonwunderlich.de>
-References: <20170516092316.15636-1-sw@simonwunderlich.de>
+        Tue, 30 May 2017 08:01:51 -0400
+From: Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>
+To: Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        "nbd@nbd.name" <nbd@nbd.name>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: RE: [PATCH] ath10k : Fix channel survey dump
+Date: Tue, 30 May 2017 12:01:43 +0000
+Message-ID: <dd600e9cc88f4994bd310fb3674d55b7@aphydexm01f.ap.qualcomm.com> (sfid-20170530_140156_085228_D0685B92)
+References: <1493217698-22451-1-git-send-email-c_vnaral@qti.qualcomm.com>
+ <40f2b7a2-7276-6de6-afc6-407348c92e70@nbd.name>
+ <87wp9durwe.fsf@kamboji.qca.qualcomm.com>
+ <bf174d49b9be4b3697601f6bef7394d8@APSANEXR01F.ap.qualcomm.com>
+In-Reply-To: <bf174d49b9be4b3697601f6bef7394d8@APSANEXR01F.ap.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin@sipsolutions.net>
 
-In the Mesh Channel Switch Parameters (8.4.2.105) the reason is specified
-to WLAN_REASON_MESH_CHAN_REGULATORY in the case that a regulatory
-limitation was the cause for the switch. This means another station
-detected a radar event.
 
-Mark the channel as unusable if this happens.
+-----Original Message-----
+From: ath10k [mailto:ath10k-bounces@lists.infradead.org] On Behalf Of Venka=
+teswara Naralasettty
+Sent: Monday, May 22, 2017 8:48 PM
+To: Kalle Valo <kvalo@qca.qualcomm.com>; nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
+Subject: RE: [PATCH] ath10k : Fix channel survey dump
 
-Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
-[sw: style cleanup, rebase]
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
----
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mesh.c        | 21 +++++++++++++++++++++
- net/mac80211/spectmgmt.c   |  5 +++++
- 3 files changed, 27 insertions(+)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f8f6c148f554..60bed6c69801 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1440,6 +1440,7 @@ struct ieee80211_csa_ie {
- 	u8 count;
- 	u8 ttl;
- 	u16 pre_value;
-+	u16 reason_code;
- };
- 
- /* Parsed Information Elements */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 737e1f082b0d..3702e3d9141d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -916,6 +916,21 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	ieee80211_configure_filter(local);
- }
- 
-+static void ieee80211_mesh_csa_mark_radar(struct ieee80211_sub_if_data *sdata)
-+{
-+	int err;
-+
-+	/* if the current channel is a DFS channel, mark the channel as
-+	 * unavailable.
-+	 */
-+	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
-+					    &sdata->vif.bss_conf.chandef,
-+					    NL80211_IFTYPE_MESH_POINT);
-+	if (err > 0)
-+		cfg80211_radar_event(sdata->local->hw.wiphy,
-+				     &sdata->vif.bss_conf.chandef, GFP_ATOMIC);
-+}
-+
- static bool
- ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 				 struct ieee802_11_elems *elems, bool beacon)
-@@ -954,6 +969,12 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 	if (err)
- 		return false;
- 
-+	/* Mark the channel unavailable if the reason for the switch is
-+	 * regulatory.
-+	 */
-+	if (csa_ie.reason_code == WLAN_REASON_MESH_CHAN_REGULATORY)
-+		ieee80211_mesh_csa_mark_radar(sdata);
-+
- 	params.chandef = csa_ie.chandef;
- 	params.count = csa_ie.count;
- 
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index 0782e486fe89..d2ea0017c79d 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -76,6 +76,11 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 		csa_ie->mode = elems->mesh_chansw_params_ie->mesh_flags;
- 		csa_ie->pre_value = le16_to_cpu(
- 				elems->mesh_chansw_params_ie->mesh_pre_value);
-+
-+		if (elems->mesh_chansw_params_ie->mesh_flags &
-+				WLAN_EID_CHAN_SWITCH_PARAM_REASON)
-+			csa_ie->reason_code = le16_to_cpu(
-+				elems->mesh_chansw_params_ie->mesh_reason);
- 	}
- 
- 	new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
--- 
-2.11.0
+-----Original Message-----
+From: Kalle Valo
+Sent: Friday, May 19, 2017 2:48 PM
+To: nbd@nbd.name
+Cc: Venkateswara Naralasettty <vnaralas@qti.qualcomm.com>; ath10k@lists.inf=
+radead.org; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k : Fix channel survey dump
+
+Felix Fietkau <nbd@nbd.name> writes:
+
+> On 2017-04-26 16:41, Venkateswara Rao Naralasetty wrote:
+>> Channel active/busy time are showing incorrect (less than previous or=20
+>> sometimes zero) for successive survey dump command.
+>>=20
+>> example:
+>> Survey data from wlan0
+>>         frequency:                      5180 MHz [in use]
+>>         channel active time:            54995 ms
+>>         channel busy time:              432 ms
+>>         channel receive time:           0 ms
+>>         channel transmit time:          59 ms
+>> Survey data from wlan0
+>>         frequency:                      5180 MHz [in use]
+>>         channel active time:            32592 ms
+>>         channel busy time:              254 ms
+>>         channel receive time:           0 ms
+>>         channel transmit time:          0 ms
+>>=20
+>> This patch fix this issue by assigning 'wmi_bss_survey_req_type'
+>> as 'WMI_BSS_SURVEY_REQ_TYPE_READ'.
+>>=20
+>> Firmware ver 10.4-3.4-00082
+>> Hardware QCA4019
+>>=20
+>> Signed-off-by: Venkateswara Rao Naralasetty=20
+>> <c_vnaral@qti.qualcomm.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>=20
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
+>> b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 9977829..87a9b55 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -6621,7 +6621,7 @@ static void ath10k_reconfig_complete(struct ieee80=
+211_hw *hw,
+>>  				  struct ieee80211_channel *channel)  {
+>>  	int ret;
+>> -	enum wmi_bss_survey_req_type type =3D WMI_BSS_SURVEY_REQ_TYPE_READ_CLE=
+AR;
+>> +	enum wmi_bss_survey_req_type type =3D WMI_BSS_SURVEY_REQ_TYPE_READ;
+>
+> Does the firmware read the registers directly, or does it accumulate=20
+> the results in a way that can't overflow? If you don't clear the=20
+> counters on reset, the overflow will be problematic for the=20
+> current-channel stats. I think a better approach would be to use=20
+> READ_CLEAR for in-use channels and store the sum inside the driver.
+
+Venkateswara, any comments?
+
+--
+Kalle Valo
+
+Sorry for the delayed response I held up with some other work. Currently I =
+am working with firmware team to address your comments.
+
+--
+Venkatesh.
+
+> Firmware is not handling the overflow while accumulating the results,  we=
+ are looking into some other options to make it in host
+
+-Venkatesh.
+
+_______________________________________________
+ath10k mailing list
+ath10k@lists.infradead.org
+BLOCKEDlists[.]infradead[.]org/mailman/listinfo/ath10kBLOCKED
