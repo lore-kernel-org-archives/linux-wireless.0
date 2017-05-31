@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0084.outbound.protection.outlook.com ([104.47.38.84]:16248
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751474AbdEURIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2017 13:08:30 -0400
-Date: Sun, 21 May 2017 20:08:15 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH v6] qtnfmac: introduce new FullMAC driver for Quantenna
- chipsets
-Message-ID: <20170521170814.d7ljne2pgopymxud@bars> (sfid-20170521_190835_220130_9C814910)
-References: <20170511215101.15356-1-igor.mitsyanko.os@quantenna.com>
- <1495026753.2442.7.camel@sipsolutions.net>
- <20170518200810.pch7tivugqyjmy4d@bars>
- <1495189094.3274.2.camel@sipsolutions.net>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35570 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751145AbdEaKVL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 May 2017 06:21:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495189094.3274.2.camel@sipsolutions.net>
+In-Reply-To: <7b6903a2-ce54-44f9-18ed-a14bd32069ce@broadcom.com>
+References: <20170530112027.3983554-1-arnd@arndb.de> <7b6903a2-ce54-44f9-18ed-a14bd32069ce@broadcom.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 31 May 2017 12:21:10 +0200
+Message-ID: <CAK8P3a2-kO==gMDm3E6U8CR-zhwmZGztRy7Trcezf8oZxgn01g@mail.gmail.com> (sfid-20170531_122138_656271_4EE50A7C)
+Subject: Re: [PATCH] bcm47xx: fix build regression
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Ingo Molnar <mingo@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 19, 2017 at 12:18:14PM +0200, Johannes Berg wrote:
+On Wed, May 31, 2017 at 11:43 AM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 5/30/2017 1:20 PM, Arnd Bergmann wrote:
+>>
+>> An unknown change in the kernel headers caused a build regression
+>> in an MTD partition driver:
+>>
+>> In file included from drivers/mtd/bcm47xxpart.c:12:0:
+>> include/linux/bcm47xx_nvram.h: In function 'bcm47xx_nvram_init_from_mem':
+>> include/linux/bcm47xx_nvram.h:27:10: error: 'ENOTSUPP' undeclared (first
+>> use in this function)
+>>
+>> Clearly we want to include linux/errno.h here.
+>
+>
+> unfortunate that you did not find the commit that caused this build
+> regression. You could produce preprocessor output when it was working to see
+> where errno.h got implicitly included and start looking there for git
+> history.
 
-> FWIW, regarding the  qtnf_mgmt_frame_register() and
-> cfg80211_rx_mgmt() thing, I think we'll have to discuss how to do this,
-> and perhaps you need to think about the firmware API for it.
-> 
-> Right now, I don't see that you can pass filters down, but you probably
-> also don't want to implement the reject code in the driver? And
-> cfg80211 doesn't give you that data right now either... So somewhere I
-> expect we'll need to make changes, unless you just copy (e.g. from
-> mac80211) the implementation of what happens when cfg80211_rx_mgmt()
-> returns false.
+I did a 'git bisect run make drivers/mtd/bcm47xxpart.o' now, which pointed to
+0bc2d534708b ("rcu: Refactor #includes from include/linux/rcupdate.h").
 
-Thanks for pointing at mac80211 reject code. In our specific case
-it looks like the issue can be fixed with help of the following
-building blocks:
-- properly set NL80211_RXMGMT_FLAG_ANSWERED flag, since quite a few
-  mgmt frame types are completely handled by firmware
-- reply to action frames rejected by userspace tools
-  in the same way as it is done by mac80211
+That commit seems reasonable, it was just bad luck that it caused this
+regression. The commit is currently in the rcu/rcu/next branch of tip.git,
+so Paul could merge the patch there.
 
-Adding reject code seems to be straightforward. Adding NL80211_RXMGMT_FLAG_ANSWERED
-flag to firmware is a more involved task. But it can be done gradually, from
-simple usecases to the complicated ones. Besides, IIUC the support of this flag
-by userspace tools is still a work in progress. E.g., hostapd is not yet using it,
-so we keep using 'send_probe_response = 0' config option.
-
-In the long run the idea of passing mgmt frame filters to drivers looks
-appealing. It will be up to driver whether to use filters (e.g. pass them
-to firmware for early processing) or not to use them (essentially leaving
-it for cfg80211 subsystem). I did a quick search through other users of
-cfg80211_rx_mgmt among wireless drivers. It turns out that none of them is
-checking its return value. So there may be other potential
-users of this feature :)
-
-Does it make sense if I post an RFC patch modifying current interface
-of mgmt_frame_register in cfg80211_ops to collect feedback ?
-
-Regards,
-Sergey
+       Arnd
