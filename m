@@ -1,283 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34642 "EHLO
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33047 "EHLO
         mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751680AbdEPNUH (ORCPT
+        with ESMTP id S1751172AbdEaRdi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 09:20:07 -0400
-Received: by mail-oi0-f67.google.com with SMTP id w10so3309222oif.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:06 -0700 (PDT)
+        Wed, 31 May 2017 13:33:38 -0400
+Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
+ b43legacy_attr_interfmode_store
+To: Jia-Ju Bai <baijiaju1990@163.com>, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1496226547-5921-1-git-send-email-baijiaju1990@163.com>
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 05/10] rtlwifi: btcoex: 23b 1ant: rename and coding style modification.
-Date: Tue, 16 May 2017 08:19:52 -0500
-Message-Id: <20170516131957.9513-6-Larry.Finger@lwfinger.net> (sfid-20170516_152014_071699_1718DD55)
-In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
-References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+Message-ID: <85905124-7167-aeb0-8aff-4ceec09e9542@lwfinger.net> (sfid-20170531_193356_367118_7178A0BB)
+Date: Wed, 31 May 2017 12:33:35 -0500
+MIME-Version: 1.0
+In-Reply-To: <1496226547-5921-1-git-send-email-baijiaju1990@163.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 05/31/2017 05:29 AM, Jia-Ju Bai wrote:
+> The driver may sleep under a spin lock, and the function call path is:
+> b43legacy_attr_interfmode_store (acquire the lock by spin_lock_irqsave)
+>    b43legacy_radio_set_interference_mitigation
+>      b43legacy_radio_interference_mitigation_disable
+>        b43legacy_calc_nrssi_slope
+>          b43legacy_synth_pu_workaround
+>            might_sleep and msleep --> may sleep
+> 
+> Fixing it may be complex, and a possible way is to remove
+> spin_lock_irqsave and spin_lock_irqrestore in
+> b43legacy_attr_interfmode_store, and the code has been protected by
+> mutex_lock and mutex_unlock.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+> ---
+>   drivers/net/wireless/broadcom/b43legacy/sysfs.c |    2 --
+>   1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/b43legacy/sysfs.c b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+> index 2a1da15..9ede143 100644
+> --- a/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+> +++ b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+> @@ -137,14 +137,12 @@ static ssize_t b43legacy_attr_interfmode_store(struct device *dev,
+>   	}
+>   
+>   	mutex_lock(&wldev->wl->mutex);
+> -	spin_lock_irqsave(&wldev->wl->irq_lock, flags);
+>   
+>   	err = b43legacy_radio_set_interference_mitigation(wldev, mode);
+>   	if (err)
+>   		b43legacyerr(wldev->wl, "Interference Mitigation not "
+>   		       "supported by device\n");
+>   	mmiowb();
+> -	spin_unlock_irqrestore(&wldev->wl->irq_lock, flags);
+>   	mutex_unlock(&wldev->wl->mutex);
+>   
+>   	return err ? err : count;
+> 
 
-Rename:
- * tdma_adj_type to ps_tdma_du_adj_type
- * wifiCentralChnl to wifi_central_chnl
+Jia-Ju,
 
-Coding style:
- * move constant from right to left side in if-statement
+Did you actually observe the attempt to sleep under the spin lock, or did you 
+discover this using some tool? In other words, have either of your patches been 
+tested?
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 88 +++++++++++-----------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  2 +-
- 2 files changed, 44 insertions(+), 46 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index df0782c17905..2e1ba8fed982 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1094,7 +1094,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 		    coex_dm->cur_ps_tdma != 3 && coex_dm->cur_ps_tdma != 9) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 						true, 9);
--			coex_dm->tdma_adj_type = 9;
-+			coex_dm->ps_tdma_du_adj_type = 9;
- 
- 			up = 0;
- 			dn = 0;
-@@ -1112,7 +1112,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 			 "[BTCoex], first run TdmaDurationAdjust()!!\n");
- 
- 		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 2);
--		coex_dm->tdma_adj_type = 2;
-+		coex_dm->ps_tdma_du_adj_type = 2;
- 
- 		up = 0;
- 		dn = 0;
-@@ -1191,19 +1191,19 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 			     (coex_dm->cur_ps_tdma == 2))) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 9);
--				coex_dm->tdma_adj_type = 9;
-+				coex_dm->ps_tdma_du_adj_type = 9;
- 			} else if (coex_dm->cur_ps_tdma == 1) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 2);
--				coex_dm->tdma_adj_type = 2;
-+				coex_dm->ps_tdma_du_adj_type = 2;
- 			} else if (coex_dm->cur_ps_tdma == 2) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 9);
--				coex_dm->tdma_adj_type = 9;
-+				coex_dm->ps_tdma_du_adj_type = 9;
- 			} else if (coex_dm->cur_ps_tdma == 9) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 11);
--				coex_dm->tdma_adj_type = 11;
-+				coex_dm->ps_tdma_du_adj_type = 11;
- 			}
- 		} else if (result == 1) {
- 			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
-@@ -1211,19 +1211,19 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 			     (coex_dm->cur_ps_tdma == 2))) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 9);
--				coex_dm->tdma_adj_type = 9;
-+				coex_dm->ps_tdma_du_adj_type = 9;
- 			} else if (coex_dm->cur_ps_tdma == 11) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 9);
--				coex_dm->tdma_adj_type = 9;
-+				coex_dm->ps_tdma_du_adj_type = 9;
- 			} else if (coex_dm->cur_ps_tdma == 9) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 2);
--				coex_dm->tdma_adj_type = 2;
-+				coex_dm->ps_tdma_du_adj_type = 2;
- 			} else if (coex_dm->cur_ps_tdma == 2) {
- 				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 							true, 1);
--				coex_dm->tdma_adj_type = 1;
-+				coex_dm->ps_tdma_du_adj_type = 1;
- 			}
- 		} else {
- 			/* if busy / idle change */
-@@ -1236,7 +1236,7 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 		    coex_dm->cur_ps_tdma != 9 && coex_dm->cur_ps_tdma != 11) {
- 			/* recover to previous adjust type */
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
--						coex_dm->tdma_adj_type);
-+						coex_dm->ps_tdma_du_adj_type);
- 		}
- 	}
- }
-@@ -1501,7 +1501,7 @@ btc8723b1ant_action_wifi_not_conn_scan(struct btc_coexist *btcoexist)
- 					 0x0, 0x0);
- 
- 	/* tdma and coex table */
--	if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
-+	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
- 		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 						true, 22);
-@@ -1518,9 +1518,8 @@ btc8723b1ant_action_wifi_not_conn_scan(struct btc_coexist *btcoexist)
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
- 							     NORMAL_EXEC, 1);
- 		}
--	} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY == coex_dm->bt_status) ||
--		   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
--		    coex_dm->bt_status)){
-+	} else if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
-+		   coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY){
- 		btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
- 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
- 	} else {
-@@ -1556,7 +1555,7 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
- 					 0x0, 0x0);
- 
- 	/* tdma and coex table */
--	if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
-+	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
- 		if (bt_link_info->a2dp_exist && bt_link_info->pan_exist) {
- 			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
- 						true, 22);
-@@ -1573,9 +1572,8 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
- 			halbtc8723b1ant_coex_table_with_type(btcoexist,
- 							     NORMAL_EXEC, 1);
- 		}
--	} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY == coex_dm->bt_status) ||
--		   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
--		    coex_dm->bt_status)) {
-+	} else if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
-+		   coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
- 		btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
- 				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN);
- 	} else {
-@@ -1646,7 +1644,7 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
- 	/* power save state */
- 	if (!ap_enable &&
--	    BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status &&
-+	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY &&
- 	    !btcoexist->bt_link_info.hid_only) {
- 		if (!wifi_busy && btcoexist->bt_link_info.a2dp_only)
- 			halbtc8723b1ant_power_save_state(btcoexist,
-@@ -1662,13 +1660,14 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 	}
- 	/* tdma and coex table */
- 	if (!wifi_busy) {
--		if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
--			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(btcoexist,
--				      BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE);
--		} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY ==
--						coex_dm->bt_status) ||
--			   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
--						coex_dm->bt_status)) {
-+		if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
-+			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
-+				btcoexist,
-+				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE);
-+		} else if (coex_dm->bt_status ==
-+				BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
-+			   coex_dm->bt_status ==
-+				BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
- 			btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
- 				     BT_8723B_1ANT_WIFI_STATUS_CONNECTED_IDLE);
- 		} else {
-@@ -1678,13 +1677,14 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
- 							     NORMAL_EXEC, 2);
- 		}
- 	} else {
--		if (BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) {
--			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(btcoexist,
--				    BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
--		} else if ((BT_8723B_1ANT_BT_STATUS_SCO_BUSY ==
--			   coex_dm->bt_status) ||
--			   (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY ==
--			    coex_dm->bt_status)) {
-+		if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY) {
-+			halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
-+				btcoexist,
-+				BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
-+		} else if (coex_dm->bt_status ==
-+				BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
-+			   coex_dm->bt_status ==
-+				BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY) {
- 			btc8723b1ant_act_bt_sco_hid_only_busy(btcoexist,
- 				    BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY);
- 		} else {
-@@ -1728,11 +1728,10 @@ static void halbtc8723b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 		return;
- 	}
- 
--	if ((BT_8723B_1ANT_BT_STATUS_ACL_BUSY == coex_dm->bt_status) ||
--	    (BT_8723B_1ANT_BT_STATUS_SCO_BUSY == coex_dm->bt_status) ||
--	    (BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY == coex_dm->bt_status)) {
-+	if (coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_BUSY ||
-+	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_SCO_BUSY ||
-+	    coex_dm->bt_status == BT_8723B_1ANT_BT_STATUS_ACL_SCO_BUSY)
- 		increase_scan_dev_num = true;
--	}
- 
- 	btcoexist->btc_set(btcoexist, BTC_SET_BL_INC_SCAN_DEV_NUM,
- 			   &increase_scan_dev_num);
-@@ -2349,7 +2348,7 @@ void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	u8 h2c_parameter[3] = {0};
- 	u32 wifi_bw;
--	u8 wifiCentralChnl;
-+	u8 wifi_central_chnl;
- 
- 	if (btcoexist->manual_control || btcoexist->stop_coex_dm ||
- 	    btcoexist->bt_info.bt_disabled)
-@@ -2364,12 +2363,11 @@ void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
- 
- 	/* only 2.4G we need to inform bt the chnl mask */
- 	btcoexist->btc_get(btcoexist, BTC_GET_U1_WIFI_CENTRAL_CHNL,
--			   &wifiCentralChnl);
-+			   &wifi_central_chnl);
- 
--	if ((BTC_MEDIA_CONNECT == type) &&
--	    (wifiCentralChnl <= 14)) {
-+	if (type == BTC_MEDIA_CONNECT && wifi_central_chnl <= 14) {
- 		h2c_parameter[0] = 0x0;
--		h2c_parameter[1] = wifiCentralChnl;
-+		h2c_parameter[1] = wifi_central_chnl;
- 		btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 		if (BTC_WIFI_BW_HT40 == wifi_bw)
- 			h2c_parameter[2] = 0x30;
-@@ -2464,8 +2462,8 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 				 "0x%02x, ", tmp_buf[i]);
- 	}
- 
--	if (BT_INFO_SRC_8723B_1ANT_WIFI_FW != rsp_source) {
--		coex_sta->bt_retry_cnt =	/* [3:0] */
-+	if (rsp_source != BT_INFO_SRC_8723B_1ANT_WIFI_FW) {
-+		coex_sta->bt_retry_cnt = /* [3:0] */
- 			coex_sta->bt_info_c2h[rsp_source][2] & 0xf;
- 
- 		coex_sta->bt_rssi =
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 7e91901122c3..cd6369ef0e3a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -88,7 +88,7 @@ struct coex_dm_8723b_1ant {
- 	u8 pre_ps_tdma;
- 	u8 cur_ps_tdma;
- 	u8 ps_tdma_para[5];
--	u8 tdma_adj_type;
-+	u8 ps_tdma_du_adj_type;
- 	bool auto_tdma_adjust;
- 	bool pre_ps_tdma_on;
- 	bool cur_ps_tdma_on;
--- 
-2.12.0
+Larry
