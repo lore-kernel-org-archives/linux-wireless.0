@@ -1,103 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:32923 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753054AbdEPNUK (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:35504 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751070AbdEaMPu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 09:20:10 -0400
-Received: by mail-oi0-f68.google.com with SMTP id h4so3310015oib.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/10] rtlwifi: btcoex: 23b 1ant: check if BT high priority packet exist
-Date: Tue, 16 May 2017 08:19:55 -0500
-Message-Id: <20170516131957.9513-9-Larry.Finger@lwfinger.net> (sfid-20170516_152017_392524_9D91813E)
-In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
-References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+        Wed, 31 May 2017 08:15:50 -0400
+Received: by mail-wm0-f41.google.com with SMTP id b84so116697768wmh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 05:15:50 -0700 (PDT)
+Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
+ b43legacy_op_bss_info_changed
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Jia-Ju Bai <baijiaju1990@163.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com>
+ <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <471e5030-0a9a-e9bb-855c-90dcd506f466@broadcom.com> (sfid-20170531_141630_161771_C6B139FC)
+Date: Wed, 31 May 2017 14:15:47 +0200
+MIME-Version: 1.0
+In-Reply-To: <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 31-05-17 12:26, Kalle Valo wrote:
+> Jia-Ju Bai <baijiaju1990@163.com> writes:
+> 
+>> The driver may sleep under a spin lock, and the function call path is:
+>> b43legacy_op_bss_info_changed (acquire the lock by spin_lock_irqsave)
+>>   b43legacy_synchronize_irq
+>>     synchronize_irq --> may sleep
+>>
+>> To fix it, the lock is released before b43legacy_synchronize_irq, and the 
+>> lock is acquired again after this function.
+>>
+>> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+>> ---
+>>  drivers/net/wireless/broadcom/b43legacy/main.c |    2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
+>> index f1e3dad..31ead21 100644
+>> --- a/drivers/net/wireless/broadcom/b43legacy/main.c
+>> +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
+>> @@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
+>>  	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
+>>  
+>>  	if (changed & BSS_CHANGED_BSSID) {
+>> +		spin_unlock_irqrestore(&wl->irq_lock, flags);
+>>  		b43legacy_synchronize_irq(dev);
+>> +		spin_lock_irqsave(&wl->irq_lock, flags);
+> 
+> To me this looks like a fragile workaround and not a real fix. You can
+> easily add new race conditions with releasing the lock like this.
 
-If there are BT high priority packets, we arrange more time to BT.
-To make user experience to  be better, HID and SCO are also seen as
-high priority packet exist.
+Hi Jia-Ju,
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c  | 11 +++++++++++
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h  |  1 +
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  1 +
- 3 files changed, 13 insertions(+)
+Agree with Kalle as I was about to say the same thing. You really need
+to determine what is protected by the irq_lock. Here you are using the
+lock because you are about to change wl->bssid a bit further down. Did
+not check the entire function but it seems the lock perimeter is too wide.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 437007dd0db0..9178cccb5ddf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -407,6 +407,7 @@ static void halbtc8723b1ant_update_bt_link_info(struct btc_coexist *btcoexist)
- 	bt_link_info->a2dp_exist = coex_sta->a2dp_exist;
- 	bt_link_info->pan_exist = coex_sta->pan_exist;
- 	bt_link_info->hid_exist = coex_sta->hid_exist;
-+	bt_link_info->bt_hi_pri_link_exist = coex_sta->bt_hi_pri_link_exist;
- 
- 	/* work around for HS mode. */
- 	if (bt_hs_on) {
-@@ -2644,6 +2645,8 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 		coex_sta->a2dp_exist = false;
- 		coex_sta->hid_exist = false;
- 		coex_sta->sco_exist = false;
-+
-+		coex_sta->bt_hi_pri_link_exist = false;
- 	} else {
- 		/* connection exists */
- 		coex_sta->bt_link_exist = true;
-@@ -2663,6 +2666,14 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
- 			coex_sta->sco_exist = true;
- 		else
- 			coex_sta->sco_exist = false;
-+
-+		/* Add Hi-Pri Tx/Rx counter to avoid false detection */
-+		if (((coex_sta->hid_exist) || (coex_sta->sco_exist)) &&
-+		    (coex_sta->high_priority_tx + coex_sta->high_priority_rx >=
-+		     160) &&
-+		    (!coex_sta->c2h_bt_inquiry_page))
-+			coex_sta->bt_hi_pri_link_exist = true;
-+
- 	}
- 
- 	halbtc8723b1ant_update_bt_link_info(btcoexist);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index cf14db5fa759..0b7b9b2a8e12 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -142,6 +142,7 @@ struct coex_sta_8723b_1ant {
- 	bool a2dp_exist;
- 	bool hid_exist;
- 	bool pan_exist;
-+	bool bt_hi_pri_link_exist;
- 
- 	bool under_lps;
- 	bool under_ips;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index ab2e31a44253..6ce2fcadc144 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -468,6 +468,7 @@ struct btc_statistics {
- 
- struct btc_bt_link_info {
- 	bool bt_link_exist;
-+	bool bt_hi_pri_link_exist;
- 	bool sco_exist;
- 	bool sco_only;
- 	bool a2dp_exist;
--- 
-2.12.0
+Regards,
+Arend
