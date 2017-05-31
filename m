@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36636 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750864AbdE2Jbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 May 2017 05:31:47 -0400
-Message-ID: <1496050303.2467.3.camel@sipsolutions.net> (sfid-20170529_113150_652842_94250423)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Mon, 29 May 2017 11:31:43 +0200
-In-Reply-To: <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com> (sfid-20170529_111825_524433_97F9D9F2)
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1495030794.2442.21.camel@sipsolutions.net>
-         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
-         <1495099355.2553.1.camel@sipsolutions.net>
-         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
-         <1495104012.2553.3.camel@sipsolutions.net>
-         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
-         <1495189263.3274.4.camel@sipsolutions.net>
-         <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
-         <1495448886.2653.12.camel@sipsolutions.net>
-         <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com>
-         (sfid-20170529_111825_524433_97F9D9F2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:34100 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750898AbdEaUUv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 May 2017 16:20:51 -0400
+Received: by mail-qt0-f180.google.com with SMTP id c13so21533841qtc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 13:20:51 -0700 (PDT)
+Subject: Re: [PATCH] ath10k: add configurable debugging.
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Adrian Chadd <adrian@freebsd.org>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20170510211925.17468-1-adrian@freebsd.org>
+ <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com> (sfid-20170531_222055_071580_FD6D8237)
+Date: Wed, 31 May 2017 22:20:45 +0200
+MIME-Version: 1.0
+In-Reply-To: <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
-
-> > Note that this (checking NEW_KEY) only works when you don't have
-> > any split between AP/client cases. Not sure what's the case for
-> > you.
+On 31-05-17 14:16, Kalle Valo wrote:
+> Adrian Chadd <adrian@freebsd.org> writes:
 > 
-> Late response so hopefully you recall, but what do you mean by "any 
-> split between AP/client cases"?
+>> This adds a few configurable debugging options:
+>>
+>> * driver debugging and tracing is now configurable per device
+>> * driver debugging and tracing is now configurable at runtime
+>> * the debugging / tracing is not run at all (besides a mask check)
+>>   unless the specific debugging bitmap field is configured.
+>>
+>> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
+> 
+> [...]
+> 
+>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>> @@ -2444,6 +2444,8 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+>>  	ar->hw_rev = hw_rev;
+>>  	ar->hif.ops = hif_ops;
+>>  	ar->hif.bus = bus;
+>> +	ar->debug_mask = ath10k_debug_mask;
+>> +	ar->trace_debug_mask = ath10k_debug_mask;
+> 
+> Until now tracing has been always enabled, irrespective what debug_mask
+> has contained. Now you are changing that and by default log messages are
+> not delivered through tracing until user enables them. So I think to
+> keep the old behaviour trace_debug_mask should be ATH10K_DBG_ANY
+> (0xffffffff) by default and the user can modify the mask per device via
+> the debugfs file.
+> 
+> But is it really needed to be able to filter trace messages? debug_mask
+> I understand, but not sure about trace_debug_mask.
 
-I meant the capability split - let's say you support 4-way-HS only for
-client, but not for AP. Then you have to support the NEW_KEY command
-for the AP case, even if you might not support non-offloaded 4-way-HS
-for the client case.
+FWIW, in brcmfmac I decided not to filter trace messages. The overhead
+is relatively small and if needed you can pass filter expressions with
+trace-cmd record.
 
-So if something supports the following:
-
- * client: offloaded 4-way-HS only
- * AP: not offloaded 4-way-HS only
-
-Then you have to support NEW_KEY (AP case) and then using NEW_KEY to
-detect whether or not a wpa_s configuration option to not use offloaded
-4-way-HS can be used will not work correctly.
-
-I don't really see that this is a sensible configuration, but I could
-imagine it existing if somebody "bolted on" AP functionality for a
-client-side chipset or something like that.
-
-Again, I think I'm happy to leave this up to you - this kind of
-configuration option should really only be used for debugging anyway,
-so just getting errors later is probably fine.
-
-johannes
+Regards,
+Arend
