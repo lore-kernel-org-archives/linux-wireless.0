@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49372 "EHLO mx1.redhat.com"
+Received: from m12-16.163.com ([220.181.12.16]:39457 "EHLO m12-16.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751923AbdEYRp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2017 13:45:56 -0400
-Message-ID: <1495734353.12839.2.camel@redhat.com> (sfid-20170525_194600_802350_ECA77158)
-Subject: Re: WPA and WPA2
-From: Dan Williams <dcbw@redhat.com>
-To: "Tobin C. Harding" <me@tobin.cc>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 25 May 2017 12:45:53 -0500
-In-Reply-To: <20170524224014.GC2319@eros>
-References: <20170524072750.GI8158@eros> <20170524073459.GJ8158@eros>
-         <1495644240.12939.3.camel@redhat.com>
-         <1495649200.20833.1.camel@sipsolutions.net> <20170524224014.GC2319@eros>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1750869AbdEaKHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 May 2017 06:07:39 -0400
+From: Jia-Ju Bai <baijiaju1990@163.com>
+To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@163.com>
+Subject: [PATCH] b43legacy: Fix a sleep-in-atomic bug in b43legacy_op_bss_info_changed
+Date: Wed, 31 May 2017 18:09:13 +0800
+Message-Id: <1496225353-5544-1-git-send-email-baijiaju1990@163.com> (sfid-20170531_120812_833675_E8D683EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-05-25 at 08:40 +1000, Tobin C. Harding wrote:
-> On Wed, May 24, 2017 at 08:06:40PM +0200, Johannes Berg wrote:
-> > Just a small correction:
-> > 
-> > On Wed, 2017-05-24 at 11:44 -0500, Dan Williams wrote:
-> > > 
-> > > For RSN, they are 1 = PMK, 2 = GMK, 3 = GMK2, 4 seems unused.
-> > 
-> > PTK and GTK, and in theory you could have more than two GTKs but
-> > that's
-> > not usually done.
-> 
-> Excuse my ignorance but why do you say PTK and GTK here? Who
-> generates
-> the transient keys, hardware, firmware or software? Is this device
-> specific or is there a *normal* way?
-> 
-> From the nomenclature in the WEXT driver I thought the driver
-> supplied the
-> master keys to the firmware and transient keys were generated at the
-> firmware layer or lower.
+The driver may sleep under a spin lock, and the function call path is:
+b43legacy_op_bss_info_changed (acquire the lock by spin_lock_irqsave)
+  b43legacy_synchronize_irq
+    synchronize_irq --> may sleep
 
-Usually the supplicant supplies only the PTK/GTK to the driver at the
-right times (like during the 4-way handshake).  It looks like the
-driver only refers to PMK/GMK when using the rx_seq[] bits, while the
-actual WPA keys are probably the PTK/GTK.
+To fix it, the lock is released before b43legacy_synchronize_irq, and the 
+lock is acquired again after this function.
 
-While it's not the best example, see
-drivers/net/wireless/marvell/libertas/cfg.c and lbs_cfg_connect() and
-lbs_cfg_add_key().  That should translate fairly well to the ks7010
-driver.  The important parts you'll get from nl80211 are
-add_key/del_key and set_default_key.  The connect hook gets called
-first to tell the driver to start the auth/assoc process to a given AP,
- and that's where you'd set up the general stuff like whether or not
-you'll use WEP or WPA, what the SSID/BSSID are, whether PSK or
-EAPOL/802.1x, rates, etc.  Then after that you'll get the add_key hook
-that actually sends the real keys to the driver when the supplicant has
-calculated them.
+Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+---
+ drivers/net/wireless/broadcom/b43legacy/main.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-
-Dan
+diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
+index f1e3dad..31ead21 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/main.c
++++ b/drivers/net/wireless/broadcom/b43legacy/main.c
+@@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
+ 
+ 	if (changed & BSS_CHANGED_BSSID) {
++		spin_unlock_irqrestore(&wl->irq_lock, flags);
+ 		b43legacy_synchronize_irq(dev);
++		spin_lock_irqsave(&wl->irq_lock, flags);
+ 
+ 		if (conf->bssid)
+ 			memcpy(wl->bssid, conf->bssid, ETH_ALEN);
+-- 
+1.7.9.5
