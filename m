@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35372 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935563AbdEXI1m (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47409 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751125AbdEaLx1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2017 04:27:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [v3 10/11] rsi: Add new firmware loading method
-References: <1494928877-27168-1-git-send-email-amit.karwar@redpinesignals.com>
-        <1494928877-27168-11-git-send-email-amit.karwar@redpinesignals.com>
-Date: Wed, 24 May 2017 11:27:37 +0300
-In-Reply-To: <1494928877-27168-11-git-send-email-amit.karwar@redpinesignals.com>
-        (Amitkumar Karwar's message of "Tue, 16 May 2017 15:31:16 +0530")
-Message-ID: <87bmqi4q2u.fsf@purkki.adurom.net> (sfid-20170524_103846_518009_59E6479D)
+        Wed, 31 May 2017 07:53:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add configurable debugging.
+Date: Wed, 31 May 2017 11:53:13 +0000
+Message-ID: <8737blnsz6.fsf@kamboji.qca.qualcomm.com> (sfid-20170531_135330_824796_8A92ADC8)
+References: <20170510211925.17468-1-adrian@freebsd.org>
+In-Reply-To: <20170510211925.17468-1-adrian@freebsd.org> (Adrian Chadd's
+        message of "Wed, 10 May 2017 14:19:25 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+Adrian Chadd <adrian@freebsd.org> writes:
 
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> This adds a few configurable debugging options:
 >
-> The older firmware loading method has been deprecated and not in use
-> for any chipets. New method is introduced which works based on soft
-> boot loader. In this method, complete RAM image and FLASH image are
-> present in the flash. Before loading the functional firmware, host
-> issues boot loader commands to verify whether firmware to load is
-> different from the current functional firmware. If not, firmware
-> upgrade progresses and boot loader will switch to the new functional
-> firmware.
->
-> "rs9113_wlan_qspi.rps" is the firmware filename used in this patch.
+> * driver debugging and tracing is now configurable per device
 
-I don't know if you saw the discussion with the wil6210 firmware, but
-the linux-firmware maintainers prefer to have a subdirectory for
-firmware files. I'm planning to apply this series now, but you can send
-a followup patch ASAP which changes the rsi driver to use a subdirectory
-for the firmware files?
+So this means that there's a debugfs file
+/sys/kernel/debug/ieee80211/phy0/ath10k/debug for every ath10k device.
+Sounds like a good idea. I just don't like the name of file, would
+debug_mask be more descriptive?
 
-Normally these kind of breaks in user space interface are not allowed,
-and instead the requirement is that the driver has a transition period
-from the old firmware interface to the new one. But I'm making an
-exception here as, to my knowledge, the upstream rsi driver is not that
-widely used and I want to get the driver development going on again.
+> * driver debugging and tracing is now configurable at runtime
 
--- 
-Kalle Valo
+Correction, debug_mask has been always to possible change via
+/sys/module/ath10k_core/parameters/debug_mask file. Now it doesn't work
+anymore, which is ok, but I think we should make it clear for users as
+well.
+
+I wonder would that work if we change the mask to 0444:
+
+module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
+
+> * the debugging / tracing is not run at all (besides a mask check)
+>   unless the specific debugging bitmap field is configured.
+
+So I guess with this you mean that the function ath10k_dbg() is not
+called if debug messages are disabled? This is something which is good
+to do in another patch. And the original assumption was that if you care
+about performance you won't even enable CONFIG_ATH10K_DEBUG, so that
+path was not optimised in any way. How much benefit does this bring?
+
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -2418,6 +2418,79 @@ int ath10k_debug_create(struct ath10k *ar)
+>  	return 0;
+>  }
+> =20
+> +#ifdef	CONFIG_ATH10K_DEBUGFS
+> +static ssize_t ath10k_write_debug_mask(struct file *file,
+> +				       const char __user *ubuf,
+> +				       size_t count, loff_t *ppos)
+> +{
+
+The ifdef looks wrong, it's already inside CONFIG_ATH10K_DEBUGFS. Was it
+supposed to be CONFIG_ATH10K_DEBUG?
+
+--=20
+Kalle Valo=
