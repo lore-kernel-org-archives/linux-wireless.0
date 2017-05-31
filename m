@@ -1,35 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipout2-voc2esa.syd1.mail-filtering.com.au ([175.107.169.228]:17760
-        "EHLO o-voc2esa.syd1.mail-filtering.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753034AbdEQKrS (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34735 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751037AbdEaUXe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2017 06:47:18 -0400
-From: =?UTF-8?Q?Tom_Gaudasi=c5=84ski?= <tomg@records.headdesk.com.au>
-Subject: [PATCH] rt2800usb: Add Epson wireless adapter device-id
-Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com
-To: linux-wireless@vger.kernel.org
-Message-ID: <8e00714b-ab62-15e9-e86a-e0de5009797d@records.headdesk.com.au> (sfid-20170517_124732_436098_053CFA3D)
-Date: Wed, 17 May 2017 20:15:30 +1000
+        Wed, 31 May 2017 16:23:34 -0400
+Received: by mail-wm0-f65.google.com with SMTP id d127so6262684wmf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 13:23:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com>
+References: <20170510211925.17468-1-adrian@freebsd.org> <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
+ <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Wed, 31 May 2017 13:23:32 -0700
+Message-ID: <CAJ-Vmom0SpsrTWK8-rdZk3AKW_JGcFLGeQzfVbvX81UBKw=REg@mail.gmail.com> (sfid-20170531_222339_089819_D5DCDAC6)
+Subject: Re: [PATCH] ath10k: add configurable debugging.
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make Epson WN7512BEP work by adding its device-id to rt2800usb. Device
-contains a Ralink RT3071L, registers as vendor Accton/Arcadyan.
+On 31 May 2017 at 13:20, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 31-05-17 14:16, Kalle Valo wrote:
+>> Adrian Chadd <adrian@freebsd.org> writes:
+>>
+>>> This adds a few configurable debugging options:
+>>>
+>>> * driver debugging and tracing is now configurable per device
+>>> * driver debugging and tracing is now configurable at runtime
+>>> * the debugging / tracing is not run at all (besides a mask check)
+>>>   unless the specific debugging bitmap field is configured.
+>>>
+>>> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
+>>
+>> [...]
+>>
+>>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>>> @@ -2444,6 +2444,8 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+>>>      ar->hw_rev = hw_rev;
+>>>      ar->hif.ops = hif_ops;
+>>>      ar->hif.bus = bus;
+>>> +    ar->debug_mask = ath10k_debug_mask;
+>>> +    ar->trace_debug_mask = ath10k_debug_mask;
+>>
+>> Until now tracing has been always enabled, irrespective what debug_mask
+>> has contained. Now you are changing that and by default log messages are
+>> not delivered through tracing until user enables them. So I think to
+>> keep the old behaviour trace_debug_mask should be ATH10K_DBG_ANY
+>> (0xffffffff) by default and the user can modify the mask per device via
+>> the debugfs file.
+>>
+>> But is it really needed to be able to filter trace messages? debug_mask
+>> I understand, but not sure about trace_debug_mask.
+>
+> FWIW, in brcmfmac I decided not to filter trace messages. The overhead
+> is relatively small and if needed you can pass filter expressions with
+> trace-cmd record.
 
-Signed-off-by: Tom Gaudasinski <tomg@records.headdesk.com.au>
+The reason for configuring it via a mask is that:
 
---- linux/drivers/net/wireless/ralink/rt2x00/rt2800usb.c.orig   
-2017-05-17 19:49:44.893895819 +1000
-+++ linux/drivers/net/wireless/ralink/rt2x00/rt2800usb.c    2017-05-17
-19:49:32.906111192 +1000
-@@ -1156,6 +1156,8 @@ static struct usb_device_id rt2800usb_de
-     { USB_DEVICE(0x2001, 0x3c17) },
-     /* Panasonic */
-     { USB_DEVICE(0x083a, 0xb511) },
-+    /* Accton/Arcadyan/Epson */
-+    { USB_DEVICE(0x083a, 0xb512) },
-     /* Philips */
-     { USB_DEVICE(0x0471, 0x20dd) },
-     /* Ralink */
+* the previous behaviour is "always call debug(), conditionally print,
+always pass to trace"
+
+This meant that function arguments were evaluated even if things
+weren't being printed.
+
+So to avoid that in the default case, there are now two masks. If I
+have one mask then I can only trace what is being printed, which is
+not desired. I'd like to be able to have no overhead when doing no
+debugging, a little overhead when doing tracing (and only the items
+being traced), and then printing when I want to print.
+
+
+
+-adrian
