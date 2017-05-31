@@ -1,71 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35482 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752982AbdEGVvQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 May 2017 17:51:16 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH 1/3] staging: rtl8192e rtl92e_fill_tx_desc fix write to mapped out memory.
-Date: Sun,  7 May 2017 20:03:51 +0100
-Message-Id: <20170507190353.3195-1-tvboxspy@gmail.com> (sfid-20170507_235150_241346_F7BEA37F)
+Received: from bues.ch ([80.190.117.144]:48999 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751033AbdEaPSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 May 2017 11:18:17 -0400
+Date: Wed, 31 May 2017 17:17:15 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
+ b43legacy_attr_interfmode_store
+Message-ID: <20170531171715.58d6c084@wiggum> (sfid-20170531_171840_580201_1C1A3CF7)
+In-Reply-To: <1496226547-5921-1-git-send-email-baijiaju1990@163.com>
+References: <1496226547-5921-1-git-send-email-baijiaju1990@163.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/DYF4VkEf44uXT=vJAHo_HLf"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver attempts to alter memory that is mapped to PCI device.
+--Sig_/DYF4VkEf44uXT=vJAHo_HLf
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This is because tx_fwinfo_8190pci points to skb->data.
+On Wed, 31 May 2017 18:29:07 +0800
+Jia-Ju Bai <baijiaju1990@163.com> wrote:
 
-Move the pci_map_single to when completed buffer is ready to be mapped with
-psdec is empty to drop on mapping error.
+> The driver may sleep under a spin lock, and the function call path is:
+> b43legacy_attr_interfmode_store (acquire the lock by spin_lock_irqsave)
+>   b43legacy_radio_set_interference_mitigation
+>     b43legacy_radio_interference_mitigation_disable
+>       b43legacy_calc_nrssi_slope
+>         b43legacy_synth_pu_workaround
+>           might_sleep and msleep --> may sleep
+>=20
+> Fixing it may be complex, and a possible way is to remove=20
+> spin_lock_irqsave and spin_lock_irqrestore in=20
+> b43legacy_attr_interfmode_store, and the code has been protected by
+> mutex_lock and mutex_unlock.
+>=20
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+> ---
+>  drivers/net/wireless/broadcom/b43legacy/sysfs.c |    2 --
+>  1 file changed, 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/broadcom/b43legacy/sysfs.c b/drivers/ne=
+t/wireless/broadcom/b43legacy/sysfs.c
+> index 2a1da15..9ede143 100644
+> --- a/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+> +++ b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+> @@ -137,14 +137,12 @@ static ssize_t b43legacy_attr_interfmode_store(stru=
+ct device *dev,
+>  	}
+> =20
+>  	mutex_lock(&wldev->wl->mutex);
+> -	spin_lock_irqsave(&wldev->wl->irq_lock, flags);
+> =20
+>  	err =3D b43legacy_radio_set_interference_mitigation(wldev, mode);
+>  	if (err)
+>  		b43legacyerr(wldev->wl, "Interference Mitigation not "
+>  		       "supported by device\n");
+>  	mmiowb();
+> -	spin_unlock_irqrestore(&wldev->wl->irq_lock, flags);
+>  	mutex_unlock(&wldev->wl->mutex);
+> =20
+>  	return err ? err : count;
 
-Fixes slow operation and tx queue fails.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+Interference mitigation has never been properly implemented and tested.
+As such nobody should use it and I would be surprised if anybody uses
+this attribute.
+So I would suggest to remove this sysfs attribute entirely instead of
+having this incorrect fix.
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index 4723a0bd5067..a23628f390c9 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -1182,8 +1182,7 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
- 			  struct cb_desc *cb_desc, struct sk_buff *skb)
- {
- 	struct r8192_priv *priv = rtllib_priv(dev);
--	dma_addr_t mapping = pci_map_single(priv->pdev, skb->data, skb->len,
--			 PCI_DMA_TODEVICE);
-+	dma_addr_t mapping;
- 	struct tx_fwinfo_8190pci *pTxFwInfo;
- 
- 	pTxFwInfo = (struct tx_fwinfo_8190pci *)skb->data;
-@@ -1194,8 +1193,6 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
- 	pTxFwInfo->Short = _rtl92e_query_is_short(pTxFwInfo->TxHT,
- 						  pTxFwInfo->TxRate, cb_desc);
- 
--	if (pci_dma_mapping_error(priv->pdev, mapping))
--		netdev_err(dev, "%s(): DMA Mapping error\n", __func__);
- 	if (cb_desc->bAMPDUEnable) {
- 		pTxFwInfo->AllowAggregation = 1;
- 		pTxFwInfo->RxMF = cb_desc->ampdu_factor;
-@@ -1230,6 +1227,14 @@ void  rtl92e_fill_tx_desc(struct net_device *dev, struct tx_desc *pdesc,
- 	}
- 
- 	memset((u8 *)pdesc, 0, 12);
-+
-+	mapping = pci_map_single(priv->pdev, skb->data, skb->len,
-+				 PCI_DMA_TODEVICE);
-+	if (pci_dma_mapping_error(priv->pdev, mapping)) {
-+		netdev_err(dev, "%s(): DMA Mapping error\n", __func__);
-+		return;
-+	}
-+
- 	pdesc->LINIP = 0;
- 	pdesc->CmdInit = 1;
- 	pdesc->Offset = sizeof(struct tx_fwinfo_8190pci) + 8;
--- 
-2.11.0
+--=20
+Michael
+
+--Sig_/DYF4VkEf44uXT=vJAHo_HLf
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlku3nsACgkQ9TK+HZCN
+iw6XYg/+OL8og6Ss9XLnnaRISragtwTA4A5WefhpXV4eae5oxfHlkpJrs1RZDkGN
+tBP7MrGQpCgpuNmEpAKe4OuAI7GXks4SSyWwfbUj/uxCI8UEB10GM4wYKRfSHOdC
+ORxxx3/vPInaOF4eQ+5C5hHq7sGJI+7PC7QSVAz/4vJ160R2Y0ZZysu5zhRuNTqO
+JwukqhqTGVUeUFc3Ys89cS6teE/GPaEkHmpJrW/2PztyQuMoPa6Qr1y9M9FVHnhl
+BCrIR74oGJlC2SYQyykicAMZ/riSTrXKXdTJi4sVYOON4Ih8pAgtGYhqh1FNgF03
+msshvjvnb6ILd/q9+7kB7CZ6ZP4qCzXXQ0lU2VPNdY3MFpym6MQEBFAdskF4T1S+
+bpqnldFoUH1ER7/4kvdFdDvOnTdKrzjFDx2EmunZmfK0SDVAs/ZrHpPqzyCxL+GA
+TYmHvthUGgxy1iq+dLL/DQb1UmGIaT9pii4p5YZhiYF9BqynskNu83CnZiRwe42h
+kF9PPaxteApwXD3xhnEXsj3fH80ycUTGGRIPqFZql3GDvED9wP1BH500/6k29u4h
+J2J3YEl2r7FWIwG5DbCkzvtAZs4W7M0ZDsu1JX5QggHZc8xRgyeSLAYu0tp3l11b
+JkSAPHKZMz4x2sfZH+noaKZgONFeKBukKoYZhCAabaLi7/S+oUs=
+=B5GJ
+-----END PGP SIGNATURE-----
+
+--Sig_/DYF4VkEf44uXT=vJAHo_HLf--
