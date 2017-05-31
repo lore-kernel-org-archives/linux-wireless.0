@@ -1,227 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34947 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752828AbdEPNUG (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35346 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751062AbdEaNe7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2017 09:20:06 -0400
-Received: by mail-oi0-f67.google.com with SMTP id m17so3304090oik.2
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2017 06:20:05 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Pkshih <pkshih@realtek.com>, Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/10] rtlwifi: btcoex: Restore 23b 1ant routine for tdma adjustment
-Date: Tue, 16 May 2017 08:19:51 -0500
-Message-Id: <20170516131957.9513-5-Larry.Finger@lwfinger.net> (sfid-20170516_152011_169883_114F58D5)
-In-Reply-To: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
-References: <20170516131957.9513-1-Larry.Finger@lwfinger.net>
+        Wed, 31 May 2017 09:34:59 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170531131216.GJ3956@linux.vnet.ibm.com>
+References: <20170530112027.3983554-1-arnd@arndb.de> <7b6903a2-ce54-44f9-18ed-a14bd32069ce@broadcom.com>
+ <CAK8P3a2-kO==gMDm3E6U8CR-zhwmZGztRy7Trcezf8oZxgn01g@mail.gmail.com> <20170531131216.GJ3956@linux.vnet.ibm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 31 May 2017 15:34:57 +0200
+Message-ID: <CAK8P3a1wcVC1+dPbtAgn=2RbToV_ai+dGc2tJxdQ4r1s+nxAFg@mail.gmail.com> (sfid-20170531_153522_568899_0D80E335)
+Subject: Re: [PATCH] bcm47xx: fix build regression
+To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
+        Ingo Molnar <mingo@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Routine btc8723b1ant_tdma_dur_adj_for_acl() was removed in a set of
-Sparse fixes; however, this routine will be needed later.
+On Wed, May 31, 2017 at 3:12 PM, Paul E. McKenney
+<paulmck@linux.vnet.ibm.com> wrote:
+> On Wed, May 31, 2017 at 12:21:10PM +0200, Arnd Bergmann wrote:
+>> On Wed, May 31, 2017 at 11:43 AM, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>> > On 5/30/2017 1:20 PM, Arnd Bergmann wrote:
+>> >>
+>> >> An unknown change in the kernel headers caused a build regression
+>> >> in an MTD partition driver:
+>> >>
+>> >> In file included from drivers/mtd/bcm47xxpart.c:12:0:
+>> >> include/linux/bcm47xx_nvram.h: In function 'bcm47xx_nvram_init_from_mem':
+>> >> include/linux/bcm47xx_nvram.h:27:10: error: 'ENOTSUPP' undeclared (first
+>> >> use in this function)
+>> >>
+>> >> Clearly we want to include linux/errno.h here.
+>> >
+>> >
+>> > unfortunate that you did not find the commit that caused this build
+>> > regression. You could produce preprocessor output when it was working to see
+>> > where errno.h got implicitly included and start looking there for git
+>> > history.
+>>
+>> I did a 'git bisect run make drivers/mtd/bcm47xxpart.o' now, which pointed to
+>> 0bc2d534708b ("rcu: Refactor #includes from include/linux/rcupdate.h").
+>>
+>> That commit seems reasonable, it was just bad luck that it caused this
+>> regression. The commit is currently in the rcu/rcu/next branch of tip.git,
+>> so Paul could merge the patch there.
+>
+> Apologies for the inconvenience, not sure why 0day test robot didn't
+> find this.  Probably because it cannot test each and every driver.  ;-)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Pkshih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 177 ++++++++++++++++++++-
- 1 file changed, 176 insertions(+), 1 deletion(-)
+No worries.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index f23c9e3fbda1..df0782c17905 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1066,8 +1066,183 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 	coex_dm->pre_ps_tdma = coex_dm->cur_ps_tdma;
- }
- 
-+void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
-+				       u8 wifi_status)
-+{
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	static s32 up, dn, m, n, wait_count;
-+	/*  0: no change, +1: increase WiFi duration,
-+	 * -1: decrease WiFi duration
-+	 */
-+	s32 result;
-+	u8 retry_count = 0, bt_info_ext;
-+	bool wifi_busy = false;
-+
-+	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+		 "[BTCoex], TdmaDurationAdjustForAcl()\n");
-+
-+	if (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY)
-+		wifi_busy = true;
-+	else
-+		wifi_busy = false;
-+
-+	if ((wifi_status ==
-+	     BT_8723B_1ANT_WIFI_STATUS_NON_CONNECTED_ASSO_AUTH_SCAN) ||
-+	    (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN) ||
-+	    (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SPECIAL_PKT)) {
-+		if (coex_dm->cur_ps_tdma != 1 && coex_dm->cur_ps_tdma != 2 &&
-+		    coex_dm->cur_ps_tdma != 3 && coex_dm->cur_ps_tdma != 9) {
-+			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+						true, 9);
-+			coex_dm->tdma_adj_type = 9;
-+
-+			up = 0;
-+			dn = 0;
-+			m = 1;
-+			n = 3;
-+			result = 0;
-+			wait_count = 0;
-+		}
-+		return;
-+	}
-+
-+	if (!coex_dm->auto_tdma_adjust) {
-+		coex_dm->auto_tdma_adjust = true;
-+		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+			 "[BTCoex], first run TdmaDurationAdjust()!!\n");
-+
-+		halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 2);
-+		coex_dm->tdma_adj_type = 2;
-+
-+		up = 0;
-+		dn = 0;
-+		m = 1;
-+		n = 3;
-+		result = 0;
-+		wait_count = 0;
-+	} else {
-+		/* acquire the BT TRx retry count from BT_Info byte2 */
-+		retry_count = coex_sta->bt_retry_cnt;
-+		bt_info_ext = coex_sta->bt_info_ext;
-+		result = 0;
-+		wait_count++;
-+		/* no retry in the last 2-second duration */
-+		if (retry_count == 0) {
-+			up++;
-+			dn--;
-+
-+			if (dn <= 0)
-+				dn = 0;
-+
-+			if (up >= n) {
-+				wait_count = 0;
-+				n = 3;
-+				up = 0;
-+				dn = 0;
-+				result = 1;
-+				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+					 "[BTCoex], Increase wifi duration!!\n");
-+			}
-+		} else if (retry_count <= 3) {
-+			up--;
-+			dn++;
-+
-+			if (up <= 0)
-+				up = 0;
-+
-+			if (dn == 2) {
-+				if (wait_count <= 2)
-+					m++;
-+				else
-+					m = 1;
-+
-+				if (m >= 20)
-+					m = 20;
-+
-+				n = 3 * m;
-+				up = 0;
-+				dn = 0;
-+				wait_count = 0;
-+				result = -1;
-+				RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+					 "[BTCoex], Decrease wifi duration for retryCounter<3!!\n");
-+			}
-+		} else {
-+			if (wait_count == 1)
-+				m++;
-+			else
-+				m = 1;
-+
-+			if (m >= 20)
-+				m = 20;
-+
-+			n = 3 * m;
-+			up = 0;
-+			dn = 0;
-+			wait_count = 0;
-+			result = -1;
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex], Decrease wifi duration for retryCounter>3!!\n");
-+		}
-+
-+		if (result == -1) {
-+			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
-+			    ((coex_dm->cur_ps_tdma == 1) ||
-+			     (coex_dm->cur_ps_tdma == 2))) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 9);
-+				coex_dm->tdma_adj_type = 9;
-+			} else if (coex_dm->cur_ps_tdma == 1) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 2);
-+				coex_dm->tdma_adj_type = 2;
-+			} else if (coex_dm->cur_ps_tdma == 2) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 9);
-+				coex_dm->tdma_adj_type = 9;
-+			} else if (coex_dm->cur_ps_tdma == 9) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 11);
-+				coex_dm->tdma_adj_type = 11;
-+			}
-+		} else if (result == 1) {
-+			if ((BT_INFO_8723B_1ANT_A2DP_BASIC_RATE(bt_info_ext)) &&
-+			    ((coex_dm->cur_ps_tdma == 1) ||
-+			     (coex_dm->cur_ps_tdma == 2))) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 9);
-+				coex_dm->tdma_adj_type = 9;
-+			} else if (coex_dm->cur_ps_tdma == 11) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 9);
-+				coex_dm->tdma_adj_type = 9;
-+			} else if (coex_dm->cur_ps_tdma == 9) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 2);
-+				coex_dm->tdma_adj_type = 2;
-+			} else if (coex_dm->cur_ps_tdma == 2) {
-+				halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-+							true, 1);
-+				coex_dm->tdma_adj_type = 1;
-+			}
-+		} else {
-+			/* if busy / idle change */
-+			RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
-+				 "[BTCoex],********* TDMA(on, %d) ********\n",
-+				 coex_dm->cur_ps_tdma);
-+		}
-+
-+		if (coex_dm->cur_ps_tdma != 1 && coex_dm->cur_ps_tdma != 2 &&
-+		    coex_dm->cur_ps_tdma != 9 && coex_dm->cur_ps_tdma != 11) {
-+			/* recover to previous adjust type */
-+			halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC, true,
-+						coex_dm->tdma_adj_type);
-+		}
-+	}
-+}
-+
- static void halbtc8723b1ant_ps_tdma_chk_pwr_save(struct btc_coexist *btcoexist,
--						 bool new_ps_state)
-+					  bool new_ps_state)
- {
- 	u8 lps_mode = 0x0;
- 
--- 
-2.12.0
+> This patch, correct?
+>
+>         https://lkml.org/lkml/2017/5/30/348
+
+Right, I should have included the link.
+
+      Arnd
