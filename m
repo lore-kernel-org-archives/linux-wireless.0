@@ -1,423 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36762 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755836AbdESJHF (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:34718 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbdEaTcy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 May 2017 05:07:05 -0400
-Received: by mail-pg0-f65.google.com with SMTP id h64so9105763pge.3
-        for <linux-wireless@vger.kernel.org>; Fri, 19 May 2017 02:06:59 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v3 4/6] mwifiex: usb: add timer to flush aggregation packets
-Date: Fri, 19 May 2017 09:06:43 +0000
-Message-Id: <1495184805-6631-4-git-send-email-huxinming820@gmail.com> (sfid-20170519_110715_352172_8EDE8605)
-In-Reply-To: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
-References: <1495184805-6631-1-git-send-email-huxinming820@gmail.com>
+        Wed, 31 May 2017 15:32:54 -0400
+Received: by mail-wm0-f44.google.com with SMTP id 123so36462124wmg.1
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2017 12:32:53 -0700 (PDT)
+Subject: Re: [RFT 0/3] brcmfmac: firmware loading rework
+To: Enric Balletbo Serra <eballetbo@gmail.com>
+Cc: Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1496147754-2303-1-git-send-email-arend.vanspriel@broadcom.com>
+ <CAFqH_51ddok-8NQ0EuNaebU--OS1wkmTH19j-WOufg4JYUo8mA@mail.gmail.com>
+ <df03fc22-4141-2c17-db09-6500872d37e6@broadcom.com>
+ <CAFqH_501kOMNRz4d-CfvhPYHrifc1xT9wm=i362_dmtCFEXTnw@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ece9a8bd-122b-af85-ae7e-0080884ee525@broadcom.com> (sfid-20170531_213258_316338_8A03D7E3)
+Date: Wed, 31 May 2017 21:32:51 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAFqH_501kOMNRz4d-CfvhPYHrifc1xT9wm=i362_dmtCFEXTnw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 31-05-17 14:45, Enric Balletbo Serra wrote:
+> 2017-05-31 14:00 GMT+02:00 Arend van Spriel <arend.vanspriel@broadcom.com>:
+>> On 31-05-17 13:10, Enric Balletbo Serra wrote:
+>>> Hi Arend,
+>>>
+>>> 2017-05-30 14:35 GMT+02:00 Arend van Spriel <arend.vanspriel@broadcom.com>:
+>>>> Hi Enric,
+>>>>
+>>>> Could you please try these patches and let me know if they resolve
+>>>> the issue for you.
+>>>>
+>>>> Regards,
+>>>> Arend
+>>>>
+>>>> Arend van Spriel (3):
+>>>>   brcmfmac: add parameter to pass error code in firmware callback
+>>>>   brcmfmac: use firmware callback upon failure to load
+>>>>   brcmfmac: unbind all devices upon failure in firmware callback
+>>>>
+>>>>  .../broadcom/brcm80211/brcmfmac/firmware.c         | 35 +++++++++++-----------
+>>>>  .../broadcom/brcm80211/brcmfmac/firmware.h         |  4 +--
+>>>>  .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 17 +++++++----
+>>>>  .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 18 +++++++----
+>>>>  .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  6 ++--
+>>>>  5 files changed, 47 insertions(+), 33 deletions(-)
+>>>>
+>>>> --
+>>>> 1.9.1
+>>>>
+>>>
+>>> After these patches the error path when firmware is not found seems
+>>> the correct way to proceed but I'm still getting the same kernel panic
+>>> [1].
+>>>
+>>> I added some printk and I saw that when firmware load fails
+>>>
+>>> [    7.696463] brcmfmac mmc1:0001:1: Direct firmware load for
+>>> brcm/brcmfmac4354-sdio.bin failed with error -2
+>>>
+>>> The brcmf_sdio_firmware_callback fails, and goes to the fail label and
+>>> the devices are released.
+>>>
+>>>         device_release_driver(dev);
+>>>         device_release_driver(&sdiodev->func[1]->dev);
+>>>
+>>> But PM ops are not unregistered for mmc1:0001:2 and
+>>> brcmf_ops_sdio_resume is still called, so I'm wondering if you missed
+>>> here to add
+>>>
+>>>         device_release_driver(&sdiodev->func[2]->dev);
+>>>
+>>> Adding that seems to solve the problem, not sure if there is any
+>>> collateral effect.
+>>
+>> Looking closer at the firmware load failure message it uses mmc1:0001:1,
+>> ie. func[1]->dev. I wrongly assume everything was using func[2]->dev
+>> hence I added the device_release_driver() call for func[1]->dev. So we
+>> are calling device_release_driver() twice for the same device. Just
+>> change func[1] into func[2].
+>>
+> 
+> -       device_release_driver(&sdiodev->func[1]->dev);
+> +       device_release_driver(&sdiodev->func[2]->dev);
+> 
+> Right this works, thanks Arend. If you send a new patch revision you can add my
+> 
+> Tested-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
 
-Aggregation will wait for next packet until limit aggr size/number reach.
-Packet might be drop and also packet dequeue will be stop in some cases.
-This patch add timer to flush packets in aggregation list to avoid long
-time waiting.
+Thanks for testing. Will update the patches.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v3: same as v1,v2
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 258 ++++++++++++++++++++---------
- drivers/net/wireless/marvell/mwifiex/usb.h |  14 ++
- 2 files changed, 193 insertions(+), 79 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index e13f758d..f230017 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -662,76 +662,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 	.soft_unbind = 1,
- };
- 
--static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
--{
--	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
--	struct usb_tx_data_port *port;
--	int i, j;
--
--	card->tx_cmd.adapter = adapter;
--	card->tx_cmd.ep = card->tx_cmd_ep;
--
--	card->tx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!card->tx_cmd.urb)
--		return -ENOMEM;
--
--	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
--		port = &card->port[i];
--		if (!port->tx_data_ep)
--			continue;
--		port->tx_data_ix = 0;
--		skb_queue_head_init(&port->tx_aggr.aggr_list);
--		if (port->tx_data_ep == MWIFIEX_USB_EP_DATA)
--			port->block_status = false;
--		else
--			port->block_status = true;
--		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
--			port->tx_data_list[j].adapter = adapter;
--			port->tx_data_list[j].ep = port->tx_data_ep;
--			port->tx_data_list[j].urb =
--					usb_alloc_urb(0, GFP_KERNEL);
--			if (!port->tx_data_list[j].urb)
--				return -ENOMEM;
--		}
--	}
--
--	return 0;
--}
--
--static int mwifiex_usb_rx_init(struct mwifiex_adapter *adapter)
--{
--	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
--	int i;
--
--	card->rx_cmd.adapter = adapter;
--	card->rx_cmd.ep = card->rx_cmd_ep;
--
--	card->rx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!card->rx_cmd.urb)
--		return -ENOMEM;
--
--	card->rx_cmd.skb = dev_alloc_skb(MWIFIEX_RX_CMD_BUF_SIZE);
--	if (!card->rx_cmd.skb)
--		return -ENOMEM;
--
--	if (mwifiex_usb_submit_rx_urb(&card->rx_cmd, MWIFIEX_RX_CMD_BUF_SIZE))
--		return -1;
--
--	for (i = 0; i < MWIFIEX_RX_DATA_URB; i++) {
--		card->rx_data_list[i].adapter = adapter;
--		card->rx_data_list[i].ep = card->rx_data_ep;
--
--		card->rx_data_list[i].urb = usb_alloc_urb(0, GFP_KERNEL);
--		if (!card->rx_data_list[i].urb)
--			return -1;
--		if (mwifiex_usb_submit_rx_urb(&card->rx_data_list[i],
--					      MWIFIEX_RX_DATA_BUF_SIZE))
--			return -1;
--	}
--
--	return 0;
--}
--
- static int mwifiex_write_data_sync(struct mwifiex_adapter *adapter, u8 *pbuf,
- 				   u32 *len, u8 ep, u32 timeout)
- {
-@@ -918,6 +848,15 @@ static int mwifiex_usb_prepare_tx_aggr_skb(struct mwifiex_adapter *adapter,
- 	struct mwifiex_txinfo *tx_info = NULL;
- 	bool is_txinfo_set = false;
- 
-+	/* Packets in aggr_list will be send in either skb_aggr or
-+	 * write complete, delete the tx_aggr timer
-+	 */
-+	if (port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+		del_timer(&port->tx_aggr.timer_cnxt.hold_timer);
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
-+	}
-+
- 	skb_aggr = mwifiex_alloc_dma_align_buf(port->tx_aggr.aggr_len,
- 					       GFP_ATOMIC);
- 	if (!skb_aggr) {
-@@ -999,6 +938,7 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 	u8 f_send_cur_buf = 0;
- 	u8 f_precopy_cur_buf = 0;
- 	u8 f_postcopy_cur_buf = 0;
-+	u32 timeout;
- 	int ret;
- 
- 	/* padding to ensure each packet alginment */
-@@ -1069,8 +1009,35 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
- 		port->tx_aggr.aggr_len += (skb->len + pad);
- 		port->tx_aggr.aggr_num++;
-+		if (f_send_aggr_buf)
-+			goto send_aggr_buf;
-+
-+		/* packet will not been send immediately,
-+		 * set a timer to make sure it will be sent under
-+		 * strict time limit. Dynamically fit the timeout
-+		 * value, according to packets number in aggr_list
-+		 */
-+		if (!port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+			port->tx_aggr.timer_cnxt.hold_tmo_msecs =
-+					MWIFIEX_USB_TX_AGGR_TMO_MIN;
-+			timeout =
-+				port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+			mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+				  jiffies + msecs_to_jiffies(timeout));
-+			port->tx_aggr.timer_cnxt.is_hold_timer_set = true;
-+		} else {
-+			if (port->tx_aggr.timer_cnxt.hold_tmo_msecs <
-+			    MWIFIEX_USB_TX_AGGR_TMO_MAX) {
-+				/* Dyanmic fit timeout */
-+				timeout =
-+				++port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+				mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+					  jiffies + msecs_to_jiffies(timeout));
-+			}
-+		}
- 	}
- 
-+send_aggr_buf:
- 	if (f_send_aggr_buf) {
- 		ret = mwifiex_usb_prepare_tx_aggr_skb(adapter, port, &skb_send);
- 		if (!ret) {
-@@ -1114,11 +1081,60 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		skb_queue_tail(&port->tx_aggr.aggr_list, skb);
- 		port->tx_aggr.aggr_len += (skb->len + pad);
- 		port->tx_aggr.aggr_num++;
-+		/* New aggregation begin, start timer */
-+		if (!port->tx_aggr.timer_cnxt.is_hold_timer_set) {
-+			port->tx_aggr.timer_cnxt.hold_tmo_msecs =
-+					MWIFIEX_USB_TX_AGGR_TMO_MIN;
-+			timeout = port->tx_aggr.timer_cnxt.hold_tmo_msecs;
-+			mod_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+				  jiffies + msecs_to_jiffies(timeout));
-+			port->tx_aggr.timer_cnxt.is_hold_timer_set = true;
-+		}
- 	}
- 
- 	return -EINPROGRESS;
- }
- 
-+static void mwifiex_usb_tx_aggr_tmo(unsigned long context)
-+{
-+	struct urb_context *urb_cnxt = NULL;
-+	struct sk_buff *skb_send = NULL;
-+	struct tx_aggr_tmr_cnxt *timer_context =
-+		(struct tx_aggr_tmr_cnxt *)context;
-+	struct mwifiex_adapter *adapter = timer_context->adapter;
-+	struct usb_tx_data_port *port = timer_context->port;
-+	unsigned long flags;
-+	int err = 0;
-+
-+	spin_lock_irqsave(&port->tx_aggr_lock, flags);
-+	err = mwifiex_usb_prepare_tx_aggr_skb(adapter, port, &skb_send);
-+	if (err) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "prepare tx aggr skb failed, err=%d\n", err);
-+		return;
-+	}
-+
-+	if (atomic_read(&port->tx_data_urb_pending) >=
-+	    MWIFIEX_TX_DATA_URB) {
-+		port->block_status = true;
-+		adapter->data_sent =
-+			mwifiex_usb_data_sent(adapter);
-+		err = -1;
-+		goto done;
-+	}
-+
-+	if (port->tx_data_ix >= MWIFIEX_TX_DATA_URB)
-+		port->tx_data_ix = 0;
-+
-+	urb_cnxt = &port->tx_data_list[port->tx_data_ix++];
-+	err = mwifiex_usb_construct_send_urb(adapter, port, port->tx_data_ep,
-+					     urb_cnxt, skb_send);
-+done:
-+	if (err == -1)
-+		mwifiex_write_data_complete(adapter, skb_send, 0, -1);
-+	spin_unlock_irqrestore(&port->tx_aggr_lock, flags);
-+}
-+
- /* This function write a command/data packet to card. */
- static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 				    struct sk_buff *skb,
-@@ -1127,7 +1143,8 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	struct usb_card_rec *card = adapter->card;
- 	struct urb_context *context = NULL;
- 	struct usb_tx_data_port *port = NULL;
--	int idx;
-+	unsigned long flags;
-+	int idx, ret;
- 
- 	if (adapter->is_suspended) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -1167,9 +1184,13 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 			return -1;
- 		}
- 
--		if (adapter->bus_aggr.enable)
--			return mwifiex_usb_aggr_tx_data(adapter, ep, skb,
-+		if (adapter->bus_aggr.enable) {
-+			spin_lock_irqsave(&port->tx_aggr_lock, flags);
-+			ret =  mwifiex_usb_aggr_tx_data(adapter, ep, skb,
- 							tx_param, port);
-+			spin_unlock_irqrestore(&port->tx_aggr_lock, flags);
-+			return ret;
-+		}
- 
- 		context = &port->tx_data_list[port->tx_data_ix++];
- 	}
-@@ -1177,6 +1198,84 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	return mwifiex_usb_construct_send_urb(adapter, port, ep, context, skb);
- }
- 
-+static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+	struct usb_tx_data_port *port;
-+	int i, j;
-+
-+	card->tx_cmd.adapter = adapter;
-+	card->tx_cmd.ep = card->tx_cmd_ep;
-+
-+	card->tx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!card->tx_cmd.urb)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
-+		port = &card->port[i];
-+		if (!port->tx_data_ep)
-+			continue;
-+		port->tx_data_ix = 0;
-+		skb_queue_head_init(&port->tx_aggr.aggr_list);
-+		if (port->tx_data_ep == MWIFIEX_USB_EP_DATA)
-+			port->block_status = false;
-+		else
-+			port->block_status = true;
-+		for (j = 0; j < MWIFIEX_TX_DATA_URB; j++) {
-+			port->tx_data_list[j].adapter = adapter;
-+			port->tx_data_list[j].ep = port->tx_data_ep;
-+			port->tx_data_list[j].urb =
-+					usb_alloc_urb(0, GFP_KERNEL);
-+			if (!port->tx_data_list[j].urb)
-+				return -ENOMEM;
-+		}
-+
-+		port->tx_aggr.timer_cnxt.adapter = adapter;
-+		port->tx_aggr.timer_cnxt.port = port;
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
-+		setup_timer(&port->tx_aggr.timer_cnxt.hold_timer,
-+			    mwifiex_usb_tx_aggr_tmo,
-+			    (unsigned long)&port->tx_aggr.timer_cnxt);
-+	}
-+
-+	return 0;
-+}
-+
-+static int mwifiex_usb_rx_init(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+	int i;
-+
-+	card->rx_cmd.adapter = adapter;
-+	card->rx_cmd.ep = card->rx_cmd_ep;
-+
-+	card->rx_cmd.urb = usb_alloc_urb(0, GFP_KERNEL);
-+	if (!card->rx_cmd.urb)
-+		return -ENOMEM;
-+
-+	card->rx_cmd.skb = dev_alloc_skb(MWIFIEX_RX_CMD_BUF_SIZE);
-+	if (!card->rx_cmd.skb)
-+		return -ENOMEM;
-+
-+	if (mwifiex_usb_submit_rx_urb(&card->rx_cmd, MWIFIEX_RX_CMD_BUF_SIZE))
-+		return -1;
-+
-+	for (i = 0; i < MWIFIEX_RX_DATA_URB; i++) {
-+		card->rx_data_list[i].adapter = adapter;
-+		card->rx_data_list[i].ep = card->rx_data_ep;
-+
-+		card->rx_data_list[i].urb = usb_alloc_urb(0, GFP_KERNEL);
-+		if (!card->rx_data_list[i].urb)
-+			return -1;
-+		if (mwifiex_usb_submit_rx_urb(&card->rx_data_list[i],
-+					      MWIFIEX_RX_DATA_BUF_SIZE))
-+			return -1;
-+	}
-+
-+	return 0;
-+}
-+
- /* This function register usb device and initialize parameter. */
- static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- {
-@@ -1224,14 +1323,16 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
- 	struct sk_buff *skb_tmp;
- 	int idx;
- 
--	if (adapter->bus_aggr.enable) {
--		for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
--			port = &card->port[idx];
-+	for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
-+		port = &card->port[idx];
-+		if (adapter->bus_aggr.enable)
- 			while ((skb_tmp =
- 				skb_dequeue(&port->tx_aggr.aggr_list)))
- 				mwifiex_write_data_complete(adapter, skb_tmp,
- 							    0, -1);
--		}
-+		del_timer_sync(&port->tx_aggr.timer_cnxt.hold_timer);
-+		port->tx_aggr.timer_cnxt.is_hold_timer_set = false;
-+		port->tx_aggr.timer_cnxt.hold_tmo_msecs = 0;
- 	}
- }
- 
-@@ -1239,8 +1340,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- {
- 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
- 
--	if (adapter->bus_aggr.enable)
--		mwifiex_usb_cleanup_tx_aggr(adapter);
-+	mwifiex_usb_cleanup_tx_aggr(adapter);
- 
- 	card->adapter = NULL;
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
-index b89b840..37abd22 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.h
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.h
-@@ -64,10 +64,22 @@ struct urb_context {
- 	u8 ep;
- };
- 
-+#define MWIFIEX_USB_TX_AGGR_TMO_MIN	1
-+#define MWIFIEX_USB_TX_AGGR_TMO_MAX	4
-+
-+struct tx_aggr_tmr_cnxt {
-+	struct mwifiex_adapter *adapter;
-+	struct usb_tx_data_port *port;
-+	struct timer_list hold_timer;
-+	bool is_hold_timer_set;
-+	u32 hold_tmo_msecs;
-+};
-+
- struct usb_tx_aggr {
- 	struct sk_buff_head aggr_list;
- 	int aggr_len;
- 	int aggr_num;
-+	struct tx_aggr_tmr_cnxt timer_cnxt;
- };
- 
- struct usb_tx_data_port {
-@@ -79,6 +91,8 @@ struct usb_tx_data_port {
- 	/* usb tx aggregation*/
- 	struct usb_tx_aggr tx_aggr;
- 	struct sk_buff *skb_aggr[MWIFIEX_TX_DATA_URB];
-+	/* lock for protect tx aggregation data path*/
-+	spinlock_t tx_aggr_lock;
- };
- 
- struct usb_card_rec {
--- 
-1.9.1
+> Regards,
+>  Enric
+> 
+>> Regards,
+>> Arend
+>>
+>>> + info:
+>>>
+>>> Steps to reproduce the Oops:
+>>>
+>>> 1. Remove the brcm/brcmfmac4354-sdio.bin firmware
+>>> 2. modprobe brcmfmac
+>>> [    6.879679] brcmfmac mmc1:0001:1: Direct firmware load for
+>>> brcm/brcmfmac4354-sdio.bin failed with error -2
+>>> 3. Do a suspend/resume cycle
+>>> echo mem > /sys/power/state && # hit a key
+>>>
+>>> [1] Kernel Oops:
+>>>
+>>> [   29.375149] Unable to handle kernel NULL pointer dereference at
+>>> virtual address 00000000
+>>> [   29.384270] pgd = c0204000
+>>> [   29.387310] [00000000] *pgd=00000000
+>>> [   29.391336] Internal error: Oops: 17 [#1] SMP ARM
+>>> [   29.396628] Modules linked in: cpufreq_powersave cpufreq_userspace
+>>> cpufreq_conservative bq27xxx_battery_i2c bq27xxx_battery cros_ec_keyb
+>>> i2c_cros_ec_tunnel cros_ec_devs cros_ec_spi cros_ec_core
+>>> snd_soc_rockchip_max98090 brcmfmac snd_soc_ts3a227e snd_soc_max98090
+>>> snd_soc_rockchip_i2s cfg80211 snd_soc_core ac97_bus uvcvideo
+>>> videobuf2_vmalloc videobuf2_memops videobuf2_v4l2 videobuf2_core
+>>> videodev snd_pcm_dmaengine brcmutil snd_pcm gpio_charger snd_timer
+>>> media nvmem_rockchip_efuse rk_crypto md5 sha256_generic sha1_generic
+>>> des_generic phy_rockchip_dp rtc_rk808 snd soundcore pwm_rockchip
+>>> rockchipdrm tpm_i2c_infineon dw_hdmi tpm analogix_dp pwm_bl
+>>> spi_rockchip
+>>> [   29.461958] CPU: 0 PID: 3030 Comm: kworker/u8:28 Not tainted
+>>> 4.12.0-rc2-next-20170529-00003-g38fc31b-dirty #3
+>>> [   29.473118] Hardware name: Rockchip (Device Tree)
+>>> [   29.478415] Workqueue: events_unbound async_run_entry_fn
+>>> [   29.484384] task: ed6dc200 task.stack: ed27c000
+>>> [   29.489494] PC is at brcmf_ops_sdio_resume+0x10/0x5c [brcmfmac]
+>>> [   29.496158] LR is at dpm_run_callback+0x38/0x160
+>>> [   29.501351] pc : [<bf4c0fc0>]    lr : [<c087fb70>]    psr: 60000113
+>>> [   29.508394] sp : ed27dec8  ip : 60000113  fp : c1572a54
+>>> [   29.514262] r10: 00000000  r9 : c0fe196c  r8 : 00000010
+>>> [   29.520131] r7 : c087b900  r6 : 00000000  r5 : ed1b5208  r4 : 00000001
+>>> [   29.527476] r3 : 00000000  r2 : 00000002  r1 : ed1b5208  r0 : ed1b5208
+>>> [   29.537127] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+>>> [   29.547454] Control: 10c5387d  Table: 2d75c06a  DAC: 00000051
+>>> [   29.556215] Process kworker/u8:28 (pid: 3030, stack limit = 0xed27c220)
+>>> [   29.565965] Stack: (0xed27dec8 to 0xed27e000)
+>>> [   29.573150] dec0:                   00000001 c087fb70 00000001
+>>> ed1b5208 00000000 00000010
+>>> [   29.584656] dee0: ed1b523c ed27c000 00000000 c08802d4 c15c54fc
+>>> ed1b5208 ed542140 ee006500
+>>> [   29.596172] df00: 00000000 c08804b8 ed542150 c157fda0 ed542140
+>>> c036525c ec820280 ed542150
+>>> [   29.607694] df20: ee004800 ee006500 00000000 c035cc28 eef914c0
+>>> ee004848 ee004818 ee004800
+>>> [   29.619249] df40: ec820298 00000088 ee004818 c1402d00 ed27c000
+>>> ee004800 ec820280 c035cf58
+>>> [   29.630816] df60: ee004960 00000000 ec820280 ec802000 00000000
+>>> ed7d7ac0 ec820280 c035cf20
+>>> [   29.642397] df80: ec80201c ec96bee8 00000000 c0362358 ed7d7ac0
+>>> c036222c 00000000 00000000
+>>> [   29.654046] dfa0: 00000000 00000000 00000000 c0307e78 00000000
+>>> 00000000 00000000 00000000
+>>> [   29.665707] dfc0: 00000000 00000000 00000000 00000000 00000000
+>>> 00000000 00000000 00000000
+>>> [   29.677322] dfe0: 00000000 00000000 00000000 00000000 00000013
+>>> 00000000 00000000 00000000
+>>> [   29.688968] [<bf4c0fc0>] (brcmf_ops_sdio_resume [brcmfmac]) from
+>>> [<c087fb70>] (dpm_run_callback+0x38/0x160)
+>>> [   29.702379] [<c087fb70>] (dpm_run_callback) from [<c08802d4>]
+>>> (device_resume+0x94/0x25c)
+>>> [   29.713951] [<c08802d4>] (device_resume) from [<c08804b8>]
+>>> (async_resume+0x1c/0x44)
+>>> [   29.725063] [<c08804b8>] (async_resume) from [<c036525c>]
+>>> (async_run_entry_fn+0x44/0x108)
+>>> [   29.736788] [<c036525c>] (async_run_entry_fn) from [<c035cc28>]
+>>> (process_one_work+0x14c/0x444)
+>>> [   29.749022] [<c035cc28>] (process_one_work) from [<c035cf58>]
+>>> (worker_thread+0x38/0x510)
+>>> [   29.760675] [<c035cf58>] (worker_thread) from [<c0362358>]
+>>> (kthread+0x12c/0x15c)
+>>> [   29.771521] [<c0362358>] (kthread) from [<c0307e78>]
+>>> (ret_from_fork+0x14/0x3c)
+>>> [   29.782226] Code: e92d4010 e59021a4 e5903054 e3520002 (e5934000)
+>>> [   29.791751] ---[ end trace 035307c5087a8fee ]---
+>>>
