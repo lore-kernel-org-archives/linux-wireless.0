@@ -1,70 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:45774 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751677AbdFUNzs (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42229 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750790AbdFAEJv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 09:55:48 -0400
-Subject: Re: [PATCH][net-next] qtnfmac: fix uninitialized return code in ret
-To: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20170621132530.11937-1-colin.king@canonical.com>
- <20170621135402.e4iwovvmdumarzqj@bars>
-From: Colin Ian King <colin.king@canonical.com>
-Message-ID: <36a321a5-5134-9284-ca3d-663723880156@canonical.com> (sfid-20170621_155615_626357_E36117CC)
-Date: Wed, 21 Jun 2017 14:55:44 +0100
+        Thu, 1 Jun 2017 00:09:51 -0400
+Date: Thu, 1 Jun 2017 14:09:47 +1000
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Greg KH <greg@kroah.com>
+Cc: linux-wireless@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
+        Tycho Andersen <tycho@tycho.ws>,
+        driverdev-devel@linuxdriverproject.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC 1/3] staging: ks7010: move WEXT files to sub directory
+Message-ID: <20170601040947.GC30618@eros> (sfid-20170601_061006_607375_A4B0CBF9)
+References: <1496287628-16787-1-git-send-email-me@tobin.cc>
+ <1496287628-16787-2-git-send-email-me@tobin.cc>
+ <20170601034537.GA7468@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <20170621135402.e4iwovvmdumarzqj@bars>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170601034537.GA7468@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21/06/17 14:54, Sergey Matyukevich wrote:
->> The return value ret is unitialized and garbage is being returned
->> for the three different error conditions when setting up the PCIe
->> BARs. Fix this by initializing ret to  -ENOMEM to indicate that
->> the BARs failed to be setup correctly.
->>
->> Detected by CoverityScan, CID#1437563 ("Unitialized scalar variable")
->>
->> Signed-off-by: Colin Ian King <colin.king@canonical.com>
->> ---
->>  drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
->> index f93b27f3a236..7fc4f0d6a9ad 100644
->> --- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
->> +++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
->> @@ -247,7 +247,7 @@ static void qtnf_pcie_free_shm_ipc(struct qtnf_pcie_bus_priv *priv)
->>
->>  static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_priv *priv)
->>  {
->> -       int ret;
->> +       int ret = -ENOMEM;
->>
->>         priv->sysctl_bar = qtnf_map_bar(priv, QTN_SYSCTL_BAR);
->>         if (IS_ERR_OR_NULL(priv->sysctl_bar)) {
->> --
+On Thu, Jun 01, 2017 at 12:45:37PM +0900, Greg KH wrote:
+> On Thu, Jun 01, 2017 at 01:27:06PM +1000, Tobin C. Harding wrote:
+> > Current driver implements the WEXT interface. WEXT is in maintenance
+> > mode, we need to re-write the driver using cfg80211. The current
+> > driver is handy as a reference for the new implementation, we can keep
+> > it in tree for now.
+> > 
+> > Move WEXT driver to sub directory, add dummy Makefile and Kconfig so
+> > build completes successfully but does not process any files from the
+> > WEXT directory.
+> > 
+> > Signed-off-by: Tobin C. Harding <me@tobin.cc>
+> > ---
+> >  drivers/staging/ks7010/Kconfig              |    6 +-
+> >  drivers/staging/ks7010/Makefile             |    3 -
+> >  drivers/staging/ks7010/TODO                 |   36 -
+> >  drivers/staging/ks7010/eap_packet.h         |  144 --
+> >  drivers/staging/ks7010/ks7010_sdio.c        | 1079 ----------
+> >  drivers/staging/ks7010/ks7010_sdio.h        |  164 --
+> >  drivers/staging/ks7010/ks_hostif.c          | 2638 -----------------------
+> >  drivers/staging/ks7010/ks_hostif.h          |  685 ------
+> >  drivers/staging/ks7010/ks_wlan.h            |  514 -----
+> >  drivers/staging/ks7010/ks_wlan_ioctl.h      |   67 -
+> >  drivers/staging/ks7010/ks_wlan_net.c        | 2999 ---------------------------
+> >  drivers/staging/ks7010/michael_mic.c        |  148 --
+> >  drivers/staging/ks7010/michael_mic.h        |   25 -
+> >  drivers/staging/ks7010/wext/Kconfig         |   10 +
+> >  drivers/staging/ks7010/wext/Makefile        |    4 +
+> >  drivers/staging/ks7010/wext/TODO            |   36 +
+> >  drivers/staging/ks7010/wext/eap_packet.h    |  144 ++
+> >  drivers/staging/ks7010/wext/ks7010_sdio.c   | 1079 ++++++++++
+> >  drivers/staging/ks7010/wext/ks7010_sdio.h   |  164 ++
+> >  drivers/staging/ks7010/wext/ks_hostif.c     | 2638 +++++++++++++++++++++++
+> >  drivers/staging/ks7010/wext/ks_hostif.h     |  685 ++++++
+> >  drivers/staging/ks7010/wext/ks_wlan.h       |  514 +++++
+> >  drivers/staging/ks7010/wext/ks_wlan_ioctl.h |   67 +
+> >  drivers/staging/ks7010/wext/ks_wlan_net.c   | 2999 +++++++++++++++++++++++++++
+> >  drivers/staging/ks7010/wext/michael_mic.c   |  148 ++
+> >  drivers/staging/ks7010/wext/michael_mic.h   |   25 +
+> >  26 files changed, 8514 insertions(+), 8507 deletions(-)
+> >  delete mode 100644 drivers/staging/ks7010/TODO
+> >  delete mode 100644 drivers/staging/ks7010/eap_packet.h
+> >  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.c
+> >  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.h
+> >  delete mode 100644 drivers/staging/ks7010/ks_hostif.c
+> >  delete mode 100644 drivers/staging/ks7010/ks_hostif.h
+> >  delete mode 100644 drivers/staging/ks7010/ks_wlan.h
+> >  delete mode 100644 drivers/staging/ks7010/ks_wlan_ioctl.h
+> >  delete mode 100644 drivers/staging/ks7010/ks_wlan_net.c
+> >  delete mode 100644 drivers/staging/ks7010/michael_mic.c
+> >  delete mode 100644 drivers/staging/ks7010/michael_mic.h
+> >  create mode 100644 drivers/staging/ks7010/wext/Kconfig
+> >  create mode 100644 drivers/staging/ks7010/wext/Makefile
+> >  create mode 100644 drivers/staging/ks7010/wext/TODO
+> >  create mode 100644 drivers/staging/ks7010/wext/eap_packet.h
+> >  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.c
+> >  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.h
+> >  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.c
+> >  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.h
+> >  create mode 100644 drivers/staging/ks7010/wext/ks_wlan.h
+> >  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_ioctl.h
+> >  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_net.c
+> >  create mode 100644 drivers/staging/ks7010/wext/michael_mic.c
+> >  create mode 100644 drivers/staging/ks7010/wext/michael_mic.h
 > 
-> Thanks !
-> 
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> 
-> By the way, could you please use the recepient list suggested by
-> get_maintainer.pl script from the kernel scripts directory.
+> Please use the -M option to 'git format-patch" so that we can just see
+> file moves, not delete/add like you have here.
 
-Yep, I did.
+Point noted, will submit v2 using -M option. This is the second time
+you have told me this, that means I have to buy you a beer doesn't it?
 
-> 
-> Regards,
-> Sergey
-> 
+Will follow the 'wait a day before submitting next version' rule.
+
+thanks,
+Tobin.
