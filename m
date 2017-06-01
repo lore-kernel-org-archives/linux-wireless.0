@@ -1,36 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58298 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751674AbdFVJtz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 05:49:55 -0400
-Message-ID: <1498124992.2246.6.camel@sipsolutions.net> (sfid-20170622_114958_352126_3C842457)
-Subject: Re: net_device::destructor patch for brcmfmac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Jun 2017 11:49:52 +0200
-In-Reply-To: <3f81fbd3-2896-2b09-1d59-ae5ec88045c9@broadcom.com> (sfid-20170622_114530_618693_3E9C66A1)
-References: <3f81fbd3-2896-2b09-1d59-ae5ec88045c9@broadcom.com>
-         (sfid-20170622_114530_618693_3E9C66A1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:37518 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751686AbdFAJih (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Jun 2017 05:38:37 -0400
+Received: by mail-wm0-f45.google.com with SMTP id d127so52462613wmf.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Jun 2017 02:38:37 -0700 (PDT)
+Subject: Re: BRCMFMAC OOB interrupt problem
+To: "Hegr, Jiri" <Jiri.Hegr2@Honeywell.com>,
+        "franky.lin@broadcom.com" <franky.lin@broadcom.com>,
+        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <BY2PR07MB15534619EB5D533B633CDAF5CEF60@BY2PR07MB1553.namprd07.prod.outlook.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <4c82d08f-60cc-9ef6-4598-81a616782d11@broadcom.com> (sfid-20170601_113913_538653_AE02DA19)
+Date: Thu, 1 Jun 2017 11:38:28 +0200
+MIME-Version: 1.0
+In-Reply-To: <BY2PR07MB15534619EB5D533B633CDAF5CEF60@BY2PR07MB1553.namprd07.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-06-22 at 11:45 +0200, Arend van Spriel wrote:
-> Hi Kalle,
+On 01-06-17 09:44, Hegr, Jiri wrote:
+> Dears,
+> We use small WiFi evaluation board WM-BN-BM-04_EVB_V1.2 with BCM43362 chip (Broadcom).
+> This board is connected to OMAP-L138 via SDIO interface with Linux 4.9.10 containing WiFi driver brcmfmac.
+> Our problem is in OOB interrupt. The driver (and the WiFi chip) works fine if the interrupt is not set in a device tree (SDIO interface is used instead).
+> But if the host-wake interrupt is used, the initialization phase does not pass. We are sure that the OOB interrupt is triggered. We found out that it waits for a control frame (probably) but it gets some event frame only. After about 2.5 seconds the timeout occurs and the initialization fails.
+> Could you help us to solve the problem?
+> There is our device tree settings and terminal output bellow (the "DBG" lines are our own).
 > 
-> I have a fix for brcmfmac, which is related to a change Dave made in
-> struct net_device, ie. commit cf124db566e6 ("net: Fix inconsistent
-> teardown and release of private netdev state."). This change is not
-> in
-> wireless-drivers-next, but it is in mac80211-next and thus in
-> wireless-testing. What should I do? Submit to net-next, or
-> mac80211-next, or will you merge net-next into wireless-drivers-next?
+> There is also problem with WARN_ON(nents > sdiodev->max_segment_count); in bcmsdh.c file, but it seems that it does not influence the driver work because the problem occurs without OOB interrupt setting also and everything works fine.
+> 
+> Regards,
+> 
+> Jiri Hegr
+> 
+> mmc1: mmc@21b000 {
+>      #address-cells = <1>;
+>      #size-cells = <0>;
+>      max-frequency = <25000000>;
+>      bus-width = <4>;
+>      pinctrl-names = "default";
+>      pinctrl-0 = <&mmc1_pins>;
+>      status = "okay";
+>      non-removable;
+> 
+>      brcmf: bcrmf@1 {
+> reg = <1>;
+> compatible = "brcm,bcm4329-fmac";
+> interrupt-parent = <&gpio>;
+> interrupts = <95 0x02>;
+> interrupt-names = "host-wake";
+>      };
+> };
+> 
+> [   24.314527] brcmfmac: *** DBG: starting datawork worker thread...
+> [   24.354778] brcmfmac: *** DBG: brcmf_sdio_readframes...
+> [   24.360088] brcmfmac: *** DBG: rd->len check: 0
+> [   24.404232] brcmfmac: *** DBG: rd->channel check: 1
+> [   24.435047] brcmfmac: *** DBG: rd->len check: 0
+> [   24.454977] brcmfmac: *** DBG: brcmf_sdio_readframes - loop break
+> [   27.013900] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+> [   27.019813] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -110
+> [   27.031282] brcmfmac: brcmf_bus_start: failed: -110
+> [   27.046164] brcmfmac: brcmf_sdio_firmware_callback: dongle is not responding
 
-Actually, it's even in *net* I believe, so you should submit it to
-there, or Kalle should integrate (fast-forward, rebase?) that into
-wireless-drivers.
+Can you build the driver with CONFIG_BRCMDBG and load the driver with
+debugging:
 
-johannes
+$ sudo insmod brcmfmac.ko debug=0x31516
+
+Regards,
+Arend
+
+>                                           Honeywell  *
+> Jiri Hegr - R&D Scientist III.
+> 
+> Honeywell International s.r.o. - Aerospace Advanced Techonologies
+> V Parku 2325/16
+> Praha 148 00, Czech Republic
+> Office: Turanka 100
+> 627 00 Brno, Czech Republic
+> 
+> Tel:         +420 532 115 564
+> E-mail:    jiri.hegr2@honeywell.com<mailto:jiri.hegr2@honeywell.com>
+> 
+> 
