@@ -1,88 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34346 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753842AbdFVVVq (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42143 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751097AbdFADpn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:21:46 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:47 +0300
-Message-Id: <20170622212101.16422-12-luca@coelho.fi> (sfid-20170622_232159_781012_0B221837)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 11/25] iwlwifi: mvm: track and report IBSS manager status to mac80211
+        Wed, 31 May 2017 23:45:43 -0400
+Date: Thu, 1 Jun 2017 12:45:37 +0900
+From: Greg KH <greg@kroah.com>
+To: "Tobin C. Harding" <me@tobin.cc>
+Cc: linux-wireless@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
+        Tycho Andersen <tycho@tycho.ws>,
+        driverdev-devel@linuxdriverproject.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC 1/3] staging: ks7010: move WEXT files to sub directory
+Message-ID: <20170601034537.GA7468@kroah.com> (sfid-20170601_054612_857267_AC8499A5)
+References: <1496287628-16787-1-git-send-email-me@tobin.cc>
+ <1496287628-16787-2-git-send-email-me@tobin.cc>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1496287628-16787-2-git-send-email-me@tobin.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Jun 01, 2017 at 01:27:06PM +1000, Tobin C. Harding wrote:
+> Current driver implements the WEXT interface. WEXT is in maintenance
+> mode, we need to re-write the driver using cfg80211. The current
+> driver is handy as a reference for the new implementation, we can keep
+> it in tree for now.
+> 
+> Move WEXT driver to sub directory, add dummy Makefile and Kconfig so
+> build completes successfully but does not process any files from the
+> WEXT directory.
+> 
+> Signed-off-by: Tobin C. Harding <me@tobin.cc>
+> ---
+>  drivers/staging/ks7010/Kconfig              |    6 +-
+>  drivers/staging/ks7010/Makefile             |    3 -
+>  drivers/staging/ks7010/TODO                 |   36 -
+>  drivers/staging/ks7010/eap_packet.h         |  144 --
+>  drivers/staging/ks7010/ks7010_sdio.c        | 1079 ----------
+>  drivers/staging/ks7010/ks7010_sdio.h        |  164 --
+>  drivers/staging/ks7010/ks_hostif.c          | 2638 -----------------------
+>  drivers/staging/ks7010/ks_hostif.h          |  685 ------
+>  drivers/staging/ks7010/ks_wlan.h            |  514 -----
+>  drivers/staging/ks7010/ks_wlan_ioctl.h      |   67 -
+>  drivers/staging/ks7010/ks_wlan_net.c        | 2999 ---------------------------
+>  drivers/staging/ks7010/michael_mic.c        |  148 --
+>  drivers/staging/ks7010/michael_mic.h        |   25 -
+>  drivers/staging/ks7010/wext/Kconfig         |   10 +
+>  drivers/staging/ks7010/wext/Makefile        |    4 +
+>  drivers/staging/ks7010/wext/TODO            |   36 +
+>  drivers/staging/ks7010/wext/eap_packet.h    |  144 ++
+>  drivers/staging/ks7010/wext/ks7010_sdio.c   | 1079 ++++++++++
+>  drivers/staging/ks7010/wext/ks7010_sdio.h   |  164 ++
+>  drivers/staging/ks7010/wext/ks_hostif.c     | 2638 +++++++++++++++++++++++
+>  drivers/staging/ks7010/wext/ks_hostif.h     |  685 ++++++
+>  drivers/staging/ks7010/wext/ks_wlan.h       |  514 +++++
+>  drivers/staging/ks7010/wext/ks_wlan_ioctl.h |   67 +
+>  drivers/staging/ks7010/wext/ks_wlan_net.c   | 2999 +++++++++++++++++++++++++++
+>  drivers/staging/ks7010/wext/michael_mic.c   |  148 ++
+>  drivers/staging/ks7010/wext/michael_mic.h   |   25 +
+>  26 files changed, 8514 insertions(+), 8507 deletions(-)
+>  delete mode 100644 drivers/staging/ks7010/TODO
+>  delete mode 100644 drivers/staging/ks7010/eap_packet.h
+>  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.c
+>  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.h
+>  delete mode 100644 drivers/staging/ks7010/ks_hostif.c
+>  delete mode 100644 drivers/staging/ks7010/ks_hostif.h
+>  delete mode 100644 drivers/staging/ks7010/ks_wlan.h
+>  delete mode 100644 drivers/staging/ks7010/ks_wlan_ioctl.h
+>  delete mode 100644 drivers/staging/ks7010/ks_wlan_net.c
+>  delete mode 100644 drivers/staging/ks7010/michael_mic.c
+>  delete mode 100644 drivers/staging/ks7010/michael_mic.h
+>  create mode 100644 drivers/staging/ks7010/wext/Kconfig
+>  create mode 100644 drivers/staging/ks7010/wext/Makefile
+>  create mode 100644 drivers/staging/ks7010/wext/TODO
+>  create mode 100644 drivers/staging/ks7010/wext/eap_packet.h
+>  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.c
+>  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.h
+>  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.c
+>  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.h
+>  create mode 100644 drivers/staging/ks7010/wext/ks_wlan.h
+>  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_ioctl.h
+>  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_net.c
+>  create mode 100644 drivers/staging/ks7010/wext/michael_mic.c
+>  create mode 100644 drivers/staging/ks7010/wext/michael_mic.h
 
-Shaul reported that when iwlmvm was sending beacons, it didn't properly
-also take ownership of the probe responses. This is because the whole
-mac80211 callback (tx_last_beacon) wasn't implemented. Fix that to make
-IBSS discovery work better.
+Please use the -M option to 'git format-patch" so that we can just see
+file moves, not delete/add like you have here.
 
-Reported-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 9 +++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 3 +++
- 3 files changed, 13 insertions(+)
+thanks,
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index d573ac739414..50a71da2e96e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1457,6 +1457,7 @@ void iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
- 
- 	beacon_notify_hdr = &beacon->beacon_notify_hdr;
- 	mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2);
-+	mvm->ibss_manager = beacon->ibss_mgr_status != 0;
- 
- 	agg_status = iwl_mvm_get_agg_status(mvm, beacon_notify_hdr);
- 	status = le16_to_cpu(agg_status->status) & TX_STATUS_MSK;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 05041d37773b..75ec567ab9e2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3737,6 +3737,13 @@ static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
- 	return ret;
- }
- 
-+static int iwl_mvm_tx_last_beacon(struct ieee80211_hw *hw)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+
-+	return mvm->ibss_manager;
-+}
-+
- static int iwl_mvm_set_tim(struct ieee80211_hw *hw,
- 			   struct ieee80211_sta *sta,
- 			   bool set)
-@@ -4338,6 +4345,8 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.join_ibss = iwl_mvm_start_ap_ibss,
- 	.leave_ibss = iwl_mvm_stop_ap_ibss,
- 
-+	.tx_last_beacon = iwl_mvm_tx_last_beacon,
-+
- 	.set_tim = iwl_mvm_set_tim,
- 
- 	.channel_switch = iwl_mvm_channel_switch,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index cdd13bc343e6..a4bee9c740e0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1021,6 +1021,9 @@ struct iwl_mvm {
- 	/* system time of last beacon (for AP/GO interface) */
- 	u32 ap_last_beacon_gp2;
- 
-+	/* indicates that we transmitted the last beacon */
-+	bool ibss_manager;
-+
- 	bool lar_regdom_set;
- 	enum iwl_mcc_source mcc_src;
- 
--- 
-2.11.0
+greg k-h
