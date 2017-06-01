@@ -1,192 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:35244 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753962AbdFSKJL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 06:09:11 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 12/13] NFC: st-nci: Get rid of code duplication in ->probe()
-Date: Mon, 19 Jun 2017 13:08:57 +0300
-Message-Id: <20170619100858.2655-13-andriy.shevchenko@linux.intel.com> (sfid-20170619_120920_424669_0B8F106C)
-In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
-References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:51084 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751076AbdFAOTT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Jun 2017 10:19:19 -0400
+From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+To: "amitkarwar@gmail.com" <amitkarwar@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "prameela.j04cs@gmail.com" <prameela.j04cs@gmail.com>,
+        "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>,
+        "linux-snps-arc@lists.infradead.org"
+        <linux-snps-arc@lists.infradead.org>
+Subject: Re: git repo with Redpine changes
+Date: Thu, 1 Jun 2017 14:19:14 +0000
+Message-ID: <1496326752.28487.27.camel@synopsys.com> (sfid-20170601_161922_537142_1C677B93)
+References: <1495008675.2606.72.camel@synopsys.com>
+         <CAEhWJFkVe1C9jtxH9zeeMeJiAs86sJGOKSoqMku0qRqNAQujxg@mail.gmail.com>
+         <1495560381.22203.29.camel@synopsys.com>
+         <CAEhWJFkqCWE1QLJCRvkQEo0YokfzcW1sVFitwY_Q+OUcMBYSGg@mail.gmail.com>
+In-Reply-To: <CAEhWJFkqCWE1QLJCRvkQEo0YokfzcW1sVFitwY_Q+OUcMBYSGg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since OF and ACPI case almost the same get rid of code duplication
-by moving gpiod_get() calls directly to ->probe().
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/st-nci/i2c.c | 61 +++++++-----------------------------------------
- drivers/nfc/st-nci/spi.c | 60 +++++++----------------------------------------
- 2 files changed, 18 insertions(+), 103 deletions(-)
-
-diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
-index edda253b07fe..515f08d037fb 100644
---- a/drivers/nfc/st-nci/i2c.c
-+++ b/drivers/nfc/st-nci/i2c.c
-@@ -210,41 +210,6 @@ static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
- 	{},
- };
- 
--static int st_nci_i2c_acpi_request_resources(struct i2c_client *client)
--{
--	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--	int r;
--
--	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
--	if (r)
--		return r;
--
--	/* Get RESET GPIO from ACPI */
--	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
--	if (IS_ERR(phy->gpiod_reset)) {
--		nfc_err(dev, "Unable to get RESET GPIO\n");
--		return -ENODEV;
--	}
--
--	return 0;
--}
--
--static int st_nci_i2c_of_request_resources(struct i2c_client *client)
--{
--	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
--	struct device *dev = &client->dev;
--
--	/* Get GPIO from device tree */
--	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
--	if (IS_ERR(phy->gpiod_reset)) {
--		nfc_err(dev, "Unable to get RESET GPIO\n");
--		return PTR_ERR(phy->gpiod_reset);
--	}
--
--	return 0;
--}
--
- static int st_nci_i2c_probe(struct i2c_client *client,
- 				  const struct i2c_device_id *id)
- {
-@@ -260,8 +225,7 @@ static int st_nci_i2c_probe(struct i2c_client *client,
- 		return -ENODEV;
- 	}
- 
--	phy = devm_kzalloc(&client->dev, sizeof(struct st_nci_i2c_phy),
--			   GFP_KERNEL);
-+	phy = devm_kzalloc(dev, sizeof(struct st_nci_i2c_phy), GFP_KERNEL);
- 	if (!phy)
- 		return -ENOMEM;
- 
-@@ -269,21 +233,14 @@ static int st_nci_i2c_probe(struct i2c_client *client,
- 
- 	i2c_set_clientdata(client, phy);
- 
--	if (client->dev.of_node) {
--		r = st_nci_i2c_of_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev, "No platform data\n");
--			return r;
--		}
--	} else if (ACPI_HANDLE(&client->dev)) {
--		r = st_nci_i2c_acpi_request_resources(client);
--		if (r) {
--			nfc_err(&client->dev, "Cannot get ACPI data\n");
--			return r;
--		}
--	} else {
--		nfc_err(&client->dev,
--			"st_nci platform resources not available\n");
-+	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
-+	if (r)
-+		dev_dbg(dev, "Unable to add GPIO mapping table\n");
-+
-+	/* Get RESET GPIO */
-+	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
-+	if (IS_ERR(phy->gpiod_reset)) {
-+		nfc_err(dev, "Unable to get RESET GPIO\n");
- 		return -ENODEV;
- 	}
- 
-diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
-index 99ecf92edc8c..14705591b0fb 100644
---- a/drivers/nfc/st-nci/spi.c
-+++ b/drivers/nfc/st-nci/spi.c
-@@ -225,41 +225,6 @@ static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
- 	{},
- };
- 
--static int st_nci_spi_acpi_request_resources(struct spi_device *spi_dev)
--{
--	struct st_nci_spi_phy *phy = spi_get_drvdata(spi_dev);
--	struct device *dev = &spi_dev->dev;
--	int r;
--
--	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
--	if (r)
--		return r;
--
--	/* Get RESET GPIO from ACPI */
--	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
--	if (IS_ERR(phy->gpiod_reset)) {
--		nfc_err(dev, "Unable to get RESET GPIO\n");
--		return PTR_ERR(phy->gpiod_reset);
--	}
--
--	return 0;
--}
--
--static int st_nci_spi_of_request_resources(struct spi_device *spi)
--{
--	struct st_nci_spi_phy *phy = spi_get_drvdata(spi);
--	struct device *dev = &spi->dev;
--
--	/* Get GPIO from device tree */
--	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
--	if (IS_ERR(phy->gpiod_reset)) {
--		nfc_err(dev, "Unable to get RESET GPIO\n");
--		return PTR_ERR(phy->gpiod_reset);
--	}
--
--	return 0;
--}
--
- static int st_nci_spi_probe(struct spi_device *dev)
- {
- 	struct st_nci_spi_phy *phy;
-@@ -284,22 +249,15 @@ static int st_nci_spi_probe(struct spi_device *dev)
- 
- 	spi_set_drvdata(dev, phy);
- 
--	if (dev->dev.of_node) {
--		r = st_nci_spi_of_request_resources(dev);
--		if (r) {
--			nfc_err(&dev->dev, "No platform data\n");
--			return r;
--		}
--	} else if (ACPI_HANDLE(&dev->dev)) {
--		r = st_nci_spi_acpi_request_resources(dev);
--		if (r) {
--			nfc_err(&dev->dev, "Cannot get ACPI data\n");
--			return r;
--		}
--	} else {
--		nfc_err(&dev->dev,
--			"st_nci platform resources not available\n");
--		return -ENODEV;
-+	r = devm_acpi_dev_add_driver_gpios(&dev->dev, acpi_st_nci_gpios);
-+	if (r)
-+		dev_dbg(&dev->dev, "Unable to add GPIO mapping table\n");
-+
-+	/* Get RESET GPIO */
-+	phy->gpiod_reset = devm_gpiod_get(&dev->dev, "reset", GPIOD_OUT_HIGH);
-+	if (IS_ERR(phy->gpiod_reset)) {
-+		nfc_err(&dev->dev, "Unable to get RESET GPIO\n");
-+		return PTR_ERR(phy->gpiod_reset);
- 	}
- 
- 	phy->se_status.is_ese_present =
--- 
-2.11.0
+SGkgQW1pdCENCg0KT24gVGh1LCAyMDE3LTA2LTAxIGF0IDE5OjI0ICswNTMwLCBhbWl0IGthcndh
+ciB3cm90ZToNCj4gT24gVHVlLCBNYXkgMjMsIDIwMTcgYXQgMTA6NTYgUE0sIEFsZXhleSBCcm9k
+a2luDQo+IDxBbGV4ZXkuQnJvZGtpbkBzeW5vcHN5cy5jb20+IHdyb3RlOg0KPiANCj4gSSBoYXZl
+IHBvc3RlZCBhIGZpcm13YXJlIGltYWdlIGZvciBuZXcgZmlybXdhcmUgbG9hZGluZyBtZWNoYW5p
+c20gdG8NCj4gY29tbXVuaXR5LiBUaGVyZSBhcmUgc29tZSBwYXRjaGVzIGZvciBTRElPIHNwZWNp
+ZmljIGRyaXZlcg0KPiBlbmhhbmNlbWVudHMgYW5kIGZpeGVzLiBJIGFtIHNlbmRpbmcgdGhlbSBp
+biBjb3VwbGUgb2YgZGF5cy4gV2l0aA0KPiB0aG9zZSBwYXRjaGVzIHlvdSB3aWxsIGJlIGFibGUg
+dG8gc2VlIHdpcmVsZXNzIGludGVyZmFjZSBicmluZyB1cCwNCj4gY29ubmVjdGlvbiBpbiBvcGVu
+IG5ldHdvcmsgYW5kIGRhdGEgcGF0aCB3b3JraW5nLg0KDQpNYXkgSSBoYXZlIGFueSByZWZlcmVu
+Y2UgdG8gdGhhdCBwb3N0L2ltYWdlPw0KDQo+ID4gDQo+ID4gDQo+ID4gPiANCj4gPiA+ID4gDQo+
+ID4gPiA+IHJzaV85MXg6IHJzaV9zZGlvX21hc3Rlcl9yZWdfcmVhZDogQUhCIHJlZ2lzdGVyIHJl
+YWQgZmFpbGVkDQo+ID4gPiA+IHJzaV85MXg6IHJzaV9sb2FkX2Zpcm13YXJlOiBSRUdPVVQgcmVh
+ZCBmYWlsZWQNCj4gPiA+ID4gcnNpXzkxeDogcnNpX2hhbF9kZXZpY2VfaW5pdDogRmFpbGVkIHRv
+IGxvYWQgVEEgaW5zdHJ1Y3Rpb25zDQo+ID4gPiA+IHJzaV85MXg6IHJzaV9wcm9iZTogRmFpbGVk
+IGluIGRldmljZSBpbml0DQo+ID4gPiA+IHJzaV85MXg6IHJzaV85MXhfZGVpbml0OiBQZXJmb3Jt
+aW5nIGRlaW5pdCBvcyBvcHMNCj4gPiA+ID4gcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3Nv
+cjogUXVldWUgbnVtYmVyID0gMjU1DQo+ID4gPiA+IHJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9j
+ZXNzb3I6IE5vIE1vcmUgUGt0DQo+ID4gPiA+IHJzaV85MXg6IHJzaV9wcm9iZTogRmFpbGVkIGlu
+IHByb2JlLi4uRXhpdGluZw0KPiA+ID4gPiBSU0ktU0RJTyBXTEFOOiBwcm9iZSBvZiBtbWMwOmZm
+ZmQ6MSBmYWlsZWQgd2l0aCBlcnJvciAxDQo+ID4gPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+PjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+ID4gPiANCj4gPiA+ID4gwqAyKSBJbiBjYXNlIG9m
+IFVTQiBJIGp1c3Qgc2VlOg0KPiA+ID4gPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0t
+LS0tLS0tLS0tLS0tLS0NCj4gPiA+ID4gdXNiIDEtMTogbmV3IGhpZ2gtc3BlZWQgVVNCIGRldmlj
+ZSBudW1iZXIgNiB1c2luZyBlaGNpLXBsYXRmb3JtDQo+ID4gPiA+IHVzYiAxLTE6IGNvbmZpZyAx
+IGludGVyZmFjZSAwIGFsdHNldHRpbmcgMCBlbmRwb2ludCAweDgzIGhhcyBhbiBpbnZhbGlkIGJJ
+bnRlcnZhbCAyNTUsIGNoYW5naW5nIHRvIDExDQo+ID4gPiA+IHVzYiAxLTE6IE5ldyBVU0IgZGV2
+aWNlIGZvdW5kLCBpZFZlbmRvcj0xNjE4LCBpZFByb2R1Y3Q9OTExMw0KPiA+ID4gPiB1c2IgMS0x
+OiBOZXcgVVNCIGRldmljZSBzdHJpbmdzOiBNZnI9MSwgUHJvZHVjdD0yLCBTZXJpYWxOdW1iZXI9
+MA0KPiA+ID4gPiB1c2IgMS0xOiBQcm9kdWN0OiBXaXJlbGVzcyBVU0ItQ0RDIE5ldHdvcmsgTW9k
+dWxlDQo+ID4gPiA+IHVzYiAxLTE6IE1hbnVmYWN0dXJlcjogUmVkcGluZSBTaWduYWxzLCBJbmMu
+DQo+ID4gPiA+IGNkY19hY20gMS0xOjEuMDogdHR5QUNNMDogVVNCIEFDTSBkZXZpY2UNCj4gPiA+
+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0+OC0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ID4gPiA+
+IA0KPiA+ID4gPiBJIG5vdGljZWQgdGhhdCB0aGVyZSdyZSBxdWl0ZSBzb21lIHBhdGNoZXMgZmxv
+YXRpbmcgb24gbGludXgtd2lyZWxlc3MgbWFpbGluZyBsaXN0IHdoaWNoDQo+ID4gPiA+IHdlcmUg
+bm90IHlldCBtZXJnZWQgaW4gdXBzdHJlYW0ga2VybmVsIChldmVuIGluIGxpbnV4LW5leHQgb3Ig
+d2lyZWxlc3MtdGVzdGluZykuDQo+ID4gPiA+IA0KPiA+ID4gPiBTbyBhdCB0aGlzIHBvaW50IEkn
+bSBub3QgcmVhbGx5IHN1cmUgd2hhdCBjb3VsZCBiZSBhIHNhZmUgYmFzZWxpbmUgZm9yIG15IGV4
+cGVyaW1lbnRzOg0KPiA+ID4gPiDCoC0gaWYgZXhpc3RpbmcgdmFuaWxsYSBzYXkgNC4xMSBrZXJu
+ZWwgaXMgZ29vZCBlbm91Z2ggYW5kIHRoaW5ncyB0aGF0IGRvZXNuJ3Qgd29yayBhcmUgY2F1c2Vk
+DQo+ID4gPiA+IMKgwqDCoGJ5IG90aGVyIHByb2JsZW1zIG5vdCByZWxhdGVkIHRvIFJlZHBpbmUg
+bW9kdWxlICh0aGF0IHdvdWxkIGJlIHN0cmFuZ2UgYmVjYXVzZSBib3RoIFVTQiBhYmQgU0QtY2Fy
+ZA0KPiA+ID4gPiDCoMKgwqBzbG90IGFyZSBwcm92ZW4gdG8gd29yayBwcmV0dHkgd2VsbCB3aXRo
+IG90aGVyIGRldmljZXMpDQo+ID4gPiA+IMKgLSBpZiBJIG5lZWQgYW4gYXJiaXRyYXJ5IHNldCBv
+ZiBwYXRjaGVzIHRvIGdldCB0aGluZ3MgdXAgYW5kIHJ1bm5pbmcgZXRjDQo+ID4gPiA+IA0KPiA+
+ID4gPiBUaGF0IHNhaWQgaWYgdGhlcmUncyBhIHB1YmxpYyBnaXQgcmVwbyB3aGljaCBjb250YWlu
+cyBldmVyeXRoaW5nIHJlcXVpcmVkIGZvciBSZWRwaW5lIG1vZHVsZSB0bw0KPiA+ID4gPiB3b3Jr
+IFtwcmVmZXJhYmx5IGJhc2VkIG9uIHRoZSBsYXRlc3Qga2VybmVsIHNvdXJjZXNdIEknZCBsaWtl
+IHRvIGdldCBhIHJlZmVyZW5jZSB0byBpdC4NCj4gPiA+ID4gDQo+ID4gPiA+IEFueSBoaW50cyBo
+ZXJlIGFyZSBtdWNoIGFwcHJlY2lhdGVkLg0KPiA+ID4gDQo+ID4gPiBXZSBkb24ndCBoYXZlIGEg
+cHVibGljIGdpdCByZXBvIG1haW50YWluZWQuIFdlIGhhdmUgMiBwYXRjaHNldHMgcmVhZHkNCj4g
+PiA+IGZvciBzdWJtaXNzaW9uLiBXZSBhcmUgd29ya2luZyBvbiBjb2RlIGNsZWFudXAgZm9yIG90
+aGVyIHBlbmRpbmcNCj4gPiA+IGNoYW5nZXMuIEkgd291bGQgc3VnZ2VzdCB5b3UgdG8gd2FpdCB0
+aWxsIHRoZXNlIHBhdGNoZXMgYXJlIHBvc3RlZC4NCj4gPiANCj4gPiBPaywgd2lsbCBkby4gQnV0
+IHBsZWFzZSBhZGQgbWUgaW4gQ2MgbGlzdCBpbiB5b3VyIHVwY29taW5nIHBhdGNoZXMgYXMgSSdt
+IHZlcnkgaW50ZXJlc3RlZA0KPiA+IGluIGdldHRpbmcgUmVkcGluZSBtb2R1bGUgd29ya2luZyBv
+biBvdXIgbmV3IGJvYXJkIGFuZCB3aWxsIGJlIGhhcHB5IHRvIHJldmlldyB0aGVtIGFzIHdlbGwg
+YXMgdGVzdCBvbg0KPiA+IG15IHBsYXRmb3JtLg0KPiA+IA0KPiANCj4gU3VyZS4gSSB3aWxsIGFk
+ZCB5b3UgaW4gQ0MgZm9yIHRob3NlIHBhdGNoZXMuDQoNClRoYW5rcyBhIGxvdCENCklcbGwga2Vl
+cCBhbiBleWUgb24gdGhvc2UgY2hhbmdlcyBvbmNlIHRoZXkgYXBwZWFyLg0KDQotQWxleGV5
