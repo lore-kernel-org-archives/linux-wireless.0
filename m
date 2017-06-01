@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59404 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751321AbdFEUn0 (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33286 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751162AbdFARnn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:43:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Jun 2017 23:42:14 +0300
-Message-Id: <20170605204218.30151-22-luca@coelho.fi> (sfid-20170605_224331_317862_5FD88E1A)
-In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
-References: <20170605204218.30151-1-luca@coelho.fi>
-Subject: [PATCH 21/25] iwlwifi: mvm: link to TX commands in documentation
+        Thu, 1 Jun 2017 13:43:43 -0400
+Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
+ b43legacy_attr_interfmode_store
+To: Jonathan Corbet <corbet@lwn.net>, Jia-Ju Bai <baijiaju1990@163.com>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1496226547-5921-1-git-send-email-baijiaju1990@163.com>
+ <85905124-7167-aeb0-8aff-4ceec09e9542@lwfinger.net>
+ <592F6843.9000204@163.com> <20170601101113.6dd30d6d@lwn.net>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <ff1dd7ad-e8d5-bb3e-9a38-3eefcc8e3b23@lwfinger.net> (sfid-20170601_194414_039340_4E1F1217)
+Date: Thu, 1 Jun 2017 12:43:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170601101113.6dd30d6d@lwn.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/01/2017 11:11 AM, Jonathan Corbet wrote:
+> On Thu, 01 Jun 2017 09:05:07 +0800
+> Jia-Ju Bai <baijiaju1990@163.com> wrote:
+> 
+>> I admit my patches are not well tested, and they may not well fix the bugs.
+>> I am looking forward to opinions and suggestions :)
+> 
+> May I politely suggest that sending out untested locking changes is a
+> dangerous thing to do?  You really should not be changing the locking in a
+> piece of kernel code without understanding very well what the lock is
+> protecting and being able to say why your changes are safe.  Without that,
+> the risk of introducing subtle bugs is very high.
+> 
+> It looks like you have written a useful tool that could help us to make
+> the kernel more robust.  If you are interested in my suggestion, I would
+> recommend that you post the sleep-in-atomic scenarios that you are
+> finding, but refrain from "fixing" them in any case where you cannot offer
+> a strong explanation of why your fix is correct.
+> 
+> Thanks for working to find bugs in the kernel!
 
-Link from the TX_CMD enum value to the TX command structs.
+I agree with the suggestion above. Locking changes should only be done in 
+conjunction with testing by someone that actually has the hardware.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 19cb0ee120c5..cfadc5fb0e1d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -215,7 +215,9 @@ enum iwl_legacy_cmds {
- 	/* paging get item */
- 	FW_GET_ITEM_CMD = 0x1a,
- 
--	/* TX */
-+	/**
-+	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2
-+	 */
- 	TX_CMD = 0x1c,
- 
- 	/**
--- 
-2.11.0
+Larry
