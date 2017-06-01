@@ -1,139 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:38737
-        "EHLO osg.samsung.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753305AbdFQP1W (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Jun 2017 11:27:22 -0400
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 07/26] rfkill.txt: standardize document format
-Date: Sat, 17 Jun 2017 12:26:47 -0300
-Message-Id: <0cbf26da98f6f6124c440be11452d0df7b537ec7.1497713221.git.mchehab@s-opensource.com> (sfid-20170617_173242_253452_6BEDDD09)
-In-Reply-To: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
-References: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
-In-Reply-To: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
-References: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
+Received: from bues.ch ([80.190.117.144]:49284 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751135AbdFAF3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Jun 2017 01:29:43 -0400
+Date: Thu, 1 Jun 2017 07:29:15 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Jia-Ju Bai <baijiaju1990@163.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
+ b43legacy_op_bss_info_changed
+Message-ID: <20170601072839.2ca1b791@wiggum> (sfid-20170601_073013_823843_885748BC)
+In-Reply-To: <878tlcmixj.fsf@kamboji.qca.qualcomm.com>
+References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com>
+ <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
+ <20170531173107.25eeda48@wiggum>
+ <878tlcmixj.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/Fy4IExmBx0Pu=.YHT.z005I"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each text file under Documentation follows a different
-format. Some doesn't even have titles!
+--Sig_/Fy4IExmBx0Pu=.YHT.z005I
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Change its representation to follow the adopted standard,
-using ReST markups for it to be parseable by Sphinx:
+On Thu, 01 Jun 2017 07:27:20 +0300
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-- mark titles;
-- comment contents index;
-- mark literal blocks;
-- adjust identation.
+> Michael B=C3=BCsch <m@bues.ch> writes:
+>=20
+> >> > --- a/drivers/net/wireless/broadcom/b43legacy/main.c
+> >> > +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
+> >> > @@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(stru=
+ct ieee80211_hw *hw,
+> >> >  	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
+> >> > =20
+> >> >  	if (changed & BSS_CHANGED_BSSID) {
+> >> > +		spin_unlock_irqrestore(&wl->irq_lock, flags);
+> >> >  		b43legacy_synchronize_irq(dev);
+> >> > +		spin_lock_irqsave(&wl->irq_lock, flags);   =20
+> >>=20
+> >> To me this looks like a fragile workaround and not a real fix. You can
+> >> easily add new race conditions with releasing the lock like this.
+> >>  =20
+> >
+> >
+> > I think releasing the lock possibly is fine. It certainly is better than
+> > sleeping with a lock held. =20
+>=20
+> Sure, but IMHO in general I think the practise of releasing the lock
+> like this in a middle of function is dangerous as one can easily miss
+> that upper and lower halves of the function are not actually atomic
+> anymore. And in this case that it's under a conditional makes it even
+> worse.
+>=20
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
----
- Documentation/rfkill.txt | 43 ++++++++++++++++++++++++++-----------------
- 1 file changed, 26 insertions(+), 17 deletions(-)
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index 8c174063b3f0..a289285d2412 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -1,13 +1,13 @@
-+===============================
- rfkill - RF kill switch support
- ===============================
- 
--1. Introduction
--2. Implementation details
--3. Kernel API
--4. Userspace support
- 
-+.. contents::
-+   :depth: 2
- 
--1. Introduction
-+Introduction
-+============
- 
- The rfkill subsystem provides a generic interface to disabling any radio
- transmitter in the system. When a transmitter is blocked, it shall not
-@@ -21,17 +21,24 @@ aircraft.
- The rfkill subsystem has a concept of "hard" and "soft" block, which
- differ little in their meaning (block == transmitters off) but rather in
- whether they can be changed or not:
-- - hard block: read-only radio block that cannot be overridden by software
-- - soft block: writable radio block (need not be readable) that is set by
--               the system software.
-+
-+ - hard block
-+	read-only radio block that cannot be overridden by software
-+
-+ - soft block
-+	writable radio block (need not be readable) that is set by
-+        the system software.
- 
- The rfkill subsystem has two parameters, rfkill.default_state and
--rfkill.master_switch_mode, which are documented in admin-guide/kernel-parameters.rst.
-+rfkill.master_switch_mode, which are documented in
-+admin-guide/kernel-parameters.rst.
- 
- 
--2. Implementation details
-+Implementation details
-+======================
- 
- The rfkill subsystem is composed of three main components:
-+
-  * the rfkill core,
-  * the deprecated rfkill-input module (an input layer handler, being
-    replaced by userspace policy code) and
-@@ -55,7 +62,8 @@ use the return value of rfkill_set_hw_state() unless the hardware actually
- keeps track of soft and hard block separately.
- 
- 
--3. Kernel API
-+Kernel API
-+==========
- 
- 
- Drivers for radio transmitters normally implement an rfkill driver.
-@@ -69,7 +77,7 @@ For some platforms, it is possible that the hardware state changes during
- suspend/hibernation, in which case it will be necessary to update the rfkill
- core with the current state is at resume time.
- 
--To create an rfkill driver, driver's Kconfig needs to have
-+To create an rfkill driver, driver's Kconfig needs to have::
- 
- 	depends on RFKILL || !RFKILL
- 
-@@ -87,7 +95,8 @@ RFKill provides per-switch LED triggers, which can be used to drive LEDs
- according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
- 
- 
--5. Userspace support
-+Userspace support
-+=================
- 
- The recommended userspace interface to use is /dev/rfkill, which is a misc
- character device that allows userspace to obtain and set the state of rfkill
-@@ -112,11 +121,11 @@ rfkill core framework.
- Additionally, each rfkill device is registered in sysfs and emits uevents.
- 
- rfkill devices issue uevents (with an action of "change"), with the following
--environment variables set:
-+environment variables set::
- 
--RFKILL_NAME
--RFKILL_STATE
--RFKILL_TYPE
-+	RFKILL_NAME
-+	RFKILL_STATE
-+	RFKILL_TYPE
- 
- The contents of these variables corresponds to the "name", "state" and
- "type" sysfs files explained above.
--- 
-2.9.4
+Yes in general I agree. Releasing and re-acquiring a lock is dangerous.
+But I think in this special case here it might be harmless.
+The irq_lock is used mostly (if not exclusively; I don't fully
+remember) to protect against the IRQ top and bottom half.
+But we disabled the device IRQs a line above and the purpose of this
+synchronize is to make sure the handler will finish and thus make
+dropping the lock save.
+Of course it does not make sense to do this with the lock held :)
+
+--=20
+Michael
+
+--Sig_/Fy4IExmBx0Pu=.YHT.z005I
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlkvpisACgkQ9TK+HZCN
+iw4B2xAAq9OX19qlK1kp+DCJaqkipfO2eyNPOay9FK959w3IW5hJ60F/t9KHQLlK
+Xf2rThwvyjgawfg2Ep3Dd3Vr8BLLMo4XA3F3MmUd0+79nDugLah3zKD5bfmFoOz+
+rOhChMtU0gwPMvxwqitJAnCbxASekGQ9fvD4bqkXyQnXvqpNWzXBjw/sxkmeMOcD
+nJsgsh+1PMLmLhSNmdwcy/Xd1rWzARNkSZrbyFpJ3na/6VBif9luIQ4nuvTIs1fB
+Z9CSKB+t1r081e3QHalLH6m0Wi/eeZs0q2ro2QotHmSTajZIeDmZr6jknm8r2tcA
+ednfzCLNvNdvRXm7CRqPqu4nz6O5lFZkkQxIKH1++sJd+Ox7LKbwKKGBmABZOTL9
+ySUNi29F4sLtz6SVDsPU3nIxrhy4tY44SCANqzIB/dtVH0dC1S9+QtubaQVlJmKg
+rVAWjF/NYA+iXQxbXB7XdJq+wXRDsgPR0zqtydMM2N388g3+/u952ewEG8IoYuWB
+VWHUyI+o9RyTyiMiQTTlaUji8Bpu/CeLlW7twWM2MopepbRXK3HbowvjZISbvwy8
+klv9MfMJp3wqOXA/vDRhRCBXOrKOJUPh6XcA5gr1eG7o39K1/ElGKcevg4KN74np
+o+XWorgnCQJCI8KeQM4hBwOL2Ohs/bCz+cgfffZJyQvlnH8ZjZA=
+=6iBW
+-----END PGP SIGNATURE-----
+
+--Sig_/Fy4IExmBx0Pu=.YHT.z005I--
