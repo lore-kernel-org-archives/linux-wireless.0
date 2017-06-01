@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f170.google.com ([74.125.82.170]:35211 "EHLO
-        mail-ot0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751548AbdFIVmF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50540 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750895AbdFAEQ0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 17:42:05 -0400
-Received: by mail-ot0-f170.google.com with SMTP id a2so45000749oth.2
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jun 2017 14:42:05 -0700 (PDT)
-Subject: LINKMODE & OPERSTATE thoughts
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
- <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
- <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
- <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
- <1496993334.2424.1.camel@sipsolutions.net>
- <08fb9e64-a01e-54ea-7627-a0664d350710@gmail.com>
- <1497038197.12088.4.camel@sipsolutions.net>
-Cc: j@w1.fi
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <ad95b6e5-9220-3eca-bf93-8ba1d89bde3b@gmail.com> (sfid-20170609_234209_112071_67F4575C)
-Date: Fri, 9 Jun 2017 16:42:03 -0500
+        Thu, 1 Jun 2017 00:16:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in b43legacy_attr_interfmode_store
+References: <1496226547-5921-1-git-send-email-baijiaju1990@163.com>
+        <85905124-7167-aeb0-8aff-4ceec09e9542@lwfinger.net>
+        <592F6843.9000204@163.com>
+Date: Thu, 01 Jun 2017 07:15:51 +0300
+In-Reply-To: <592F6843.9000204@163.com> (Jia-Ju Bai's message of "Thu, 01 Jun
+        2017 09:05:07 +0800")
+Message-ID: <87d1aomjgo.fsf@kamboji.qca.qualcomm.com> (sfid-20170601_061659_241161_84B0D0C1)
 MIME-Version: 1.0
-In-Reply-To: <1497038197.12088.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Jia-Ju Bai <baijiaju1990@163.com> writes:
 
-Let me start a separate thread on this:
-
->> Also, while we're on this subject.  Should the kernel auto-manage
->> the LINKMODE and OPERSTATE flags?  It would seem that it already has
->> the information to do so, and having userspace manage this just
->> introduces another source of latency / possibility of race
->> conditions, etc.
+>> Did you actually observe the attempt to sleep under the spin lock,
+>> or did you discover this using some tool? In other words, have
+>> either of your patches been tested?
 >
-> I'm not convinced that it does have that information in all cases, and
-> I don't see how that causes race conditions or much latency, since for
-> client mode userspace would probably just set that together with the
-> NL80211_STA_FLAG_AUTHORIZED flag?
+> In fact, my reported bugs are found by a static analysis tool written
+> by me, and they are checked by my review of the driver code.
 
-Well right there is a race condition.  You have 2 sockets and both 
-conveying the same information?
+It's valuable information to add to the commit log how you found the
+bug. If you check other wireless commits you can see comments like
+"Found by spatch", "Coverity reported" quite frequently. So I recommend
+that you also mention your tool in the commit log, makes understanding
+the background of the patch easier.
 
-If we can optimize away an extra kernel trap, isn't that worthwhile 
-thing to do?
-
-The most common case is issuing Dormant + UP after setting keys & 
-issuing the set_station command.  Isn't setting STA_FLAG_AUTHORIZED and 
-operstate to IF_OPER_UP in effect equivalent?
-
-Oh, by the way, some drivers don't implement set_station for normal 
-links (e.g. setting STA_FLAG_AUTHORIZED returns an error), should they?
-
-The only other cases where we mess with setting linkmode I can think of are:
-
-1. After connecting to an open network
-2. After a fast transition
-
-For 1, it would seem that the kernel can easily infer that the 
-IF_OPER_UP flag should be tweaked.
-For 2, this needs to be done after the new TK is installed.  Can we 
-combine these steps somehow?
-
-Regards,
--Denis
+-- 
+Kalle Valo
