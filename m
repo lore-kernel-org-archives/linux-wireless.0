@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60864 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752253AbdFMGNN (ORCPT
+Received: from bombadil.infradead.org ([65.50.211.133]:48152 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751148AbdFARWr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 02:13:13 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [for-4.12] brcmfmac: fix brcmf_fws_add_interface() for USB devices
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1497268595-4836-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497268595-4836-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+        Thu, 1 Jun 2017 13:22:47 -0400
+Date: Thu, 1 Jun 2017 10:22:46 -0700
+From: Kyle McMartin <kyle@infradead.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170613061312.8B39C607C4@smtp.codeaurora.org> (sfid-20170613_081358_785412_9690D629)
-Date: Tue, 13 Jun 2017 06:13:12 +0000 (UTC)
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        linux-firmware@kernel.org
+Subject: Re: [PATCH] linux-firmware: add firmware image for Redpine 9113
+ chipset
+Message-ID: <20170601172246.GB13400@bombadil.infradead.org> (sfid-20170601_192251_428942_D674D05C)
+References: <1496236783-3250-1-git-send-email-amit.karwar@redpinesignals.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1496236783-3250-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-
-> USB devices rely on queuing functionality provided by the fwsignal
-> module regardless the mode fwsignal is operating in. For this some
-> data structure needs to be reserved which is tied to the interface,
-> which is done by brcmf_fws_add_interface(). However, it checks the
-> mode. Replace that by checking result from brcmf_fws_queue_skbs().
+On Wed, May 31, 2017 at 06:49:43PM +0530, Amitkumar Karwar wrote:
+> This image will be loaded by rsi driver. Firmware version is 1.5.3
 > 
-> Fixes: fc0471e3e884 ("brcmfmac: ignore interfaces when fwsignal is disabled")
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Same here, a short description of the bug would be nice.
+Applied, thanks Amitkumar.
 
--- 
-https://patchwork.kernel.org/patch/9780809/
+--kyle
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> ---
+>  WHENCE                   |   3 +++
+>  rsi/rs9113_wlan_qspi.rps | Bin 0 -> 199180 bytes
+>  2 files changed, 3 insertions(+)
+>  create mode 100644 rsi/rs9113_wlan_qspi.rps
+> 
