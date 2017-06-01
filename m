@@ -1,77 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f177.google.com ([209.85.128.177]:35370 "EHLO
-        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdFWHs0 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:32859 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbdFATKx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 03:48:26 -0400
-To: Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        luciano.coelho@intel.com, linuxwifi@intel.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, ML netdev <netdev@vger.kernel.org>,
-        Linux kernel mailing list <linux-kernel@vger.kernel.org>
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: [UBSAN] iwlmvm's iwl_mvm_enable_txq accesses IEEE80211_INVAL_HW_QUEUE
-Message-ID: <3f089134-9739-a61f-80e4-6f9ee7dd83b4@suse.cz> (sfid-20170623_094852_912665_18314A6E)
-Date: Fri, 23 Jun 2017 09:48:22 +0200
+        Thu, 1 Jun 2017 15:10:53 -0400
+Received: by mail-pf0-f196.google.com with SMTP id f27so8394235pfe.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Jun 2017 12:10:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
+From: Norik Dzhandzhapanyan <norikd@gmail.com>
+Date: Thu, 1 Jun 2017 12:10:52 -0700
+Message-ID: <CAAV6Hgmjq9DDpcUUTZtDwodUjKrkzjnKSNZ+sK8U=M_AQgr-iQ@mail.gmail.com> (sfid-20170601_211056_736915_DB1C23D4)
+Subject: [PATCH 1/1] Add per chain RSSI reporting.
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Report per chain RSSI
 
-we have got an UBSAN report from opensuse's user who booten
-UBSAN-enabled kernel by mistake:
-UBSAN: Undefined behaviour in
-drivers/net/wireless/intel/iwlwifi/mvm/utils.c:667:49
-shift exponent 255 is too large for 64-bit type 'long unsigned int'
-CPU: 2 PID: 1590 Comm: wpa_supplicant Not tainted 4.11.2-1-syzkaller #1
-Hardware name: Dell Inc. Precision 5510/0N8J4R, BIOS 01.02.00 04/07/2016
-Call Trace:
-...
- iwl_mvm_enable_txq+0xc6d/0x1080 [iwlmvm]
- iwl_mvm_send_add_bcast_sta+0x275/0x850 [iwlmvm]
- iwl_mvm_add_bcast_sta+0x11b/0x280 [iwlmvm]
- iwl_mvm_mac_add_interface+0x51f/0x8b0 [iwlmvm]
- drv_add_interface+0x1a7/0x8c0 [mac80211]
- ieee80211_do_open+0xdff/0x2790 [mac80211]
- ieee80211_start_p2p_device+0xac/0xf0 [mac80211]
- nl80211_start_p2p_device+0x25d/0xab0 [cfg80211]
- genl_family_rcv_msg+0x835/0xf10
- genl_rcv_msg+0xd0/0x1c0
- netlink_rcv_skb+0x226/0x310
- genl_rcv+0x2d/0x40
- netlink_unicast+0x631/0x9d0
- netlink_sendmsg+0xa2e/0xf60
- sock_sendmsg+0xf7/0x180
- ___sys_sendmsg+0x777/0xa60
- __sys_sendmsg+0xd6/0x170
- SyS_sendmsg+0x32/0x50
- entry_SYSCALL_64_fastpath+0x23/0xc6
+Signed-off-by: Norik Dzhandzhapanyan <norikd@gmail.com>
 
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-
-mac80211_queue is 255 which is IEEE80211_INVAL_HW_QUEUE, so it should
-not be worked with at all.
-
-
-The invalid queue is hopefully handled in ieee80211_check_queues after
-drv_add_interface in ieee80211_do_open:
-
-res = drv_add_interface(local, sdata);
-if (res)
-        goto err_stop;
-res = ieee80211_check_queues(sdata,
-        ieee80211_vif_type_p2p(&sdata->vif));
-
-
-But the mvm driver still should not blindly shift 1 by 255 in
-iwl_mvm_enable_txq. Should the check for the invalid queue be before
-adding the interface in mac80211? Or should drivers check it in their
-add_interface?
-
-thanks,
--- 
-js
-suse labs
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c
+b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6c0a821fe79d..110953e0bff9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -829,6 +829,22 @@ static void ath10k_htt_rx_h_signal(struct ath10k *ar,
+                    struct ieee80211_rx_status *status,
+                    struct htt_rx_desc *rxd)
+ {
++    int i;
++
++    for(i=0;i<IEEE80211_MAX_CHAINS;i++)
++    {
++        status->chains &= ~BIT(i);
++
++        if (rxd->ppdu_start.rssi_chains[i].pri20_mhz != 0x80)
++        {
++            status->chain_signal[i] = ATH10K_DEFAULT_NOISE_FLOOR +
++                rxd->ppdu_start.rssi_chains[i].pri20_mhz;
++
++            status->chains |= BIT(i);
++
++        }
++    }
++
+     /* FIXME: Get real NF */
+     status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
+              rxd->ppdu_start.rssi_comb;
