@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34254 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753731AbdFVVVM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50972 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751093AbdFAJDl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:21:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:42 +0300
-Message-Id: <20170622212101.16422-7-luca@coelho.fi> (sfid-20170622_232116_480358_5A1CDA93)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 06/25] iwlwifi: mvm: remove pointless num_stored condition
+        Thu, 1 Jun 2017 05:03:41 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [4.12, REGRESSION,
+ fix] brcmfmac: fix alignment configuration on host using 64-bit DMA
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170526110255.21342-1-hdegoede@redhat.com>
+References: <20170526110255.21342-1-hdegoede@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Message-Id: <20170601090340.B7D616073B@smtp.codeaurora.org> (sfid-20170601_110345_335522_197DE0D9)
+Date: Thu,  1 Jun 2017 09:03:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hans de Goede <hdegoede@redhat.com> wrote:
 
-Since we exit if buf->num_stored is 0, there's no need to
-check it again later.
+> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> 
+> For SDIO the alignment requirement for transfers from device to host
+> is configured in firmware. This configuration is limited to minimum
+> of 4-byte alignment. However, this is not correct for platforms using
+> 64-bit DMA when the minimum alignment should be 8 bytes. This issue
+> appeared when the ALIGNMENT definition was set according the DMA
+> configuration. The configuration in firmware was not using that macro
+> defintion, but a hardcoded value of 4. Hence the driver reported
+> alignment failures for data coming from the device and causing
+> transfers to fail.
+> 
+> Fixes: 6e84ab604bde ("brcmfmac: properly align buffers on certain platforms
+> Reported-by: Hans de Goede <hdegoede@redhat.com>
+> Tested-by: Hans de Goede <hdegoede@redhat.com>
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Patch applied to wireless-drivers.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 966cd7543629..36fd8c87027c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -503,7 +503,7 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
- 			     buf->sta_id, sn);
- 		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
- 		rcu_read_unlock();
--	} else if (buf->num_stored) {
-+	} else {
- 		/*
- 		 * If no frame expired and there are stored frames, index is now
- 		 * pointing to the first unexpired frame - modify timer
+1dbf647f3175 brcmfmac: fix alignment configuration on host using 64-bit DMA
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9750347/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
