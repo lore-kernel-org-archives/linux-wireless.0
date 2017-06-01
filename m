@@ -1,93 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42143 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751097AbdFADpn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 23:45:43 -0400
-Date: Thu, 1 Jun 2017 12:45:37 +0900
-From: Greg KH <greg@kroah.com>
-To: "Tobin C. Harding" <me@tobin.cc>
-Cc: linux-wireless@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
-        Tycho Andersen <tycho@tycho.ws>,
-        driverdev-devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC 1/3] staging: ks7010: move WEXT files to sub directory
-Message-ID: <20170601034537.GA7468@kroah.com> (sfid-20170601_054612_857267_AC8499A5)
-References: <1496287628-16787-1-git-send-email-me@tobin.cc>
- <1496287628-16787-2-git-send-email-me@tobin.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496287628-16787-2-git-send-email-me@tobin.cc>
+Received: from m12-14.163.com ([220.181.12.14]:47954 "EHLO m12-14.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751052AbdFACen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 May 2017 22:34:43 -0400
+From: Jia-Ju Bai <baijiaju1990@163.com>
+To: pizza@shaftnet.org, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
+Subject: [PATCH] cw1200: Fix a sleep-in-atomic bug in cw1200_tx_confirm_cb and cw1200_cqm_bssloss_sm
+Date: Thu,  1 Jun 2017 10:36:14 +0800
+Message-Id: <1496284574-11056-1-git-send-email-baijiaju1990@163.com> (sfid-20170601_043507_929544_DB0B8D50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 01:27:06PM +1000, Tobin C. Harding wrote:
-> Current driver implements the WEXT interface. WEXT is in maintenance
-> mode, we need to re-write the driver using cfg80211. The current
-> driver is handy as a reference for the new implementation, we can keep
-> it in tree for now.
-> 
-> Move WEXT driver to sub directory, add dummy Makefile and Kconfig so
-> build completes successfully but does not process any files from the
-> WEXT directory.
-> 
-> Signed-off-by: Tobin C. Harding <me@tobin.cc>
-> ---
->  drivers/staging/ks7010/Kconfig              |    6 +-
->  drivers/staging/ks7010/Makefile             |    3 -
->  drivers/staging/ks7010/TODO                 |   36 -
->  drivers/staging/ks7010/eap_packet.h         |  144 --
->  drivers/staging/ks7010/ks7010_sdio.c        | 1079 ----------
->  drivers/staging/ks7010/ks7010_sdio.h        |  164 --
->  drivers/staging/ks7010/ks_hostif.c          | 2638 -----------------------
->  drivers/staging/ks7010/ks_hostif.h          |  685 ------
->  drivers/staging/ks7010/ks_wlan.h            |  514 -----
->  drivers/staging/ks7010/ks_wlan_ioctl.h      |   67 -
->  drivers/staging/ks7010/ks_wlan_net.c        | 2999 ---------------------------
->  drivers/staging/ks7010/michael_mic.c        |  148 --
->  drivers/staging/ks7010/michael_mic.h        |   25 -
->  drivers/staging/ks7010/wext/Kconfig         |   10 +
->  drivers/staging/ks7010/wext/Makefile        |    4 +
->  drivers/staging/ks7010/wext/TODO            |   36 +
->  drivers/staging/ks7010/wext/eap_packet.h    |  144 ++
->  drivers/staging/ks7010/wext/ks7010_sdio.c   | 1079 ++++++++++
->  drivers/staging/ks7010/wext/ks7010_sdio.h   |  164 ++
->  drivers/staging/ks7010/wext/ks_hostif.c     | 2638 +++++++++++++++++++++++
->  drivers/staging/ks7010/wext/ks_hostif.h     |  685 ++++++
->  drivers/staging/ks7010/wext/ks_wlan.h       |  514 +++++
->  drivers/staging/ks7010/wext/ks_wlan_ioctl.h |   67 +
->  drivers/staging/ks7010/wext/ks_wlan_net.c   | 2999 +++++++++++++++++++++++++++
->  drivers/staging/ks7010/wext/michael_mic.c   |  148 ++
->  drivers/staging/ks7010/wext/michael_mic.h   |   25 +
->  26 files changed, 8514 insertions(+), 8507 deletions(-)
->  delete mode 100644 drivers/staging/ks7010/TODO
->  delete mode 100644 drivers/staging/ks7010/eap_packet.h
->  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.c
->  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.h
->  delete mode 100644 drivers/staging/ks7010/ks_hostif.c
->  delete mode 100644 drivers/staging/ks7010/ks_hostif.h
->  delete mode 100644 drivers/staging/ks7010/ks_wlan.h
->  delete mode 100644 drivers/staging/ks7010/ks_wlan_ioctl.h
->  delete mode 100644 drivers/staging/ks7010/ks_wlan_net.c
->  delete mode 100644 drivers/staging/ks7010/michael_mic.c
->  delete mode 100644 drivers/staging/ks7010/michael_mic.h
->  create mode 100644 drivers/staging/ks7010/wext/Kconfig
->  create mode 100644 drivers/staging/ks7010/wext/Makefile
->  create mode 100644 drivers/staging/ks7010/wext/TODO
->  create mode 100644 drivers/staging/ks7010/wext/eap_packet.h
->  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.c
->  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.h
->  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.c
->  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.h
->  create mode 100644 drivers/staging/ks7010/wext/ks_wlan.h
->  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_ioctl.h
->  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_net.c
->  create mode 100644 drivers/staging/ks7010/wext/michael_mic.c
->  create mode 100644 drivers/staging/ks7010/wext/michael_mic.h
+The driver may sleep under a spin lock, and the function call path is:
+cw1200_tx_confirm_cb (acquire the lock by spin_lock)
+  __cw1200_cqm_bssloss_sm
+    cancel_work_sync --> may sleep
 
-Please use the -M option to 'git format-patch" so that we can just see
-file moves, not delete/add like you have here.
+cw1200_cqm_bssloss_sm
+  __cw1200_cqm_bssloss_sm
+    cancel_work_sync --> may sleep
 
-thanks,
+To fix it, the lock is released before cancel_work_sync, and the lock 
+is acquired again after this function.
 
-greg k-h
+Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+---
+ drivers/net/wireless/st/cw1200/sta.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index a522248..d5f7698 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -154,7 +154,9 @@ void __cw1200_cqm_bssloss_sm(struct cw1200_common *priv,
+ 	int tx = 0;
+ 
+ 	priv->delayed_link_loss = 0;
++	spin_unlock(&priv->bss_loss_lock);
+ 	cancel_work_sync(&priv->bss_params_work);
++	spin_lock(&priv->bss_loss_lock);
+ 
+ 	pr_debug("[STA] CQM BSSLOSS_SM: state: %d init %d good %d bad: %d txlock: %d uj: %d\n",
+ 		 priv->bss_loss_state,
+-- 
+1.7.9.5
