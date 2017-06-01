@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:32953 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754070AbdFPOi3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36574 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751249AbdFAJub (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:38:29 -0400
-Received: by mail-pg0-f68.google.com with SMTP id u62so928386pgb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:38:29 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 0/6] rsi driver bringup enhancements
-Date: Fri, 16 Jun 2017 20:05:35 +0530
-Message-Id: <1497623741-2082-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_163832_852176_05E27B72)
+        Thu, 1 Jun 2017 05:50:31 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [net-next] qtnfmac: remove duplicated assignment to mac
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170525134503.12106-1-colin.king@canonical.com>
+References: <20170525134503.12106-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20170601095030.463D260779@smtp.codeaurora.org> (sfid-20170601_115113_248237_F2129867)
+Date: Thu,  1 Jun 2017 09:50:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series includes the changes for adding USB chipset,
-frames exchanged with firmware during initialization
-and false interrupt problem fix for SDIO.
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Changes in v2:
-Patch 6/6: Get rid of __LITTLE_ENDIAN compiler flag usage(Kalle Valo)
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> mac is being assigned twice, remove redundant 2nd assignment.
+> 
+> Detected by CoverityScan, CID#1437554 ("Incorrect expression")
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Acked-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-Amitkumar Karwar (1):
-  rsi: use enum for FSM states
+Patch applied to wireless-drivers-next.git, thanks.
 
-Prameela Rani Garnepudi (5):
-  rsi: add usb RS9113 chipset support
-  rsi: Register interrupt handler before firmware load
-  rsi: receive path enhancement for RS9113
-  rsi: configure new boot parameters to device
-  rsi: add tx frame for common device configuration
-
- drivers/net/wireless/rsi/rsi_91x_hal.c     |   4 +-
- drivers/net/wireless/rsi/rsi_91x_main.c    |   9 ++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c    | 120 ++++++++++++++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_sdio.c    |  21 ++---
- drivers/net/wireless/rsi/rsi_91x_usb.c     |   1 +
- drivers/net/wireless/rsi/rsi_boot_params.h |  15 ++--
- drivers/net/wireless/rsi/rsi_hal.h         |   3 +
- drivers/net/wireless/rsi/rsi_main.h        |  28 +++++--
- drivers/net/wireless/rsi/rsi_mgmt.h        |  76 ++++++++++++++++++
- 9 files changed, 232 insertions(+), 45 deletions(-)
+4f8e25458cb6 qtnfmac: remove duplicated assignment to mac
 
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9748407/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
