@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:48206 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751394AbdFYXEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 19:04:41 -0400
-Date: Mon, 26 Jun 2017 01:04:30 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Shikha Singh <shikha.singh@st.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        raunaque.quaiser@st.com, manoj.kumar@st.com,
-        sylvain.fidelis@st.com, raphael.collado@st.com
-Subject: Re: [[linux-nfc][PATCH v1] 2/6] NFC: nfcst: Add ST NFC Transceiver
- core framework
-Message-ID: <20170625225926.GK21214@zurbaran.ger.intel.com> (sfid-20170626_010450_494701_237738CE)
-References: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
- <1493705023-8710-3-git-send-email-shikha.singh@st.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35848 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751247AbdFAJsZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Jun 2017 05:48:25 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1493705023-8710-3-git-send-email-shikha.singh@st.com>
+Subject: Re: cw1200: Fix a sleep-in-atomic bug in cw1200_tx_confirm_cb and
+ cw1200_cqm_bssloss_sm
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1496284574-11056-1-git-send-email-baijiaju1990@163.com>
+References: <1496284574-11056-1-git-send-email-baijiaju1990@163.com>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: pizza@shaftnet.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@163.com>
+Message-Id: <20170601094825.02EF96074D@smtp.codeaurora.org> (sfid-20170601_114857_883039_FCAC620A)
+Date: Thu,  1 Jun 2017 09:48:25 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Shikha,
+Jia-Ju Bai <baijiaju1990@163.com> wrote:
 
-On Tue, May 02, 2017 at 02:03:39AM -0400, Shikha Singh wrote:
-> +static int nfcst_in_send_cmd(struct nfc_digital_dev *ddev,
-> +			     struct sk_buff *skb,
-> +			     u16 timeout,
-> +			     nfc_digital_cmd_complete_t cb,
-> +			     void *arg)
-> +{
-> +	struct nfcst_context *context = nfc_digital_get_drvdata(ddev);
-> +	int rc;
-> +	int len_data_to_tag = 0;
-> +
-> +	if (!context->nfcst_power)
-> +		return -EIO;
-> +
-> +	/*
-> +	 * down the semaphore to indicate that last nfcst_in_send_cmd()
-> +	 * call is pending, If interrupted, WARN and return !
-> +	 */
-> +	rc = down_killable(&context->exchange_lock);
-> +	if (rc) {
-> +		WARN(1, "Semaphore wait is interrupted in nfcst_in_send_cmd\n");
-> +		return rc;
-> +	}
-> +
-> +	if (context->trig_config) {
-> +		context->trig_config = false;
-> +		rc = nfcst_handle_config_fdt(context, false);
-> +		if (rc) {
-> +			dev_err(&context->nfcdev->dev, "config fdt failed from nfcst_in_send_cmd %d\n",
-> +				rc);
-> +			return rc;
-> +		}
-> +	}
-> +
-> +	switch (context->current_rf_tech) {
-> +	case NFC_DIGITAL_RF_TECH_106A:
-> +		len_data_to_tag = skb->len + 1;
-> +		*skb_put(skb, 1) = context->sendrcv_trflag;
-You can't dereference a void pointer. Please fix that as it will most
-likely break the build.
+> The driver may sleep under a spin lock, and the function call path is:
+> cw1200_tx_confirm_cb (acquire the lock by spin_lock)
+>   __cw1200_cqm_bssloss_sm
+>     cancel_work_sync --> may sleep
+> 
+> cw1200_cqm_bssloss_sm
+>   __cw1200_cqm_bssloss_sm
+>     cancel_work_sync --> may sleep
+> 
+> To fix it, the lock is released before cancel_work_sync, and the lock 
+> is acquired again after this function.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
 
-Cheers,
-Samuel.
+I assume that you haven't tested this on a real device and only compile tested.
+You should mention that in the commit log.
+
+Releasing a lock held by calling function is evil. Did you do any lock analysis
+or are you just blindly releasing locks to fix a warning in your tool?
+
+Also I would like to have an ack from a reviewer before I can take patches like
+this.
+
+Patch set to Changes Requested.
+
+-- 
+https://patchwork.kernel.org/patch/9758613/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
