@@ -1,73 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35232 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbdFPO5q (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32953 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750954AbdFAAHS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:57:46 -0400
-Received: by mail-pg0-f66.google.com with SMTP id f127so6641016pgc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:45 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 04/20] rsi: correct SDIO disconnect path handling
-Date: Fri, 16 Jun 2017 20:24:25 +0530
-Message-Id: <1497624881-2315-5-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165749_231772_19D4F90E)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Wed, 31 May 2017 20:07:18 -0400
+Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
+ b43legacy_op_bss_info_changed
+To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Jia-Ju Bai <baijiaju1990@163.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com>
+ <877f0xnwyk.fsf@kamboji.qca.qualcomm.com> <20170531173107.25eeda48@wiggum>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <284d6d5d-d548-9e05-eafd-a6b521af5a04@lwfinger.net> (sfid-20170601_020746_811126_F04D2D8D)
+Date: Wed, 31 May 2017 19:07:15 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170531173107.25eeda48@wiggum>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+On 05/31/2017 10:32 AM, Michael Büsch wrote:
+> On Wed, 31 May 2017 13:26:43 +0300
+> Kalle Valo <kvalo@codeaurora.org> wrote:
+> 
+>> Jia-Ju Bai <baijiaju1990@163.com> writes:
+>>
+>>> The driver may sleep under a spin lock, and the function call path is:
+>>> b43legacy_op_bss_info_changed (acquire the lock by spin_lock_irqsave)
+>>>    b43legacy_synchronize_irq
+>>>      synchronize_irq --> may sleep
+>>>
+>>> To fix it, the lock is released before b43legacy_synchronize_irq, and the
+>>> lock is acquired again after this function.
+>>>
+>>> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+>>> ---
+>>>   drivers/net/wireless/broadcom/b43legacy/main.c |    2 ++
+>>>   1 file changed, 2 insertions(+)
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
+>>> index f1e3dad..31ead21 100644
+>>> --- a/drivers/net/wireless/broadcom/b43legacy/main.c
+>>> +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
+>>> @@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
+>>>   	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
+>>>   
+>>>   	if (changed & BSS_CHANGED_BSSID) {
+>>> +		spin_unlock_irqrestore(&wl->irq_lock, flags);
+>>>   		b43legacy_synchronize_irq(dev);
+>>> +		spin_lock_irqsave(&wl->irq_lock, flags);
+>>
+>> To me this looks like a fragile workaround and not a real fix. You can
+>> easily add new race conditions with releasing the lock like this.
+>>
+> 
+> 
+> I think releasing the lock possibly is fine. It certainly is better than
+> sleeping with a lock held.
+> We disabled the device interrupts just before this line.
+> 
+> However I think the synchronize_irq should be outside of the
+> conditional right after the write to B43legacy_MMIO_GEN_IRQ_MASK. (So
+> two lines above)
+> I don't think it makes sense to only synchronize if BSS_CHANGED_BSSID
+> is set.
+> 
+> 
+> On the other hand b43 does not have this irq-disabling foobar anymore.
+> So somebody must have removed it. Maybe you can find the commit that
+> removed this stuff from b43 and port it to b43legacy?
+> 
+> 
+> So I would vote for moving the synchronize_irq up outside of the
+> conditional and put the unlock/lock sequence around it.
+> And as a second patch on top of that try to remove this stuff
+> altogether like b43 did.
 
-Sometimes it's observed that we get interrupt/Rx frame when device is
-already detached from mac80211. In this case couple of error messages
-are displayed in dmesg log. This patch corrects the order so that
-disconnection will happen cleanly
+The patch that removed it in b43 is
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+commit 36dbd9548e92268127b0c31b0e121e63e9207108
+Author: Michael Buesch <mb@bu3sch.de>
+Date:   Fri Sep 4 22:51:29 2009 +0200
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index ebfd29c..f1ba8ac 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -1026,17 +1026,26 @@ static void rsi_disconnect(struct sdio_func *pfunction)
- 		return;
- 
- 	dev = (struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	sdio_claim_host(pfunction);
-+	sdio_release_irq(pfunction);
-+	sdio_release_host(pfunction);
-+	mdelay(10);
- 
--	dev->write_fail = 2;
- 	rsi_mac80211_detach(adapter);
-+	mdelay(10);
- 
--	sdio_claim_host(pfunction);
--	sdio_release_irq(pfunction);
--	sdio_disable_func(pfunction);
--	rsi_91x_deinit(adapter);
-+	/* Reset Chip */
- 	rsi_reset_chip(adapter);
-+
-+	/* Resetting to take care of the case, where-in driver is re-loaded */
-+	sdio_claim_host(pfunction);
- 	rsi_reset_card(pfunction);
-+	sdio_disable_func(pfunction);
- 	sdio_release_host(pfunction);
-+	dev->write_fail = 2;
-+	rsi_91x_deinit(adapter);
-+	rsi_dbg(ERR_ZONE, "##### RSI SDIO device disconnected #####\n");
-+
- }
- 
- #ifdef CONFIG_PM
--- 
-2.7.4
+     b43: Use a threaded IRQ handler
+
+     Use a threaded IRQ handler to allow locking the mutex and
+     sleeping while executing an interrupt.
+     This removes usage of the irq_lock spinlock, but introduces
+     a new hardirq_lock, which is _only_ used for the PCI/SSB lowlevel
+     hard-irq handler. Sleeping busses (SDIO) will use mutex instead.
+
+     Signed-off-by: Michael Buesch <mb@bu3sch.de>
+     Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+I vaguely remember this patch. Although it is roughly a 1000-line fix, I will 
+try to port it to b43legacy. I still have an old BCM4306 PCMCIA card that I can 
+test in a PowerBook G4.
+
+I agree with Michael that this is the way to go. Both of Jia-Ju's patches should 
+be rejected.
+
+Larry
