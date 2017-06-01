@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751460AbdFZHEq (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:36182 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbdFASHI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 03:04:46 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH 5/7] staging: wilc1000: Get packet count from firmware
-Date: Mon, 26 Jun 2017 12:33:36 +0530
-Message-ID: <1498460618-22187-6-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090448_886215_38CF2ADE)
-In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
+        Thu, 1 Jun 2017 14:07:08 -0400
+Received: by mail-pf0-f180.google.com with SMTP id m17so33833542pfg.3
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Jun 2017 11:07:08 -0700 (PDT)
+Date: Thu, 1 Jun 2017 11:07:01 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: Fw: [Bug 195953] New: Possible access to unintended variable in
+ "linux/net/mac80211/sta_info.c" line 2158
+Message-ID: <20170601110701.21dcef2a@xeon-e3> (sfid-20170601_200712_425985_60499553)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new function to get packet count from the firmware.
 
-31:25       24      23:17   16      15:9    8       7:2     1       0
-VO CNT      VO ACM  VI CNT  VI ACM  BE CNT  BE ACM  BK CNT  BK ACM  VMM ready
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Begin forwarded message:
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 655f229..b3e1136 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -443,6 +443,14 @@ static inline int ac_balance(u8 *count, u8 *ratio)
- 	return 0;
- }
- 
-+static inline void ac_pkt_count(u32 reg, u8 *pkt_count)
-+{
-+	pkt_count[AC_BK_Q] = (reg & 0x000000fa) >> BK_AC_COUNT_POS;
-+	pkt_count[AC_BE_Q] = (reg & 0x0000fe00) >> BE_AC_COUNT_POS;
-+	pkt_count[AC_VI_Q] = (reg & 0x00fe0000) >> VI_AC_COUNT_POS;
-+	pkt_count[AC_VO_Q] = (reg & 0xfe000000) >> VO_AC_COUNT_POS;
-+}
-+
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func)
- {
+Date: Thu, 01 Jun 2017 06:55:22 +0000
+From: bugzilla-daemon@bugzilla.kernel.org
+To: stephen@networkplumber.org
+Subject: [Bug 195953] New: Possible access to unintended variable in "linux/net/mac80211/sta_info.c" line 2158
+
+
+https://bugzilla.kernel.org/show_bug.cgi?id=195953
+
+            Bug ID: 195953
+           Summary: Possible access to unintended variable in
+                    "linux/net/mac80211/sta_info.c" line 2158
+           Product: Networking
+           Version: 2.5
+    Kernel Version: 4.12-rc3
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: stephen@networkplumber.org
+          Reporter: petrum@gmail.com
+        Regression: No
+
+While experimenting with a CodeSonar plugin we develop, we noticed a
+potential issue in file "linux/net/mac80211/sta_info.c" line 2158 function
+sta_set_sinfo
+
+        sinfo->rx_dropped_misc = sta->rx_stats.dropped;
+        if (sta->pcpu_rx_stats) {
+                for_each_possible_cpu(cpu) {
+                        struct ieee80211_sta_rx_stats *cpurxs;
+
+                        cpurxs = per_cpu_ptr(sta->pcpu_rx_stats, cpu);
+        /*HERE*/        sinfo->rx_packets += cpurxs->dropped;
+                }
+        }
+
+Wasn't the intention to use "rx_dropped_misc" (instead of "rx_packets") in the
+indicated line. In the first line, "rx_dropped_misc" is updated.
+
+Thank you.
+
 -- 
-2.7.4
+You are receiving this mail because:
+You are the assignee for the bug.
