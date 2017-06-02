@@ -1,138 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35926 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752770AbdFPO6W (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60690 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751125AbdFBL0F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:58:22 -0400
-Received: by mail-pg0-f68.google.com with SMTP id v18so6634363pgb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:22 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        "pavani.muthyala" <pavani.muthyala@redpinesignals.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 15/20] rsi: separate function for data packet descriptor
-Date: Fri, 16 Jun 2017 20:24:36 +0530
-Message-Id: <1497624881-2315-16-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165825_313235_730CFB83)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Fri, 2 Jun 2017 07:26:05 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:28 +0300
+Message-Id: <20170602112553.2466-1-luca@coelho.fi> (sfid-20170602_132609_470506_CE17DAAD)
+Subject: [PATCH 00/25] iwlwifi: updates intended for v4.13 2017-06-02
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Data packet descriptor preparation code is moved a separate
-function.
+Hi,
 
-Signed-off-by: pavani.muthyala <pavani.muthyala@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_hal.c | 51 +++++++++++++++++++---------------
- 1 file changed, 28 insertions(+), 23 deletions(-)
+Here's my first set of patches for v4.13.  These are the changes:
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index af7fe87..b0a7a15 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -108,25 +108,15 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	return 0;
- }
- 
--/**
-- * rsi_send_data_pkt() - This function sends the recieved data packet from
-- *			 driver to device.
-- * @common: Pointer to the driver private structure.
-- * @skb: Pointer to the socket buffer structure.
-- *
-- * Return: status: 0 on success, -1 on failure.
-- */
--int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
-+/* This function prepares descriptor for given data packet */
-+static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- {
--	struct rsi_hw *adapter = common->priv;
- 	struct ieee80211_hdr *wh = NULL;
- 	struct ieee80211_tx_info *info;
--	struct ieee80211_vif *vif = NULL;
- 	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss;
- 	struct rsi_data_desc *data_desc;
- 	struct xtended_desc *xtend_desc;
--	int status;
- 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
- 	u8 header_size;
- 	u8 vap_id = 0;
-@@ -137,22 +127,16 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	bss = &info->control.vif->bss_conf;
- 	tx_params = (struct skb_info *)info->driver_data;
- 
--	if (!bss->assoc) {
--		status = -EINVAL;
--		goto err;
--	}
- 	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
- 	if (header_size > skb_headroom(skb)) {
- 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
--		status = -ENOSPC;
--		goto err;
-+		return -ENOSPC;
- 	}
- 	skb_push(skb, header_size);
- 	dword_align_bytes = ((unsigned long)skb->data & 0x3f);
- 	if (header_size > skb_headroom(skb)) {
- 		rsi_dbg(ERR_ZONE, "%s: Not enough headroom\n", __func__);
--		status = -ENOSPC;
--		goto err;
-+		return -ENOSPC;
- 	}
- 	skb_push(skb, dword_align_bytes);
- 	header_size += dword_align_bytes;
-@@ -164,7 +148,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
- 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
- 	seq_num = (le16_to_cpu(wh->seq_ctrl) >> 4);
--	vif = adapter->vifs[0];
- 
- 	data_desc->xtend_desc_size = header_size - FRAME_DESC_SZ;
- 
-@@ -227,11 +210,33 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 		data_desc->sta_id = vap_id;
- 	}
- 
-+	return 0;
-+}
-+
-+/* This function sends received data packet from driver to device */
-+int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_bss_conf *bss;
-+	int status = -EIO;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	bss = &info->control.vif->bss_conf;
-+
-+	if (!bss->assoc) {
-+		status = -EINVAL;
-+		goto err;
-+	}
-+
-+	status = rsi_prepare_data_desc(common, skb);
-+	if (status)
-+		goto err;
-+
- 	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
- 						   skb->len);
- 	if (status)
--		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
--			__func__);
-+		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n", __func__);
- 
- err:
- 	++common->tx_stats.total_tx_pkt_freed[skb->priority];
+* A bunch of FW API documentation updates;
+* Continued work for the new A000 family;
+* Some small fixes and cleanups here and there.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Haim Dreyfuss (1):
+  iwlwifi: Add fw_name_pre_rf_next_step to support different rf steps
+
+Johannes Berg (16):
+  iwlwifi: mvm: fix endianness in lq_cmd declaration
+  iwlwifi: mvm: document which group enums are used with which group ID
+  iwlwifi: mvm: use proper sta_addr in firmware API
+  iwlwifi: mvm: fix MCC endianness bug
+  iwlwifi: mvm: use u8 for reserved fields
+  iwlwifi: mvm: disentangle paging command structs
+  iwlwifi: mvm: add documentation to some WoWLAN commands
+  iwlwifi: mvm: fix some kernel-doc
+  iwlwifi: mvm: add documentation links to various fields
+  iwlwifi: mvm: disentangle binding command versions
+  iwlwifi: mvm: create/name various enums
+  iwlwifi: mvm: document structures used by commands
+  iwlwifi: mvm: remove unused TX_CMD_NEXT_FRAME_*
+  iwlwifi: kernel-doc: make proper links
+  iwlwifi: mvm: remove unused REPLY_MAX
+  iwlwifi: mvm: fix many kernel-doc warnings
+
+Liad Kaufman (2):
+  iwlwifi: mvm: remove wrt support of page dumps in gen2
+  iwlwifi: pcie: support page dumping in wrt in gen2
+
+Sara Sharon (6):
+  iwlwifi: mvm: flush per station for DQA mode
+  iwlwifi: mvm: support getting nvm data from firmware
+  iwlwifi: mvm: support old method of NVM parsing
+  iwlwifi: mvm: wait for the flushed queue only
+  iwlwifi: update device ID for a000 family
+  iwlwifi: add wait for tx queue empty
+
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c      |   6 +
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   3 +
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |   8 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   4 +
+ .../net/wireless/intel/iwlwifi/iwl-fw-error-dump.h |   8 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   |  14 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-modparams.h |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c     |   2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  20 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c      |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h |   1 +
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-coex.h   |  10 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h |  29 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    |  10 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  |  45 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h |   7 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-scan.h   |  32 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    |  46 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-stats.h  |  29 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-tof.h    |  16 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  67 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    | 536 +++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c    |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  54 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  28 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   4 +
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |  94 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  48 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   2 +
+ .../net/wireless/intel/iwlwifi/mvm/time-event.c    |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  19 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  12 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 101 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |   9 +-
+ 36 files changed, 989 insertions(+), 294 deletions(-)
+
 -- 
-2.7.4
+2.11.0
