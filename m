@@ -1,129 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:32863 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751230AbdFWOKt (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60670 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751125AbdFBJ75 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:49 -0400
-Received: by mail-pg0-f65.google.com with SMTP id u62so6285797pgb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:49 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 10/17] rsi: update set_key command frame
-Date: Fri, 23 Jun 2017 19:37:29 +0530
-Message-Id: <1498226856-6305-11-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161053_333652_56EF5811)
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Fri, 2 Jun 2017 05:59:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 12:35:16 +0300
+Message-Id: <20170602093516.16369-11-luca@coelho.fi> (sfid-20170602_120001_294422_0CE22D1B)
+In-Reply-To: <20170602093516.16369-1-luca@coelho.fi>
+References: <20170602093516.16369-1-luca@coelho.fi>
+Subject: [PATCH 10/10] iwlwifi: fix host command memory leaks
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-TX command frame set_key is modified to use common descriptor
-structure.
+Sending host command with CMD_WANT_SKB flag demands the release of the
+response buffer with iwl_free_resp function.
+The patch adds the memory release in all the relevant places
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 26 +++++++++++++-------------
- drivers/net/wireless/rsi/rsi_mgmt.h     | 16 +++++++++++++++-
- 2 files changed, 28 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 9fdf7b12..9d74495 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -713,39 +713,39 @@ int rsi_hal_load_key(struct rsi_common *common,
- 	struct sk_buff *skb = NULL;
- 	struct rsi_set_key *set_key;
- 	u16 key_descriptor = 0;
-+	u16 frame_len = sizeof(struct rsi_set_key);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 9fb46a6f47cf..9c9bfbbabdf1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -906,7 +906,7 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
  
- 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending load key frame\n", __func__);
- 
--	skb = dev_alloc_skb(sizeof(struct rsi_set_key));
-+	skb = dev_alloc_skb(frame_len);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
- 			__func__);
- 		return -ENOMEM;
+ 	if (WARN_ON(iwl_rx_packet_payload_len(hcmd.resp_pkt) != sizeof(*rsp))) {
+ 		ret = -EINVAL;
+-		goto error;
++		goto error_free_resp;
  	}
  
--	memset(skb->data, 0, sizeof(struct rsi_set_key));
-+	memset(skb->data, 0, frame_len);
- 	set_key = (struct rsi_set_key *)skb->data;
- 
- 	if ((cipher == WLAN_CIPHER_SUITE_WEP40) ||
- 	    (cipher == WLAN_CIPHER_SUITE_WEP104)) {
- 		key_len += 1;
--		key_descriptor |= BIT(2);
-+		key_descriptor |= RSI_WEP_KEY;
- 		if (key_len >= 13)
--			key_descriptor |= BIT(3);
-+			key_descriptor |= RSI_WEP_KEY_104;
- 	} else if (cipher != KEY_TYPE_CLEAR) {
--		key_descriptor |= BIT(4);
-+		key_descriptor |= RSI_CIPHER_WPA;
- 		if (key_type == RSI_PAIRWISE_KEY)
- 			key_id = 0;
- 		if (cipher == WLAN_CIPHER_SUITE_TKIP)
--			key_descriptor |= BIT(5);
-+			key_descriptor |= RSI_CIPHER_TKIP;
+ 	rsp = (void *)hcmd.resp_pkt->data;
+@@ -915,13 +915,13 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
+ 	if (qid > ARRAY_SIZE(trans_pcie->txq)) {
+ 		WARN_ONCE(1, "queue index %d unsupported", qid);
+ 		ret = -EIO;
+-		goto error;
++		goto error_free_resp;
  	}
--	key_descriptor |= (key_type | BIT(13) | (key_id << 14));
-+	key_descriptor |= (key_type | RSI_PROTECT_DATA_FRAMES | (key_id << 14));
  
--	set_key->desc_word[0] = cpu_to_le16((sizeof(struct rsi_set_key) -
--					    FRAME_DESC_SZ) |
--					    (RSI_WIFI_MGMT_Q << 12));
--	set_key->desc_word[1] = cpu_to_le16(SET_KEY_REQ);
--	set_key->desc_word[4] = cpu_to_le16(key_descriptor);
-+	rsi_set_len_qno(&set_key->desc_dword0.len_qno,
-+			(frame_len - FRAME_DESC_SZ), RSI_WIFI_MGMT_Q);
-+	set_key->desc_dword0.frame_type = SET_KEY_REQ;
-+	set_key->key_desc = cpu_to_le16(key_descriptor);
+ 	if (test_and_set_bit(qid, trans_pcie->queue_used)) {
+ 		WARN_ONCE(1, "queue %d already used", qid);
+ 		ret = -EIO;
+-		goto error;
++		goto error_free_resp;
+ 	}
  
- 	if ((cipher == WLAN_CIPHER_SUITE_WEP40) ||
- 	    (cipher == WLAN_CIPHER_SUITE_WEP104)) {
-@@ -759,7 +759,7 @@ int rsi_hal_load_key(struct rsi_common *common,
- 	memcpy(set_key->tx_mic_key, &data[16], 8);
- 	memcpy(set_key->rx_mic_key, &data[24], 8);
+ 	txq->id = qid;
+@@ -934,8 +934,11 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
+ 			   (txq->write_ptr) | (qid << 16));
+ 	IWL_DEBUG_TX_QUEUES(trans, "Activate queue %d\n", qid);
  
--	skb_put(skb, sizeof(struct rsi_set_key));
-+	skb_put(skb, frame_len);
++	iwl_free_resp(&hcmd);
+ 	return qid;
  
- 	return rsi_send_internal_mgmt_frame(common, skb);
- }
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index fcde44e..5df64d3 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -348,8 +348,22 @@ struct rsi_vap_caps {
- 	__le16 beacon_miss_threshold;
- } __packed;
- 
-+/* Key descriptor flags */
-+#define RSI_KEY_TYPE_BROADCAST	BIT(1)
-+#define RSI_WEP_KEY		BIT(2)
-+#define RSI_WEP_KEY_104		BIT(3)
-+#define RSI_CIPHER_WPA		BIT(4)
-+#define RSI_CIPHER_TKIP		BIT(5)
-+#define RSI_PROTECT_DATA_FRAMES	BIT(13)
-+#define RSI_KEY_ID_MASK		0xC0
-+#define RSI_KEY_ID_OFFSET	14
- struct rsi_set_key {
--	__le16 desc_word[8];
-+	struct rsi_cmd_desc_dword0 desc_dword0;
-+	struct rsi_cmd_desc_dword1 desc_dword1;
-+	__le16 key_desc;
-+	__le32 bpn;
-+	u8 sta_id;
-+	u8 vap_id;
- 	u8 key[4][32];
- 	u8 tx_mic_key[8];
- 	u8 rx_mic_key[8];
++error_free_resp:
++	iwl_free_resp(&hcmd);
+ error:
+ 	iwl_pcie_gen2_txq_free_memory(trans, txq);
+ 	return ret;
 -- 
-2.7.4
+2.11.0
