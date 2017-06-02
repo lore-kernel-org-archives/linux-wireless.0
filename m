@@ -1,106 +1,287 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34832 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:60916 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751066AbdFYLMH (ORCPT
+        with ESMTP id S1751138AbdFBL2F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:07 -0400
+        Fri, 2 Jun 2017 07:28:05 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:32 +0300
-Message-Id: <20170625111158.1792-1-luca@coelho.fi> (sfid-20170625_131234_196634_0B3AC2AA)
-Subject: [PATCH 00/26] iwlwifi: updates intended for v4.13 2017-06-25
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:41 +0300
+Message-Id: <20170602112553.2466-14-luca@coelho.fi> (sfid-20170602_132809_864622_6E560AB1)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 13/25] iwlwifi: mvm: add documentation links to various fields
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi,
+Link various fields to the documentation of the enums that
+define their values.
 
-More patches intended for 4.13.  These are the changes:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-coex.h   | 10 +++----
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    | 10 +++----
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  |  4 +--
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    | 14 +++++-----
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-stats.h  |  4 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  4 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    | 31 +++++++++++++---------
+ 7 files changed, 45 insertions(+), 32 deletions(-)
 
-* Support for a new version of the TX flush FW API;
-* Some fixes in monitor interfaces;
-* A few fixes in the recovery flows;
-* Documentation fixes and FW API struct cleanups;
-* Remove some noise from the kernel logs;
-* Clean-ups and small fixes here and there.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a comnined pull-request with the previous bunch later.
-
-Please review.
-
-Cheers,
-Luca.
-
-Avraham Stern (1):
-  iwlwifi: mvm: set assoc_beacon_arrive_time
-
-Chaya Rachel Ivgi (1):
-  iwlwifi: mvm: fix typo in CTDP_CMD_OPERATION_REPORT description
-
-Emmanuel Grumbach (5):
-  iwlwifi: mvm: fix the recovery flow while connecting
-  iwlwifi: mvm: don't mark TIDs that are not idle wrt BA as inactive
-  iwlwifi: add a W/A for a scheduler hardware bug
-  iwlwifi: mvm: reset the fw_dump_desc pointer after ASSERT
-  iwlwifi: pcie: delete the Tx queue timer earlier upon firmware crash
-
-Johannes Berg (9):
-  iwlwifi: simplify data tracepoint
-  iwlwifi: fix TX tracing for non-linear SKBs
-  iwlwifi: pcie: fix command completion name debug
-  iwlwifi: mvm: docs: fix enum link, provide TX response link
-  iwlwifi: mvm: disentangle union in TX status struct
-  iwlwifi: mvm: add documentation for enum iwl_debug_cmds
-  iwlwifi: document transmit buffer bits better
-  iwlwifi: pcie: make iwl_pcie_apm_stop_master() return void
-  iwlwifi: pcie: work around suspend/resume issue
-
-Liad Kaufman (2):
-  iwlwifi: mvm: fix fw monitor 7000 HW recollecting
-  iwlwifi: mvm: support TX on MONITOR iface
-
-Luca Coelho (7):
-  iwlwifi: remove useless iwl_free_nvm_data() function
-  iwlwifi: mvm: fix nvm_data leak
-  iwlwifi: pcie: don't disable bh when handling FW errors
-  iwlwifi: mvm: reset the HW before dumping if HW error is detected
-  iwlwifi: mvm: document assoc_beacon_arrive_time
-  iwlwifi: mvm: print base HW address during init
-  iwlwifi: pcie: reduce unwanted noise in the logs
-
-Mordechai Goodstein (1):
-  iwlwifi: mvm: support new flush API
-
- drivers/net/wireless/intel/iwlwifi/dvm/main.c      |  4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |  4 +
- .../net/wireless/intel/iwlwifi/iwl-devtrace-data.h | 11 +--
- .../wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h  | 19 +++--
- .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.h  |  9 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h        | 18 ++++-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  2 +
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 13 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   | 19 ++++-
- .../net/wireless/intel/iwlwifi/mvm/fw-api-mac.h    |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 89 ++++++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    | 23 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c    |  6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 32 ++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 13 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       | 10 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 20 +++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 68 ++++++++++-------
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 50 +++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 86 +++++++++++++++------
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  4 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 10 +--
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 23 ++++--
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  8 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 33 ++++++--
- 26 files changed, 413 insertions(+), 164 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-coex.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-coex.h
+index 204c1b13988b..c432fdb98630 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-coex.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-coex.h
+@@ -99,8 +99,8 @@ enum iwl_bt_coex_enabled_modules {
+ 
+ /**
+  * struct iwl_bt_coex_cmd - bt coex configuration command
+- * @mode: enum %iwl_bt_coex_mode
+- * @enabled_modules: enum %iwl_bt_coex_enabled_modules
++ * @mode: &enum iwl_bt_coex_mode
++ * @enabled_modules: &enum iwl_bt_coex_enabled_modules
+  *
+  * The structure is used for the BT_COEX command.
+  */
+@@ -234,9 +234,9 @@ enum iwl_bt_ci_compliance {
+  * @mbox_msg: message from BT to WiFi
+  * @msg_idx: the index of the message
+  * @bt_ci_compliance: enum %iwl_bt_ci_compliance
+- * @primary_ch_lut: LUT used for primary channel enum %iwl_bt_coex_lut_type
+- * @secondary_ch_lut: LUT used for secondary channel enume %iwl_bt_coex_lut_type
+- * @bt_activity_grading: the activity of BT enum %iwl_bt_activity_grading
++ * @primary_ch_lut: LUT used for primary channel &enum iwl_bt_coex_lut_type
++ * @secondary_ch_lut: LUT used for secondary channel &enum iwl_bt_coex_lut_type
++ * @bt_activity_grading: the activity of BT &enum iwl_bt_activity_grading
+  * @ttc_rrc_status: is TTC or RRC enabled - one bit per PHY
+  */
+ struct iwl_bt_coex_profile_notif {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
+index 970b030ed28d..aa5aaf7c940d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
+@@ -329,17 +329,17 @@ struct iwl_ac_qos {
+  * ( MAC_CONTEXT_CMD = 0x28 )
+  * @id_and_color: ID and color of the MAC
+  * @action: action to perform, one of FW_CTXT_ACTION_*
+- * @mac_type: one of FW_MAC_TYPE_*
+- * @tsd_id: TSF HW timer, one of TSF_ID_*
++ * @mac_type: one of &enum iwl_mac_types
++ * @tsd_id: TSF HW timer, one of &enum iwl_tsf_id
+  * @node_addr: MAC address
+  * @bssid_addr: BSSID
+  * @cck_rates: basic rates available for CCK
+  * @ofdm_rates: basic rates available for OFDM
+- * @protection_flags: combination of MAC_PROT_FLG_FLAG_*
++ * @protection_flags: combination of &enum iwl_mac_protection_flags
+  * @cck_short_preamble: 0x20 for enabling short preamble, 0 otherwise
+  * @short_slot: 0x10 for enabling short slots, 0 otherwise
+- * @filter_flags: combination of MAC_FILTER_*
+- * @qos_flags: from MAC_QOS_FLG_*
++ * @filter_flags: combination of &enum iwl_mac_filter_flags
++ * @qos_flags: from &enum iwl_mac_qos_flags
+  * @ac: one iwl_mac_qos configuration for each AC
+  * @mac_specific: one of struct iwl_mac_data_*, according to mac_type
+  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
+index 3d56ba4c0c71..f329e87cd97c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
+@@ -202,7 +202,7 @@ enum iwl_device_power_flags {
+  * struct iwl_device_power_cmd - device wide power command.
+  * DEVICE_POWER_CMD = 0x77 (command, has simple generic response)
+  *
+- * @flags:	Power table command flags from DEVICE_POWER_FLAGS_*
++ * @flags:	Power table command flags from &enum iwl_device_power_flags
+  */
+ struct iwl_device_power_cmd {
+ 	/* PM_POWER_TABLE_CMD_API_S_VER_6 */
+@@ -213,7 +213,7 @@ struct iwl_device_power_cmd {
+ /**
+  * struct iwl_mac_power_cmd - New power command containing uAPSD support
+  * MAC_PM_POWER_TABLE = 0xA9 (command, has simple generic response)
+- * @id_and_color:	MAC contex identifier
++ * @id_and_color:	MAC contex identifier, &enum iwl_mvm_id_and_color
+  * @flags:		Power table command flags from POWER_FLAGS_*
+  * @keep_alive_seconds:	Keep alive period in seconds. Default - 25 sec.
+  *			Minimum allowed:- 3 * DTIM. Keep alive period must be
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+index 894b8f6c8adc..0f6264fdfed1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+@@ -253,11 +253,12 @@ struct iwl_mvm_keyinfo {
+ /**
+  * struct iwl_mvm_add_sta_cmd_v7 - Add/modify a station in the fw's sta table.
+  * ( REPLY_ADD_STA = 0x18 )
+- * @add_modify: 1: modify existing, 0: add new station
++ * @add_modify: see &enum iwl_sta_mode
+  * @awake_acs:
+  * @tid_disable_tx: is tid BIT(tid) enabled for Tx. Clear BIT(x) to enable
+  *	AMPDU for tid x. Set %STA_MODIFY_TID_DISABLE_TX to change this field.
+- * @mac_id_n_color: the Mac context this station belongs to
++ * @mac_id_n_color: the Mac context this station belongs to,
++ *	see &enum iwl_mvm_id_and_color
+  * @addr: station's MAC address
+  * @sta_id: index of station in uCode's station table
+  * @modify_mask: STA_MODIFY_*, selects which parameters to modify vs. leave
+@@ -331,11 +332,12 @@ enum iwl_sta_type {
+ /**
+  * struct iwl_mvm_add_sta_cmd - Add/modify a station in the fw's sta table.
+  * ( REPLY_ADD_STA = 0x18 )
+- * @add_modify: 1: modify existing, 0: add new station
++ * @add_modify: see &enum iwl_sta_mode
+  * @awake_acs:
+  * @tid_disable_tx: is tid BIT(tid) enabled for Tx. Clear BIT(x) to enable
+  *	AMPDU for tid x. Set %STA_MODIFY_TID_DISABLE_TX to change this field.
+- * @mac_id_n_color: the Mac context this station belongs to
++ * @mac_id_n_color: the Mac context this station belongs to,
++ *	see &enum iwl_mvm_id_and_color
+  * @addr: station's MAC address
+  * @sta_id: index of station in uCode's station table
+  * @modify_mask: STA_MODIFY_*, selects which parameters to modify vs. leave
+@@ -470,7 +472,7 @@ struct iwl_mvm_rm_sta_cmd {
+ /**
+  * struct iwl_mvm_mgmt_mcast_key_cmd_v1
+  * ( MGMT_MCAST_KEY = 0x1f )
+- * @ctrl_flags: %iwl_sta_key_flag
++ * @ctrl_flags: &enum iwl_sta_key_flag
+  * @igtk:
+  * @k1: unused
+  * @k2: unused
+@@ -491,7 +493,7 @@ struct iwl_mvm_mgmt_mcast_key_cmd_v1 {
+ /**
+  * struct iwl_mvm_mgmt_mcast_key_cmd
+  * ( MGMT_MCAST_KEY = 0x1f )
+- * @ctrl_flags: %iwl_sta_key_flag
++ * @ctrl_flags: &enum iwl_sta_key_flag
+  * @igtk: IGTK master key
+  * @sta_id: station ID that support IGTK
+  * @key_id:
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
+index 809ec1ba5025..c8561b16add4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
+@@ -326,6 +326,10 @@ struct iwl_notif_statistics_cdb {
+ #define IWL_STATISTICS_FLG_CLEAR		0x1
+ #define IWL_STATISTICS_FLG_DISABLE_NOTIF	0x2
+ 
++/**
++ * struct iwl_statistics_cmd - statistics config command
++ * @flags: flags from &enum iwl_statistics_flags
++ */
+ struct iwl_statistics_cmd {
+ 	__le32 flags;
+ } __packed; /* STATISTICS_CMD_API_S_VER_1 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index e1c7c798e139..052b7f0db889 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -828,9 +828,9 @@ enum iwl_scd_cfg_actions {
+  * @tid: TID
+  * @scd_queue: scheduler queue to confiug
+  * @action: 1 queue enable, 0 queue disable, 2 change txq's tid owner
+- *	Value is one of %iwl_scd_cfg_actions options
++ *	Value is one of &enum iwl_scd_cfg_actions options
+  * @aggregate: 1 aggregated queue, 0 otherwise
+- * @tx_fifo: %enum iwl_mvm_tx_fifo
++ * @tx_fifo: &enum iwl_mvm_tx_fifo
+  * @window: BA window size
+  * @ssn: SSN for the BA agreement
+  * @reserved: reserved
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 3f42efb76f06..a4567d5206e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -491,10 +491,10 @@ enum {
+ };
+ 
+ /**
+- * struct iwl_nvm_access_cmd_ver2 - Request the device to send an NVM section
+- * @op_code: 0 - read, 1 - write
+- * @target: NVM_ACCESS_TARGET_*
+- * @type: NVM_SECTION_TYPE_*
++ * struct iwl_nvm_access_cmd - Request the device to send an NVM section
++ * @op_code: &enum iwl_nvm_access_op
++ * @target: &enum iwl_nvm_access_target
++ * @type: &enum iwl_nvm_section_type
+  * @offset: offset in bytes into the section
+  * @length: in bytes, to read/write
+  * @data: if write operation, the data to write. On read its empty
+@@ -918,12 +918,13 @@ enum {
+ };
+ 
+ /**
+- * struct iwl_time_event_cmd_api - configuring Time Events
++ * struct iwl_time_event_cmd - configuring Time Events
+  * with struct MAC_TIME_EVENT_DATA_API_S_VER_2 (see also
+  * with version 1. determined by IWL_UCODE_TLV_FLAGS)
+  * ( TIME_EVENT_CMD = 0x29 )
+- * @id_and_color: ID and color of the relevant MAC
+- * @action: action to perform, one of FW_CTXT_ACTION_*
++ * @id_and_color: ID and color of the relevant MAC,
++ *	&enum iwl_mvm_id_and_color
++ * @action: action to perform, one of &enum iwl_phy_ctxt_action
+  * @id: this field has two meanings, depending on the action:
+  *	If the action is ADD, then it means the type of event to add.
+  *	For all other actions it is the unique event ID assigned when the
+@@ -939,7 +940,8 @@ enum {
+  *	on event and/or fragment start and/or end
+  *	using one of TE_INDEPENDENT, TE_DEP_OTHER, TE_DEP_TSF
+  *	TE_EVENT_SOCIOPATHIC
+- *	using TE_ABSENCE and using TE_NOTIF_*
++ *	using TE_ABSENCE and using TE_NOTIF_*,
++ *	&enum iwl_time_event_policy
+  */
+ struct iwl_time_event_cmd {
+ 	/* COMMON_INDEX_HDR_API_S_VER_1 */
+@@ -962,7 +964,8 @@ struct iwl_time_event_cmd {
+  * @status: bit 0 indicates success, all others specify errors
+  * @id: the Time Event type
+  * @unique_id: the unique ID assigned (in ADD) or given (others) to the TE
+- * @id_and_color: ID and color of the relevant MAC
++ * @id_and_color: ID and color of the relevant MAC,
++ *	&enum iwl_mvm_id_and_color
+  */
+ struct iwl_time_event_resp {
+ 	__le32 status;
+@@ -978,7 +981,7 @@ struct iwl_time_event_resp {
+  * @session_id: session's unique id
+  * @unique_id: unique id of the Time Event itself
+  * @id_and_color: ID and color of the relevant MAC
+- * @action: one of TE_NOTIF_START or TE_NOTIF_END
++ * @action: &enum iwl_time_event_policy
+  * @status: true if scheduled, false otherwise (not executed)
+  */
+ struct iwl_time_event_notif {
+@@ -996,10 +999,13 @@ struct iwl_time_event_notif {
+ /**
+  * struct iwl_binding_cmd - configuring bindings
+  * ( BINDING_CONTEXT_CMD = 0x2b )
+- * @id_and_color: ID and color of the relevant Binding
++ * @id_and_color: ID and color of the relevant Binding,
++ *	&enum iwl_mvm_id_and_color
+  * @action: action to perform, one of FW_CTXT_ACTION_*
+  * @macs: array of MAC id and colors which belong to the binding
++ *	&enum iwl_mvm_id_and_color
+  * @phy: PHY id and color which belongs to the binding
++ *	&enum iwl_mvm_id_and_color
+  * @lmac_id: the lmac id the binding belongs to
+  */
+ struct iwl_binding_cmd {
+@@ -1022,7 +1028,8 @@ struct iwl_binding_cmd {
+ 
+ /**
+  * struct iwl_time_quota_data - configuration of time quota per binding
+- * @id_and_color: ID and color of the relevant Binding
++ * @id_and_color: ID and color of the relevant Binding,
++ *	&enum iwl_mvm_id_and_color
+  * @quota: absolute time quota in TU. The scheduler will try to divide the
+  *	remainig quota (after Time Events) according to this quota.
+  * @max_duration: max uninterrupted context duration in TU
 -- 
 2.11.0
