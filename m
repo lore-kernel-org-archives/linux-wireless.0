@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40470 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752550AbdFOOol (ORCPT
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:32926 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750747AbdFBFai (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 10:44:41 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [PATCH 2/6] rsi: use enum for FSM states
-References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
-        <1496412785-8720-3-git-send-email-amit.karwar@redpinesignals.com>
-        <87lgowpeno.fsf@purkki.adurom.net>
-        <CAEhWJFmzEotu+MpKaHqtXFnWyQWsekk23+Pj-3z8oEVmy2Z2DQ@mail.gmail.com>
-        <87zidb2aq5.fsf@kamboji.qca.qualcomm.com>
-        <CAEhWJFmXJSJNJxppNtfK-vTRaq1vCZckWChW++TCfj8j8-ZwAg@mail.gmail.com>
-Date: Thu, 15 Jun 2017 17:44:32 +0300
-In-Reply-To: <CAEhWJFmXJSJNJxppNtfK-vTRaq1vCZckWChW++TCfj8j8-ZwAg@mail.gmail.com>
-        (Amitkumar Karwar's message of "Wed, 14 Jun 2017 19:55:38 +0530")
-Message-ID: <87r2yle2en.fsf@codeaurora.org> (sfid-20170615_164459_956132_54F044FD)
+        Fri, 2 Jun 2017 01:30:38 -0400
+Received: by mail-qk0-f169.google.com with SMTP id y201so52510436qka.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Jun 2017 22:30:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1496326752.28487.27.camel@synopsys.com>
+References: <1495008675.2606.72.camel@synopsys.com> <CAEhWJFkVe1C9jtxH9zeeMeJiAs86sJGOKSoqMku0qRqNAQujxg@mail.gmail.com>
+ <1495560381.22203.29.camel@synopsys.com> <CAEhWJFkqCWE1QLJCRvkQEo0YokfzcW1sVFitwY_Q+OUcMBYSGg@mail.gmail.com>
+ <1496326752.28487.27.camel@synopsys.com>
+From: amit karwar <amitkarwar@gmail.com>
+Date: Fri, 2 Jun 2017 11:00:36 +0530
+Message-ID: <CAEhWJF=0W3RiR+ZAL+CwT-az47TmvPLjbpHjMvx8ByDNXeCaJg@mail.gmail.com> (sfid-20170602_073041_616310_7F655093)
+Subject: Re: git repo with Redpine changes
+To: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "prameela.j04cs@gmail.com" <prameela.j04cs@gmail.com>,
+        "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>,
+        "linux-snps-arc@lists.infradead.org"
+        <linux-snps-arc@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
-
-> On Wed, Jun 14, 2017 at 2:43 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> amit karwar <amitkarwar@gmail.com> writes:
->>
->>> On Tue, Jun 13, 2017 at 12:17 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>
->>>> Also your name in patchwork is not capitalised (patchwork is idiotic and
->>>> takes the name from patchwork user data and not from the patch):
->>>>
->>>>       [1/6] rsi: add usb RS9113 chipset support 2017-06-02 amit
->>>> karwar New
->>>>       [2/6] rsi: use enum for FSM states 2017-06-02 amit karwar New
->>>>       [3/6] rsi: Register interrupt handler before firmware load
->>>> 2017-06-02 amit karwar New
->>>>       [4/6] rsi: receive path enhancement for RS9113 2017-06-02 amit
->>>> karwar New
->>>>       [5/6] rsi: configure new boot parameters to device 2017-06-02
->>>> amit karwar New
->>>>       [6/6] rsi: add tx frame for common device configuration
->>>> 2017-06-02 amit karwar New
->>>>
->>>> To fix that could you please register to patchwork and capitalise your
->>>> name correctly? You have only one chance, patchwork doesn't allow users
->>>> edit the name afterwards, so don't do any typos :)
->>>
->>> Thanks. I have registered with patchwork and corrected my name.
->>
->> What address did you use? Patchwork still shows your name all lower:
->>
->> https://patchwork.kernel.org/project/linux-wireless/list/?submitter=173645
->>
->> I suspect you didn't register with gmail.com, but with some other
->> address. I recommend that you link all your email addresses, including
->> gmail.com, to the same patchwork account and hopefully that fixes it.
->> You should be able to do that from the profile page in patchwork.
+On Thu, Jun 1, 2017 at 7:49 PM, Alexey Brodkin
+<Alexey.Brodkin@synopsys.com> wrote:
+> Hi Amit!
 >
-> I had registered with my gmail id. Also, other email id has also been
-> linked to patchwork. But still patchwork took previous user name.
-> I could not find a way to check my name in patchwork database after
-> login. I have now corrected my display name in gmail's setting.
+> On Thu, 2017-06-01 at 19:24 +0530, amit karwar wrote:
+>> On Tue, May 23, 2017 at 10:56 PM, Alexey Brodkin
+>> <Alexey.Brodkin@synopsys.com> wrote:
+>>
+>> I have posted a firmware image for new firmware loading mechanism to
+>> community. There are some patches for SDIO specific driver
+>> enhancements and fixes. I am sending them in couple of days. With
+>> those patches you will be able to see wireless interface bring up,
+>> connection in open network and data path working.
+>
+> May I have any reference to that post/image?
 
-Good, thanks. This name format bug in patchwork is really annoying, I'm
-suffering from frequently. Let's see how your next submission goes and
-hopefully we can sort it out.
+Here is the link:
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/commit/?id=37857004a430e96dc837db7f967b6d0279053de8
 
--- 
-Kalle Valo
+Regards,
+Amitkumar Karwar
