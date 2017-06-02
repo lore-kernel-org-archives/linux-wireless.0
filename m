@@ -1,121 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58162 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750936AbdFOQr2 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60792 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751126AbdFBL0Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 12:47:28 -0400
-Subject: Re: Question on flushing and deauth frames
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-References: <10e690bb-b201-13e2-8c4d-1708bab37106@candelatech.com>
- <CANUX_P2LrrNzLWRtOERnSyu0q=C4u26V+iJbpxqUssYb80PzEg@mail.gmail.com>
- <485de26b-87ae-6977-dbb2-bc98378d3aeb@candelatech.com>
- <CANUX_P1ppTkXfXS-3RcocB_GBf5earZgZPM3fMiFem2jpRoPZA@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <c291bc94-d1cd-5fca-dba0-d1b617ea0cb8@candelatech.com> (sfid-20170615_184732_177624_209164CF)
-Date: Thu, 15 Jun 2017 09:47:27 -0700
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P1ppTkXfXS-3RcocB_GBf5earZgZPM3fMiFem2jpRoPZA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 2 Jun 2017 07:26:25 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:36 +0300
+Message-Id: <20170602112553.2466-9-luca@coelho.fi> (sfid-20170602_132640_370479_02CEED5B)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 08/25] iwlwifi: mvm: use u8 for reserved fields
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2017 09:34 AM, Emmanuel Grumbach wrote:
-> On Thu, Jun 15, 2017 at 4:32 PM, Ben Greear <greearb@candelatech.com> wrote:
->>
->>
->> On 06/14/2017 11:18 PM, Emmanuel Grumbach wrote:
->>>>
->>>> ath10k is a bit weird about flushing frames, and at least my variant of
->>>> the wave-2
->>>> firmware does not always put the deauth frame on the air when deleting
->>>> stations.
->>>>
->>>> It will likely not be much fun to fix this.  I was wondering if the code
->>>> below
->>>> from ieee80211_set_disassoc() could (easily?) be made to wait for a
->>>> tx-status of the deauth frame
->>>> instead of trying to force a flush?
->>>
->>>
->>> That's exactly what it does:
->>
->>
->> Well, the end effect is supposed to be the same, at least...
->>
->>>>        /*
->>>>          * drop any frame before deauth/disassoc, this can be data or
->>>>          * management frame. Since we are disconnecting, we should not
->>>>          * insist sending these frames which can take time and delay
->>>>          * the disconnection and possible the roaming.
->>>>          */
->>>>         if (tx)
->>>>                 ieee80211_flush_queues(local, sdata, true);
->>>
->>>
->>> Remove all the pending data frames from the queues to clear the way
->>> for the deauth.
->>> Note the drop=true
->>>
->>>>
->>>>         /* deauthenticate/disassociate now */
->>>>         if (tx || frame_buf)
->>>>                 ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid,
->>>> stype,
->>>>                                                reason, tx, frame_buf);
->>>>
->>>
->>> Send the deauth.
->>>
->>>>         /* flush out frame - make sure the deauth was actually sent */
->>>>         if (tx)
->>>>                 ieee80211_flush_queues(local, sdata, false);
->>>>
->>>
->>> Wait for the deauth (drop=false).
->>> The question here is how ath10k implements the flush(, drop=false)
->>
->>
->> Not well, it seems.  I don't think it has a good way to flush (drop=false)
->> an individual vdev, though probably I could implement it.  And, I think that
->> the packets in the mac80211 txqs might be difficult to flush.
->>
->> But, mac80211 gets a txstatus when the deauth is sent, so if it simply
->> waited on that, it would not matter how flush is implemented.  And, it might
->> try to re-send a time or two if getting the deauth through was worth the
->> wait and the initial attempt(s) got a false txstatus.
->>
->
-> Keep in mind that this code is also called when roaming, any
-> additional operations will slow down the roaming process. Not all the
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is a reason to not retransmit, but logically the flush(drop=false) is
-supposed to wait for the frame to be transmitted anyway, and at that point,
-tx-status should be immediately available.
+There's no saying what kind of type a reserved field will
+get in the future, so use u8 arrays to reserve space.
 
-> drivers support tx_status, but I think that this could be implemented
-> internally in ath10k. In iwlwifi, we just wait until the queues get
-> empty without dropping the packets.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h       | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-When you support virtual stations and a fat firmware, that can be tricky to implement.
-
- From your description, are you waiting on a single vdev, or multiple when you flush?
-If multiple, then waiting for tx status of just the deauth frame should be faster
-on average than waiting for the flush since you don't have to flush the other
-vdevs.
-
-Whether drivers support a correct tx-status, I think all of them report *some* tx
-status...that is how mac80211 knows it can clean up the frame?  That would be enough
-to know that the frame at least went through the tx logic and thus was flushed.
-
-> Of course, I am giving my *non authoritative* opinion :)
-
-I appreciate it none the less!
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
+index 6371c342b96d..809ec1ba5025 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-stats.h
+@@ -72,7 +72,7 @@ struct mvm_statistics_dbg {
+ 	__le32 burst_check;
+ 	__le32 burst_count;
+ 	__le32 wait_for_silence_timeout_cnt;
+-	__le32 reserved[3];
++	u8 reserved[12];
+ } __packed; /* STATISTICS_DEBUG_API_S_VER_2 */
+ 
+ struct mvm_statistics_div {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 8e4919a27cc7..69f3065ba600 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -1612,7 +1612,7 @@ struct iwl_mcc_update_cmd {
+ 	u8 source_id;
+ 	u8 reserved;
+ 	__le32 key;
+-	__le32 reserved2[5];
++	u8 reserved2[20];
+ } __packed; /* LAR_UPDATE_MCC_CMD_API_S_VER_2 */
+ 
+ /**
+@@ -2196,7 +2196,7 @@ struct iwl_link_qual_msrmnt_notif {
+ 	__le32 tx_frame_dropped;
+ 	__le32 mac_id;
+ 	__le32 status;
+-	__le32 reserved[3];
++	u8 reserved[12];
+ } __packed; /* LQM_MEASUREMENT_COMPLETE_NTF_API_S_VER1 */
+ 
+ /**
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.11.0
