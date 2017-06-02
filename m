@@ -1,61 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52328 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751906AbdFMJCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 05:02:06 -0400
-Message-ID: <1497344524.6068.5.camel@sipsolutions.net> (sfid-20170613_110226_444570_7390CB36)
-Subject: Re: [PATCH V3 3/9] nl80211: add authorized flag to CONNECT event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Jun 2017 11:02:04 +0200
-In-Reply-To: <1497010130-16186-4-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1497010130-16186-4-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35340 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbdFBV2F (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Jun 2017 17:28:05 -0400
+Received: by mail-oi0-f65.google.com with SMTP id f206so3956155oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 14:28:04 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 3/9] rtlwifi: btcoex: settings before firmware is downloaded
+Date: Fri,  2 Jun 2017 16:27:42 -0500
+Message-Id: <20170602212748.23857-4-Larry.Finger@lwfinger.net> (sfid-20170602_232808_450626_40C1F00C)
+In-Reply-To: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
+References: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-09 at 13:08 +0100, Arend van Spriel wrote:
-> When the driver supports offloading of the PTK/GTK handshakes
-> completion of that during connect changes the layer 2 control
-> port state to authorized. This patch allows the driver to pass
-> that state in cfg80211_connect_done() resulting in adding the
-> new flag NL80211_ATTR_PORT_AUTHORIZED in the NL80211_CMD_CONNECT
-> notification. For 802.1X the driver is expected to issue the
-> NL80211_CMD_CONNECT notification twice. First without the new
-> attribute to inform user-space that 802.1X authentication can
-> start and a second one with the new attribute to indicate the
-> completion of the handshakes.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-So I was going to apply this, but now I'm no longer sure.
+The btcoex is sometimes unstable because there are some unexpected
+behaviors before the firmware has been downloaded successfully.
 
-First of all, I'm concerned it could confuse older tools that don't
-expect to see the notification twice. OTOH, they'd get the connected
-notification now and not really know whether or not data can be passed,
-so it seems unlikely they'd rely on it - but are we really sure about
-that?
+Therefore we force the antenna path settings to avoid this, then let the
+firmware control the btcoexistence when the firmware is ready.
 
-Additionally, I just discussed this with Avi, and it's not clear to us
-what the second notification is actually useful for? If you were going
-to say maybe it makes sense for when you can't send ROAMED, but still
-connected again to the same network so you've already done the 4-way-HS 
-at the time of the first notification - that I think makes sense.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  1 +
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  2 ++
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 13 +++++++++++++
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h   |  1 +
+ 4 files changed, 17 insertions(+)
 
-But it seems that wpa_s moves all state machines to COMPLETE when it
-sends the PMK to the device for offload, so it won't really care about
-when that finished?
-
-However, I think this might actually be a BAD thing, because it would
-leave higher layers trying to do DHCP when the link isn't actually
-ready yet.
-
-(This, btw, is another problem we can solve with the EAPOL-over-nl80211 
-since then we can set the carrier later when the port is authorized.)
-
-So - I have no objections to this patch, but I think the double
-notification needs to be revised, and if needed a separate notification
-for "4-way-HS is done now" can be added.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index 50726beaeead..a98b9548c3c7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -196,5 +196,6 @@ void ex_btc8723b2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ void ex_btc8723b2ant_halt_notify(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist);
++void ex_btc8723b2ant_pre_load_firmware(struct btc_coexist *btcoexist);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index 1d6e3e9abd91..a839d5574422 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -228,3 +228,5 @@ void
+ ex_btc8821a2ant_display_coex_info(
+ 	struct btc_coexist *btcoexist
+ 	);
++void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
++void ex_btc8821a2ant_pre_load_firmware(struct btc_coexist *btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index f13000612913..0cd4926c1ed7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -690,6 +690,19 @@ bool exhalbtc_initlize_variables(struct rtl_priv *adapter)
+ 	return true;
+ }
+ 
++void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
++{
++	if (!halbtc_is_bt_coexist_available(btcoexist))
++		return;
++
++	btcoexist->statistics.cnt_pre_load_firmware++;
++
++	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8723b2ant_pre_load_firmware(btcoexist);
++	}
++}
++
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index c5c360e011a9..eca0e5a78ada 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -486,6 +486,7 @@ struct btc_statistics {
+ 	u32 cnt_coex_dm_switch;
+ 	u32 cnt_stack_operation_notify;
+ 	u32 cnt_dbg_ctrl;
++	u32 cnt_pre_load_firmware;
+ };
+ 
+ struct btc_bt_link_info {
+-- 
+2.13.0
