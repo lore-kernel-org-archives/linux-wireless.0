@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr00066.outbound.protection.outlook.com ([40.107.0.66]:12501
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751515AbdF1UYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:24:19 -0400
-Subject: Re: [PATCH] ieee80211: update public action codes
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <1498601249-8372-1-git-send-email-peter.oh@bowerswilkins.com>
- <d9aaa85b-49ac-494e-7979-afc42d309dc4@broadcom.com>
-Cc: johannes.berg@intel.com
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <ccd3208a-8235-ffbc-79cd-422115f5f3ab@bowerswilkins.com> (sfid-20170628_222425_338464_4AD4A57C)
-Date: Wed, 28 Jun 2017 13:24:06 -0700
-MIME-Version: 1.0
-In-Reply-To: <d9aaa85b-49ac-494e-7979-afc42d309dc4@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from paleale.coelho.fi ([176.9.41.70]:60610 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751150AbdFBJfl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Jun 2017 05:35:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 12:35:12 +0300
+Message-Id: <20170602093516.16369-7-luca@coelho.fi> (sfid-20170602_113546_906631_BFBD4AD2)
+In-Reply-To: <20170602093516.16369-1-luca@coelho.fi>
+References: <20170602093516.16369-1-luca@coelho.fi>
+Subject: [PATCH 06/10] iwlwifi: pcie: only use d0i3 in suspend/resume if system_pm is set to d0i3
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Luca Coelho <luciano.coelho@intel.com>
 
+We only need to handle d0i3 entry and exit during suspend resume if
+system_pm is set to IWL_PLAT_PM_MODE_D0I3, otherwise d0i3 entry
+failures will cause suspend to fail.
 
-On 06/28/2017 01:16 PM, Arend van Spriel wrote:
-> On 28-06-17 00:07, peter.oh@bowerswilkins.com wrote:
->> From: Peter Oh <peter.oh@bowerswilkins.com>
->>
->> Update Public Action field values as updated in IEEE Std 802.11-2016,
->> so that modules/drivers can refer it.
-> Hi Peter,
->
-> I am pretty sure there are a lot of other definitions in the 802.11 spec
-> that are not in a linux header file. So are you planning on submitting
-> driver patches using the added definitions. Stuff is mostly added as needed.
-I have extra patches that uses the new values, but doubt if it's fit to 
-be upstream.
-> Regards,
-> Arend
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=194791
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 70acf850a9f1..93cbc7a69bcd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2803,7 +2803,8 @@ static struct iwl_trans_dump_data
+ #ifdef CONFIG_PM_SLEEP
+ static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
+ {
+-	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3)
++	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3 &&
++	    (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3))
+ 		return iwl_pci_fw_enter_d0i3(trans);
+ 
+ 	return 0;
+@@ -2811,7 +2812,8 @@ static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
+ 
+ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
+ {
+-	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3)
++	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3 &&
++	    (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3))
+ 		iwl_pci_fw_exit_d0i3(trans);
+ }
+ #endif /* CONFIG_PM_SLEEP */
+-- 
+2.11.0
