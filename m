@@ -1,50 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40622 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751855AbdF2H5q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 03:57:46 -0400
-Message-ID: <1498723062.3141.0.camel@sipsolutions.net> (sfid-20170629_095750_185915_5F90CEE2)
-Subject: Re: [PATCH] ieee80211: update public action codes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Oh <peter.oh@bowerswilkins.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Date: Thu, 29 Jun 2017 09:57:42 +0200
-In-Reply-To: <ccd3208a-8235-ffbc-79cd-422115f5f3ab@bowerswilkins.com>
-References: <1498601249-8372-1-git-send-email-peter.oh@bowerswilkins.com>
-         <d9aaa85b-49ac-494e-7979-afc42d309dc4@broadcom.com>
-         <ccd3208a-8235-ffbc-79cd-422115f5f3ab@bowerswilkins.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33905 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbdFBV2H (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Jun 2017 17:28:07 -0400
+Received: by mail-oi0-f68.google.com with SMTP id d99so2085741oic.1
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 14:28:06 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 5/9] rtlwifi: btcoex: add settings before the hardware is ready
+Date: Fri,  2 Jun 2017 16:27:44 -0500
+Message-Id: <20170602212748.23857-6-Larry.Finger@lwfinger.net> (sfid-20170602_232819_620636_BE933C37)
+In-Reply-To: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
+References: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-06-28 at 13:24 -0700, Peter Oh wrote:
-> 
-> On 06/28/2017 01:16 PM, Arend van Spriel wrote:
-> > On 28-06-17 00:07, peter.oh@bowerswilkins.com wrote:
-> > > From: Peter Oh <peter.oh@bowerswilkins.com>
-> > > 
-> > > Update Public Action field values as updated in IEEE Std 802.11-
-> > > 2016,
-> > > so that modules/drivers can refer it.
-> > 
-> > Hi Peter,
-> > 
-> > I am pretty sure there are a lot of other definitions in the 802.11
-> > spec
-> > that are not in a linux header file. So are you planning on
-> > submitting
-> > driver patches using the added definitions. Stuff is mostly added
-> > as needed.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-I think that's mostly laziness though :-) I'm perfectly happy to have
-all these values in even if we don't use them now - they're not going
-to change by not using.
+When the hardware is turned on and in the initialization stage, the PTA
+circuit is unstable. Hence we need to force some hardware settings to
+make sure the PTA circuit work correctly, otherwise it may affect the
+user's experience.
 
-> I have extra patches that uses the new values, but doubt if it's fit
-> to be upstream.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h  |  1 +
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 15 +++++++++++++++
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  1 +
+ 3 files changed, 17 insertions(+)
 
-I guess you can try :)
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index ae3e450c5966..bc1e3042e271 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -198,5 +198,6 @@ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+ void ex_btc8723b2ant_pre_load_firmware(struct btc_coexist *btcoexist);
++void ex_btc8723b2ant_power_on_setting(struct btc_coexist *btcoexist);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 5e6e14fd8c85..8b015e64af49 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -690,6 +690,21 @@ bool exhalbtc_initlize_variables(struct rtl_priv *adapter)
+ 	return true;
+ }
+ 
++void exhalbtc_power_on_setting(struct btc_coexist *btcoexist)
++{
++	if (!halbtc_is_bt_coexist_available(btcoexist))
++		return;
++
++	btcoexist->statistics.cnt_power_on++;
++
++	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8723b2ant_power_on_setting(btcoexist);
++		else if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8723b1ant_power_on_setting(btcoexist);
++	}
++}
++
+ void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
+ {
+ 	if (!halbtc_is_bt_coexist_available(btcoexist))
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index eca0e5a78ada..9b0a6e9c5b20 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -487,6 +487,7 @@ struct btc_statistics {
+ 	u32 cnt_stack_operation_notify;
+ 	u32 cnt_dbg_ctrl;
+ 	u32 cnt_pre_load_firmware;
++	u32 cnt_power_on;
+ };
+ 
+ struct btc_bt_link_info {
+-- 
+2.13.0
