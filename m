@@ -1,72 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59450 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751186AbdFEUn7 (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35344 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751164AbdFBV2F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:43:59 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Jun 2017 23:42:04 +0300
-Message-Id: <20170605204218.30151-12-luca@coelho.fi> (sfid-20170605_224403_060391_7A559A91)
-In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
-References: <20170605204218.30151-1-luca@coelho.fi>
-Subject: [PATCH 11/25] iwlwifi: mvm: disable prph collection in a000 hw
+        Fri, 2 Jun 2017 17:28:05 -0400
+Received: by mail-oi0-f66.google.com with SMTP id f206so3956182oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 14:28:05 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 4/9] rtlwifi: btcoex: hook external PnP notify by chip for wifi driver
+Date: Fri,  2 Jun 2017 16:27:43 -0500
+Message-Id: <20170602212748.23857-5-Larry.Finger@lwfinger.net> (sfid-20170602_232811_086611_75BE8E3C)
+In-Reply-To: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
+References: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Apart from the current list of PRPH that can't be
-collected in A000 HW, the rest of the debug dump
-data the driver collects is valid, so there is no
-need to disable collection only because of this.
+Hook the chip-specific PnP notify functions for the wifi driver to
+notify btcoexistence.
 
-Disable PRPH collecting in A000 HW, and allow
-collecting the rest of the debug data.
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h        |  1 +
+ .../wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c  | 18 ++++++++++++++++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 8aa2992e1427..aac0426112c7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -640,18 +640,21 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index a98b9548c3c7..ae3e450c5966 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -196,6 +196,7 @@ void ex_btc8723b2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ void ex_btc8723b2ant_halt_notify(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist);
++void ex_btc8723b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+ void ex_btc8723b2ant_pre_load_firmware(struct btc_coexist *btcoexist);
  
- 		/* Make room for PRPH registers */
--		for (i = 0; i < ARRAY_SIZE(iwl_prph_dump_addr_comm); i++) {
--			/* The range includes both boundaries */
--			int num_bytes_in_chunk =
--				iwl_prph_dump_addr_comm[i].end -
--				iwl_prph_dump_addr_comm[i].start + 4;
--
--			prph_len += sizeof(*dump_data) +
--				sizeof(struct iwl_fw_error_dump_prph) +
--				num_bytes_in_chunk;
-+		if (!mvm->trans->cfg->gen2) {
-+			for (i = 0; i < ARRAY_SIZE(iwl_prph_dump_addr_comm);
-+			     i++) {
-+				/* The range includes both boundaries */
-+				int num_bytes_in_chunk =
-+					iwl_prph_dump_addr_comm[i].end -
-+					iwl_prph_dump_addr_comm[i].start + 4;
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 0cd4926c1ed7..5e6e14fd8c85 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -916,6 +916,24 @@ void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ {
+ 	if (!halbtc_is_bt_coexist_available(btcoexist))
+ 		return;
 +
-+				prph_len += sizeof(*dump_data) +
-+					sizeof(struct iwl_fw_error_dump_prph) +
-+					num_bytes_in_chunk;
-+			}
- 		}
++	/* currently only 1ant we have to do the notification,
++	 * once pnp is notified to sleep state, we have to leave LPS that
++	 * we can sleep normally.
++	 */
++
++	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8723b1ant_pnp_notify(btcoexist, pnp_state);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8723b2ant_pnp_notify(btcoexist, pnp_state);
++	} else if (IS_HARDWARE_TYPE_8821(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8821a1ant_pnp_notify(btcoexist, pnp_state);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8821a2ant_pnp_notify(btcoexist, pnp_state);
++	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
++	}
+ }
  
--		if (mvm->cfg->mq_rx_supported) {
-+		if (!mvm->trans->cfg->gen2 && mvm->cfg->mq_rx_supported) {
- 			for (i = 0; i <
- 				ARRAY_SIZE(iwl_prph_dump_addr_9000); i++) {
- 				/* The range includes both boundaries */
+ void exhalbtc_periodical(struct btc_coexist *btcoexist)
 -- 
-2.11.0
+2.13.0
