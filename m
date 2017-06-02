@@ -1,37 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41333 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752563AbdFVKBJ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60708 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751149AbdFBL0K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 06:01:09 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 0/4] brcm80211: general admin and headroom rework
-Date: Thu, 22 Jun 2017 11:01:00 +0100
-Message-Id: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170622_120114_398402_77D8BCE6)
+        Fri, 2 Jun 2017 07:26:10 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:31 +0300
+Message-Id: <20170602112553.2466-4-luca@coelho.fi> (sfid-20170602_132636_502366_D4B5F427)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 03/25] iwlwifi: mvm: support old method of NVM parsing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This smallish set contains:
- * rework headroom handling in .start_xmit() callback.
- * add Cypress maintainers for brcm80211.
+From: Sara Sharon <sara.sharon@intel.com>
 
-The series apply to the master branch of the wireless-drivers-next
-repository.
+Add configuration for allowing driver's nvm parsing and
+bypassing the new host command, for debugging.
 
-Arend van Spriel (4):
-  brcmfmac: cleanup kerneldoc for struct brcmf_bus
-  brcmfmac: use atomic_t for statistic counter in struct brcmf_bus
-  brcmfmac: rework headroom check in .start_xmit()
-  MAINTAINERS: add brcm80211 maintainer info from Cypress
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 10 +++++++++-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
- MAINTAINERS                                        |  3 +++
- .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h | 18 +++++++++++++----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 23 +++++++++++++++-------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 13 +++++++-----
- 4 files changed, 41 insertions(+), 16 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
+index 4eeb6b78d952..6fda8627b726 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
+@@ -110,6 +110,7 @@
+ #define IWL_MVM_TOF_IS_RESPONDER		0
+ #define IWL_MVM_SW_TX_CSUM_OFFLOAD		0
+ #define IWL_MVM_HW_CSUM_DISABLE			0
++#define IWL_MVM_PARSE_NVM			0
+ #define IWL_MVM_COLLECT_FW_ERR_DUMP		1
+ #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
+ #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE      2
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 3d68595243fc..a8804bc979fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -744,6 +744,14 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 		iwl_mvm_load_nvm_to_nic(mvm);
+ 	}
+ 
++	if (IWL_MVM_PARSE_NVM && read_nvm) {
++		ret = iwl_nvm_init(mvm, true);
++		if (ret) {
++			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
++			goto error;
++		}
++	}
++
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(REGULATORY_AND_NVM_GROUP,
+ 						NVM_ACCESS_COMPLETE), 0,
+ 				   sizeof(nvm_complete), &nvm_complete);
+@@ -760,7 +768,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 		return ret;
+ 
+ 	/* Read the NVM only at driver load time, no need to do this twice */
+-	if (read_nvm) {
++	if (!IWL_MVM_PARSE_NVM && read_nvm) {
+ 		ret = iwl_mvm_nvm_get_from_fw(mvm);
+ 		if (ret) {
+ 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
 -- 
-1.9.1
+2.11.0
