@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f195.google.com ([209.85.217.195]:32888 "EHLO
-        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751420AbdF2ENj (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60720 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751214AbdFBL0L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 00:13:39 -0400
-Received: by mail-ua0-f195.google.com with SMTP id w19so5883764uac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 21:13:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87zics2ijg.fsf@purkki.adurom.net>
-References: <20170622120004.GA5783@symbol-HP-ZBook-15> <87zics2ijg.fsf@purkki.adurom.net>
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Date: Thu, 29 Jun 2017 09:43:37 +0530
-Message-ID: <CAFqt6zY7eLc7k5E8rAXL1NRjAaEswNDJ0E8vJB42DtHTjqt2PA@mail.gmail.com> (sfid-20170629_061343_367084_A3B863C6)
-Subject: Re: [PATCH v2] rtlwifi: Replace hardcode value with macro
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 2 Jun 2017 07:26:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:33 +0300
+Message-Id: <20170602112553.2466-6-luca@coelho.fi> (sfid-20170602_132637_018816_C84C0410)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 05/25] iwlwifi: mvm: document which group enums are used with which group ID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Wed, Jun 28, 2017 at 9:47 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Souptick Joarder <jrdr.linux@gmail.com> writes:
->
->> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
->> and hw->max_rate_tries are replaced by macro.
->>
->> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->> ---
->> Changes in v2:
->>    - Signed-off was missing in previous one.
+Make it explicit which command definition enum is supposed to be
+used with which command group, rather than relying on being able
+to figure it out by name.
 
-As Signed-off was missing in first patch, so I send v2 with change
-logs mentioned the same.
-Just for clarification, shall I replace the comment mentioned in
-change log with "no change"?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 27 ++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
 
->>
->>  drivers/net/wireless/realtek/rtlwifi/base.c | 6 +++---
->>  drivers/net/wireless/realtek/rtlwifi/base.h | 2 ++
->>  2 files changed, 5 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
->> index bdc3791..f45d093 100644
->> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
->> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
->> @@ -422,9 +422,9 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
->>       hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
->>
->>       /* TODO: Correct this value for our hw */
->> -     /* TODO: define these hard code value */
->> -     hw->max_listen_interval = 10;
->> -     hw->max_rate_tries = 4;
->> +     /* defined these hard code values */
->> +     hw->max_listen_interval = MAX_LISTEN_INTERVAL;
->> +     hw->max_rate_tries = MAX_RATE_TRIES;
->
-> Like Larry said, the comment does not make any sense. Please remove it
-> and send v3.
->
-> --
-> Kalle Valo
-
-Souptick
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 0996127897c1..c69aff91404b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -131,7 +131,7 @@ enum iwl_mvm_tx_fifo {
+ 
+ 
+ /* commands */
+-enum {
++enum iwl_legacy_cmds {
+ 	MVM_ALIVE = 0x1,
+ 	REPLY_ERROR = 0x2,
+ 	ECHO_CMD = 0x3,
+@@ -354,8 +354,29 @@ enum iwl_debug_cmds {
+ 	MFU_ASSERT_DUMP_NTF = 0xFE,
+ };
+ 
+-/* command groups */
+-enum {
++/**
++ * enum iwl_mvm_command_groups - command groups for the firmware
++ * @LEGACY_GROUP: legacy group, uses command IDs from &enum iwl_legacy_cmds
++ * @LONG_GROUP: legacy group with long header, also uses command IDs
++ *	from &enum iwl_legacy_cmds
++ * @SYSTEM_GROUP: system group, uses command IDs from
++ *	&enum iwl_system_subcmd_ids
++ * @MAC_CONF_GROUP: MAC configuration group, uses command IDs from
++ *	&enum iwl_mac_conf_subcmd_ids
++ * @PHY_OPS_GROUP: PHY operations group, uses command IDs from
++ *	&enum iwl_phy_ops_subcmd_ids
++ * @DATA_PATH_GROUP: data path group, uses command IDs from
++ *	&enum iwl_data_path_subcmd_ids
++ * @SCAN_GROUP: scan group, uses command IDs from &enum iwl_scan_subcmd_ids
++ * @NAN_GROUP: NAN group, uses command IDs from &enum iwl_nan_subcmd_ids
++ * @TOF_GROUP: TOF group, uses command IDs from &enum iwl_tof_subcmd_ids
++ * @PROT_OFFLOAD_GROUP: protocol offload group, uses command IDs from
++ *	&enum iwl_prot_offload_subcmd_ids
++ * @REGULATORY_AND_NVM_GROUP: regulatory/NVM group, uses command IDs from
++ *	&enum iwl_regulatory_and_nvm_subcmd_ids
++ * @DEBUG_GROUP: Debug group, uses command IDs from &enum iwl_debug_cmds
++ */
++enum iwl_mvm_command_groups {
+ 	LEGACY_GROUP = 0x0,
+ 	LONG_GROUP = 0x1,
+ 	SYSTEM_GROUP = 0x2,
+-- 
+2.11.0
