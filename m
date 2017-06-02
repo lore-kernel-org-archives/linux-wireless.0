@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52402 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752665AbdFTBOF (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35294 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbdFBV16 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 21:14:05 -0400
-From: miaoqing@codeaurora.org
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        sssa@qti.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 2/2] ath9k: fix tx99 bus error
-Date: Tue, 20 Jun 2017 09:13:40 +0800
-Message-Id: <1497921220-12940-2-git-send-email-miaoqing@codeaurora.org> (sfid-20170620_031409_624070_99FABD4E)
-In-Reply-To: <1497921220-12940-1-git-send-email-miaoqing@codeaurora.org>
-References: <1497921220-12940-1-git-send-email-miaoqing@codeaurora.org>
+        Fri, 2 Jun 2017 17:27:58 -0400
+Received: by mail-oi0-f66.google.com with SMTP id f206so3955716oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 14:27:58 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 0/9] rtlwifi: btcoex: Further updates
+Date: Fri,  2 Jun 2017 16:27:39 -0500
+Message-Id: <20170602212748.23857-1-Larry.Finger@lwfinger.net> (sfid-20170602_232802_083578_A0F696DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+This set of 9 patches contain the material that was originally sent as
+1 of 7. Each of these now accomplish a single task.
 
-The hard coded register 0x9864 and 0x9924 are invalid
-for ar9300 chips.
+Larry
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 2 --
- 1 file changed, 2 deletions(-)
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index ae304355..fe5102c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1821,8 +1821,6 @@ static void ar9003_hw_spectral_scan_wait(struct ath_hw *ah)
- static void ar9003_hw_tx99_start(struct ath_hw *ah, u32 qnum)
- {
- 	REG_SET_BIT(ah, AR_PHY_TEST, PHY_AGC_CLR);
--	REG_SET_BIT(ah, 0x9864, 0x7f000);
--	REG_SET_BIT(ah, 0x9924, 0x7f00fe);
- 	REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_RX_DIS);
- 	REG_WRITE(ah, AR_CR, AR_CR_RXD);
- 	REG_WRITE(ah, AR_DLCL_IFS(qnum), 0);
+Yan-Hsuan Chuang (9):
+  rtlwifi: btcoex: add macros to check chip type
+  rtlwifi: btcoex: rename ex_halbtcXXXXYZant to ex_btcXXXXYZant
+  rtlwifi: btcoex: settings before firmware is downloaded
+  rtlwifi: btcoex: hook external PnP notify by chip for wifi driver
+  rtlwifi: btcoex: add settings before the hardware is ready
+  rtlwifi: btcoex: hook external functions for newer chips
+  rtlwifi: btcoex: bind BT coex information with wifi driver
+  rtlwifi: btcoex: remove unused display functions
+  rtlwifi: btcoex: let btcoex get wifi rssi and link status
+
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  22 +
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |  32 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  52 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  41 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  38 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  26 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 838 ++++++++++++++++-----
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  42 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  35 +-
+ 11 files changed, 814 insertions(+), 317 deletions(-)
+
 -- 
-1.9.1
+2.13.0
