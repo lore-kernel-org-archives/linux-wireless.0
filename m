@@ -1,52 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout02.posteo.de ([185.67.36.142]:58517 "EHLO mout02.posteo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751013AbdFAGrv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 02:47:51 -0400
-Message-ID: <1496299074.13131.3.camel@embedded.rocks> (sfid-20170601_084755_564094_5958B66F)
-Subject: Re: brcmfmac experiment for a specific use case - tx throughput
- maximization for slow CPU with glomming
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: =?ISO-8859-1?Q?J=E9r=F4me?= Carretero <cJ-ko@zougloub.eu>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Wright Feng <Wright.Feng@cypress.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Date: Thu, 01 Jun 2017 08:37:54 +0200
-In-Reply-To: <20170524073326.3a16481b@Vantage>
-References: <20170524073326.3a16481b@Vantage>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:60908 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751138AbdFBL2B (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Jun 2017 07:28:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:38 +0300
+Message-Id: <20170602112553.2466-11-luca@coelho.fi> (sfid-20170602_132805_343488_E5E9F14D)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 10/25] iwlwifi: mvm: add documentation to some WoWLAN commands
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jérôme,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Wed, 2017-05-24 at 07:33 -0400, Jérôme Carretero wrote:
-> Hi,
-> 
-> 
-> I've crippled a Raspberry Pi 3 (1 core, 200 MHz) and observed that the
-> glomming feature has a definite impact on TX performance, but it looks
-> like at this CPU frequency, the work queue is solicited "too often"
-> by brcmf_sdio_trigger_dpc() and glomming is only doing 4 packets at
-> once, resulting in maybe a sub-optimal throughput.
+Add some documentation for the WoWLAN commands, also linking the
+correct enums used.
 
-I'm experiencing low throughput with a BCM43362 wifi chip attached via
-SDIO to an i.MX28 [1,2]. After disabling some Kernel debug features I'm
-getting now a TCP throughput of 12.5 Mbps for the wifi interface, which
-is still below the throughput I get for the Cubietruck.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h | 29 +++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
-> 
-> I have a vague idea that deliberately delaying the transmissions so as
-> to wait for either a small timeout, or the glomming level has been
-> reached, would be something worth exploring.
-> But I haven't spent a long time looking at the driver.
-
-If you are in need for any testing I'm willing to help!
-
-[1] https://www.spinics.net/lists/linux-wireless/msg153257.html	
-[2] http://lists.infradead.org/pipermail/linux-arm-kernel/2016-October/
-461137.html
-
-Jörg
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+index 5f22cc7ac26a..edde49202786 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,6 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -254,6 +255,17 @@ enum iwl_wowlan_flags {
+ 	ENABLE_STORE_BEACON	= BIT(4),
+ };
+ 
++/**
++ * struct iwl_wowlan_config_cmd - WoWLAN configuration
++ * @wakeup_filter: filter from &enum iwl_wowlan_wakeup_filters
++ * @non_qos_seq: non-QoS sequence counter to use next
++ * @qos_seq: QoS sequence counters to use next
++ * @wowlan_ba_teardown_tids: bitmap of BA sessions to tear down
++ * @is_11n_connection: indicates HT connection
++ * @offloading_tid: TID reserved for firmware use
++ * @flags: extra flags, see &enum iwl_wowlan_flags
++ * @reserved: reserved
++ */
+ struct iwl_wowlan_config_cmd {
+ 	__le32 wakeup_filter;
+ 	__le16 non_qos_seq;
+@@ -370,6 +382,21 @@ struct iwl_wowlan_gtk_status {
+ 	struct iwl_wowlan_rsc_tsc_params_cmd rsc;
+ } __packed; /* WOWLAN_GTK_MATERIAL_VER_1 */
+ 
++/**
++ * struct iwl_wowlan_status - WoWLAN status
++ * @gtk: GTK data
++ * @replay_ctr: GTK rekey replay counter
++ * @pattern_number: number of the matched pattern
++ * @non_qos_seq_ctr: non-QoS sequence counter to use next
++ * @qos_seq_ctr: QoS sequence counters to use next
++ * @wakeup_reasons: wakeup reasons, see &enum iwl_wowlan_wakeup_reason
++ * @num_of_gtk_rekeys: number of GTK rekeys
++ * @transmitted_ndps: number of transmitted neighbor discovery packets
++ * @received_beacons: number of received beacons
++ * @wake_packet_length: wakeup packet length
++ * @wake_packet_bufsize: wakeup packet buffer size
++ * @wake_packet: wakeup packet
++ */
+ struct iwl_wowlan_status {
+ 	struct iwl_wowlan_gtk_status gtk;
+ 	__le64 replay_ctr;
+-- 
+2.11.0
