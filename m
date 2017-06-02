@@ -1,100 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:36479 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751156AbdFYPnx (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60752 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751230AbdFBL0Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 11:43:53 -0400
-Received: by mail-ot0-f193.google.com with SMTP id r67so9298105ota.3
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 08:43:53 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 04/10] rtlwifi: add amplifier type for 8812ae
-Date: Sun, 25 Jun 2017 10:43:38 -0500
-Message-Id: <20170625154344.19213-5-Larry.Finger@lwfinger.net> (sfid-20170625_174400_996384_B7074CC0)
-In-Reply-To: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
-References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+        Fri, 2 Jun 2017 07:26:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:35 +0300
+Message-Id: <20170602112553.2466-8-luca@coelho.fi> (sfid-20170602_132639_252723_5E4E039B)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 07/25] iwlwifi: mvm: fix MCC endianness bug
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-With correct amplifier_type, the phy praser can choose correct parameters.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-v2 - no changes
----
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    | 41 +++++++++++++++++++++-
- 1 file changed, 40 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c    | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 2bc6bace069c..8f4abb3d7669 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -2966,6 +2966,44 @@ static void _rtl8812ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
- 	}
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index c69aff91404b..8e4919a27cc7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -1681,7 +1681,7 @@ struct iwl_mcc_update_resp {
+  * @reserved1: reserved for alignment
+  */
+ struct iwl_mcc_chub_notif {
+-	u16 mcc;
++	__le16 mcc;
+ 	u8 source_id;
+ 	u8 reserved1;
+ } __packed; /* LAR_MCC_NOTIFY_S */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 67a6c9c9af27..e7b16ecccb86 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -913,8 +913,8 @@ void iwl_mvm_rx_chub_update_mcc(struct iwl_mvm *mvm,
+ 	if (WARN_ON_ONCE(!iwl_mvm_is_lar_supported(mvm)))
+ 		return;
  
-+static void _rtl8812ae_read_amplifier_type(struct ieee80211_hw *hw, u8 *hwinfo,
-+					   bool autoload_fail)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+
-+	u8 ext_type_pa_2g_a  = (hwinfo[0xBD] & BIT(2))      >> 2; /* 0xBD[2] */
-+	u8 ext_type_pa_2g_b  = (hwinfo[0xBD] & BIT(6))      >> 6; /* 0xBD[6] */
-+	u8 ext_type_pa_5g_a  = (hwinfo[0xBF] & BIT(2))      >> 2; /* 0xBF[2] */
-+	u8 ext_type_pa_5g_b  = (hwinfo[0xBF] & BIT(6))      >> 6; /* 0xBF[6] */
-+	/* 0xBD[1:0] */
-+	u8 ext_type_lna_2g_a = (hwinfo[0xBD] & (BIT(1) | BIT(0))) >> 0;
-+	/* 0xBD[5:4] */
-+	u8 ext_type_lna_2g_b = (hwinfo[0xBD] & (BIT(5) | BIT(4))) >> 4;
-+	/* 0xBF[1:0] */
-+	u8 ext_type_lna_5g_a = (hwinfo[0xBF] & (BIT(1) | BIT(0))) >> 0;
-+	/* 0xBF[5:4] */
-+	u8 ext_type_lna_5g_b = (hwinfo[0xBF] & (BIT(5) | BIT(4))) >> 4;
-+
-+	_rtl8812ae_read_pa_type(hw, hwinfo, autoload_fail);
-+
-+	/* [2.4G] Path A and B are both extPA */
-+	if ((rtlhal->pa_type_2g & (BIT(5) | BIT(4))) == (BIT(5) | BIT(4)))
-+		rtlhal->type_gpa  = ext_type_pa_2g_b  << 2 | ext_type_pa_2g_a;
-+
-+	/* [5G] Path A and B are both extPA */
-+	if ((rtlhal->pa_type_5g & (BIT(1) | BIT(0))) == (BIT(1) | BIT(0)))
-+		rtlhal->type_apa  = ext_type_pa_5g_b  << 2 | ext_type_pa_5g_a;
-+
-+	/* [2.4G] Path A and B are both extLNA */
-+	if ((rtlhal->lna_type_2g & (BIT(7) | BIT(3))) == (BIT(7) | BIT(3)))
-+		rtlhal->type_glna = ext_type_lna_2g_b << 2 | ext_type_lna_2g_a;
-+
-+	/* [5G] Path A and B are both extLNA */
-+	if ((rtlhal->lna_type_5g & (BIT(7) | BIT(3))) == (BIT(7) | BIT(3)))
-+		rtlhal->type_alna = ext_type_lna_5g_b << 2 | ext_type_lna_5g_a;
-+}
-+
- static void _rtl8821ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
- 				    bool autoload_fail)
- {
-@@ -3114,7 +3152,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
- 					       hwinfo);
+-	mcc[0] = notif->mcc >> 8;
+-	mcc[1] = notif->mcc & 0xff;
++	mcc[0] = le16_to_cpu(notif->mcc) >> 8;
++	mcc[1] = le16_to_cpu(notif->mcc) & 0xff;
+ 	mcc[2] = '\0';
+ 	src = notif->source_id;
  
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
--		_rtl8812ae_read_pa_type(hw, hwinfo, rtlefuse->autoload_failflag);
-+		_rtl8812ae_read_amplifier_type(hw, hwinfo,
-+					       rtlefuse->autoload_failflag);
- 		_rtl8812ae_read_bt_coexist_info_from_hwpg(hw,
- 				rtlefuse->autoload_failflag, hwinfo);
- 	} else {
 -- 
-2.12.3
+2.11.0
