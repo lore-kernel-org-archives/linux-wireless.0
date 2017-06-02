@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51640 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdFVIlO (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60728 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751149AbdFBL0M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 04:41:14 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH 05/12] ath10k: QCA9377 hw1.0: update board-2.bin
-Date: Thu, 22 Jun 2017 11:32:01 +0300
-Message-ID: <1498120328-2017-6-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170622_104117_875345_D3B5B2B8)
-In-Reply-To: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 2 Jun 2017 07:26:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:34 +0300
+Message-Id: <20170602112553.2466-7-luca@coelho.fi> (sfid-20170602_132637_595694_0F8FC0F8)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 06/25] iwlwifi: mvm: use proper sta_addr in firmware API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
+
+There's no point to declare an address as a __le32/__le16
+and then only take a pointer to it anyway, change that to
+just a sta_addr[ETH_ALEN].
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- ath10k/QCA9377/hw1.0/board-2.bin | Bin 427668 -> 304308 bytes
- 1 file changed, 0 insertions(+), 0 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 6 ++----
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 2 +-
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/ath10k/QCA9377/hw1.0/board-2.bin b/ath10k/QCA9377/hw1.0/board-2.bin
-index 841456c9e982599fb4c3552d0ab28c62abc6f63f..a92e8cbd168ead02d829d9fa80e7ef4599b9a44b 100644
-GIT binary patch
-delta 168
-zcmV;Z09XH%jT*Gc60n*ew;G}W{2#Yg0|U6Aw{8RkC_uM%ApwM7w;H4a{2#aWp#gSa
-zw~QtRDnPf^f&y1Sw@u>$2_U!jqXTzfx6Nb($>6v4r3ICMx65V*$sduh1eds>0Y4=&
-zI4pB@Vsm+ObY*QVWMy_~V`V)tI59A70RR91ydMAnydOdQmmH!29|8sulMx#mw^*V9
-W^c)AA9|8cJ-vP7ngwX+$gdecERza}<
-
-delta 618
-zcmdmTQfNxA)P`9KOiwZ<*2ptS2u_};BE9*B!UM+5GnjNmHa|7H%E|P29!O3cEH`mS
-z&*l`x1jfxvm^|1#lz>1H3m{b-XzQ-+eXAL-^K3pUcABwXYG8pNhV`2#s$62+Y!tnM
-z6<0{9mIFfyM<}{Z$1Rt-{VM0isz36R%^s?3pQXqsq%b{)k&zF=+}@+en3n)z|B>JR
-zZ6RY>!t@>$7Cs#IY=3ISg43eyOMfupmOLuKgj@2d1rvwY=3WI(h3(gxm=qK?PjlF@
-zU_0Mpruc--z7I7WwqI*xR8ZI+#?1WS0mzjJ3ERz{Fi&mRp3TIh?XZ1Y3d=ot0K9Iq
-Aj{pDw
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index 81b98915b1a4..c03fbb81efd1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -594,8 +594,7 @@ struct iwl_mvm_tx_resp {
+ /**
+  * struct iwl_mvm_ba_notif - notifies about reception of BA
+  * ( BA_NOTIF = 0xc5 )
+- * @sta_addr_lo32: lower 32 bits of the MAC address
+- * @sta_addr_hi16: upper 16 bits of the MAC address
++ * @sta_addr: MAC address
+  * @sta_id: Index of recipient (BA-sending) station in fw's station table
+  * @tid: tid of the session
+  * @seq_ctl:
+@@ -609,8 +608,7 @@ struct iwl_mvm_tx_resp {
+  *	for Tx-ing then this value will be set to 0 by FW.
+  */
+ struct iwl_mvm_ba_notif {
+-	__le32 sta_addr_lo32;
+-	__le16 sta_addr_hi16;
++	u8 sta_addr[ETH_ALEN];
+ 	__le16 reserved;
+ 
+ 	u8 sta_id;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index aa76c8baecce..64ca8b92f8d2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1850,7 +1850,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 
+ 	IWL_DEBUG_TX_REPLY(mvm,
+ 			   "BA_NOTIFICATION Received from %pM, sta_id = %d\n",
+-			   (u8 *)&ba_notif->sta_addr_lo32, ba_notif->sta_id);
++			   ba_notif->sta_addr, ba_notif->sta_id);
+ 
+ 	IWL_DEBUG_TX_REPLY(mvm,
+ 			   "TID = %d, SeqCtl = %d, bitmap = 0x%llx, scd_flow = %d, scd_ssn = %d sent:%d, acked:%d\n",
 -- 
-2.7.4
+2.11.0
