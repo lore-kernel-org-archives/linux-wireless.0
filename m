@@ -1,149 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34222 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:60594 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753765AbdFVVVO (ORCPT
+        with ESMTP id S1751239AbdFBJfc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:21:14 -0400
+        Fri, 2 Jun 2017 05:35:32 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:38 +0300
-Message-Id: <20170622212101.16422-3-luca@coelho.fi> (sfid-20170622_232127_511235_BB32C1AD)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 02/25] iwlwifi: remove resp_pkt NULL checks
+Date: Fri,  2 Jun 2017 12:35:11 +0300
+Message-Id: <20170602093516.16369-6-luca@coelho.fi> (sfid-20170602_113539_562823_FE159901)
+In-Reply-To: <20170602093516.16369-1-luca@coelho.fi>
+References: <20170602093516.16369-1-luca@coelho.fi>
+Subject: [PATCH 05/10] iwlwifi: mvm: fix firmware debug restart recording
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Contrary to what some of the comments say, if rfkill was
-asserted the transport will return -ERFKILL instead of
-success, if CMD_WANT_SKB was set, so it's not necessary
-to check cmd.resp_pkt for being NULL if the return code
-was success.
+When we want to stop the recording of the firmware debug
+and restart it later without reloading the firmware we
+don't need to resend the configuration that comes with
+host commands.
+Sending those commands confused the hardware and led to
+an NMI 0x66.
 
-Validate that this is true in iwl_trans_send_cmd().
+Change the flow as following:
+* read the relevant registers (DBGC_IN_SAMPLE, DBGC_OUT_CTRL)
+* clear those registers
+* wait for the hardware to complete its write to the buffer
+* get the data
+* restore the value of those registers (to restart the
+  recording)
 
-Most of the other code modifications were done with the
-following spatch:
-    @@
-    struct iwl_host_cmd cmd;
-    identifier pkt;
-    @@
-    <...
-    (
-    pkt = cmd.resp_pkt;
-    ...
-    -if (!pkt) { ... }
-    |
-    pkt = cmd.resp_pkt;
-    ...
-    -if (WARN_ON(!pkt)) { ... }
-    |
-    -if (!cmd.resp_pkt) { ... }
-    )
-    ...>
+For early start (where the configuration is already
+compiled in the firmware), we don't need to set those
+registers after the firmware has been loaded, but only
+when we want to restart the recording without having
+restarted the firmware.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c |  3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c    | 12 ------------
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c   |  4 ----
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c   |  3 ---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c |  5 -----
- 5 files changed, 3 insertions(+), 24 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h   |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 12 +---------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 32 ++++++++++++++++++-------
+ 4 files changed, 27 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index c0871f8f2c68..dcf596217d9e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -143,6 +143,9 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (!(cmd->flags & CMD_ASYNC))
- 		lock_map_release(&trans->sync_cmd_lockdep_map);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 306bc967742e..77efbb78e867 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -370,6 +370,7 @@
+ #define MON_DMARB_RD_DATA_ADDR		(0xa03c5c)
  
-+	if (WARN_ON((cmd->flags & CMD_WANT_SKB) && !ret && !cmd->resp_pkt))
-+		return -EIO;
-+
- 	return ret;
+ #define DBGC_IN_SAMPLE			(0xa03c00)
++#define DBGC_OUT_CTRL			(0xa03c0c)
+ 
+ /* enable the ID buf for read */
+ #define WFPM_PS_CTL_CLR			0xA0300C
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 7b86a4f1b574..c8712e6eea74 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -1002,14 +1002,6 @@ int iwl_mvm_fw_dbg_collect_trig(struct iwl_mvm *mvm,
+ 	return 0;
  }
- IWL_EXPORT_SYMBOL(iwl_trans_send_cmd);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 119a3bd92c50..0493a03ec3ed 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1795,12 +1795,6 @@ iwl_mvm_get_wakeup_status(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		return ERR_PTR(ret);
- 	}
  
--	/* RF-kill already asserted again... */
--	if (!cmd.resp_pkt) {
--		fw_status = ERR_PTR(-ERFKILL);
--		goto out_free_resp;
--	}
+-static inline void iwl_mvm_restart_early_start(struct iwl_mvm *mvm)
+-{
+-	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000)
+-		iwl_clear_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
+-	else
+-		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 1);
+-}
 -
- 	status_size = sizeof(*fw_status);
- 
- 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
-@@ -1925,12 +1919,6 @@ iwl_mvm_netdetect_query_results(struct iwl_mvm *mvm,
- 		return ret;
- 	}
- 
--	/* RF-kill already asserted again... */
--	if (!cmd.resp_pkt) {
--		ret = -ERFKILL;
--		goto out_free_resp;
+ int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, u8 conf_id)
+ {
+ 	u8 *ptr;
+@@ -1023,10 +1015,8 @@ int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, u8 conf_id)
+ 	/* EARLY START - firmware's configuration is hard coded */
+ 	if ((!mvm->fw->dbg_conf_tlv[conf_id] ||
+ 	     !mvm->fw->dbg_conf_tlv[conf_id]->num_of_hcmds) &&
+-	    conf_id == FW_DBG_START_FROM_ALIVE) {
+-		iwl_mvm_restart_early_start(mvm);
++	    conf_id == FW_DBG_START_FROM_ALIVE)
+ 		return 0;
 -	}
--
- 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
- 	if (len < sizeof(*query)) {
- 		IWL_ERR(mvm, "Invalid scan offload profiles query response!\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index 87b9ebfc653e..beead0bc08c9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -118,10 +118,6 @@ static int iwl_nvm_write_chunk(struct iwl_mvm *mvm, u16 section,
- 		return ret;
  
- 	pkt = cmd.resp_pkt;
--	if (!pkt) {
--		IWL_ERR(mvm, "Error in NVM_ACCESS response\n");
--		return -EINVAL;
--	}
- 	/* Extract & check NVM write response */
- 	nvm_resp = (void *)pkt->data;
- 	if (le16_to_cpu(nvm_resp->status) != READ_NVM_CHUNK_SUCCEED) {
+ 	if (!mvm->fw->dbg_conf_tlv[conf_id])
+ 		return -EINVAL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index ed20c0c5abc8..52f8d7a6a7dc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1756,6 +1756,7 @@ static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+ 	if (!iwl_mvm_has_new_tx_api(mvm))
+ 		iwl_free_fw_paging(mvm);
+ 	mvm->ucode_loaded = false;
++	mvm->fw_dbg_conf = FW_DBG_INVALID;
+ 	iwl_trans_stop_device(mvm->trans);
+ }
+ 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 1da55e4a1048..c9686e31b32e 100644
+index 9ffff6ed8133..3da5ec40aaea 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1611,9 +1611,6 @@ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk)
- 	if (ret)
- 		goto out;
+@@ -1149,21 +1149,37 @@ static void iwl_mvm_fw_error_dump_wk(struct work_struct *work)
  
--	if (!get_status_cmd.resp_pkt)
--		goto out;
--
- 	status = (void *)get_status_cmd.resp_pkt->data;
- 	wakeup_reasons = le32_to_cpu(status->wakeup_reasons);
- 	qos_seq = status->qos_seq_ctr;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 8f4f176e204e..cc5a56818db8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -168,11 +168,6 @@ int iwl_mvm_send_cmd_status(struct iwl_mvm *mvm, struct iwl_host_cmd *cmd,
- 	}
+ 	mutex_lock(&mvm->mutex);
  
- 	pkt = cmd->resp_pkt;
--	/* Can happen if RFKILL is asserted */
--	if (!pkt) {
--		ret = 0;
--		goto out_free_resp;
+-	/* stop recording */
+ 	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		/* stop recording */
+ 		iwl_set_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
++
++		iwl_mvm_fw_error_dump(mvm);
++
++		/* start recording again if the firmware is not crashed */
++		if (!test_bit(STATUS_FW_ERROR, &mvm->trans->status) &&
++		    mvm->fw->dbg_dest_tlv)
++			iwl_clear_bits_prph(mvm->trans,
++					    MON_BUFF_SAMPLE_CTL, 0x100);
+ 	} else {
++		u32 in_sample = iwl_read_prph(mvm->trans, DBGC_IN_SAMPLE);
++		u32 out_ctrl = iwl_read_prph(mvm->trans, DBGC_OUT_CTRL);
++
++		/* stop recording */
+ 		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 0);
+-		/* wait before we collect the data till the DBGC stop */
+ 		udelay(100);
 -	}
++		iwl_write_prph(mvm->trans, DBGC_OUT_CTRL, 0);
++		/* wait before we collect the data till the DBGC stop */
++		udelay(500);
  
- 	resp_len = iwl_rx_packet_payload_len(pkt);
- 	if (WARN_ON_ONCE(resp_len != sizeof(*resp))) {
+-	iwl_mvm_fw_error_dump(mvm);
++		iwl_mvm_fw_error_dump(mvm);
+ 
+-	/* start recording again if the firmware is not crashed */
+-	WARN_ON_ONCE((!test_bit(STATUS_FW_ERROR, &mvm->trans->status)) &&
+-		     mvm->fw->dbg_dest_tlv &&
+-		     iwl_mvm_start_fw_dbg_conf(mvm, mvm->fw_dbg_conf));
++		/* start recording again if the firmware is not crashed */
++		if (!test_bit(STATUS_FW_ERROR, &mvm->trans->status) &&
++		    mvm->fw->dbg_dest_tlv) {
++			iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, in_sample);
++			iwl_write_prph(mvm->trans, DBGC_OUT_CTRL, out_ctrl);
++		}
++	}
+ 
+ 	mutex_unlock(&mvm->mutex);
+ 
 -- 
 2.11.0
