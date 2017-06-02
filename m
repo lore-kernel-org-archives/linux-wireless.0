@@ -1,125 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34929 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751999AbdFWOK3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60942 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751125AbdFBL22 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:29 -0400
-Received: by mail-pf0-f194.google.com with SMTP id s66so7530509pfs.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:28 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 04/17] rsi: remove unnecessary check for 802.11 management packet
-Date: Fri, 23 Jun 2017 19:37:23 +0530
-Message-Id: <1498226856-6305-5-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161032_723126_249D912C)
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Fri, 2 Jun 2017 07:28:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:52 +0300
+Message-Id: <20170602112553.2466-25-luca@coelho.fi> (sfid-20170602_132833_186777_85B0F0C5)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 24/25] iwlwifi: mvm: fix many kernel-doc warnings
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The function rsi_mgmt_pkt_to_core() is for passing the 802.11
-management frames to mac80211. So, it is unnecessary to check
-again for the frame type 802.11 management in this function.
-It can be checked before passing to this function.
+Fix many kernel-doc warnings. In one case, this required adding
+a new enum value to be able to document things properly.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 56 ++++++++++++++-------------------
- 1 file changed, 24 insertions(+), 32 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  | 35 ++++++++++++++--------
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-tof.h    | 16 ++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 15 ++++++++--
+ 3 files changed, 46 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 77cb36a..c73007d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -401,8 +401,7 @@ static int rsi_load_radio_caps(struct rsi_common *common)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
+index 0d88721b7b52..9d87fddd29b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
+@@ -82,6 +82,8 @@
+  * @LTR_CFG_FLAG_SW_SET_SHORT: fixed static short LTR register
+  * @LTR_CFG_FLAG_SW_SET_LONG: fixed static short LONG register
+  * @LTR_CFG_FLAG_DENIE_C10_ON_PD: allow going into C10 on PD
++ * @LTR_CFG_FLAG_UPDATE_VALUES: update config values and short
++ *	idle timeout
   */
- static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
- 				u8 *msg,
--				s32 msg_len,
--				u8 type)
-+				s32 msg_len)
- {
- 	struct rsi_hw *adapter = common->priv;
- 	struct ieee80211_tx_info *info;
-@@ -412,41 +411,32 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
- 	struct sk_buff *skb;
- 	char *buffer;
+ enum iwl_ltr_config_flags {
+ 	LTR_CFG_FLAG_FEATURE_ENABLE = BIT(0),
+@@ -91,11 +93,14 @@ enum iwl_ltr_config_flags {
+ 	LTR_CFG_FLAG_SW_SET_SHORT = BIT(4),
+ 	LTR_CFG_FLAG_SW_SET_LONG = BIT(5),
+ 	LTR_CFG_FLAG_DENIE_C10_ON_PD = BIT(6),
++	LTR_CFG_FLAG_UPDATE_VALUES = BIT(7),
+ };
  
--	if (type == RX_DOT11_MGMT) {
--		if (!adapter->sc_nvifs)
--			return -ENOLINK;
-+	if (!adapter->sc_nvifs)
-+		return -ENOLINK;
+ /**
+  * struct iwl_ltr_config_cmd_v1 - configures the LTR
+  * @flags: See &enum iwl_ltr_config_flags
++ * @static_long: static LTR Long register value.
++ * @static_short: static LTR Short register value.
+  */
+ struct iwl_ltr_config_cmd_v1 {
+ 	__le32 flags;
+@@ -108,10 +113,13 @@ struct iwl_ltr_config_cmd_v1 {
+ /**
+  * struct iwl_ltr_config_cmd - configures the LTR
+  * @flags: See &enum iwl_ltr_config_flags
+- * @static_long:
+- * @static_short:
+- * @ltr_cfg_values:
+- * @ltr_short_idle_timeout:
++ * @static_long: static LTR Long register value.
++ * @static_short: static LTR Short register value.
++ * @ltr_cfg_values: LTR parameters table values (in usec) in folowing order:
++ *	TX, RX, Short Idle, Long Idle. Used only if %LTR_CFG_FLAG_UPDATE_VALUES
++ *	is set.
++ * @ltr_short_idle_timeout: LTR Short Idle timeout (in usec). Used only if
++ *	%LTR_CFG_FLAG_UPDATE_VALUES is set.
+  */
+ struct iwl_ltr_config_cmd {
+ 	__le32 flags;
+@@ -140,7 +148,7 @@ struct iwl_ltr_config_cmd {
+  *		PBW Snoozing enabled
+  * @POWER_FLAGS_ADVANCE_PM_ENA_MSK: Advanced PM (uAPSD) enable mask
+  * @POWER_FLAGS_LPRX_ENA_MSK: Low Power RX enable.
+- * @POWER_FLAGS_AP_UAPSD_MISBEHAVING_ENA_MSK: AP/GO's uAPSD misbehaving
++ * @POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK: AP/GO's uAPSD misbehaving
+  *		detection enablement
+ */
+ enum iwl_power_flags {
+@@ -166,6 +174,7 @@ enum iwl_power_flags {
+  *			Minimum allowed:- 3 * DTIM. Keep alive period must be
+  *			set regardless of power scheme or current power state.
+  *			FW use this value also when PM is disabled.
++ * @debug_flags:	debug flags
+  * @rx_data_timeout:    Minimum time (usec) from last Rx packet for AM to
+  *			PSM transition - legacy PM
+  * @tx_data_timeout:    Minimum time (usec) from last Tx packet for AM to
+@@ -191,7 +200,8 @@ struct iwl_powertable_cmd {
  
--		msg_len -= pad_bytes;
--		if (msg_len <= 0) {
--			rsi_dbg(MGMT_RX_ZONE,
--				"%s: Invalid rx msg of len = %d\n",
--				__func__, msg_len);
--			return -EINVAL;
--		}
-+	msg_len -= pad_bytes;
-+	if (msg_len <= 0) {
-+		rsi_dbg(MGMT_RX_ZONE,
-+			"%s: Invalid rx msg of len = %d\n",
-+			__func__, msg_len);
-+		return -EINVAL;
-+	}
+ /**
+  * enum iwl_device_power_flags - masks for device power command flags
+- * @DEVIC_POWER_FLAGS_POWER_SAVE_ENA_MSK: '1' Allow to save power by turning off
++ * @DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK:
++ *	'1' Allow to save power by turning off
+  *	receiver and transmitter. '0' - does not allow.
+ */
+ enum iwl_device_power_flags {
+@@ -203,6 +213,7 @@ enum iwl_device_power_flags {
+  * DEVICE_POWER_CMD = 0x77 (command, has simple generic response)
+  *
+  * @flags:	Power table command flags from &enum iwl_device_power_flags
++ * @reserved: reserved (padding)
+  */
+ struct iwl_device_power_cmd {
+ 	/* PM_POWER_TABLE_CMD_API_S_VER_6 */
+@@ -223,7 +234,6 @@ struct iwl_device_power_cmd {
+  *			PSM transition - legacy PM
+  * @tx_data_timeout:    Minimum time (usec) from last Tx packet for AM to
+  *			PSM transition - legacy PM
+- * @sleep_interval:	not in use
+  * @skip_dtim_periods:	Number of DTIM periods to skip if Skip over DTIM flag
+  *			is set. For example, if it is required to skip over
+  *			one DTIM, this value need to be set to 2 (DTIM periods).
+@@ -233,7 +243,6 @@ struct iwl_device_power_cmd {
+  *			PSM transition - uAPSD
+  * @lprx_rssi_threshold: Signal strength up to which LP RX can be enabled.
+  *			Default: 80dbm
+- * @num_skip_dtim:	Number of DTIMs to skip if Skip over DTIM flag is set
+  * @snooze_interval:	Maximum time between attempts to retrieve buffered data
+  *			from the AP [msec]
+  * @snooze_window:	A window of time in which PBW snoozing insures that all
+@@ -251,8 +260,9 @@ struct iwl_device_power_cmd {
+  * @heavy_rx_thld_packets:	RX threshold measured in number of packets
+  * @heavy_tx_thld_percentage:	TX threshold measured in load's percentage
+  * @heavy_rx_thld_percentage:	RX threshold measured in load's percentage
+- * @limited_ps_threshold:
+-*/
++ * @limited_ps_threshold: (unused)
++ * @reserved: reserved (padding)
++ */
+ struct iwl_mac_power_cmd {
+ 	/* CONTEXT_DESC_API_T_VER_1 */
+ 	__le32 id_and_color;
+@@ -343,6 +353,7 @@ struct iwl_dev_tx_power_cmd_v3 {
+  * @v3: version 3 of the command, embedded here for easier software handling
+  * @enable_ack_reduction: enable or disable close range ack TX power
+  *	reduction.
++ * @reserved: reserved (padding)
+  */
+ struct iwl_dev_tx_power_cmd {
+ 	/* v4 is just an extension of v3 - keep this here */
+@@ -393,7 +404,6 @@ struct iwl_geo_tx_power_profiles_cmd {
+ /**
+  * struct iwl_beacon_filter_cmd
+  * REPLY_BEACON_FILTERING_CMD = 0xd2 (command)
+- * @id_and_color: MAC contex identifier
+  * @bf_energy_delta: Used for RSSI filtering, if in 'normal' state. Send beacon
+  *      to driver if delta in Energy values calculated for this and last
+  *      passed beacon is greater than this threshold. Zero value means that
+@@ -425,7 +435,8 @@ struct iwl_geo_tx_power_profiles_cmd {
+  *      beacon filtering; beacons will not be forced to be sent to driver
+  *      regardless of whether its temerature has been changed.
+  * @bf_enable_beacon_filter: 1, beacon filtering is enabled; 0, disabled.
+- * @bf_filter_escape_timer: Send beacons to to driver if no beacons were passed
++ * @bf_debug_flag: beacon filtering debug configuration
++ * @bf_escape_timer: Send beacons to to driver if no beacons were passed
+  *      for a specific period of time. Units: Beacons.
+  * @ba_escape_timer: Fully receive and parse beacon if no beacons were passed
+  *      for a longer period of time then this escape-timeout. Units: Beacons.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
+index 86aa51b2210e..eae036af880e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
+@@ -118,11 +118,17 @@ struct iwl_tof_config_cmd {
+  * @bandwidth: current AP Bandwidth: 0  20MHz, 1  40MHz, 2  80MHz
+  * @rate: current AP rate
+  * @ctrl_ch_position: coding of the control channel position relative to
+- *	     the center frequency.
+- *	     40MHz  0 below center, 1 above center
+- *	     80MHz  bits [0..1]: 0  the near 20MHz to the center,
+- *				 1  the far  20MHz to the center
+- *		    bit[2]  as above 40MHz
++ *	the center frequency:
++ *
++ *	40 MHz
++ *		0 below center, 1 above center
++ *
++ *	80 MHz
++ *		bits [0..1]
++ *		 * 0  the near 20MHz to the center,
++ *		 * 1  the far  20MHz to the center
++ *		bit[2]
++ *		 as above 40MHz
+  * @ftm_per_burst: FTMs per Burst
+  * @ftm_resp_ts_avail: '0' - we don't measure over the Initial FTM Response,
+  *		  '1' - we measure over the Initial FTM Response
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index 30008237323a..e7610add13f6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -74,6 +74,7 @@
+  *	Otherwise, use rate_n_flags from the TX command
+  * @TX_CMD_FLG_BAR: this frame is a BA request, immediate BAR is expected
+  *	Must set TX_CMD_FLG_ACK with this flag.
++ * @TX_CMD_FLG_TXOP_PROT: TXOP protection requested
+  * @TX_CMD_FLG_VHT_NDPA: mark frame is NDPA for VHT beamformer sequence
+  * @TX_CMD_FLG_HT_NDPA: mark frame is NDPA for HT beamformer sequence
+  * @TX_CMD_FLG_CSI_FDBK2HOST: mark to send feedback to host (only if good CRC)
+@@ -201,7 +202,7 @@ enum iwl_tx_cmd_sec_ctrl {
  
--		skb = dev_alloc_skb(msg_len);
--		if (!skb) {
--			rsi_dbg(ERR_ZONE, "%s: Failed to allocate skb\n",
--				__func__);
--			return -ENOMEM;
--		}
-+	skb = dev_alloc_skb(msg_len);
-+	if (!skb)
-+		return -ENOMEM;
- 
--		buffer = skb_put(skb, msg_len);
-+	buffer = skb_put(skb, msg_len);
- 
--		memcpy(buffer,
--		       (u8 *)(msg +  FRAME_DESC_SZ + pad_bytes),
--		       msg_len);
-+	memcpy(buffer, (u8 *)(msg +  FRAME_DESC_SZ + pad_bytes), msg_len);
- 
--		pkt_recv = buffer[0];
-+	pkt_recv = buffer[0];
- 
--		info = IEEE80211_SKB_CB(skb);
--		rx_params = (struct skb_info *)info->driver_data;
--		rx_params->rssi = rsi_get_rssi(msg);
--		rx_params->channel = rsi_get_channel(msg);
--		rsi_indicate_pkt_to_os(common, skb);
--	} else {
--		rsi_dbg(MGMT_TX_ZONE, "%s: Internal Packet\n", __func__);
--	}
-+	info = IEEE80211_SKB_CB(skb);
-+	rx_params = (struct skb_info *)info->driver_data;
-+	rx_params->rssi = rsi_get_rssi(msg);
-+	rx_params->channel = rsi_get_channel(msg);
-+	rsi_indicate_pkt_to_os(common, skb);
- 
- 	return 0;
- }
-@@ -1647,8 +1637,10 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
- 			rsi_dbg(FSM_ZONE, "%s: Probe confirm received\n",
- 				__func__);
- 		}
-+	} else if (msg_type == RX_DOT11_MGMT) {
-+		return rsi_mgmt_pkt_to_core(common, msg, msg_len);
- 	} else {
--		return rsi_mgmt_pkt_to_core(common, msg, msg_len, msg_type);
-+		rsi_dbg(INFO_ZONE, "Received packet type: 0x%x\n", msg_type);
- 	}
- 	return 0;
- }
+ /**
+  * enum iwl_tx_offload_assist_flags_pos -  set %iwl_tx_cmd offload_assist values
+- * @TX_CMD_OFFLD_IP_HDR_OFFSET: offset to start of IP header (in words)
++ * @TX_CMD_OFFLD_IP_HDR: offset to start of IP header (in words)
+  *	from mac header end. For normal case it is 4 words for SNAP.
+  *	note: tx_cmd, mac header and pad are not counted in the offset.
+  *	This is used to help the offload in case there is tunneling such as
+@@ -235,12 +236,14 @@ enum iwl_tx_offload_assist_flags_pos {
+  * @len: in bytes of the payload, see below for details
+  * @offload_assist: TX offload configuration
+  * @tx_flags: combination of TX_CMD_FLG_*
++ * @scratch: scratch buffer used by the device
+  * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
+  *	cleared. Combination of RATE_MCS_*
+  * @sta_id: index of destination station in FW station table
+  * @sec_ctl: security control, TX_CMD_SEC_*
+  * @initial_rate_index: index into the the rate table for initial TX attempt.
+  *	Applied if TX_CMD_FLG_STA_RATE_MSK is set, normally 0 for data frames.
++ * @reserved2: reserved
+  * @key: security key
+  * @reserved3: reserved
+  * @life_time: frame life time (usecs??)
+@@ -249,8 +252,11 @@ enum iwl_tx_offload_assist_flags_pos {
+  * @dram_msb_ptr: upper bits of the scratch physical address
+  * @rts_retry_limit: max attempts for RTS
+  * @data_retry_limit: max attempts to send the data packet
+- * @tid_spec: TID/tspec
++ * @tid_tspec: TID/tspec
+  * @pm_frame_timeout: PM TX frame timeout
++ * @reserved4: reserved
++ * @payload: payload (same as @hdr)
++ * @hdr: 802.11 header (same as @payload)
+  *
+  * The byte count (both len and next_frame_len) includes MAC header
+  * (24/26/30/32 bytes)
+@@ -304,10 +310,11 @@ struct iwl_dram_sec_info {
+  * ( TX_CMD = 0x1c )
+  * @len: in bytes of the payload, see below for details
+  * @offload_assist: TX offload configuration
+- * @tx_flags: combination of &iwl_tx_cmd_flags
++ * @flags: combination of &enum iwl_tx_cmd_flags
+  * @dram_info: FW internal DRAM storage
+  * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
+  *	cleared. Combination of RATE_MCS_*
++ * @hdr: 802.11 header
+  */
+ struct iwl_tx_cmd_gen2 {
+ 	__le16 len;
+@@ -519,6 +526,8 @@ struct agg_tx_status {
+  * @pa_integ_res_b: tx power info
+  * @pa_integ_res_c: tx power info
+  * @measurement_req_id: tx power info
++ * @reduced_tpc: transmit power reduction used
++ * @reserved: reserved
+  * @tfd_info: TFD information set by the FH
+  * @seq_ctl: sequence control from the Tx cmd
+  * @byte_cnt: byte count from the Tx cmd
 -- 
-2.7.4
+2.11.0
