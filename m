@@ -1,49 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33458 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbdFPO6C (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60852 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751147AbdFBL1L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:58:02 -0400
-Received: by mail-pf0-f196.google.com with SMTP id w12so6925122pfk.0
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:02 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 09/20] rsi: choose correct endpoint based on queue.
-Date: Fri, 16 Jun 2017 20:24:30 +0530
-Message-Id: <1497624881-2315-10-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165805_785886_06B7D0DB)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Fri, 2 Jun 2017 07:27:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:48 +0300
+Message-Id: <20170602112553.2466-21-luca@coelho.fi> (sfid-20170602_132715_254160_72E1FC45)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 20/25] iwlwifi: Add fw_name_pre_rf_next_step to support different rf steps
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-Till now only management packets were handled. Let's enhance
-the logic for choosing endpoint to accommodate other packets.
+Integrated chip may have different HW and RF steps.
+Currently, the driver supports only different HW steps.
+Add logic to support different RF steps enables combining different
+HW and RF steps.
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 6 ++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 3 +++
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h    | 5 +++++
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c    | 4 ++++
+ 4 files changed, 18 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 99967ce..3febf24 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -384,7 +384,8 @@ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
- 	u32 queueno = ((pkt[1] >> 4) & 0x7);
- 	u8 endpoint;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 110ceefccc15..a2ee6aad3ce3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -73,10 +73,13 @@
+ #define IWL9000_SMEM_LEN		0x68000
  
--	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? WLAN_EP : BT_EP);
-+	endpoint = ((queueno == RSI_WIFI_MGMT_Q || queueno == RSI_WIFI_DATA_Q ||
-+		     queueno == RSI_COEX_Q) ? WLAN_EP : BT_EP);
+ #define  IWL9000_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
++#define  IWL9000RFB_FW_PRE "iwlwifi-9000-pu-a0-jf-b0-"
+ #define  IWL9260A_FW_PRE "iwlwifi-9260-th-a0-jf-a0-"
+ #define  IWL9260B_FW_PRE "iwlwifi-9260-th-b0-jf-b0-"
+ #define IWL9000_MODULE_FIRMWARE(api) \
+ 	IWL9000_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL9000RFB_MODULE_FIRMWARE(api) \
++	IWL9000RFB_FW_PRE "-" __stringify(api) ".ucode"
+ #define IWL9260A_MODULE_FIRMWARE(api) \
+ 	IWL9260A_FW_PRE "-" __stringify(api) ".ucode"
+ #define IWL9260B_MODULE_FIRMWARE(api) \
+@@ -182,6 +185,7 @@ const struct iwl_cfg iwl9270_2ac_cfg = {
+ const struct iwl_cfg iwl9460_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9460",
+ 	.fw_name_pre = IWL9000_FW_PRE,
++	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
+ 	IWL_DEVICE_9000,
+ 	.ht_params = &iwl9000_ht_params,
+ 	.nvm_ver = IWL9000_NVM_VERSION,
+@@ -193,6 +197,7 @@ const struct iwl_cfg iwl9460_2ac_cfg = {
+ const struct iwl_cfg iwl9560_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9560",
+ 	.fw_name_pre = IWL9000_FW_PRE,
++	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
+ 	IWL_DEVICE_9000,
+ 	.ht_params = &iwl9000_ht_params,
+ 	.nvm_ver = IWL9000_NVM_VERSION,
+@@ -202,5 +207,6 @@ const struct iwl_cfg iwl9560_2ac_cfg = {
+ };
  
- 	return rsi_write_multiple(adapter,
- 				  endpoint,
+ MODULE_FIRMWARE(IWL9000_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL9000RFB_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9260A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9260B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index a12197e3ce78..8b3ebd1d4a3d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -275,6 +275,8 @@ struct iwl_pwr_tx_backoff {
+  *	filename is constructed as fw_name_pre<api>.ucode.
+  * @fw_name_pre_next_step: same as @fw_name_pre, only for next step
+  *	(if supported)
++ * @fw_name_pre_rf_next_step: same as @fw_name_pre_next_step, only for rf next
++ *	step. Supported only in integrated solutions.
+  * @ucode_api_max: Highest version of uCode API supported by driver.
+  * @ucode_api_min: Lowest version of uCode API supported by driver.
+  * @max_inst_size: The maximal length of the fw inst section
+@@ -325,6 +327,7 @@ struct iwl_cfg {
+ 	const char *name;
+ 	const char *fw_name_pre;
+ 	const char *fw_name_pre_next_step;
++	const char *fw_name_pre_rf_next_step;
+ 	/* params not likely to change within a device family */
+ 	const struct iwl_base_params *base_params;
+ 	/* params likely to change within a device family */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index c9481b23b1a7..36fb20168598 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -316,6 +316,11 @@
+ #define CSR_HW_REV_DASH(_val)          (((_val) & 0x0000003) >> 0)
+ #define CSR_HW_REV_STEP(_val)          (((_val) & 0x000000C) >> 2)
+ 
++/* HW RFID */
++#define CSR_HW_RFID_FLAVOR(_val)       (((_val) & 0x000000F) >> 0)
++#define CSR_HW_RFID_DASH(_val)         (((_val) & 0x00000F0) >> 4)
++#define CSR_HW_RFID_STEP(_val)         (((_val) & 0x0000F00) >> 8)
++#define CSR_HW_RFID_TYPE(_val)         (((_val) & 0x0FFF000) >> 12)
+ 
+ /**
+  *  hw_rev values
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 5cfacb0bca84..806933377c58 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -218,6 +218,10 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
+ 	if (drv->trans->cfg->device_family == IWL_DEVICE_FAMILY_8000 &&
+ 	    CSR_HW_REV_STEP(drv->trans->hw_rev) == SILICON_B_STEP)
+ 		fw_pre_name = cfg->fw_name_pre_next_step;
++	else if (drv->trans->cfg->integrated &&
++		 CSR_HW_RFID_STEP(drv->trans->hw_rf_id) == SILICON_B_STEP &&
++		 cfg->fw_name_pre_rf_next_step)
++		fw_pre_name = cfg->fw_name_pre_rf_next_step;
+ 	else
+ 		fw_pre_name = cfg->fw_name_pre;
+ 
 -- 
-2.7.4
+2.11.0
