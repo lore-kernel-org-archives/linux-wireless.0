@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33781 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753011AbdFOSZb (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60868 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751147AbdFBL1T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:31 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 11/23] adapter: Do not poll when there is an active tag
-Date: Thu, 15 Jun 2017 11:25:04 -0700
-Message-Id: <20170615182516.4508-12-mgreer@animalcreek.com> (sfid-20170615_202545_304365_5DDF34D4)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+        Fri, 2 Jun 2017 07:27:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:39 +0300
+Message-Id: <20170602112553.2466-12-luca@coelho.fi> (sfid-20170602_132723_854788_BAB5FF98)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 11/25] iwlwifi: mvm: wait for the flushed queue only
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When there is an active tag and a request to start polling is
-received by neard, it will discard the currently registered tag
-and requests that the kernel start another poll.  The kernel receives
-this request and returns EBUSY because there is already an active tag.
-neard receives this failure and reports it to the poll requestor.
-At this point, the tag is active but neard no longer has any knowledge
-of it.  Fix this by returning EBUSY when there is an active tag and
-a new poll request is received.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+The function flushed only agg queue and no more traffic
+is queued on it.
+However, it waits for all queues to empty, which is not
+necessary and may take more time.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- src/adapter.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/src/adapter.c b/src/adapter.c
-index eb1a407..9e3e75e 100644
---- a/src/adapter.c
-+++ b/src/adapter.c
-@@ -358,6 +358,9 @@ static DBusMessage *start_poll_loop(DBusConnection *conn,
- 		return __near_error_failed(msg, ENODEV);
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index bf105c6572ba..9f74d4ff6b73 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2850,8 +2850,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		iwl_mvm_drain_sta(mvm, mvmsta, true);
+ 		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), 0))
+ 			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
+-		iwl_trans_wait_tx_queues_empty(mvm->trans,
+-					       mvmsta->tfd_queue_msk);
++		iwl_trans_wait_tx_queues_empty(mvm->trans, BIT(txq_id));
+ 		iwl_mvm_drain_sta(mvm, mvmsta, false);
  
-+	if (g_hash_table_size(adapter->tags) > 0)
-+		return __near_error_failed(msg, EBUSY);
-+
- 	dbus_message_get_args(msg, NULL, DBUS_TYPE_STRING, &dbus_mode,
- 							DBUS_TYPE_INVALID);
- 
+ 		iwl_mvm_sta_tx_agg(mvm, sta, tid, txq_id, false);
 -- 
-2.13.0
+2.11.0
