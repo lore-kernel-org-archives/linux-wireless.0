@@ -1,85 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34510 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753185AbdFRQM7 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60818 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751188AbdFBL0n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2017 12:12:59 -0400
-Received: by mail-oi0-f66.google.com with SMTP id w127so7233946oiw.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:12:59 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 05/11] rtlwifi: extend debug_comp to u64
-Date: Sun, 18 Jun 2017 11:12:43 -0500
-Message-Id: <20170618161249.6146-6-Larry.Finger@lwfinger.net> (sfid-20170618_181311_029435_4B97DA1F)
-In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
-References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+        Fri, 2 Jun 2017 07:26:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:50 +0300
+Message-Id: <20170602112553.2466-23-luca@coelho.fi> (sfid-20170602_132647_803347_941C9E5B)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 22/25] iwlwifi: kernel-doc: make proper links
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The number of debugging conditions now exceeds the capabilities of a
-32-bit word.
+Using %enum instead of &enum (and in one case, %struct) results in
+the wrong parsing. Fix that so that if documentation is generated,
+the result is clickable links.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/debug.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/debug.h | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h |  8 ++++----
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h       | 10 +++++-----
+ drivers/net/wireless/intel/iwlwifi/iwl-modparams.h     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h  |  4 ++--
+ 4 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
-index 7ecac6116d5d..38fef6dbb44b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
-@@ -27,7 +27,7 @@
- #include <linux/moduleparam.h>
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
+index 420c31dab263..cfebde68a391 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
+@@ -116,7 +116,7 @@ enum iwl_fw_error_dump_type {
  
- #ifdef CONFIG_RTLWIFI_DEBUG
--void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
-+void _rtl_dbg_trace(struct rtl_priv *rtlpriv, u64 comp, int level,
- 		    const char *fmt, ...)
- {
- 	if (unlikely((comp & rtlpriv->cfg->mod_params->debug_mask) &&
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
-index bf5339f1c1bc..a4006104ee8a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
-@@ -169,7 +169,7 @@ enum dbgp_flag_e {
- struct rtl_priv;
+ /**
+  * struct iwl_fw_error_dump_data - data for one type
+- * @type: %enum iwl_fw_error_dump_type
++ * @type: &enum iwl_fw_error_dump_type
+  * @len: the length starting from %data
+  * @data: the data itself
+  */
+@@ -130,7 +130,7 @@ struct iwl_fw_error_dump_data {
+  * struct iwl_fw_error_dump_file - the layout of the header of the file
+  * @barker: must be %IWL_FW_ERROR_DUMP_BARKER
+  * @file_len: the length of all the file starting from %barker
+- * @data: array of %struct iwl_fw_error_dump_data
++ * @data: array of &struct iwl_fw_error_dump_data
+  */
+ struct iwl_fw_error_dump_file {
+ 	__le32 barker;
+@@ -225,7 +225,7 @@ enum iwl_fw_error_dump_mem_type {
  
- __printf(4, 5)
--void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
-+void _rtl_dbg_trace(struct rtl_priv *rtlpriv, u64 comp, int level,
- 		    const char *fmt, ...);
+ /**
+  * struct iwl_fw_error_dump_mem - chunk of memory
+- * @type: %enum iwl_fw_error_dump_mem_type
++ * @type: &enum iwl_fw_error_dump_mem_type
+  * @offset: the offset from which the memory was read
+  * @data: the content of the memory
+  */
+@@ -324,7 +324,7 @@ enum iwl_fw_dbg_trigger {
  
- __printf(4, 5)
-@@ -198,7 +198,7 @@ struct rtl_priv;
+ /**
+  * struct iwl_fw_error_dump_trigger_desc - describes the trigger condition
+- * @type: %enum iwl_fw_dbg_trigger
++ * @type: &enum iwl_fw_dbg_trigger
+  * @data: raw data about what happened
+  */
+ struct iwl_fw_error_dump_trigger_desc {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 89bc008e152f..c178c8f32466 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -468,7 +468,7 @@ enum iwl_fw_dbg_reg_operator {
+ /**
+  * struct iwl_fw_dbg_reg_op - an operation on a register
+  *
+- * @op: %enum iwl_fw_dbg_reg_operator
++ * @op: &enum iwl_fw_dbg_reg_operator
+  * @addr: offset of the register
+  * @val: value
+  */
+@@ -526,7 +526,7 @@ struct iwl_fw_dbg_mem_seg_tlv {
+  * struct iwl_fw_dbg_dest_tlv - configures the destination of the debug data
+  *
+  * @version: version of the TLV - currently 0
+- * @monitor_mode: %enum iwl_fw_dbg_monitor_mode
++ * @monitor_mode: &enum iwl_fw_dbg_monitor_mode
+  * @size_power: buffer size will be 2^(size_power + 11)
+  * @base_reg: addr of the base addr register (PRPH)
+  * @end_reg:  addr of the end addr register (PRPH)
+@@ -595,15 +595,15 @@ enum iwl_fw_dbg_trigger_vif_type {
  
- __printf(4, 5)
- static inline void RT_TRACE(struct rtl_priv *rtlpriv,
--			    int comp, int level,
-+			    u64 comp, int level,
- 			    const char *fmt, ...)
- {
- }
-@@ -211,7 +211,7 @@ static inline void RTPRINT(struct rtl_priv *rtlpriv,
- }
+ /**
+  * struct iwl_fw_dbg_trigger_tlv - a TLV that describes the trigger
+- * @id: %enum iwl_fw_dbg_trigger
+- * @vif_type: %enum iwl_fw_dbg_trigger_vif_type
++ * @id: &enum iwl_fw_dbg_trigger
++ * @vif_type: &enum iwl_fw_dbg_trigger_vif_type
+  * @stop_conf_ids: bitmap of configurations this trigger relates to.
+  *	if the mode is %IWL_FW_DBG_TRIGGER_STOP, then if the bit corresponding
+  *	to the currently running configuration is set, the data should be
+  *	collected.
+  * @stop_delay: how many milliseconds to wait before collecting the data
+  *	after the STOP trigger fires.
+- * @mode: %enum iwl_fw_dbg_trigger_mode - can be stop / start of both
++ * @mode: &enum iwl_fw_dbg_trigger_mode - can be stop / start of both
+  * @start_conf_id: if mode is %IWL_FW_DBG_TRIGGER_START, this defines what
+  *	configuration should be applied when the triggers kicks in.
+  * @occurrences: number of occurrences. 0 means the trigger will never fire.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+index 4d32b10fe50c..0bd85e58cc2c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+@@ -114,7 +114,7 @@ enum iwl_uapsd_disable {
+  * @debug_level: levels are IWL_DL_*
+  * @ant_coupling: antenna coupling in dB, default = 0
+  * @nvm_file: specifies a external NVM file
+- * @uapsd_disable: disable U-APSD, see %enum iwl_uapsd_disable, default =
++ * @uapsd_disable: disable U-APSD, see &enum iwl_uapsd_disable, default =
+  *	IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT
+  * @d0i3_disable: disable d0i3, default = 1,
+  * @d0i3_entry_delay: time to wait after no refs are taken before
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
+index f329e87cd97c..0d88721b7b52 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
+@@ -95,7 +95,7 @@ enum iwl_ltr_config_flags {
  
- static inline void RT_PRINT_DATA(struct rtl_priv *rtlpriv,
--				 int comp, int level,
-+				 u64 comp, int level,
- 				 const char *titlestring,
- 				 const void *hexdata, size_t hexdatalen)
- {
+ /**
+  * struct iwl_ltr_config_cmd_v1 - configures the LTR
+- * @flags: See %enum iwl_ltr_config_flags
++ * @flags: See &enum iwl_ltr_config_flags
+  */
+ struct iwl_ltr_config_cmd_v1 {
+ 	__le32 flags;
+@@ -107,7 +107,7 @@ struct iwl_ltr_config_cmd_v1 {
+ 
+ /**
+  * struct iwl_ltr_config_cmd - configures the LTR
+- * @flags: See %enum iwl_ltr_config_flags
++ * @flags: See &enum iwl_ltr_config_flags
+  * @static_long:
+  * @static_short:
+  * @ltr_cfg_values:
 -- 
-2.12.3
+2.11.0
