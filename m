@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33880 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751131AbdFTURb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jun 2017 16:17:31 -0400
-Message-ID: <1497989849.11421.2.camel@sipsolutions.net> (sfid-20170620_221735_507113_5A3FE052)
-Subject: Re: [PATCH 5/8] qtnfmac: enable reporting the current operating
- channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Tue, 20 Jun 2017 22:17:29 +0200
-In-Reply-To: <20170620200915.kltxuoaxlhnvaat7@bars>
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-         <20170620195517.18373-6-sergey.matyukevich.os@quantenna.com>
-         <1497988764.11421.1.camel@sipsolutions.net>
-         <20170620200915.kltxuoaxlhnvaat7@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:60884 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751150AbdFBL1m (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Jun 2017 07:27:42 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Jun 2017 14:25:51 +0300
+Message-Id: <20170602112553.2466-24-luca@coelho.fi> (sfid-20170602_132800_064747_F75C42B6)
+In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
+References: <20170602112553.2466-1-luca@coelho.fi>
+Subject: [PATCH 23/25] iwlwifi: mvm: remove unused REPLY_MAX
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-06-20 at 23:09 +0300, Sergey Matyukevich wrote:
-> > 
-> > > +     if (sme->channel) {
-> > > +             /* FIXME: need to set proper nl80211_channel_type
-> > > value */
-> > > +             cfg80211_chandef_create(&chandef, sme->channel,
-> > > +                                     NL80211_CHAN_HT20);
-> > > +             /* fall-back to minimal safe chandef description */
-> > > +             if (!cfg80211_chandef_valid(&chandef))
-> > > +                     cfg80211_chandef_create(&chandef, sme-
-> > > > channel,
-> > > 
-> > > +                                             NL80211_CHAN_HT20);
-> > > 
-> > 
-> > This seems odd since you just do the same thing over again? Not
-> > that I
-> > could see how it would be invalid anyway.
-> 
-> The first call of cfg80211_chandef_create will be replaced by proper
-> chandef calculation based on current h/w channel settings. This piece
-> is still in work. NL80211_CHAN_HT20 is going to be used as a safe
-> fallback when channel info turns out to be inconsistent.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yeah, ok. I guess I'd advocate doing that when the code is actually
-there, but I suppose it doesn't really matter much.
+This value is unused, and there's no reason we'd ever use it.
+Just remove it.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 332f204761cc..ef8b47faa265 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -470,8 +470,6 @@ enum iwl_legacy_cmds {
+ 	SCAN_OFFLOAD_PROFILES_QUERY_CMD = 0x56,
+ 	SCAN_OFFLOAD_HOTSPOTS_CONFIG_CMD = 0x58,
+ 	SCAN_OFFLOAD_HOTSPOTS_QUERY_CMD = 0x59,
+-
+-	REPLY_MAX = 0xff,
+ };
+ 
+ /* Please keep this enum *SORTED* by hex value.
+-- 
+2.11.0
