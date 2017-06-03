@@ -1,112 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55747 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751285AbdFEUVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:21:51 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 11/12] NFC: st-nci: Add GPIO ACPI mapping table
-Date: Mon,  5 Jun 2017 23:20:08 +0300
-Message-Id: <20170605202009.78561-12-andriy.shevchenko@linux.intel.com> (sfid-20170605_222202_047666_AC455F43)
-In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
-References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:35920 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751150AbdFCIIk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 3 Jun 2017 04:08:40 -0400
+Received: by mail-wm0-f41.google.com with SMTP id 7so40155035wmo.1
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Jun 2017 01:08:40 -0700 (PDT)
+Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake offload
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1495030794.2442.21.camel@sipsolutions.net>
+ <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
+ <1495099355.2553.1.camel@sipsolutions.net>
+ <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
+ <1495104012.2553.3.camel@sipsolutions.net>
+ <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
+ <1495189263.3274.4.camel@sipsolutions.net>
+ <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
+ <1495448886.2653.12.camel@sipsolutions.net>
+ <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com>
+ <1496050303.2467.3.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d41f58e9-b12e-9e52-a0fb-b674d278353b@broadcom.com> (sfid-20170603_100844_609947_E0C81620)
+Date: Sat, 3 Jun 2017 10:08:38 +0200
+MIME-Version: 1.0
+In-Reply-To: <1496050303.2467.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+On 29-05-17 11:31, Johannes Berg wrote:
+> So if something supports the following:
+> 
+>  * client: offloaded 4-way-HS only
+>  * AP: not offloaded 4-way-HS only
+> 
+> Then you have to support NEW_KEY (AP case) and then using NEW_KEY to
+> detect whether or not a wpa_s configuration option to not use offloaded
+> 4-way-HS can be used will not work correctly.
+> 
+> I don't really see that this is a sensible configuration, but I could
+> imagine it existing if somebody "bolted on" AP functionality for a
+> client-side chipset or something like that.
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+Hi Johannes,
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/st-nci/i2c.c | 16 +++++++++++++---
- drivers/nfc/st-nci/spi.c | 16 +++++++++++++---
- 2 files changed, 26 insertions(+), 6 deletions(-)
+So I want to get back to this as to assure we have the same
+understanding. First off, the proposed offloads are STA-only. So if a
+driver supports STA and AP mode and the 4-way-HS offload, we could
+already have the case you describe here. So not really a "bolted on"
+scenario I would say. It does raise the question whether or not we want
+similar offloads for AP.
 
-diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
-index 157e99992eae..edda253b07fe 100644
---- a/drivers/nfc/st-nci/i2c.c
-+++ b/drivers/nfc/st-nci/i2c.c
-@@ -40,8 +40,6 @@
- #define ST_NCI_DRIVER_NAME "st_nci"
- #define ST_NCI_I2C_DRIVER_NAME "st_nci_i2c"
- 
--#define ST_NCI_GPIO_NAME_RESET "reset"
--
- struct st_nci_i2c_phy {
- 	struct i2c_client *i2c_dev;
- 	struct llt_ndlc *ndlc;
-@@ -205,13 +203,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
- 	.disable = st_nci_i2c_disable,
- };
- 
-+static const struct acpi_gpio_params reset_gpios = { 1, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
-+	{ "reset-gpios", &reset_gpios, 1 },
-+	{},
-+};
-+
- static int st_nci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct device *dev = &client->dev;
-+	int r;
-+
-+	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
-+	if (r)
-+		return r;
- 
- 	/* Get RESET GPIO from ACPI */
--	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET, 1, GPIOD_OUT_HIGH);
-+	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
- 	if (IS_ERR(phy->gpiod_reset)) {
- 		nfc_err(dev, "Unable to get RESET GPIO\n");
- 		return -ENODEV;
-diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
-index d21259cf42c0..80afdb9ea248 100644
---- a/drivers/nfc/st-nci/spi.c
-+++ b/drivers/nfc/st-nci/spi.c
-@@ -41,8 +41,6 @@
- #define ST_NCI_DRIVER_NAME "st_nci"
- #define ST_NCI_SPI_DRIVER_NAME "st_nci_spi"
- 
--#define ST_NCI_GPIO_NAME_RESET "reset"
--
- struct st_nci_spi_phy {
- 	struct spi_device *spi_dev;
- 	struct llt_ndlc *ndlc;
-@@ -220,13 +218,25 @@ static struct nfc_phy_ops spi_phy_ops = {
- 	.disable = st_nci_spi_disable,
- };
- 
-+static const struct acpi_gpio_params reset_gpios = { 1, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
-+	{ "reset-gpios", &reset_gpios, 1 },
-+	{},
-+};
-+
- static int st_nci_spi_acpi_request_resources(struct spi_device *spi_dev)
- {
- 	struct st_nci_spi_phy *phy = spi_get_drvdata(spi_dev);
- 	struct device *dev = &spi_dev->dev;
-+	int r;
-+
-+	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
-+	if (r)
-+		return r;
- 
- 	/* Get RESET GPIO from ACPI */
--	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET, 1, GPIOD_OUT_HIGH);
-+	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
- 	if (IS_ERR(phy->gpiod_reset)) {
- 		nfc_err(dev, "Unable to get RESET GPIO\n");
- 		return PTR_ERR(phy->gpiod_reset);
--- 
-2.11.0
+Regards,
+Arend
