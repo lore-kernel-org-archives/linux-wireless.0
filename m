@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36236 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753140AbdF2Sak (ORCPT
+Received: from magic.merlins.org ([209.81.13.136]:41571 "EHLO
+        mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750775AbdFCQ7y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:30:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:17 +0300
-Message-Id: <20170629183027.15408-6-luca@coelho.fi> (sfid-20170629_203050_026194_47CC8348)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 05/15] iwlwifi: mvm: map cab_queue to real one earlier
+        Sat, 3 Jun 2017 12:59:54 -0400
+Date: Sat, 3 Jun 2017 09:59:50 -0700
+From: Marc MERLIN <marc@merlins.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: After upgrading to 4.11.1, wifi driver refuses to load after being unloaded once.
+Message-ID: <20170603165950.GC29546@merlins.org> (sfid-20170603_185957_877400_0FA3BB56)
+References: <20170526024826.3qjx7pe3kz44klk3@merlins.org> <1496396575.9478.54.camel@coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1496396575.9478.54.camel@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-There may be a difference between the mac80211 vif->cab_queue and
-mvmvif->cab_queue, particularly with TVQM. Make the code map this
-earlier, instead of first returning the mac80211 one again from
-iwl_mvm_get_ctrl_vif_queue().
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 419d0351e0ef..12a35af66918 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -551,9 +551,13 @@ static void iwl_mvm_skb_prepare_status(struct sk_buff *skb,
- static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
- 				      struct ieee80211_tx_info *info, __le16 fc)
- {
-+	struct iwl_mvm_vif *mvmvif;
-+
- 	if (!iwl_mvm_is_dqa_supported(mvm))
- 		return info->hw_queue;
+On Fri, Jun 02, 2017 at 12:42:55PM +0300, Luca Coelho wrote:
+> I kernel v4.9, we stopped supporting firmware versions smaller than 22
+> for the 8260.  But unfortunately I made a mistake in the patch[1] when I
+> removed support for those firmwares and I used 17, which is the lowest
+> version for 7260 devices.
+> 
+> I have just sent out a patch[2] with a fix for that.
+> 
+> You can probably solve your problem by getting the latest firmware we
+> have released, which is version 27.  You can get it from the linux-
+> firmware.git repository[3].  Please try that and let us know how it
+> goes.
  
-+	mvmvif = iwl_mvm_vif_from_mac80211(info->control.vif);
-+
- 	switch (info->control.vif->type) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-@@ -569,7 +573,7 @@ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
- 		    ieee80211_is_deauth(fc) || ieee80211_is_assoc_resp(fc))
- 			return mvm->probe_queue;
- 		if (info->hw_queue == info->control.vif->cab_queue)
--			return info->hw_queue;
-+			return mvmvif->cab_queue;
- 
- 		WARN_ONCE(info->control.vif->type != NL80211_IFTYPE_ADHOC,
- 			  "fc=0x%02x", le16_to_cpu(fc));
-@@ -578,7 +582,7 @@ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
- 		if (ieee80211_is_mgmt(fc))
- 			return mvm->p2p_dev_queue;
- 		if (info->hw_queue == info->control.vif->cab_queue)
--			return info->hw_queue;
-+			return mvmvif->cab_queue;
- 
- 		WARN_ON_ONCE(1);
- 		return mvm->p2p_dev_queue;
-@@ -645,9 +649,6 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 							   hdr->frame_control);
- 			if (queue < 0)
- 				return -1;
--
--			if (queue == info.control.vif->cab_queue)
--				queue = mvmvif->cab_queue;
- 		} else if (info.control.vif->type == NL80211_IFTYPE_STATION &&
- 			   is_multicast_ether_addr(hdr->addr1)) {
- 			u8 ap_sta_id = ACCESS_ONCE(mvmvif->ap_sta_id);
+Thanks. I think the other problem is that
+https://wireless.wiki.kernel.org/en/users/drivers/iwlwifihttps://wireless.wiki.kernel.org/en/users/drivers/iwlwifi
+says to use 'iwlwifi-8000-ucode-16.242414.0.tgz' for 4.3+ kenrels.
+and strangely says "iwlwifi-8000-ucode-25.30.13.0.tgz" for 4.1+ kernels.
+
+Unless I'm crazy, it didn't have -25 when I looked last time.
+Is there a way to keep what I thought was the canonical page, up to date?
+
+Firmware 27 seems to work, but I'm getting allocation error/warnings?
+
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+Intel(R) Wireless WiFi driver for Linux
+Copyright(c) 2003- 2015 Intel Corporation
+iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
+iwlwifi 0000:04:00.0: Falling back to user helper
+iwlwifi 0000:04:00.0: capa flags index 3 larger than supported by driver
+iwlwifi 0000:04:00.0: loaded firmware version 27.455470.0 op_mode iwlmvm
+iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 24 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 32 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 6 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 7 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 16 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
+ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
+thermal thermal_zone3: failed to read out thermal zone (-5)
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 24 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 32 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 6 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 7 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 16 pages, ret: -12
+cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+
+Thanks,
+Marc
 -- 
-2.11.0
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
