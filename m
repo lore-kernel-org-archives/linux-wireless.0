@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:33884 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754621AbdFXBxU (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:55867 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751218AbdFDQgL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 21:53:20 -0400
-Received: by mail-ot0-f193.google.com with SMTP id p48so6525495otc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 18:53:20 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 06/10] rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
-Date: Fri, 23 Jun 2017 20:53:05 -0500
-Message-Id: <20170624015309.28099-7-Larry.Finger@lwfinger.net> (sfid-20170624_035336_616384_5B38E9F4)
-In-Reply-To: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
-References: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
+        Sun, 4 Jun 2017 12:36:11 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] ath6kl: fix spelling mistake: "Indicat" -> "Indicate"
+Date: Sun,  4 Jun 2017 17:36:08 +0100
+Message-Id: <20170604163608.24894-1-colin.king@canonical.com> (sfid-20170604_183637_402917_8888C92C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-This is a common enumeration, so we use a common name.
+Trivial fix to spelling mistake in ath6kl_dbg debug message
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 2 +-
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 77c3b186900e..4c6d01eb065d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -592,7 +592,7 @@ enum rtl_hal_state {
- 	_HAL_STATE_START = 1,
- };
- 
--enum rtl_desc92_rate {
-+enum rtl_desc_rate {
- 	DESC_RATE1M = 0x00,
- 	DESC_RATE2M = 0x01,
- 	DESC_RATE5_5M = 0x02,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index d127a08d60df..d4fd9e40fffb 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -383,7 +383,7 @@ static enum htc_send_queue_result htc_try_send(struct htc_target *target,
+ 			list_for_each_entry_safe(packet, tmp_pkt,
+ 						 txq, list) {
+ 				ath6kl_dbg(ATH6KL_DBG_HTC,
+-					   "%s: Indicat overflowed TX pkts: %p\n",
++					   "%s: Indicate overflowed TX pkts: %p\n",
+ 					   __func__, packet);
+ 				action = ep->ep_cb.tx_full(ep->target, packet);
+ 				if (action == HTC_SEND_FULL_DROP) {
 -- 
-2.12.3
+2.11.0
