@@ -1,128 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33921 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754297AbdFPOi6 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33820 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751279AbdFEPaD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:38:58 -0400
-Received: by mail-pf0-f195.google.com with SMTP id d5so6826134pfe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:38:58 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Mon, 5 Jun 2017 11:30:03 -0400
+Received: by mail-oi0-f68.google.com with SMTP id d99so10783051oic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:03 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 5/6] rsi: configure new boot parameters to device
-Date: Fri, 16 Jun 2017 20:05:40 +0530
-Message-Id: <1497623741-2082-6-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_163901_524608_2C13F942)
-In-Reply-To: <1497623741-2082-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497623741-2082-1-git-send-email-amit.karwar@redpinesignals.com>
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 0/9] rtlwifi: btcoex: Further updates
+Date: Mon,  5 Jun 2017 10:29:50 -0500
+Message-Id: <20170605152959.27439-1-Larry.Finger@lwfinger.net> (sfid-20170605_173036_568901_B368C47A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+This set of 9 patches contain the material that was originally sent as
+1 of 7. Each of these now accomplish a single task.
 
-Boot parameters are changed in new firmware. Also three
-new sdio sleep parameters are added for ultra low power
-save.
+Larry
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c    | 20 +++++++++++++-------
- drivers/net/wireless/rsi/rsi_boot_params.h | 15 +++++++++------
- 2 files changed, 22 insertions(+), 13 deletions(-)
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index fac87c0..b2950aa 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -45,10 +45,10 @@ static struct bootup_params boot_params_20 = {
- 			}
- 		},
- 		.switch_clk_g = {
--			.switch_clk_info = cpu_to_le16(BIT(3)),
--			.bbp_lmac_clk_reg_val = cpu_to_le16(0x121),
--			.umac_clock_reg_config = 0x0,
--			.qspi_uart_clock_reg_config = 0x0
-+			.switch_clk_info = cpu_to_le16(0xb),
-+			.bbp_lmac_clk_reg_val = cpu_to_le16(0x111),
-+			.umac_clock_reg_config = cpu_to_le16(0x48),
-+			.qspi_uart_clock_reg_config = cpu_to_le16(0x1211)
- 		}
- 	},
- 	{
-@@ -106,7 +106,10 @@ static struct bootup_params boot_params_20 = {
- 	.wdt_prog_value = 0x0,
- 	.wdt_soc_rst_delay = 0x0,
- 	.dcdc_operation_mode = 0x0,
--	.soc_reset_wait_cnt = 0x0
-+	.soc_reset_wait_cnt = 0x0,
-+	.waiting_time_at_fresh_sleep = 0x0,
-+	.max_threshold_to_avoid_sleep = 0x0,
-+	.beacon_resedue_alg_en = 0,
- };
- 
- static struct bootup_params boot_params_40 = {
-@@ -139,7 +142,7 @@ static struct bootup_params boot_params_40 = {
- 			.switch_clk_info = cpu_to_le16(0x09),
- 			.bbp_lmac_clk_reg_val = cpu_to_le16(0x1121),
- 			.umac_clock_reg_config = cpu_to_le16(0x48),
--			.qspi_uart_clock_reg_config = 0x0
-+			.qspi_uart_clock_reg_config = cpu_to_le16(0x1211)
- 		}
- 	},
- 	{
-@@ -197,7 +200,10 @@ static struct bootup_params boot_params_40 = {
- 	.wdt_prog_value = 0x0,
- 	.wdt_soc_rst_delay = 0x0,
- 	.dcdc_operation_mode = 0x0,
--	.soc_reset_wait_cnt = 0x0
-+	.soc_reset_wait_cnt = 0x0,
-+	.waiting_time_at_fresh_sleep = 0x0,
-+	.max_threshold_to_avoid_sleep = 0x0,
-+	.beacon_resedue_alg_en = 0,
- };
- 
- static u16 mcs[] = {13, 26, 39, 52, 78, 104, 117, 130};
-diff --git a/drivers/net/wireless/rsi/rsi_boot_params.h b/drivers/net/wireless/rsi/rsi_boot_params.h
-index 5e2721f..238ee96 100644
---- a/drivers/net/wireless/rsi/rsi_boot_params.h
-+++ b/drivers/net/wireless/rsi/rsi_boot_params.h
-@@ -24,19 +24,19 @@
- #define WIFI_AFEPLL_CONFIGS              BIT(7)
- #define WIFI_SWITCH_CLK_CONFIGS          BIT(8)
- 
--#define TA_PLL_M_VAL_20                  8
--#define TA_PLL_N_VAL_20                  1
-+#define TA_PLL_M_VAL_20                  9
-+#define TA_PLL_N_VAL_20                  0
- #define TA_PLL_P_VAL_20                  4
- 
- #define PLL960_M_VAL_20                  0x14
- #define PLL960_N_VAL_20                  0
- #define PLL960_P_VAL_20                  5
- 
--#define UMAC_CLK_40MHZ                   40
-+#define UMAC_CLK_40MHZ                   80
- 
--#define TA_PLL_M_VAL_40                  46
--#define TA_PLL_N_VAL_40                  3
--#define TA_PLL_P_VAL_40                  3
-+#define TA_PLL_M_VAL_40                  9
-+#define TA_PLL_N_VAL_40                  0
-+#define TA_PLL_P_VAL_40                  4
- 
- #define PLL960_M_VAL_40                  0x14
- #define PLL960_N_VAL_40                  0
-@@ -122,5 +122,8 @@ struct bootup_params {
- 	/* dcdc modes configs */
- 	__le32 dcdc_operation_mode;
- 	__le32 soc_reset_wait_cnt;
-+	__le32 waiting_time_at_fresh_sleep;
-+	__le32 max_threshold_to_avoid_sleep;
-+	u8 beacon_resedue_alg_en;
- } __packed;
- #endif
+Yan-Hsuan Chuang (9):
+  rtlwifi: btcoex: add macros to check chip type
+  rtlwifi: btcoex: rename ex_halbtcXXXXYZant to ex_btcXXXXYZant
+  rtlwifi: btcoex: settings before firmware is downloaded
+  rtlwifi: btcoex: hook external PnP notify by chip for wifi driver
+  rtlwifi: btcoex: add settings before the hardware is ready
+  rtlwifi: btcoex: hook external functions for newer chips
+  rtlwifi: btcoex: bind BT coex information with wifi driver
+  rtlwifi: btcoex: remove unused display functions
+  rtlwifi: btcoex: let btcoex get wifi rssi and link status
+
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  22 +
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |   2 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |  32 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  52 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  41 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  38 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  26 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 838 ++++++++++++++++-----
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  42 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  35 +-
+ 11 files changed, 814 insertions(+), 317 deletions(-)
+
 -- 
-2.7.4
+2.13.0
