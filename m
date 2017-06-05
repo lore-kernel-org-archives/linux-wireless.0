@@ -1,145 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:44555 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751641AbdFPD5b (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59276 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751258AbdFEUmi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 23:57:31 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 1/4] adapter: Make adapter_start_poll() global
-Date: Thu, 15 Jun 2017 20:57:25 -0700
-Message-Id: <20170616035728.19415-2-mgreer@animalcreek.com> (sfid-20170616_055746_213807_4FF9421A)
-In-Reply-To: <20170616035728.19415-1-mgreer@animalcreek.com>
-References: <20170616035728.19415-1-mgreer@animalcreek.com>
+        Mon, 5 Jun 2017 16:42:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:41:59 +0300
+Message-Id: <20170605204218.30151-7-luca@coelho.fi> (sfid-20170605_224246_994457_209B1922)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 06/25] iwlwifi: add dbgc_supported to transport configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An upcoming commit will need to call adapter_start_poll() from the
-tag code so make it global.  To be consistent with the names of
-other global routines in adapter.c, add the '__near_' prefix.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+Use transport configuration to determine DBGC support
+instead of relying on device family.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- src/adapter.c | 22 +++++++++++-----------
- src/near.h    |  1 +
- 2 files changed, 12 insertions(+), 11 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c   | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c   | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 3 ++-
+ 4 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/src/adapter.c b/src/adapter.c
-index 9e3e75e..e8c7c61 100644
---- a/src/adapter.c
-+++ b/src/adapter.c
-@@ -152,7 +152,7 @@ static void rf_mode_changed(struct near_adapter *adapter)
- 					NFC_ADAPTER_INTERFACE, "Mode");
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index 4d6135b5ff92..5d446740383a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -164,7 +164,8 @@ static const struct iwl_tt_params iwl8000_tt_params = {
+ 	.default_nvm_file_C_step = DEFAULT_NVM_FILE_FAMILY_8000C,	\
+ 	.thermal_params = &iwl8000_tt_params,				\
+ 	.apmg_not_supported = true,					\
+-	.ext_nvm = true
++	.ext_nvm = true,						\
++	.dbgc_supported = true
  
--static int adapter_start_poll(struct near_adapter *adapter)
-+int __near_adapter_start_poll(struct near_adapter *adapter)
- {
- 	int err;
- 	uint32_t im_protos, tm_protos;
-@@ -375,7 +375,7 @@ static DBusMessage *start_poll_loop(DBusConnection *conn,
- 	else
- 		adapter->poll_mode = NEAR_ADAPTER_MODE_INITIATOR;
+ #define IWL_DEVICE_8000							\
+ 	IWL_DEVICE_8000_COMMON,						\
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 3cb416157e73..c7e6ba878af8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -148,7 +148,8 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.vht_mu_mimo_supported = true,					\
+ 	.mac_addr_from_csr = true,					\
+ 	.rf_id = true,							\
+-	.ext_nvm = true
++	.ext_nvm = true,						\
++	.dbgc_supported = true
  
--	err = adapter_start_poll(adapter);
-+	err = __near_adapter_start_poll(adapter);
- 	if (err < 0)
- 		return __near_error_failed(msg, -err);
+ const struct iwl_cfg iwl9160_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9160",
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index ca913b3ddd11..9d09c7ebc3c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -124,7 +124,8 @@ static const struct iwl_ht_params iwl_a000_ht_params = {
+ 	.use_tfh = true,						\
+ 	.rf_id = true,							\
+ 	.gen2 = true,							\
+-	.ext_nvm = true
++	.ext_nvm = true,						\
++	.dbgc_supported = true
  
-@@ -433,7 +433,7 @@ static gboolean check_presence(gpointer user_data)
- out_err:
- 	near_adapter_disconnect(adapter->idx);
- 	if (adapter->constant_poll)
--		adapter_start_poll(adapter);
-+		__near_adapter_start_poll(adapter);
- 
- 	return FALSE;
- }
-@@ -447,7 +447,7 @@ static gboolean dep_timer(gpointer user_data)
- 	if (!adapter)
- 		return FALSE;
- 
--	adapter_start_poll(adapter);
-+	__near_adapter_start_poll(adapter);
- 
- 	return FALSE;
- }
-@@ -469,7 +469,7 @@ static void tag_present_cb(uint32_t adapter_idx, uint32_t target_idx,
- 
- 		near_adapter_disconnect(adapter->idx);
- 		if (adapter->constant_poll)
--			adapter_start_poll(adapter);
-+			__near_adapter_start_poll(adapter);
- 
- 		return;
- 	}
-@@ -606,7 +606,7 @@ int __near_adapter_set_dep_state(uint32_t idx, bool dep)
- 		 * that very moment. In this case we need to try polling later
- 		 * again, so constant polling will work properly.
- 		 */
--		if(adapter_start_poll(adapter) == -EBUSY) {
-+		if(__near_adapter_start_poll(adapter) == -EBUSY) {
- 			near_error("Adapter is busy, retry polling later");
- 			g_timeout_add_seconds(1, dep_timer, adapter);
- 		}
-@@ -688,7 +688,7 @@ static void tag_read_cb(uint32_t adapter_idx, uint32_t target_idx, int status)
- 	if (status < 0) {
- 		near_adapter_disconnect(adapter->idx);
- 		if (adapter->constant_poll)
--			adapter_start_poll(adapter);
-+			__near_adapter_start_poll(adapter);
- 
- 		return;
- 	}
-@@ -717,7 +717,7 @@ static void device_read_cb(uint32_t adapter_idx, uint32_t target_idx,
- 		}
- 
- 		if (adapter->constant_poll)
--			adapter_start_poll(adapter);
-+			__near_adapter_start_poll(adapter);
- 
- 		return;
- 	}
-@@ -838,7 +838,7 @@ int __near_adapter_add_target(uint32_t idx, uint32_t target_idx,
- 					iso15693_uid_len, iso15693_uid);
- 
- 	if (ret < 0 && adapter->constant_poll)
--		adapter_start_poll(adapter);
-+		__near_adapter_start_poll(adapter);
- 
- 	return ret;
- }
-@@ -879,7 +879,7 @@ static gboolean poll_error(gpointer user_data)
- 		 __near_netlink_adapter_enable(adapter->idx, true);
- 	}
- 
--	adapter_start_poll(adapter);
-+	__near_adapter_start_poll(adapter);
- 
- 	return FALSE;
- }
-@@ -954,7 +954,7 @@ int __near_adapter_remove_device(uint32_t idx)
- 	adapter->dep_up = false;
- 
- 	if (adapter->constant_poll)
--		adapter_start_poll(adapter);
-+		__near_adapter_start_poll(adapter);
- 
- 	return 0;
- }
-diff --git a/src/near.h b/src/near.h
-index 1ac6191..7795e61 100644
---- a/src/near.h
-+++ b/src/near.h
-@@ -94,6 +94,7 @@ int __near_adapter_remove_device(uint32_t idx);
- int __near_adapter_set_dep_state(uint32_t idx, bool dep);
- bool __near_adapter_get_dep_state(uint32_t idx);
- void __near_adapter_listen(struct near_device_driver *driver);
-+int __near_adapter_start_poll(struct near_adapter *adapter);
- void __near_adapter_start_check_presence(uint32_t adapter_idx, uint32_t target_idx);
- void __near_adapter_stop_check_presence(uint32_t adapter_idx, uint32_t target_idx);
- int __near_adapter_init(void);
+ const struct iwl_cfg iwla000_2ac_cfg_hr = {
+ 		.name = "Intel(R) Dual Band Wireless AC a000",
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 5b0f1d65d199..f7533045dbce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -366,7 +366,8 @@ struct iwl_cfg {
+ 	    use_tfh:1,
+ 	    gen2:1,
+ 	    cdb:1,
+-	    ext_nvm:1;
++	    ext_nvm:1,
++	    dbgc_supported:1;
+ 	u8 valid_tx_ant;
+ 	u8 valid_rx_ant;
+ 	u8 non_shared_ant;
 -- 
-2.13.0
+2.11.0
