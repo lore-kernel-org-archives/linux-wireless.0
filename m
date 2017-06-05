@@ -1,55 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway31.websitewelcome.com ([192.185.143.36]:39453 "EHLO
-        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752615AbdFMUnL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43834 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751153AbdFEPyZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 16:43:11 -0400
-Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
-        by gateway31.websitewelcome.com (Postfix) with ESMTP id 6A4D8124BE0B
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 15:43:03 -0500 (CDT)
-Date: Tue, 13 Jun 2017 15:42:59 -0500
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Mon, 5 Jun 2017 11:54:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
         linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] rtlwifi: rtl8821ae: remove unused variable
-Message-ID: <20170613204259.GA9189@embeddedgus> (sfid-20170613_224337_148122_BAB0857E)
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
+References: <20170525001119.64791-1-briannorris@chromium.org>
+        <20170525001119.64791-5-briannorris@chromium.org>
+        <87fufk2hmm.fsf@purkki.adurom.net>
+        <20170601173954.GA138807@google.com>
+Date: Mon, 05 Jun 2017 18:54:18 +0300
+In-Reply-To: <20170601173954.GA138807@google.com> (Brian Norris's message of
+        "Thu, 1 Jun 2017 10:39:56 -0700")
+Message-ID: <87inka77md.fsf@codeaurora.org> (sfid-20170605_175448_575451_BBED11BA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused variable rtlhal.
+Brian Norris <briannorris@chromium.org> writes:
 
-Addresses-Coverity-ID: 1248810
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 3 ---
- 1 file changed, 3 deletions(-)
+> On Thu, Jun 01, 2017 at 12:15:45PM +0300, Kalle Valo wrote:
+>> Brian Norris <briannorris@chromium.org> writes:
+>> 
+>> > In general, it's helpful to use the same code for device removal as for
+>> > device reset, as this tends to have fewer bugs. Let's move the wiphy
+>> > unregistration code into the common reset and removal code.
+>> >
+>> > In particular, it's very hard to properly handle the reset sequence when
+>> > something fails. Currently, if mwifiex_reinit_sw() fails, we've failed
+>> > to unregister the associated wiphy, and so running something as simple
+>> > as "iw phy" can trigger an OOPS, as the wiphy still has hooks back into
+>> > freed mwifiex data structures. For example, KASAN complained:
+>> >
+>> > [... see reset fail for other reasons ...]
+>> > [ 1184.821158] mwifiex_pcie 0000:01:00.0: info: dnld wifi firmware from 174948 bytes
+>> > [ 1186.870914] mwifiex_pcie 0000:01:00.0: info: FW download over, size 608396 bytes
+>> > [ 1187.685990] mwifiex_pcie 0000:01:00.0: WLAN FW is active
+>> > [ 1187.692673] mwifiex_pcie 0000:01:00.0: cmd_wait_q terminated: -512
+>> > [ 1187.699075] mwifiex_pcie 0000:01:00.0: info: _mwifiex_fw_dpc: unregister device
+>> > [ 1187.713476] mwifiex: Failed to bring up adapter: -5
+>> > [ 1187.718644] mwifiex_pcie 0000:01:00.0: reinit failed: -5
+>> >
+>> > [... run `iw phy` ...]
+>> > [ 1212.902419] ==================================================================
+>> > [ 1212.909806] BUG: KASAN: use-after-free in mwifiex_cfg80211_get_antenna+0x54/0xfc [mwifiex] at addr ffffffc0ad1a8028
+>> > [ 1212.920246] Read of size 1 by task iw/3127
+>> > [...]
+>> > [ 1212.934946] page dumped because: kasan: bad access detected
+>> > [...]
+>> > [ 1212.950665] Call trace:
+>> > [ 1212.953148] [<ffffffc00020a69c>] dump_backtrace+0x0/0x190
+>> > [ 1212.958572] [<ffffffc00020a96c>] show_stack+0x20/0x28
+>> > [ 1212.963648] [<ffffffc0005ce18c>] dump_stack+0xa4/0xcc
+>> > [ 1212.968723] [<ffffffc0003c4430>] kasan_report+0x378/0x500
+>> > [ 1212.974140] [<ffffffc0003c3358>] __asan_load1+0x44/0x4c
+>> > [ 1212.979462] [<ffffffbffc2e8360>] mwifiex_cfg80211_get_antenna+0x54/0xfc [mwifiex]
+>> > [ 1212.987131] [<ffffffbffc084fc4>] nl80211_send_wiphy+0x75c/0x2de0 [cfg80211]
+>> > [ 1212.994246] [<ffffffbffc094f60>] nl80211_dump_wiphy+0x32c/0x438 [cfg80211]
+>> > [ 1213.001149] [<ffffffc000ab6404>] genl_lock_dumpit+0x48/0x64
+>> > [ 1213.006746] [<ffffffc000ab3474>] netlink_dump+0x178/0x398
+>> > [ 1213.012171] [<ffffffc000ab3d18>] __netlink_dump_start+0x1bc/0x260
+>> > [...]
+>> >
+>> > This all goes away if we just tear down the wiphy on the way down, and
+>> > set it back up if/when we bring the device back up.
+>> 
+>> I don't know exactly what kind of reset this is about,
+>
+> Marvell firmwares are known to be quite buggy, and there are plenty of
+> situations in which they crash (often resulting in a command timeout).
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 2bc6bac..d158e34 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -1360,7 +1360,6 @@ static bool _rtl8821ae_reset_pcie_interface_dma(struct ieee80211_hw *hw,
- static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
- 	u8 fw_reason = 0;
- 	struct timeval ts;
-@@ -1372,8 +1371,6 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
- 
- 	ppsc->wakeup_reason = 0;
- 
--	rtlhal->last_suspend_sec = ts.tv_sec;
--
- 	switch (fw_reason) {
- 	case FW_WOW_V2_PTK_UPDATE_EVENT:
- 		ppsc->wakeup_reason = WOL_REASON_PTK_UPDATE;
+That is a common problem with firmwares :/
+
+> The current best workaround for these is to essentially unwind the
+> whole driver, reset the card, and reprobe the whole thing. See
+> anywhere that the ->card_reset() callback is called.
+>
+> This has been around for a long time on SDIO, and you recently merged my
+> changes to enable this for PCIe:
+>
+> 6d7d579a8243 mwifiex: pcie: add card_reset() support
+>
+>> but isn't this a
+>> quite intrusive solution? For example, phy name changes because of this?
+>
+> Yes, it is a bit intrusive. But the whole process is intrusive, as it
+> deletes all the virtual interfaces and loses your settings. This all
+> relies on user space being prepared to clean up and reinitialize
+> everything afterward.
+>
+> And yes, this causes a phy name change.
+>
+> In favor: this is what the SDIO reset code *used* to do, before this
+> commit:
+>
+> c742e623e941 mwifiex: sdio card reset enhancement
+>
+> where the SDIO driver started using the half-baked reset solution
+> written for PCIe.
+>
+> Lastly, I still need to analyze a few more things in this driver, but
+> AFAICT, if we *don't* unregister the wiphy, we are exposed to quite a
+> few more race conditions -- not just the easy-to-notice condition
+> described above. What happens if the wiphy still processes cfg80211
+> operations while we're still resetting the firmware? Much of the driver
+> may not be prepared for this. At the moment, I can't find anything
+> terribly wrong; if I slow down the reset (e.g., with msleep()s) I can
+> just trigger complaints about "cmd node not available" or "card is
+> removed", but I haven't yet found a true bug.
+>
+> That's not to say that there aren't such bugs out there. I'd still be
+> willing to bet there are. And IMO, it seems wise to just do the same
+> teardown/setup as one would do for (e.g.) 'rmmod', to prevent exposing
+> *too* many new permutations of "wiphy is available but rest of the
+> driver is torn down".
+
+This feels like a sledge hammer approach causing all sort of problems
+for user space and I really like the mac80211 approach more. For
+example, if an ath10k firmware crash happens user only sees a few second
+pause in data traffic and a warning in kernel log, otherwise everything
+happens behind the scenes. Of course there are very likely races
+somewhere but at least I haven't seen that many reports related to
+firmware restart functionality.
+
+> But if none of this is convincing to you, I can take a stab at a
+> different solution.
+
+I don't have any problem applying this patch but more about being
+curious why doing it like this. And hopefully finding a less intrusive
+solution in the future.
+
+> BTW, since you're taking an interest in this code now, can I trouble you
+> with a question? Looking at mwifiex_uninit_sw() (after this patchset),
+> you can see a loop like this:
+>
+>         /* Stop data */
+>         for (i = 0; i < adapter->priv_num; i++) {
+>                 priv = adapter->priv[i];
+>                 if (priv && priv->netdev) {
+>                         mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+>                         if (netif_carrier_ok(priv->netdev))
+>                                 netif_carrier_off(priv->netdev);
+>                         netif_device_detach(priv->netdev);
+>                 }
+>         }
+>
+> That seems to be the only attempt to prevent user space from talking to
+> the device while we proceed to shut down (mwifiex_shutdown_drv()). AIUI,
+> that's wholly insufficient, and we need to actually stop all the virtual
+> interfaces (and possibly the wiphy as well) first. I'm looking at trying
+> to move the mwifiex_del_virtual_intf() loop up much further in this
+> function (but there are other bugs preventing me from doing that yet).
+>
+> Does that sound like the right approach to you? I'm kinda figuring this
+> should better mimic the mac80211 ieee80211_remove_interfaces()
+> structure.
+
+Johannes is much better person to answer this (CCed).
+
 -- 
-2.5.0
+Kalle Valo
