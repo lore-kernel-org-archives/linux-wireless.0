@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:58573 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753011AbdFOSZZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59358 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751311AbdFEUm5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:25 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 15/23] nfctype5: Remove superfluous parentheses
-Date: Thu, 15 Jun 2017 11:25:08 -0700
-Message-Id: <20170615182516.4508-16-mgreer@animalcreek.com> (sfid-20170615_202634_978468_7FD3A64E)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+        Mon, 5 Jun 2017 16:42:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:17 +0300
+Message-Id: <20170605204218.30151-25-luca@coelho.fi> (sfid-20170605_224325_684655_75D4D972)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 24/25] iwlwifi: bump max FW API to 31
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the superfluous parentheses around calls to
-t5_manufacturer_stmicro().
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+Bump the maximum accepted firmware API number for devices in the 8000,
+9000 and A000 families.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- plugins/nfctype5.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/plugins/nfctype5.c b/plugins/nfctype5.c
-index 29e1d0c..9d09bf8 100644
---- a/plugins/nfctype5.c
-+++ b/plugins/nfctype5.c
-@@ -456,7 +456,7 @@ static int t5_write_resp(uint8_t *resp, int length, void *data)
- 		goto out_done;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index 5d446740383a..707f282b5afd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -70,8 +70,8 @@
+ #include "iwl-agn-hw.h"
  
- 	/* CMD_FLAG_OPTION should be set for non ST tags */
--	if (!(t5_manufacturer_stmicro(tag)))
-+	if (!t5_manufacturer_stmicro(tag))
- 		t5_cmd->hdr.flags |= CMD_FLAG_OPTION;
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	30
+-#define IWL8265_UCODE_API_MAX	30
++#define IWL8000_UCODE_API_MAX	31
++#define IWL8265_UCODE_API_MAX	31
  
- 	t5_cmd->blk_no = cookie->blk;
-@@ -515,7 +515,7 @@ static int t5_write(struct near_tag *tag, uint8_t offset, uint8_t *buf,
- 	 * does not work with ST Type5 tags.
- 	 * So, implemeting OPTION flag set only for non ST tags.
- 	 */
--	if (!(t5_manufacturer_stmicro(tag)))
-+	if (!t5_manufacturer_stmicro(tag))
- 		t5_cmd->hdr.flags |= CMD_FLAG_OPTION;
+ /* Lowest firmware API version supported */
+ #define IWL8000_UCODE_API_MIN	17
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 0f520d138414..42daaddfa740 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
  
- 	t5_cmd->blk_no = offset / blk_size;
-@@ -1046,7 +1046,7 @@ static int t5_format_read_multiple_blocks_resp(uint8_t *resp, int length,
- 	 * lying in different sectors. So, doing multi block read
- 	 * support setting only for non ST tags.
- 	 */
--	if (!(t5_manufacturer_stmicro(tag))) {
-+	if (!t5_manufacturer_stmicro(tag)) {
- 		if (read_multiple_supported)
- 			t5_cc.cc3 |= TYPE5_CC3_MBREAD_FLAG;
- 	}
+ /* Highest firmware API version supported */
+-#define IWL9000_UCODE_API_MAX	30
++#define IWL9000_UCODE_API_MAX	31
+ 
+ /* Lowest firmware API version supported */
+ #define IWL9000_UCODE_API_MIN	30
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index 32ba70190d3d..63a4183c0de7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_A000_UCODE_API_MAX	30
++#define IWL_A000_UCODE_API_MAX	31
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_A000_UCODE_API_MIN	24
 -- 
-2.13.0
+2.11.0
