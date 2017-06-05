@@ -1,158 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60594 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751239AbdFBJfc (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33004 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751294AbdFEPaM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 05:35:32 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 12:35:11 +0300
-Message-Id: <20170602093516.16369-6-luca@coelho.fi> (sfid-20170602_113539_562823_FE159901)
-In-Reply-To: <20170602093516.16369-1-luca@coelho.fi>
-References: <20170602093516.16369-1-luca@coelho.fi>
-Subject: [PATCH 05/10] iwlwifi: mvm: fix firmware debug restart recording
+        Mon, 5 Jun 2017 11:30:12 -0400
+Received: by mail-oi0-f65.google.com with SMTP id h4so22371182oib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:12 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 8/9] rtlwifi: btcoex: remove unused display functions
+Date: Mon,  5 Jun 2017 10:29:58 -0500
+Message-Id: <20170605152959.27439-9-Larry.Finger@lwfinger.net> (sfid-20170605_173038_284312_95EBC1AB)
+In-Reply-To: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
+References: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-When we want to stop the recording of the firmware debug
-and restart it later without reloading the firmware we
-don't need to resend the configuration that comes with
-host commands.
-Sending those commands confused the hardware and led to
-an NMI 0x66.
+These display functions are useless and will not be called in the
+future.
 
-Change the flow as following:
-* read the relevant registers (DBGC_IN_SAMPLE, DBGC_OUT_CTRL)
-* clear those registers
-* wait for the hardware to complete its write to the buffer
-* get the data
-* restore the value of those registers (to restart the
-  recording)
-
-For early start (where the configuration is already
-compiled in the firmware), we don't need to set those
-registers after the firmware has been loaded, but only
-when we want to restart the recording without having
-restarted the firmware.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 12 +---------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 32 ++++++++++++++++++-------
- 4 files changed, 27 insertions(+), 19 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 38 ----------------------
+ 1 file changed, 38 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 306bc967742e..77efbb78e867 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -370,6 +370,7 @@
- #define MON_DMARB_RD_DATA_ADDR		(0xa03c5c)
- 
- #define DBGC_IN_SAMPLE			(0xa03c00)
-+#define DBGC_OUT_CTRL			(0xa03c0c)
- 
- /* enable the ID buf for read */
- #define WFPM_PS_CTL_CLR			0xA0300C
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 7b86a4f1b574..c8712e6eea74 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -1002,14 +1002,6 @@ int iwl_mvm_fw_dbg_collect_trig(struct iwl_mvm *mvm,
- 	return 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 5ad9c180bc28..53a43dfdecba 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -485,22 +485,6 @@ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
+ 	return true;
  }
  
--static inline void iwl_mvm_restart_early_start(struct iwl_mvm *mvm)
+-static void halbtc_display_coex_statistics(struct btc_coexist *btcoexist)
 -{
--	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000)
--		iwl_clear_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
--	else
--		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 1);
 -}
 -
- int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, u8 conf_id)
- {
- 	u8 *ptr;
-@@ -1023,10 +1015,8 @@ int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, u8 conf_id)
- 	/* EARLY START - firmware's configuration is hard coded */
- 	if ((!mvm->fw->dbg_conf_tlv[conf_id] ||
- 	     !mvm->fw->dbg_conf_tlv[conf_id]->num_of_hcmds) &&
--	    conf_id == FW_DBG_START_FROM_ALIVE) {
--		iwl_mvm_restart_early_start(mvm);
-+	    conf_id == FW_DBG_START_FROM_ALIVE)
- 		return 0;
--	}
- 
- 	if (!mvm->fw->dbg_conf_tlv[conf_id])
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index ed20c0c5abc8..52f8d7a6a7dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1756,6 +1756,7 @@ static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
- 	if (!iwl_mvm_has_new_tx_api(mvm))
- 		iwl_free_fw_paging(mvm);
- 	mvm->ucode_loaded = false;
-+	mvm->fw_dbg_conf = FW_DBG_INVALID;
- 	iwl_trans_stop_device(mvm->trans);
+-static void halbtc_display_bt_link_info(struct btc_coexist *btcoexist)
+-{
+-}
+-
+-static void halbtc_display_bt_fw_info(struct btc_coexist *btcoexist)
+-{
+-}
+-
+-static void halbtc_display_fw_pwr_mode_cmd(struct btc_coexist *btcoexist)
+-{
+-}
+-
+ /************************************************************
+  *		IO related function
+  ************************************************************/
+@@ -619,27 +603,6 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
+ 					cmd_len, cmd_buf);
  }
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 9ffff6ed8133..3da5ec40aaea 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1149,21 +1149,37 @@ static void iwl_mvm_fw_error_dump_wk(struct work_struct *work)
- 
- 	mutex_lock(&mvm->mutex);
- 
--	/* stop recording */
- 	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
-+		/* stop recording */
- 		iwl_set_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
-+
-+		iwl_mvm_fw_error_dump(mvm);
-+
-+		/* start recording again if the firmware is not crashed */
-+		if (!test_bit(STATUS_FW_ERROR, &mvm->trans->status) &&
-+		    mvm->fw->dbg_dest_tlv)
-+			iwl_clear_bits_prph(mvm->trans,
-+					    MON_BUFF_SAMPLE_CTL, 0x100);
- 	} else {
-+		u32 in_sample = iwl_read_prph(mvm->trans, DBGC_IN_SAMPLE);
-+		u32 out_ctrl = iwl_read_prph(mvm->trans, DBGC_OUT_CTRL);
-+
-+		/* stop recording */
- 		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 0);
--		/* wait before we collect the data till the DBGC stop */
- 		udelay(100);
+-static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type)
+-{
+-	struct btc_coexist *btcoexist =	(struct btc_coexist *)bt_context;
+-	switch (disp_type) {
+-	case BTC_DBG_DISP_COEX_STATISTICS:
+-		halbtc_display_coex_statistics(btcoexist);
+-		break;
+-	case BTC_DBG_DISP_BT_LINK_INFO:
+-		halbtc_display_bt_link_info(btcoexist);
+-		break;
+-	case BTC_DBG_DISP_BT_FW_VER:
+-		halbtc_display_bt_fw_info(btcoexist);
+-		break;
+-	case BTC_DBG_DISP_FW_PWR_MODE_CMD:
+-		halbtc_display_fw_pwr_mode_cmd(btcoexist);
+-		break;
+-	default:
+-		break;
 -	}
-+		iwl_write_prph(mvm->trans, DBGC_OUT_CTRL, 0);
-+		/* wait before we collect the data till the DBGC stop */
-+		udelay(500);
+-}
+-
+ bool halbtc_under_ips(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -696,7 +659,6 @@ bool exhalbtc_initlize_variables(struct rtl_priv *adapter)
+ 	btcoexist->btc_get_rf_reg = halbtc_get_rfreg;
  
--	iwl_mvm_fw_error_dump(mvm);
-+		iwl_mvm_fw_error_dump(mvm);
+ 	btcoexist->btc_fill_h2c = halbtc_fill_h2c_cmd;
+-	btcoexist->btc_disp_dbg_msg = halbtc_display_dbg_msg;
  
--	/* start recording again if the firmware is not crashed */
--	WARN_ON_ONCE((!test_bit(STATUS_FW_ERROR, &mvm->trans->status)) &&
--		     mvm->fw->dbg_dest_tlv &&
--		     iwl_mvm_start_fw_dbg_conf(mvm, mvm->fw_dbg_conf));
-+		/* start recording again if the firmware is not crashed */
-+		if (!test_bit(STATUS_FW_ERROR, &mvm->trans->status) &&
-+		    mvm->fw->dbg_dest_tlv) {
-+			iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, in_sample);
-+			iwl_write_prph(mvm->trans, DBGC_OUT_CTRL, out_ctrl);
-+		}
-+	}
- 
- 	mutex_unlock(&mvm->mutex);
- 
+ 	btcoexist->btc_get = halbtc_get;
+ 	btcoexist->btc_set = halbtc_set;
 -- 
-2.11.0
+2.13.0
