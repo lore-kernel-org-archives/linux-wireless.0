@@ -1,71 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35426 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:59466 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751483AbdF0Pmq (ORCPT
+        with ESMTP id S1751237AbdFEUoN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 11:42:46 -0400
-Message-ID: <1498578162.22048.77.camel@coelho.fi> (sfid-20170627_174249_674939_0D845D31)
+        Mon, 5 Jun 2017 16:44:13 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: Kyle McMartin <kyle@infradead.org>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
-        linux-firmware@kernel.org,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Tue, 27 Jun 2017 18:42:42 +0300
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi firmwares update 2017-06-27
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:05 +0300
+Message-Id: <20170605204218.30151-13-luca@coelho.fi> (sfid-20170605_224444_326457_9EE8964C)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 12/25] iwlwifi: mvm: check firmware is up in debugfs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kyle,
+From: Johannes Berg <johannes.berg@intel.com>
 
-We have some updates for our -27 firmware version (on supported devices)
-and versions -29 and -31 that will be supported by the iwlwifi driver on
-v4.13.
+Protect various debugfs files that need to communicate with the
+firmware from being used when the firmware isn't running.
 
-Please pull or let me know if there are any issues.
+Some will just reject getting written to, while others that store
+some state will simply store it and not apply it immediately.
 
-Cheers,
-Luca.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 55 +++++++++++++++++++++---
+ 1 file changed, 49 insertions(+), 6 deletions(-)
 
-
-The following changes since commit 7d2c913dcd1be083350d97a8cb1eba24cfacbc8a:
-
-  ath10k: update year in license (2017-06-22 12:06:02 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2017-06-27
-
-for you to fetch changes up to d392df8feda805e37022686d76be96de407a9e18:
-
-  iwlwifi: add new firmware for 3168, 7265D, 8000C and 8265 (2017-06-27 14:45:20 +0300)
-
-----------------------------------------------------------------
-Update and add new firmwares for 3168, 7265D, 8000C and 8265
-
-* new -29 for 3168 and 7265D;
-* new -31 for 8000C and 8265;
-* updated -27 for 3168, 7265D, 8000C and 8265.
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: update -27 firmware for 3168, 7265D, 8000C and 8265
-
-Johannes Berg (1):
-      iwlwifi: add new firmware for 3168, 7265D, 8000C and 8265
-
- WHENCE                 |  20 ++++++++++++++++----
- iwlwifi-3168-27.ucode  | Bin 1032168 -> 1032436 bytes
- iwlwifi-3168-29.ucode  | Bin 0 -> 1036372 bytes
- iwlwifi-7265D-27.ucode | Bin 1032452 -> 1032740 bytes
- iwlwifi-7265D-29.ucode | Bin 0 -> 1036528 bytes
- iwlwifi-8000C-27.ucode | Bin 2227284 -> 2227284 bytes
- iwlwifi-8000C-31.ucode | Bin 0 -> 2309768 bytes
- iwlwifi-8265-27.ucode  | Bin 2234528 -> 2234528 bytes
- iwlwifi-8265-31.ucode  | Bin 0 -> 2303024 bytes
- 9 files changed, 16 insertions(+), 4 deletions(-)
- create mode 100644 iwlwifi-3168-29.ucode
- create mode 100644 iwlwifi-7265D-29.ucode
- create mode 100644 iwlwifi-8000C-31.ucode
- create mode 100644 iwlwifi-8265-31.ucode
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 59aaab8274c2..25092cb08c2e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -583,7 +583,11 @@ iwl_dbgfs_bt_force_ant_write(struct iwl_mvm *mvm, char *buf,
+ 	mvm->bt_force_ant_mode = bt_force_ant_mode;
+ 	IWL_DEBUG_COEX(mvm, "Force mode: %s\n",
+ 		       modes_str[mvm->bt_force_ant_mode]);
+-	ret = iwl_send_bt_init_conf(mvm);
++
++	if (iwl_mvm_firmware_running(mvm))
++		ret = iwl_send_bt_init_conf(mvm);
++	else
++		ret = 0;
+ 
+ out:
+ 	mutex_unlock(&mvm->mutex);
+@@ -800,6 +804,9 @@ static ssize_t iwl_dbgfs_fw_restart_write(struct iwl_mvm *mvm, char *buf,
+ {
+ 	int __maybe_unused ret;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	/* allow one more restart that we're provoking here */
+@@ -817,7 +824,12 @@ static ssize_t iwl_dbgfs_fw_restart_write(struct iwl_mvm *mvm, char *buf,
+ static ssize_t iwl_dbgfs_fw_nmi_write(struct iwl_mvm *mvm, char *buf,
+ 				      size_t count, loff_t *ppos)
+ {
+-	int ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_NMI);
++	int ret;
++
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
++	ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_NMI);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -857,6 +869,9 @@ iwl_dbgfs_scan_ant_rxchain_write(struct iwl_mvm *mvm, char *buf,
+ {
+ 	u8 scan_rx_ant;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	if (sscanf(buf, "%hhx", &scan_rx_ant) != 1)
+ 		return -EINVAL;
+ 	if (scan_rx_ant > ANT_ABC)
+@@ -911,7 +926,11 @@ static ssize_t iwl_dbgfs_indirection_tbl_write(struct iwl_mvm *mvm,
+ 	netdev_rss_key_fill(cmd.secret_key, sizeof(cmd.secret_key));
+ 
+ 	mutex_lock(&mvm->mutex);
+-	ret = iwl_mvm_send_cmd_pdu(mvm, RSS_CONFIG_CMD, 0, sizeof(cmd), &cmd);
++	if (iwl_mvm_firmware_running(mvm))
++		ret = iwl_mvm_send_cmd_pdu(mvm, RSS_CONFIG_CMD, 0,
++					   sizeof(cmd), &cmd);
++	else
++		ret = 0;
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	return ret ?: count;
+@@ -931,6 +950,9 @@ static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
+ 	int bin_len = count / 2;
+ 	int ret = -EINVAL;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	/* supporting only 9000 descriptor */
+ 	if (!mvm->trans->cfg->mq_rx_supported)
+ 		return -ENOTSUPP;
+@@ -1004,6 +1026,9 @@ static ssize_t iwl_dbgfs_cont_recording_write(struct iwl_mvm *mvm,
+ 	struct iwl_continuous_record_cmd cont_rec = {};
+ 	int ret, rec_mode;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	if (!dest)
+ 		return -EOPNOTSUPP;
+ 
+@@ -1034,6 +1059,9 @@ static ssize_t iwl_dbgfs_fw_dbg_conf_write(struct iwl_mvm *mvm,
+ 	unsigned int conf_id;
+ 	int ret;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	ret = kstrtouint(buf, 0, &conf_id);
+ 	if (ret)
+ 		return ret;
+@@ -1052,8 +1080,12 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
+ 					      char *buf, size_t count,
+ 					      loff_t *ppos)
+ {
+-	int ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PRPH_WRITE);
++	int ret;
++
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
+ 
++	ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PRPH_WRITE);
+ 	if (ret)
+ 		return ret;
+ 	if (count == 0)
+@@ -1184,7 +1216,8 @@ static ssize_t iwl_dbgfs_bcast_filters_write(struct iwl_mvm *mvm, char *buf,
+ 	       &filter, sizeof(filter));
+ 
+ 	/* send updated bcast filtering configuration */
+-	if (mvm->dbgfs_bcast_filtering.override &&
++	if (iwl_mvm_firmware_running(mvm) &&
++	    mvm->dbgfs_bcast_filtering.override &&
+ 	    iwl_mvm_bcast_filter_build_cmd(mvm, &cmd))
+ 		err = iwl_mvm_send_cmd_pdu(mvm, BCAST_FILTER_CMD, 0,
+ 					   sizeof(cmd), &cmd);
+@@ -1256,7 +1289,8 @@ static ssize_t iwl_dbgfs_bcast_filters_macs_write(struct iwl_mvm *mvm,
+ 	       &mac, sizeof(mac));
+ 
+ 	/* send updated bcast filtering configuration */
+-	if (mvm->dbgfs_bcast_filtering.override &&
++	if (iwl_mvm_firmware_running(mvm) &&
++	    mvm->dbgfs_bcast_filtering.override &&
+ 	    iwl_mvm_bcast_filter_build_cmd(mvm, &cmd))
+ 		err = iwl_mvm_send_cmd_pdu(mvm, BCAST_FILTER_CMD, 0,
+ 					   sizeof(cmd), &cmd);
+@@ -1473,6 +1507,9 @@ iwl_dbgfs_send_echo_cmd_write(struct iwl_mvm *mvm, char *buf,
+ {
+ 	int ret;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	mutex_lock(&mvm->mutex);
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, ECHO_CMD, 0, 0, NULL);
+ 	mutex_unlock(&mvm->mutex);
+@@ -1534,6 +1571,9 @@ static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
+ 	size_t delta;
+ 	ssize_t ret, len;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	hcmd.id = iwl_cmd_id(*ppos >> 24 ? UMAC_RD_WR : LMAC_RD_WR,
+ 			     DEBUG_GROUP, 0);
+ 	cmd.op = cpu_to_le32(DEBUG_MEM_OP_READ);
+@@ -1586,6 +1626,9 @@ static ssize_t iwl_dbgfs_mem_write(struct file *file,
+ 	u32 op, len;
+ 	ssize_t ret;
+ 
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
+ 	hcmd.id = iwl_cmd_id(*ppos >> 24 ? UMAC_RD_WR : LMAC_RD_WR,
+ 			     DEBUG_GROUP, 0);
+ 
+-- 
+2.11.0
