@@ -1,45 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32904 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753130AbdFPM0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 08:26:19 -0400
-Message-ID: <1497615975.2622.11.camel@sipsolutions.net> (sfid-20170616_142622_405434_DEC22668)
-Subject: Re: [RFC] networking: add and use skb_put_u8()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 16 Jun 2017 14:26:15 +0200
-In-Reply-To: <1497614684.10546.9.camel@perches.com>
-References: <20170616090300.13805-1-johannes@sipsolutions.net>
-         <b7ba5145-b4f0-0f86-e93d-ad8700483ff2@broadcom.com>
-         (sfid-20170616_121658_816680_06914E8C) <1497608566.2622.7.camel@sipsolutions.net>
-         <1497614684.10546.9.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:59296 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751258AbdFEUmp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 16:42:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:01 +0300
+Message-Id: <20170605204218.30151-9-luca@coelho.fi> (sfid-20170605_224251_240497_C7AEE723)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 08/25] iwlwifi: mvm: support init flow debugging
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-16 at 05:04 -0700, Joe Perches wrote:
-> 
-> Perhaps
-> 
-> 	skb_put_data(skb, &c, sizeof(c))
-> 
-> as that avoids api expansion.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Doing this means putting c on the stack first in many places so a
-pointer can be taken, which isn't nice.
+In case an assert happens on init flow, the current
+driver powers down the NIC, except if iwlmvm modparam
+init_dbg=1, and only on very specific flows.
 
-> Optimizing the indirections and the size in a macro front-end
-> in skb_put_data may be better as it's would be completely
-> consistent for all use styles.
+Extend this capability to cover most failure cases
+by keeping track of what init configurations have been
+completed. This way, we can allow NOT powering down
+the NIC, while making sure that when the driver is
+removed we don't try to free resources that haven't
+been allocated. (This can result in a kernel panic.)
 
-Well, you'd still have to worry about aligned/unaligned for anything
-bigger than 1 byte, so ...
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/led.c      |  5 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 18 +++++++++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tof.c      |  6 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c       |  5 +++++
+ 7 files changed, 42 insertions(+), 6 deletions(-)
 
-My bikeshedding on this is over, I'll send out all these (now 6)
-patches again once I have a build result from the 0-day bot, and unless
-Dave wants to have specific changes I've already spent enough time.
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 8bdeb7c891e9..16200960baf2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1639,7 +1639,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	IWL_DEBUG_INFO(mvm, "RT uCode started.\n");
+ 	return 0;
+  error:
+-	iwl_mvm_stop_device(mvm);
++	if (!iwlmvm_mod_params.init_dbg)
++		iwl_mvm_stop_device(mvm);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/led.c b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
+index 1e51fbe95f7c..3cac4278a5fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/led.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
+@@ -123,14 +123,17 @@ int iwl_mvm_leds_init(struct iwl_mvm *mvm)
+ 		return ret;
+ 	}
+ 
++	mvm->init_status |= IWL_MVM_INIT_STATUS_LEDS_INIT_COMPLETE;
+ 	return 0;
+ }
+ 
+ void iwl_mvm_leds_exit(struct iwl_mvm *mvm)
+ {
+-	if (iwlwifi_mod_params.led_mode == IWL_LED_DISABLE)
++	if (iwlwifi_mod_params.led_mode == IWL_LED_DISABLE ||
++	    !(mvm->init_status & IWL_MVM_INIT_STATUS_LEDS_INIT_COMPLETE))
+ 		return;
+ 
+ 	led_classdev_unregister(&mvm->led);
+ 	kfree(mvm->led.name);
++	mvm->init_status &= ~IWL_MVM_INIT_STATUS_LEDS_INIT_COMPLETE;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 50510e96a82d..f52c251cd891 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -735,6 +735,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	ret = ieee80211_register_hw(mvm->hw);
+ 	if (ret)
+ 		iwl_mvm_leds_exit(mvm);
++	mvm->init_status |= IWL_MVM_INIT_STATUS_REG_HW_INIT_COMPLETE;
+ 
+ 	if (mvm->cfg->vht_mu_mimo_supported)
+ 		wiphy_ext_feature_set(hw->wiphy,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 7519fda01792..05489694979e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -754,6 +754,8 @@ struct iwl_mvm {
+ 
+ 	struct work_struct roc_done_wk;
+ 
++	unsigned long init_status;
++
+ 	unsigned long status;
+ 
+ 	u32 queue_sync_cookie;
+@@ -1088,6 +1090,14 @@ enum iwl_mvm_status {
+ 	IWL_MVM_STATUS_DUMPING_FW_LOG,
+ };
+ 
++/* Keep track of completed init configuration */
++enum iwl_mvm_init_status {
++	IWL_MVM_INIT_STATUS_THERMAL_INIT_COMPLETE = BIT(0),
++	IWL_MVM_INIT_STATUS_LEDS_INIT_COMPLETE = BIT(1),
++	IWL_MVM_INIT_STATUS_REG_HW_INIT_COMPLETE = BIT(2),
++	IWL_MVM_INIT_STATUS_TOF_INIT_COMPLETE = BIT(3),
++};
++
+ static inline bool iwl_mvm_is_radio_killed(struct iwl_mvm *mvm)
+ {
+ 	return test_bit(IWL_MVM_STATUS_HW_RFKILL, &mvm->status) ||
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 607cc83908b5..085dbe4d0fe9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016 Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -589,6 +590,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	mvm->fw = fw;
+ 	mvm->hw = hw;
+ 
++	mvm->init_status = 0;
++
+ 	if (iwl_mvm_has_new_rx_api(mvm)) {
+ 		op_mode->ops = &iwl_mvm_ops_mq;
+ 		trans->rx_mpdu_cmd_hdr_size = sizeof(struct iwl_rx_mpdu_desc);
+@@ -753,7 +756,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	iwl_mvm_unref(mvm, IWL_MVM_REF_INIT_UCODE);
+ 	mutex_unlock(&mvm->mutex);
+ 	/* returns 0 if successful, 1 if success but in rfkill */
+-	if (err < 0 && !iwlmvm_mod_params.init_dbg) {
++	if (err < 0) {
+ 		IWL_ERR(mvm, "Failed to run INIT ucode: %d\n", err);
+ 		goto out_free;
+ 	}
+@@ -791,12 +794,18 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	return op_mode;
+ 
+  out_unregister:
++	if (iwlmvm_mod_params.init_dbg)
++		return op_mode;
++
+ 	ieee80211_unregister_hw(mvm->hw);
+ 	mvm->hw_registered = false;
+ 	iwl_mvm_leds_exit(mvm);
+ 	iwl_mvm_thermal_exit(mvm);
+  out_free:
+ 	flush_delayed_work(&mvm->fw_dump_wk);
++
++	if (iwlmvm_mod_params.init_dbg)
++		return op_mode;
+ 	iwl_phy_db_free(mvm->phy_db);
+ 	kfree(mvm->scan_cmd);
+ 	iwl_trans_op_mode_leave(trans);
+@@ -821,7 +830,10 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ 
+ 	iwl_mvm_thermal_exit(mvm);
+ 
+-	ieee80211_unregister_hw(mvm->hw);
++	if (mvm->init_status & IWL_MVM_INIT_STATUS_REG_HW_INIT_COMPLETE) {
++		ieee80211_unregister_hw(mvm->hw);
++		mvm->init_status &= ~IWL_MVM_INIT_STATUS_REG_HW_INIT_COMPLETE;
++	}
+ 
+ 	kfree(mvm->scan_cmd);
+ 	kfree(mvm->mcast_filter_cmd);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tof.c b/drivers/net/wireless/intel/iwlwifi/mvm/tof.c
+index 16ce8a56b5b9..634175b2480c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tof.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tof.c
+@@ -93,17 +93,21 @@ void iwl_mvm_tof_init(struct iwl_mvm *mvm)
+ 		cpu_to_le32(TOF_RANGE_REQ_EXT_CMD);
+ 
+ 	mvm->tof_data.active_range_request = IWL_MVM_TOF_RANGE_REQ_MAX_ID;
++	mvm->init_status |= IWL_MVM_INIT_STATUS_TOF_INIT_COMPLETE;
+ }
+ 
+ void iwl_mvm_tof_clean(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_mvm_tof_data *tof_data = &mvm->tof_data;
+ 
+-	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_TOF_SUPPORT))
++	if (!fw_has_capa(&mvm->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_TOF_SUPPORT) ||
++	    !(mvm->init_status & IWL_MVM_INIT_STATUS_TOF_INIT_COMPLETE))
+ 		return;
+ 
+ 	memset(tof_data, 0, sizeof(*tof_data));
+ 	mvm->tof_data.active_range_request = IWL_MVM_TOF_RANGE_REQ_MAX_ID;
++	mvm->init_status &= ~IWL_MVM_INIT_STATUS_TOF_INIT_COMPLETE;
+ }
+ 
+ static void iwl_tof_iterator(void *_data, u8 *mac,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index f9cbd197246f..4e03ea911a1f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -882,10 +882,14 @@ void iwl_mvm_thermal_initialize(struct iwl_mvm *mvm, u32 min_backoff)
+ 	iwl_mvm_cooling_device_register(mvm);
+ 	iwl_mvm_thermal_zone_register(mvm);
+ #endif
++	mvm->init_status |= IWL_MVM_INIT_STATUS_THERMAL_INIT_COMPLETE;
+ }
+ 
+ void iwl_mvm_thermal_exit(struct iwl_mvm *mvm)
+ {
++	if (!(mvm->init_status & IWL_MVM_INIT_STATUS_THERMAL_INIT_COMPLETE))
++		return;
++
+ 	cancel_delayed_work_sync(&mvm->thermal_throttle.ct_kill_exit);
+ 	IWL_DEBUG_TEMP(mvm, "Exit Thermal Throttling\n");
+ 
+@@ -893,4 +897,5 @@ void iwl_mvm_thermal_exit(struct iwl_mvm *mvm)
+ 	iwl_mvm_cooling_device_unregister(mvm);
+ 	iwl_mvm_thermal_zone_unregister(mvm);
+ #endif
++	mvm->init_status &= ~IWL_MVM_INIT_STATUS_THERMAL_INIT_COMPLETE;
+ }
+-- 
+2.11.0
