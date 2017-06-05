@@ -1,90 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35256 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751456AbdFZQwp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59774 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751077AbdFETXZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 12:52:45 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 26 Jun 2017 19:52:30 +0300
-Message-Id: <20170626165230.13971-1-luca@coelho.fi> (sfid-20170626_185309_264202_D66A09AC)
-Subject: [PATCH v2] nl80211: Don't verify owner_nlportid on NAN commands
+        Mon, 5 Jun 2017 15:23:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi 2017-06-05
+References: <1496689233.9478.71.camel@coelho.fi>
+Date: Mon, 05 Jun 2017 22:23:21 +0300
+In-Reply-To: <1496689233.9478.71.camel@coelho.fi> (Luca Coelho's message of
+        "Mon, 05 Jun 2017 22:00:33 +0300")
+Message-ID: <87a85m6xxy.fsf@codeaurora.org> (sfid-20170605_212328_684040_3C82805A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Luca Coelho <luca@coelho.fi> writes:
 
-If NAN interface is created with NL80211_ATTR_SOCKET_OWNER, the socket
-that is used to create the interface is used for all NAN operations and
-reporting NAN events.
-However, it turns out that sending commands and receiving events on
-the same socket is not possible in a completely race-free way:
-If the socket buffer is overflowed by the events, the command response
-will not be sent. In that case the caller will block forever on recv.
-Using non-blocking socket for commands is more complicated and still
-the command response or ack may not be received.
-So, keep unicasting NAN events to the interface creator, but allow
-using a different socket for commands.
+> Here are some fixes for 4.12.  More details in the tag description. =C2=
+=A0As
+> we agreed, I updated the commit messages on the first two patches.
+>
+> I have sent this out before and kbuildbot didn't find any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 6d18c732b95c0a9d35e9f978b4438bba154122=
+84:
+>
+>   bridge: start hello_timer when enabling KERNEL_STP in br_stp_start (201=
+7-05-21 13:33:28 -0400)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ tags/iwlwifi-for-kalle-2017-06-05
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
+Pulled, thanks.
 
-In v2:
-   * Andrei fixed the documentation.
-
-include/uapi/linux/nl80211.h | 9 ++++-----
- net/wireless/nl80211.c       | 8 --------
- 2 files changed, 4 insertions(+), 13 deletions(-)
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 828aa4703e22..51626b4175c0 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1909,11 +1909,10 @@ enum nl80211_commands {
-  *	that configured the indoor setting, and the indoor operation would be
-  *	cleared when the socket is closed.
-  *	If set during NAN interface creation, the interface will be destroyed
-- *	if the socket is closed just like any other interface. Moreover, only
-- *	the netlink socket that created the interface will be allowed to add
-- *	and remove functions. NAN notifications will be sent in unicast to that
-- *	socket. Without this attribute, any socket can add functions and the
-- *	notifications will be sent to the %NL80211_MCGRP_NAN multicast group.
-+ *	if the socket is closed just like any other interface. Moreover, NAN
-+ *	notifications will be sent in unicast to that socket. Without this
-+ *	attribute, the notifications will be sent to the %NL80211_MCGRP_NAN
-+ *	multicast group.
-  *	If set during %NL80211_CMD_ASSOCIATE or %NL80211_CMD_CONNECT the
-  *	station will deauthenticate when the socket is closed.
-  *
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5487cd775b6f..45ba3d0872cc 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -11206,10 +11206,6 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
- 	if (!info->attrs[NL80211_ATTR_NAN_FUNC])
- 		return -EINVAL;
- 
--	if (wdev->owner_nlportid &&
--	    wdev->owner_nlportid != info->snd_portid)
--		return -ENOTCONN;
--
- 	err = nla_parse_nested(tb, NL80211_NAN_FUNC_ATTR_MAX,
- 			       info->attrs[NL80211_ATTR_NAN_FUNC],
- 			       nl80211_nan_func_policy, info->extack);
-@@ -11441,10 +11437,6 @@ static int nl80211_nan_del_func(struct sk_buff *skb,
- 	if (!info->attrs[NL80211_ATTR_COOKIE])
- 		return -EINVAL;
- 
--	if (wdev->owner_nlportid &&
--	    wdev->owner_nlportid != info->snd_portid)
--		return -ENOTCONN;
--
- 	cookie = nla_get_u64(info->attrs[NL80211_ATTR_COOKIE]);
- 
- 	rdev_del_nan_func(rdev, wdev, cookie);
--- 
-2.11.0
+--=20
+Kalle Valo
