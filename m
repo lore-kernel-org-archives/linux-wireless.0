@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60560 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:59426 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751142AbdFBJfd (ORCPT
+        with ESMTP id S1751186AbdFEUnk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 05:35:33 -0400
+        Mon, 5 Jun 2017 16:43:40 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 12:35:06 +0300
-Message-Id: <20170602093516.16369-1-luca@coelho.fi> (sfid-20170602_113544_787717_0A8F2437)
-Subject: [PATCH 00/10] iwlwifi: some fixes intended for 4.12
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:13 +0300
+Message-Id: <20170605204218.30151-21-luca@coelho.fi> (sfid-20170605_224344_558051_34AE4CAF)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 20/25] iwlwifi: mvm: document structures used for BEACON_TEMPLATE_CMD
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Here some patches that I intend to send in a pull-request for 4.12.
-Some of the issues solved are:
-
-* Some memory leaks;
-* IBSS support;
-* Some bugzilla bugs;
-* Some runtime PM fixes;
-* Rate-scaling issues;
-* Some locking problems;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: fix firmware debug restart recording
-
-Gregory Greenman (1):
-  iwlwifi: mvm: rs: start using LQ command color
-
-Haim Dreyfuss (1):
-  iwlwifi: mvm: Fix command queue number on d0i3 flow
-
-Johannes Berg (2):
-  iwlwifi: tt: move ucode_loaded check under mutex
-  iwlwifi: mvm: clear new beacon command template struct
-
-Liad Kaufman (1):
-  iwlwifi: mvm: support ibss in dqa mode
-
-Luca Coelho (3):
-  iwlwifi: pcie: only use d0i3 in suspend/resume if system_pm is set to
-    d0i3
-  iwlwifi: mvm: don't fail when removing a key from an inexisting sta
-  iwlwifi: fix min API version for 7265D, 3168, 8000 and 8265
-
-Shahar S Matityahu (1):
-  iwlwifi: fix host command memory leaks
-
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c      |  4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c      |  4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h |  5 +++
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  3 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c    | 12 +-----
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  6 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 32 +++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 46 ++++++----------------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h        | 15 +++++++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 26 +++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |  8 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 12 +++++-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  6 ++-
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  9 +++--
- 17 files changed, 115 insertions(+), 78 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index bf0523d8ca9a..19cb0ee120c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -328,6 +328,12 @@ enum iwl_legacy_cmds {
+ 	SET_CALIB_DEFAULT_CMD = 0x8e,
+ 
+ 	BEACON_NOTIFICATION = 0x90,
++	/**
++	 * @BEACON_TEMPLATE_CMD:
++	 *	Uses one of &struct iwl_mac_beacon_cmd_v6,
++	 *	&struct iwl_mac_beacon_cmd_v7 or &struct iwl_mac_beacon_cmd
++	 *	depending on the device version.
++	 */
+ 	BEACON_TEMPLATE_CMD = 0x91,
+ 	/**
+ 	 * @TX_ANT_CONFIGURATION_CMD: &struct iwl_tx_ant_cfg_cmd
 -- 
 2.11.0
