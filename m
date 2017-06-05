@@ -1,70 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:34805 "EHLO mail.neratec.com"
+Received: from mga03.intel.com ([134.134.136.65]:64300 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751584AbdFGHfI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Jun 2017 03:35:08 -0400
-Subject: Re: Wifi-Event for when initial 4-way completes?
-To: Ben Greear <greearb@candelatech.com>
-References: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
-Message-ID: <f1334e7f-1d86-00fd-cfba-7ce56b8a9f81@neratec.com> (sfid-20170607_093545_139116_93E70B5B)
-Date: Wed, 7 Jun 2017 09:25:36 +0200
-MIME-Version: 1.0
-In-Reply-To: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1751188AbdFEUUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 16:20:16 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 01/12] NFC: pn544: Switch to devm_acpi_dev_add_driver_gpios()
+Date: Mon,  5 Jun 2017 23:19:58 +0300
+Message-Id: <20170605202009.78561-2-andriy.shevchenko@linux.intel.com> (sfid-20170605_222031_852845_F001D8E2)
+In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Ben,
+Switch to use managed variant of acpi_dev_add_driver_gpios() to simplify
+error path and fix potentially wrong assingment if ->probe() fails.
 
-I have been using this part of wpa_supplicant to notify that 4-Way 
-handshake is completed.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/pn544/i2c.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-around line 868 in wpa_supplicant.c
-
-#if defined(CONFIG_CTRL_IFACE) || !defined(CONFIG_NO_STDOUT_DEBUG)
-                 wpa_msg(wpa_s, MSG_INFO, WPA_EVENT_CONNECTED "- 
-Connection to "
-                         MACSTR " completed [id=%d id_str=%s%s]",
-                         MAC2STR(wpa_s->bssid),
-                         ssid ? ssid->id : -1,
-                         ssid && ssid->id_str ? ssid->id_str : "",
-                         fils_hlp_sent ? " FILS_HLP_SENT" : "");
-#endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
-
-You can pack whatever notification message inside the if statement.
-
-Br,
-
-Wojtek
-
-
-On 07/06/17 02:46, Ben Greear wrote:
-> I have been tracking down a nasty EAPOL related bug in ath10k, and 
-> found something that may be peripheral, or maybe
-> it is significant.
->
-> My logic is basically to kick supplicant, watch 'iw events', and then 
-> when I see something
-> like "sta62 (phy #5): connected to 00:0e:8e:f8:73:96", I consider it 
-> connected and start
-> dhcpd.
->
-> But, it appears that the 'connected' message comes out before the 
-> EAPOL 4-way completes, so
-> I am starting dhclient before the encryption is really set up 
-> properly.  At best, this slows
-> things down and makes dhclient have to retry.
->
-> Is there some existing event or state I can probe to determine when 
-> the initial 4-way is complete?
->
-> In case there is not, maybe that event would be worth adding?
->
-> Or, should I hack on supplicant instead and grab the info out of it 
-> somehow?
->
-> Thanks,
-> Ben
->
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index 71ac0836c9f4..619181e5b395 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -904,7 +904,7 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 	phy->i2c_dev = client;
+ 	i2c_set_clientdata(client, phy);
+ 
+-	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
++	r = devm_acpi_dev_add_driver_gpios(dev, acpi_pn544_gpios);
+ 	if (r)
+ 		dev_dbg(dev, "Unable to add GPIO mapping table\n");
+ 
+@@ -958,7 +958,6 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
+ 	if (phy->powered)
+ 		pn544_hci_i2c_disable(phy);
+ 
+-	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
+ 	return 0;
+ }
+ 
+-- 
+2.11.0
