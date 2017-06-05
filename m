@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60200 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:59238 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751890AbdFJKwz (ORCPT
+        with ESMTP id S1751258AbdFEUmd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Jun 2017 06:52:55 -0400
+        Mon, 5 Jun 2017 16:42:33 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 10 Jun 2017 13:52:42 +0300
-Message-Id: <20170610105246.26455-1-luca@coelho.fi> (sfid-20170610_125400_536067_F56E7FEC)
-Subject: [PATCH 0/4] mac80211 patches from our internal tree 2017-06-10
+Date: Mon,  5 Jun 2017 23:41:54 +0300
+Message-Id: <20170605204218.30151-2-luca@coelho.fi> (sfid-20170605_224237_453073_094F0579)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 01/25] iwlwifi: mvm: add AMSDU flag to offload assist
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Hi Johannes,
+Enable offload assist for AMSDU when the AMSDU present flag is set.
 
-Here are the pending mac80211 patches from our internal tree.  There
-is a couple of bugfixes, a cleanup and a small improvement in tracing.
+Fixes: a830baba9c2e ("iwlwifi: mvm: support new TX API")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 64ca8b92f8d2..4d0d23b224c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -480,8 +480,14 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		struct iwl_tx_cmd_gen2 *cmd = (void *)dev_cmd->payload;
+ 		u16 offload_assist = iwl_mvm_tx_csum(mvm, skb, hdr, info);
  
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (2):
-  mac80211: don't send SMPS action frame in AP mode when not needed
-  mac80211: add the action to the drv_ampdu_action tracepoint
-
-Johannes Berg (2):
-  mac80211: set bss_info data before configuring the channel
-  mac80211: remove 5/10 MHz rate code from station MLME
-
- net/mac80211/cfg.c   |  2 ++
- net/mac80211/mlme.c  | 62 ++++++++++++++++++++++++++--------------------------
- net/mac80211/trace.h | 11 ++++++----
- 3 files changed, 40 insertions(+), 35 deletions(-)
-
++		if (ieee80211_is_data_qos(hdr->frame_control)) {
++			u8 *qc = ieee80211_get_qos_ctl(hdr);
++
++			if (*qc & IEEE80211_QOS_CTL_A_MSDU_PRESENT)
++				offload_assist |= BIT(TX_CMD_OFFLD_AMSDU);
++		}
++
+ 		/* padding is inserted later in transport */
+-		/* FIXME - check for AMSDU may need to be removed */
+ 		if (ieee80211_hdrlen(hdr->frame_control) % 4 &&
+ 		    !(offload_assist & BIT(TX_CMD_OFFLD_AMSDU)))
+ 			offload_assist |= BIT(TX_CMD_OFFLD_PAD);
 -- 
 2.11.0
