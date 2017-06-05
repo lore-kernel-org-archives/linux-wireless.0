@@ -1,48 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from onstation.org ([52.200.56.107]:39572 "EHLO onstation.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751215AbdFFAR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 20:17:27 -0400
-Date: Mon, 5 Jun 2017 20:07:40 -0400
-From: Brian Masney <masneyb@onstation.org>
-To: "Tobin C. Harding" <me@tobin.cc>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-        driverdev-devel@linuxdriverproject.org,
-        linux-wireless@vger.kernel.org, kernelnewbies@kernelnewbies.org
-Subject: Re: ks7010 firmware upload fail
-Message-ID: <20170606000740.GA5645@3160d2e63219> (sfid-20170606_021731_722041_81FBB43A)
-References: <20170605025637.GA23011@eros>
- <20170605072212.GB1495@katana>
- <20170605102444.GA31446@eros>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170605102444.GA31446@eros>
+Received: from paleale.coelho.fi ([176.9.41.70]:59254 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751258AbdFEUmf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 16:42:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:41:56 +0300
+Message-Id: <20170605204218.30151-4-luca@coelho.fi> (sfid-20170605_224239_925695_2128AC6B)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 03/25] iwlwifi: pcie: add AMSDU to gen2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 05, 2017 at 08:24:44PM +1000, Tobin C. Harding wrote:
-> On Mon, Jun 05, 2017 at 09:22:12AM +0200, Wolfram Sang wrote:
-> > Tobin,
-> > 
-> > > My question is should I be digging further into the MMC code or be doing
-> > > something else with the driver code?
-> > 
-> > So, you haven't found any branch that worked? No plain v4.9 or the
-> > gen3-sdio branch from my tree?
-> 
-> I have not tried cloning your tree. I am using the Rasperry Pi kernel
-> source
-> 
-> https://github.com/raspberrypi/linux
-> 
-> which is v4.9.29
+From: Sara Sharon <sara.sharon@intel.com>
 
-Hi Tobin,
+This is essentially the same code as gen1, except that it uses
+gen2 functions and SW checksum is not included.
 
-Here are some instructions on how to compile an upstream kernel for a
-Raspberry Pi: http://elinux.org/RPi_Upstream_Kernel_Compilation.
-It describes setting up u-boot as the boot loader instead of the
-boot loader that the Raspberry Pi kernel uses. One gotcha to be aware of
-is that the config.txt file on the sd card won't be used.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   3 +
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 172 ++++++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |   3 +-
+ 3 files changed, 172 insertions(+), 6 deletions(-)
 
-Brian
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index fd4faaaa1484..4b7be7ba9780 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -779,6 +779,9 @@ int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
+ 			   struct iwl_dma_ptr *ptr, size_t size);
+ void iwl_pcie_free_dma_ptr(struct iwl_trans *trans, struct iwl_dma_ptr *ptr);
+ void iwl_pcie_apply_destination(struct iwl_trans *trans);
++#ifdef CONFIG_INET
++struct iwl_tso_hdr_page *get_page_hdr(struct iwl_trans *trans, size_t len);
++#endif
+ 
+ /* transport gen 2 exported functions */
+ int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 9c9bfbbabdf1..6e186501f43c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -49,6 +49,7 @@
+  *
+  *****************************************************************************/
+ #include <linux/pm_runtime.h>
++#include <net/tso.h>
+ 
+ #include "iwl-debug.h"
+ #include "iwl-csr.h"
+@@ -226,6 +227,143 @@ static int iwl_pcie_gen2_set_tb(struct iwl_trans *trans,
+ 	return idx;
+ }
+ 
++static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
++				     struct sk_buff *skb,
++				     struct iwl_tfh_tfd *tfd, int start_len,
++				     u8 hdr_len, struct iwl_device_cmd *dev_cmd)
++{
++#ifdef CONFIG_INET
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_tx_cmd *tx_cmd = (void *)dev_cmd->payload;
++	struct ieee80211_hdr *hdr = (void *)skb->data;
++	unsigned int snap_ip_tcp_hdrlen, ip_hdrlen, total_len, hdr_room;
++	unsigned int mss = skb_shinfo(skb)->gso_size;
++	u16 length, iv_len, amsdu_pad;
++	u8 *start_hdr;
++	struct iwl_tso_hdr_page *hdr_page;
++	struct page **page_ptr;
++	struct tso_t tso;
++
++	/* if the packet is protected, then it must be CCMP or GCMP */
++	iv_len = ieee80211_has_protected(hdr->frame_control) ?
++		IEEE80211_CCMP_HDR_LEN : 0;
++
++	trace_iwlwifi_dev_tx(trans->dev, skb, tfd, sizeof(*tfd),
++			     &dev_cmd->hdr, start_len, NULL, 0);
++
++	ip_hdrlen = skb_transport_header(skb) - skb_network_header(skb);
++	snap_ip_tcp_hdrlen = 8 + ip_hdrlen + tcp_hdrlen(skb);
++	total_len = skb->len - snap_ip_tcp_hdrlen - hdr_len - iv_len;
++	amsdu_pad = 0;
++
++	/* total amount of header we may need for this A-MSDU */
++	hdr_room = DIV_ROUND_UP(total_len, mss) *
++		(3 + snap_ip_tcp_hdrlen + sizeof(struct ethhdr)) + iv_len;
++
++	/* Our device supports 9 segments at most, it will fit in 1 page */
++	hdr_page = get_page_hdr(trans, hdr_room);
++	if (!hdr_page)
++		return -ENOMEM;
++
++	get_page(hdr_page->page);
++	start_hdr = hdr_page->pos;
++	page_ptr = (void *)((u8 *)skb->cb + trans_pcie->page_offs);
++	*page_ptr = hdr_page->page;
++	memcpy(hdr_page->pos, skb->data + hdr_len, iv_len);
++	hdr_page->pos += iv_len;
++
++	/*
++	 * Pull the ieee80211 header + IV to be able to use TSO core,
++	 * we will restore it for the tx_status flow.
++	 */
++	skb_pull(skb, hdr_len + iv_len);
++
++	/*
++	 * Remove the length of all the headers that we don't actually
++	 * have in the MPDU by themselves, but that we duplicate into
++	 * all the different MSDUs inside the A-MSDU.
++	 */
++	le16_add_cpu(&tx_cmd->len, -snap_ip_tcp_hdrlen);
++
++	tso_start(skb, &tso);
++
++	while (total_len) {
++		/* this is the data left for this subframe */
++		unsigned int data_left = min_t(unsigned int, mss, total_len);
++		struct sk_buff *csum_skb = NULL;
++		unsigned int tb_len;
++		dma_addr_t tb_phys;
++		struct tcphdr *tcph;
++		u8 *iph, *subf_hdrs_start = hdr_page->pos;
++
++		total_len -= data_left;
++
++		memset(hdr_page->pos, 0, amsdu_pad);
++		hdr_page->pos += amsdu_pad;
++		amsdu_pad = (4 - (sizeof(struct ethhdr) + snap_ip_tcp_hdrlen +
++				  data_left)) & 0x3;
++		ether_addr_copy(hdr_page->pos, ieee80211_get_DA(hdr));
++		hdr_page->pos += ETH_ALEN;
++		ether_addr_copy(hdr_page->pos, ieee80211_get_SA(hdr));
++		hdr_page->pos += ETH_ALEN;
++
++		length = snap_ip_tcp_hdrlen + data_left;
++		*((__be16 *)hdr_page->pos) = cpu_to_be16(length);
++		hdr_page->pos += sizeof(length);
++
++		/*
++		 * This will copy the SNAP as well which will be considered
++		 * as MAC header.
++		 */
++		tso_build_hdr(skb, hdr_page->pos, &tso, data_left, !total_len);
++		iph = hdr_page->pos + 8;
++		tcph = (void *)(iph + ip_hdrlen);
++
++		hdr_page->pos += snap_ip_tcp_hdrlen;
++
++		tb_len = hdr_page->pos - start_hdr;
++		tb_phys = dma_map_single(trans->dev, start_hdr,
++					 tb_len, DMA_TO_DEVICE);
++		if (unlikely(dma_mapping_error(trans->dev, tb_phys))) {
++			dev_kfree_skb(csum_skb);
++			goto out_err;
++		}
++		iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, tb_len);
++		trace_iwlwifi_dev_tx_tso_chunk(trans->dev, start_hdr, tb_len);
++		/* add this subframe's headers' length to the tx_cmd */
++		le16_add_cpu(&tx_cmd->len, hdr_page->pos - subf_hdrs_start);
++
++		/* prepare the start_hdr for the next subframe */
++		start_hdr = hdr_page->pos;
++
++		/* put the payload */
++		while (data_left) {
++			tb_len = min_t(unsigned int, tso.size, data_left);
++			tb_phys = dma_map_single(trans->dev, tso.data,
++						 tb_len, DMA_TO_DEVICE);
++			if (unlikely(dma_mapping_error(trans->dev, tb_phys))) {
++				dev_kfree_skb(csum_skb);
++				goto out_err;
++			}
++			iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, tb_len);
++			trace_iwlwifi_dev_tx_tso_chunk(trans->dev, tso.data,
++						       tb_len);
++
++			data_left -= tb_len;
++			tso_build_data(skb, &tso, tb_len);
++		}
++	}
++
++	/* re -add the WiFi header and IV */
++	skb_push(skb, hdr_len + iv_len);
++
++	return 0;
++
++out_err:
++#endif
++	return -EINVAL;
++}
++
+ static
+ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 					    struct iwl_txq *txq,
+@@ -238,15 +376,21 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 	struct iwl_tfh_tfd *tfd =
+ 		iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr);
+ 	dma_addr_t tb_phys;
++	bool amsdu;
+ 	int i, len, tb1_len, tb2_len, hdr_len;
+ 	void *tb1_addr;
+ 
+ 	memset(tfd, 0, sizeof(*tfd));
+ 
++	amsdu = ieee80211_is_data_qos(hdr->frame_control) &&
++		(*ieee80211_get_qos_ctl(hdr) &
++		 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
++
+ 	tb_phys = iwl_pcie_get_first_tb_dma(txq, txq->write_ptr);
+ 	/* The first TB points to bi-directional DMA data */
+-	memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
+-	       IWL_FIRST_TB_SIZE);
++	if (!amsdu)
++		memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
++		       IWL_FIRST_TB_SIZE);
+ 
+ 	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, IWL_FIRST_TB_SIZE);
+ 
+@@ -262,7 +406,11 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 	len = sizeof(struct iwl_tx_cmd_gen2) + sizeof(struct iwl_cmd_header) +
+ 	      ieee80211_hdrlen(hdr->frame_control) - IWL_FIRST_TB_SIZE;
+ 
+-	tb1_len = ALIGN(len, 4);
++	/* do not align A-MSDU to dword as the subframe header aligns it */
++	if (amsdu)
++		tb1_len = len;
++	else
++		tb1_len = ALIGN(len, 4);
+ 
+ 	/* map the data for TB1 */
+ 	tb1_addr = ((u8 *)&dev_cmd->hdr) + IWL_FIRST_TB_SIZE;
+@@ -271,8 +419,24 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 		goto out_err;
+ 	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, tb1_len);
+ 
+-	/* set up TFD's third entry to point to remainder of skb's head */
+ 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++
++	if (amsdu) {
++		if (!iwl_pcie_gen2_build_amsdu(trans, skb, tfd,
++					       tb1_len + IWL_FIRST_TB_SIZE,
++					       hdr_len, dev_cmd))
++			goto out_err;
++
++		/*
++		 * building the A-MSDU might have changed this data, so memcpy
++		 * it now
++		 */
++		memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
++		       IWL_FIRST_TB_SIZE);
++		return tfd;
++	}
++
++	/* set up TFD's third entry to point to remainder of skb's head */
+ 	tb2_len = skb_headlen(skb) - hdr_len;
+ 
+ 	if (tb2_len > 0) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 386950a2d616..b8675ad91459 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1987,8 +1987,7 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
+ }
+ 
+ #ifdef CONFIG_INET
+-static struct iwl_tso_hdr_page *
+-get_page_hdr(struct iwl_trans *trans, size_t len)
++struct iwl_tso_hdr_page *get_page_hdr(struct iwl_trans *trans, size_t len)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_tso_hdr_page *p = this_cpu_ptr(trans_pcie->tso_hdr_page);
+-- 
+2.11.0
