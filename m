@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40694 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751579AbdF1QWI (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59364 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751225AbdFEUnB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 12:22:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Colin King <colin.king@canonical.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rsi: add in missing RSI_FSM_STATES into array fsm_state
-References: <20170622165804.24379-1-colin.king@canonical.com>
-Date: Wed, 28 Jun 2017 19:22:02 +0300
-In-Reply-To: <20170622165804.24379-1-colin.king@canonical.com> (Colin King's
-        message of "Thu, 22 Jun 2017 17:58:04 +0100")
-Message-ID: <87vangqdzp.fsf@kamboji.qca.qualcomm.com> (sfid-20170628_182241_753780_9D5B2FD3)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 5 Jun 2017 16:43:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:10 +0300
+Message-Id: <20170605204218.30151-18-luca@coelho.fi> (sfid-20170605_224326_503488_A718A042)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 17/25] iwlwifi: fix a kernel-doc tag
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Colin Ian King <colin.king@canonical.com>
->
-> Two recent commits added new RSI_FSM_STATES (namely FSM_FW_NOT_LOADED
-> and FSM_COMMON_DEV_PARAMS_SENT) and the corresponding table fsm_state
-> was not updated to match. This can lead to an array overrun when
-> accessing the latter two states in fsm_state. Fix this by adding in
-> the missing states.
->
-> Detected by CoverityScan, CID#1398379 ("Illegal address computation")
->
-> Fixes: 9920322ccd8e04 ("rsi: add tx frame for common device configuration")
-> Fixes: 015e367494c1d5 ("rsi: Register interrupt handler before firmware load")
+The kernel-doc here is on an enum, so don't tag it as struct
+but correctly as enum instead, preventing an error.
 
-This is very much nitpicking, no need to resend because of this, but the
-preferred format is to to use 12 chars for the commit id:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Fixes: 9920322ccd8e ("rsi: add tx frame for common device configuration")
-Fixes: 015e367494c1 ("rsi: Register interrupt handler before firmware load")
-
-Documentation/process/submitting-patches.rst contains a nice tip how you
-can get that automatically with git:
-
-        [core]
-                abbrev = 12
-        [pretty]
-                fixes = Fixes: %h (\"%s\")
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index d3a78a11821a..63e4857718c7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -308,7 +308,7 @@ struct iwl_device_cmd {
+ #define IWL_MAX_CMD_TBS_PER_TFD	2
+ 
+ /**
+- * struct iwl_hcmd_dataflag - flag for each one of the chunks of the command
++ * enum iwl_hcmd_dataflag - flag for each one of the chunks of the command
+  *
+  * @IWL_HCMD_DFL_NOCOPY: By default, the command is copied to the host command's
+  *	ring. The transport layer doesn't map the command's buffer to DMA, but
 -- 
-Kalle Valo
+2.11.0
