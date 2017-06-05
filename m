@@ -1,157 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:35196 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752643AbdFTAc0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 20:32:26 -0400
-Received: by mail-ot0-f196.google.com with SMTP id z48so13333825otz.2
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jun 2017 17:32:26 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 01/10] rtlwifi: Fix a2dp choppy while BT RSSI stays on threshold.
-Date: Mon, 19 Jun 2017 19:32:09 -0500
-Message-Id: <20170620003218.17010-2-Larry.Finger@lwfinger.net> (sfid-20170620_023230_786767_31534D0E)
-In-Reply-To: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
-References: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
+Received: from mga03.intel.com ([134.134.136.65]:38212 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751192AbdFEUUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 16:20:16 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 03/12] NFC: st21nfca: Get rid of code duplication in ->probe()
+Date: Mon,  5 Jun 2017 23:20:00 +0300
+Message-Id: <20170605202009.78561-4-andriy.shevchenko@linux.intel.com> (sfid-20170605_222031_316342_BB9AC3A1)
+In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Since OF and ACPI case almost the same get rid of code duplication
+by moving gpiod_get() calls directly to ->probe().
 
-In this case, BTC asks to enter/leave PS mode frequently to cause A2DP
-choppy.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/ps.c           | 14 ++++++++------
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c | 10 ++++++++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c |  8 ++++++--
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 10 ++++++++--
- 4 files changed, 30 insertions(+), 12 deletions(-)
+ drivers/nfc/st21nfca/i2c.c | 62 ++++++++--------------------------------------
+ 1 file changed, 10 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index 0d152877d969..07ee3096f50e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -356,7 +356,7 @@ void rtl_lps_set_psmode(struct ieee80211_hw *hw, u8 rt_psmode)
- 	if (mac->link_state != MAC80211_LINKED)
- 		return;
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 9b889e017a9d..e0efe3e77745 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -61,8 +61,6 @@
+ #define ST21NFCA_HCI_DRIVER_NAME "st21nfca_hci"
+ #define ST21NFCA_HCI_I2C_DRIVER_NAME "st21nfca_hci_i2c"
  
--	if (ppsc->dot11_psmode == rt_psmode)
-+	if (ppsc->dot11_psmode == rt_psmode && rt_psmode == EACTIVE)
- 		return;
+-#define ST21NFCA_GPIO_NAME_EN "enable"
+-
+ struct st21nfca_i2c_phy {
+ 	struct i2c_client *i2c_dev;
+ 	struct nfc_hci_dev *hdev;
+@@ -508,44 +506,10 @@ static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
+ 	{},
+ };
  
- 	/* Update power save mode configured. */
-@@ -438,11 +438,13 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 
- 	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
- 
--	if (ppsc->dot11_psmode == EACTIVE) {
--		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
--			 "Enter 802.11 power save mode...\n");
--		rtl_lps_set_psmode(hw, EAUTOPS);
+-static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+-{
+-	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-	int ret;
+-
+-	ret = devm_acpi_dev_add_driver_gpios(dev, acpi_st21nfca_gpios);
+-	if (ret)
+-		return ret;
+-
+-	/* Get EN GPIO from ACPI */
+-	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
+-	if (IS_ERR(phy->gpiod_ena)) {
+-		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+-		return PTR_ERR(phy->gpiod_ena);
 -	}
-+	/* Don't need to check (ppsc->dot11_psmode == EACTIVE), because
-+	 * bt_ccoexist may ask to enter lps.
-+	 * In normal case, this constraint move to rtl_lps_set_psmode().
-+	 */
-+	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
-+		 "Enter 802.11 power save mode...\n");
-+	rtl_lps_set_psmode(hw, EAUTOPS);
+-
+-	return 0;
+-}
+-
+-static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+-{
+-	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct device *dev = &client->dev;
+-
+-	/* Get GPIO from device tree */
+-	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
+-	if (IS_ERR(phy->gpiod_ena)) {
+-		nfc_err(dev, "Failed to request enable pin\n");
+-		return PTR_ERR(phy->gpiod_ena);
+-	}
+-
+-	return 0;
+-}
+-
+ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 				  const struct i2c_device_id *id)
+ {
++	struct device *dev = &client->dev;
+ 	struct st21nfca_i2c_phy *phy;
+ 	int r;
  
- 	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index 2ba9e613a7f6..f4ee7906eb20 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -427,6 +427,11 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
- 			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
-+	bool bt_lps_on = (rtlpriv->cfg->ops->get_btc_status() ?
-+			  btc_ops->btc_is_bt_lps_on(rtlpriv) : false);
+@@ -572,21 +536,15 @@ static int st21nfca_hci_i2c_probe(struct i2c_client *client,
+ 	mutex_init(&phy->phy_lock);
+ 	i2c_set_clientdata(client, phy);
+ 
+-	if (client->dev.of_node) {
+-		r = st21nfca_hci_i2c_of_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev, "No platform data\n");
+-			return r;
+-		}
+-	} else if (ACPI_HANDLE(&client->dev)) {
+-		r = st21nfca_hci_i2c_acpi_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev, "Cannot get ACPI data\n");
+-			return r;
+-		}
+-	} else {
+-		nfc_err(&client->dev, "st21nfca platform resources not available\n");
+-		return -ENODEV;
++	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st21nfca_gpios);
++	if (r)
++		dev_dbg(dev, "Unable to add GPIO mapping table\n");
 +
-+	if (bt_ctrl_lps)
-+		mode = (bt_lps_on ? FW_PS_MIN_MODE : FW_PS_ACTIVE_MODE);
++	/* Get EN GPIO from resource provider */
++	phy->gpiod_ena = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
++	if (IS_ERR(phy->gpiod_ena)) {
++		nfc_err(dev, "Unable to get ENABLE GPIO\n");
++		return PTR_ERR(phy->gpiod_ena);
+ 	}
  
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
- 		 mode, bt_ctrl_lps);
-@@ -482,8 +487,9 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
- 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
- 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
--					 (rtlpriv->mac80211.p2p) ?
--					 ppsc->smart_ps : 1);
-+					 bt_ctrl_lps ? 0 :
-+					 ((rtlpriv->mac80211.p2p) ?
-+					  ppsc->smart_ps : 1));
- 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
- 					       awake_intvl);
- 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-index a37eb27cefe6..95b2e9a87d20 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-@@ -245,6 +245,11 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
- 			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
-+	bool bt_lps_on = (rtlpriv->cfg->ops->get_btc_status() ?
-+			  btc_ops->btc_is_bt_lps_on(rtlpriv) : false);
-+
-+	if (bt_ctrl_lps)
-+		mode = (bt_lps_on ? FW_PS_MIN_MODE : FW_PS_ACTIVE_MODE);
- 
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
- 		 mode, bt_ctrl_lps);
-@@ -300,8 +305,7 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
- 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
- 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
--					 (rtlpriv->mac80211.p2p) ?
--					  ppsc->smart_ps : 1);
-+					 bt_ctrl_lps ? 0 : ppsc->smart_ps);
- 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
- 					       awake_intvl);
- 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index cc03f9813824..97401aa4dacb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -494,6 +494,11 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
- 			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
-+	bool bt_lps_on = (rtlpriv->cfg->ops->get_btc_status() ?
-+			  btc_ops->btc_is_bt_lps_on(rtlpriv) : false);
-+
-+	if (bt_ctrl_lps)
-+		mode = (bt_lps_on ? FW_PS_MIN_MODE : FW_PS_ACTIVE_MODE);
- 
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
- 		 mode, bt_ctrl_lps);
-@@ -549,8 +554,9 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
- 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
- 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
--					 (rtlpriv->mac80211.p2p) ?
--					 ppsc->smart_ps : 1);
-+					 bt_ctrl_lps ? 0 :
-+					 ((rtlpriv->mac80211.p2p) ?
-+					  ppsc->smart_ps : 1));
- 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
- 					       awake_intvl);
- 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
+ 	phy->se_status.is_ese_present =
 -- 
-2.12.3
+2.11.0
