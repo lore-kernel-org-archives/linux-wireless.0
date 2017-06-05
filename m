@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.newmedia-net.de ([185.84.6.166]:56571 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751534AbdFIOaD (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59472 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751373AbdFEUoP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 10:30:03 -0400
-Subject: Re: [PATCH v2 1/3] ath10k: Use complete VHT chan width for 160MHz
- workaround
-To: Ben Greear <greearb@candelatech.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
- <c91d2578-d491-c813-cbfb-f742d04f9417@candelatech.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <f01b07e5-bc11-68ac-0c37-e0d859ebfb4e@dd-wrt.com> (sfid-20170609_163007_340362_EEFD2267)
-Date: Fri, 9 Jun 2017 16:09:01 +0200
-MIME-Version: 1.0
-In-Reply-To: <c91d2578-d491-c813-cbfb-f742d04f9417@candelatech.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Mon, 5 Jun 2017 16:44:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Mordechai Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:16 +0300
+Message-Id: <20170605204218.30151-24-luca@coelho.fi> (sfid-20170605_224445_411576_B5BDF0F2)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 23/25] iwlwifi: fw-api: cleanup cycle includes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 09.06.2017 um 15:50 schrieb Ben Greear:
->
->
-> On 06/09/2017 04:07 AM, Sven Eckelmann wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> The ath10k firmware doesn't announce its VHT channel width 
->> capabilities in
->> the vht_cap information from the "service ready event" arguments. The
->> driver must therefore check whether the 160MHz short GI bit is set and
->> whether the driver still doesn't set the bits for the 160/80+80 MHz
->> capabilities.
->>
->> The two bits for the channel width are a two bit integer and not two
->> separate bits which cannot be parsed without the knowledge of the other
->> bit. Using IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ (b10..) 
->> as a
->> mask for this task doesn't make any sense. The correct mask for the VHT
->> channel width should be used instead to make this check more readable.
->
-> I didn't test them, but a quick review looks good.  Thanks for picking 
-> this up!
-mmh except that it wont change anything. this patch is a workaround for 
-older firmwares. these older firmwares have this flag zeroed
-newer firmwares have 80p80 set. thats all. for sure we can now check if 
-the mask is 0 or not 0. but it wont change anything at the end
->
-> --Ben
->
->
+From: Mordechai Goodstein <mordechay.goodstein@intel.com>
 
+The include in the deleted file are included in the fw-api.h file.
+Which caused a cycle include in the dependencies.
+
+Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h | 2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h  | 2 --
+ 2 files changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
+index dded91d7eb96..d27c67b67015 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
+@@ -68,8 +68,6 @@
+ #ifndef __fw_api_scan_h__
+ #define __fw_api_scan_h__
+ 
+-#include "fw-api.h"
+-
+ /* Scan Commands, Responses, Notifications */
+ 
+ /* Max number of IEs for direct SSID scans in a command */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
+index eae036af880e..e2acf39f784d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
+@@ -63,8 +63,6 @@
+ #ifndef __fw_api_tof_h__
+ #define __fw_api_tof_h__
+ 
+-#include "fw-api.h"
+-
+ /* ToF sub-group command IDs */
+ enum iwl_mvm_tof_sub_grp_ids {
+ 	TOF_RANGE_REQ_CMD = 0x1,
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.11.0
