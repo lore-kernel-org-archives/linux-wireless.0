@@ -1,137 +1,407 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:33583 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751566AbdFIVrL (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59384 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751335AbdFEUnR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 17:47:11 -0400
-Received: by mail-oi0-f49.google.com with SMTP id s3so35670629oia.0
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jun 2017 14:47:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <e617e9f9-0a83-cfef-9bb3-127a06ba33e0@candelatech.com>
-References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
- <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com> <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
- <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com> <1496993334.2424.1.camel@sipsolutions.net>
- <de7611e7-c34d-26e2-4083-b7e01b657426@candelatech.com> <1497038480.12088.6.camel@sipsolutions.net>
- <e617e9f9-0a83-cfef-9bb3-127a06ba33e0@candelatech.com>
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Date: Fri, 9 Jun 2017 23:47:09 +0200
-Message-ID: <CAFED-jnTNGU-VozW1kLxzHk+Uq3JfR2kTfu-J8gTbrHebzX_2w@mail.gmail.com> (sfid-20170609_234715_372053_487AE74F)
-Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Denis Kenzior <denkenz@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 5 Jun 2017 16:43:17 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:11 +0300
+Message-Id: <20170605204218.30151-19-luca@coelho.fi> (sfid-20170605_224330_119093_A34B6497)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 18/25] iwlwifi: split firmware API from iwl-trans.h
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-06-09 22:18 GMT+02:00 Ben Greear <greearb@candelatech.com>:
-> On 06/09/2017 01:01 PM, Johannes Berg wrote:
->>
->> On Fri, 2017-06-09 at 06:46 -0700, Ben Greear wrote:
->>
->>>> However, the solution is far simpler! Once you have nl80211 PAE
->>>> transport, you can easily even set the key before transmitting the
->>>> packet and simply indicate that this particular packet should _not_
->>>> be encrypted regardless of key presence.
->>>
->>>
->>> My ath10k firmware cannot deal with a case like this:
->>>
->>> pkt is enqueued before key is set
->>> key is set
->>> pkt is transmitted (incorrectly)
->>>
->>> This is because of how the tid's header-length variables are set up
->>> and modified when the keys are set, and I don't see any good way to
->>> fix this.
->>
->>
->> That seems awful, and anyway will not work with the mentioned non-IEEE
->> protocols that require not encrypting the rekeying frames even when
->> keys have been set up.
->>
->> I don't know what to tell you here, I think it'd be best if you fix
->> that.
->
->
-> The case that fails is basically any packet that is currently
-> enqueued in the firmware when the key is set is transmitted incorrectly or
-> not at all.
-> And, maybe this is only for DATA tids.
->
-> Otherwise, the no-encrypt logic should work fine.  So, it is just the race
-> with the EAPOL 4/4 and set-key that causes issues as far as I can tell.
->
-> It looks like the EAPOL 4/4 and set-key race is fixable without too much
-> effort,
-> so I think I will focus on that for now instead of further hacking special
-> case logic into the firmware.
->
-Ben, as I remember correctly there is a flag,
-WMI_PEER_NEED_PTK_4_WAY
+From: Johannes Berg <johannes.berg@intel.com>
 
-This fix race (you describe) in the firmware/hw.
-For 636 firmware, where we tested STA mode really hard (5 years ago),
-that works perfect.
-So, I am not sure why this flag don't work correctly with your firmware.
+In order to more clearly document which parts of this file
+are firmware API and which are something else, split the
+firmware API into a separate file to include here.
 
-Regarding EAPOL frames I am not sure you will have real/correct ACK. I
-remember in case of mgmt frames FW always return ACK - but probably
-you will check that.
-I also fight with some EAPOL frames, but forgot why ... Seems my brain
-removed this information for some reason :-)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-api.h | 205 ++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 137 +---------------
+ 2 files changed, 206 insertions(+), 136 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-fw-api.h
 
-BR
-Janusz
-
->>> Stock ath10k firmware goes to great lengths to parse EAPOL frames and
->>> try to work around it in that manner, but that breaks .11r (or used
->>> to, I haven't tried stock firmware lately) and adds more complexity
->>> to the code.
->>
->>
->> It just has to be a single flag saying "don't encrypt this frame" -
->> nothing super complicated about that?
->>
->> In ath10k it looks like HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT gets set for
->> this, seems easy enough?
->>
->>>  From a patch someone sent to hostapd list last night, it seems we
->>> could get the tx-status for the EAPOL 4/4, and in that case, we
->>> *know* the pkt has been transmitted, so we can then set the key
->>> safely it would seem?
->>
->>
->> I think so, and I don't remember why we dismissed this solution. Could
->> be that we just decided solving the bridging issue at the same time,
->> while not introducing more latency, was better.
->>
->> Also, the other way can possibly solve some PTK rekeying issues, so
->> overall the solution to go all the way seems better.
->
->
-> I guess I don't fully understand the PAE thing, but if you all like it,
-> then sounds good to me.
->
-> For kernels not supporting this new feature, it seems that having supplicant
-> wait for tx-status would be a good interim fix?
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
->
-> _______________________________________________
-> Hostap mailing list
-> Hostap@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/hostap
-
-
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-api.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-api.h
+new file mode 100644
+index 000000000000..a004409fa984
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-api.h
+@@ -0,0 +1,205 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <linuxwifi@intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#ifndef __iwl_fw_api_h__
++#define __iwl_fw_api_h__
++
++/**
++ * DOC: Host command section
++ *
++ * A host command is a command issued by the upper layer to the fw. There are
++ * several versions of fw that have several APIs. The transport layer is
++ * completely agnostic to these differences.
++ * The transport does provide helper functionality (i.e. SYNC / ASYNC mode),
++ */
++#define SEQ_TO_QUEUE(s)	(((s) >> 8) & 0x1f)
++#define QUEUE_TO_SEQ(q)	(((q) & 0x1f) << 8)
++#define SEQ_TO_INDEX(s)	((s) & 0xff)
++#define INDEX_TO_SEQ(i)	((i) & 0xff)
++#define SEQ_RX_FRAME	cpu_to_le16(0x8000)
++
++/*
++ * those functions retrieve specific information from
++ * the id field in the iwl_host_cmd struct which contains
++ * the command id, the group id and the version of the command
++ * and vice versa
++*/
++static inline u8 iwl_cmd_opcode(u32 cmdid)
++{
++	return cmdid & 0xFF;
++}
++
++static inline u8 iwl_cmd_groupid(u32 cmdid)
++{
++	return ((cmdid & 0xFF00) >> 8);
++}
++
++static inline u8 iwl_cmd_version(u32 cmdid)
++{
++	return ((cmdid & 0xFF0000) >> 16);
++}
++
++static inline u32 iwl_cmd_id(u8 opcode, u8 groupid, u8 version)
++{
++	return opcode + (groupid << 8) + (version << 16);
++}
++
++/* make u16 wide id out of u8 group and opcode */
++#define WIDE_ID(grp, opcode) (((grp) << 8) | (opcode))
++#define DEF_ID(opcode) ((1 << 8) | (opcode))
++
++/* due to the conversion, this group is special; new groups
++ * should be defined in the appropriate fw-api header files
++ */
++#define IWL_ALWAYS_LONG_GROUP	1
++
++/**
++ * struct iwl_cmd_header
++ *
++ * This header format appears in the beginning of each command sent from the
++ * driver, and each response/notification received from uCode.
++ */
++struct iwl_cmd_header {
++	u8 cmd;		/* Command ID:  REPLY_RXON, etc. */
++	u8 group_id;
++	/*
++	 * The driver sets up the sequence number to values of its choosing.
++	 * uCode does not use this value, but passes it back to the driver
++	 * when sending the response to each driver-originated command, so
++	 * the driver can match the response to the command.  Since the values
++	 * don't get used by uCode, the driver may set up an arbitrary format.
++	 *
++	 * There is one exception:  uCode sets bit 15 when it originates
++	 * the response/notification, i.e. when the response/notification
++	 * is not a direct response to a command sent by the driver.  For
++	 * example, uCode issues REPLY_RX when it sends a received frame
++	 * to the driver; it is not a direct response to any driver command.
++	 *
++	 * The Linux driver uses the following format:
++	 *
++	 *  0:7		tfd index - position within TX queue
++	 *  8:12	TX queue id
++	 *  13:14	reserved
++	 *  15		unsolicited RX or uCode-originated notification
++	 */
++	__le16 sequence;
++} __packed;
++
++/**
++ * struct iwl_cmd_header_wide
++ *
++ * This header format appears in the beginning of each command sent from the
++ * driver, and each response/notification received from uCode.
++ * this is the wide version that contains more information about the command
++ * like length, version and command type
++ */
++struct iwl_cmd_header_wide {
++	u8 cmd;
++	u8 group_id;
++	__le16 sequence;
++	__le16 length;
++	u8 reserved;
++	u8 version;
++} __packed;
++
++/**
++ * iwl_tx_queue_cfg_actions - TXQ config options
++ * @TX_QUEUE_CFG_ENABLE_QUEUE: enable a queue
++ * @TX_QUEUE_CFG_TFD_SHORT_FORMAT: use short TFD format
++ */
++enum iwl_tx_queue_cfg_actions {
++	TX_QUEUE_CFG_ENABLE_QUEUE		= BIT(0),
++	TX_QUEUE_CFG_TFD_SHORT_FORMAT		= BIT(1),
++};
++
++/**
++ * struct iwl_tx_queue_cfg_cmd - txq hw scheduler config command
++ * @sta_id: station id
++ * @tid: tid of the queue
++ * @flags: see &enum iwl_tx_queue_cfg_actions
++ * @cb_size: size of TFD cyclic buffer. Value is exponent - 3.
++ *	Minimum value 0 (8 TFDs), maximum value 5 (256 TFDs)
++ * @byte_cnt_addr: address of byte count table
++ * @tfdq_addr: address of TFD circular buffer
++ */
++struct iwl_tx_queue_cfg_cmd {
++	u8 sta_id;
++	u8 tid;
++	__le16 flags;
++	__le32 cb_size;
++	__le64 byte_cnt_addr;
++	__le64 tfdq_addr;
++} __packed; /* TX_QUEUE_CFG_CMD_API_S_VER_2 */
++
++/**
++ * struct iwl_tx_queue_cfg_rsp - response to txq hw scheduler config
++ * @queue_number: queue number assigned to this RA -TID
++ * @flags: set on failure
++ * @write_pointer: initial value for write pointer
++ */
++struct iwl_tx_queue_cfg_rsp {
++	__le16 queue_number;
++	__le16 flags;
++	__le16 write_pointer;
++	__le16 reserved;
++} __packed; /* TX_QUEUE_CFG_RSP_API_S_VER_2 */
++
++#endif /* __iwl_fw_api_h__*/
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 63e4857718c7..e965285f84f1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -76,6 +76,7 @@
+ #include "iwl-config.h"
+ #include "iwl-fw.h"
+ #include "iwl-op-mode.h"
++#include "iwl-fw-api.h"
+ 
+ /**
+  * DOC: Transport layer - what is it ?
+@@ -111,104 +112,6 @@
+  *	6) Eventually, the free function will be called.
+  */
+ 
+-/**
+- * DOC: Host command section
+- *
+- * A host command is a command issued by the upper layer to the fw. There are
+- * several versions of fw that have several APIs. The transport layer is
+- * completely agnostic to these differences.
+- * The transport does provide helper functionality (i.e. SYNC / ASYNC mode),
+- */
+-#define SEQ_TO_QUEUE(s)	(((s) >> 8) & 0x1f)
+-#define QUEUE_TO_SEQ(q)	(((q) & 0x1f) << 8)
+-#define SEQ_TO_INDEX(s)	((s) & 0xff)
+-#define INDEX_TO_SEQ(i)	((i) & 0xff)
+-#define SEQ_RX_FRAME	cpu_to_le16(0x8000)
+-
+-/*
+- * those functions retrieve specific information from
+- * the id field in the iwl_host_cmd struct which contains
+- * the command id, the group id and the version of the command
+- * and vice versa
+-*/
+-static inline u8 iwl_cmd_opcode(u32 cmdid)
+-{
+-	return cmdid & 0xFF;
+-}
+-
+-static inline u8 iwl_cmd_groupid(u32 cmdid)
+-{
+-	return ((cmdid & 0xFF00) >> 8);
+-}
+-
+-static inline u8 iwl_cmd_version(u32 cmdid)
+-{
+-	return ((cmdid & 0xFF0000) >> 16);
+-}
+-
+-static inline u32 iwl_cmd_id(u8 opcode, u8 groupid, u8 version)
+-{
+-	return opcode + (groupid << 8) + (version << 16);
+-}
+-
+-/* make u16 wide id out of u8 group and opcode */
+-#define WIDE_ID(grp, opcode) ((grp << 8) | opcode)
+-#define DEF_ID(opcode) ((1 << 8) | (opcode))
+-
+-/* due to the conversion, this group is special; new groups
+- * should be defined in the appropriate fw-api header files
+- */
+-#define IWL_ALWAYS_LONG_GROUP	1
+-
+-/**
+- * struct iwl_cmd_header
+- *
+- * This header format appears in the beginning of each command sent from the
+- * driver, and each response/notification received from uCode.
+- */
+-struct iwl_cmd_header {
+-	u8 cmd;		/* Command ID:  REPLY_RXON, etc. */
+-	u8 group_id;
+-	/*
+-	 * The driver sets up the sequence number to values of its choosing.
+-	 * uCode does not use this value, but passes it back to the driver
+-	 * when sending the response to each driver-originated command, so
+-	 * the driver can match the response to the command.  Since the values
+-	 * don't get used by uCode, the driver may set up an arbitrary format.
+-	 *
+-	 * There is one exception:  uCode sets bit 15 when it originates
+-	 * the response/notification, i.e. when the response/notification
+-	 * is not a direct response to a command sent by the driver.  For
+-	 * example, uCode issues REPLY_RX when it sends a received frame
+-	 * to the driver; it is not a direct response to any driver command.
+-	 *
+-	 * The Linux driver uses the following format:
+-	 *
+-	 *  0:7		tfd index - position within TX queue
+-	 *  8:12	TX queue id
+-	 *  13:14	reserved
+-	 *  15		unsolicited RX or uCode-originated notification
+-	 */
+-	__le16 sequence;
+-} __packed;
+-
+-/**
+- * struct iwl_cmd_header_wide
+- *
+- * This header format appears in the beginning of each command sent from the
+- * driver, and each response/notification received from uCode.
+- * this is the wide version that contains more information about the command
+- * like length, version and command type
+- */
+-struct iwl_cmd_header_wide {
+-	u8 cmd;
+-	u8 group_id;
+-	__le16 sequence;
+-	__le16 length;
+-	u8 reserved;
+-	u8 version;
+-} __packed;
+-
+ #define FH_RSCSR_FRAME_SIZE_MSK		0x00003FFF	/* bits 0-13 */
+ #define FH_RSCSR_FRAME_INVALID		0x55550000
+ #define FH_RSCSR_FRAME_ALIGN		0x40
+@@ -533,44 +436,6 @@ struct iwl_trans_txq_scd_cfg {
+ 	int frame_limit;
+ };
+ 
+-/* Available options for &struct iwl_tx_queue_cfg_cmd */
+-enum iwl_tx_queue_cfg_actions {
+-	TX_QUEUE_CFG_ENABLE_QUEUE		= BIT(0),
+-	TX_QUEUE_CFG_TFD_SHORT_FORMAT		= BIT(1),
+-};
+-
+-/**
+- * struct iwl_tx_queue_cfg_cmd - txq hw scheduler config command
+- * @sta_id: station id
+- * @tid: tid of the queue
+- * @flags: Bit 0 - on enable, off - disable, Bit 1 - short TFD format
+- * @cb_size: size of TFD cyclic buffer. Value is exponent - 3.
+- *	Minimum value 0 (8 TFDs), maximum value 5 (256 TFDs)
+- * @byte_cnt_addr: address of byte count table
+- * @tfdq_addr: address of TFD circular buffer
+- */
+-struct iwl_tx_queue_cfg_cmd {
+-	u8 sta_id;
+-	u8 tid;
+-	__le16 flags;
+-	__le32 cb_size;
+-	__le64 byte_cnt_addr;
+-	__le64 tfdq_addr;
+-} __packed; /* TX_QUEUE_CFG_CMD_API_S_VER_2 */
+-
+-/**
+- * struct iwl_tx_queue_cfg_rsp - response to txq hw scheduler config
+- * @queue_number: queue number assigned to this RA -TID
+- * @flags: set on failure
+- * @write_pointer: initial value for write pointer
+- */
+-struct iwl_tx_queue_cfg_rsp {
+-	__le16 queue_number;
+-	__le16 flags;
+-	__le16 write_pointer;
+-	__le16 reserved;
+-} __packed; /* TX_QUEUE_CFG_RSP_API_S_VER_2 */
+-
+ /**
+  * struct iwl_trans_ops - transport specific operations
+  *
 -- 
-Janusz Dziedzic
+2.11.0
