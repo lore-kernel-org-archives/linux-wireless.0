@@ -1,151 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60818 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751188AbdFBL0n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:26:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 14:25:50 +0300
-Message-Id: <20170602112553.2466-23-luca@coelho.fi> (sfid-20170602_132647_803347_941C9E5B)
-In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
-References: <20170602112553.2466-1-luca@coelho.fi>
-Subject: [PATCH 22/25] iwlwifi: kernel-doc: make proper links
+Received: from mga02.intel.com ([134.134.136.20]:33567 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751192AbdFEUUS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 16:20:18 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 02/12] NFC: st21nfca: Add GPIO ACPI mapping table
+Date: Mon,  5 Jun 2017 23:19:59 +0300
+Message-Id: <20170605202009.78561-3-andriy.shevchenko@linux.intel.com> (sfid-20170605_222026_983418_46358B36)
+In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In order to make GPIO ACPI library stricter prepare users of
+gpiod_get_index() to correctly behave when there no mapping is
+provided by firmware.
 
-Using %enum instead of &enum (and in one case, %struct) results in
-the wrong parsing. Fix that so that if documentation is generated,
-the result is clickable links.
+Here we add explicit mapping between _CRS GpioIo() resources and
+their names used in the driver.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h       | 10 +++++-----
- drivers/net/wireless/intel/iwlwifi/iwl-modparams.h     |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h  |  4 ++--
- 4 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/nfc/st21nfca/i2c.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
-index 420c31dab263..cfebde68a391 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
-@@ -116,7 +116,7 @@ enum iwl_fw_error_dump_type {
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 02a920ca07c8..9b889e017a9d 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -501,14 +501,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
+ 	.disable = st21nfca_hci_i2c_disable,
+ };
  
- /**
-  * struct iwl_fw_error_dump_data - data for one type
-- * @type: %enum iwl_fw_error_dump_type
-+ * @type: &enum iwl_fw_error_dump_type
-  * @len: the length starting from %data
-  * @data: the data itself
-  */
-@@ -130,7 +130,7 @@ struct iwl_fw_error_dump_data {
-  * struct iwl_fw_error_dump_file - the layout of the header of the file
-  * @barker: must be %IWL_FW_ERROR_DUMP_BARKER
-  * @file_len: the length of all the file starting from %barker
-- * @data: array of %struct iwl_fw_error_dump_data
-+ * @data: array of &struct iwl_fw_error_dump_data
-  */
- struct iwl_fw_error_dump_file {
- 	__le32 barker;
-@@ -225,7 +225,7 @@ enum iwl_fw_error_dump_mem_type {
++static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
++
++static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
++	{ "enable-gpios", &enable_gpios, 1 },
++	{},
++};
++
+ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
++	int ret;
++
++	ret = devm_acpi_dev_add_driver_gpios(dev, acpi_st21nfca_gpios);
++	if (ret)
++		return ret;
  
- /**
-  * struct iwl_fw_error_dump_mem - chunk of memory
-- * @type: %enum iwl_fw_error_dump_mem_type
-+ * @type: &enum iwl_fw_error_dump_mem_type
-  * @offset: the offset from which the memory was read
-  * @data: the content of the memory
-  */
-@@ -324,7 +324,7 @@ enum iwl_fw_dbg_trigger {
+ 	/* Get EN GPIO from ACPI */
+-	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+-					      GPIOD_OUT_LOW);
++	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
+ 	if (IS_ERR(phy->gpiod_ena)) {
+ 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+ 		return PTR_ERR(phy->gpiod_ena);
+@@ -523,8 +534,7 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 	struct device *dev = &client->dev;
  
- /**
-  * struct iwl_fw_error_dump_trigger_desc - describes the trigger condition
-- * @type: %enum iwl_fw_dbg_trigger
-+ * @type: &enum iwl_fw_dbg_trigger
-  * @data: raw data about what happened
-  */
- struct iwl_fw_error_dump_trigger_desc {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 89bc008e152f..c178c8f32466 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -468,7 +468,7 @@ enum iwl_fw_dbg_reg_operator {
- /**
-  * struct iwl_fw_dbg_reg_op - an operation on a register
-  *
-- * @op: %enum iwl_fw_dbg_reg_operator
-+ * @op: &enum iwl_fw_dbg_reg_operator
-  * @addr: offset of the register
-  * @val: value
-  */
-@@ -526,7 +526,7 @@ struct iwl_fw_dbg_mem_seg_tlv {
-  * struct iwl_fw_dbg_dest_tlv - configures the destination of the debug data
-  *
-  * @version: version of the TLV - currently 0
-- * @monitor_mode: %enum iwl_fw_dbg_monitor_mode
-+ * @monitor_mode: &enum iwl_fw_dbg_monitor_mode
-  * @size_power: buffer size will be 2^(size_power + 11)
-  * @base_reg: addr of the base addr register (PRPH)
-  * @end_reg:  addr of the end addr register (PRPH)
-@@ -595,15 +595,15 @@ enum iwl_fw_dbg_trigger_vif_type {
- 
- /**
-  * struct iwl_fw_dbg_trigger_tlv - a TLV that describes the trigger
-- * @id: %enum iwl_fw_dbg_trigger
-- * @vif_type: %enum iwl_fw_dbg_trigger_vif_type
-+ * @id: &enum iwl_fw_dbg_trigger
-+ * @vif_type: &enum iwl_fw_dbg_trigger_vif_type
-  * @stop_conf_ids: bitmap of configurations this trigger relates to.
-  *	if the mode is %IWL_FW_DBG_TRIGGER_STOP, then if the bit corresponding
-  *	to the currently running configuration is set, the data should be
-  *	collected.
-  * @stop_delay: how many milliseconds to wait before collecting the data
-  *	after the STOP trigger fires.
-- * @mode: %enum iwl_fw_dbg_trigger_mode - can be stop / start of both
-+ * @mode: &enum iwl_fw_dbg_trigger_mode - can be stop / start of both
-  * @start_conf_id: if mode is %IWL_FW_DBG_TRIGGER_START, this defines what
-  *	configuration should be applied when the triggers kicks in.
-  * @occurrences: number of occurrences. 0 means the trigger will never fire.
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-index 4d32b10fe50c..0bd85e58cc2c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-@@ -114,7 +114,7 @@ enum iwl_uapsd_disable {
-  * @debug_level: levels are IWL_DL_*
-  * @ant_coupling: antenna coupling in dB, default = 0
-  * @nvm_file: specifies a external NVM file
-- * @uapsd_disable: disable U-APSD, see %enum iwl_uapsd_disable, default =
-+ * @uapsd_disable: disable U-APSD, see &enum iwl_uapsd_disable, default =
-  *	IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT
-  * @d0i3_disable: disable d0i3, default = 1,
-  * @d0i3_entry_delay: time to wait after no refs are taken before
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-index f329e87cd97c..0d88721b7b52 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-@@ -95,7 +95,7 @@ enum iwl_ltr_config_flags {
- 
- /**
-  * struct iwl_ltr_config_cmd_v1 - configures the LTR
-- * @flags: See %enum iwl_ltr_config_flags
-+ * @flags: See &enum iwl_ltr_config_flags
-  */
- struct iwl_ltr_config_cmd_v1 {
- 	__le32 flags;
-@@ -107,7 +107,7 @@ struct iwl_ltr_config_cmd_v1 {
- 
- /**
-  * struct iwl_ltr_config_cmd - configures the LTR
-- * @flags: See %enum iwl_ltr_config_flags
-+ * @flags: See &enum iwl_ltr_config_flags
-  * @static_long:
-  * @static_short:
-  * @ltr_cfg_values:
+ 	/* Get GPIO from device tree */
+-	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
+-					      GPIOD_OUT_HIGH);
++	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
+ 	if (IS_ERR(phy->gpiod_ena)) {
+ 		nfc_err(dev, "Failed to request enable pin\n");
+ 		return PTR_ERR(phy->gpiod_ena);
 -- 
 2.11.0
