@@ -1,73 +1,436 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fed1rmfepi103.cox.net ([68.230.241.134]:56245 "EHLO
-        fed1rmfepi103.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751154AbdFBRhs (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33864 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751200AbdFEPaY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 13:37:48 -0400
-Received: from fed1rmimpo110.cox.net ([68.230.241.159])
-          by fed1rmfepo102.cox.net
-          (InterMail vM.8.01.05.28 201-2260-151-171-20160122) with ESMTP
-          id <20170602172832.FKNF32620.fed1rmfepo102.cox.net@fed1rmimpo110.cox.net>
-          for <linux-wireless@vger.kernel.org>;
-          Fri, 2 Jun 2017 13:28:32 -0400
-From: "Peter S. Housel" <housel@acm.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Christian Daudt <csd@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "Peter S. Housel" <housel@acm.org>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain
-Date: Fri,  2 Jun 2017 10:22:21 -0700
-Message-Id: <1496424146-10928-1-git-send-email-housel@acm.org> (sfid-20170602_193752_667588_915A71D5)
+        Mon, 5 Jun 2017 11:30:24 -0400
+Received: by mail-oi0-f66.google.com with SMTP id d99so10783353oic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:10 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 2/9] rtlwifi: btcoex: rename ex_halbtc*ant to ex_btc*ant
+Date: Mon,  5 Jun 2017 10:29:52 -0500
+Message-Id: <20170605152959.27439-3-Larry.Finger@lwfinger.net> (sfid-20170605_173039_508811_39472903)
+In-Reply-To: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
+References: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An earlier change to this function (3bdae810721b) fixed a leak in the
-case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
-glob_skb buffer, used for emulating a scattering read, is never used
-or referenced after its contents are copied into the destination
-buffers, and therefore always needs to be freed by the end of the
-function.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Peter S. Housel <housel@acm.org>
+These external functions are for BT-coexistence, so remove the "hal"
+prefix for consistancy.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    | 32 ++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 52 +++++++++++-----------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    | 41 ++++++++---------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    | 38 ++++++++--------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    | 24 +++++-----
+ 5 files changed, 95 insertions(+), 92 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9b970dc..4c5064f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -727,15 +727,16 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 			return -ENOMEM;
- 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
- 					 glom_skb);
--		if (err) {
--			brcmu_pkt_buf_free_skb(glom_skb);
--			goto done;
--		}
-+		if (err)
-+			goto free_glom_skb;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h
+index a57d6947eaf7..65502acee52c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h
+@@ -164,20 +164,20 @@ struct coex_sta_8192e_2ant {
+ /****************************************************************
+  *    The following is interface which will notify coex module.
+  ****************************************************************/
+-void ex_halbtc8192e2ant_init_hwconfig(struct btc_coexist *btcoexist);
+-void ex_halbtc8192e2ant_init_coex_dm(struct btc_coexist *btcoexist);
+-void ex_halbtc8192e2ant_ips_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8192e2ant_lps_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8192e2ant_scan_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8192e2ant_connect_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8192e2ant_media_status_notify(struct btc_coexist *btcoexist,
++void ex_btc8192e2ant_init_hwconfig(struct btc_coexist *btcoexist);
++void ex_btc8192e2ant_init_coex_dm(struct btc_coexist *btcoexist);
++void ex_btc8192e2ant_ips_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8192e2ant_lps_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8192e2ant_scan_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8192e2ant_connect_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8192e2ant_media_status_notify(struct btc_coexist *btcoexist,
++					 u8 type);
++void ex_btc8192e2ant_special_packet_notify(struct btc_coexist *btcoexist,
++					   u8 type);
++void ex_btc8192e2ant_bt_info_notify(struct btc_coexist *btcoexist,
++				    u8 *tmpbuf, u8 length);
++void ex_btc8192e2ant_stack_operation_notify(struct btc_coexist *btcoexist,
+ 					    u8 type);
+-void ex_halbtc8192e2ant_special_packet_notify(struct btc_coexist *btcoexist,
+-					      u8 type);
+-void ex_halbtc8192e2ant_bt_info_notify(struct btc_coexist *btcoexist,
+-				       u8 *tmpbuf, u8 length);
+-void ex_halbtc8192e2ant_stack_operation_notify(struct btc_coexist *btcoexist,
+-					       u8 type);
+-void ex_halbtc8192e2ant_halt_notify(struct btc_coexist *btcoexist);
+-void ex_halbtc8192e2ant_periodical(struct btc_coexist *btcoexist);
+-void ex_halbtc8192e2ant_display_coex_info(struct btc_coexist *btcoexist);
++void ex_btc8192e2ant_halt_notify(struct btc_coexist *btcoexist);
++void ex_btc8192e2ant_periodical(struct btc_coexist *btcoexist);
++void ex_btc8192e2ant_display_coex_info(struct btc_coexist *btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index a0f3a18add25..03998d2e9eb8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -2390,9 +2390,9 @@ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
+ }
  
- 		skb_queue_walk(pktq, skb) {
- 			memcpy(skb->data, glom_skb->data, skb->len);
- 			skb_pull(glom_skb, skb->len);
+ /**************************************************************
+- * extern function start with ex_halbtc8723b1ant_
++ * extern function start with ex_btc8723b1ant_
+  **************************************************************/
+-void ex_halbtc8723b1ant_power_on_setting(struct btc_coexist *btcoexist)
++void ex_btc8723b1ant_power_on_setting(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+@@ -2462,14 +2462,14 @@ void ex_halbtc8723b1ant_power_on_setting(struct btc_coexist *btcoexist)
+ }
+ 
+ 
+-void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
+-				      bool wifi_only)
++void ex_btc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
++				   bool wifi_only)
+ {
+ 	halbtc8723b1ant_init_hw_config(btcoexist, true, wifi_only);
+ 	btcoexist->stop_coex_dm = false;
+ }
+ 
+-void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
++void ex_btc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+@@ -2483,7 +2483,7 @@ void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ 	halbtc8723b1ant_query_bt_info(btcoexist);
+ }
+ 
+-void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
++void ex_btc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
+ {
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+@@ -2758,7 +2758,7 @@ void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_disp_dbg_msg(btcoexist, BTC_DBG_DISP_COEX_STATISTICS);
+ }
+ 
+-void ex_halbtc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
++void ex_btc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+@@ -2787,7 +2787,7 @@ void ex_halbtc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 	}
+ }
+ 
+-void ex_halbtc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
++void ex_btc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+@@ -2805,7 +2805,7 @@ void ex_halbtc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ 	}
+ }
+ 
+-void ex_halbtc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
++void ex_btc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	bool wifi_connected = false, bt_hs_on = false;
+@@ -2891,7 +2891,7 @@ void ex_halbtc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ 	}
+ }
+ 
+-void ex_halbtc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
++void ex_btc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	bool wifi_connected = false, bt_hs_on = false;
+@@ -2961,8 +2961,8 @@ void ex_halbtc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ 	}
+ }
+ 
+-void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+-					    u8 type)
++void ex_btc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
++					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 h2c_parameter[3] = {0};
+@@ -3042,8 +3042,8 @@ void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x66, 3, h2c_parameter);
+ }
+ 
+-void ex_halbtc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
+-					      u8 type)
++void ex_btc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
++					   u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	bool bt_hs_on = false;
+@@ -3119,8 +3119,8 @@ void ex_halbtc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 	}
+ }
+ 
+-void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+-				       u8 *tmp_buf, u8 length)
++void ex_btc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
++				    u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 bt_info = 0;
+@@ -3211,11 +3211,11 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 			btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+ 					   &wifi_connected);
+ 			if (wifi_connected)
+-				ex_halbtc8723b1ant_media_status_notify(btcoexist,
+-							     BTC_MEDIA_CONNECT);
++				ex_btc8723b1ant_media_status_notify(btcoexist,
++						BTC_MEDIA_CONNECT);
+ 			else
+-				ex_halbtc8723b1ant_media_status_notify(btcoexist,
+-							  BTC_MEDIA_DISCONNECT);
++				ex_btc8723b1ant_media_status_notify(btcoexist,
++						BTC_MEDIA_DISCONNECT);
  		}
-+
-+free_glom_skb:
-+		brcmu_pkt_buf_free_skb(glom_skb);
- 	} else
- 		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, false, addr,
- 					    pktq);
+ 
+ 		if (coex_sta->bt_info_ext & BIT3) {
+@@ -3364,7 +3364,7 @@ void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 	halbtc8723b1ant_run_coexist_mechanism(btcoexist);
+ }
+ 
+-void ex_halbtc8723b1ant_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
++void ex_btc8723b1ant_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u32 u32tmp;
+@@ -3401,7 +3401,7 @@ void ex_halbtc8723b1ant_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
+ 	}
+ }
+ 
+-void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
++void ex_btc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+@@ -3418,12 +3418,12 @@ void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
+ 					 0x0, 0x0);
+ 	halbtc8723b1ant_ps_tdma(btcoexist, FORCE_EXEC, false, 0);
+ 
+-	ex_halbtc8723b1ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
++	ex_btc8723b1ant_media_status_notify(btcoexist, BTC_MEDIA_DISCONNECT);
+ 
+ 	btcoexist->stop_coex_dm = true;
+ }
+ 
+-void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
++void ex_btc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+@@ -3458,7 +3458,7 @@ void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ 	}
+ }
+ 
+-void ex_halbtc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
++void ex_btc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+@@ -3469,7 +3469,7 @@ void ex_halbtc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
+ 	halbtc8723b1ant_init_coex_dm(btcoexist);
+ }
+ 
+-void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist)
++void ex_btc8723b1ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+index 506961a1ca56..8d4fde235e11 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
+@@ -200,24 +200,25 @@ struct coex_sta_8723b_1ant {
+ /*************************************************************************
+  * The following is interface which will notify coex module.
+  *************************************************************************/
+-void ex_halbtc8723b1ant_power_on_setting(struct btc_coexist *btcoexist);
+-void ex_halbtc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
+-				      bool wifi_only);
+-void ex_halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist);
+-void ex_halbtc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+-					    u8 type);
+-void ex_halbtc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
+-					      u8 type);
+-void ex_halbtc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+-				       u8 *tmpbuf, u8 length);
+-void ex_halbtc8723b1ant_rf_status_notify(struct btc_coexist *btcoexist,
++void ex_btc8723b1ant_power_on_setting(struct btc_coexist *btcoexist);
++void ex_btc8723b1ant_init_hwconfig(struct btc_coexist *btcoexist,
++				   bool wifi_only);
++void ex_btc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist);
++void ex_btc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type);
+-void ex_halbtc8723b1ant_halt_notify(struct btc_coexist *btcoexist);
+-void ex_halbtc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnpstate);
+-void ex_halbtc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist);
+-void ex_halbtc8723b1ant_periodical(struct btc_coexist *btcoexist);
+-void ex_halbtc8723b1ant_display_coex_info(struct btc_coexist *btcoexist);
++void ex_btc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
++					   u8 type);
++void ex_btc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
++				    u8 *tmpbuf, u8 length);
++void ex_btc8723b1ant_rf_status_notify(struct btc_coexist *btcoexist,
++				      u8 type);
++void ex_btc8723b1ant_halt_notify(struct btc_coexist *btcoexist);
++void ex_btc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnpstate);
++void ex_btc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist);
++void ex_btc8723b1ant_periodical(struct btc_coexist *btcoexist);
++void ex_btc8723b1ant_display_coex_info(struct btc_coexist *btcoexist);
++void ex_btc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
+index cb32e7a64ae6..b0a6626fbb66 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
+@@ -170,21 +170,23 @@ struct coex_sta_8821a_1ant {
+  * The following is interface which will notify coex module.
+  *===========================================
+  */
+-void ex_halbtc8821a1ant_init_hwconfig(struct btc_coexist *btcoexist);
+-void ex_halbtc8821a1ant_init_coex_dm(struct btc_coexist *btcoexist);
+-void ex_halbtc8821a1ant_ips_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8821a1ant_lps_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type);
+-void ex_halbtc8821a1ant_media_status_notify(struct btc_coexist *btcoexist,
+-					    u8 type);
+-void ex_halbtc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
+-					      u8 type);
+-void ex_halbtc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
+-				       u8 *tmpbuf, u8 length);
+-void ex_halbtc8821a1ant_halt_notify(struct btc_coexist *btcoexist);
+-void ex_halbtc8821a1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnpstate);
+-void ex_halbtc8821a1ant_periodical(struct btc_coexist *btcoexist);
+-void ex_halbtc8821a1ant_display_coex_info(struct btc_coexist *btcoexist);
+-void ex_halbtc8821a1ant_dbg_control(struct btc_coexist *btcoexist, u8 op_code,
+-				    u8 op_len, u8 *data);
++void ex_btc8821a1ant_init_hwconfig(struct btc_coexist *btcoexist,
++				   bool wifi_only);
++void ex_btc8821a1ant_init_coex_dm(struct btc_coexist *btcoexist);
++void ex_btc8821a1ant_ips_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8821a1ant_lps_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type);
++void ex_btc8821a1ant_media_status_notify(struct btc_coexist *btcoexist,
++					 u8 type);
++void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
++					   u8 type);
++void ex_btc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
++				    u8 *tmpbuf, u8 length);
++void ex_btc8821a1ant_halt_notify(struct btc_coexist *btcoexist);
++void ex_btc8821a1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnpstate);
++void ex_btc8821a1ant_periodical(struct btc_coexist *btcoexist);
++void ex_btc8821a1ant_display_coex_info(struct btc_coexist *btcoexist);
++void ex_btc8821a1ant_dbg_control(struct btc_coexist *btcoexist, u8 op_code,
++				 u8 op_len, u8 *data);
++void ex_btc8821a1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index a1603e2d44e3..1d6e3e9abd91 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -173,58 +173,58 @@ struct coex_sta_8821a_2ant {
+  *===========================================
+  */
+ void
+-ex_halbtc8821a2ant_init_hwconfig(
++ex_btc8821a2ant_init_hwconfig(
+ 	struct btc_coexist *btcoexist
+ 	);
+ void
+-ex_halbtc8821a2ant_init_coex_dm(
++ex_btc8821a2ant_init_coex_dm(
+ 	struct btc_coexist *btcoexist
+ 	);
+ void
+-ex_halbtc8821a2ant_ips_notify(
++ex_btc8821a2ant_ips_notify(
+ 	struct btc_coexist *btcoexist,
+ 	u8 type
+ 	);
+ void
+-ex_halbtc8821a2ant_lps_notify(
++ex_btc8821a2ant_lps_notify(
+ 	struct btc_coexist *btcoexist,
+ 	u8 type
+ 	);
+ void
+-ex_halbtc8821a2ant_scan_notify(
++ex_btc8821a2ant_scan_notify(
+ 	struct btc_coexist *btcoexist,
+ 	u8 type
+ 	);
+ void
+-ex_halbtc8821a2ant_connect_notify(
++ex_btc8821a2ant_connect_notify(
+ 	struct btc_coexist *btcoexist,
+ 	u8 type
+ 	);
+ void
+-ex_halbtc8821a2ant_media_status_notify(
++ex_btc8821a2ant_media_status_notify(
+ 	struct btc_coexist *btcoexist,
+ 	u8 type
+ 	);
+ void
+-ex_halbtc8821a2ant_special_packet_notify(
++ex_btc8821a2ant_special_packet_notify(
+ 	struct btc_coexist *btcoexist,
+ 	u8 type
+ 	);
+ void
+-ex_halbtc8821a2ant_bt_info_notify(
++ex_btc8821a2ant_bt_info_notify(
+ 	struct btc_coexist *btcoexist,
+ 	u8 *tmp_buf,
+ 	u8 length
+ 	);
+ void
+-ex_halbtc8821a2ant_halt_notify(
++ex_btc8821a2ant_halt_notify(
+ 	struct btc_coexist *btcoexist
+ 	);
+ void
+-ex_halbtc8821a2ant_periodical(
++ex_btc8821a2ant_periodical(
+ 	struct btc_coexist *btcoexist
+ 	);
+ void
+-ex_halbtc8821a2ant_display_coex_info(
++ex_btc8821a2ant_display_coex_info(
+ 	struct btc_coexist *btcoexist
+ 	);
 -- 
-2.7.4
+2.13.0
