@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42942 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751672AbdFIMJC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 08:09:02 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from www.zeus03.de ([194.117.254.33]:53066 "EHLO mail.zeus03.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751321AbdFEHWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 03:22:16 -0400
+Date: Mon, 5 Jun 2017 09:22:12 +0200
+From: Wolfram Sang <wsa@the-dreams.de>
+To: "Tobin C. Harding" <me@tobin.cc>
 Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 5/9] nl80211: remove desciption about request from NL80211_CMD_ROAM
-Date: Fri,  9 Jun 2017 13:08:46 +0100
-Message-Id: <1497010130-16186-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140925_045423_71A6834B)
-In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+        driverdev-devel@linuxdriverproject.org,
+        kernelnewbies@kernelnewbies.org
+Subject: Re: ks7010 firmware upload fail
+Message-ID: <20170605072212.GB1495@katana> (sfid-20170605_092220_616978_801A5EE5)
+References: <20170605025637.GA23011@eros>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="0eh6TmSyL6TZE2Uz"
+In-Reply-To: <20170605025637.GA23011@eros>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The description of NL80211_CMD_ROAM indicated possibility for a
-request to roam issued by user-space. However, it also states that
-as not being implemented right now. This has been so since commit
-b23aa676ab9d ("cfg80211: connect/disconnect API") added in 2009.
-So it seems safe to assume it will not be added any time soon and
-thus remove it.
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- include/uapi/linux/nl80211.h | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+--0eh6TmSyL6TZE2Uz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c792234..c931263 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -569,14 +569,13 @@
-  *	authentication/association or not receiving a response from the AP.
-  *	Non-zero %NL80211_ATTR_STATUS_CODE value is indicated in that case as
-  *	well to remain backwards compatible.
-- * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
-- *	sent as an event when the card/driver roamed by itself.
-- *	When used as an event, and the driver roamed in a network that requires
-- *	802.1X authentication, %NL80211_ATTR_PORT_AUTHORIZED should be set
-- *	if the 802.1X authentication was done by the driver or if roaming was
-- *	done using Fast Transition protocol (in which case 802.1X authentication
-- *	is not needed). If %NL80211_ATTR_PORT_AUTHORIZED is not set, user space
-- *	is responsible for the 802.1X authentication.
-+ * @NL80211_CMD_ROAM: notifcation indicating the card/driver roamed by itself.
-+ *	When the driver roamed in a network that requires 802.1X authentication,
-+ *	%NL80211_ATTR_PORT_AUTHORIZED should be set if the 802.1X authentication
-+ *	was done by the driver or if roaming was done using Fast Transition
-+ *	protocol (in which case 802.1X authentication is not needed). If
-+ *	%NL80211_ATTR_PORT_AUTHORIZED is not set, user space is responsible for
-+ *	the 802.1X authentication.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-  *	userspace that a connection was dropped by the AP or due to other
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
--- 
-1.9.1
+Tobin,
+
+> My question is should I be digging further into the MMC code or be doing
+> something else with the driver code?
+
+So, you haven't found any branch that worked? No plain v4.9 or the
+gen3-sdio branch from my tree?
+
+Regards,
+
+   Wolfram
+
+
+--0eh6TmSyL6TZE2Uz
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlk1BqQACgkQFA3kzBSg
+KbZ/0w/9Ft1TYBRvHU0nitPFE6Dvi/6zITP8CReGP+B+MI/NsXeNtqrsefYCqV0l
+WLDb/vO+AjNKhPy4fvpTVIyeJrQ5TWd+zRyewhos61M1zYWYbxZ0PuNyj/AL5Zer
+RnVRTYHBOB3HzY+xTxidqPhER6vBAIa8Xq0DGa4gai320KhctDH4pdRa1p0Pk+nX
+Y6J/VclJImYrsvRPlWhlPOFjlFe+KOJdn2vHAB8Op/WSQnH/jW9v25zUSxVj+OGw
+QUJzOLbndHMM9eYVRj6EuTj2CbU22FIfF8T+jkcd5aoelYOPed4WnM9UCHJQ9KhL
+QYGb1K6dO2GpKVLYpm958lIX56W8uqYphCKZbh/XKOcKktmdcRudXRCjNqwonJ6z
+G978wbKrcQ8q1n93TLab/5SUCYs3th4WQVjuA7rshSRsDY5VcY+f7n5rvIsJTvLl
+L2vZG9n58km1eNcKlFBKge4QI1xkV+BuMGmA1HAdEnxm/rMaJsYIzBEV4v+4HjW1
+ZX6wHrwV1t+Oytfc5AIknp5BT/yBrLHS/cld7T+xL/reM+prd9glkESeAPTSWEZd
+/mdJavC8vIdksXqcISZS9zDdv9h7C0O2JGnQC5Ny77NpKczsET4W29UDTHc8DkV9
+ck8puuIslXhly5QOr17ekaBPvpiJTW19YAVChhuws5wgoMVjxoc=
+=XKQc
+-----END PGP SIGNATURE-----
+
+--0eh6TmSyL6TZE2Uz--
