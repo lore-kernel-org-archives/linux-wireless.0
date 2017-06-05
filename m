@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49658 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752339AbdFUQek (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54652 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751437AbdFEIXV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 12:34:40 -0400
+        Mon, 5 Jun 2017 04:23:21 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Colin King <colin.king@canonical.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "Ganapathi Bhat" <gbhat@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>
+Subject: Re:  [PATCH][-next] mwifiex: make function mwifiex_ret_pkt_aggr_ctrl
+ static
+Date: Mon, 5 Jun 2017 08:23:13 +0000
+Message-ID: <0edf9f73cf2f49788ef767658cd038d0@SC-EXCH02.marvell.com> (sfid-20170605_102354_041877_9CB27B25)
+References: <20170602085639.29338-1-colin.king@canonical.com>
+In-Reply-To: <20170602085639.29338-1-colin.king@canonical.com>
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [07/10] rtlwifi: Fill ap_num filed by vendor command
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170620003218.17010-8-Larry.Finger@lwfinger.net>
-References: <20170620003218.17010-8-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20170621151721.0052060A4F@smtp.codeaurora.org> (sfid-20170621_183507_333925_3B2A27C9)
-Date: Wed, 21 Jun 2017 15:17:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> The ap_num can be filled by wpa_cli's VENDOR command.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
-
-This is a perfect example why I have been against vendor commands in the past.
-I already regret changing my mind...
-
-If you want me to seriously consider taking a patch adding a vendor command I
-need GOOD justifications why a normal nl80211 command is not suitable and which
-are properly documented in the commit log. One sentence definitely
-is not enough.
-
-Larry, please drop all patches related to vendor commands in this patch and
-resend. Adding vendor commands should be in a separate patchset so it can be
-discussed without blocking anything else.
-
--- 
-https://patchwork.kernel.org/patch/9798295/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+SGkgQ29saW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQ29saW4g
+S2luZyBbbWFpbHRvOmNvbGluLmtpbmdAY2Fub25pY2FsLmNvbV0NCj4gU2VudDogMjAxN+W5tDbm
+nIgy5pelIDE2OjU3DQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyOyBOaXNoYW50IFNhcm11a2FkYW07
+IEdhbmFwYXRoaSBCaGF0OyBYaW5taW5nIEh1Ow0KPiBLYWxsZSBWYWxvOyBsaW51eC13aXJlbGVz
+c0B2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IGtlcm5lbC1q
+YW5pdG9yc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4g
+U3ViamVjdDogW0VYVF0gW1BBVENIXVstbmV4dF0gbXdpZmlleDogbWFrZSBmdW5jdGlvbg0KPiBt
+d2lmaWV4X3JldF9wa3RfYWdncl9jdHJsIHN0YXRpYw0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4g
+DQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0NCj4gRnJvbTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fu
+b25pY2FsLmNvbT4NCj4gDQo+IGZ1bmN0aW9uIG13aWZpZXhfcmV0X3BrdF9hZ2dyX2N0cmwgY2Fu
+IGJlIG1hZGUgc3RhdGljIGFzIGl0IGRvZXMgbm90IG5lZWQgdG8NCj4gYmUgaW4gZ2xvYmFsIHNj
+b3BlLg0KPiANCj4gQ2xlYW5zIHVwIHNwYXJzZSB3YXJuaW5nOiAic3ltYm9sICdtd2lmaWV4X3Jl
+dF9wa3RfYWdncl9jdHJsJyB3YXMgbm90DQo+IGRlY2xhcmVkLiBTaG91bGQgaXQgYmUgc3RhdGlj
+PyINCg0KWWVzLCBpdCBzaG91bGQgYmUgc3RhdGljLCBUaGFua3MsDQoNClJlZ2FyZHMsDQpTaW1v
+bg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25p
+Y2FsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgv
+c3RhX2NtZHJlc3AuYyB8IDQgKystLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygr
+KSwgMiBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9tYXJ2ZWxsL213aWZpZXgvc3RhX2NtZHJlc3AuYw0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L21hcnZlbGwvbXdpZmlleC9zdGFfY21kcmVzcC5jDQo+IGluZGV4IDMzNDhmYjNhNzUxNC4uMjk0
+NTc3NWU4M2M1IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213
+aWZpZXgvc3RhX2NtZHJlc3AuYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
+L213aWZpZXgvc3RhX2NtZHJlc3AuYw0KPiBAQCAtMTE1NCw4ICsxMTU0LDggQEAgc3RhdGljIGlu
+dCBtd2lmaWV4X3JldF9jaGFuX3JlZ2lvbl9jZmcoc3RydWN0DQo+IG13aWZpZXhfcHJpdmF0ZSAq
+cHJpdiwNCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4gDQo+IC1pbnQgbXdpZmlleF9yZXRfcGt0X2Fn
+Z3JfY3RybChzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LA0KPiAtCQkJICAgICAgc3RydWN0
+IGhvc3RfY21kX2RzX2NvbW1hbmQgKnJlc3ApDQo+ICtzdGF0aWMgaW50IG13aWZpZXhfcmV0X3Br
+dF9hZ2dyX2N0cmwoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwNCj4gKwkJCQkgICAgIHN0
+cnVjdCBob3N0X2NtZF9kc19jb21tYW5kICpyZXNwKQ0KPiAgew0KPiAgCXN0cnVjdCBob3N0X2Nt
+ZF9kc19wa3RfYWdncl9jdHJsICpwa3RfYWdncl9jdHJsID0NCj4gIAkJCQkJJnJlc3AtPnBhcmFt
+cy5wa3RfYWdncl9jdHJsOw0KPiAtLQ0KPiAyLjExLjANCg0K
