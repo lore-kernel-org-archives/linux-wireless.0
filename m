@@ -1,58 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.eperm.de ([89.247.134.16]:60166 "EHLO mail.eperm.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751861AbdFKVGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Jun 2017 17:06:19 -0400
-From: Stephan =?ISO-8859-1?Q?M=FCller?= <smueller@chronox.de>
-To: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc: linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        David Howells <dhowells@redhat.com>,
-        David Safford <safford@us.ibm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Gilad Ben-Yossef <gilad@benyossef.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        keyrings@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
-Date: Sun, 11 Jun 2017 23:06:14 +0200
-Message-ID: <20235732.W6WmnKk6cl@tauon.chronox.de> (sfid-20170611_230641_740850_5457B25B)
-In-Reply-To: <20170610025912.6499-1-Jason@zx2c4.com>
-References: <20170610025912.6499-1-Jason@zx2c4.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35814 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751284AbdFEPaH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 11:30:07 -0400
+Received: by mail-oi0-f67.google.com with SMTP id f206so12649541oig.2
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:06 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 3/9] rtlwifi: btcoex: settings before firmware is downloaded
+Date: Mon,  5 Jun 2017 10:29:53 -0500
+Message-Id: <20170605152959.27439-4-Larry.Finger@lwfinger.net> (sfid-20170605_173035_832310_8440BD27)
+In-Reply-To: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
+References: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 10. Juni 2017, 04:59:06 CEST schrieb Jason A. Donenfeld:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Hi Jason,
+The btcoex is sometimes unstable because there are some unexpected
+behaviors before the firmware has been downloaded successfully.
 
-> Whenever you're comparing two MACs, it's important to do this using
-> crypto_memneq instead of memcmp. With memcmp, you leak timing information,
-> which could then be used to iteratively forge a MAC. This is far too basic
-> of a mistake for us to have so pervasively in the year 2017, so let's begin
-> cleaning this stuff up. The following 6 locations were found with some
-> simple regex greps, but I'm sure more lurk below the surface. If you
-> maintain some code or know somebody who maintains some code that deals
-> with MACs, tell them to double check which comparison function they're
-> using.
+Therefore we force the antenna path settings to avoid this, then let the
+firmware control the btcoexistence when the firmware is ready.
 
-Are you planning to send an update to your patch set? If yes, there is another 
-one which should be converted too: crypto/rsa-pkcs1pad.c.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  1 +
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  2 ++
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 13 +++++++++++++
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h   |  1 +
+ 4 files changed, 17 insertions(+)
 
-Otherwise, I will send a patch converting this one.
-
-Thanks.
-
-Ciao
-Stephan
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index 50726beaeead..a98b9548c3c7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -196,5 +196,6 @@ void ex_btc8723b2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ void ex_btc8723b2ant_halt_notify(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist);
++void ex_btc8723b2ant_pre_load_firmware(struct btc_coexist *btcoexist);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+index 1d6e3e9abd91..a839d5574422 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
+@@ -228,3 +228,5 @@ void
+ ex_btc8821a2ant_display_coex_info(
+ 	struct btc_coexist *btcoexist
+ 	);
++void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
++void ex_btc8821a2ant_pre_load_firmware(struct btc_coexist *btcoexist);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index f13000612913..0cd4926c1ed7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -690,6 +690,19 @@ bool exhalbtc_initlize_variables(struct rtl_priv *adapter)
+ 	return true;
+ }
+ 
++void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
++{
++	if (!halbtc_is_bt_coexist_available(btcoexist))
++		return;
++
++	btcoexist->statistics.cnt_pre_load_firmware++;
++
++	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8723b2ant_pre_load_firmware(btcoexist);
++	}
++}
++
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index c5c360e011a9..eca0e5a78ada 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -486,6 +486,7 @@ struct btc_statistics {
+ 	u32 cnt_coex_dm_switch;
+ 	u32 cnt_stack_operation_notify;
+ 	u32 cnt_dbg_ctrl;
++	u32 cnt_pre_load_firmware;
+ };
+ 
+ struct btc_bt_link_info {
+-- 
+2.13.0
