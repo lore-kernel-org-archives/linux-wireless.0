@@ -1,188 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35780 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751605AbdF1UNx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:13:53 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:04 +0300
-Message-Id: <20170628201330.9432-6-luca@coelho.fi> (sfid-20170628_221408_751247_3C9D2225)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 05/31] iwlwifi: mvm: remove various unused command IDs/structs
+Received: from mga03.intel.com ([134.134.136.65]:64300 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751195AbdFEUUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 16:20:16 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 06/12] NFC: fdp: Add GPIO ACPI mapping table
+Date: Mon,  5 Jun 2017 23:20:03 +0300
+Message-Id: <20170605202009.78561-7-andriy.shevchenko@linux.intel.com> (sfid-20170605_222025_310518_24B97782)
+In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In order to make GPIO ACPI library stricter prepare users of
+gpiod_get_index() to correctly behave when there no mapping is
+provided by firmware.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Here we add explicit mapping between _CRS GpioIo() resources and
+their names used in the driver.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 28 -------------------------
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 11 ----------
- 2 files changed, 39 deletions(-)
+ drivers/nfc/fdp/i2c.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 612546334545..60f86997f8cf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -295,7 +295,6 @@ enum iwl_legacy_cmds {
- 	HOT_SPOT_CMD = 0x53,
- 	SCAN_OFFLOAD_COMPLETE = 0x6D,
- 	SCAN_OFFLOAD_UPDATE_PROFILES_CMD = 0x6E,
--	SCAN_OFFLOAD_CONFIG_CMD = 0x6f,
- 	MATCH_FOUND_NOTIFICATION = 0xd9,
- 	SCAN_ITERATION_COMPLETE = 0xe7,
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index 250cbaddb5a9..9f79f2c53525 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -27,7 +27,6 @@
  
-@@ -329,8 +328,6 @@ enum iwl_legacy_cmds {
- 	 */
- 	NVM_ACCESS_CMD = 0x88,
+ #define FDP_I2C_DRIVER_NAME	"fdp_nci_i2c"
  
--	SET_CALIB_DEFAULT_CMD = 0x8e,
--
- 	BEACON_NOTIFICATION = 0x90,
- 	/**
- 	 * @BEACON_TEMPLATE_CMD:
-@@ -364,8 +361,6 @@ enum iwl_legacy_cmds {
- 	 */
- 	REDUCE_TX_POWER_CMD = 0x9f,
+-#define FDP_DP_POWER_GPIO_NAME	"power"
+ #define FDP_DP_CLOCK_TYPE_NAME	"clock-type"
+ #define FDP_DP_CLOCK_FREQ_NAME	"clock-freq"
+ #define FDP_DP_FW_VSC_CFG_NAME	"fw-vsc-cfg"
+@@ -281,6 +280,13 @@ static void fdp_nci_i2c_read_device_properties(struct device *dev,
+ 		*clock_type, *clock_freq, *fw_vsc_cfg != NULL ? "yes" : "no");
+ }
  
--	/* RF-KILL commands and notifications */
--	CARD_STATE_CMD = 0xa0,
- 	CARD_STATE_NOTIFICATION = 0xa1,
++static const struct acpi_gpio_params power_gpios = { 0, 0, false };
++
++static const struct acpi_gpio_mapping acpi_fdp_gpios[] = {
++	{ "power-gpios", &power_gpios, 1 },
++	{},
++};
++
+ static int fdp_nci_i2c_probe(struct i2c_client *client)
+ {
+ 	struct fdp_i2c_phy *phy;
+@@ -321,10 +327,12 @@ static int fdp_nci_i2c_probe(struct i2c_client *client)
+ 		return r;
+ 	}
  
- 	MISSED_BEACONS_NOTIFICATION = 0xa2,
-@@ -411,9 +406,6 @@ enum iwl_legacy_cmds {
+-	/* Requesting the power gpio */
+-	phy->power_gpio = devm_gpiod_get(dev, FDP_DP_POWER_GPIO_NAME,
+-					 GPIOD_OUT_LOW);
++	r = devm_acpi_dev_add_driver_gpios(dev, acpi_fdp_gpios);
++	if (r)
++		dev_dbg(dev, "Unable to add GPIO mapping table\n");
  
- 	MARKER_CMD = 0xcb,
- 
--	/* BT Coex */
--	BT_COEX_PRIO_TABLE = 0xcc,
--	BT_COEX_PROT_ENV = 0xcd,
- 	/**
- 	 * @BT_PROFILE_NOTIFICATION: &struct iwl_bt_coex_profile_notif
- 	 */
-@@ -422,7 +414,6 @@ enum iwl_legacy_cmds {
- 	 * @BT_CONFIG: &struct iwl_bt_coex_cmd
- 	 */
- 	BT_CONFIG = 0x9b,
--	BT_COEX_UPDATE_SW_BOOST = 0x5a,
- 	BT_COEX_UPDATE_CORUN_LUT = 0x5b,
- 	BT_COEX_UPDATE_REDUCED_TXP = 0x5c,
- 	/**
-@@ -439,11 +430,8 @@ enum iwl_legacy_cmds {
- 	 */
- 	REPLY_BEACON_FILTERING_CMD = 0xd2,
- 
--	/* DTS measurements */
--	CMD_DTS_MEASUREMENT_TRIGGER = 0xdc,
- 	DTS_MEASUREMENT_NOTIFICATION = 0xdd,
- 
--	REPLY_DEBUG_CMD = 0xf0,
- 	LDBG_CONFIG_CMD = 0xf6,
- 	DEBUG_LOG_MSG = 0xf7,
- 
-@@ -484,12 +472,9 @@ enum iwl_legacy_cmds {
- 	 * @WOWLAN_GET_STATUSES: response in &struct iwl_wowlan_status
- 	 */
- 	WOWLAN_GET_STATUSES = 0xe5,
--	WOWLAN_TX_POWER_PER_DB = 0xe6,
- 
- 	/* and for NetDetect */
- 	SCAN_OFFLOAD_PROFILES_QUERY_CMD = 0x56,
--	SCAN_OFFLOAD_HOTSPOTS_CONFIG_CMD = 0x58,
--	SCAN_OFFLOAD_HOTSPOTS_QUERY_CMD = 0x59,
- };
- 
- /* Please keep this enum *SORTED* by hex value.
-@@ -1580,19 +1565,6 @@ struct iwl_mfu_assert_dump_notif {
- 	__le32   data[0];
- } __packed; /*MFU_DUMP_ASSERT_API_S_VER_1*/
- 
--/**
-- * struct iwl_set_calib_default_cmd - set default value for calibration.
-- * ( SET_CALIB_DEFAULT_CMD = 0x8e )
-- * @calib_index: the calibration to set value for
-- * @length: of data
-- * @data: the value to set for the calibration result
-- */
--struct iwl_set_calib_default_cmd {
--	__le16 calib_index;
--	__le16 length;
--	u8 data[0];
--} __packed; /* PHY_CALIB_OVERRIDE_VALUES_S */
--
- #define MAX_PORT_ID_NUM	2
- #define MAX_MCAST_FILTERING_ADDRESSES 256
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 2e4bfe9f07ec..695d1aead89f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -357,9 +357,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(SCAN_OFFLOAD_ABORT_CMD),
- 	HCMD_NAME(HOT_SPOT_CMD),
- 	HCMD_NAME(SCAN_OFFLOAD_PROFILES_QUERY_CMD),
--	HCMD_NAME(SCAN_OFFLOAD_HOTSPOTS_CONFIG_CMD),
--	HCMD_NAME(SCAN_OFFLOAD_HOTSPOTS_QUERY_CMD),
--	HCMD_NAME(BT_COEX_UPDATE_SW_BOOST),
- 	HCMD_NAME(BT_COEX_UPDATE_CORUN_LUT),
- 	HCMD_NAME(BT_COEX_UPDATE_REDUCED_TXP),
- 	HCMD_NAME(BT_COEX_CI),
-@@ -368,13 +365,11 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(PHY_DB_CMD),
- 	HCMD_NAME(SCAN_OFFLOAD_COMPLETE),
- 	HCMD_NAME(SCAN_OFFLOAD_UPDATE_PROFILES_CMD),
--	HCMD_NAME(SCAN_OFFLOAD_CONFIG_CMD),
- 	HCMD_NAME(POWER_TABLE_CMD),
- 	HCMD_NAME(PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION),
- 	HCMD_NAME(REPLY_THERMAL_MNG_BACKOFF),
- 	HCMD_NAME(DC2DC_CONFIG_CMD),
- 	HCMD_NAME(NVM_ACCESS_CMD),
--	HCMD_NAME(SET_CALIB_DEFAULT_CMD),
- 	HCMD_NAME(BEACON_NOTIFICATION),
- 	HCMD_NAME(BEACON_TEMPLATE_CMD),
- 	HCMD_NAME(TX_ANT_CONFIGURATION_CMD),
-@@ -383,7 +378,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(STATISTICS_NOTIFICATION),
- 	HCMD_NAME(EOSP_NOTIFICATION),
- 	HCMD_NAME(REDUCE_TX_POWER_CMD),
--	HCMD_NAME(CARD_STATE_CMD),
- 	HCMD_NAME(CARD_STATE_NOTIFICATION),
- 	HCMD_NAME(MISSED_BEACONS_NOTIFICATION),
- 	HCMD_NAME(TDLS_CONFIG_CMD),
-@@ -398,8 +392,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(MCC_UPDATE_CMD),
- 	HCMD_NAME(MCC_CHUB_UPDATE_CMD),
- 	HCMD_NAME(MARKER_CMD),
--	HCMD_NAME(BT_COEX_PRIO_TABLE),
--	HCMD_NAME(BT_COEX_PROT_ENV),
- 	HCMD_NAME(BT_PROFILE_NOTIFICATION),
- 	HCMD_NAME(BCAST_FILTER_CMD),
- 	HCMD_NAME(MCAST_FILTER_CMD),
-@@ -410,7 +402,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(OFFLOADS_QUERY_CMD),
- 	HCMD_NAME(REMOTE_WAKE_CONFIG_CMD),
- 	HCMD_NAME(MATCH_FOUND_NOTIFICATION),
--	HCMD_NAME(CMD_DTS_MEASUREMENT_TRIGGER),
- 	HCMD_NAME(DTS_MEASUREMENT_NOTIFICATION),
- 	HCMD_NAME(WOWLAN_PATTERNS),
- 	HCMD_NAME(WOWLAN_CONFIGURATION),
-@@ -418,11 +409,9 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(WOWLAN_TKIP_PARAM),
- 	HCMD_NAME(WOWLAN_KEK_KCK_MATERIAL),
- 	HCMD_NAME(WOWLAN_GET_STATUSES),
--	HCMD_NAME(WOWLAN_TX_POWER_PER_DB),
- 	HCMD_NAME(SCAN_ITERATION_COMPLETE),
- 	HCMD_NAME(D0I3_END_CMD),
- 	HCMD_NAME(LTR_CONFIG),
--	HCMD_NAME(REPLY_DEBUG_CMD),
- };
- 
- /* Please keep this array *SORTED* by hex value.
++	/* Requesting the power gpio */
++	phy->power_gpio = devm_gpiod_get(dev, "power", GPIOD_OUT_LOW);
+ 	if (IS_ERR(phy->power_gpio)) {
+ 		nfc_err(dev, "Power GPIO request failed\n");
+ 		return PTR_ERR(phy->power_gpio);
 -- 
 2.11.0
