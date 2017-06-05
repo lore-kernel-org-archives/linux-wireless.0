@@ -1,159 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0062.outbound.protection.outlook.com ([104.47.40.62]:63680
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752117AbdFTT4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jun 2017 15:56:16 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 8/8] qtnfmac: implement scan timeout
-Date: Tue, 20 Jun 2017 22:55:17 +0300
-Message-Id: <20170620195517.18373-9-sergey.matyukevich.os@quantenna.com> (sfid-20170620_215620_876991_6B5404CF)
-In-Reply-To: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:38212 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751180AbdFEUUP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 16:20:15 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 04/12] NFC: fdp: Convert I2C driver to ->probe_new()
+Date: Mon,  5 Jun 2017 23:20:01 +0300
+Message-Id: <20170605202009.78561-5-andriy.shevchenko@linux.intel.com> (sfid-20170605_222024_760204_F1B3FF8C)
+In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Userspace tools may hang on scan in the case when scan completion event
-is not returned by firmware. This patch implements the scan timeout
-to avoid such situation.
+There is no platform code that uses i2c module table. Remove it altogether and
+adjust ->probe() to be ->probe_new().
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 22 ++++++++++++++++++----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.h |  4 ++++
- drivers/net/wireless/quantenna/qtnfmac/core.c     |  2 ++
- drivers/net/wireless/quantenna/qtnfmac/core.h     | 13 +++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/event.c    |  2 ++
- 5 files changed, 39 insertions(+), 4 deletions(-)
+ drivers/nfc/fdp/i2c.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 097f29189339..a0ab7d289684 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -741,19 +741,33 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index 712936f5d2d6..754d8d89c580 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -281,8 +281,7 @@ static void fdp_nci_i2c_read_device_properties(struct device *dev,
+ 		*clock_type, *clock_freq, *fw_vsc_cfg != NULL ? "yes" : "no");
  }
  
-+static void qtnf_scan_timeout(unsigned long data)
-+{
-+	struct qtnf_wmac *mac = (struct qtnf_wmac *)data;
-+
-+	pr_warn("mac%d scan timed out\n", mac->macid);
-+	qtnf_scan_done(mac, true);
-+}
-+
- static int
- qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+-static int fdp_nci_i2c_probe(struct i2c_client *client,
+-			     const struct i2c_device_id *id)
++static int fdp_nci_i2c_probe(struct i2c_client *client)
  {
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
--	int ret;
- 
- 	mac->scan_req = request;
- 
--	ret = qtnf_cmd_send_scan(mac);
--	if (ret)
-+	if (qtnf_cmd_send_scan(mac)) {
- 		pr_err("MAC%u: failed to start scan\n", mac->macid);
-+		mac->scan_req = NULL;
-+		return -EFAULT;
-+	}
- 
--	return ret;
-+	mac->scan_timeout.data = (unsigned long)mac;
-+	mac->scan_timeout.function = qtnf_scan_timeout;
-+	mod_timer(&mac->scan_timeout,
-+		  jiffies + QTNF_SCAN_TIMEOUT_SEC * HZ);
-+
-+	return 0;
- }
- 
- static int
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-index 5bd33124a7c8..eddd040b8869 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-@@ -34,10 +34,14 @@ static inline void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
- 		.aborted = aborted,
- 	};
- 
-+	qtnf_wmac_lock(mac);
-+
- 	if (mac->scan_req) {
- 		cfg80211_scan_done(mac->scan_req, &info);
- 		mac->scan_req = NULL;
- 	}
-+
-+	qtnf_wmac_unlock(mac);
- }
- 
- #endif /* _QTN_FMAC_CFG80211_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index 3d9b217790ed..8ce9c370dc94 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -336,6 +336,8 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
- 		mac->iflist[i].vifid = i;
- 		qtnf_list_init(&mac->iflist[i].sta_list);
- 		qtnf_list_init(&mac->iflist[i].vlan_list);
-+		mutex_init(&mac->mac_lock);
-+		init_timer(&mac->scan_timeout);
- 	}
- 
- 	qtnf_mac_init_primary_intf(mac);
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index efe078a6d1d3..883b052ccb01 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -46,6 +46,7 @@
- #define QTNF_MAX_EVENT_QUEUE_LEN	255
- #define QTNF_DEFAULT_BG_SCAN_PERIOD	300
- #define QTNF_MAX_BG_SCAN_PERIOD		0xffff
-+#define QTNF_SCAN_TIMEOUT_SEC		15
- 
- #define QTNF_DEF_BSS_PRIORITY		0
- #define QTNF_DEF_WDOG_TIMEOUT		5
-@@ -161,6 +162,8 @@ struct qtnf_wmac {
- 	struct cfg80211_scan_request *scan_req;
- 	struct cfg80211_chan_def chandef;
- 	struct cfg80211_chan_def csa_chandef;
-+	struct mutex mac_lock;	/* lock during wmac speicific ops */
-+	struct timer_list scan_timeout;
- };
- 
- struct qtnf_hw_info {
-@@ -197,4 +200,14 @@ static inline struct qtnf_vif *qtnf_netdev_get_priv(struct net_device *dev)
- 	return *((void **)netdev_priv(dev));
- }
- 
-+static __always_inline void qtnf_wmac_lock(struct qtnf_wmac *mac)
-+{
-+	mutex_lock(&mac->mac_lock);
-+}
-+
-+static __always_inline void qtnf_wmac_unlock(struct qtnf_wmac *mac)
-+{
-+	mutex_unlock(&mac->mac_lock);
-+}
-+
- #endif /* _QTN_FMAC_CORE_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index b48d9e8b6935..2c0d6095544f 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -345,6 +345,8 @@ qtnf_event_handle_scan_complete(struct qtnf_wmac *mac,
- 		return -EINVAL;
- 	}
- 
-+	if (timer_pending(&mac->scan_timeout))
-+		del_timer_sync(&mac->scan_timeout);
- 	qtnf_scan_done(mac, le32_to_cpu(status->flags) & QLINK_SCAN_ABORTED);
- 
+ 	struct fdp_i2c_phy *phy;
+ 	struct device *dev = &client->dev;
+@@ -360,12 +359,6 @@ static int fdp_nci_i2c_remove(struct i2c_client *client)
  	return 0;
+ }
+ 
+-static struct i2c_device_id fdp_nci_i2c_id_table[] = {
+-	{"int339a", 0},
+-	{}
+-};
+-MODULE_DEVICE_TABLE(i2c, fdp_nci_i2c_id_table);
+-
+ static const struct acpi_device_id fdp_nci_i2c_acpi_match[] = {
+ 	{"INT339A", 0},
+ 	{}
+@@ -377,8 +370,7 @@ static struct i2c_driver fdp_nci_i2c_driver = {
+ 		   .name = FDP_I2C_DRIVER_NAME,
+ 		   .acpi_match_table = ACPI_PTR(fdp_nci_i2c_acpi_match),
+ 		  },
+-	.id_table = fdp_nci_i2c_id_table,
+-	.probe = fdp_nci_i2c_probe,
++	.probe_new = fdp_nci_i2c_probe,
+ 	.remove = fdp_nci_i2c_remove,
+ };
+ module_i2c_driver(fdp_nci_i2c_driver);
 -- 
 2.11.0
