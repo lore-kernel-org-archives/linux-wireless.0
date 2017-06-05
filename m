@@ -1,73 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33212 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750832AbdFZO1J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 10:27:09 -0400
-Message-ID: <1498487226.24675.3.camel@sipsolutions.net> (sfid-20170626_162712_909431_413A9333)
-Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Date: Mon, 26 Jun 2017 16:27:06 +0200
-In-Reply-To: <b01d8009-80ba-e437-02b8-5a120c2927e4@candelatech.com>
-References: <20170621235022.25362-1-johannes@sipsolutions.net>
-         <20170621235022.25362-3-johannes@sipsolutions.net>
-         <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
-         <1498112650.2246.1.camel@sipsolutions.net>
-         <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
-         <1498209700.2595.2.camel@sipsolutions.net>
-         <89353e7a-5c61-eba3-fe34-0e7eadf7588e@candelatech.com>
-         <1498474826.3318.4.camel@sipsolutions.net>
-         <b01d8009-80ba-e437-02b8-5a120c2927e4@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:32994 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751200AbdFEPaQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Jun 2017 11:30:16 -0400
+Received: by mail-oi0-f67.google.com with SMTP id h4so22371045oib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:15 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 5/9] rtlwifi: btcoex: add settings before the hardware is ready
+Date: Mon,  5 Jun 2017 10:29:55 -0500
+Message-Id: <20170605152959.27439-6-Larry.Finger@lwfinger.net> (sfid-20170605_173037_696515_1E6B18D1)
+In-Reply-To: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
+References: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-06-26 at 07:15 -0700, Ben Greear wrote:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> > This *can* be solved, even in this piece of code I inserted here,
-> > but it'd have to keep state about the queues and then insert some
-> > hooks elsewhere. I'm pretty sure I can solve that, but don't have
-> > the time (or even hardware) to test this (easily, I have ath10k in
-> > a few routers, but ...).
-> 
-> What/how is it relying on buffering?
+When the hardware is turned on and in the initialization stage, the PTA
+circuit is unstable. Hence we need to force some hardware settings to
+make sure the PTA circuit work correctly, otherwise it may affect the
+user's experience.
 
-So with the TXQs, I thought we were only buffering in mac80211 on the
-TXQs themselves. This isn't true though!
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h  |  1 +
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 15 +++++++++++++++
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  1 +
+ 3 files changed, 17 insertions(+)
 
-We still have the local->pending queues, and the drivers will still
-rely on this for all the frames that are *not* going through a TXQ,
-which currently is:
- * all non-data frames
- * multicast data frames if they need to be sent after DTIM
-   (not sure why this is - doesn't make much sense to me to
-    differentiate immediate and after-DTIM transmissions)
- * data frames to stations the driver doesn't know about (yet)
-
-In this case, the driver can still call ieee80211_stop_queue() or
-similar, and expect frames to be buffered. I completely failed to take
-that into account in this patchset; the dequeue logic I added to ath9k
-and ath10k would have to take that into account and not dequeue if the
-corresponding queue was stopped.
-
-I think we'll probably have to put this logic into the current
-driver(s); I was planning to put it into mac80211 for non-TXQ drivers,
-but the ones already using TXQs would have to deal with it, since it'd
-be really hard to make mac80211 logic kick in only partially for some
-TXQs and not for others.
-
-However, due to all the different levels of buffering we need more TXQs
-than I introduced in this patchset (except I really don't want to
-introduce one for per-vif-multicast-dtim-buffered-data ...)
-
-> I'd be happy to send you plenty of ath10k mini-pcie NICs if that
-> would help.
-
-No need; I have no doubt that I could obtain them, but now I'll be
-going on sabbatical for 2 months anyway :-)
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+index ae3e450c5966..bc1e3042e271 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+@@ -198,5 +198,6 @@ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist);
+ void ex_btc8723b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+ void ex_btc8723b2ant_pre_load_firmware(struct btc_coexist *btcoexist);
++void ex_btc8723b2ant_power_on_setting(struct btc_coexist *btcoexist);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 5e6e14fd8c85..8b015e64af49 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -690,6 +690,21 @@ bool exhalbtc_initlize_variables(struct rtl_priv *adapter)
+ 	return true;
+ }
+ 
++void exhalbtc_power_on_setting(struct btc_coexist *btcoexist)
++{
++	if (!halbtc_is_bt_coexist_available(btcoexist))
++		return;
++
++	btcoexist->statistics.cnt_power_on++;
++
++	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8723b2ant_power_on_setting(btcoexist);
++		else if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8723b1ant_power_on_setting(btcoexist);
++	}
++}
++
+ void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
+ {
+ 	if (!halbtc_is_bt_coexist_available(btcoexist))
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index eca0e5a78ada..9b0a6e9c5b20 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -487,6 +487,7 @@ struct btc_statistics {
+ 	u32 cnt_stack_operation_notify;
+ 	u32 cnt_dbg_ctrl;
+ 	u32 cnt_pre_load_firmware;
++	u32 cnt_power_on;
+ };
+ 
+ struct btc_bt_link_info {
+-- 
+2.13.0
