@@ -1,99 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42229 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750790AbdFAEJv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59478 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751238AbdFEUoZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 00:09:51 -0400
-Date: Thu, 1 Jun 2017 14:09:47 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
-        Tycho Andersen <tycho@tycho.ws>,
-        driverdev-devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC 1/3] staging: ks7010: move WEXT files to sub directory
-Message-ID: <20170601040947.GC30618@eros> (sfid-20170601_061006_607375_A4B0CBF9)
-References: <1496287628-16787-1-git-send-email-me@tobin.cc>
- <1496287628-16787-2-git-send-email-me@tobin.cc>
- <20170601034537.GA7468@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170601034537.GA7468@kroah.com>
+        Mon, 5 Jun 2017 16:44:25 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon,  5 Jun 2017 23:42:06 +0300
+Message-Id: <20170605204218.30151-14-luca@coelho.fi> (sfid-20170605_224445_352591_4DF45912)
+In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
+References: <20170605204218.30151-1-luca@coelho.fi>
+Subject: [PATCH 13/25] iwlwifi: mvm: use schedule_delayed_work()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 12:45:37PM +0900, Greg KH wrote:
-> On Thu, Jun 01, 2017 at 01:27:06PM +1000, Tobin C. Harding wrote:
-> > Current driver implements the WEXT interface. WEXT is in maintenance
-> > mode, we need to re-write the driver using cfg80211. The current
-> > driver is handy as a reference for the new implementation, we can keep
-> > it in tree for now.
-> > 
-> > Move WEXT driver to sub directory, add dummy Makefile and Kconfig so
-> > build completes successfully but does not process any files from the
-> > WEXT directory.
-> > 
-> > Signed-off-by: Tobin C. Harding <me@tobin.cc>
-> > ---
-> >  drivers/staging/ks7010/Kconfig              |    6 +-
-> >  drivers/staging/ks7010/Makefile             |    3 -
-> >  drivers/staging/ks7010/TODO                 |   36 -
-> >  drivers/staging/ks7010/eap_packet.h         |  144 --
-> >  drivers/staging/ks7010/ks7010_sdio.c        | 1079 ----------
-> >  drivers/staging/ks7010/ks7010_sdio.h        |  164 --
-> >  drivers/staging/ks7010/ks_hostif.c          | 2638 -----------------------
-> >  drivers/staging/ks7010/ks_hostif.h          |  685 ------
-> >  drivers/staging/ks7010/ks_wlan.h            |  514 -----
-> >  drivers/staging/ks7010/ks_wlan_ioctl.h      |   67 -
-> >  drivers/staging/ks7010/ks_wlan_net.c        | 2999 ---------------------------
-> >  drivers/staging/ks7010/michael_mic.c        |  148 --
-> >  drivers/staging/ks7010/michael_mic.h        |   25 -
-> >  drivers/staging/ks7010/wext/Kconfig         |   10 +
-> >  drivers/staging/ks7010/wext/Makefile        |    4 +
-> >  drivers/staging/ks7010/wext/TODO            |   36 +
-> >  drivers/staging/ks7010/wext/eap_packet.h    |  144 ++
-> >  drivers/staging/ks7010/wext/ks7010_sdio.c   | 1079 ++++++++++
-> >  drivers/staging/ks7010/wext/ks7010_sdio.h   |  164 ++
-> >  drivers/staging/ks7010/wext/ks_hostif.c     | 2638 +++++++++++++++++++++++
-> >  drivers/staging/ks7010/wext/ks_hostif.h     |  685 ++++++
-> >  drivers/staging/ks7010/wext/ks_wlan.h       |  514 +++++
-> >  drivers/staging/ks7010/wext/ks_wlan_ioctl.h |   67 +
-> >  drivers/staging/ks7010/wext/ks_wlan_net.c   | 2999 +++++++++++++++++++++++++++
-> >  drivers/staging/ks7010/wext/michael_mic.c   |  148 ++
-> >  drivers/staging/ks7010/wext/michael_mic.h   |   25 +
-> >  26 files changed, 8514 insertions(+), 8507 deletions(-)
-> >  delete mode 100644 drivers/staging/ks7010/TODO
-> >  delete mode 100644 drivers/staging/ks7010/eap_packet.h
-> >  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.c
-> >  delete mode 100644 drivers/staging/ks7010/ks7010_sdio.h
-> >  delete mode 100644 drivers/staging/ks7010/ks_hostif.c
-> >  delete mode 100644 drivers/staging/ks7010/ks_hostif.h
-> >  delete mode 100644 drivers/staging/ks7010/ks_wlan.h
-> >  delete mode 100644 drivers/staging/ks7010/ks_wlan_ioctl.h
-> >  delete mode 100644 drivers/staging/ks7010/ks_wlan_net.c
-> >  delete mode 100644 drivers/staging/ks7010/michael_mic.c
-> >  delete mode 100644 drivers/staging/ks7010/michael_mic.h
-> >  create mode 100644 drivers/staging/ks7010/wext/Kconfig
-> >  create mode 100644 drivers/staging/ks7010/wext/Makefile
-> >  create mode 100644 drivers/staging/ks7010/wext/TODO
-> >  create mode 100644 drivers/staging/ks7010/wext/eap_packet.h
-> >  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.c
-> >  create mode 100644 drivers/staging/ks7010/wext/ks7010_sdio.h
-> >  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.c
-> >  create mode 100644 drivers/staging/ks7010/wext/ks_hostif.h
-> >  create mode 100644 drivers/staging/ks7010/wext/ks_wlan.h
-> >  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_ioctl.h
-> >  create mode 100644 drivers/staging/ks7010/wext/ks_wlan_net.c
-> >  create mode 100644 drivers/staging/ks7010/wext/michael_mic.c
-> >  create mode 100644 drivers/staging/ks7010/wext/michael_mic.h
-> 
-> Please use the -M option to 'git format-patch" so that we can just see
-> file moves, not delete/add like you have here.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Point noted, will submit v2 using -M option. This is the second time
-you have told me this, that means I have to buy you a beer doesn't it?
+There's no need to refer to system_wq directly, use the provided
+wrapper schedule_delayed_work().
 
-Will follow the 'wait a day before submitting next version' rule.
+Made with the following spatch:
+    @@
+    expression E,F;
+    @@
+    -queue_delayed_work(system_wq, E, F);
+    +schedule_delayed_work(E, F);
 
-thanks,
-Tobin.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c   | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c     | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tdls.c     | 3 +--
+ 4 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index aac0426112c7..a8353ea1df58 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -927,7 +927,7 @@ int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
+ 	mvm->fw_dump_desc = desc;
+ 	mvm->fw_dump_trig = trigger;
+ 
+-	queue_delayed_work(system_wq, &mvm->fw_dump_wk, delay);
++	schedule_delayed_work(&mvm->fw_dump_wk, delay);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 0f1831b41915..d0806d27df58 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -1632,9 +1632,9 @@ void iwl_mvm_channel_switch_noa_notif(struct iwl_mvm *mvm,
+ 
+ 	IWL_DEBUG_INFO(mvm, "Channel Switch Started Notification\n");
+ 
+-	queue_delayed_work(system_wq, &mvm->cs_tx_unblock_dwork,
+-			   msecs_to_jiffies(IWL_MVM_CS_UNBLOCK_TX_TIMEOUT *
+-					    csa_vif->bss_conf.beacon_int));
++	schedule_delayed_work(&mvm->cs_tx_unblock_dwork,
++			      msecs_to_jiffies(IWL_MVM_CS_UNBLOCK_TX_TIMEOUT *
++					       csa_vif->bss_conf.beacon_int));
+ 
+ 	ieee80211_csa_finish(csa_vif);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 8d1b994ae79f..d48c2ecc0893 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1421,8 +1421,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	mvm->scan_vif = iwl_mvm_vif_from_mac80211(vif);
+ 	iwl_mvm_ref(mvm, IWL_MVM_REF_SCAN);
+ 
+-	queue_delayed_work(system_wq, &mvm->scan_timeout_dwork,
+-			   msecs_to_jiffies(SCAN_TIMEOUT));
++	schedule_delayed_work(&mvm->scan_timeout_dwork,
++			      msecs_to_jiffies(SCAN_TIMEOUT));
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c b/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c
+index df7cd87199ea..3d97436bbdf5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c
+@@ -551,8 +551,7 @@ void iwl_mvm_tdls_ch_switch_work(struct work_struct *work)
+ 
+ 	/* retry after a DTIM if we failed sending now */
+ 	delay = TU_TO_MS(vif->bss_conf.dtim_period * vif->bss_conf.beacon_int);
+-	queue_delayed_work(system_wq, &mvm->tdls_cs.dwork,
+-			   msecs_to_jiffies(delay));
++	schedule_delayed_work(&mvm->tdls_cs.dwork, msecs_to_jiffies(delay));
+ out:
+ 	mutex_unlock(&mvm->mutex);
+ }
+-- 
+2.11.0
