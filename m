@@ -1,86 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:35064 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbdFWOKP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36078 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751433AbdFFMU1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:15 -0400
-Received: by mail-pg0-f65.google.com with SMTP id f127so6274875pgc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:15 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 01/17] rsi: add common structures needed for command packets
-Date: Fri, 23 Jun 2017 19:37:20 +0530
-Message-Id: <1498226856-6305-2-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161019_579007_AFA06432)
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Tue, 6 Jun 2017 08:20:27 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2017-06-06
+Date: Tue, 06 Jun 2017 15:20:20 +0300
+Message-ID: <8760g95muz.fsf@codeaurora.org> (sfid-20170606_142103_843690_4379D8A3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Hi Dave,
 
-All internal management packets (command packets) use some common
-fields and some packet specific fields for packet descriptors.
-This patch adds some common structures which are needed for all
-command packets.
+fixes to net tree, more info in the tag below. Please let me know if
+there are any problems.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_mgmt.h | 38 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+Kalle
 
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index a8a195e..63360c2 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -221,6 +221,44 @@ struct rsi_mac_frame {
- 	__le16 desc_word[8];
- } __packed;
- 
-+#define PWR_SAVE_WAKEUP_IND		BIT(0)
-+#define TCP_CHECK_SUM_OFFLOAD		BIT(1)
-+#define CONFIRM_REQUIRED_TO_HOST	BIT(2)
-+#define ADD_DELTA_TSF			BIT(3)
-+#define FETCH_RETRY_CNT_FROM_HOST_DESC	BIT(4)
-+#define EOSP_INDICATION			BIT(5)
-+#define REQUIRE_TSF_SYNC_CONFIRM	BIT(6)
-+#define ENCAP_MGMT_PKT			BIT(7)
-+
-+struct rsi_cmd_desc_dword0 {
-+	__le16 len_qno;
-+	u8 frame_type;
-+	u8 misc_flags;
-+};
-+
-+struct rsi_cmd_desc_dword1 {
-+	u8 xtend_desc_size;
-+	u8 reserved1;
-+	__le16 reserved2;
-+};
-+
-+struct rsi_cmd_desc_dword2 {
-+	__le32 pkt_info; /* Packet specific data */
-+};
-+
-+struct rsi_cmd_desc_dword3 {
-+	__le16 token;
-+	u8 qid_tid;
-+	u8 sta_id;
-+};
-+
-+struct rsi_cmd_desc {
-+	struct rsi_cmd_desc_dword0 desc_dword0;
-+	struct rsi_cmd_desc_dword1 desc_dword1;
-+	struct rsi_cmd_desc_dword2 desc_dword2;
-+	struct rsi_cmd_desc_dword3 desc_dword3;
-+};
-+
- struct rsi_boot_params {
- 	__le16 desc_word[8];
- 	struct bootup_params bootup_params;
--- 
-2.7.4
+The following changes since commit 6d18c732b95c0a9d35e9f978b4438bba15412284:
+
+  bridge: start hello_timer when enabling KERNEL_STP in br_stp_start (2017-05-21 13:33:28 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-06-06
+
+for you to fetch changes up to dc89481bb4c9af0700423e21c8371379d3d943b1:
+
+  Merge tag 'iwlwifi-for-kalle-2017-06-05' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-06-05 22:21:25 +0300)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.12
+
+It has been a slow start of cycle and this the first set of fixes for
+4.12. Nothing really major here.
+
+wcn36xx
+
+* fix an issue with module reload
+
+brcmfmac
+
+* fix aligment regression on 64 bit systems
+
+iwlwifi
+
+* fixes for memory leaks, runtime PM, memory initialisation and other
+  smaller problems
+
+* fix IBSS on devices using DQA mode (7260 and up)
+
+* fix the minimum firmware API requirement for 7265D, 3168, 8000 and
+  8265
+
+----------------------------------------------------------------
+Arend Van Spriel (1):
+      brcmfmac: fix alignment configuration on host using 64-bit DMA
+
+Bjorn Andersson (1):
+      wcn36xx: Close SMD channel on device removal
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: fix firmware debug restart recording
+
+Gregory Greenman (1):
+      iwlwifi: mvm: rs: start using LQ command color
+
+Haim Dreyfuss (1):
+      iwlwifi: mvm: Fix command queue number on d0i3 flow
+
+Johannes Berg (2):
+      iwlwifi: tt: move ucode_loaded check under mutex
+      iwlwifi: mvm: clear new beacon command template struct
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2017-06-05' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Liad Kaufman (1):
+      iwlwifi: mvm: support ibss in dqa mode
+
+Luca Coelho (3):
+      iwlwifi: pcie: only use d0i3 in suspend/resume if system_pm is set to d0i3
+      iwlwifi: mvm: don't fail when removing a key from an inexisting sta
+      iwlwifi: fix min API version for 7265D, 3168, 8000 and 8265
+
+Shahar S Matityahu (1):
+      iwlwifi: fix host command memory leaks
+
+ drivers/net/wireless/ath/wcn36xx/main.c            |  2 +
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c      |  4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c      |  4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h |  5 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  3 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c    | 12 +-----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  6 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 32 +++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 46 ++++++----------------
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h        | 15 +++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 26 +++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |  8 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 12 +++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  6 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  9 +++--
+ 19 files changed, 118 insertions(+), 79 deletions(-)
