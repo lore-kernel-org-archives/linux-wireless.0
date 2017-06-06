@@ -1,79 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35660 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752167AbdFMG2a (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:34186 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751445AbdFFQyK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 02:28:30 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Caesar Wang <wxt@rock-chips.com>
-Cc: amitkarwar@gmail.com, huxm@marvell.com, nishants@marvell.com,
-        gbhat@marvell.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        briannorris@chromium.org, jeffy.chen@rock-chips.com
-Subject: Re: [PATCH] mwifiex: fixes the trivial print
-References: <1497008411-15223-1-git-send-email-wxt@rock-chips.com>
-Date: Tue, 13 Jun 2017 09:28:23 +0300
-In-Reply-To: <1497008411-15223-1-git-send-email-wxt@rock-chips.com> (Caesar
-        Wang's message of "Fri, 9 Jun 2017 19:40:11 +0800")
-Message-ID: <87poe8pfjs.fsf@purkki.adurom.net> (sfid-20170613_082941_713817_68B54B4C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 6 Jun 2017 12:54:10 -0400
+Date: Tue, 06 Jun 2017 12:54:08 -0400 (EDT)
+Message-Id: <20170606.125408.1718000289062928676.davem@davemloft.net> (sfid-20170606_185442_130834_5E24332E)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2017-06-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <8760g95muz.fsf@codeaurora.org>
+References: <8760g95muz.fsf@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Caesar Wang <wxt@rock-chips.com> writes:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Tue, 06 Jun 2017 15:20:20 +0300
 
-> We have always met the unused log be printed as following.
->
-> ...
-> [23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-> cannot find cfp by band 2    & channel=13 freq=0
-> [23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-> cannot find cfp by band 2    & channel=13 freq=0
->
-> Maybe that's related to wifi regdom, since wifi default area
-> was US and didn't support 12~14 channels.
->
-> As Frequencies:
-> * 2412 MHz [1] (30.0 dBm)
-> * 2417 MHz [2] (30.0 dBm)
-> * 2422 MHz [3] (30.0 dBm)
-> * 2427 MHz [4] (30.0 dBm)
-> * 2432 MHz [5] (30.0 dBm)
-> * 2437 MHz [6] (30.0 dBm)
-> * 2442 MHz [7] (30.0 dBm)
-> * 2447 MHz [8] (30.0 dBm)
-> * 2452 MHz [9] (30.0 dBm)
-> * 2457 MHz [10] (30.0 dBm)
-> * 2462 MHz [11] (30.0 dBm)
-> * 2467 MHz [12] (disabled)
-> * 2472 MHz [13] (disabled)
-> * 2484 MHz [14] (disabled)
->
-> Signed-off-by: Caesar Wang <wxt@rock-chips.com>
-> ---
->
->  drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
-> index 1ff2205..6e29943 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-> @@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8 band, u16 channel, u32 freq)
->  		}
->  	}
->  	if (i == sband->n_channels) {
-> -		mwifiex_dbg(priv->adapter, ERROR,
-> +		mwifiex_dbg(priv->adapter, WARN,
->  			    "%s: cannot find cfp by band %d\t"
->  			    "& channel=%d freq=%d\n",
->  			    __func__, band, channel, freq);
+> fixes to net tree, more info in the tag below. Please let me know if
+> there are any problems.
 
-I don't see how this fixes anything, care to explain? And the title is
-quite vague.
-
-And I would rather fix the root cause, mwifiex folks please comment.
-
--- 
-Kalle Valo
+Pulled, thanks Kalle.
