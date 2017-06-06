@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43252 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751553AbdFBN47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 09:56:59 -0400
-Message-ID: <1496411817.20223.2.camel@sipsolutions.net> (sfid-20170602_155714_753966_90FC78D9)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Fri, 02 Jun 2017 15:56:57 +0200
-In-Reply-To: <8c101115-1038-ddc0-463f-c38344f740db@broadcom.com> (sfid-20170602_131917_345156_76945615)
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1495030794.2442.21.camel@sipsolutions.net>
-         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
-         <1495099355.2553.1.camel@sipsolutions.net>
-         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
-         <1495104012.2553.3.camel@sipsolutions.net>
-         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
-         <1495189263.3274.4.camel@sipsolutions.net>
-         <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
-         <1495448886.2653.12.camel@sipsolutions.net>
-         <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com>
-         <1496050303.2467.3.camel@sipsolutions.net>
-         <8c101115-1038-ddc0-463f-c38344f740db@broadcom.com>
-         (sfid-20170602_131917_345156_76945615)
+Received: from mail-vk0-f47.google.com ([209.85.213.47]:33450 "EHLO
+        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750704AbdFFF0h (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jun 2017 01:26:37 -0400
+Received: by mail-vk0-f47.google.com with SMTP id p62so41763888vkp.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 22:26:37 -0700 (PDT)
+MIME-Version: 1.0
+From: Benjamin Wie <beewee91@gmail.com>
+Date: Tue, 6 Jun 2017 07:26:36 +0200
+Message-ID: <CAAPSgj3XDzQ_7TK4SuX_L_1QgQ=CDtn6EqWPo4RFWM+20JG4Hw@mail.gmail.com> (sfid-20170606_072643_256442_FE50768D)
+Subject: ath9k: wifi not working with btcoex_enable on AR9462
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-02 at 13:19 +0200, Arend van Spriel wrote:
+Hello,
 
-> I was thinking about adding a DOC section in nl80211.h:
+I'm trying to use a bluetooth speaker while connected to a wifi. At
+first, once I started sending something to the speaker via bluetooth,
+the wifi connection was slowed down a lot or even disconnected because
+btcoex_enable was not set.
+Now I enabled it using:
 
-Sure!
+  modprobe -r ath9k
+  modprobe ath9k btcoex_enable=1
 
-> /**
->   * DOC: WPA/WPA2 temporal key exchange offload
->   *
->   * By setting @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK flag
-> drivers
->   * can indicate offload support of EAPOL handshakes for WPA/WPA2
+with the result, that I can't connect to the wifi at all, even if
+bluetooth is completely disabled.
+Do you know how to fix this?
 
-can indicate they support offloading EAPOL ...?
+[ben@localhost]~% uname -r
+4.11.3-200.fc25.x86_64
 
->   * preshared key authentication. In %NL80211_CMD_CONNECT the
-> preshared
->   * key should be specified using %NL80211_ATTR_PMK. Drivers
-> supporting
->   * this offload may reject the %NL80211_CMD_CONNECT when no
-> preshared
->   * key material is provided. For example when that driver does not
->   * support setting the temporal keys through %NL80211_CMD_NEW_KEY.
+[ben@localhost]~% lspci -k
+(...)
+04:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network
+Adapter (rev 01)
+    Subsystem: Foxconn International, Inc. Device e052
+    Kernel driver in use: ath9k
+    Kernel modules: ath9k
 
-[...] is provided, for example when [...]
+[ben@localhost]~% dmesg | grep ath
+[    4.482734] usbcore: registered new interface driver ath3k
+[    4.769527] ath: phy0: ASPM enabled: 0x42
+[    4.769530] ath: EEPROM regdomain: 0x6c
+[    4.769531] ath: EEPROM indicates we should expect a direct regpair map
+[    4.769533] ath: Country alpha2 being used: 00
+[    4.769533] ath: Regpair used: 0x6c
+[    4.819454] ath9k 0000:04:00.0 wlp4s0: renamed from wlan0
 
-I think? Starting with "For example" seems odd to me.
 
->   *
->   * Similarly @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X flag can be
->   * set by drivers indicating offload support of the PTK/GTK EAPOL
->   * handshakes during 802.1X authentication. In order to use the
-> offload
->   * the %NL80211_CMD_CONNECT should have
-> %NL80211_ATTR_WANT_1X_4WAY_HS
->   * attribute flag. Drivers supporting this offload may reject the
->   * %NL80211_CMD_CONNECT when the attribute flag is not present.
->   */
-> 
-> Could add description for FT, ie. PMK-R0 handling as well. Do you
-> think this change warrants a separate section or not. Any comments on
-> the text itself are welcome.
-
-I think that's good to have.
-
-johannes
+Thank you!
+Benjamin
