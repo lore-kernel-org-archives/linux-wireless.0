@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56230 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751744AbdFTNkF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jun 2017 09:40:05 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2017-06-20
-Date: Tue, 20 Jun 2017 16:39:59 +0300
-Message-ID: <877f06ydzk.fsf@kamboji.qca.qualcomm.com> (sfid-20170620_154030_266406_C8B80311)
+Received: from mail.neratec.com ([46.140.151.2]:34805 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751584AbdFGHfI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Jun 2017 03:35:08 -0400
+Subject: Re: Wifi-Event for when initial 4-way completes?
+To: Ben Greear <greearb@candelatech.com>
+References: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Message-ID: <f1334e7f-1d86-00fd-cfba-7ce56b8a9f81@neratec.com> (sfid-20170607_093545_139116_93E70B5B)
+Date: Wed, 7 Jun 2017 09:25:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Hello Ben,
 
-here's a pull request to net tree, few important fixes still I would
-like to have in 4.12. Please let me know if there are any problems.
+I have been using this part of wpa_supplicant to notify that 4-Way 
+handshake is completed.
 
-Kalle
+around line 868 in wpa_supplicant.c
 
-The following changes since commit dc89481bb4c9af0700423e21c8371379d3d943b1:
+#if defined(CONFIG_CTRL_IFACE) || !defined(CONFIG_NO_STDOUT_DEBUG)
+                 wpa_msg(wpa_s, MSG_INFO, WPA_EVENT_CONNECTED "- 
+Connection to "
+                         MACSTR " completed [id=%d id_str=%s%s]",
+                         MAC2STR(wpa_s->bssid),
+                         ssid ? ssid->id : -1,
+                         ssid && ssid->id_str ? ssid->id_str : "",
+                         fils_hlp_sent ? " FILS_HLP_SENT" : "");
+#endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
 
-  Merge tag 'iwlwifi-for-kalle-2017-06-05' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-06-05 22:21:25 +0300)
+You can pack whatever notification message inside the if statement.
 
-are available in the git repository at:
+Br,
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-06-20
+Wojtek
 
-for you to fetch changes up to 35abcd4f9f303ac4f10f99b3f7e993e5f2e6fa37:
 
-  brcmfmac: fix uninitialized warning in brcmf_usb_probe_phase2() (2017-06-16 11:52:36 +0300)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.12
-
-Two important fixes for brcmfmac. The rest of the brcmfmac patches are
-either code preparation and fixing a new build warning.
-
-brcmfmac
-
-* fix a NULL pointer dereference during resume
-
-* fix a NULL pointer dereference with USB devices, a regression from
-  v4.12-rc1
-
-----------------------------------------------------------------
-Arend Van Spriel (5):
-      brcmfmac: add parameter to pass error code in firmware callback
-      brcmfmac: use firmware callback upon failure to load
-      brcmfmac: unbind all devices upon failure in firmware callback
-      brcmfmac: fix brcmf_fws_add_interface() for USB devices
-      brcmfmac: fix uninitialized warning in brcmf_usb_probe_phase2()
-
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 35 +++++++++++-----------
- .../broadcom/brcm80211/brcmfmac/firmware.h         |  4 +--
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         |  2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 17 +++++++----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 18 +++++++----
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  9 +++---
- 6 files changed, 49 insertions(+), 36 deletions(-)
+On 07/06/17 02:46, Ben Greear wrote:
+> I have been tracking down a nasty EAPOL related bug in ath10k, and 
+> found something that may be peripheral, or maybe
+> it is significant.
+>
+> My logic is basically to kick supplicant, watch 'iw events', and then 
+> when I see something
+> like "sta62 (phy #5): connected to 00:0e:8e:f8:73:96", I consider it 
+> connected and start
+> dhcpd.
+>
+> But, it appears that the 'connected' message comes out before the 
+> EAPOL 4-way completes, so
+> I am starting dhclient before the encryption is really set up 
+> properly.  At best, this slows
+> things down and makes dhclient have to retry.
+>
+> Is there some existing event or state I can probe to determine when 
+> the initial 4-way is complete?
+>
+> In case there is not, maybe that event would be worth adding?
+>
+> Or, should I hack on supplicant instead and grab the info out of it 
+> somehow?
+>
+> Thanks,
+> Ben
+>
