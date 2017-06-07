@@ -1,65 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f170.google.com ([209.85.128.170]:35826 "EHLO
-        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751870AbdFJJds (ORCPT
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:35470 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751382AbdFGQqG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Jun 2017 05:33:48 -0400
-Received: by mail-wr0-f170.google.com with SMTP id q97so53412018wrb.2
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Jun 2017 02:33:47 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: iso cfg80211: Fix grammar issue in error
- message
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20170608080141.rswb2czupjeblqzq@jirafa.cyrius.com>
- <3bf898aa-c890-32ec-aa83-c7a1e7f56729@broadcom.com>
- <20170610092247.2gz6sydytp5pomq6@jirafa.cyrius.com>
+        Wed, 7 Jun 2017 12:46:06 -0400
+Received: by mail-qt0-f174.google.com with SMTP id w1so12490478qtg.2
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jun 2017 09:46:06 -0700 (PDT)
+Subject: Re: [V4,1/3] brcmfmac: add support multi-scheduled scan
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
+ <20170522151649.B5F1060AC8@smtp.codeaurora.org>
+ <621288e8-e950-5aea-7d27-c5cb802dd416@broadcom.com>
+ <87y3t34zom.fsf@codeaurora.org>
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a79b0fa3-2f7d-e704-371d-c2eec383afaf@broadcom.com> (sfid-20170610_113737_756944_F8C5ED3A)
-Date: Sat, 10 Jun 2017 11:33:45 +0200
+Message-ID: <26477cca-3aa9-b2c9-0469-a9d0ee008e0a@broadcom.com> (sfid-20170607_184610_966647_77C22B51)
+Date: Wed, 7 Jun 2017 18:46:02 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170610092247.2gz6sydytp5pomq6@jirafa.cyrius.com>
+In-Reply-To: <87y3t34zom.fsf@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hah. That is (unintended?) fun. I actually meant to change the subject
-from "cfg80211: Fix grammar issue in error message" into "brcmfmac: Fix
-grammar issue in error message". Using the abbreviation "iso" in this
-context was maybe a bit misleading of me.
+On 07-06-17 16:53, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+> 
+>> On 5/22/2017 5:16 PM, Kalle Valo wrote:
+>>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>>> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+>>>>
+>>>> This change adds support for multi-scheduled scan in the driver. It
+>>>> currently relies on g-scan support in firmware and will set struct
+>>>> wiphy::max_sched_scan_reqs accordingly. This is limited to 16 concurrent
+>>>> requests.
+>>>>
+>>>> The firmware currently has a limit of 64 channels that can be configured
+>>>> for all requests in total regardless whether there are duplicates. So if
+>>>> a request uses 35 channels there are 29 channels left for another request.
+>>>> When user-space does not specify any channels cfg80211 will add all
+>>>> channels defined by the wiphy instance to the request, which makes
+>>>> reaching the limit rather easy for dual-band devices.
+>>>>
+>>>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>>>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>>>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>
+>>> I see new warnings:
+>>>
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c: In function ‘brcmf_pno_config_sched_scans’:
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:166:6: warning: ‘mac_mask’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+>>>    u8 *mac_mask;
+>>>        ^
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:183:2: warning: ‘mac_addr’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+>>>    memcpy(pfn_mac.mac, mac_addr, ETH_ALEN);
+>>>    ^
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:165:6: note: ‘mac_addr’ was declared here
+>>>    u8 *mac_addr;
+>>>        ^
+>>>
+>>> 3 patches set to Changes Requested.
+>>>
+>>> 9736151 [V4,1/3] brcmfmac: add support multi-scheduled scan
+>>> 9736147 [V4,2/3] brcmfmac: add mutex to protect pno requests
+>>> 9736149 [V4,3/3] brcmfmac: add scheduled scan support for specified BSSIDs
+>>
+>> Not seeing it here using gcc version 4.8.4 (Ubuntu
+>> 4.8.4-2ubuntu1~14.04.3).
+> 
+> My version is:
+> 
+> gcc (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
+> 
+> I don't think that's really exocit version of the compiler, or is it?
 
-One more purely educational note: when sending a reworked patch it is
-good practice to use "[PATCH V2]" in the subject and add a changelog
-between the signature tags and the diff separated by "---" so people now
-what changed, ie.:
+Nope.
 
----
- changes:
-  V2:
-   - updated subject prefix.
----
+>> Also tried using W=1 on the make command
+>> line. Getting a bunck of other warnings, but not the ones above.
+> 
+> This was without W=1, just a default compilation with all wireless
+> drivers enabled.
+> 
+>> Do you want me to fix it?
+> 
+> Yes, please. I try to keep the patches warning free, even if they are
+> false warnings.
 
-Thanks,
+Will do. And thanks again for the reminder ;-)
+
+Regards,
 Arend
-
-On 10-06-17 11:22, Martin Michlmayr wrote:
-> Fix grammar issue in error message about ISO3166.
-> 
-> Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index cd1d6730eab7..c1ad81f34658 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -6767,7 +6767,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
->  	/* ignore non-ISO3166 country codes */
->  	for (i = 0; i < sizeof(req->alpha2); i++)
->  		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
-> -			brcmf_err("not a ISO3166 code (0x%02x 0x%02x)\n",
-> +			brcmf_err("not an ISO3166 code (0x%02x 0x%02x)\n",
->  				  req->alpha2[0], req->alpha2[1]);
->  			return;
->  		}
-> 
