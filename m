@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36316 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753357AbdF2Sbl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:31:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:24 +0300
-Message-Id: <20170629183027.15408-13-luca@coelho.fi> (sfid-20170629_203205_030845_BEDE266E)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 12/15] iwlwifi: mvm: quietly accept non-sta disassoc frames
+Received: from s3.sipsolutions.net ([5.9.151.49]:60712 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751072AbdFGV51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Jun 2017 17:57:27 -0400
+Message-ID: <1496872642.3291.4.camel@sipsolutions.net> (sfid-20170607_235731_130722_755C7167)
+Subject: Re: [PATCH 1/1] mac80211: ieee80211_rx_napi: remove warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>, kvalo@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Wed, 07 Jun 2017 23:57:22 +0200
+In-Reply-To: <1496581915-4412-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170604_151234_601164_C284D202)
+References: <1496581915-4412-1-git-send-email-erik.stromdahl@gmail.com>
+         <1496581915-4412-2-git-send-email-erik.stromdahl@gmail.com>
+         (sfid-20170604_151234_601164_C284D202)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, 2017-06-04 at 15:11 +0200, Erik Stromdahl wrote:
+> The softirq count is not always incremented during driver
+> operation. This is the case for usb and sdio network
+> drivers.
 
-When a station that's not associated sends a data frame (e.g. an NDP)
-hostapd will respond with a disassoc frame, telling it that it's not
-associated. The station might also not be authenticated, in which case
-there will not be a station entry for it, and as a result we need to
-accept such frames without a station.
+I'm pretty sure the warning is correct, and we do rely on having
+local_bh_disable(), otherwise we may end up taking a soft-IRQ and I
+believe there are some things that could get messed up in that case.
 
-Fixes: 3ee0f0e23e4f ("iwlwifi: mvm: fix DQA AP mode station assumption")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+So - I think the warning is there for a reason, and drivers should just
+local_bh_disable() before calling into that. What's wrong with that?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 73967790f7e4..60360ed73f26 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -568,9 +568,12 @@ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
- 		 * station that we don't have, or similarly an association
- 		 * response (with non-success status) for a station we can't
- 		 * accept.
-+		 * Also, disassociate frames might happen, particular with
-+		 * reason 7 ("Class 3 frame received from nonassociated STA").
- 		 */
- 		if (ieee80211_is_probe_resp(fc) || ieee80211_is_auth(fc) ||
--		    ieee80211_is_deauth(fc) || ieee80211_is_assoc_resp(fc))
-+		    ieee80211_is_deauth(fc) || ieee80211_is_assoc_resp(fc) ||
-+		    ieee80211_is_disassoc(fc))
- 			return mvm->probe_queue;
- 		if (info->hw_queue == info->control.vif->cab_queue)
- 			return mvmvif->cab_queue;
--- 
-2.11.0
+johannes
