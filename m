@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:34446 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753617AbdFMOvl (ORCPT
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:35010 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751625AbdFGHwe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 10:51:41 -0400
-Received: by mail-pg0-f66.google.com with SMTP id v14so19226142pgn.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:51:40 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 04/20] rsi: correct SDIO disconnect path handling
-Date: Tue, 13 Jun 2017 20:18:52 +0530
-Message-Id: <1497365348-2305-5-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165143_878930_0592C888)
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Wed, 7 Jun 2017 03:52:34 -0400
+Received: by mail-qt0-f172.google.com with SMTP id w1so2888063qtg.2
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jun 2017 00:52:34 -0700 (PDT)
+Subject: Re: Wifi-Event for when initial 4-way completes?
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+References: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <30b6091b-f74f-fabf-b0ed-ef1c1b78ef72@broadcom.com> (sfid-20170607_095248_303807_F3419559)
+Date: Wed, 7 Jun 2017 09:52:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
 
-Sometimes it's observed that we get interrupt/Rx frame when device is
-already detached from mac80211. In this case couple of error messages
-are displayed in dmesg log. This patch corrects the order so that
-disconnection will happen cleanly
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
++ hostap list
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index ebfd29c..f1ba8ac 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -1026,17 +1026,26 @@ static void rsi_disconnect(struct sdio_func *pfunction)
- 		return;
- 
- 	dev = (struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	sdio_claim_host(pfunction);
-+	sdio_release_irq(pfunction);
-+	sdio_release_host(pfunction);
-+	mdelay(10);
- 
--	dev->write_fail = 2;
- 	rsi_mac80211_detach(adapter);
-+	mdelay(10);
- 
--	sdio_claim_host(pfunction);
--	sdio_release_irq(pfunction);
--	sdio_disable_func(pfunction);
--	rsi_91x_deinit(adapter);
-+	/* Reset Chip */
- 	rsi_reset_chip(adapter);
-+
-+	/* Resetting to take care of the case, where-in driver is re-loaded */
-+	sdio_claim_host(pfunction);
- 	rsi_reset_card(pfunction);
-+	sdio_disable_func(pfunction);
- 	sdio_release_host(pfunction);
-+	dev->write_fail = 2;
-+	rsi_91x_deinit(adapter);
-+	rsi_dbg(ERR_ZONE, "##### RSI SDIO device disconnected #####\n");
-+
- }
- 
- #ifdef CONFIG_PM
--- 
-2.7.4
+On 6/7/2017 2:46 AM, Ben Greear wrote:
+> I have been tracking down a nasty EAPOL related bug in ath10k, and found 
+> something that may be peripheral, or maybe
+> it is significant.
+> 
+> My logic is basically to kick supplicant, watch 'iw events', and then 
+> when I see something
+> like "sta62 (phy #5): connected to 00:0e:8e:f8:73:96", I consider it 
+> connected and start
+> dhcpd.
+> 
+> But, it appears that the 'connected' message comes out before the EAPOL 
+> 4-way completes, so
+> I am starting dhclient before the encryption is really set up properly.  
+> At best, this slows
+> things down and makes dhclient have to retry.
+> 
+> Is there some existing event or state I can probe to determine when the 
+> initial 4-way is complete?
+> 
+> In case there is not, maybe that event would be worth adding?
+> 
+> Or, should I hack on supplicant instead and grab the info out of it 
+> somehow?
+
+The completion of the 4-way handshake is a supplicant state. Reaching 
+that state the PTK is set in the driver. It fires a CTRL-EVENT to the 
+wpa_s control interface. Actually found a python script eapol_test.py in 
+hostap repo that catches that event. So you may check it out.
+
+Gr. AvS
