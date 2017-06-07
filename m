@@ -1,109 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60208 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751955AbdFJKwz (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:41228 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750766AbdFGAqg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Jun 2017 06:52:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Sat, 10 Jun 2017 13:52:44 +0300
-Message-Id: <20170610105246.26455-3-luca@coelho.fi> (sfid-20170610_125402_879959_6F3C08DB)
-In-Reply-To: <20170610105246.26455-1-luca@coelho.fi>
-References: <20170610105246.26455-1-luca@coelho.fi>
-Subject: [PATCH 2/4] mac80211: remove 5/10 MHz rate code from station MLME
+        Tue, 6 Jun 2017 20:46:36 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 513D9409E08
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2017 17:46:35 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Wifi-Event for when initial 4-way completes?
+Message-ID: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com> (sfid-20170607_024640_921694_0B6DC9F3)
+Date: Tue, 6 Jun 2017 17:46:35 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+I have been tracking down a nasty EAPOL related bug in ath10k, and found something that may be peripheral, or maybe
+it is significant.
 
-There's no need for the station MLME code to handle bitrates for 5
-or 10 MHz channels when it can't ever create such a configuration.
-Remove the unnecessary code.
+My logic is basically to kick supplicant, watch 'iw events', and then when I see something
+like "sta62 (phy #5): connected to 00:0e:8e:f8:73:96", I consider it connected and start
+dhcpd.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 24 +++---------------------
- 1 file changed, 3 insertions(+), 21 deletions(-)
+But, it appears that the 'connected' message comes out before the EAPOL 4-way completes, so
+I am starting dhclient before the encryption is really set up properly.  At best, this slows
+things down and makes dhclient have to retry.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 570d9ab61950..1929bce8e518 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -601,7 +601,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_channel *chan;
--	u32 rate_flags, rates = 0;
-+	u32 rates = 0;
- 
- 	sdata_assert_lock(sdata);
- 
-@@ -612,7 +612,6 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		return;
- 	}
- 	chan = chanctx_conf->def.chan;
--	rate_flags = ieee80211_chandef_rate_flags(&chanctx_conf->def);
- 	rcu_read_unlock();
- 	sband = local->hw.wiphy->bands[chan->band];
- 	shift = ieee80211_vif_get_shift(&sdata->vif);
-@@ -636,9 +635,6 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		 */
- 		rates_len = 0;
- 		for (i = 0; i < sband->n_bitrates; i++) {
--			if ((rate_flags & sband->bitrates[i].flags)
--			    != rate_flags)
--				continue;
- 			rates |= BIT(i);
- 			rates_len++;
- 		}
-@@ -2817,7 +2813,7 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
- 				u32 *rates, u32 *basic_rates,
- 				bool *have_higher_than_11mbit,
- 				int *min_rate, int *min_rate_index,
--				int shift, u32 rate_flags)
-+				int shift)
- {
- 	int i, j;
- 
-@@ -2845,8 +2841,6 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
- 			int brate;
- 
- 			br = &sband->bitrates[j];
--			if ((rate_flags & br->flags) != rate_flags)
--				continue;
- 
- 			brate = DIV_ROUND_UP(br->bitrate, (1 << shift) * 5);
- 			if (brate == rate) {
-@@ -4414,27 +4408,15 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 		u32 rates = 0, basic_rates = 0;
- 		bool have_higher_than_11mbit;
- 		int min_rate = INT_MAX, min_rate_index = -1;
--		struct ieee80211_chanctx_conf *chanctx_conf;
- 		const struct cfg80211_bss_ies *ies;
- 		int shift = ieee80211_vif_get_shift(&sdata->vif);
--		u32 rate_flags;
--
--		rcu_read_lock();
--		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--		if (WARN_ON(!chanctx_conf)) {
--			rcu_read_unlock();
--			sta_info_free(local, new_sta);
--			return -EINVAL;
--		}
--		rate_flags = ieee80211_chandef_rate_flags(&chanctx_conf->def);
--		rcu_read_unlock();
- 
- 		ieee80211_get_rates(sband, bss->supp_rates,
- 				    bss->supp_rates_len,
- 				    &rates, &basic_rates,
- 				    &have_higher_than_11mbit,
- 				    &min_rate, &min_rate_index,
--				    shift, rate_flags);
-+				    shift);
- 
- 		/*
- 		 * This used to be a workaround for basic rates missing
+Is there some existing event or state I can probe to determine when the initial 4-way is complete?
+
+In case there is not, maybe that event would be worth adding?
+
+Or, should I hack on supplicant instead and grab the info out of it somehow?
+
+Thanks,
+Ben
+
 -- 
-2.11.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
