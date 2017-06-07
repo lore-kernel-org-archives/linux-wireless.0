@@ -1,74 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58688 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751746AbdFLKqc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44290 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751397AbdFGOxX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 06:46:32 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, "Peter S. Housel" <housel@acm.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
-Date: Mon, 12 Jun 2017 11:46:22 +0100
-Message-Id: <1497264382-2290-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170612_124634_738486_3547EF8D)
+        Wed, 7 Jun 2017 10:53:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [V4,1/3] brcmfmac: add support multi-scheduled scan
+References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
+        <20170522151649.B5F1060AC8@smtp.codeaurora.org>
+        <621288e8-e950-5aea-7d27-c5cb802dd416@broadcom.com>
+Date: Wed, 07 Jun 2017 17:53:13 +0300
+In-Reply-To: <621288e8-e950-5aea-7d27-c5cb802dd416@broadcom.com> (Arend van
+        Spriel's message of "Wed, 7 Jun 2017 10:15:15 +0200")
+Message-ID: <87y3t34zom.fsf@codeaurora.org> (sfid-20170607_165331_372834_FABD7492)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Peter S. Housel" <housel@acm.org>
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-An earlier change to this function (3bdae810721b) fixed a leak in the
-case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
-glom_skb buffer, used for emulating a scattering read, is never used
-or referenced after its contents are copied into the destination
-buffers, and therefore always needs to be freed by the end of the
-function.
+> On 5/22/2017 5:16 PM, Kalle Valo wrote:
+>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+>>>
+>>> This change adds support for multi-scheduled scan in the driver. It
+>>> currently relies on g-scan support in firmware and will set struct
+>>> wiphy::max_sched_scan_reqs accordingly. This is limited to 16 concurrent
+>>> requests.
+>>>
+>>> The firmware currently has a limit of 64 channels that can be configured
+>>> for all requests in total regardless whether there are duplicates. So if
+>>> a request uses 35 channels there are 29 channels left for another reque=
+st.
+>>> When user-space does not specify any channels cfg80211 will add all
+>>> channels defined by the wiphy instance to the request, which makes
+>>> reaching the limit rather easy for dual-band devices.
+>>>
+>>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>
+>> I see new warnings:
+>>
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c: In function =E2=
+=80=98brcmf_pno_config_sched_scans=E2=80=99:
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:166:6: warning: =
+=E2=80=98mac_mask=E2=80=99 may be used uninitialized in this function [-Wma=
+ybe-uninitialized]
+>>    u8 *mac_mask;
+>>        ^
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:183:2: warning: =
+=E2=80=98mac_addr=E2=80=99 may be used uninitialized in this function [-Wma=
+ybe-uninitialized]
+>>    memcpy(pfn_mac.mac, mac_addr, ETH_ALEN);
+>>    ^
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:165:6: note: =E2=
+=80=98mac_addr=E2=80=99 was declared here
+>>    u8 *mac_addr;
+>>        ^
+>>
+>> 3 patches set to Changes Requested.
+>>
+>> 9736151 [V4,1/3] brcmfmac: add support multi-scheduled scan
+>> 9736147 [V4,2/3] brcmfmac: add mutex to protect pno requests
+>> 9736149 [V4,3/3] brcmfmac: add scheduled scan support for specified BSSI=
+Ds
+>
+> Not seeing it here using gcc version 4.8.4 (Ubuntu
+> 4.8.4-2ubuntu1~14.04.3).
 
-Fixes: 3bdae810721b ("brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain")
-Fixes: a413e39a38573 ("brcmfmac: fix brcmf_sdcard_recv_chain() for host without sg support")
-Signed-off-by: Peter S. Housel <housel@acm.org>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- changes:
-  V2:
-   - avoid goto using if (!err) {}.
-  V3:
-   - free glom_skb at done label.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+My version is:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9b970dc..844c1e6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -706,7 +706,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 			   struct sk_buff_head *pktq, uint totlen)
- {
--	struct sk_buff *glom_skb;
-+	struct sk_buff *glom_skb = NULL;
- 	struct sk_buff *skb;
- 	u32 addr = sdiodev->sbwad;
- 	int err = 0;
-@@ -727,10 +727,8 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 			return -ENOMEM;
- 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
- 					 glom_skb);
--		if (err) {
--			brcmu_pkt_buf_free_skb(glom_skb);
-+		if (err)
- 			goto done;
--		}
- 
- 		skb_queue_walk(pktq, skb) {
- 			memcpy(skb->data, glom_skb->data, skb->len);
-@@ -741,6 +739,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 					    pktq);
- 
- done:
-+	brcmu_pkt_buf_free_skb(glom_skb);
- 	return err;
- }
- 
--- 
-1.9.1
+gcc (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
+
+I don't think that's really exocit version of the compiler, or is it?
+
+> Also tried using W=3D1 on the make command
+> line. Getting a bunck of other warnings, but not the ones above.
+
+This was without W=3D1, just a default compilation with all wireless
+drivers enabled.
+
+> Do you want me to fix it?
+
+Yes, please. I try to keep the patches warning free, even if they are
+false warnings.
+
+--=20
+Kalle Valo
