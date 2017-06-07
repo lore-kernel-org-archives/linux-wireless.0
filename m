@@ -1,154 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49294 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751001AbdFAFcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 01:32:48 -0400
-Date: Thu, 1 Jun 2017 07:31:36 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Jia-Ju Bai <baijiaju1990@163.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
- b43legacy_op_bss_info_changed
-Message-ID: <20170601073136.0b35368e@wiggum> (sfid-20170601_073318_451889_C6E430D0)
-In-Reply-To: <284d6d5d-d548-9e05-eafd-a6b521af5a04@lwfinger.net>
-References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com>
-        <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
-        <20170531173107.25eeda48@wiggum>
-        <284d6d5d-d548-9e05-eafd-a6b521af5a04@lwfinger.net>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33366 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751425AbdFGWeC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Jun 2017 18:34:02 -0400
+From: Seraphime Kirkovski <kirkseraph@gmail.com>
+To: luca@coelho.fi
+Cc: Seraphime Kirkovski <kirkseraph@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org (open list:INTEL WIRELESS WIFI LINK
+        (iwlwifi)), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] net: wireless: intel: iwlwifi: dvm: fix tid mask
+Date: Thu,  8 Jun 2017 00:33:52 +0200
+Message-Id: <20170607223354.22399-1-kirkseraph@gmail.com> (sfid-20170608_003435_965667_158D8449)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/BNa10aK/GYtxshAwCI0T3ht"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/BNa10aK/GYtxshAwCI0T3ht
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Currently the tid mask covers the first 4 bits of iwlagn_tx_resp::ra_tid,
+which gives 16 possible values for tid.
+This is problematic because IWL_MAX_TID_COUNT is 8, so indexing
+iwl_priv::tid_data can go very wrong.
 
-On Wed, 31 May 2017 19:07:15 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+With UBSAN I can it happening while establishing the first connection
+after module load.
 
-> On 05/31/2017 10:32 AM, Michael B=C3=BCsch wrote:
-> > On Wed, 31 May 2017 13:26:43 +0300
-> > Kalle Valo <kvalo@codeaurora.org> wrote:
-> >  =20
-> >> Jia-Ju Bai <baijiaju1990@163.com> writes:
-> >> =20
-> >>> The driver may sleep under a spin lock, and the function call path is:
-> >>> b43legacy_op_bss_info_changed (acquire the lock by spin_lock_irqsave)
-> >>>    b43legacy_synchronize_irq
-> >>>      synchronize_irq --> may sleep
-> >>>
-> >>> To fix it, the lock is released before b43legacy_synchronize_irq, and=
- the
-> >>> lock is acquired again after this function.
-> >>>
-> >>> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> >>> ---
-> >>>   drivers/net/wireless/broadcom/b43legacy/main.c |    2 ++
-> >>>   1 file changed, 2 insertions(+)
-> >>>
-> >>> diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers=
-/net/wireless/broadcom/b43legacy/main.c
-> >>> index f1e3dad..31ead21 100644
-> >>> --- a/drivers/net/wireless/broadcom/b43legacy/main.c
-> >>> +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-> >>> @@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(struc=
-t ieee80211_hw *hw,
-> >>>   	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
-> >>>  =20
-> >>>   	if (changed & BSS_CHANGED_BSSID) {
-> >>> +		spin_unlock_irqrestore(&wl->irq_lock, flags);
-> >>>   		b43legacy_synchronize_irq(dev);
-> >>> +		spin_lock_irqsave(&wl->irq_lock, flags); =20
-> >>
-> >> To me this looks like a fragile workaround and not a real fix. You can
-> >> easily add new race conditions with releasing the lock like this.
-> >> =20
-> >=20
-> >=20
-> > I think releasing the lock possibly is fine. It certainly is better than
-> > sleeping with a lock held.
-> > We disabled the device interrupts just before this line.
-> >=20
-> > However I think the synchronize_irq should be outside of the
-> > conditional right after the write to B43legacy_MMIO_GEN_IRQ_MASK. (So
-> > two lines above)
-> > I don't think it makes sense to only synchronize if BSS_CHANGED_BSSID
-> > is set.
-> >=20
-> >=20
-> > On the other hand b43 does not have this irq-disabling foobar anymore.
-> > So somebody must have removed it. Maybe you can find the commit that
-> > removed this stuff from b43 and port it to b43legacy?
-> >=20
-> >=20
-> > So I would vote for moving the synchronize_irq up outside of the
-> > conditional and put the unlock/lock sequence around it.
-> > And as a second patch on top of that try to remove this stuff
-> > altogether like b43 did. =20
->=20
-> The patch that removed it in b43 is
->=20
-> commit 36dbd9548e92268127b0c31b0e121e63e9207108
-> Author: Michael Buesch <mb@bu3sch.de>
-> Date:   Fri Sep 4 22:51:29 2009 +0200
+[  272.143440] UBSAN: Undefined behaviour in drivers/net/wireless/intel/iwlwifi/dvm/tx.c:777:32
+[  272.143447] index 8 is out of range for type 'iwl_tid_data [8]'
+[  272.143457] CPU: 0 PID: 4605 Comm: irq/32-iwlwifi Not tainted 4.12.0-dirty #2
+[  272.143460] Hardware name: Hewlett-Packard HP EliteBook 2560p/162B, BIOS 68SSU Ver. F.02 07/26/2011
+[  272.143462] Call Trace:
+[  272.143472]  dump_stack+0x9c/0x10b
+[  272.143477]  ? _atomic_dec_and_lock+0x285/0x285
+[  272.143486]  ubsan_epilogue+0xd/0x4e
+[  272.143493]  __ubsan_handle_out_of_bounds+0xef/0x118
+[  272.143498]  ? __ubsan_handle_shift_out_of_bounds+0x221/0x221
+[  272.143519]  ? iwl_trans_pcie_reclaim+0x153/0xc90 [iwlwifi]
+[  272.143539]  iwlagn_check_ratid_empty+0x337/0x410 [iwldvm]
+[  272.143556]  ? iwl_hcmd_names_cmp+0x2f/0x60 [iwlwifi]
+[  272.143571]  iwlagn_rx_reply_tx+0x8a4/0x1820 [iwldvm]
 
-Damn it :D
+Signed-off-by: Seraphime Kirkovski <kirkseraph@gmail.com>
+---
+   I'm currently running this patch on my machines and I have wifi.
+   The patch presumes а cleanup patch, I sent yesterday:
+      https://www.spinics.net/lists/kernel/msg2526314.html
 
->      b43: Use a threaded IRQ handler
->=20
->      Use a threaded IRQ handler to allow locking the mutex and
->      sleeping while executing an interrupt.
->      This removes usage of the irq_lock spinlock, but introduces
->      a new hardirq_lock, which is _only_ used for the PCI/SSB lowlevel
->      hard-irq handler. Sleeping busses (SDIO) will use mutex instead.
->=20
->      Signed-off-by: Michael Buesch <mb@bu3sch.de>
->      Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
->      Signed-off-by: John W. Linville <linville@tuxdriver.com>
->=20
-> I vaguely remember this patch. Although it is roughly a 1000-line fix, I =
-will=20
-> try to port it to b43legacy. I still have an old BCM4306 PCMCIA card that=
- I can=20
-> test in a PowerBook G4.
->=20
-> I agree with Michael that this is the way to go. Both of Jia-Ju's patches=
- should=20
-> be rejected.
+ drivers/net/wireless/intel/iwlwifi/dvm/commands.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-I'm not sure if it's worth it. There is a risk that this would
-introduce new bugs.
-But sure, please feel free to try it. This way we can find out how big
-this change becomes.
-
---=20
-Michael
-
---Sig_/BNa10aK/GYtxshAwCI0T3ht
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlkvprgACgkQ9TK+HZCN
-iw61QA/+KQAxV3h295YF4SmDpwPp70J7kbff2o3xTm7RoJ/9Z1D6vI/fMkHStXaP
-wPAXBnGdYuygyv5JsbvcV3HJa8P2bNSVd/HiEe6bgGEWIxrboMRkhYX/wumJxqCU
-MatL1Ggrps8v/O4VqzGU2V7Y+43su2D9OKGxo2kVtBP+mfO2dZpoTByo3ZP3qVyB
-mhw+IpRbeB5eQRro0/uUjvflyIraD41TigyfcLQe+986WTo5snHRC2dtO1Yd5E5y
-7Tszic+JMv5lxa+zl4MW+DPZL+aNI2ozLVMfVQUIZwHNf7gzZfqTGkgCTgV9v/JL
-J7LXT92eyFEUgyO5e7kqZrsxcuounR1nAMNkOABCWgGbUD9LqmkC885VJyulyvg+
-6F8MRM/dYh3rNxLvo1pLWVQC4Os1XL/4pjcD8Gc2y+f0wtQ+5HeBuPKMwn1Is5yw
-5BhT7VTasjR9Zw+Y2vXMNSDs0CKq7D7FlhVAgdM1gjK9UYi/eLiy4192S3MHCE/P
-FJH/nNtB20qn1VScFGRpR0CjK5ecvM7LS4FOvfZzh2ztpbtagtEjpjwf5BDEeHuH
-U36oDz4tobRAvJVZiCGCwBRgAl69Hsguk8qhWYYII3CxBzLljOBYcD61nkq/GeD7
-KW2/yLHi3qRdeaUtENoeLv3tdk8YkBIvRlWqCcpP0yI8AEIgAWw=
-=djbR
------END PGP SIGNATURE-----
-
---Sig_/BNa10aK/GYtxshAwCI0T3ht--
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
+index 37d2ba5ae852..e5994df9ea4c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
+@@ -1448,7 +1448,7 @@ struct agg_tx_status {
+  */
+ /* refer to ra_tid */
+ #define IWLAGN_TX_RES_TID_POS	0
+-#define IWLAGN_TX_RES_TID_MSK	0x0f
++#define IWLAGN_TX_RES_TID_MSK	0x07
+ #define IWLAGN_TX_RES_RA_POS	4
+ #define IWLAGN_TX_RES_RA_MSK	0xf0
+ 
+-- 
+2.11.0
